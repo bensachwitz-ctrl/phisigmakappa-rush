@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { setBrotherCookie, clearAdminCookie } from "@/lib/auth";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const LoginSchema = z.object({
   name: z.string().min(2).max(80),

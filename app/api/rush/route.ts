@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const RushSchema = z.object({
   name: z.string().min(2).max(120),
@@ -13,6 +14,7 @@ const RushSchema = z.object({
   year: z.string().max(40).optional().or(z.literal("")),
   highSchoolInfo: z.string().max(2000).optional().or(z.literal("")),
   backgroundInfo: z.string().max(2000).optional().or(z.literal("")),
+  headshotUrl: z.string().url().max(2048).optional().or(z.literal("")),
 });
 
 export async function POST(req: Request) {
@@ -28,7 +30,6 @@ export async function POST(req: Request) {
 
     const existing = await prisma.rush.findUnique({ where: { email: data.email } });
     if (existing) {
-      // Update if they're re-submitting
       const updated = await prisma.rush.update({
         where: { email: data.email },
         data: {
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
           year: data.year || null,
           highSchoolInfo: data.highSchoolInfo || null,
           backgroundInfo: data.backgroundInfo || null,
+          headshotUrl: data.headshotUrl || existing.headshotUrl || null,
         },
       });
       return NextResponse.json({ ok: true, id: updated.id, updated: true });
@@ -54,6 +56,7 @@ export async function POST(req: Request) {
         year: data.year || null,
         highSchoolInfo: data.highSchoolInfo || null,
         backgroundInfo: data.backgroundInfo || null,
+        headshotUrl: data.headshotUrl || null,
       },
     });
 

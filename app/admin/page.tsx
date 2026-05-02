@@ -30,6 +30,7 @@ export default async function AdminDashboard() {
     year: r.year,
     highSchoolInfo: r.highSchoolInfo,
     backgroundInfo: r.backgroundInfo,
+    headshotUrl: r.headshotUrl,
     status: r.status,
     notes: r.notes,
     createdAt: r.createdAt.toISOString(),

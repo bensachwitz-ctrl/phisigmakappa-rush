@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/auth";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const PayloadSchema = z.object({
   rushIds: z.array(z.string().min(1)).min(1).max(500),

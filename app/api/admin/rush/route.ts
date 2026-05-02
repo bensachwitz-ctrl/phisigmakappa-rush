@@ -5,6 +5,7 @@ import { isAdminAuthed } from "@/lib/auth";
 import { RUSH_STATUSES } from "@/lib/utils";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const PatchSchema = z.object({
   id: z.string().min(1),

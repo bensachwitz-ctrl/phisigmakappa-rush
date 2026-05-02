@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentBrotherId, isAdminAuthed } from "@/lib/auth";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const VoteSchema = z.object({
   rushId: z.string().min(1),

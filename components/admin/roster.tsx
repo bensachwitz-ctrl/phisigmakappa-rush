@@ -70,6 +70,7 @@ type Rush = {
   year: string | null;
   highSchoolInfo: string | null;
   backgroundInfo: string | null;
+  headshotUrl: string | null;
   status: string;
   notes: string | null;
   createdAt: string;
@@ -348,8 +349,13 @@ export function Roster({
                     />
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{r.name}</div>
-                    <div className="text-xs text-muted-foreground md:hidden">{r.email}</div>
+                    <div className="flex items-center gap-3">
+                      <Avatar rush={r} />
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{r.name}</div>
+                        <div className="text-xs text-muted-foreground md:hidden truncate">{r.email}</div>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="text-sm">{r.email}</div>
@@ -445,6 +451,33 @@ export function Roster({
 }
 
 /* ---------- Cells ---------- */
+
+function Avatar({ rush, size = 36 }: { rush: Rush; size?: number }) {
+  const initials = rush.name
+    .split(" ")
+    .map((s) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  if (rush.headshotUrl) {
+    return (
+      <img
+        src={rush.headshotUrl}
+        alt=""
+        style={{ width: size, height: size }}
+        className="rounded-full object-cover ring-1 ring-border shrink-0"
+      />
+    );
+  }
+  return (
+    <div
+      style={{ width: size, height: size }}
+      className="rounded-full bg-phisig-red-soft text-phisig-red flex items-center justify-center text-xs font-semibold shrink-0"
+    >
+      {initials}
+    </div>
+  );
+}
 
 function VotePill({ rush, onVote }: { rush: Rush; onVote: (v: number) => void }) {
   const tone =
@@ -543,9 +576,7 @@ function RushDetail({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-full bg-phisig-red text-white flex items-center justify-center font-semibold text-lg shrink-0">
-              {rush.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
-            </div>
+            <Avatar rush={rush} size={56} />
             <div className="min-w-0">
               <DialogTitle className="truncate">{rush.name}</DialogTitle>
               <DialogDescription>

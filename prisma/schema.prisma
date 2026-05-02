@@ -25,6 +25,7 @@ model Rush {
   year            String?
   highSchoolInfo  String?
   backgroundInfo  String?
+  headshotUrl     String?
   status          String    @default("ACTIVE")
   notes           String?
   createdAt       DateTime  @default(now())
