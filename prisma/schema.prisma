@@ -1,0 +1,114 @@
+// Phi Sigma Kappa @ USC — Rush Management
+// Production target: Vercel Postgres / Neon. Schema is dialect-agnostic and works
+// with sqlite locally if you swap the provider to "sqlite".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// RushStatus values stored as String (SQLite has no native enums):
+// ACTIVE | DROPPED | BID_EXTENDED | ACCEPTED | DECLINED
+
+model Rush {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  phone           String
+  hometown        String?
+  major           String?
+  year            String?
+  highSchoolInfo  String?
+  backgroundInfo  String?
+  status          String    @default("ACTIVE")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  emailLogs       EmailLog[]
+  smsLogs         SmsLog[]
+  attendances     Attendance[]
+  votes           Vote[]
+}
+
+model Event {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  location    String?
+  dressCode   String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  isPrivate   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  attendances Attendance[]
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  rushId    String
+  eventId   String
+  attended  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  rush      Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, eventId])
+}
+
+model Brother {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  email     String?  @unique
+  role      String   @default("MEMBER")  // MEMBER | ADMIN
+  createdAt DateTime @default(now())
+  lastSeen  DateTime @default(now())
+
+  votes     Vote[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  rushId    String
+  brotherId String
+  value     Int      // -2 strong no, -1 no, 0 neutral, 1 yes, 2 strong yes
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rush      Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  brother   Brother  @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, brotherId])
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  rushId     String?
+  subject    String
+  body       String
+  recipients String
+  sentAt     DateTime @default(now())
+  status     String   @default("SENT")
+
+  rush       Rush?    @relation(fields: [rushId], references: [id], onDelete: SetNull)
+}
+
+model SmsLog {
+  id         String   @id @default(cuid())
+  rushId     String?
+  body       String
+  recipients String
+  sentAt     DateTime @default(now())
+  status     String   @default("SENT")
+
+  rush       Rush?    @relation(fields: [rushId], references: [id], onDelete: SetNull)
+}
