@@ -5,6 +5,7 @@ import { ScheduleList } from "@/components/site/schedule-list";
 import { Seal, Crest } from "@/components/brand/wordmark";
 import { Scene } from "@/components/brand/scene";
 import { InstagramFeed } from "@/components/site/instagram-feed";
+import { StickyCTA } from "@/components/site/sticky-cta";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
@@ -67,17 +68,25 @@ export default function Home() {
 
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-phisig-red-soft via-white to-white" aria-hidden />
-        <div className="absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden />
-        <div className="absolute -right-20 top-0 -z-10 hidden lg:block opacity-90 animate-float">
-          <Seal className="w-[520px] h-[520px]" />
+        {/* Background photo from chapter Instagram (proxied) */}
+        <div className="absolute inset-0 -z-30">
+          <img
+            src="/api/photo/DRzyoVciZCh"
+            alt=""
+            className="w-full h-full object-cover object-top opacity-60 lg:opacity-50"
+          />
         </div>
-        {/* Floating Greek letters as decoration */}
-        <div className="absolute right-[20%] top-[15%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-30">
-          <span className="text-[180px] font-serif font-bold text-phisig-red leading-none">Φ</span>
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-white/90 via-white/75 to-white/40" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white via-white/85 to-white/0 lg:to-white/10" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-dot-grid opacity-30" aria-hidden />
+        <div className="absolute -right-16 -top-8 -z-10 hidden lg:block opacity-95 animate-float">
+          <Seal className="w-[480px] h-[480px]" />
+        </div>
+        <div className="absolute right-[18%] top-[12%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-15">
+          <span className="text-[160px] font-serif font-bold text-phisig-red leading-none">Φ</span>
         </div>
 
-        <div className="container py-12 sm:py-20 lg:py-28">
+        <div className="container py-14 sm:py-20 lg:py-28">
           <div className="max-w-2xl animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/90 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
@@ -473,6 +482,7 @@ export default function Home() {
       </section>
 
       <PublicFooter />
+      <StickyCTA />
     </main>
   );
 }
