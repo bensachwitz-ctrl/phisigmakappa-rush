@@ -11,26 +11,34 @@ import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2,
   User, Mail, Phone, Sparkles, Send, Check,
   Camera, Upload, X as XIcon, ImagePlus,
+  GraduationCap, MapPin, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type FormData = {
   name: string;
-  email: string;
   phone: string;
+  email: string;
+  year: string;
+  major: string;
+  hometown: string;
   about: string;
   headshotUrl: string;
 };
 
 const initial: FormData = {
-  name: "", email: "", phone: "", about: "", headshotUrl: "",
+  name: "", phone: "", email: "",
+  year: "", major: "", hometown: "",
+  about: "", headshotUrl: "",
 };
+
+const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Transfer"];
 
 const STEPS = [
   { id: "intro", label: "Start" },
-  { id: "you", label: "Contact" },
-  { id: "about", label: "About" },
-  { id: "headshot", label: "Photo" },
+  { id: "contact", label: "Contact" },
+  { id: "profile", label: "Profile" },
+  { id: "photo", label: "Photo" },
   { id: "review", label: "Submit" },
 ] as const;
 
@@ -56,10 +64,13 @@ export function RushForm() {
 
   function validateStep(s: StepId): boolean {
     const e: Record<string, string> = {};
-    if (s === "you") {
+    if (s === "contact") {
       if (data.name.trim().length < 2) e.name = "Please enter your full name.";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Enter a valid email.";
       if (data.phone.replace(/\D/g, "").length < 10) e.phone = "Enter a valid phone number.";
+      if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Enter a valid email.";
+    }
+    if (s === "profile") {
+      if (!data.year) e.year = "Pick your year.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -82,12 +93,14 @@ export function RushForm() {
   async function submit() {
     setSubmitting(true);
     try {
-      // Map "about" to backgroundInfo for the existing API
       const payload = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        backgroundInfo: data.about,
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim() || `${data.name.replace(/\s+/g, ".").toLowerCase()}-${Date.now()}@noemail.local`,
+        year: data.year,
+        major: data.major.trim(),
+        hometown: data.hometown.trim(),
+        backgroundInfo: data.about.trim(),
         headshotUrl: data.headshotUrl,
       };
       const res = await fetch("/api/rush", {
@@ -100,7 +113,7 @@ export function RushForm() {
       setDone(true);
       push({
         title: json.updated ? "Info updated" : "You're in",
-        description: "Watch your email for what's next.",
+        description: "Watch your email and texts.",
         variant: "success",
       });
     } catch (err: any) {
@@ -157,10 +170,10 @@ export function RushForm() {
 
       <CardContent className="p-5 sm:p-8 md:p-10">
         <div key={step} className="animate-fade-in">
-          {step === "intro" && <IntroStep onStart={() => setStep("you")} />}
-          {step === "you" && <ContactStep data={data} errors={errors} update={update} />}
-          {step === "about" && <AboutStep data={data} update={update} />}
-          {step === "headshot" && <HeadshotStep data={data} update={update} />}
+          {step === "intro" && <IntroStep onStart={() => setStep("contact")} />}
+          {step === "contact" && <ContactStep data={data} errors={errors} update={update} />}
+          {step === "profile" && <ProfileStep data={data} errors={errors} update={update} />}
+          {step === "photo" && <PhotoStep data={data} update={update} />}
           {step === "review" && <ReviewStep data={data} />}
         </div>
 
@@ -198,13 +211,13 @@ function IntroStep({ onStart }: { onStart: () => void }) {
         <Sparkles className="h-7 w-7" />
       </div>
       <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-        Sixty seconds. Three questions.
+        Sixty seconds. Four questions.
       </h3>
       <p className="mt-2 text-xs uppercase tracking-[0.18em] text-phisig-red font-semibold">
         Fall Rush 2026 · Interest list
       </p>
       <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-        Just your name, contact, and a quick intro. We'll handle the rest from there.
+        Just your contact and a quick profile. We'll text you when the schedule drops.
       </p>
       <div className="mt-8 flex items-center justify-center">
         <Button onClick={onStart} size="lg" className="group">
@@ -213,9 +226,9 @@ function IntroStep({ onStart }: { onStart: () => void }) {
       </div>
       <ul className="mt-10 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
         {[
-          { icon: User, label: "Contact info" },
-          { icon: Sparkles, label: "Quick intro" },
-          { icon: Camera, label: "Headshot" },
+          { icon: Phone, label: "Contact" },
+          { icon: GraduationCap, label: "USC profile" },
+          { icon: Camera, label: "Headshot (optional)" },
         ].map((s, i) => (
           <li
             key={s.label}
@@ -230,6 +243,9 @@ function IntroStep({ onStart }: { onStart: () => void }) {
           </li>
         ))}
       </ul>
+      <p className="mt-6 text-xs text-muted-foreground">
+        Your info goes straight to the rush chair. Never shared.
+      </p>
     </div>
   );
 }
@@ -243,74 +259,109 @@ function ContactStep({
 }) {
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 1 of 3" title="How do we reach you?" sub="The basics — that's all we need." />
+      <Header eyebrow="Step 1 of 4" title="How do we reach you?" sub="Phone is required — that's how we'll text the schedule." />
       <Field id="name" label="Full name" required error={errors.name} icon={User}>
         <Input
           id="name" autoComplete="name" autoFocus
           value={data.name} onChange={(e) => update("name", e.target.value)}
-          placeholder="James Carter" className="pl-9"
+          placeholder="James Carter" className="pl-9" inputMode="text"
         />
       </Field>
-      <div className="grid sm:grid-cols-2 gap-5">
-        <Field id="email" label="Email" required error={errors.email} icon={Mail}>
-          <Input
-            id="email" type="email" autoComplete="email"
-            value={data.email} onChange={(e) => update("email", e.target.value)}
-            placeholder="you@email.sc.edu" className="pl-9"
-          />
-        </Field>
-        <Field id="phone" label="Phone" required error={errors.phone} icon={Phone}>
-          <Input
-            id="phone" type="tel" inputMode="tel" autoComplete="tel"
-            value={data.phone} onChange={(e) => update("phone", e.target.value)}
-            placeholder="(803) 555-0142" className="pl-9"
-          />
-        </Field>
-      </div>
+      <Field id="phone" label="Phone" required error={errors.phone} icon={Phone}>
+        <Input
+          id="phone" type="tel" inputMode="tel" autoComplete="tel"
+          value={data.phone} onChange={(e) => update("phone", e.target.value)}
+          placeholder="(803) 555-0142" className="pl-9"
+        />
+      </Field>
+      <Field id="email" label="Email (optional)" error={errors.email} icon={Mail}>
+        <Input
+          id="email" type="email" autoComplete="email"
+          value={data.email} onChange={(e) => update("email", e.target.value)}
+          placeholder="you@email.sc.edu" className="pl-9"
+        />
+      </Field>
       <p className="text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3">
-        We assume you're a USC student. Brothers will fill in the rest from your social profiles —
-        save you the typing.
+        We'll text you the moment the Fall '26 rush schedule drops in August.
       </p>
     </div>
   );
 }
 
-function AboutStep({
-  data, update,
-}: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void }) {
+function ProfileStep({
+  data, errors, update,
+}: {
+  data: FormData;
+  errors: Record<string, string>;
+  update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
+}) {
   return (
     <div className="space-y-5">
-      <Header
-        eyebrow="Step 2 of 3"
-        title="Tell us about yourself"
-        sub="A couple sentences in your own words. Skip if you'd rather not."
-      />
-      <Field id="about" label="A bit about you (optional)">
+      <Header eyebrow="Step 2 of 4" title="At USC" sub="Tap your year, then add major and hometown." />
+      <Field id="year" label="Year" required error={errors.year}>
+        <div className="flex flex-wrap gap-2">
+          {YEARS.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => update("year", y)}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
+                data.year === y
+                  ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
+                  : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+              )}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      </Field>
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field id="major" label="Major" icon={BookOpen}>
+          <Input
+            id="major"
+            value={data.major} onChange={(e) => update("major", e.target.value)}
+            placeholder="Finance" className="pl-9"
+            list="major-suggestions"
+          />
+          <datalist id="major-suggestions">
+            {[
+              "Finance", "Marketing", "Accounting", "Management", "Economics",
+              "Computer Science", "Information Systems", "Mechanical Engineering",
+              "Electrical Engineering", "Civil Engineering", "Chemical Engineering",
+              "Pre-Med / Biology", "Biomedical Engineering", "Nursing", "Pharmacy",
+              "Political Science", "International Business", "Sport & Entertainment Mgmt",
+              "Hospitality Management", "Real Estate", "Risk Management",
+              "Criminal Justice", "Psychology", "Communications",
+              "Mathematics", "Statistics", "Undecided",
+            ].map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
+        </Field>
+        <Field id="hometown" label="Hometown" icon={MapPin}>
+          <Input
+            id="hometown"
+            value={data.hometown} onChange={(e) => update("hometown", e.target.value)}
+            placeholder="Charleston, SC" className="pl-9"
+          />
+        </Field>
+      </div>
+      <Field id="about" label="Anything else (optional)">
         <Textarea
-          id="about" value={data.about}
+          id="about"
+          value={data.about}
           onChange={(e) => update("about", e.target.value)}
-          placeholder="What you're studying, where you're from, what you're into, what you're looking for in a fraternity…"
-          rows={6}
-          className="text-base"
+          placeholder="HS sports, family ties to the chapter, what you're looking for…"
+          rows={3}
         />
       </Field>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground">
-        {[
-          "Major / year",
-          "Hometown",
-          "HS sports",
-          "What you're into",
-        ].map((p) => (
-          <div key={p} className="rounded-md border border-dashed border-border px-2 py-1.5 text-center">
-            {p}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
-function HeadshotStep({
+function PhotoStep({
   data, update,
 }: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void }) {
   const { push } = useToast();
@@ -349,17 +400,23 @@ function HeadshotStep({
 
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 3 of 3" title="Headshot" sub="Helps brothers put a face to your name. Optional." />
+      <Header
+        eyebrow="Step 3 of 4"
+        title="Headshot"
+        sub="Helps brothers put a face to your name. Skip if you'd rather not."
+      />
 
       {data.headshotUrl ? (
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
             <img
-              src={data.headshotUrl} alt="Your headshot"
+              src={data.headshotUrl}
+              alt="Your headshot"
               className="h-44 w-44 rounded-full object-cover ring-4 ring-phisig-red/15 ring-offset-2 ring-offset-background shadow-lg animate-fade-in"
             />
             <button
-              type="button" onClick={() => update("headshotUrl", "")}
+              type="button"
+              onClick={() => update("headshotUrl", "")}
               className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-background border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Remove"
             >
@@ -370,7 +427,9 @@ function HeadshotStep({
             <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
               <Upload className="h-3.5 w-3.5" /> Replace
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => update("headshotUrl", "")}>Remove</Button>
+            <Button variant="ghost" size="sm" onClick={() => update("headshotUrl", "")}>
+              Remove
+            </Button>
           </div>
         </div>
       ) : (
@@ -382,7 +441,9 @@ function HeadshotStep({
           className={cn(
             "relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200",
             "flex flex-col items-center justify-center text-center px-6 py-12",
-            drag ? "border-phisig-red bg-phisig-red-soft scale-[1.01]" : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft/30",
+            drag
+              ? "border-phisig-red bg-phisig-red-soft scale-[1.01]"
+              : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft/30",
             busy && "pointer-events-none opacity-60"
           )}
         >
@@ -406,7 +467,7 @@ function HeadshotStep({
       />
 
       <p className="text-xs text-muted-foreground text-center">
-        On mobile, you can take a photo directly with your camera.
+        On mobile you can take a photo with your camera directly.
       </p>
     </div>
   );
@@ -415,12 +476,15 @@ function HeadshotStep({
 function ReviewStep({ data }: { data: FormData }) {
   const lines = [
     { label: "Name", value: data.name || "—" },
-    { label: "Email", value: data.email || "—" },
     { label: "Phone", value: data.phone || "—" },
+    { label: "Year", value: data.year || "—" },
+    { label: "Major", value: data.major || "—" },
+    { label: "Hometown", value: data.hometown || "—" },
+    { label: "Email", value: data.email || "—" },
   ];
   return (
     <div className="space-y-5">
-      <Header eyebrow="Final step" title="Submit" sub="Make sure everything looks right." />
+      <Header eyebrow="Step 4 of 4" title="Review and submit" sub="Quick check — anything off?" />
       <div className="rounded-xl border border-border bg-secondary/40 p-5">
         <div className="flex items-start gap-5">
           {data.headshotUrl ? (
@@ -433,7 +497,7 @@ function ReviewStep({ data }: { data: FormData }) {
               <Camera className="h-7 w-7" />
             </div>
           )}
-          <dl className="flex-1 grid sm:grid-cols-3 gap-x-6 gap-y-2.5 text-sm">
+          <dl className="flex-1 grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
             {lines.map((l) => (
               <div key={l.label}>
                 <dt className="text-muted-foreground text-xs uppercase tracking-wide">{l.label}</dt>
@@ -450,7 +514,7 @@ function ReviewStep({ data }: { data: FormData }) {
         )}
       </div>
       <p className="text-xs text-muted-foreground text-center">
-        By submitting, you agree to receive event-related emails and texts. We'll never share your info.
+        By submitting, you agree to receive event-related emails and texts. We never share your info.
       </p>
     </div>
   );
@@ -466,9 +530,7 @@ function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => voi
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ title: "Phi Sigma Kappa USC", text, url });
-      } catch {
-        /* user cancelled */
-      }
+      } catch { /* user cancelled */ }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
       push({ title: "Link copied", description: "Share it with your buddies.", variant: "success" });
@@ -486,7 +548,7 @@ function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => voi
           You're on the list, {first}.
         </h3>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          Watch your email and texts — we'll send the Fall '26 schedule the moment it's live.
+          We've got your number. Watch for a text the second the Fall '26 schedule drops in August.
         </p>
 
         <div className="mt-7 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
@@ -522,6 +584,8 @@ function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => voi
   );
 }
 
+/* ---------- helpers ---------- */
+
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
   return (
     <div>
@@ -535,8 +599,12 @@ function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: 
 function Field({
   id, label, required, error, icon: Icon, children,
 }: {
-  id: string; label: string; required?: boolean; error?: string;
-  icon?: React.ElementType; children: React.ReactNode;
+  id: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
 }) {
   return (
     <div>
@@ -545,7 +613,7 @@ function Field({
       </Label>
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
         )}
         {children}
       </div>

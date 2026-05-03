@@ -424,16 +424,12 @@ export default function Home() {
               rel="noreferrer"
               className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <iframe
-                  src="https://www.instagram.com/p/DXzzTaFjSyj/embed/captioned/"
-                  className="absolute -top-[54px] left-0 w-full h-[calc(100%+280px)] border-0 scale-[1.05] origin-top"
-                  loading="lazy"
-                  scrolling="no"
-                  allowTransparency
-                  title="Brother of the Month — Michael McCarthy"
-                />
-              </div>
+              <img
+                src="/api/photo/DXzzTaFjSyj"
+                alt="Brother of the Month — Michael McCarthy"
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
@@ -540,16 +536,12 @@ export default function Home() {
               rel="noreferrer"
               className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <iframe
-                  src="https://www.instagram.com/p/DWmioxGCaBG/embed/captioned/"
-                  className="absolute -top-[54px] left-0 w-full h-[calc(100%+280px)] border-0 scale-[1.05] origin-top"
-                  loading="lazy"
-                  scrolling="no"
-                  allowTransparency
-                  title="Spring formal in New Orleans"
-                />
-              </div>
+              <img
+                src="/api/photo/DWmioxGCaBG"
+                alt="Spring formal in New Orleans"
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
@@ -631,11 +623,17 @@ export default function Home() {
       {/* ─── WHERE TO FIND US ─── */}
       <section className="container py-14 sm:py-18">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
-          <div className="relative aspect-[5/4] rounded-3xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1">
+          <a
+            href="https://www.instagram.com/p/DRxIVRXkYCn/"
+            target="_blank"
+            rel="noreferrer"
+            className="relative aspect-[5/4] rounded-3xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
+          >
             <img
               src="/api/photo/DRxIVRXkYCn"
               alt="Game day at Williams-Brice Stadium"
-              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
@@ -646,7 +644,7 @@ export default function Home() {
                 We tailgate every home game.
               </p>
             </div>
-          </div>
+          </a>
           <div className="order-1 lg:order-2">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <MapPin className="h-3 w-3" /> Where we live
@@ -770,8 +768,8 @@ function ContactPill({
 }
 
 /**
- * Renders a real Instagram post via /embed/captioned, cropped to show just the photo.
- * Wraps it in a click-through card that links to the original post with a brand caption.
+ * Real Instagram photo rendered through our /api/photo proxy with object-cover cropping.
+ * The proxy scrapes the public /embed/ page for the og:image and proxies bytes through our domain.
  */
 function PostTile({
   slug, caption, icon: Icon, className,
@@ -788,19 +786,13 @@ function PostTile({
       rel="noreferrer"
       className={`group relative rounded-2xl overflow-hidden border border-border bg-secondary lift block ${className ?? ""}`}
     >
-      {/* Iframe shows the real Instagram photo. Cropped via overflow + transform so we
-          show just the image, not the IG header/footer. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <iframe
-          src={`https://www.instagram.com/p/${slug}/embed/captioned/`}
-          className="absolute -top-[54px] left-0 w-full h-[calc(100%+260px)] border-0 scale-[1.04] origin-top"
-          loading="lazy"
-          scrolling="no"
-          allowTransparency
-          title={caption}
-        />
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+      <img
+        src={`/api/photo/${slug}`}
+        alt={caption}
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
       <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
         <Icon className="h-3 w-3" /> {caption}
       </span>
