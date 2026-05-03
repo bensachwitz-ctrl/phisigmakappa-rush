@@ -50,6 +50,9 @@ import {
   User,
   Calendar,
   CheckCircle2,
+  Wand2,
+  ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import {
   RUSH_STATUSES,
@@ -549,6 +552,14 @@ function SortableHead({
 
 /* ---------- Detail Dialog ---------- */
 
+type Enrichment = {
+  summary?: string;
+  bullets?: string[];
+  links?: { label: string; url: string }[];
+  source?: string;
+  searchedAt?: string;
+};
+
 function RushDetail({
   rush, onClose, onRemove, onSetStatus, onVote, onNotesSaved,
 }: {
@@ -560,6 +571,10 @@ function RushDetail({
   onNotesSaved: (n: string) => void;
 }) {
   const [allVotes, setAllVotes] = React.useState<{ value: number; comment: string | null; brother: { name: string } }[]>([]);
+  const [enrichment, setEnrichment] = React.useState<Enrichment | null>(null);
+  const [quickLinks, setQuickLinks] = React.useState<{ label: string; url: string }[]>([]);
+  const [enrichBusy, setEnrichBusy] = React.useState(false);
+  const { push } = useToast();
 
   React.useEffect(() => {
     if (!rush) return;
@@ -567,7 +582,36 @@ function RushDetail({
       .then((r) => r.json())
       .then((j) => setAllVotes(j.votes || []))
       .catch(() => setAllVotes([]));
+    fetch(`/api/admin/enrich?rushId=${rush.id}`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.ok) {
+          setEnrichment(j.enrichment || null);
+          setQuickLinks(j.quickLinks || []);
+        }
+      })
+      .catch(() => {});
   }, [rush?.id]);
+
+  async function runEnrich() {
+    if (!rush) return;
+    setEnrichBusy(true);
+    try {
+      const res = await fetch("/api/admin/enrich", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rushId: rush.id }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || "Enrich failed");
+      setEnrichment(j.enrichment);
+      push({ title: "Researched", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Research failed", variant: "destructive" });
+    } finally {
+      setEnrichBusy(false);
+    }
+  }
 
   if (!rush) return null;
 

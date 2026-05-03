@@ -8,22 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import {
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
-  User,
-  Mail,
-  Phone,
-  GraduationCap,
-  Trophy,
-  Sparkles,
-  Send,
-  Check,
-  Camera,
-  Upload,
-  X as XIcon,
-  ImagePlus,
+  CheckCircle2, ArrowRight, ArrowLeft, Loader2,
+  User, Mail, Phone, Sparkles, Send, Check,
+  Camera, Upload, X as XIcon, ImagePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,33 +18,20 @@ type FormData = {
   name: string;
   email: string;
   phone: string;
-  hometown: string;
-  major: string;
-  year: string;
-  highSchoolInfo: string;
-  backgroundInfo: string;
+  about: string;
   headshotUrl: string;
 };
 
 const initial: FormData = {
-  name: "",
-  email: "",
-  phone: "",
-  hometown: "",
-  major: "",
-  year: "",
-  highSchoolInfo: "",
-  backgroundInfo: "",
-  headshotUrl: "",
+  name: "", email: "", phone: "", about: "", headshotUrl: "",
 };
 
 const STEPS = [
-  { id: "intro", label: "Welcome" },
-  { id: "you", label: "About you" },
-  { id: "school", label: "School" },
-  { id: "activities", label: "Activities" },
-  { id: "headshot", label: "Headshot" },
-  { id: "review", label: "Review" },
+  { id: "intro", label: "Start" },
+  { id: "you", label: "Contact" },
+  { id: "about", label: "About" },
+  { id: "headshot", label: "Photo" },
+  { id: "review", label: "Submit" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -76,10 +50,7 @@ export function RushForm() {
   function update<K extends keyof FormData>(k: K, v: FormData[K]) {
     setData((d) => ({ ...d, [k]: v }));
     if (errors[k as string]) {
-      setErrors((e) => {
-        const { [k as string]: _, ...rest } = e;
-        return rest;
-      });
+      setErrors((e) => { const { [k as string]: _, ...rest } = e; return rest; });
     }
   }
 
@@ -111,15 +82,21 @@ export function RushForm() {
   async function submit() {
     setSubmitting(true);
     try {
+      // Map "about" to backgroundInfo for the existing API
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        backgroundInfo: data.about,
+        headshotUrl: data.headshotUrl,
+      };
       const res = await fetch("/api/rush", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Submission failed");
-      }
+      if (!res.ok || !json.ok) throw new Error(json.error || "Submission failed");
       setDone(true);
       push({
         title: json.updated ? "Info updated" : "You're in",
@@ -143,7 +120,6 @@ export function RushForm() {
 
   return (
     <Card className="overflow-hidden border-border/80 shadow-xl shadow-phisig-red/5 hover:shadow-2xl hover:shadow-phisig-red/10 transition-shadow duration-500">
-      {/* Progress bar */}
       <div className="relative h-1 bg-secondary">
         <div
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700 ease-out"
@@ -151,7 +127,6 @@ export function RushForm() {
         />
       </div>
 
-      {/* Step pills */}
       <div className="px-4 sm:px-6 pt-6 pb-2">
         <ol className="flex items-center justify-between gap-1 sm:gap-2 text-xs">
           {STEPS.map((s, i) => {
@@ -159,28 +134,18 @@ export function RushForm() {
             const active = i === stepIndex;
             return (
               <li key={s.id} className="flex-1">
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 sm:gap-2 transition-all",
-                    !active && !done && "opacity-50"
-                  )}
-                >
+                <div className={cn("flex items-center gap-1.5 sm:gap-2 transition-all", !active && !done && "opacity-50")}>
                   <span
                     className={cn(
                       "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold transition-all duration-300",
-                      done && "bg-phisig-red text-white scale-100",
+                      done && "bg-phisig-red text-white",
                       active && "bg-phisig-red text-white ring-4 ring-phisig-red/20 scale-110",
                       !done && !active && "bg-secondary text-muted-foreground"
                     )}
                   >
                     {done ? <Check className="h-3 w-3" /> : i + 1}
                   </span>
-                  <span
-                    className={cn(
-                      "hidden md:inline-block font-medium text-xs",
-                      active ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  >
+                  <span className={cn("hidden md:inline-block font-medium text-xs", active ? "text-foreground" : "text-muted-foreground")}>
                     {s.label}
                   </span>
                 </div>
@@ -193,9 +158,8 @@ export function RushForm() {
       <CardContent className="p-5 sm:p-8 md:p-10">
         <div key={step} className="animate-fade-in">
           {step === "intro" && <IntroStep onStart={() => setStep("you")} />}
-          {step === "you" && <AboutYouStep data={data} errors={errors} update={update} />}
-          {step === "school" && <SchoolStep data={data} update={update} />}
-          {step === "activities" && <ActivitiesStep data={data} update={update} />}
+          {step === "you" && <ContactStep data={data} errors={errors} update={update} />}
+          {step === "about" && <AboutStep data={data} update={update} />}
           {step === "headshot" && <HeadshotStep data={data} update={update} />}
           {step === "review" && <ReviewStep data={data} />}
         </div>
@@ -208,20 +172,14 @@ export function RushForm() {
             {step === "review" ? (
               <Button onClick={submit} disabled={submitting} size="lg" className="group">
                 {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                 ) : (
-                  <>
-                    Submit registration
-                    <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </>
+                  <>Submit registration <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
                 )}
               </Button>
             ) : (
               <Button onClick={next} size="lg" className="group">
-                Continue
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Continue <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             )}
           </div>
@@ -236,26 +194,24 @@ export function RushForm() {
 function IntroStep({ onStart }: { onStart: () => void }) {
   return (
     <div className="text-center py-4 sm:py-10">
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-[float_3s_ease-in-out_infinite]">
+      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-float">
         <Sparkles className="h-7 w-7" />
       </div>
       <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-        Welcome — let's get you registered.
+        Sixty seconds. Three questions.
       </h3>
       <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-        Five quick steps. Sixty seconds. We'll use your info to send you event
-        invitations and keep you in the loop.
+        Just your name, contact, and a quick intro. We'll handle the rest from there.
       </p>
       <div className="mt-8 flex items-center justify-center">
         <Button onClick={onStart} size="lg" className="group">
-          Get started
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          Get started <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
       <ul className="mt-10 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
         {[
-          { icon: User, label: "About you" },
-          { icon: GraduationCap, label: "School info" },
+          { icon: User, label: "Contact info" },
+          { icon: Sparkles, label: "Quick intro" },
           { icon: Camera, label: "Headshot" },
         ].map((s, i) => (
           <li
@@ -275,7 +231,7 @@ function IntroStep({ onStart }: { onStart: () => void }) {
   );
 }
 
-function AboutYouStep({
+function ContactStep({
   data, errors, update,
 }: {
   data: FormData;
@@ -284,7 +240,7 @@ function AboutYouStep({
 }) {
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 1 of 5" title="About you" sub="The basics so we can reach out." />
+      <Header eyebrow="Step 1 of 3" title="How do we reach you?" sub="The basics — that's all we need." />
       <Field id="name" label="Full name" required error={errors.name} icon={User}>
         <Input
           id="name" autoComplete="name" autoFocus
@@ -308,76 +264,45 @@ function AboutYouStep({
           />
         </Field>
       </div>
+      <p className="text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3">
+        We assume you're a USC student. Brothers will fill in the rest from your social profiles —
+        save you the typing.
+      </p>
     </div>
   );
 }
 
-function SchoolStep({
+function AboutStep({
   data, update,
 }: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void }) {
-  const years = ["Freshman", "Sophomore", "Junior", "Senior", "Transfer"];
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 2 of 5" title="At USC" sub="What are you studying and where are you from?" />
-      <Field id="year" label="Year">
-        <div className="flex flex-wrap gap-2">
-          {years.map((y) => (
-            <button
-              key={y}
-              type="button"
-              onClick={() => update("year", y)}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-sm transition-all duration-200 active:scale-95",
-                data.year === y
-                  ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
-                  : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
-              )}
-            >
-              {y}
-            </button>
-          ))}
-        </div>
+      <Header
+        eyebrow="Step 2 of 3"
+        title="Tell us about yourself"
+        sub="A couple sentences in your own words. Skip if you'd rather not."
+      />
+      <Field id="about" label="A bit about you (optional)">
+        <Textarea
+          id="about" value={data.about}
+          onChange={(e) => update("about", e.target.value)}
+          placeholder="What you're studying, where you're from, what you're into, what you're looking for in a fraternity…"
+          rows={6}
+          className="text-base"
+        />
       </Field>
-      <div className="grid sm:grid-cols-2 gap-5">
-        <Field id="major" label="Major" icon={GraduationCap}>
-          <Input
-            id="major" value={data.major} onChange={(e) => update("major", e.target.value)}
-            placeholder="Finance" className="pl-9"
-          />
-        </Field>
-        <Field id="hometown" label="Hometown">
-          <Input
-            id="hometown" value={data.hometown} onChange={(e) => update("hometown", e.target.value)}
-            placeholder="Charleston, SC"
-          />
-        </Field>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground">
+        {[
+          "Major / year",
+          "Hometown",
+          "HS sports",
+          "What you're into",
+        ].map((p) => (
+          <div key={p} className="rounded-md border border-dashed border-border px-2 py-1.5 text-center">
+            {p}
+          </div>
+        ))}
       </div>
-    </div>
-  );
-}
-
-function ActivitiesStep({
-  data, update,
-}: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void }) {
-  return (
-    <div className="space-y-5">
-      <Header eyebrow="Step 3 of 5" title="Activities & background" sub="Help us get to know you a little better." />
-      <Field id="hs" label="High school sports & activities">
-        <Textarea
-          id="hs" value={data.highSchoolInfo}
-          onChange={(e) => update("highSchoolInfo", e.target.value)}
-          placeholder="Varsity football, NHS, Eagle Scout, student government…"
-          rows={4}
-        />
-      </Field>
-      <Field id="bg" label="Anything else we should know">
-        <Textarea
-          id="bg" value={data.backgroundInfo}
-          onChange={(e) => update("backgroundInfo", e.target.value)}
-          placeholder="Family ties to the chapter, interests, hobbies, what you're looking for in a fraternity…"
-          rows={4}
-        />
-      </Field>
     </div>
   );
 }
@@ -421,23 +346,17 @@ function HeadshotStep({
 
   return (
     <div className="space-y-5">
-      <Header
-        eyebrow="Step 4 of 5"
-        title="Headshot"
-        sub="Helps brothers put a face to your name. Optional but encouraged."
-      />
+      <Header eyebrow="Step 3 of 3" title="Headshot" sub="Helps brothers put a face to your name. Optional." />
 
       {data.headshotUrl ? (
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
             <img
-              src={data.headshotUrl}
-              alt="Your headshot"
+              src={data.headshotUrl} alt="Your headshot"
               className="h-44 w-44 rounded-full object-cover ring-4 ring-phisig-red/15 ring-offset-2 ring-offset-background shadow-lg animate-fade-in"
             />
             <button
-              type="button"
-              onClick={() => update("headshotUrl", "")}
+              type="button" onClick={() => update("headshotUrl", "")}
               className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-background border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Remove"
             >
@@ -448,9 +367,7 @@ function HeadshotStep({
             <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
               <Upload className="h-3.5 w-3.5" /> Replace
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => update("headshotUrl", "")}>
-              Remove
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => update("headshotUrl", "")}>Remove</Button>
           </div>
         </div>
       ) : (
@@ -462,9 +379,7 @@ function HeadshotStep({
           className={cn(
             "relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200",
             "flex flex-col items-center justify-center text-center px-6 py-12",
-            drag
-              ? "border-phisig-red bg-phisig-red-soft scale-[1.01]"
-              : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft/30",
+            drag ? "border-phisig-red bg-phisig-red-soft scale-[1.01]" : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft/30",
             busy && "pointer-events-none opacity-60"
           )}
         >
@@ -474,9 +389,7 @@ function HeadshotStep({
           <p className="text-base font-medium">
             {busy ? "Uploading…" : "Tap to choose or drag & drop"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            JPG, PNG, or WEBP · up to 8 MB
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WEBP · up to 8 MB</p>
         </div>
       )}
 
@@ -497,23 +410,19 @@ function HeadshotStep({
 }
 
 function ReviewStep({ data }: { data: FormData }) {
-  const lines: { label: string; value: string }[] = [
+  const lines = [
     { label: "Name", value: data.name || "—" },
     { label: "Email", value: data.email || "—" },
     { label: "Phone", value: data.phone || "—" },
-    { label: "Year", value: data.year || "—" },
-    { label: "Major", value: data.major || "—" },
-    { label: "Hometown", value: data.hometown || "—" },
   ];
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 5 of 5" title="Review and submit" sub="Make sure everything looks right." />
+      <Header eyebrow="Final step" title="Submit" sub="Make sure everything looks right." />
       <div className="rounded-xl border border-border bg-secondary/40 p-5">
         <div className="flex items-start gap-5">
           {data.headshotUrl ? (
             <img
-              src={data.headshotUrl}
-              alt=""
+              src={data.headshotUrl} alt=""
               className="h-20 w-20 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-background shrink-0"
             />
           ) : (
@@ -521,31 +430,19 @@ function ReviewStep({ data }: { data: FormData }) {
               <Camera className="h-7 w-7" />
             </div>
           )}
-          <dl className="flex-1 grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
+          <dl className="flex-1 grid sm:grid-cols-3 gap-x-6 gap-y-2.5 text-sm">
             {lines.map((l) => (
-              <div key={l.label} className="flex items-baseline justify-between gap-2">
+              <div key={l.label}>
                 <dt className="text-muted-foreground text-xs uppercase tracking-wide">{l.label}</dt>
-                <dd className="font-medium truncate text-right">{l.value}</dd>
+                <dd className="font-medium truncate">{l.value}</dd>
               </div>
             ))}
           </dl>
         </div>
-        {(data.highSchoolInfo || data.backgroundInfo) && (
-          <div className="mt-4 pt-4 border-t border-border space-y-3">
-            {data.highSchoolInfo && (
-              <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                  HS sports & activities
-                </div>
-                <p className="mt-1 text-sm whitespace-pre-wrap">{data.highSchoolInfo}</p>
-              </div>
-            )}
-            {data.backgroundInfo && (
-              <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">Other</div>
-                <p className="mt-1 text-sm whitespace-pre-wrap">{data.backgroundInfo}</p>
-              </div>
-            )}
+        {data.about && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">About</div>
+            <p className="mt-1 text-sm whitespace-pre-wrap">{data.about}</p>
           </div>
         )}
       </div>
@@ -569,24 +466,18 @@ function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => voi
           You're on the list, {first}.
         </h3>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          Watch your email — invitations to upcoming events are headed your way.
-          Glad you took the first step.
+          Watch your email and texts — invitations are headed your way. Glad you took the first step.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
           <Button variant="outline" onClick={onRestart}>Submit another</Button>
           <Button asChild className="group">
-            <a href="#schedule">
-              View schedule
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+            <a href="#schedule">View schedule <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></a>
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
-
-/* ---------- helpers ---------- */
 
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
   return (
@@ -601,12 +492,8 @@ function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: 
 function Field({
   id, label, required, error, icon: Icon, children,
 }: {
-  id: string;
-  label: string;
-  required?: boolean;
-  error?: string;
-  icon?: React.ElementType;
-  children: React.ReactNode;
+  id: string; label: string; required?: boolean; error?: string;
+  icon?: React.ElementType; children: React.ReactNode;
 }) {
   return (
     <div>

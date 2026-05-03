@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // RushStatus values stored as String (SQLite has no native enums):
@@ -26,6 +26,8 @@ model Rush {
   highSchoolInfo  String?
   backgroundInfo  String?
   headshotUrl     String?
+  enrichmentData  String?   // JSON blob with auto-researched info (LinkedIn, IG, etc.)
+  enrichedAt      DateTime?
   status          String    @default("ACTIVE")
   notes           String?
   createdAt       DateTime  @default(now())
