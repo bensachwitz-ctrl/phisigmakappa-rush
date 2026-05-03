@@ -47,11 +47,14 @@ export function Reveal({
     <Tag
       ref={ref as any}
       className={cn(
-        "transition-all duration-700 ease-[cubic-bezier(.2,.8,.2,1)]",
+        "transition-all duration-700",
         shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
         className
       )}
-      style={{ transitionDelay: shown ? `${delay}ms` : "0ms" }}
+      style={{
+        transitionDelay: shown ? `${delay}ms` : "0ms",
+        transitionTimingFunction: "cubic-bezier(.2,.8,.2,1)",
+      }}
     >
       {children}
     </Tag>
