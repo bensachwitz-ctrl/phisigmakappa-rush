@@ -71,11 +71,46 @@ model Brother {
   id        String   @id @default(cuid())
   name      String   @unique
   email     String?  @unique
+  phone     String?
+  year      String?           // Freshman | Sophomore | Junior | Senior
+  major     String?
+  position  String?           // President, VP, Treasurer, Rush Chair, etc.
+  pledgeClass String?         // e.g. "Alpha Phi" — pledge class name
+  bio       String?
+  headshotUrl String?
+  duesPaid  Boolean  @default(false)
+  serviceHours Int   @default(0)
+  studyHours Int    @default(0)
   role      String   @default("MEMBER")  // MEMBER | ADMIN
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   lastSeen  DateTime @default(now())
 
   votes     Vote[]
+  announcements Announcement[]
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  audience  String   @default("ALL")  // ALL | BROTHERS | RUSHES | EBOARD
+  pinned    Boolean  @default(false)
+  authorId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    Brother? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  url         String   // Vercel Blob URL
+  category    String   @default("GENERAL")  // BYLAWS | CALENDAR | DUES | RITUAL | GENERAL
+  size        Int?
+  createdAt   DateTime @default(now())
 }
 
 model Vote {

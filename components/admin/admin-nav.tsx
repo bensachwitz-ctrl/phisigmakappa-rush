@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, CalendarDays } from "lucide-react";
+import { LogOut, LayoutDashboard, CalendarDays, Users, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminNav() {
@@ -18,8 +18,10 @@ export function AdminNav() {
   }
 
   const items = [
-    { href: "/admin", label: "Roster", icon: LayoutDashboard },
+    { href: "/admin", label: "Rush", icon: LayoutDashboard },
+    { href: "/admin/brothers", label: "Brothers", icon: Users },
     { href: "/admin/events", label: "Events", icon: CalendarDays },
+    { href: "/admin/announcements", label: "News", icon: Megaphone },
   ];
 
   return (
