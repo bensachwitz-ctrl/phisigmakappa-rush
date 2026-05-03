@@ -50,6 +50,7 @@ import {
   User,
   Calendar,
   CheckCircle2,
+  Download,
   Wand2,
   ExternalLink,
   RefreshCw,
@@ -274,6 +275,12 @@ export function Roster({
           </SelectContent>
         </Select>
         <div className="flex gap-2">
+          <Button asChild variant="outline" title="Download all rushes as CSV">
+            <a href="/api/admin/export" download>
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </a>
+          </Button>
           <Button
             variant="outline"
             onClick={() => setSmsOpen(true)}

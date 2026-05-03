@@ -458,23 +458,63 @@ function ReviewStep({ data }: { data: FormData }) {
 
 function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => void }) {
   const first = data.name.split(" ")[0] || "there";
+  const { push } = useToast();
+
+  async function shareWithFriends() {
+    const url = "https://phisigmakappa.vercel.app";
+    const text = `Just signed up for Fall Rush 2026 with Phi Sigma Kappa at USC. ${url}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: "Phi Sigma Kappa USC", text, url });
+      } catch {
+        /* user cancelled */
+      }
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      push({ title: "Link copied", description: "Share it with your buddies.", variant: "success" });
+    }
+  }
+
   return (
     <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10">
       <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
       <CardContent className="py-12 px-6 text-center animate-fade-in">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           You're on the list, {first}.
         </h3>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          Watch your email and texts — invitations are headed your way. Glad you took the first step.
+          Watch your email and texts — we'll send the Fall '26 schedule the moment it's live.
         </p>
-        <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
-          <Button variant="outline" onClick={onRestart}>Submit another</Button>
-          <Button asChild className="group">
-            <a href="#schedule">View schedule <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></a>
+
+        <div className="mt-7 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
+          {[
+            { num: "1", label: "Schedule drops mid-August" },
+            { num: "2", label: "We'll text & email you" },
+            { num: "3", label: "Show up & meet the brothers" },
+          ].map((s) => (
+            <div key={s.num} className="rounded-lg border border-border bg-card px-3 py-2.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white text-[11px] font-semibold">
+                {s.num}
+              </div>
+              <p className="mt-2 text-xs font-medium leading-snug">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
+          <Button onClick={shareWithFriends} className="group">
+            <Send className="h-4 w-4" /> Tell your buddies
+          </Button>
+          <Button asChild variant="outline">
+            <a href="https://www.instagram.com/phisig_usc/" target="_blank" rel="noreferrer">
+              Follow @phisig_usc
+            </a>
+          </Button>
+          <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">
+            Submit another
           </Button>
         </div>
       </CardContent>
