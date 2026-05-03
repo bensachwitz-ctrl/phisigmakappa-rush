@@ -151,44 +151,14 @@ export default function Home() {
             </div>
             </div>
 
-            {/* Hero photo collage — real chapter photos from @phisig_usc */}
+            {/* Hero photo collage — real chapter posts via Instagram embed */}
             <div className="relative animate-slide-up [animation-delay:200ms] hidden md:block">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <div className="relative col-span-2 aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-secondary lift">
-                  <img
-                    src="/api/photo/DRzyoVciZCh"
-                    alt="2026 Executive Board"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                    <Crown className="h-3 w-3" /> 2026 Executive Board
-                  </span>
-                </div>
-                <div className="relative aspect-square rounded-2xl overflow-hidden border border-border bg-secondary lift">
-                  <img
-                    src="/api/photo/DXHwOJCkUbi"
-                    alt="Annual paintball at Trigger Tyme"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm">
-                    <Trophy className="h-3 w-3" /> Paintball
-                  </span>
-                </div>
-                <div className="relative aspect-square rounded-2xl overflow-hidden border border-border bg-secondary lift">
-                  <img
-                    src="/api/photo/DUyvfpokpy6"
-                    alt="Polar Plunge for Special Olympics SC"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm">
-                    <HandHeart className="h-3 w-3" /> Polar Plunge
-                  </span>
-                </div>
+                <PostTile slug="DRzyoVciZCh" caption="2026 Executive Board" icon={Crown} className="col-span-2 aspect-[4/3]" />
+                <PostTile slug="DXHwOJCkUbi" caption="Paintball" icon={Trophy} className="aspect-square" />
+                <PostTile slug="DUyvfpokpy6" caption="Polar Plunge" icon={HandHeart} className="aspect-square" />
               </div>
-              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10">
+              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10 pointer-events-none">
                 <span className="text-center leading-tight">
                   <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
                   <span className="block text-base font-semibold">1873</span>
@@ -448,14 +418,24 @@ export default function Home() {
             </p>
           </div>
           <div className="order-1 lg:order-2 relative">
-            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10">
-              <img
-                src="/api/photo/DXzzTaFjSyj"
-                alt="Brother of the Month — Michael McCarthy"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
-              <div className="absolute bottom-4 left-4 right-4">
+            <a
+              href="https://www.instagram.com/p/DXzzTaFjSyj/"
+              target="_blank"
+              rel="noreferrer"
+              className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
+            >
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <iframe
+                  src="https://www.instagram.com/p/DXzzTaFjSyj/embed/captioned/"
+                  className="absolute -top-[54px] left-0 w-full h-[calc(100%+280px)] border-0 scale-[1.05] origin-top"
+                  loading="lazy"
+                  scrolling="no"
+                  allowTransparency
+                  title="Brother of the Month — Michael McCarthy"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
+              <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
                   <Star className="h-3 w-3" /> April · Brother of the Month
                 </span>
@@ -466,8 +446,8 @@ export default function Home() {
                   Freshman · Philanthropy Chair
                 </p>
               </div>
-            </div>
-            <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/30 rotate-[-6deg]">
+            </a>
+            <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/30 rotate-[-6deg] pointer-events-none">
               <Star className="h-6 w-6" />
             </div>
           </div>
@@ -554,14 +534,24 @@ export default function Home() {
           </div>
 
           <div className="relative">
-            <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl">
-              <img
-                src="/api/photo/DWmioxGCaBG"
-                alt="Spring formal in New Orleans"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 text-white">
+            <a
+              href="https://www.instagram.com/p/DWmioxGCaBG/"
+              target="_blank"
+              rel="noreferrer"
+              className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
+            >
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <iframe
+                  src="https://www.instagram.com/p/DWmioxGCaBG/embed/captioned/"
+                  className="absolute -top-[54px] left-0 w-full h-[calc(100%+280px)] border-0 scale-[1.05] origin-top"
+                  loading="lazy"
+                  scrolling="no"
+                  allowTransparency
+                  title="Spring formal in New Orleans"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+              <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
                   <Award className="h-3 w-3" /> Spring formal · NOLA
                 </span>
@@ -570,7 +560,7 @@ export default function Home() {
                 </p>
                 <p className="mt-1 text-xs text-white/80">#BeignetsWithTheBoys · #DamnProud</p>
               </div>
-            </div>
+            </a>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">
               <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 Cardinal Principles
@@ -776,5 +766,44 @@ function ContactPill({
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{sub}</p>
     </div>
+  );
+}
+
+/**
+ * Renders a real Instagram post via /embed/captioned, cropped to show just the photo.
+ * Wraps it in a click-through card that links to the original post with a brand caption.
+ */
+function PostTile({
+  slug, caption, icon: Icon, className,
+}: {
+  slug: string;
+  caption: string;
+  icon: React.ElementType;
+  className?: string;
+}) {
+  return (
+    <a
+      href={`https://www.instagram.com/p/${slug}/`}
+      target="_blank"
+      rel="noreferrer"
+      className={`group relative rounded-2xl overflow-hidden border border-border bg-secondary lift block ${className ?? ""}`}
+    >
+      {/* Iframe shows the real Instagram photo. Cropped via overflow + transform so we
+          show just the image, not the IG header/footer. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <iframe
+          src={`https://www.instagram.com/p/${slug}/embed/captioned/`}
+          className="absolute -top-[54px] left-0 w-full h-[calc(100%+260px)] border-0 scale-[1.04] origin-top"
+          loading="lazy"
+          scrolling="no"
+          allowTransparency
+          title={caption}
+        />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+        <Icon className="h-3 w-3" /> {caption}
+      </span>
+    </a>
   );
 }
