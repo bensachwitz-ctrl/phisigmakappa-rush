@@ -7,7 +7,7 @@ export function PublicFooter() {
         <div>
           <Wordmark variant="compact" />
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
-            Phi Sigma Kappa, Eta-Pentaton chapter at the University of South Carolina.
+            Phi Sigma Kappa, Gamma Triton chapter at the University of South Carolina.
             Three Cardinal Principles: Brotherhood, Scholarship, Character.
           </p>
         </div>
