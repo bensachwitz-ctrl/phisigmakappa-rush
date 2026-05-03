@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import {
   CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
-  ClipboardCheck, Users, Search,
+  ClipboardCheck, Users, Search, Sparkles, Wand2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -106,19 +106,143 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     }
   }
 
+  async function deleteAll() {
+    if (events.length === 0) return;
+    if (!confirm(`Delete all ${events.length} events? This cannot be undone.`)) return;
+    setBusy(true);
+    const prev = events;
+    setEvents([]);
+    try {
+      for (const e of prev) {
+        await fetch("/api/admin/events", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id: e.id }),
+        });
+      }
+      push({ title: `Cleared ${prev.length} events`, variant: "success" });
+    } catch {
+      setEvents(prev);
+      push({ title: "Bulk delete failed", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Quick-fill: typical 4-week Phi Sig USC rush starting from a chosen anchor date.
+  // Pre-fills the dialog so admin can review and tweak before saving.
+  function applyFallTemplate() {
+    const open = new Date();
+    open.setHours(18, 0, 0, 0);
+    // Default: anchor to next Sunday so the wizard has a sensible start date.
+    while (open.getDay() !== 0) open.setDate(open.getDate() + 1);
+    const fmt = (d: Date) => {
+      const tz = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
+      return tz.toISOString().slice(0, 16);
+    };
+    setForm({
+      name: "Meet the Brothers — Cookout",
+      description:
+        "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, get a feel for the chapter.",
+      location: "Phi Sigma Kappa House — 800 Lincoln St",
+      dressCode: "Casual",
+      startsAt: fmt(open),
+      endsAt: "",
+      isPrivate: false,
+    });
+    setOpen(true);
+    push({
+      title: "Template applied",
+      description: "Edit and save — repeat for each event in your week.",
+    });
+  }
+
+  async function bulkAddFallRush() {
+    if (!confirm("Add the standard 4-week Fall rush schedule? You can edit each one after.")) return;
+    setBusy(true);
+    const day = 24 * 60 * 60 * 1000;
+    const anchor = new Date();
+    anchor.setHours(18, 0, 0, 0);
+    while (anchor.getDay() !== 0) anchor.setDate(anchor.getDate() + 1);
+    const fmt = (offsetDays: number, hour: number) => {
+      const d = new Date(anchor.getTime() + offsetDays * day);
+      d.setHours(hour, 0, 0, 0);
+      const tz = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
+      return tz.toISOString().slice(0, 16);
+    };
+    const template = [
+      { name: "Meet the Brothers — Cookout", description: "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, get a feel for the chapter.", location: "Phi Sigma Kappa House — 800 Lincoln St", dressCode: "Casual", startsAt: fmt(0, 18), isPrivate: false },
+      { name: "Tailgate at Williams-Brice", description: "Pre-game tailgate before the Gamecocks home opener.", location: "Williams-Brice Stadium — Lot 5", dressCode: "Garnet & Black gameday", startsAt: fmt(6, 12), isPrivate: false },
+      { name: "Brotherhood Paintball", description: "Annual paintball at Trigger Tyme. Bring your A-game.", location: "Trigger Tyme Paintball, Columbia SC", dressCode: "Athletic / clothes you can ruin", startsAt: fmt(12, 14), isPrivate: false },
+      { name: "Cantina 76 Percent Night", description: "Percentage of your tab donated to the Leukemia & Lymphoma Society.", location: "Cantina 76 — 2901 Devine St, Columbia SC", dressCode: "Casual", startsAt: fmt(16, 16), isPrivate: false },
+      { name: "Formal Dinner — Invite Only", description: "Sit-down dinner for select rushes with the executive board.", location: "Capital City Club, downtown Columbia", dressCode: "Coat & tie", startsAt: fmt(21, 19), isPrivate: true },
+      { name: "Bid Night", description: "Bid extension and welcome ceremony for accepting members. #DamnProud", location: "Phi Sigma Kappa House — 800 Lincoln St", dressCode: "Smart casual", startsAt: fmt(25, 19), isPrivate: true },
+    ];
+    const created: Event[] = [];
+    try {
+      for (const ev of template) {
+        const res = await fetch("/api/admin/events", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(ev),
+        });
+        const json = await res.json();
+        if (json?.ok && json.event) {
+          created.push({
+            ...json.event,
+            startsAt: new Date(json.event.startsAt).toISOString(),
+            endsAt: json.event.endsAt ? new Date(json.event.endsAt).toISOString() : null,
+          });
+        }
+      }
+      setEvents((es) => [...es, ...created].sort((a, b) => a.startsAt.localeCompare(b.startsAt)));
+      push({ title: `Added ${created.length} events`, description: "Edit dates/times to match your real schedule.", variant: "success" });
+    } catch {
+      push({ title: "Bulk add failed", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{events.length} events</p>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Add event
-        </Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {events.length === 0 ? "No events yet — set up your Fall '26 schedule below." : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={bulkAddFallRush} disabled={busy}>
+            <Wand2 className="h-3.5 w-3.5" /> Add Fall rush template
+          </Button>
+          {events.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={deleteAll} className="text-muted-foreground hover:text-destructive" disabled={busy}>
+              <Trash2 className="h-3.5 w-3.5" /> Clear all
+            </Button>
+          )}
+          <Button onClick={() => setOpen(true)} size="sm">
+            <Plus className="h-4 w-4" /> Add event
+          </Button>
+        </div>
       </div>
 
       {events.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No events yet. Click "Add event" to create the first one.
+        <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
+          <CardContent className="py-12 px-6 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-semibold tracking-tight">Set up your Fall '26 schedule</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              Click <span className="font-medium text-foreground">"Add Fall rush template"</span> to seed the standard 4-week schedule (cookout, tailgate, paintball, percent night, formal, Bid Night), then edit dates to match your real plan.
+            </p>
+            <div className="mt-5 flex items-center justify-center gap-2">
+              <Button onClick={bulkAddFallRush} disabled={busy} size="sm">
+                <Wand2 className="h-3.5 w-3.5" /> Apply template
+              </Button>
+              <Button variant="outline" onClick={() => setOpen(true)} size="sm">
+                <Plus className="h-3.5 w-3.5" /> Add manually
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (

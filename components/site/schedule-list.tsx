@@ -17,9 +17,39 @@ export async function ScheduleList() {
 
   if (!events.length) {
     return (
-      <Card className="bg-muted/30">
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          The full schedule will be posted shortly. Register above to be the first to know.
+      <Card className="relative overflow-hidden border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white">
+        <div className="absolute -top-8 -right-8 opacity-10 select-none">
+          <span className="text-[140px] font-serif font-bold text-phisig-red leading-none">ΦΣΚ</span>
+        </div>
+        <CardContent className="relative py-12 px-6 sm:px-10">
+          <div className="max-w-md">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-phisig-red/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+              <CalendarDays className="h-3 w-3" /> Coming in August
+            </span>
+            <h3 className="mt-3 text-xl sm:text-2xl font-semibold tracking-tight">
+              Fall '26 schedule drops mid-August.
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              We're locking in dates with the chapter house, the e-board, and our partner venues.
+              Sign up above and we'll text you the second every event goes live — cookouts,
+              tailgates, philanthropy, and Bid Night.
+            </p>
+            <ul className="mt-5 grid sm:grid-cols-2 gap-2 text-xs">
+              {[
+                "Meet the Brothers cookout",
+                "Williams-Brice tailgate",
+                "Brotherhood paintball",
+                "Cantina 76 percent night",
+                "Formal dinner (invite-only)",
+                "Bid Night",
+              ].map((label) => (
+                <li key={label} className="inline-flex items-center gap-2 rounded-md bg-white border border-border px-2.5 py-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-phisig-red" />
+                  <span className="font-medium">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </CardContent>
       </Card>
     );

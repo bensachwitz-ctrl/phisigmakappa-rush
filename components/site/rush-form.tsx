@@ -200,6 +200,9 @@ function IntroStep({ onStart }: { onStart: () => void }) {
       <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
         Sixty seconds. Three questions.
       </h3>
+      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-phisig-red font-semibold">
+        Fall Rush 2026 · Interest list
+      </p>
       <p className="mt-3 text-muted-foreground max-w-md mx-auto">
         Just your name, contact, and a quick intro. We'll handle the rest from there.
       </p>

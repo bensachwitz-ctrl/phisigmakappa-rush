@@ -6,6 +6,7 @@ import { Seal, Crest } from "@/components/brand/wordmark";
 import { Scene } from "@/components/brand/scene";
 import { InstagramFeed } from "@/components/site/instagram-feed";
 import { StickyCTA } from "@/components/site/sticky-cta";
+import { Reveal, CountUp } from "@/components/site/reveal";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
@@ -24,10 +25,10 @@ const VALUES = [
 ];
 
 const USC_FACTS = [
-  { value: "60+", label: "Active brothers", icon: Users },
-  { value: "3.45", label: "Chapter GPA", icon: GraduationCap, sub: "3.50 NM GPA" },
-  { value: "150+", label: "Years strong", icon: ShieldCheck, sub: "Founded 1873" },
-  { value: "$25k+", label: "Raised for charity", icon: HandHeart, sub: "2025 alone" },
+  { num: 60, suffix: "+", label: "Active brothers", icon: Users },
+  { num: 3.45, decimals: 2, label: "Chapter GPA", icon: GraduationCap, sub: "3.50 NM GPA" },
+  { num: 150, suffix: "+", label: "Years strong", icon: ShieldCheck, sub: "Founded 1873" },
+  { num: 25, prefix: "$", suffix: "k+", label: "Raised for charity", icon: HandHeart, sub: "2025 alone" },
 ];
 
 const TIMELINE = [
@@ -88,27 +89,27 @@ export default function Home() {
 
         <div className="container py-14 sm:py-20 lg:py-28">
           <div className="max-w-2xl animate-slide-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/90 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
-              Rush Spring 2026 — Now Open
+              Fall Rush 2026 — Interest list now open
             </span>
             <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.02]">
               The chapter that built<br className="hidden sm:block" />
               the men of <span className="text-phisig-red">Carolina</span>.
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl">
-              Phi Sigma Kappa, Gamma Triton at the University of South Carolina.
-              Sixty-second sign-up — three questions, that's it.
+              Phi Sigma Kappa, Gamma Triton at the University of South Carolina. Sign up
+              now — we'll text you the second the Fall '26 schedule drops in August.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow">
                 <Link href="#register">
-                  Register for rush
+                  Get on the interest list
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="#schedule">View schedule</Link>
+                <Link href="#about">About the chapter</Link>
               </Button>
             </div>
 
@@ -141,18 +142,20 @@ export default function Home() {
         <div className="absolute -right-20 -top-20 opacity-10">
           <Seal className="w-[300px] h-[300px] text-white" />
         </div>
-        <div className="relative container py-8 sm:py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 stagger">
-          {USC_FACTS.map((s) => (
-            <div key={s.label} className="flex items-center gap-4">
+        <div className="relative container py-8 sm:py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+          {USC_FACTS.map((s, i) => (
+            <Reveal key={s.label} delay={i * 80} className="flex items-center gap-4">
               <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 shrink-0">
                 <s.icon className="h-5 w-5" />
               </span>
               <div>
-                <div className="text-2xl sm:text-3xl font-semibold tracking-tight leading-none">{s.value}</div>
+                <div className="text-2xl sm:text-3xl font-semibold tracking-tight leading-none">
+                  <CountUp value={s.num} prefix={s.prefix} suffix={s.suffix} decimals={s.decimals} />
+                </div>
                 <div className="mt-1 text-xs opacity-85">{s.label}</div>
                 {s.sub && <div className="text-[10px] opacity-65 mt-0.5">{s.sub}</div>}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -201,11 +204,12 @@ export default function Home() {
         <div className="container py-14 sm:py-20">
           <div className="max-w-2xl mx-auto text-center mb-8 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Sparkles className="h-3 w-3" /> Step into the chapter
+              <Sparkles className="h-3 w-3" /> Get on the list
             </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">Register</h2>
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">Register your interest</h2>
             <p className="mt-2 text-muted-foreground">
-              Three steps. Sixty seconds. Brothers fill in the rest from your social profiles.
+              Three steps. Sixty seconds. The Fall '26 rush schedule drops in August —
+              we'll text and email everyone on this list the moment it's live.
             </p>
           </div>
           <div className="max-w-3xl mx-auto">
@@ -298,12 +302,15 @@ export default function Home() {
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" /> Rush calendar
+              <Calendar className="h-3 w-3" /> Fall '26 calendar
             </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">Upcoming events</h2>
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+              Upcoming events
+            </h2>
           </div>
           <p className="text-muted-foreground max-w-xl">
-            All public events. Private events go out by text and email after you register.
+            Full Fall '26 rush schedule drops in August. Get on the interest list above —
+            we'll text everyone the second it's live. Private events go out by invitation only.
           </p>
         </div>
         <div className="max-w-3xl">
@@ -456,18 +463,18 @@ export default function Home() {
           </div>
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/90">
-              <Sparkles className="h-3 w-3" /> Spring 2026 rush
+              <Sparkles className="h-3 w-3" /> Fall Rush 2026
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
-              Take the first step.
+              Get on the interest list.
             </h2>
             <p className="mt-3 text-white/85 max-w-md text-base sm:text-lg">
-              Three questions. Sixty seconds. The brotherhood is waiting.
+              Three questions. Sixty seconds. We'll text the second the schedule drops in August.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg" variant="secondary" className="group">
                 <Link href="#register">
-                  Register now
+                  Sign me up
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
