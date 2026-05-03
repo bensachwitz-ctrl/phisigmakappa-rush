@@ -155,7 +155,7 @@ export default function Home() {
             <div className="relative animate-slide-up [animation-delay:200ms] hidden md:block">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <PostTile slug="DRzyoVciZCh" caption="2026 Executive Board" icon={Crown} className="col-span-2 aspect-[4/3]" />
-                <PostTile slug="DXHwOJCkUbi" caption="Paintball" icon={Trophy} className="aspect-square" />
+                <PostTile slug="DRxIVRXkYCn" caption="Game Day" icon={Trophy} className="aspect-square" />
                 <PostTile slug="DUyvfpokpy6" caption="Polar Plunge" icon={HandHeart} className="aspect-square" />
               </div>
               <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10 pointer-events-none">
