@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 const VALUES = [
   { icon: Users, title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
-  { icon: GraduationCap, title: "Scholarship", body: "3.4 chapter GPA. Study halls, mentorship, alumni network across every field." },
+  { icon: GraduationCap, title: "Scholarship", body: "3.45 chapter GPA, 3.50 new-member GPA. Study halls, mentorship, alumni network across every field." },
   { icon: Heart, title: "Character", body: "We measure men by what they do — service, integrity, courage in conviction." },
 ];
 
