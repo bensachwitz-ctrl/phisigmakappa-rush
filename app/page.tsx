@@ -13,6 +13,7 @@ import {
   GraduationCap, Sparkles, Quote, Star, Calendar,
   MapPin, Award, Zap, Music, BookOpen, HandHeart,
   Instagram, Mail, Phone, Building2, Flame, Crown,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -36,6 +37,33 @@ const TIMELINE = [
   { week: "Week 2", title: "Brotherhood", body: "Smaller events. Get to know individual brothers." },
   { week: "Week 3", title: "Invite-only", body: "Formal dinners and one-on-ones with the e-board." },
   { week: "Week 4", title: "Bid Night", body: "Bids extended. Welcome ceremony for new members." },
+];
+
+const FAQ = [
+  {
+    q: "Do I need to be a freshman?",
+    a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you.",
+  },
+  {
+    q: "Is there a GPA requirement?",
+    a: "We expect a minimum 2.5 to receive a bid. Our chapter average is 3.45 — scholarship is one of our three cardinal principles.",
+  },
+  {
+    q: "How much does it cost?",
+    a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises.",
+  },
+  {
+    q: "Is there hazing?",
+    a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New member education is built around brotherhood, history, and leadership development.",
+  },
+  {
+    q: "What's the time commitment?",
+    a: "About 4-6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want.",
+  },
+  {
+    q: "Can I rush if I'm already in another organization?",
+    a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it.",
+  },
 ];
 
 const HIGHLIGHTS = [
@@ -69,26 +97,15 @@ export default function Home() {
 
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden">
-        {/* Background photo from chapter Instagram (proxied) */}
-        <div className="absolute inset-0 -z-30">
-          <img
-            src="/api/photo/DRzyoVciZCh"
-            alt=""
-            className="w-full h-full object-cover object-top opacity-60 lg:opacity-50"
-          />
-        </div>
-        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-white/90 via-white/75 to-white/40" aria-hidden />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white via-white/85 to-white/0 lg:to-white/10" aria-hidden />
-        <div className="absolute inset-0 -z-10 bg-dot-grid opacity-30" aria-hidden />
-        <div className="absolute -right-16 -top-8 -z-10 hidden lg:block opacity-95 animate-float">
-          <Seal className="w-[480px] h-[480px]" />
-        </div>
-        <div className="absolute right-[18%] top-[12%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-15">
-          <span className="text-[160px] font-serif font-bold text-phisig-red leading-none">Φ</span>
+        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
+        <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
+        <div className="absolute right-[10%] top-[8%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-10 select-none pointer-events-none">
+          <span className="text-[200px] font-serif font-bold text-phisig-red leading-none">Φ</span>
         </div>
 
-        <div className="container py-14 sm:py-20 lg:py-28">
-          <div className="max-w-2xl animate-slide-up">
+        <div className="container py-12 sm:py-16 lg:py-20">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
+            <div className="max-w-2xl animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
               Fall Rush 2026 — Interest list now open
@@ -131,6 +148,52 @@ export default function Home() {
               >
                 <Instagram className="h-3.5 w-3.5" /> @phisig_usc
               </Link>
+            </div>
+            </div>
+
+            {/* Hero photo collage — real chapter photos from @phisig_usc */}
+            <div className="relative animate-slide-up [animation-delay:200ms] hidden md:block">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="relative col-span-2 aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-secondary lift">
+                  <img
+                    src="/api/photo/DRzyoVciZCh"
+                    alt="2026 Executive Board"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                    <Crown className="h-3 w-3" /> 2026 Executive Board
+                  </span>
+                </div>
+                <div className="relative aspect-square rounded-2xl overflow-hidden border border-border bg-secondary lift">
+                  <img
+                    src="/api/photo/DXHwOJCkUbi"
+                    alt="Annual paintball at Trigger Tyme"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm">
+                    <Trophy className="h-3 w-3" /> Paintball
+                  </span>
+                </div>
+                <div className="relative aspect-square rounded-2xl overflow-hidden border border-border bg-secondary lift">
+                  <img
+                    src="/api/photo/DUyvfpokpy6"
+                    alt="Polar Plunge for Special Olympics SC"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm">
+                    <HandHeart className="h-3 w-3" /> Polar Plunge
+                  </span>
+                </div>
+              </div>
+              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10">
+                <span className="text-center leading-tight">
+                  <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
+                  <span className="block text-base font-semibold">1873</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -350,6 +413,67 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── BROTHER SPOTLIGHT ─── */}
+      <section className="container py-14 sm:py-18">
+        <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
+          <div className="order-2 lg:order-1">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+              <Star className="h-3 w-3" /> Brother of the Month
+            </span>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+              Real men. Real recognition.
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
+              Every month the chapter recognizes a brother who's gone above and beyond — in
+              the classroom, in service, on the field, in leadership. Michael McCarthy,
+              this April's Brother of the Month, joined as a freshman and within a semester
+              took over Philanthropy Chair, transforming the chapter's Special Olympics
+              partnership.
+            </p>
+            <ul className="mt-6 space-y-2.5 text-sm">
+              {[
+                "Philanthropy Chair (freshman)",
+                "Led Polar Plunge — $700 raised for Special Olympics SC",
+                "Cantina 76 Percent Night for L&L Society",
+                "Embodies the cardinal principle of Character",
+              ].map((p) => (
+                <li key={p} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" />
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-sm text-phisig-red font-medium">
+              #DamnProud
+            </p>
+          </div>
+          <div className="order-1 lg:order-2 relative">
+            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10">
+              <img
+                src="/api/photo/DXzzTaFjSyj"
+                alt="Brother of the Month — Michael McCarthy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                  <Star className="h-3 w-3" /> April · Brother of the Month
+                </span>
+                <p className="mt-2 text-white text-xl font-semibold tracking-tight">
+                  Michael McCarthy
+                </p>
+                <p className="text-white/80 text-xs">
+                  Freshman · Philanthropy Chair
+                </p>
+              </div>
+            </div>
+            <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/30 rotate-[-6deg]">
+              <Star className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── 2026 EXECUTIVE BOARD ─── */}
       <section className="border-t border-border">
         <div className="container py-14 sm:py-18">
@@ -430,8 +554,22 @@ export default function Home() {
           </div>
 
           <div className="relative">
-            <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-gradient-to-b from-phisig-red-soft to-white flex items-center justify-center tilt">
-              <Seal className="w-[78%] h-[78%]" />
+            <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl">
+              <img
+                src="/api/photo/DWmioxGCaBG"
+                alt="Spring formal in New Orleans"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                  <Award className="h-3 w-3" /> Spring formal · NOLA
+                </span>
+                <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
+                  Brotherhood you can count on — every weekend, every milestone, every year.
+                </p>
+                <p className="mt-1 text-xs text-white/80">#BeignetsWithTheBoys · #DamnProud</p>
+              </div>
             </div>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">
               <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -446,6 +584,139 @@ export default function Home() {
                 <span className="block text-[10px] uppercase tracking-[0.16em] opacity-80">Since</span>
                 <span className="block text-lg font-semibold">1873</span>
               </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section className="border-y border-border bg-secondary/30">
+        <div className="container py-14 sm:py-20">
+          <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+                <Sparkles className="h-3 w-3" /> FAQ
+              </span>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+                Common questions.
+              </h2>
+              <p className="mt-3 text-muted-foreground max-w-md">
+                Got something else? DM us on{" "}
+                <Link
+                  href="https://www.instagram.com/phisig_usc/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-phisig-red hover:underline font-medium"
+                >
+                  @phisig_usc
+                </Link>{" "}
+                or email{" "}
+                <span className="text-foreground font-medium">rush@phisig-usc.com</span>.
+              </p>
+            </div>
+            <ul className="space-y-3">
+              {FAQ.map((item, i) => (
+                <li
+                  key={item.q}
+                  className="group rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-phisig-red/40 hover:shadow-md"
+                >
+                  <details className="cursor-pointer">
+                    <summary className="flex items-center justify-between gap-4 px-5 py-4 list-none">
+                      <span className="text-base font-medium tracking-tight">{item.q}</span>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red shrink-0 transition-transform group-open:rotate-45">
+                        <ArrowRight className="h-3.5 w-3.5 -rotate-45 group-open:rotate-0 transition-transform" />
+                      </span>
+                    </summary>
+                    <div className="px-5 pb-5 -mt-1">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── WHERE TO FIND US ─── */}
+      <section className="container py-14 sm:py-18">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          <div className="relative aspect-[5/4] rounded-3xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1">
+            <img
+              src="/api/photo/DRxIVRXkYCn"
+              alt="Game day at Williams-Brice Stadium"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-5 text-white">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                <MapPin className="h-3 w-3" /> Game day · Williams-Brice
+              </span>
+              <p className="mt-2 text-lg font-semibold tracking-tight">
+                We tailgate every home game.
+              </p>
+            </div>
+          </div>
+          <div className="order-1 lg:order-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+              <MapPin className="h-3 w-3" /> Where we live
+            </span>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+              The house at 800 Lincoln.
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              The Phi Sigma Kappa chapter house sits on Lincoln Street, a block off Greek Village
+              and walking distance to Russell House and the Horseshoe. It's where the cookouts,
+              chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
+              for the first time.
+            </p>
+            <div className="mt-6 grid sm:grid-cols-2 gap-3">
+              <Link
+                href="https://maps.google.com/?q=800+Lincoln+St+Columbia+SC"
+                target="_blank"
+                rel="noreferrer"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <MapPin className="h-3 w-3" /> Address
+                </div>
+                <p className="mt-1.5 text-sm font-semibold">800 Lincoln St</p>
+                <p className="text-xs text-muted-foreground">Columbia, SC 29201</p>
+              </Link>
+              <Link
+                href="https://www.instagram.com/phisig_usc/"
+                target="_blank"
+                rel="noreferrer"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <Instagram className="h-3 w-3" /> Daily updates
+                </div>
+                <p className="mt-1.5 text-sm font-semibold">@phisig_usc</p>
+                <p className="text-xs text-muted-foreground">Follow for chapter life</p>
+              </Link>
+              <Link
+                href="mailto:rush@phisig-usc.com"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <Mail className="h-3 w-3" /> Rush questions
+                </div>
+                <p className="mt-1.5 text-sm font-semibold">rush@phisig-usc.com</p>
+                <p className="text-xs text-muted-foreground">We reply within 24h</p>
+              </Link>
+              <Link
+                href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
+                target="_blank"
+                rel="noreferrer"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <Building2 className="h-3 w-3" /> USC chapter info
+                </div>
+                <p className="mt-1.5 text-sm font-semibold">UofSC FSL</p>
+                <p className="text-xs text-muted-foreground">Fraternity & Sorority Life</p>
+              </Link>
             </div>
           </div>
         </div>
