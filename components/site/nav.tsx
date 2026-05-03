@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 
 export function PublicNav() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <Wordmark variant="compact" />

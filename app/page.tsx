@@ -13,42 +13,42 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-/* High-confidence Unsplash photo IDs — broadly themed: classical college, formal events, brotherhood, USC red/garnet vibes */
+/* Verified-stable Unsplash IDs (popular, high view counts → unlikely to be removed) */
 const HERO_PHOTO =
-  "https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?auto=format&fit=crop&w=2000&q=80"; // classical campus columns
+  "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2400&q=80"; // university hall — graduation
 const ABOUT_PHOTO =
-  "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80"; // graduation
+  "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80"; // university campus arch
 const TESTIMONIAL_PHOTO =
-  "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=900&q=80"; // group of guys
+  "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=1200&q=80"; // friends laughing
 
 const GALLERY = [
   {
-    src: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80",
+    src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80",
     label: "Brotherhood",
     icon: Users,
   },
   {
-    src: "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=900&q=80",
+    src: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
     label: "Game Day",
     icon: Trophy,
   },
   {
-    src: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=900&q=80",
+    src: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
     label: "Formals",
     icon: Award,
   },
   {
-    src: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=900&q=80",
+    src: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=80",
     label: "Philanthropy",
     icon: HandHeart,
   },
   {
-    src: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80",
+    src: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1200&q=80",
     label: "Scholarship",
     icon: BookOpen,
   },
   {
-    src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=80",
+    src: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
     label: "Socials",
     icon: Music,
   },
@@ -80,12 +80,13 @@ export default function Home() {
       <PublicNav />
 
       {/* ─── HERO ─── */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/50">
         <div
-          className="absolute inset-0 -z-20 bg-cover bg-center"
+          className="absolute inset-0 -z-20 bg-cover bg-center opacity-95"
           style={{ backgroundImage: `url(${HERO_PHOTO})` }}
           aria-hidden
         />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white/95 via-white/80 to-white/40" aria-hidden />
         <div className="absolute inset-0 -z-10 vignette" aria-hidden />
         <div className="absolute inset-0 -z-10 bg-dot-grid opacity-30" aria-hidden />
         <div className="absolute right-[-100px] top-[-40px] -z-10 hidden lg:block opacity-90 animate-float">
