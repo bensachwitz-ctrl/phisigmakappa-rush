@@ -62,8 +62,11 @@ export function Reveal({
 }
 
 /**
- * Animates a number up from 0 to {value} when it scrolls into view.
- * Supports trailing suffix ("+", "k", "%") and decimals.
+ * Animates a number from 0 → {value} when the element scrolls into view.
+ * SSR-safe: renders the final value during server render and on the very first
+ * client paint so users never see "0+ Active brothers" / "0.00 Chapter GPA" in
+ * the unanimated state. Animation only starts AFTER the IntersectionObserver
+ * fires post-hydration.
  */
 export function CountUp({
   value,
@@ -81,24 +84,28 @@ export function CountUp({
   className?: string;
 }) {
   const ref = React.useRef<HTMLSpanElement>(null);
-  const [n, setN] = React.useState(0);
+  // `n === null` means "not animating yet — show the static final value".
+  const [n, setN] = React.useState<number | null>(null);
   const started = React.useRef(false);
 
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting && !started.current) {
             started.current = true;
+            setN(0); // start the animation from zero
             const startTs = performance.now();
             const tick = (now: number) => {
               const t = Math.min(1, (now - startTs) / duration);
               const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
-              setN(value * eased);
+              const v = value * eased;
+              setN(v);
               if (t < 1) requestAnimationFrame(tick);
-              else setN(value);
+              else setN(null); // settle back to static final value
             };
             requestAnimationFrame(tick);
           }
@@ -110,7 +117,8 @@ export function CountUp({
     return () => obs.disconnect();
   }, [value, duration]);
 
-  const display = decimals > 0 ? n.toFixed(decimals) : Math.round(n).toLocaleString();
+  const current = n === null ? value : n;
+  const display = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toLocaleString();
   return (
     <span ref={ref} className={className}>
       {prefix}

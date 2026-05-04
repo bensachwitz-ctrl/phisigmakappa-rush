@@ -72,7 +72,7 @@ const HIGHLIGHTS = [
 const RECENT = [
   { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: HandHeart },
   { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: Trophy },
-  { tag: "Formals", title: "Spring formal in New Orleans — #BeignetsWithTheBoys", icon: Award },
+  { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: Award },
   { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: Heart },
 ];
 
@@ -87,8 +87,45 @@ function parseStat(raw: string): { num: number; prefix?: string; suffix?: string
   return { num: Number.isFinite(num) ? num : 0, prefix: m[1] || undefined, suffix: m[3] || undefined, decimals: decimals || undefined };
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const cfg = await getSiteConfig();
+  const boothParam = searchParams?.booth;
+  const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
+
+  // Booth mode = single-purpose tablet kiosk. Render only the rush form.
+  // No hero, no marketing sections, no Instagram feed, no footer chrome — every
+  // pixel below the form is a distraction at a 30-second walk-up on bumpy 4G.
+  if (booth) {
+    return (
+      <main className="min-h-screen bg-phisig-mist">
+        <PublicNav />
+        <section className="container py-6 sm:py-10">
+          <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+              <Sparkles className="h-3 w-3" /> Phi Sigma Kappa at USC · Booth
+            </span>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
+              Add yourself to the Fall&nbsp;&apos;26 rush list.
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Three quick fields. We&apos;ll text you when the schedule drops.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <RushForm />
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground mt-6">
+            Tablet auto-clears between rushees · {cfg["contact.instagramHandle"] || "@phisig_usc"}
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   type StatRow = {
     num: number;
     prefix?: string;
@@ -631,12 +668,12 @@ export default async function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Award className="h-3 w-3" /> Spring formal · NOLA
+                  <Award className="h-3 w-3" /> {cfg["about.caption"] || "Chapter formal"}
                 </span>
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
                   Brotherhood you can count on — every weekend, every milestone, every year.
                 </p>
-                <p className="mt-1 text-xs text-white/80">#BeignetsWithTheBoys · #DamnProud</p>
+                <p className="mt-1 text-xs text-white/80">#DamnProud · {cfg["contact.instagramHandle"] || "@phisig_usc"}</p>
               </div>
             </a>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">

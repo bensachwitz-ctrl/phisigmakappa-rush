@@ -207,9 +207,9 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     };
     const template = [
       { name: "Meet the Brothers — Cookout", description: "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, get a feel for the chapter.", location: "Phi Sigma Kappa House — 800 Lincoln St", dressCode: "Casual", startsAt: fmt(0, 18), isPrivate: false },
-      { name: "Tailgate at Williams-Brice", description: "Pre-game tailgate before the Gamecocks home opener.", location: "Williams-Brice Stadium — Lot 5", dressCode: "Garnet & Black gameday", startsAt: fmt(6, 12), isPrivate: false },
+      { name: "Tailgate at Williams-Brice (Dry)", description: "Pre-game dry tailgate before the Gamecocks home opener — FIPG-compliant, all ages welcome.", location: "Williams-Brice Stadium — Lot 5", dressCode: "Garnet & Black gameday", startsAt: fmt(6, 12), isPrivate: false },
       { name: "Brotherhood Paintball", description: "Annual paintball at Trigger Tyme. Bring your A-game.", location: "Trigger Tyme Paintball, Columbia SC", dressCode: "Athletic / clothes you can ruin", startsAt: fmt(12, 14), isPrivate: false },
-      { name: "Cantina 76 Percent Night", description: "Percentage of your tab donated to the Leukemia & Lymphoma Society.", location: "Cantina 76 — 2901 Devine St, Columbia SC", dressCode: "Casual", startsAt: fmt(16, 16), isPrivate: false },
+      { name: "Service Dinner Fundraiser", description: "Dry fundraiser dinner — proceeds donated to the Leukemia & Lymphoma Society.", location: "Phi Sigma Kappa House — 800 Lincoln St", dressCode: "Casual", startsAt: fmt(16, 16), isPrivate: false },
       { name: "Formal Dinner — Invite Only", description: "Sit-down dinner for select rushes with the executive board.", location: "Capital City Club, downtown Columbia", dressCode: "Coat & tie", startsAt: fmt(21, 19), isPrivate: true },
       { name: "Bid Night", description: "Bid extension and welcome ceremony for accepting members. #DamnProud", location: "Phi Sigma Kappa House — 800 Lincoln St", dressCode: "Smart casual", startsAt: fmt(25, 19), isPrivate: true },
     ];

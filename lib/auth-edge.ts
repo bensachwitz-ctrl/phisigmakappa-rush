@@ -1,5 +1,9 @@
 // Edge-safe HMAC verification used by middleware. No Node imports.
 // Mirrors the signing logic in lib/auth.ts which uses Node's `crypto`.
+//
+// Token format support:
+//   • Modern (4-part): <brotherId>.<adminFlag>.<ts>.<sig> — minted by setBrotherCookie
+//   • Legacy (3-part): <brotherId>.<ts>.<sig> — older sessions
 
 const enc = new TextEncoder();
 
@@ -25,15 +29,29 @@ const MAX_AGE_MS = 12 * 60 * 60 * 1000;
 export async function verifyEdgeSession(token: string | undefined): Promise<boolean> {
   if (!token) return false;
   const parts = token.split(".");
-  if (parts.length !== 3) return false;
-  const [brotherId, ts, sig] = parts;
-  if (!brotherId || !ts || !sig) return false;
-
   const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
-  const expected = await hmacSha256Hex(secret, `${brotherId}.${ts}`);
-  if (expected !== sig) return false;
 
-  const age = Date.now() - parseInt(ts, 10);
-  if (Number.isNaN(age) || age > MAX_AGE_MS) return false;
-  return true;
+  // Modern 4-part: <brotherId>.<adminFlag>.<ts>.<sig>
+  if (parts.length === 4) {
+    const [brotherId, adminFlag, ts, sig] = parts;
+    if (!brotherId || !ts || !sig) return false;
+    const expected = await hmacSha256Hex(secret, `${brotherId}.${adminFlag}.${ts}`);
+    if (expected !== sig) return false;
+    const age = Date.now() - parseInt(ts, 10);
+    if (Number.isNaN(age) || age > MAX_AGE_MS) return false;
+    return true;
+  }
+
+  // Legacy 3-part: <brotherId>.<ts>.<sig>
+  if (parts.length === 3) {
+    const [brotherId, ts, sig] = parts;
+    if (!brotherId || !ts || !sig) return false;
+    const expected = await hmacSha256Hex(secret, `${brotherId}.${ts}`);
+    if (expected !== sig) return false;
+    const age = Date.now() - parseInt(ts, 10);
+    if (Number.isNaN(age) || age > MAX_AGE_MS) return false;
+    return true;
+  }
+
+  return false;
 }

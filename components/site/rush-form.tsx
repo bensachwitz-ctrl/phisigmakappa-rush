@@ -323,11 +323,12 @@ function IntroStep({ onStart }: { onStart: () => void }) {
           Get started <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
-      <ul className="mt-10 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
+      <ul className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl mx-auto text-left">
         {[
           { icon: Phone, label: "Contact" },
           { icon: GraduationCap, label: "USC profile" },
           { icon: Camera, label: "Headshot (optional)" },
+          { icon: Send, label: "Confirm & submit" },
         ].map((s, i) => (
           <li
             key={s.label}

@@ -8,18 +8,18 @@ import { cn } from "@/lib/utils";
 // Sorted newest-first; image proxy at /api/photo/[slug] fetches the og:image
 // from each post on demand and edge-caches the result.
 const POSTS = [
-  { slug: "DXzzTaFjSyj", caption: "Brother of the Month — Michael McCarthy", tag: "Leadership" },
-  { slug: "DXHwOJCkUbi", caption: "Annual paintball at Trigger Tyme", tag: "Brotherhood" },
-  { slug: "DW9-fTTibRF", caption: "Alpha Phi pledge class initiated", tag: "Pledge class" },
-  { slug: "DWmioxGCaBG", caption: "Spring formal in New Orleans", tag: "Formals" },
-  { slug: "DU80cXJidhH", caption: "Cantina 76 percent night for L&L Society", tag: "Service" },
   { slug: "DUyvfpokpy6", caption: "Polar Plunge raised $700 for Special Olympics SC", tag: "Philanthropy" },
-  { slug: "DUBvmpfktF3", caption: "3.45 chapter GPA · 3.50 NM GPA", tag: "Scholarship" },
+  { slug: "DXHwOJCkUbi", caption: "Annual paintball at Trigger Tyme", tag: "Brotherhood" },
+  { slug: "DRxIVRXkYCn", caption: "Williams-Brice gameday — dry tailgate", tag: "Game Day" },
+  { slug: "DWmioxGCaBG", caption: "Chapter formal — third-party vendor, sober transportation", tag: "Formals" },
+  { slug: "DU80cXJidhH", caption: "Dry fundraiser dinner — donations to L&L Society", tag: "Service" },
+  { slug: "DUBvmpfktF3", caption: "Above-average chapter GPA", tag: "Scholarship" },
+  { slug: "DXzzTaFjSyj", caption: "Brother of the Month spotlight", tag: "Leadership" },
+  { slug: "DW9-fTTibRF", caption: "Welcome to our newest brothers", tag: "New members" },
   { slug: "DT0irEWEdT-", caption: "Chapter celebration", tag: "Brotherhood" },
-  { slug: "DSXMOLhERFH", caption: "Spring Rush 2026 — sign up", tag: "Rush" },
-  { slug: "DSGFt3REoty", caption: "Brother of the Month — John Chiffriller", tag: "Leadership" },
-  { slug: "DRzyoVciZCh", caption: "2026 Executive Board", tag: "Leadership" },
-  { slug: "DRxIVRXkYCn", caption: "Williams-Brice game day", tag: "Game Day" },
+  { slug: "DSXMOLhERFH", caption: "Fall Rush 2026 — sign up", tag: "Rush" },
+  { slug: "DSGFt3REoty", caption: "Brother of the Month spotlight", tag: "Leadership" },
+  { slug: "DRzyoVciZCh", caption: "Chapter leadership", tag: "Leadership" },
 ];
 
 export function InstagramFeed({

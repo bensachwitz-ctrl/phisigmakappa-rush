@@ -19,7 +19,7 @@ export default function LoginClient() {
   const params = useSearchParams();
   const { push } = useToast();
 
-  const [mode, setMode] = React.useState<Mode>("brother");
+  const [mode, setMode] = React.useState<Mode>("admin");
 
   // Brother fields
   const [firstName, setFirstName] = React.useState("");
@@ -34,8 +34,17 @@ export default function LoginClient() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem("phisig_brother_name");
-    if (stored) setFirstName(stored.split(" ")[0]);
-  }, []);
+    // If we have a remembered brother name AND the user wasn't redirected from a
+    // protected admin page, default to brother login. Otherwise stay in admin mode.
+    const fromQuery = params.get("from");
+    if (stored && !fromQuery) {
+      setMode("brother");
+      setFirstName(stored.split(" ")[0]);
+    } else if (stored) {
+      // Keep the name remembered for the brother tab even if admin is the default
+      setFirstName(stored.split(" ")[0]);
+    }
+  }, [params]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

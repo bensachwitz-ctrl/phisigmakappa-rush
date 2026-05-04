@@ -73,7 +73,7 @@ const SECTIONS = [
     bullets: [
       "Click Add event to create — name, start/end time, location, dress code, description, public or private.",
       "Click Edit on any event to update dates, times, location, etc. — the homepage updates instantly.",
-      "Click Add Fall rush template to seed the standard 4-week schedule (cookout / tailgate / paintball / Cantina 76 / formal / Bid Night).",
+      "Click Add Fall rush template to seed the standard 4-week schedule (cookout / dry tailgate / paintball / service dinner / formal / Bid Night).",
       "Click Attendance on any event to mark who showed up — search PNMs and toggle check-marks.",
       "Click Clear all to wipe the schedule and start fresh (use with care).",
     ],

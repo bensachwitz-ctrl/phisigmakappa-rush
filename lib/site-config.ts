@@ -6,17 +6,17 @@ import { prisma } from "@/lib/prisma";
  */
 export const DEFAULTS = {
   // Hero photo collage tiles
-  "hero.tile1.slug": "DRzyoVciZCh",
-  "hero.tile1.caption": "2026 Executive Board",
-  "hero.tile1.icon": "Crown",
+  "hero.tile1.slug": "DUyvfpokpy6",
+  "hero.tile1.caption": "Polar Plunge for Special Olympics SC",
+  "hero.tile1.icon": "HandHeart",
 
   "hero.tile2.slug": "DRxIVRXkYCn",
-  "hero.tile2.caption": "Game Day",
+  "hero.tile2.caption": "Williams-Brice gameday",
   "hero.tile2.icon": "Trophy",
 
-  "hero.tile3.slug": "DUyvfpokpy6",
-  "hero.tile3.caption": "Polar Plunge",
-  "hero.tile3.icon": "HandHeart",
+  "hero.tile3.slug": "DRzyoVciZCh",
+  "hero.tile3.caption": "Chapter leadership",
+  "hero.tile3.icon": "Crown",
 
   // Brother of the Month
   "spotlight.slug": "DXzzTaFjSyj",
@@ -29,12 +29,12 @@ export const DEFAULTS = {
   // About section photo
   "about.slug": "DWmioxGCaBG",
   "about.objectPosition": "50% 80%",
-  "about.caption": "Spring formal · NOLA",
+  "about.caption": "Chapter formal · third-party vendor, sober transportation, FIPG-compliant",
 
   // Hero tagline
-  "hero.eyebrow": "Fall Rush 2026 — Interest list now open",
+  "hero.eyebrow": "Phi Sigma Kappa · Gamma Triton · USC · Fall Rush 2026",
   "hero.subline":
-    "Gamma Triton at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, $25k+ raised for Special Olympics. Get on the Fall '26 list — we'll text you the second the schedule drops in August.",
+    "Phi Sigma Kappa at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, $25k+ raised for Special Olympics SC. Drop your number — we'll text you the moment the Fall '26 schedule goes live.",
 
   // Stats — display-formatted strings (e.g. "60+"). The CountUp component parses
   // out the numeric prefix; everything else (e.g. "+", "k+") becomes the suffix.
@@ -44,10 +44,10 @@ export const DEFAULTS = {
   "stats.charity": "$25k+",
 
   // Hero headline & CTA
-  "hero.h1.lead": "The chapter that built",
-  "hero.h1.tail": "the men of",
-  "hero.h1.highlight": "Carolina",
-  "hero.cta.label": "Get on the interest list",
+  "hero.h1.lead": "Rush Phi Sigma Kappa.",
+  "hero.h1.tail": "Fall '26 at",
+  "hero.h1.highlight": "USC",
+  "hero.cta.label": "Text me when rush drops",
   "hero.cta.href": "#register",
 
   // Executive board — 5 slots; leave any slot empty to hide it.

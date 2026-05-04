@@ -37,9 +37,9 @@ export async function ScheduleList() {
             <ul className="mt-5 grid sm:grid-cols-2 gap-2 text-xs">
               {[
                 "Meet the Brothers cookout",
-                "Williams-Brice tailgate",
+                "Williams-Brice dry tailgate",
                 "Brotherhood paintball",
-                "Cantina 76 percent night",
+                "Service dinner fundraiser",
                 "Formal dinner (invite-only)",
                 "Bid Night",
               ].map((label) => (
