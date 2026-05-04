@@ -41,53 +41,75 @@ export async function POST(req: Request) {
 
   if (!phone) return twiml("");
 
-  // Find the latest active rushee record by phone. We don't store phone in the
-  // consent table directly (it lives on Rush), so we lookup the rushee first.
-  const rushee = await prisma.rush.findFirst({
-    where: { phone: { contains: phone.replace(/^\+1/, "").replace(/\D/g, "") } },
+  // CRITICAL CTIA / 10DLC RULE: STOP and HELP must ALWAYS produce a correct
+  // reply, regardless of whether the sending phone is on file. Carriers test
+  // these keywords as part of brand registration and will downrank or reject
+  // a campaign that fails them. So we handle the universal keywords FIRST,
+  // before any DB lookup, and reply even when the number is not in our records.
+  const isStop = ["STOP", "UNSUBSCRIBE", "END", "QUIT", "CANCEL", "OPTOUT", "REVOKE"].includes(keyword);
+  const isHelp = ["HELP", "INFO"].includes(keyword);
+  const isStart = ["START", "RESUBSCRIBE", "UNSTOP", "YES", "Y", "CONFIRM"].includes(keyword);
+
+  // Lookup the rushee + latest consent (best-effort — null if not on file).
+  const digits = phone.replace(/^\+1/, "").replace(/\D/g, "");
+  const rushee = digits.length >= 7 ? await prisma.rush.findFirst({
+    where: { phone: { contains: digits } },
     orderBy: { createdAt: "desc" },
-  });
-
-  if (!rushee) {
-    return twiml("Phi Sig USC: we don't have a record matching this number. Reach us at rush@phisig-usc.com.");
-  }
-
-  const latestConsent = await prisma.rushConsent.findFirst({
+  }) : null;
+  const latestConsent = rushee ? await prisma.rushConsent.findFirst({
     where: { rushId: rushee.id },
     orderBy: { createdAt: "desc" },
-  });
-  if (!latestConsent) return twiml("");
+  }) : null;
 
-  if (["YES", "Y", "CONFIRM"].includes(keyword)) {
-    await prisma.rushConsent.update({
-      where: { id: latestConsent.id },
-      data: { smsConfirmed: true, smsConfirmedAt: new Date(), optedOut: false, optedOutAt: null },
-    });
-    return twiml(`Phi Sig USC: confirmed — thanks ${rushee.name.split(/\s+/)[0]}! We'll text when the Fall '26 rush schedule drops. Reply STOP anytime.`);
+  // ── HELP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
+  if (isHelp) {
+    return twiml(
+      "Phi Sigma Kappa Gamma Triton (USC): rush updates from us. Up to ~6-8 msgs/cycle. Msg & data rates may apply. Reply STOP to opt out. Email rush@phisig-usc.com for help."
+    );
   }
 
-  if (["STOP", "UNSUBSCRIBE", "END", "QUIT", "CANCEL", "OPTOUT"].includes(keyword)) {
-    await prisma.rushConsent.update({
-      where: { id: latestConsent.id },
-      data: { optedOut: true, optedOutAt: new Date(), smsConfirmed: false },
-    });
-    return twiml("Phi Sig USC: you've been opted out. You won't receive further messages. Reply START to opt back in.");
+  // ── STOP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
+  if (isStop) {
+    if (latestConsent) {
+      // EVIDENCE PRESERVATION: do NOT flip smsConfirmed back to false. The user
+      // may have confirmed earlier, then opted out — both facts matter for the
+      // TCPA audit trail. Only flip optedOut + timestamp; keep prior smsConfirmed
+      // state intact so the receipt accurately reflects the historical record.
+      await prisma.rushConsent.update({
+        where: { id: latestConsent.id },
+        data: { optedOut: true, optedOutAt: new Date() },
+      });
+    }
+    return twiml(
+      "Phi Sigma Kappa Gamma Triton (USC): you're opted out. No further messages. Reply START to resubscribe. Msg & data rates may apply."
+    );
   }
 
-  if (["START", "RESUBSCRIBE", "UNSTOP"].includes(keyword)) {
-    await prisma.rushConsent.update({
-      where: { id: latestConsent.id },
-      data: { optedOut: false, optedOutAt: null },
-    });
-    return twiml("Phi Sig USC: you're opted back in. Reply STOP anytime to leave.");
+  // ── YES / START — confirmation or re-subscription ──────────────────────
+  if (isStart) {
+    if (rushee && latestConsent) {
+      const isYes = ["YES", "Y", "CONFIRM"].includes(keyword);
+      await prisma.rushConsent.update({
+        where: { id: latestConsent.id },
+        data: isYes
+          ? { smsConfirmed: true, smsConfirmedAt: new Date(), optedOut: false, optedOutAt: null }
+          : { optedOut: false, optedOutAt: null },
+      });
+      const first = rushee.name.split(/\s+/)[0] || "there";
+      return twiml(
+        isYes
+          ? `Phi Sig USC: confirmed — thanks ${first}! We'll text when the Fall '26 rush schedule drops. Reply STOP anytime.`
+          : `Phi Sig USC: welcome back ${first}. Reply STOP anytime.`
+      );
+    }
+    // Unknown number replying YES/START — friendly redirect.
+    return twiml("Phi Sigma Kappa Gamma Triton (USC): we don't have your info on file. Sign up at https://phisigmakappa.vercel.app or email rush@phisig-usc.com.");
   }
 
-  if (["HELP", "INFO"].includes(keyword)) {
-    return twiml("Phi Sig USC rush updates. Reply YES to confirm, STOP to opt out. Up to ~6-8 msgs/cycle. Help: rush@phisig-usc.com.");
-  }
-
-  // Anything else — log and reply with the help canned response.
-  return twiml("Phi Sig USC: reply YES to confirm rush updates, STOP to opt out, HELP for help.");
+  // ── Unrecognized keyword ───────────────────────────────────────────────
+  return twiml(
+    "Phi Sigma Kappa Gamma Triton (USC): reply YES to confirm rush updates, STOP to opt out, HELP for help. Msg & data rates may apply."
+  );
 }
 
 /** Wrap a plain reply body in TwiML XML. */

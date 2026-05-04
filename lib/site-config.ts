@@ -38,10 +38,20 @@ export const DEFAULTS = {
 
   // Stats — display-formatted strings (e.g. "60+"). The CountUp component parses
   // out the numeric prefix; everything else (e.g. "+", "k+") becomes the suffix.
+  // Labels are also admin-editable so the chair can re-purpose a stat slot
+  // (e.g. swap "Years strong" for a chapter-specific number).
   "stats.brothers": "60+",
+  "stats.brothers.label": "Active brothers",
+  "stats.brothers.sub": "",
   "stats.gpa": "3.45",
+  "stats.gpa.label": "Chapter GPA",
+  "stats.gpa.sub": "Above the all-fraternity average",
   "stats.years": "150+",
+  "stats.years.label": "Years strong",
+  "stats.years.sub": "Founded 1873",
   "stats.charity": "$25k+",
+  "stats.charity.label": "Raised for charity",
+  "stats.charity.sub": "Special Olympics SC",
 
   // Hero headline & CTA
   "hero.h1.lead": "Rush Phi Sigma Kappa.",

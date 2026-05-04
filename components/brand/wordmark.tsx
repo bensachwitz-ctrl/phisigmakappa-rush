@@ -11,12 +11,12 @@ export function Wordmark({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-2 font-display text-base font-semibold tracking-tight",
+          "inline-flex items-center gap-2 text-base font-semibold tracking-tight",
           className
         )}
       >
         <Crest className="h-7 w-7 text-phisig-red" />
-        <span>ΦΣΚ</span>
+        <span className="font-display">ΦΣΚ</span>
         <span className="text-muted-foreground font-normal text-sm">USC</span>
       </span>
     );
@@ -24,7 +24,7 @@ export function Wordmark({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-3 font-display tracking-tight",
+        "inline-flex items-center gap-3 tracking-tight",
         variant === "white" ? "text-white" : "text-foreground",
         className
       )}
@@ -36,10 +36,10 @@ export function Wordmark({
         )}
       />
       <span className="flex flex-col leading-none">
-        <span className="text-[11px] uppercase tracking-[0.22em] opacity-70">
+        <span className="text-[11px] uppercase tracking-[0.22em] opacity-70 font-medium">
           Phi Sigma Kappa
         </span>
-        <span className="text-base font-semibold">University of South Carolina</span>
+        <span className="text-base font-semibold font-display">University of South Carolina</span>
       </span>
     </span>
   );
@@ -159,7 +159,7 @@ export function Seal({ className }: { className?: string }) {
       </defs>
       <text fontFamily="Inter, sans-serif" fontSize="9" letterSpacing="6" fill="#0B0B0C" opacity="0.55">
         <textPath href="#ring-path" startOffset="2%">
-          PHI SIGMA KAPPA · UNIVERSITY OF SOUTH CAROLINA · ETA-PENTATON ·
+          PHI SIGMA KAPPA · UNIVERSITY OF SOUTH CAROLINA · GAMMA TRITON ·
         </textPath>
       </text>
     </svg>

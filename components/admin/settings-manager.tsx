@@ -430,21 +430,32 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         <PhotoPreview slug={values["about.slug"]} objectPosition={values["about.objectPosition"]} className="mt-4" />
       </Section>
 
-      {/* STATS */}
-      <Section title="Stats strip" eyebrow="Numbers shown under the hero" icon={Crown}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Field label="Brothers">
-            <Input value={values["stats.brothers"] || ""} onChange={(e) => set("stats.brothers", e.target.value)} placeholder="60+" />
-          </Field>
-          <Field label="Chapter GPA">
-            <Input value={values["stats.gpa"] || ""} onChange={(e) => set("stats.gpa", e.target.value)} placeholder="3.45" />
-          </Field>
-          <Field label="Years strong">
-            <Input value={values["stats.years"] || ""} onChange={(e) => set("stats.years", e.target.value)} placeholder="150+" />
-          </Field>
-          <Field label="Charity raised">
-            <Input value={values["stats.charity"] || ""} onChange={(e) => set("stats.charity", e.target.value)} placeholder="$25k+" />
-          </Field>
+      {/* STATS — value + label + subtitle, all admin-editable */}
+      <Section title="Stats strip" eyebrow="4 stat tiles under the hero" icon={Crown}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Each tile has a number, a label, and an optional small subtitle. Re-purpose any
+          slot (e.g. swap &ldquo;150+ years strong&rdquo; for &ldquo;12 events / yr&rdquo;) without a code change.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {([
+            { val: "stats.brothers", lab: "stats.brothers.label", sub: "stats.brothers.sub", title: "Slot 1" },
+            { val: "stats.gpa", lab: "stats.gpa.label", sub: "stats.gpa.sub", title: "Slot 2" },
+            { val: "stats.years", lab: "stats.years.label", sub: "stats.years.sub", title: "Slot 3" },
+            { val: "stats.charity", lab: "stats.charity.label", sub: "stats.charity.sub", title: "Slot 4" },
+          ]).map((s) => (
+            <div key={s.val} className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">{s.title}</p>
+              <Field label="Number / value">
+                <Input value={values[s.val] || ""} onChange={(e) => set(s.val, e.target.value)} placeholder="60+" />
+              </Field>
+              <Field label="Label">
+                <Input value={values[s.lab] || ""} onChange={(e) => set(s.lab, e.target.value)} placeholder="Active brothers" />
+              </Field>
+              <Field label="Subtitle (optional)">
+                <Input value={values[s.sub] || ""} onChange={(e) => set(s.sub, e.target.value)} placeholder="Above the all-fraternity average" />
+              </Field>
+            </div>
+          ))}
         </div>
       </Section>
 

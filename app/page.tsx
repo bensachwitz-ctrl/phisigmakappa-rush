@@ -137,10 +137,10 @@ export default async function Home({
     sub?: string;
   };
   const stats: StatRow[] = [
-    { ...parseStat(cfg["stats.brothers"]), label: "Active brothers", icon: Users },
-    { ...parseStat(cfg["stats.gpa"]), label: "Chapter GPA", icon: GraduationCap, sub: "Above the all-fraternity average" },
-    { ...parseStat(cfg["stats.years"]), label: "Years strong", icon: ShieldCheck, sub: "Founded 1873" },
-    { ...parseStat(cfg["stats.charity"]), label: "Raised for charity", icon: HandHeart, sub: cfg["philanthropy.beneficiaryShort"] },
+    { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || "Active brothers", icon: Users, sub: cfg["stats.brothers.sub"] || undefined },
+    { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: GraduationCap, sub: cfg["stats.gpa.sub"] || "Above the all-fraternity average" },
+    { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: ShieldCheck, sub: cfg["stats.years.sub"] || "Founded 1873" },
+    { ...parseStat(cfg["stats.charity"]), label: cfg["stats.charity.label"] || "Raised for charity", icon: HandHeart, sub: cfg["stats.charity.sub"] || cfg["philanthropy.beneficiaryShort"] },
   ];
   const eboard = [1, 2, 3, 4, 5]
     .map((n) => ({
@@ -804,8 +804,8 @@ export default async function Home({
               The house at {cfg["contact.address"]}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The Phi Sigma Kappa chapter house sits on Lincoln Street, a block off Greek Village
-              and walking distance to Russell House and the Horseshoe. It's where the cookouts,
+              The Phi Sigma Kappa chapter house sits at <span className="text-foreground font-medium">{cfg["contact.address"]}</span>, walking
+              distance to Russell House and the Horseshoe. It&apos;s where the cookouts,
               chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
               for the first time.
             </p>
