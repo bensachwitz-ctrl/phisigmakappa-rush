@@ -1,9 +1,33 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { enrichRushee } from "@/lib/enrich";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Auto-enrich a rushee in the background — non-blocking. The submission
+ * response goes back to the rushee immediately; enrichment writes to DB
+ * when it resolves so the admin sees enriched info on the next page view.
+ */
+async function autoEnrichInBackground(rushId: string, rushee: {
+  name: string; hometown: string | null; major: string | null; year: string | null;
+}) {
+  try {
+    const enrichment = await enrichRushee(rushee);
+    await prisma.rush.update({
+      where: { id: rushId },
+      data: {
+        enrichmentData: JSON.stringify(enrichment),
+        enrichedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    // Enrichment is best-effort. Never let a failure here affect the user.
+    console.warn("[auto-enrich]", err);
+  }
+}
 
 const RushSchema = z.object({
   name: z.string().min(2).max(120),
@@ -58,6 +82,15 @@ export async function POST(req: Request) {
         backgroundInfo: data.backgroundInfo || null,
         headshotUrl: data.headshotUrl || null,
       },
+    });
+
+    // Fire auto-enrichment — searches Google/LinkedIn/IG/USC directory/MaxPreps
+    // for additional info about the rushee. Doesn't block the response.
+    await autoEnrichInBackground(created.id, {
+      name: data.name,
+      hometown: data.hometown || null,
+      major: data.major || null,
+      year: data.year || null,
     });
 
     return NextResponse.json({ ok: true, id: created.id, updated: false });
