@@ -11,6 +11,14 @@ export const metadata = {
   title: "Privacy — Phi Sigma Kappa @ USC",
   description:
     "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy — Phi Sigma Kappa @ USC",
+    description:
+      "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
+    url: "/privacy",
+    type: "website",
+  },
 };
 
 export default async function PrivacyPage() {

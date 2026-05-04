@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export function Wordmark({
@@ -91,20 +92,32 @@ export function Crest({ className }: { className?: string }) {
 }
 
 export function Seal({ className }: { className?: string }) {
+  // Per-instance unique ID suffix. Seal is rendered in multiple places on the
+  // homepage (hero + footer collage); without unique IDs the gradient/textPath
+  // refs collide as duplicate-ID violations and Safari/Firefox can render the
+  // wrong fill on the second instance. useId() works in server components.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const glowId = `seal-glow-${uid}`;
+  const fillId = `seal-fill-${uid}`;
+  const ringId = `ring-path-${uid}`;
   return (
     <svg viewBox="0 0 220 220" className={className} aria-hidden="true">
       <defs>
-        <radialGradient id="seal-glow" cx="50%" cy="50%" r="50%">
+        <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#C8102E" stopOpacity="0.10" />
           <stop offset="100%" stopColor="#C8102E" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="seal-fill" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
           <stop offset="100%" stopColor="#FCEFF1" />
         </linearGradient>
+        <path
+          id={ringId}
+          d="M 110,110 m -96,0 a 96,96 0 1,1 192,0 a 96,96 0 1,1 -192,0"
+        />
       </defs>
-      <circle cx="110" cy="110" r="108" fill="url(#seal-glow)" />
-      <circle cx="110" cy="110" r="86" fill="url(#seal-fill)" stroke="#C8102E" strokeWidth="1.6" />
+      <circle cx="110" cy="110" r="108" fill={`url(#${glowId})`} />
+      <circle cx="110" cy="110" r="86" fill={`url(#${fillId})`} stroke="#C8102E" strokeWidth="1.6" />
       <circle cx="110" cy="110" r="74" fill="none" stroke="#C8102E" strokeWidth="0.6" opacity="0.55" />
 
       {/* Stars */}
@@ -150,15 +163,8 @@ export function Seal({ className }: { className?: string }) {
         FOUNDED 1873
       </text>
 
-      {/* Outer ring text */}
-      <defs>
-        <path
-          id="ring-path"
-          d="M 110,110 m -96,0 a 96,96 0 1,1 192,0 a 96,96 0 1,1 -192,0"
-        />
-      </defs>
       <text fontFamily="Inter, sans-serif" fontSize="9" letterSpacing="6" fill="#0B0B0C" opacity="0.55">
-        <textPath href="#ring-path" startOffset="2%">
+        <textPath href={`#${ringId}`} startOffset="2%">
           PHI SIGMA KAPPA · UNIVERSITY OF SOUTH CAROLINA · GAMMA TRITON ·
         </textPath>
       </text>

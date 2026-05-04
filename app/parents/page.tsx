@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   title: "For Parents",
   description:
     "Phi Sigma Kappa Gamma Triton at the University of South Carolina. Anti-hazing policy, advisor contact, GPA standards, philanthropy partnerships, and the data-handling rules we follow when your son joins the rush list.",
+  alternates: { canonical: "/parents" },
+  openGraph: {
+    title: "For Parents — Phi Sigma Kappa Gamma Triton",
+    description:
+      "Anti-hazing policy, advisor contact, GPA standards, philanthropy partnerships, and how we handle your son's data when he joins the rush list.",
+    url: "/parents",
+    type: "website",
+  },
 };
 
 /**
