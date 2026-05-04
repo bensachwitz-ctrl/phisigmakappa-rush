@@ -60,9 +60,14 @@ const SMS_PRE_DISCLOSURE =
 
 // The line that appears next to the express-consent checkbox on the Review step.
 // Identifies the sender by full legal name, the program, frequency, opt-out keywords,
-// age affirmation, and links to the privacy policy. This is the recorded consent text.
+// and links to the privacy policy. This is the recorded consent text.
+//
+// Note on age: incoming USC freshmen can be 17 (early-grad / late-Aug birthdays /
+// transfers from accelerated programs), so the consent allows 17 with verified
+// parental permission — matching the under-18 guardian-consent path in /privacy.
+// Hard-blocking 18+ would lock out legitimate rushees.
 const SMS_EXPRESS_CONSENT =
-  "I am 18 or older and I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
+  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
 
 export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const { push } = useToast();
@@ -394,7 +399,8 @@ function ContactStep({
       )}
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3 leading-relaxed">
-        <span className="font-semibold text-foreground">SMS &amp; age notice: </span>{SMS_PRE_DISCLOSURE} You must be 18 or older to submit. You&apos;ll affirm consent on the final step before submitting.
+        <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
+        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
     </div>
   );

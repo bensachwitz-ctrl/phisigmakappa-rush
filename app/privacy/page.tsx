@@ -57,11 +57,11 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Age &amp; minor protections</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            By submitting the rush form you affirm you are <span className="font-medium text-foreground">18 years of age or older</span>. If you are under 18 and would like to express interest, please have a parent or legal guardian email{" "}
+            By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming USC freshmen are 17 at orientation — a parent or guardian may also email{" "}
             <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>{" "}
-            on your behalf. We do not knowingly collect personal information from anyone under 13. If we learn we have inadvertently collected data from a minor, we will delete it promptly upon request.
+            to confirm consent on a 17-year-old's behalf or to request removal at any time. We do not knowingly collect personal information from anyone under 13. If we learn we have inadvertently collected data from a minor, we will delete it promptly upon request.
           </p>
         </section>
 
