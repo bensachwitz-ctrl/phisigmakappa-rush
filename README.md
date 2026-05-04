@@ -1,151 +1,151 @@
-# Phi Sigma Kappa @ USC — Rush Platform
+# Greekstack — Rush + Chapter Management Platform
 
-Production-ready rush management for the Eta-Pentaton chapter at the University of South Carolina.
+> Production-grade Next.js platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications. **Originally built for Phi Sigma Kappa Gamma Triton at USC.** Designed to be re-skinned and deployed per-chapter or operated as a national white-label SaaS by an Inter/National HQ.
 
-**Stack**: Next.js 14 (App Router) · Tailwind · Shadcn-style UI · Prisma · Postgres (Vercel Postgres / Neon) · Resend (email) · Twilio (SMS)
-
----
-
-## Features
-
-**Public (`/`)**
-- Sleek red/white hero with chapter wordmark
-- Multi-step onboarding intake form (name, email, phone, year, major, hometown, HS activities, background)
-- Progress bar, validation, animated success state
-- Live event schedule with date cards, locations, dress codes
-- About section with cardinal principles
-
-**Admin (`/admin`)** — gated behind chapter password + brother name
-- Roster table with search, filter, sort, multi-select
-- Pipeline statuses: Active · Dropped · Bid Extended · Accepted · Declined
-- One-click status changes from row or detail panel
-- **Brotherhood vote**: each brother casts strong-yes / yes / neutral / no / strong-no per rush; live vote sum and full vote breakdown
-- Internal notes per rush
-- **Mass email** (Resend) with templates: blank, private invite, bid extension, reminder
-- **Mass text** (Twilio) with templates and 320-char counter
-- **Event management**: create, list, delete public/private events
-- **Attendance check-in**: per-event modal with searchable rush list, toggleable check-marks
-
-**APIs**
-- `POST /api/rush` — public registration (upserts by email)
-- `GET  /api/events` — public schedule
-- `POST /api/admin/login` — name + chapter password
-- `GET/PATCH/DELETE /api/admin/rush` — roster CRUD
-- `POST/DELETE /api/admin/events` — event CRUD
-- `POST/GET/DELETE /api/admin/vote` — brother voting
-- `POST/GET /api/admin/attendance` — event attendance
-- `POST /api/send-email` — bulk email via Resend (mock mode if no key)
-- `POST /api/send-sms` — bulk SMS via Twilio (mock mode if no creds)
+**Live reference deploy:** <https://phisigmakappa.vercel.app>
+**License:** MIT — chapters and HQs free to deploy, modify, and operate.
 
 ---
 
-## Local development
+## What you get out of the box
+
+| Surface | What it does |
+|---|---|
+| **Public rush site** | Hero with live event countdown · 3-week timeline · FAQ · e-board · stats · alumni testimonial · Instagram feed · 4-step rush form with TCPA-grade consent capture · `/parents` trust page · `/privacy` (CCPA + VCDPA + COPPA + TCPA recordkeeping) |
+| **Booth mode (`?booth=1`)** | Single-purpose tablet kiosk — form-only SSR, autofocus, 60s idle auto-clear with countdown chip, 6s post-success auto-restart, "Add rushee" submit |
+| **Admin (`/admin`)** | Rush pipeline (search/filter/vote/notes/bulk SMS+email) · Brothers directory · Events CRUD · Announcements · "Get rush ready" first-run checklist · CSV export with vote sums and attendance |
+| **Site Settings (`/admin/settings`)** | Self-serve content control — hero copy + photos, e-board roster (5 slots with headshots), stats, philanthropy, contact + advisor, anti-hazing block, FAQ/timeline/values/highlights/recent activity (JSON repeaters), testimonial, history, 10 section visibility toggles |
+| **iCal feed (`/api/events.ics`)** | One-tap calendar subscribe (`webcal://…`) for brothers and rushees |
+| **Brother onboarding** | Email/SMS/copy-link invites with 30-day token; brother sets first-name + password during onboarding |
+| **TCPA evidence trail** | Per-submit consent receipt at `/api/consent/[id]` with verbatim disclosure (47 CFR §64.1200(f)(9) ATDS language), versioned, IP truncated, UA snapshot, age path; double opt-in via Twilio inbound webhook with HMAC signature verification; CTIA-compliant STOP/HELP keywords |
+| **Quiet hours** | SMS broadcast endpoint blocks sends outside 8am–9pm Eastern with HTTP 425 |
+| **Photo proxy** | AVIF → WebP → JPEG negotiation, 30-day immutable CDN cache, automatic IG og:image scrape with anti-branding-fallback detection |
+| **Security baseline** | Full CSP + HSTS preload + Permissions-Policy + Referrer-Policy + X-Frame-Options + X-Content-Type-Options |
+| **A11y baseline** | Skip-to-content link, focus-visible rings, prefers-reduced-motion, ARIA radiogroup on age toggle, alt text on every image |
+| **SEO + Knowledge Panel** | JSON-LD CollegeOrUniversity + WebSite schema graph with PostalAddress, sameAs, ContactPoint × 2 (rush + anti-hazing) |
+
+## Stack
+
+Next.js 14 App Router · Prisma · Postgres (Vercel/Neon) · Vercel Blob · Resend (email) · Twilio (SMS, double opt-in webhook) · Tavily (auto-enrichment) · `sharp` (image transcoding) · Tailwind 3 · shadcn-style components
+
+## For nationals: white-label model
+
+Every public-facing string, every photo, every contact field is admin-editable from the chapter's `/admin/settings` panel — **no code deploy required for content updates**. A new chapter clones the deploy, sets six environment variables (database, Resend, Twilio), and signs in as admin. The "Get rush ready" checklist on `/admin` walks them through populating advisor, e-board, and first event.
+
+National HQ can operate this as a centralized SaaS: one deploy per chapter (Vercel project per chapter) or a future multi-tenant fork. The codebase is intentionally simple — a single Next.js app with a single Prisma schema. Chapter-specific branding (school colors, Greek-letter overrides) is driven by `lib/site-config.ts` defaults that admin can override.
+
+See [`SALES.md`](SALES.md) for the pitch one-pager and [`ARCHITECTURE.md`](ARCHITECTURE.md) for the system diagram.
+
+---
+
+## Quick deploy (single chapter)
 
 ```bash
-# 1. Install
+# 1. Clone
+git clone https://github.com/bensachwitz-ctrl/phisigmakappa-rush.git my-chapter
+cd my-chapter
+
+# 2. Install
 npm install
 
-# 2. Configure environment
-cp .env.example .env
-# edit .env — at minimum set ADMIN_PASSWORD and ADMIN_SESSION_SECRET
+# 3. Provision Postgres (Vercel/Neon recommended) — see .env.example for env vars
 
-# 3. Initialize the database
+# 4. Run locally
+cp .env.example .env.local
+# fill in DATABASE_URL, DIRECT_URL, ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_SESSION_SECRET
 npx prisma db push
-npm run db:seed       # seeds 5 demo events
-
-# 4. Run
 npm run dev
-# → http://localhost:3000
-# → /admin/login (use ADMIN_PASSWORD from .env)
+
+# 5. Deploy to Vercel
+vercel
+# add env vars in Vercel Project → Settings → Environment Variables
 ```
 
-Mock mode: if `RESEND_API_KEY` or Twilio creds aren't set, sends are logged to the DB but no real messages are dispatched. Useful for local testing without burning credits.
+[Deploy with Vercel](https://vercel.com/new/clone?repository-url=https://github.com/bensachwitz-ctrl/phisigmakappa-rush) — clone + provision in 2 minutes.
 
----
+## Admin onboarding (chapter rush chair, 3 steps)
 
-## Deploying to Vercel (`phisigmakappa.vercel.app`)
+1. Go to `https://your-deploy.vercel.app/admin/login`. Form opens on the **Admin** tab. Sign in with the username + password you set in env vars.
+2. The dashboard shows a **"Get rush ready"** checklist with status pills. Work through each amber item: real advisor name, rush phone, e-board roster (5 slots), hero photos, first public event, brothers directory.
+3. Click **Site** in the sidebar — every other public-facing piece of content (FAQ, timeline, testimonial, anti-hazing copy, philanthropy stats) edits from there with a sticky Save bar. Changes go live in seconds, no code deploy.
 
-### One-time setup
+That's it. Send the brother-invite link from `/admin/brothers` to your e-board and the platform runs rush.
 
-1. Push this folder to a Git repo (GitHub recommended).
-2. In Vercel, **Import Project** → select the repo.
-3. Add a **Vercel Postgres** database from Storage → connect to the project. This automatically injects `DATABASE_URL` and `DIRECT_URL`.
-4. Add environment variables in **Project → Settings → Environment Variables**:
-   - `ADMIN_PASSWORD` — chapter password
-   - `ADMIN_SESSION_SECRET` — 32+ char random string
-   - `RESEND_API_KEY` (optional)
-   - `RESEND_FROM_EMAIL` (optional, must be verified domain)
-   - `TWILIO_ACCOUNT_SID` (optional)
-   - `TWILIO_AUTH_TOKEN` (optional)
-   - `TWILIO_PHONE_NUMBER` (optional, E.164 format)
-   - `NEXT_PUBLIC_SITE_URL=https://phisigmakappa.vercel.app`
-
-5. Deploy.
-
-6. Run a one-time migration against the production DB:
-   ```bash
-   # Locally, after `vercel env pull`
-   npx prisma db push
-   ```
-
-7. Update local script to ensure first build succeeds even on a fresh DB —
-   the build only runs `prisma generate` (not `db push`), so first deploy
-   will succeed; the app gracefully shows empty states until the schema is
-   pushed.
-
-### Custom domain
-
-Vercel → Project → Settings → Domains → add your domain.
-
----
-
-## Tech notes
-
-- **Auth**: HMAC-signed cookie containing `<brotherId>.<timestamp>.<sig>`. Brothers self-register at first login by entering their name plus the chapter password. Sessions expire after 12 hours.
-- **Brother identity** is used to attribute votes — there's no email/password per brother by design (low friction for active members).
-- **Resend** sends one personalized email per recipient (no Bcc leakage). Failures are logged in `EmailLog` with a `PARTIAL`/`FAILED` status.
-- **Twilio** posts to the REST API directly (no SDK) for a smaller bundle. Numbers are normalized to E.164.
-- **SQLite → Postgres** migration: change provider, run `prisma db push`. The schema is dialect-agnostic.
-
----
-
-## Chapter password rotation
-
-Set a new `ADMIN_PASSWORD` in Vercel → redeploy. All brothers will need to re-enter it on next login.
-
----
-
-## Project layout
+## Repo structure
 
 ```
-app/
-  page.tsx                 # public PNM landing
-  api/
-    rush/route.ts          # public registration
-    events/route.ts        # public schedule feed
-    send-email/route.ts    # mass email (Resend)
-    send-sms/route.ts      # mass SMS (Twilio)
-    admin/
-      login/route.ts
-      rush/route.ts
-      events/route.ts
-      vote/route.ts
-      attendance/route.ts
-  admin/
-    login/page.tsx
-    page.tsx               # roster
-    events/page.tsx        # event management
+app/                  Next.js App Router routes
+  page.tsx            Public homepage (hero, schedule, FAQ, etc.)
+  parents/            Parent-facing trust page
+  privacy/            TCPA + CCPA + VCDPA privacy policy
+  admin/              Admin dashboard, settings, events, brothers, announcements
+  api/                Server routes (rush, consent, sms/inbound, photo, events.ics, health, ...)
+  layout.tsx          Root layout, JSON-LD, manifest hookup
+  globals.css         Tailwind base + section-y utilities + a11y rules
+
 components/
-  brand/                   # wordmark + crest
-  site/                    # public nav, footer, form, schedule
-  admin/                   # roster, events manager, attendance
-  ui/                      # button, input, dialog, table, etc.
+  site/               Public components (rush-form, schedule-list, instagram-feed, rush-countdown, sticky-cta, ...)
+  admin/              Admin components (settings-manager, brothers-manager, events-manager, ...)
+  brand/              Wordmark, Crest, Seal SVGs
+  ui/                 shadcn-style primitives
+
 lib/
-  prisma.ts
-  auth.ts
-  utils.ts
-prisma/
-  schema.prisma
-  seed.ts
-middleware.ts              # protects /admin
+  site-config.ts      Default cfg values + DB merge (single source of truth for editable content)
+  auth.ts             Session token + cookie + role check (Node)
+  auth-edge.ts        HMAC verification used in middleware (Edge runtime)
+  enrich.ts           Auto-enrichment via Tavily web search
+  utils.ts            cleanUrl / cleanMailto / cleanTel sanitizers + rush status helpers
+
+prisma/schema.prisma  Database models (Rush, RushConsent, RushSubmitLog, Brother, Event, Vote, ...)
 ```
+
+## Environment variables
+
+See [`.env.example`](.env.example) for the full annotated list. Required:
+
+- `DATABASE_URL`, `DIRECT_URL` — Postgres
+- `ADMIN_USERNAME`, `ADMIN_PASSWORD` — chapter admin login (case-insensitive)
+- `ADMIN_SESSION_SECRET` — HMAC signing key (32+ chars random)
+
+Optional (mock mode if missing):
+
+- `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — email broadcasts
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` — SMS broadcasts + double opt-in
+- `BLOB_READ_WRITE_TOKEN` — Vercel Blob for photo uploads (auto-set by Vercel when you create a Blob store)
+- `TAVILY_API_KEY` — auto-enrichment of submitted PNMs
+
+## Build / develop
+
+```bash
+npm run dev           # local dev server
+npm run build         # production build (runs prisma generate + db push)
+npm run lint          # next lint
+npx tsc --noEmit      # typecheck
+```
+
+## Verifying a deploy
+
+```bash
+# Health check
+curl https://your-deploy.vercel.app/api/health
+# → {ok:true, db:up, deployedAt, region, timestamp}
+
+# iCal feed
+curl https://your-deploy.vercel.app/api/events.ics
+# → BEGIN:VCALENDAR...
+
+# JSON-LD
+curl -s https://your-deploy.vercel.app | grep 'application/ld+json'
+```
+
+## Version history
+
+This codebase shipped via 16 audit-fix-deploy iterations. See [`FINAL.md`](FINAL.md) for the full progression, scorecard, and follow-up backlog.
+
+## Contributing
+
+PRs welcome from chapters customizing for their own deploy. Fork-and-modify works for white-label deployments — the codebase is intentionally hackable. For substantive contributions back, open an issue first describing your chapter's requirement so we can discuss whether it lands as a config knob or upstream code.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).

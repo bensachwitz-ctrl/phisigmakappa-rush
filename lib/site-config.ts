@@ -34,6 +34,17 @@ export const DEFAULTS = {
   "about.objectPosition": "50% 80%",
   "about.caption": "Chapter formal · third-party vendor, sober transportation, FIPG-compliant",
 
+  // ── Brand colors — admin-editable for white-label deployments ──
+  // Primary brand color (default = Phi Sigma Kappa cardinal red #C8102E).
+  // Each chapter can override with their school color: USC garnet #73000A,
+  // Texas A&M maroon #500000, Penn State blue #001E44, etc. Renders via the
+  // `--phisig-red` CSS custom property in app/globals.css — every component
+  // that uses `bg-phisig-red`, `text-phisig-red`, etc. updates automatically.
+  // Format: hex (#RRGGBB). Optional dark variant for gradient stops.
+  "brand.primaryHex": "#C8102E",
+  "brand.primaryDarkHex": "#A20D26",
+  "brand.primarySoftHex": "#FCEFF1",
+
   // Hero tagline
   "hero.eyebrow": "USC · Fall Rush 2026 · Gamma Triton chapter",
   "hero.subline":

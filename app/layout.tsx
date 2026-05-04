@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
+import { getSiteConfig } from "@/lib/site-config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -123,11 +124,35 @@ const STRUCTURED_DATA = {
   ],
 };
 
-export default function RootLayout({
+/**
+ * Validate a hex color string (#RGB or #RRGGBB). Defends against admin
+ * pasting `red`, `https://...`, JS, or anything that would inject through
+ * the inline <style> tag.
+ */
+function safeHex(input: string | undefined, fallback: string): string {
+  if (!input) return fallback;
+  const trimmed = input.trim();
+  if (/^#([0-9a-fA-F]{3}){1,2}$/.test(trimmed)) return trimmed;
+  return fallback;
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Per-chapter brand colors. Defaults match the reference Phi Sig Gamma Triton
+  // build (cardinal red). Admin can override from /admin/settings → brand.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#C8102E");
+  const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], "#A20D26");
+  const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], "#FCEFF1");
+
+  // Inline CSS override binds the cfg-supplied colors to the same Tailwind
+  // tokens (--phisig-red et al) used throughout the build. No client JS,
+  // no FOUC, no rebuild needed when admin saves.
+  const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};}`;
+
   return (
     <html lang="en" className={inter.variable}>
       <head>
@@ -136,6 +161,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <link rel="manifest" href="/manifest.webmanifest" />
+        <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
       </head>
       <body>
         <a href="#main-content" className="skip-to-content">

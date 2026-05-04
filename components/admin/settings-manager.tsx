@@ -73,6 +73,69 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </div>
       )}
 
+      {/* BRAND COLORS — chapter-level theme override (white-label) */}
+      <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={Sparkles}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Default is Phi Sigma Kappa cardinal red <code className="font-mono text-foreground">#C8102E</code>.
+          For chapters at other schools, paste your school&apos;s hex code. Format:{" "}
+          <code className="font-mono text-foreground">#RRGGBB</code>. Changes apply on next page load — no
+          code rebuild needed.
+        </p>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <Field label="Primary (default #C8102E)">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={values["brand.primaryHex"] || "#C8102E"}
+                onChange={(e) => set("brand.primaryHex", e.target.value)}
+                className="h-9 w-12 rounded-md border border-border cursor-pointer"
+                aria-label="Primary brand color picker"
+              />
+              <Input
+                value={values["brand.primaryHex"] || ""}
+                onChange={(e) => set("brand.primaryHex", e.target.value)}
+                placeholder="#C8102E"
+                className="font-mono"
+              />
+            </div>
+          </Field>
+          <Field label="Primary dark (default #A20D26)">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={values["brand.primaryDarkHex"] || "#A20D26"}
+                onChange={(e) => set("brand.primaryDarkHex", e.target.value)}
+                className="h-9 w-12 rounded-md border border-border cursor-pointer"
+                aria-label="Primary dark brand color picker"
+              />
+              <Input
+                value={values["brand.primaryDarkHex"] || ""}
+                onChange={(e) => set("brand.primaryDarkHex", e.target.value)}
+                placeholder="#A20D26"
+                className="font-mono"
+              />
+            </div>
+          </Field>
+          <Field label="Primary soft / tint (default #FCEFF1)">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={values["brand.primarySoftHex"] || "#FCEFF1"}
+                onChange={(e) => set("brand.primarySoftHex", e.target.value)}
+                className="h-9 w-12 rounded-md border border-border cursor-pointer"
+                aria-label="Primary soft brand color picker"
+              />
+              <Input
+                value={values["brand.primarySoftHex"] || ""}
+                onChange={(e) => set("brand.primarySoftHex", e.target.value)}
+                placeholder="#FCEFF1"
+                className="font-mono"
+              />
+            </div>
+          </Field>
+        </div>
+      </Section>
+
       {/* HERO */}
       <Section title="Hero" eyebrow="Top of homepage" icon={Sparkles}>
         <div className="grid sm:grid-cols-2 gap-4">

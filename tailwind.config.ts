@@ -50,13 +50,17 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Phi Sig brand — disciplined three-stop ramp on the cardinal axis.
-        // -soft was retuned from #FCE8EC (cool / pink-leaning) to #FCEFF1
-        // so the tint shares hue with #C8102E rather than drifting toward rose.
+        // Brand color tokens — bound to CSS custom properties so admin can
+        // override at runtime via app/layout.tsx's inline <style> tag (which
+        // reads from cfg["brand.primaryHex"], etc.). Default values match
+        // the Phi Sigma Kappa cardinal ramp (#C8102E / #A20D26 / #FCEFF1).
+        // Each chapter sets their own school color in /admin/settings without
+        // a rebuild — every component using bg-phisig-red, text-phisig-red,
+        // etc. picks up the override on next page load.
         phisig: {
-          red: "#C8102E",
-          "red-dark": "#A20D26",
-          "red-soft": "#FCEFF1",
+          red: "var(--brand-primary, #C8102E)",
+          "red-dark": "var(--brand-primary-dark, #A20D26)",
+          "red-soft": "var(--brand-primary-soft, #FCEFF1)",
           ink: "#0B0B0C",
           paper: "#FFFFFF",
           mist: "#F5F5F7",
