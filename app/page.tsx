@@ -102,8 +102,8 @@ export default async function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
-        <div className="absolute right-[10%] top-[8%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-10 select-none pointer-events-none">
-          <span className="text-[200px] font-serif font-bold text-phisig-red leading-none">Φ</span>
+        <div className="absolute right-[6%] top-[6%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.07] select-none pointer-events-none">
+          <Crest className="h-[280px] w-[280px] text-phisig-red" />
         </div>
 
         <div className="container py-12 sm:py-16 lg:py-20">
@@ -234,16 +234,15 @@ export default async function Home() {
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-4 stagger">
-          {VALUES.map((v, i) => (
-            <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-phisig-red text-white shadow-md shadow-phisig-red/20">
+          {VALUES.map((v) => (
+            <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden group">
+              <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
+              <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25">
                 <v.icon className="h-5 w-5" />
               </span>
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
-              <span className="absolute top-5 right-6 font-serif text-5xl font-bold text-phisig-red opacity-10 leading-none select-none">
-                {["Φ", "Σ", "Κ"][i]}
-              </span>
+              <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
+              <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
+              <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" />
             </div>
           ))}
         </div>
@@ -497,9 +496,7 @@ export default async function Home() {
                   </p>
                   <p className="mt-0.5 text-sm font-semibold">{m.name}</p>
                 </div>
-                <span className="absolute -bottom-3 -right-3 font-serif text-5xl font-bold text-phisig-red opacity-10 leading-none select-none">
-                  ΦΣΚ
-                </span>
+                <Crest className="absolute -bottom-3 -right-3 h-16 w-16 text-phisig-red opacity-10" />
               </div>
             ))}
           </div>
@@ -517,10 +514,17 @@ export default async function Home() {
               Founded in 1873.<br/> Built for what's next.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Phi Sigma Kappa was founded at Massachusetts Agricultural College on three
-              cardinal principles. The Gamma Triton chapter at the University of South
-              Carolina carries that legacy forward — building men who lead in the
-              classroom, the community, and beyond.
+              Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873 on three
+              cardinal principles: Brotherhood, Scholarship, and Character. The Gamma Triton chapter
+              chartered at the University of South Carolina in 1975 and has built USC men around those
+              same principles for fifty years — leaders in the classroom, in the community, and beyond.
+            </p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Parents and prospective members:{" "}
+              <a href="mailto:advisor@phisig-usc.com" className="text-phisig-red hover:underline font-medium">
+                advisor@phisig-usc.com
+              </a>{" "}
+              reaches our chapter advisor.
             </p>
 
             <ul className="mt-6 space-y-2.5 stagger">
@@ -746,7 +750,7 @@ export default async function Home() {
             <Seal className="w-[420px] h-[420px] text-white" />
           </div>
           <div className="absolute right-[8%] top-[12%] opacity-10 hidden sm:block">
-            <span className="text-[120px] font-serif font-bold text-white leading-none">ΦΣΚ</span>
+            <Crest className="h-32 w-32 text-white" />
           </div>
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/90">
@@ -824,9 +828,9 @@ function PostTile({
       rel="noreferrer"
       className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
     >
-      {/* Fallback layer — cardinal gradient with ΦΣΚ wordmark, visible until image loads */}
+      {/* Fallback layer — cardinal gradient with chapter crest, visible until image loads */}
       <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-[#7a0a1f] flex items-center justify-center pointer-events-none">
-        <span className="font-serif text-6xl font-bold text-white/15 leading-none select-none">ΦΣΚ</span>
+        <Crest className="h-20 w-20 text-white/25" />
       </div>
       <img
         src={`/api/photo/${slug}?v=3`}
