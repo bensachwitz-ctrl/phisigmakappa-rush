@@ -17,27 +17,51 @@ const CACHE_HEADERS = {
 };
 
 /**
- * If the client supports WebP, transcode the JPEG bytes to WebP at quality 80.
- * Falls back silently to the original JPEG if sharp can't read the input
- * (corrupt JPEG, animated GIF, etc.). Returns { buf, contentType }.
+ * Negotiate the best image format the client supports. Prefer AVIF (≈ 25-35%
+ * smaller than WebP at equivalent quality), fall back to WebP, fall back to
+ * the original. Falls back silently to the original at every step if sharp
+ * can't read the input (corrupt JPEG, animated GIF, etc.).
  */
-async function maybeWebp(buf: Buffer, originalContentType: string, accept: string | null) {
-  const wantsWebp = !!accept && accept.toLowerCase().includes("image/webp");
-  if (!wantsWebp) return { buf, contentType: originalContentType };
-  try {
-    const webp = await sharp(buf, { failOn: "none" })
-      .rotate() // honor EXIF orientation
-      .webp({ quality: 80, effort: 4 })
-      .toBuffer();
-    // Only ship WebP if it's actually smaller — sometimes already-compressed
-    // JPEGs grow when re-encoded; in that case keep the original.
-    if (webp.byteLength < buf.byteLength) {
-      return { buf: webp, contentType: "image/webp" };
+async function negotiateFormat(
+  buf: Buffer,
+  originalContentType: string,
+  accept: string | null
+): Promise<{ buf: Buffer; contentType: string }> {
+  const lower = (accept || "").toLowerCase();
+  const wantsAvif = lower.includes("image/avif");
+  const wantsWebp = lower.includes("image/webp");
+
+  // Try AVIF first — biggest savings.
+  if (wantsAvif) {
+    try {
+      const avif = await sharp(buf, { failOn: "none" })
+        .rotate()
+        .avif({ quality: 60, effort: 4 })
+        .toBuffer();
+      if (avif.byteLength < buf.byteLength) {
+        return { buf: avif, contentType: "image/avif" };
+      }
+    } catch {
+      // fall through to WebP
     }
-    return { buf, contentType: originalContentType };
-  } catch {
-    return { buf, contentType: originalContentType };
   }
+
+  // WebP — universally supported, 16-30% smaller than JPEG.
+  if (wantsWebp) {
+    try {
+      const webp = await sharp(buf, { failOn: "none" })
+        .rotate()
+        .webp({ quality: 80, effort: 4 })
+        .toBuffer();
+      if (webp.byteLength < buf.byteLength) {
+        return { buf: webp, contentType: "image/webp" };
+      }
+    } catch {
+      // fall through to original
+    }
+  }
+
+  return { buf, contentType: originalContentType };
 }
 
 /**
@@ -63,7 +87,7 @@ export async function GET(
       if (!r.ok) return transparentPixel();
       const original = Buffer.from(await r.arrayBuffer());
       const originalCt = r.headers.get("Content-Type") || "image/jpeg";
-      const { buf, contentType } = await maybeWebp(original, originalCt, accept);
+      const { buf, contentType } = await negotiateFormat(original, originalCt, accept);
       return new NextResponse(buf as unknown as BodyInit, {
         status: 200,
         headers: { "Content-Type": contentType, ...CACHE_HEADERS },
@@ -159,7 +183,7 @@ export async function GET(
     }
 
     const originalCt = imgRes.headers.get("Content-Type") || "image/jpeg";
-    const { buf, contentType } = await maybeWebp(original, originalCt, accept);
+    const { buf, contentType } = await negotiateFormat(original, originalCt, accept);
 
     return new NextResponse(buf as unknown as BodyInit, {
       status: 200,

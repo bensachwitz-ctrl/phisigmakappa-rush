@@ -7,8 +7,10 @@ import { Scene } from "@/components/brand/scene";
 import { InstagramFeed } from "@/components/site/instagram-feed";
 import { StickyCTA } from "@/components/site/sticky-cta";
 import { Reveal, CountUp } from "@/components/site/reveal";
+import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
 import { getSiteConfig } from "@/lib/site-config";
+import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
   GraduationCap, Sparkles, Quote, Star, Calendar,
@@ -185,6 +187,28 @@ export default async function Home({
   const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
   const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT);
 
+  // Next public rush event for the live countdown chip in the hero.
+  // Best-effort — if the DB read fails or the schedule is empty, the
+  // countdown component gracefully shows the "schedule drops in August"
+  // placeholder instead of a broken state.
+  let nextEvent: { startsAt: Date; endsAt: Date | null; name: string; location: string | null } | null = null;
+  try {
+    nextEvent = await prisma.event.findFirst({
+      where: {
+        isPrivate: false,
+        // Include events that are happening now (started but not ended yet).
+        OR: [
+          { startsAt: { gte: new Date() } },
+          { endsAt: { gte: new Date() } },
+        ],
+      },
+      orderBy: { startsAt: "asc" },
+      select: { startsAt: true, endsAt: true, name: true, location: true },
+    });
+  } catch {
+    nextEvent = null;
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <PublicNav />
@@ -200,10 +224,18 @@ export default async function Home({
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
             <div className="max-w-2xl animate-slide-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
-              {cfg["hero.eyebrow"]}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
+                {cfg["hero.eyebrow"]}
+              </span>
+              <RushCountdown
+                startsAt={nextEvent ? nextEvent.startsAt.toISOString() : null}
+                endsAt={nextEvent?.endsAt ? nextEvent.endsAt.toISOString() : null}
+                eventName={nextEvent ? nextEvent.name : null}
+                eventLocation={nextEvent ? nextEvent.location : null}
+              />
+            </div>
             <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none [text-wrap:balance]">
               {cfg["hero.h1.lead"]}{" "}<br className="hidden sm:block" />
               {cfg["hero.h1.tail"]}{" "}<span className="text-phisig-red">{cfg["hero.h1.highlight"]}</span>.

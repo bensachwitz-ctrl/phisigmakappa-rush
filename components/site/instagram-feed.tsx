@@ -64,8 +64,11 @@ export function InstagramFeed({
             alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
             width={520}
             height={i === 0 ? 650 : 520}
-            loading={i < 3 ? "eager" : "lazy"}
-            decoding={i === 0 ? "sync" : "async"}
+            // The IG feed is ~3 viewports below the fold, so every tile is
+            // eligible for lazy-loading. Only the hero PostTile in app/page.tsx
+            // gets loading=eager + fetchpriority=high (LCP candidate).
+            loading="lazy"
+            decoding="async"
             className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             style={{ objectPosition: p.objectPosition || DEFAULT_OBJECT_POSITION }}
           />
