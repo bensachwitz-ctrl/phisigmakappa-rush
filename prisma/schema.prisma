@@ -40,6 +40,19 @@ model Rush {
   consents        RushConsent[]
 }
 
+// Rate-limit log for /api/rush. Each row = one submit attempt. Indexed on
+// (ipAddress, createdAt) so the 60-minute window check is fast. Rows are
+// short-lived; a periodic cleanup job (or a TTL) can prune older than 24h.
+model RushSubmitLog {
+  id          String   @id @default(cuid())
+  ipAddress   String?
+  email       String?
+  status      String   // "ACCEPTED" | "RATE_LIMITED" | "INVALID"
+  createdAt   DateTime @default(now())
+
+  @@index([ipAddress, createdAt])
+}
+
 // TCPA-grade consent receipt: snapshots the EXACT disclosure text + timestamp
 // + IP + user-agent at the moment of submission, plus a double-opt-in confirm
 // flag. We retain these for 4 years (TCPA recordkeeping).

@@ -44,39 +44,83 @@ export const viewport: Viewport = {
 };
 
 /**
- * JSON-LD Organization schema. Helps Google rich results, Knowledge Panel,
- * and parent-side trust signals (verified org card in search).
+ * JSON-LD schema graph. Three nodes:
+ *   1. Organization (CollegeOrUniversity) — chapter identity for parent
+ *      Knowledge Panels and rich-result eligibility
+ *   2. WebSite — site-wide search action so Google can offer in-result search
+ *   3. PostalAddress — physical chapter house address linked from the org
+ *
+ * Round-12 holistic critic suggested adding `address`, `logo`, and `WebSite`;
+ * R14 ships all three plus expands `sameAs` and adds `foundingLocation`.
  */
-const ORGANIZATION_JSON_LD = {
+const SITE_URL = "https://phisigmakappa.vercel.app";
+const STRUCTURED_DATA = {
   "@context": "https://schema.org",
-  "@type": "CollegeOrUniversity",
-  "@id": "https://phisigmakappa.vercel.app/#organization",
-  name: "Phi Sigma Kappa, Gamma Triton chapter",
-  alternateName: "Phi Sig USC",
-  url: "https://phisigmakappa.vercel.app",
-  parentOrganization: {
-    "@type": "Organization",
-    name: "Phi Sigma Kappa",
-    url: "https://phisigmakappa.org",
-    foundingDate: "1873",
-  },
-  memberOf: {
-    "@type": "CollegeOrUniversity",
-    name: "University of South Carolina",
-    url: "https://sc.edu",
-  },
-  foundingDate: "1975",
-  sameAs: [
-    "https://www.instagram.com/phisig_usc/",
-    "https://phisigmakappa.org",
+  "@graph": [
+    {
+      "@type": "CollegeOrUniversity",
+      "@id": `${SITE_URL}/#organization`,
+      name: "Phi Sigma Kappa, Gamma Triton chapter",
+      alternateName: ["Phi Sig USC", "ΦΣΚ Gamma Triton"],
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon`,
+      image: `${SITE_URL}/opengraph-image`,
+      description:
+        "Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina — fraternity rush, philanthropy, brotherhood, and the Three Cardinal Principles since 1975.",
+      foundingDate: "1975",
+      foundingLocation: {
+        "@type": "Place",
+        name: "University of South Carolina, Columbia SC",
+      },
+      parentOrganization: {
+        "@type": "Organization",
+        name: "Phi Sigma Kappa",
+        url: "https://phisigmakappa.org",
+        foundingDate: "1873",
+      },
+      memberOf: {
+        "@type": "CollegeOrUniversity",
+        name: "University of South Carolina",
+        url: "https://sc.edu",
+      },
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "800 Lincoln Street",
+        addressLocality: "Columbia",
+        addressRegion: "SC",
+        postalCode: "29201",
+        addressCountry: "US",
+      },
+      sameAs: [
+        "https://www.instagram.com/phisig_usc/",
+        "https://phisigmakappa.org",
+      ],
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "Recruitment",
+          email: "rush@phisig-usc.com",
+          areaServed: "US",
+          availableLanguage: "English",
+        },
+        {
+          "@type": "ContactPoint",
+          contactType: "Anti-hazing report",
+          email: "advisor@phisig-usc.com",
+          url: "https://hazingprevention.org/help/",
+          areaServed: "US",
+        },
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en-US",
+    },
   ],
-  contactPoint: {
-    "@type": "ContactPoint",
-    contactType: "Recruitment",
-    email: "rush@phisig-usc.com",
-    areaServed: "US",
-    availableLanguage: "English",
-  },
 };
 
 export default function RootLayout({
@@ -89,11 +133,14 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body>
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

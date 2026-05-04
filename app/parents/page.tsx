@@ -32,8 +32,7 @@ export default async function ParentsPage() {
   const phonePresent = !!cfg["contact.rushPhone"];
 
   return (
-    <main className="min-h-screen bg-background">
-      <PublicNav />
+    <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
 
       <div className="container py-12 sm:py-16 max-w-4xl">
         <Link

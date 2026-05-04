@@ -87,6 +87,42 @@ const RushSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // TCPA evidence — captured at the moment of submission.
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    const userAgent = req.headers.get("user-agent") || null;
+
+    // ── Rate limit ────────────────────────────────────────────────────────
+    // Block more than 5 submits from the same IP in 60 minutes. Real rushees
+    // submit once; bots and copy-paste spam accounts hit the form repeatedly.
+    // Returning 429 short-circuits the parse + DB write so we don't poison
+    // the consent ledger with junk records.
+    if (ipAddress) {
+      try {
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const recent = await prisma.rushSubmitLog.count({
+          where: { ipAddress, createdAt: { gte: oneHourAgo } },
+        });
+        if (recent >= 5) {
+          await prisma.rushSubmitLog.create({
+            data: { ipAddress, status: "RATE_LIMITED" },
+          }).catch(() => {});
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "Too many submissions. If this isn't a typo, email rush@phisig-usc.com and we'll get you on the list.",
+            },
+            { status: 429, headers: { "Retry-After": "3600" } },
+          );
+        }
+      } catch {
+        // If the rate-limit lookup itself fails, fail open — never block a
+        // real PNM because of an infra glitch.
+      }
+    }
+
     const body = await req.json();
     const parsed = RushSchema.parse(body);
     const data = {
@@ -96,13 +132,14 @@ export async function POST(req: Request) {
       phone: parsed.phone.trim(),
     };
 
-    // TCPA evidence — captured at the moment of submission.
-    const ipAddress =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      null;
-    const userAgent = req.headers.get("user-agent") || null;
     const ageAttestation = data.ageAttestation || "ADULT_18_PLUS";
+
+    // Best-effort log of accepted submission for rate-limit math.
+    if (ipAddress) {
+      prisma.rushSubmitLog.create({
+        data: { ipAddress, email: data.email, status: "ACCEPTED" },
+      }).catch(() => {});
+    }
 
     const existing = await prisma.rush.findUnique({ where: { email: data.email } });
     if (existing) {
@@ -186,6 +223,16 @@ export async function POST(req: Request) {
       consentReceipt: { id: receipt.id, version: DISCLOSURE_VERSION, createdAt: receipt.createdAt },
     });
   } catch (err) {
+    // Best-effort: log invalid attempts so spam patterns are visible
+    const ipForLog =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    if (ipForLog) {
+      prisma.rushSubmitLog.create({
+        data: { ipAddress: ipForLog, status: "INVALID" },
+      }).catch(() => {});
+    }
     if (err instanceof z.ZodError) {
       return NextResponse.json(
         { ok: false, error: "Invalid input", issues: err.flatten() },

@@ -78,8 +78,7 @@ export default function LoginClient() {
   }
 
   return (
-    <main className="min-h-screen bg-phisig-mist flex flex-col">
-      <div className="container py-6">
+    <main id="main-content" className="min-h-screen bg-phisig-mist flex flex-col">      <div className="container py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to public site
         </Link>

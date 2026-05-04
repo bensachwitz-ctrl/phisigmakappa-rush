@@ -413,11 +413,14 @@ function ContactStep({
       </p>
 
       {/* Age attestation — separate one-tap toggle so the consent record is
-          unambiguous about WHICH path the rushee chose. */}
+          unambiguous about WHICH path the rushee chose. ARIA radiogroup so
+          screen readers announce "1 of 2 selected" properly. */}
       <Field id="ageAttestation" label="Age">
-        <div className="flex flex-wrap gap-2">
+        <div role="radiogroup" aria-label="Age attestation" className="flex flex-wrap gap-2">
           <button
             type="button"
+            role="radio"
+            aria-checked={data.ageAttestation === "ADULT_18_PLUS"}
             onClick={() => update("ageAttestation", "ADULT_18_PLUS")}
             className={cn(
               "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
@@ -430,6 +433,8 @@ function ContactStep({
           </button>
           <button
             type="button"
+            role="radio"
+            aria-checked={data.ageAttestation === "MINOR_17_WITH_GUARDIAN_PERMISSION"}
             onClick={() => update("ageAttestation", "MINOR_17_WITH_GUARDIAN_PERMISSION")}
             className={cn(
               "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",

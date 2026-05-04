@@ -18,8 +18,7 @@ export default async function PrivacyPage() {
   const rushEmail = cfg["contact.rushEmail"];
   const rushMailto = cleanMailto(rushEmail);
   return (
-    <main className="min-h-screen bg-background">
-      <PublicNav />
+    <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
       <div className="container py-12 sm:py-16 max-w-3xl">
         <Link
           href="/"

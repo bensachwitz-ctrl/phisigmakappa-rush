@@ -132,8 +132,7 @@ export default async function Home({
   // pixel below the form is a distraction at a 30-second walk-up on bumpy 4G.
   if (booth) {
     return (
-      <main className="min-h-screen bg-phisig-mist">
-        <PublicNav booth />
+      <main id="main-content" className="min-h-screen bg-phisig-mist">        <PublicNav booth />
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -210,8 +209,7 @@ export default async function Home({
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <PublicNav />
+    <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
 
       {/* ─── HERO ─── */}
       <section className="relative overflow-hidden">
@@ -506,10 +504,27 @@ export default async function Home({
               Upcoming events
             </h2>
           </div>
-          <p className="text-muted-foreground max-w-xl">
-            Full Fall '26 rush schedule drops in August. Get on the interest list above —
-            we'll text everyone the second it's live. Private events go out by invitation only.
-          </p>
+          <div className="space-y-4 max-w-xl">
+            <p className="text-muted-foreground">
+              Full Fall &apos;26 rush schedule drops in August. Get on the interest list above —
+              we&apos;ll text everyone the second it&apos;s live. Private events go out by invitation only.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="webcal://phisigmakappa.vercel.app/api/events.ics"
+                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+              >
+                <Calendar className="h-3 w-3" /> Subscribe in Apple Calendar
+              </a>
+              <a
+                href="/api/events.ics"
+                download="phisigmakappa-rush.ics"
+                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+              >
+                <Calendar className="h-3 w-3" /> Download .ics
+              </a>
+            </div>
+          </div>
         </div>
         <div className="max-w-3xl">
           <ScheduleList />
