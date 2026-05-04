@@ -13,9 +13,12 @@ export const dynamic = "force-dynamic";
  * STOP / opt-out events for arbitrary phone numbers — without verification,
  * anyone could destroy our TCPA audit trail by spamming this endpoint.
  *
- * Returns true if the signature is valid (or if TWILIO_AUTH_TOKEN isn't set,
- * which is dev / preview mode — log a warning but still accept so local
- * testing isn't blocked).
+ * Behavior when TWILIO_AUTH_TOKEN is missing:
+ *   - Production (NODE_ENV=production OR VERCEL_ENV=production):  DENY.
+ *     Fail-closed: an attacker cannot send forged STOP events just because
+ *     someone forgot to set the env var.
+ *   - Dev / preview / test: accept with a warning so local testing works
+ *     without round-tripping through the Twilio Console.
  */
 function verifyTwilioSignature(
   url: string,
@@ -23,8 +26,15 @@ function verifyTwilioSignature(
   signatureHeader: string | null
 ): boolean {
   const token = process.env.TWILIO_AUTH_TOKEN;
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
   if (!token) {
-    console.warn("[sms/inbound] TWILIO_AUTH_TOKEN not set — accepting unverified");
+    if (isProd) {
+      console.error("[sms/inbound] TWILIO_AUTH_TOKEN not set in production — denying");
+      return false;
+    }
+    console.warn("[sms/inbound] TWILIO_AUTH_TOKEN not set (dev/preview) — accepting unverified");
     return true;
   }
   if (!signatureHeader) return false;

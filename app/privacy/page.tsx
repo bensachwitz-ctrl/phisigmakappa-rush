@@ -61,6 +61,9 @@ export default async function PrivacyPage() {
             </a>{" "}
             to be removed from all communications. Consent to receive texts is not a condition of any membership consideration.
           </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground">Quiet hours:</span> we send messages only between <span className="font-medium text-foreground">9:00&nbsp;AM and 9:00&nbsp;PM Eastern</span>. We do not text outside this window, in line with CTIA SMS Best Practices. Time-sensitive event reminders fired by automation are similarly throttled to this window.
+          </p>
         </section>
 
         <section className="mt-8 space-y-2">

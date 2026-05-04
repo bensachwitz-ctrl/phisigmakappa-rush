@@ -37,10 +37,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
     description: desc,
+    alternates: { canonical: "/" },
     openGraph: {
       title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
       description: `${summary} Get on the Fall '26 rush interest list.`,
       type: "website",
+      url: "/",
     },
     twitter: {
       card: "summary_large_image",
