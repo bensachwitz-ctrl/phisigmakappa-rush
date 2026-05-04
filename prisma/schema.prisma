@@ -83,7 +83,7 @@ model Brother {
   studyHours Int    @default(0)
   role      String   @default("MEMBER")  // MEMBER | ADMIN
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   lastSeen  DateTime @default(now())
 
   votes     Vote[]
@@ -98,7 +98,7 @@ model Announcement {
   pinned    Boolean  @default(false)
   authorId  String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   author    Brother? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 }
@@ -136,7 +136,7 @@ model Document {
 model SiteConfig {
   key       String   @id
   value     String
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Vote {
@@ -146,7 +146,7 @@ model Vote {
   value     Int      // -2 strong no, -1 no, 0 neutral, 1 yes, 2 strong yes
   comment   String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   rush      Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
   brother   Brother  @relation(fields: [brotherId], references: [id], onDelete: Cascade)
