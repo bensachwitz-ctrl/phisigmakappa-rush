@@ -60,9 +60,12 @@ export const DEFAULTS = {
   // Hero headline & CTA — punchier, single-beat reading. Round-7 Rushee critic
   // called the previous "Rush Phi Sigma Kappa. Fall '26 at USC." two-fragment
   // construction "two stiff facts mashed together." Now reads as one line.
-  "hero.h1.lead": "Rush Phi Sig at USC.",
-  "hero.h1.tail": "Fall '26",
-  "hero.h1.highlight": "starts soon.",
+  // Page renders as: "<lead> <tail> <highlight>." — final period added by
+  // the JSX template, so don't end any of these three with a period or you
+  // get a double-period bug at the seam.
+  "hero.h1.lead": "Rush Phi Sig at USC",
+  "hero.h1.tail": "— Fall '26",
+  "hero.h1.highlight": "starts soon",
   "hero.cta.label": "Drop my number",
   "hero.cta.href": "#register",
 
