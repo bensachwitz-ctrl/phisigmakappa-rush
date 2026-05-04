@@ -33,7 +33,11 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const summary = `${cfg["stats.brothers"]} brothers · ${cfg["stats.gpa"]} GPA · ${cfg["philanthropy.raisedTotal"]} raised for ${cfg["philanthropy.beneficiaryShort"]}.`;
-  const desc = `Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina. ${summary} Get on the Fall '26 rush interest list — we'll text you when the schedule drops.`;
+  // Google truncates SERP descriptions around 155–160 chars. Keeping the meta
+  // description under that ceiling prevents the trailing "we'll text you when
+  // the schedule drops" from showing as "...". The longer pitch lives in the
+  // hero copy, which is what users see after they click.
+  const desc = `Phi Sigma Kappa @ USC. ${summary} Join the Fall '26 rush list — we'll text when the schedule drops.`;
   return {
     title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
     description: desc,

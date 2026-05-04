@@ -138,7 +138,7 @@ export async function POST(req: Request) {
   // ── HELP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
   if (isHelp) {
     return twiml(
-      "Phi Sigma Kappa Gamma Triton (USC) rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out. Help: rush@phisig-usc.com or visit https://phisigmakappa.vercel.app/parents."
+      "Phi Sigma Kappa Gamma Triton (USC) rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out. Help: rush@phisig-usc.com. Privacy: https://phisigmakappa.vercel.app/privacy"
     );
   }
 

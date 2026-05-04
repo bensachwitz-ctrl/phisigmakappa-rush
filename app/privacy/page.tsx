@@ -19,6 +19,12 @@ export const metadata = {
     url: "/privacy",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy — Phi Sigma Kappa @ USC",
+    description:
+      "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
+  },
 };
 
 export default async function PrivacyPage() {

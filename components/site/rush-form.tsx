@@ -102,6 +102,11 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const [consent, setConsent] = React.useState(false);
   const [receiptId, setReceiptId] = React.useState<string | null>(null);
   const [idleSecondsLeft, setIdleSecondsLeft] = React.useState<number | null>(null);
+  // Honeypot — see /api/rush for full rationale. State stays "" for real users
+  // (the input is offscreen + tabIndex=-1 + aria-hidden), so any non-empty
+  // value indicates bot traffic. The server returns a fake-success 200 so the
+  // bot doesn't retry, while skipping the DB write and SMS send.
+  const [honeypot, setHoneypot] = React.useState("");
 
   // Booth-mode safety net: if a rushee abandons mid-form and the tablet sits idle for
   // 60 seconds, auto-clear the form so the next rushee doesn't see the previous one's email.
@@ -191,6 +196,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
         backgroundInfo: data.about.trim(),
         headshotUrl: data.headshotUrl,
         ageAttestation: data.ageAttestation,
+        website: honeypot,
       };
       const res = await fetch("/api/rush", {
         method: "POST",
@@ -223,6 +229,27 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
 
   return (
     <Card className="overflow-hidden border-border/80 shadow-xl shadow-phisig-red/5 hover:shadow-2xl hover:shadow-phisig-red/10 transition-shadow duration-500">
+      {/* Honeypot — bot bait. Real users never see this field; assistive tech
+          skips it via aria-hidden + tabIndex=-1; the offscreen position keeps
+          it out of the visual viewport without using display:none (display:none
+          is the one place spambots learned to skip). */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
       <div className="relative h-1 bg-secondary">
         <div
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700 ease-out"

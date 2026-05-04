@@ -14,15 +14,23 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "For Parents",
+  // Trimmed from 217 to ~155 chars so the description is not truncated in
+  // Google SERP. Longer pitch lives on the page body.
   description:
-    "Phi Sigma Kappa Gamma Triton at the University of South Carolina. Anti-hazing policy, advisor contact, GPA standards, philanthropy partnerships, and the data-handling rules we follow when your son joins the rush list.",
+    "Anti-hazing policy, advisor contact, GPA standards, and how Phi Sigma Kappa @ USC handles your son's data when he joins the rush list.",
   alternates: { canonical: "/parents" },
   openGraph: {
     title: "For Parents — Phi Sigma Kappa Gamma Triton",
     description:
-      "Anti-hazing policy, advisor contact, GPA standards, philanthropy partnerships, and how we handle your son's data when he joins the rush list.",
+      "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
     url: "/parents",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "For Parents — Phi Sigma Kappa Gamma Triton",
+    description:
+      "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
   },
 };
 

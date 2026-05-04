@@ -83,6 +83,12 @@ const RushSchema = z.object({
   // for older clients that don't send this field; the express-consent text
   // they checked covers both 18+ and 17+with-guardian paths.
   ageAttestation: z.enum(["ADULT_18_PLUS", "MINOR_17_WITH_GUARDIAN_PERMISSION"]).optional(),
+  // Honeypot — hidden offscreen input that real users can't see/touch but
+  // dumb bots auto-fill. Any non-empty value here means the submission is
+  // bot traffic. We accept (return 200) so the bot doesn't iterate, but we
+  // never touch the DB. Field name "website" is the highest-yield trigger
+  // per OWASP form-spam research.
+  website: z.string().max(500).optional().or(z.literal("")),
 });
 
 export async function POST(req: Request) {
@@ -125,6 +131,14 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const parsed = RushSchema.parse(body);
+
+    // Honeypot tripped — silently 200 without touching the DB or sending SMS.
+    // Returning a real-looking success keeps the bot from rotating IPs to
+    // retry, while the consent ledger and Twilio quota stay clean.
+    if (parsed.website && parsed.website.trim() !== "") {
+      return NextResponse.json({ ok: true, updated: false }, { status: 200 });
+    }
+
     const data = {
       ...parsed,
       email: parsed.email.trim().toLowerCase(),
