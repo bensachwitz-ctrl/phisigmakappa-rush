@@ -542,6 +542,18 @@ export default async function Home() {
               <ContactPill icon={Mail} label="rush@phisig-usc.com" sub="Rush questions" />
               <ContactPill icon={Instagram} label="@phisig_usc" sub="Daily chapter life" />
             </div>
+
+            <div className="mt-8 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="h-4 w-4 text-phisig-red mt-0.5 shrink-0" />
+                <div className="text-xs leading-relaxed">
+                  <p className="font-semibold text-foreground">Zero-tolerance anti-hazing policy.</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm. Concerns can be reported anonymously to the chapter advisor or to Phi Sigma Kappa national HQ.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="relative">
@@ -795,6 +807,7 @@ function ContactPill({
 /**
  * Real Instagram photo rendered through our /api/photo proxy with object-cover cropping.
  * The proxy scrapes the public /embed/ page for the og:image and proxies bytes through our domain.
+ * Falls back to a designed cardinal-red gradient tile if the proxy can't resolve a real image.
  */
 function PostTile({
   slug, caption, icon: Icon, className,
@@ -809,16 +822,21 @@ function PostTile({
       href={`https://www.instagram.com/p/${slug}/`}
       target="_blank"
       rel="noreferrer"
-      className={`group relative rounded-2xl overflow-hidden border border-border bg-secondary lift block ${className ?? ""}`}
+      className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
     >
+      {/* Fallback layer — cardinal gradient with ΦΣΚ wordmark, visible until image loads */}
+      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-[#7a0a1f] flex items-center justify-center pointer-events-none">
+        <span className="font-serif text-6xl font-bold text-white/15 leading-none select-none">ΦΣΚ</span>
+      </div>
       <img
         src={`/api/photo/${slug}?v=3`}
         alt={caption}
         loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        className="relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
+      <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
         <Icon className="h-3 w-3" /> {caption}
       </span>
     </a>

@@ -81,6 +81,15 @@ export async function GET(
     });
     if (!imgRes.ok) throw new Error(`img status ${imgRes.status}`);
     const buf = Buffer.from(await imgRes.arrayBuffer());
+
+    // Sanity check: real Phi Sig chapter photos from Instagram are 100KB+.
+    // Anything under 30KB is almost certainly the IG branding/logo asset
+    // returned by a login-wall fallback path. Reject so we don't poison
+    // browser caches with the wrong image.
+    if (buf.byteLength < 30_000) {
+      throw new Error(`suspiciously small image: ${buf.byteLength} bytes`);
+    }
+
     return new NextResponse(buf, {
       status: 200,
       headers: {
