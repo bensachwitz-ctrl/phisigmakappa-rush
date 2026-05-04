@@ -4,14 +4,44 @@ import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "phisig_admin";
 const MAX_AGE = 60 * 60 * 12; // 12h
+const DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me";
+
+/**
+ * Resolve the session secret. In production we REFUSE to fall back to the dev
+ * default — if ADMIN_SESSION_SECRET is unset in prod, anyone could mint admin
+ * cookies offline using the well-known fallback string. Throwing turns a silent
+ * misconfiguration into a loud 500 the operator notices immediately.
+ */
+function getSecret(): string {
+  const env = process.env.ADMIN_SESSION_SECRET;
+  if (env) return env;
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
+  if (isProd) {
+    throw new Error("ADMIN_SESSION_SECRET is required in production");
+  }
+  return DEV_FALLBACK_SECRET;
+}
 
 function sign(value: string, secret: string) {
   return crypto.createHmac("sha256", secret).update(value).digest("hex");
 }
 
+/**
+ * Constant-time string equality on equal-length hex strings. Falls back to
+ * length check first because timingSafeEqual throws on mismatched lengths.
+ * Used for HMAC signature compare so an attacker can't byte-by-byte probe
+ * the expected signature via response timing.
+ */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
+}
+
 // Token format: <brotherId>.<isAdmin01>.<ts>.<sig>
 export function createSessionToken(brotherId: string, isAdmin: boolean) {
-  const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
+  const secret = getSecret();
   const ts = Date.now().toString();
   const adminFlag = isAdmin ? "1" : "0";
   const payload = `${brotherId}.${adminFlag}.${ts}`;
@@ -29,9 +59,13 @@ export function parseSessionToken(token: string | undefined):
   if (parts.length === 4) {
     const [brotherId, adminFlag, ts, sig] = parts;
     if (!brotherId || !ts || !sig) return null;
-    const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
-    const expected = sign(`${brotherId}.${adminFlag}.${ts}`, secret);
-    const sigOk = sig === expected;
+    let expected: string;
+    try {
+      expected = sign(`${brotherId}.${adminFlag}.${ts}`, getSecret());
+    } catch {
+      return null;
+    }
+    const sigOk = timingSafeEqualHex(sig, expected);
     const age = Date.now() - parseInt(ts, 10);
     const ageOk = !Number.isNaN(age) && age <= MAX_AGE * 1000;
     return { brotherId, isAdmin: adminFlag === "1", valid: sigOk && ageOk };
@@ -39,9 +73,13 @@ export function parseSessionToken(token: string | undefined):
   if (parts.length === 3) {
     const [brotherId, ts, sig] = parts;
     if (!brotherId || !ts || !sig) return null;
-    const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
-    const expected = sign(`${brotherId}.${ts}`, secret);
-    const sigOk = sig === expected;
+    let expected: string;
+    try {
+      expected = sign(`${brotherId}.${ts}`, getSecret());
+    } catch {
+      return null;
+    }
+    const sigOk = timingSafeEqualHex(sig, expected);
     const age = Date.now() - parseInt(ts, 10);
     const ageOk = !Number.isNaN(age) && age <= MAX_AGE * 1000;
     return { brotherId, isAdmin: false, valid: sigOk && ageOk };

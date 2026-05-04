@@ -1,11 +1,28 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { setBrotherCookie, clearAdminCookie } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Constant-time string compare. crypto.timingSafeEqual throws on length
+ * mismatch — pad both sides to the longer of the two to avoid leaking
+ * which one was longer, then compare. Used to compare admin passwords.
+ */
+function constantTimeStringEqual(a: string, b: string): boolean {
+  const len = Math.max(a.length, b.length);
+  const bufA = Buffer.alloc(len);
+  const bufB = Buffer.alloc(len);
+  bufA.write(a, "utf8");
+  bufB.write(b, "utf8");
+  // We must still check length last so the boolean doesn't leak — XOR-fold
+  // the length-mismatch into the result.
+  return crypto.timingSafeEqual(bufA, bufB) && a.length === b.length;
+}
 
 const AdminSchema = z.object({
   mode: z.literal("admin"),
@@ -41,12 +58,51 @@ export async function POST(req: Request) {
   const legacyParsed = !adminParsed.success ? LegacySchema.safeParse(body) : null;
   if (adminParsed.success || legacyParsed?.success) {
     const data: any = adminParsed.success ? adminParsed.data : legacyParsed!.data;
+
+    // Per-IP brute-force throttle: 5 failed attempts within 15 minutes →
+    // hard-block for the remainder of the 15-min window. The shared admin
+    // password is the single most attractive target on this site, so we
+    // CANNOT allow unlimited attempts.
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    if (ipAddress) {
+      try {
+        const since = new Date(Date.now() - 15 * 60 * 1000);
+        const failedRecent = await prisma.rushSubmitLog.count({
+          where: {
+            ipAddress,
+            status: "ADMIN_LOGIN_FAILED",
+            createdAt: { gte: since },
+          },
+        });
+        if (failedRecent >= 5) {
+          return NextResponse.json(
+            { ok: false, error: "Too many failed attempts. Wait 15 minutes and try again." },
+            { status: 429, headers: { "Retry-After": "900" } },
+          );
+        }
+      } catch {
+        // Lookup failure — fail open to avoid locking out admins during DB issues.
+      }
+    }
+
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
     const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
-    // Case-insensitive compare so the e-board doesn't fail login over a capitalization typo.
+    // Username is intentionally case-insensitive (it's a shared chapter handle,
+    // not a secret — admins type "Phisig" / "PHISIG" / "phisig" interchangeably).
+    // Password is case-SENSITIVE — lowercasing it as we used to was halving the
+    // effective keyspace and was flagged as a real security defect in audit.
     const userOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
-    const passOk = (data.password || "").toLowerCase() === expectedPass.toLowerCase();
+    const passOk = constantTimeStringEqual(String(data.password || ""), expectedPass);
     if (!userOk || !passOk) {
+      // Log the failure so the per-IP throttle can see it.
+      if (ipAddress) {
+        prisma.rushSubmitLog.create({
+          data: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
+        }).catch(() => {});
+      }
       return NextResponse.json({ ok: false, error: "Invalid admin credentials" }, { status: 401 });
     }
     // Single shared admin record — username = the credential. If the legacy "name"

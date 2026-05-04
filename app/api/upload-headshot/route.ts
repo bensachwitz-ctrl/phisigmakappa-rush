@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,6 +9,42 @@ const MAX_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 
 export async function POST(req: Request) {
+  // Per-IP throttle. This route is intentionally public (rushees upload their
+  // own headshot during onboarding before they have a session), so we can't
+  // gate on auth — instead we cap at 10 uploads / hour per IP. Real PNMs
+  // upload one headshot, maybe re-try once. Anything past that is abuse.
+  const ipAddress =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    null;
+  if (ipAddress) {
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000);
+      const recent = await prisma.rushSubmitLog.count({
+        where: { ipAddress, status: "HEADSHOT_UPLOAD", createdAt: { gte: since } },
+      });
+      if (recent >= 10) {
+        return NextResponse.json(
+          { ok: false, error: "Too many uploads. Try again in an hour." },
+          { status: 429, headers: { "Retry-After": "3600" } },
+        );
+      }
+    } catch {
+      // Fail open on DB error so a glitch doesn't break legit onboarding.
+    }
+  }
+
+  // Reject non-multipart bodies cleanly (415 instead of letting formData()
+  // throw and falling into the catch-all 500). This keeps debugging signal
+  // clean and avoids leaking framework errors.
+  const ct = req.headers.get("content-type") || "";
+  if (!ct.toLowerCase().includes("multipart/form-data")) {
+    return NextResponse.json(
+      { ok: false, error: "Expected multipart/form-data" },
+      { status: 415 },
+    );
+  }
+
   try {
     const form = await req.formData();
     const file = form.get("file");
@@ -28,6 +65,12 @@ export async function POST(req: Request) {
         { ok: false, error: "Only JPG, PNG, WEBP, HEIC images allowed" },
         { status: 415 }
       );
+    }
+
+    if (ipAddress) {
+      prisma.rushSubmitLog.create({
+        data: { ipAddress, status: "HEADSHOT_UPLOAD" },
+      }).catch(() => {});
     }
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;
