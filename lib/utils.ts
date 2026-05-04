@@ -70,24 +70,30 @@ export function formatTime(d: Date | string) {
 export function cleanUrl(raw: string | undefined | null): string {
   if (!raw) return "";
   let s = String(raw).trim();
-  // Strip trailing punctuation pollution: backslash, ellipsis, repeated dots.
-  // Run iteratively in case multiple bad chars are stacked.
+  // Unicode ellipsis (U+2026) is never legitimate in a URL — strip every
+  // occurrence anywhere in the string. The R10 audit caught
+  // 'https://hazingprevention.org/help/….' shipping live; the U+2026
+  // character had been auto-inserted somewhere in copy-paste.
+  s = s.replace(/…/g, "");
+  // Normalize smart quotes that sneak in via WYSIWYG copy-paste.
+  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  // Strip trailing punctuation pollution: backslash, isolated sentence-final
+  // dot (URLs basically never end in a literal '.'), zero-width chars, and
+  // whitespace. Run iteratively to peel layered junk.
   while (s.length > 0) {
-    const last = s[s.length - 1];
-    if (last === "\\" || last === "…" || last === " " || last === "\n" || last === "\r" || last === "\t") {
-      s = s.slice(0, -1);
-      continue;
-    }
-    // Strip trailing run of 2+ ASCII dots (".." or "...") but keep a single
-    // dot since it's needed for .com / .org / .edu TLDs.
-    if (last === "." && s.length >= 2 && s[s.length - 2] === ".") {
+    const last = s.charAt(s.length - 1);
+    const code = s.charCodeAt(s.length - 1);
+    if (
+      last === "\\" || last === "." || last === " " ||
+      last === "\n" || last === "\r" || last === "\t" ||
+      code === 0x200B || code === 0x200C || code === 0x200D || // zero-width chars
+      code === 0xFEFF // BOM
+    ) {
       s = s.slice(0, -1);
       continue;
     }
     break;
   }
-  // Normalize smart quotes that sometimes appear after WYSIWYG copy-paste.
-  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
   return s;
 }
 
