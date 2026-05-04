@@ -274,6 +274,7 @@ export default async function Home() {
       </section>
 
       {/* ─── INSTAGRAM FEED — real photos from @phisig_usc ─── */}
+      {cfg["show.instagramFeed"] !== "false" && (
       <section className="container py-14 sm:py-20">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
@@ -314,8 +315,10 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+      )}
 
       {/* ─── HOW RUSH WORKS ─── */}
+      {cfg["show.timeline"] !== "false" && (
       <section className="border-y border-border bg-secondary/40">
         <div className="container py-14 sm:py-18">
           <div className="max-w-2xl mb-10">
@@ -351,6 +354,7 @@ export default async function Home() {
           </ol>
         </div>
       </section>
+      )}
 
       {/* ─── SCHEDULE ─── */}
       <section id="schedule" className="container py-14 sm:py-20 scroll-mt-20">
@@ -374,6 +378,7 @@ export default async function Home() {
       </section>
 
       {/* ─── TESTIMONIAL + ABOUT (combined for density) ─── */}
+      {cfg["show.testimonial"] !== "false" && (
       <section className="border-t border-border bg-gradient-to-b from-phisig-red-soft/40 via-background to-background">
         <div className="container py-14 sm:py-20">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -404,8 +409,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─── BROTHER SPOTLIGHT ─── */}
+      {cfg["show.spotlight"] !== "false" && (
       <section className="container py-14 sm:py-18">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
@@ -471,6 +478,7 @@ export default async function Home() {
       </section>
 
       {/* ─── 2026 EXECUTIVE BOARD ─── */}
+      {cfg["show.eboard"] !== "false" && (
       <section className="border-t border-border">
         <div className="container py-14 sm:py-18">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
@@ -508,6 +516,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─── ABOUT THE CHAPTER ─── */}
       <section id="about" className="container py-14 sm:py-20 scroll-mt-20">
@@ -610,6 +619,7 @@ export default async function Home() {
       </section>
 
       {/* ─── FAQ ─── */}
+      {cfg["show.faq"] !== "false" && (
       <section className="border-y border-border bg-secondary/30">
         <div className="container py-14 sm:py-20">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
@@ -657,8 +667,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─── WHERE TO FIND US ─── */}
+      {cfg["show.whereWeLive"] !== "false" && (
       <section className="container py-14 sm:py-18">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <a
@@ -747,6 +759,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─── FINAL CTA ─── */}
       <section className="container pb-16 sm:pb-20">
