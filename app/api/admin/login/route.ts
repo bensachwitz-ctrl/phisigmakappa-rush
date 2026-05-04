@@ -43,7 +43,10 @@ export async function POST(req: Request) {
     const data: any = adminParsed.success ? adminParsed.data : legacyParsed!.data;
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
     const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
-    if (data.username.trim() !== expectedUser || data.password !== expectedPass) {
+    // Case-insensitive compare so the e-board doesn't fail login over a capitalization typo.
+    const userOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
+    const passOk = (data.password || "").toLowerCase() === expectedPass.toLowerCase();
+    if (!userOk || !passOk) {
       return NextResponse.json({ ok: false, error: "Invalid admin credentials" }, { status: 401 });
     }
     // Single shared admin record — username = the credential. If the legacy "name"
