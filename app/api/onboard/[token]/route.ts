@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ const SubmitSchema = z.object({
   pledgeClass: z.string().optional(),
   bio: z.string().max(2000).optional(),
   headshotUrl: z.string().url().optional().or(z.literal("")),
+  password: z.string().min(6).max(120).optional(),
+  confirmPassword: z.string().min(6).max(120).optional(),
 });
 
 async function loadInvite(token: string) {
@@ -58,6 +61,10 @@ export async function POST(req: Request, { params }: { params: { token: string }
   }
   const data = parsed.data;
   const cleanName = data.name.trim();
+  if (data.password && data.confirmPassword && data.password !== data.confirmPassword) {
+    return NextResponse.json({ ok: false, error: "Passwords don't match" }, { status: 400 });
+  }
+  const passwordHash = data.password ? hashPassword(data.password) : undefined;
 
   const existing = await prisma.brother.findUnique({ where: { name: cleanName } });
   let brother;
@@ -73,6 +80,7 @@ export async function POST(req: Request, { params }: { params: { token: string }
         pledgeClass: data.pledgeClass || existing.pledgeClass,
         bio: data.bio || existing.bio,
         headshotUrl: data.headshotUrl || existing.headshotUrl,
+        passwordHash: passwordHash || existing.passwordHash,
         lastSeen: new Date(),
       },
     });
@@ -88,6 +96,7 @@ export async function POST(req: Request, { params }: { params: { token: string }
         pledgeClass: data.pledgeClass || null,
         bio: data.bio || null,
         headshotUrl: data.headshotUrl || null,
+        passwordHash: passwordHash || null,
         role: "MEMBER",
       },
     });

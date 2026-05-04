@@ -38,6 +38,8 @@ export function OnboardingForm({
     pledgeClass: "",
     bio: "",
     headshotUrl: "",
+    password: "",
+    confirmPassword: "",
   });
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
@@ -66,6 +68,14 @@ export function OnboardingForm({
       push({ title: "Full name is required", variant: "destructive" });
       return;
     }
+    if (form.password.length < 6) {
+      push({ title: "Pick a password at least 6 characters long", variant: "destructive" });
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      push({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch(`/api/onboard/${token}`, {
@@ -84,6 +94,7 @@ export function OnboardingForm({
   }
 
   if (done) {
+    const firstName = form.name.trim().split(/\s+/)[0];
     return (
       <Card className="border-emerald-200 bg-emerald-50/40">
         <CardContent className="p-8 text-center">
@@ -92,11 +103,25 @@ export function OnboardingForm({
           </span>
           <h2 className="text-2xl font-semibold tracking-tight">You're in.</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Your profile is live in the chapter directory. The e-board will send your sign-in info shortly.
+            Your profile is live in the chapter directory.
           </p>
-          <p className="mt-4 text-xs text-phisig-red font-semibold tracking-[0.18em] uppercase">
-            #DamnProud
-          </p>
+          <div className="mt-5 rounded-xl border border-border bg-white p-4 text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Your sign-in</p>
+            <p className="mt-2 text-sm">
+              <span className="text-muted-foreground">Username: </span>
+              <span className="font-mono font-semibold">{firstName}</span>
+            </p>
+            <p className="mt-1 text-sm">
+              <span className="text-muted-foreground">Password: </span>
+              <span className="text-foreground">the one you just set</span>
+            </p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Sign in any time at{" "}
+              <a href="/admin/login" className="text-phisig-red hover:underline font-medium">/admin/login</a>{" "}
+              → choose <strong>Brother</strong> tab.
+            </p>
+          </div>
+          <p className="mt-4 text-xs text-phisig-red font-semibold tracking-[0.18em] uppercase">#DamnProud</p>
         </CardContent>
       </Card>
     );
@@ -198,6 +223,41 @@ export function OnboardingForm({
               onChange={(e) => set("bio", e.target.value)}
               placeholder="Hometown, interests, anything brothers should know."
             />
+          </div>
+
+          <div className="rounded-xl border border-phisig-red/20 bg-phisig-red-soft/30 p-4 space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Set your sign-in</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Pick a password you'll remember — it's the only way back into your account.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="mb-1.5 inline-block">Password *</Label>
+                <Input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => set("password", e.target.value)}
+                  placeholder="At least 6 characters"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <Label className="mb-1.5 inline-block">Confirm password *</Label>
+                <Input
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => set("confirmPassword", e.target.value)}
+                  placeholder="Re-enter password"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
           </div>
 
           <Button type="submit" disabled={busy} size="lg" className="w-full">

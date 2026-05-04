@@ -82,6 +82,7 @@ model Brother {
   serviceHours Int   @default(0)
   studyHours Int    @default(0)
   role      String   @default("MEMBER")  // MEMBER | ADMIN
+  passwordHash String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   lastSeen  DateTime @default(now())

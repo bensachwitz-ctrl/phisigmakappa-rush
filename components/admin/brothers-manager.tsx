@@ -41,7 +41,15 @@ const empty = {
   duesPaid: false, serviceHours: 0, studyHours: 0, role: "MEMBER" as "MEMBER" | "ADMIN",
 };
 
-export function BrothersManager({ initial }: { initial: Brother[] }) {
+export function BrothersManager({
+  initial,
+  isAdmin = true,
+  currentBrotherId = null,
+}: {
+  initial: Brother[];
+  isAdmin?: boolean;
+  currentBrotherId?: string | null;
+}) {
   const { push } = useToast();
   const [list, setList] = React.useState<Brother[]>(initial);
   const [query, setQuery] = React.useState("");
@@ -185,15 +193,19 @@ export function BrothersManager({ initial }: { initial: Brother[] }) {
             className="pl-9"
           />
         </div>
-        <Button variant="outline" onClick={() => setInviteOpen(true)}>
-          <Send className="h-4 w-4" /> Invite brother
-        </Button>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Add brother
-        </Button>
+        {isAdmin && (
+          <>
+            <Button variant="outline" onClick={() => setInviteOpen(true)}>
+              <Send className="h-4 w-4" /> Invite brother
+            </Button>
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" /> Add brother
+            </Button>
+          </>
+        )}
       </div>
 
-      <InviteBrotherDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      {isAdmin && <InviteBrotherDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />}
 
 
       {filtered.length === 0 ? (
@@ -230,11 +242,11 @@ export function BrothersManager({ initial }: { initial: Brother[] }) {
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {b.duesPaid ? (
-                    <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 cursor-pointer" onClick={() => quickToggleDues(b)}>
+                    <Badge className={`bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 ${isAdmin ? "cursor-pointer" : ""}`} onClick={isAdmin ? () => quickToggleDues(b) : undefined}>
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Dues paid
                     </Badge>
                   ) : (
-                    <Badge className="bg-amber-50 text-amber-800 ring-1 ring-amber-200 cursor-pointer" onClick={() => quickToggleDues(b)}>
+                    <Badge className={`bg-amber-50 text-amber-800 ring-1 ring-amber-200 ${isAdmin ? "cursor-pointer" : ""}`} onClick={isAdmin ? () => quickToggleDues(b) : undefined}>
                       Dues unpaid
                     </Badge>
                   )}
@@ -268,12 +280,16 @@ export function BrothersManager({ initial }: { initial: Brother[] }) {
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(b)}>
-                      <Edit3 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {(isAdmin || b.id === currentBrotherId) && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(b)} title={b.id === currentBrotherId && !isAdmin ? "Edit your profile" : "Edit"}>
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)} title="Delete (admin only)">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

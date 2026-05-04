@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, getCurrentBrother } from "@/lib/auth";
+import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +58,7 @@ async function sendSms(to: string, link: string, sender: string) {
 
 export async function GET() {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const invites = await prisma.brotherInvite.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -67,6 +68,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const body = await req.json().catch(() => ({}));
   const parsed = InviteSchema.safeParse(body);
   if (!parsed.success) {
@@ -113,6 +115,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const body = await req.json().catch(() => ({}));
   const id = body?.id;
   if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });

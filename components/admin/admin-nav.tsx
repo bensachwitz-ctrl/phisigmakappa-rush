@@ -12,18 +12,19 @@ import {
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { href: "/admin", label: "Rush", icon: LayoutDashboard },
-  { href: "/admin/brothers", label: "Brothers", icon: Users },
-  { href: "/admin/events", label: "Events", icon: CalendarDays },
-  { href: "/admin/announcements", label: "News", icon: Megaphone },
-  { href: "/admin/settings", label: "Site", icon: Settings },
-  { href: "/admin/help", label: "Help", icon: HelpCircle },
+  { href: "/admin", label: "Rush", icon: LayoutDashboard, adminOnly: false },
+  { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false },
+  { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true },
+  { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true },
+  { href: "/admin/settings", label: "Site", icon: Settings, adminOnly: true },
+  { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false },
 ];
 
-export function AdminNav() {
+export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const items = ITEMS.filter((it) => !it.adminOnly || isAdmin);
 
   // Close mobile menu on route change
   React.useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -43,7 +44,7 @@ export function AdminNav() {
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-1">
-          {ITEMS.map((it) => {
+          {items.map((it) => {
             const active = pathname === it.href || (it.href !== "/admin" && pathname.startsWith(it.href));
             return (
               <Link
@@ -93,7 +94,7 @@ export function AdminNav() {
       {menuOpen && (
         <div className="lg:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container py-2 grid grid-cols-2 gap-1">
-            {ITEMS.map((it) => {
+            {items.map((it) => {
               const active = pathname === it.href || (it.href !== "/admin" && pathname.startsWith(it.href));
               return (
                 <Link

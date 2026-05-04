@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +30,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   const parsed = Schema.safeParse(body);
@@ -55,6 +56,18 @@ export async function PATCH(req: Request) {
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   const { id, ...rest } = parsed.data;
+  // Non-admins can only edit their own profile.
+  if (!isAdminRole()) {
+    const me = getCurrentBrotherId();
+    if (!me || me !== id) {
+      return NextResponse.json({ ok: false, error: "You can only edit your own profile" }, { status: 403 });
+    }
+    // Members can't elevate their own role or edit dues/hours/role flags.
+    delete (rest as any).role;
+    delete (rest as any).duesPaid;
+    delete (rest as any).serviceHours;
+    delete (rest as any).studyHours;
+  }
   const data = Object.fromEntries(
     Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v])
   );
@@ -64,6 +77,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
   await prisma.brother.delete({ where: { id } });
