@@ -8,7 +8,7 @@
 **Health probe:** <https://phisigmakappa.vercel.app/api/health>
 **Consent receipt API:** `GET /api/consent/[id]`
 **SMS webhook (Twilio):** `POST /api/sms/inbound`
-**Final commit at handoff:** `52c6293` (R13)
+**Final commit at handoff:** `7d37ab2` (R14)
 
 ---
 
@@ -84,6 +84,26 @@ The rush chair edits these without a code deploy:
 > **Reading the table:** R10 audit dipped to 8.45 because the careful agents found three real bugs (broken hotline URL with literal Unicode ellipsis, mailto trailing-backslash, missing TCPA autodialer language). R11 shipped fixes for all three plus extras (JSON-LD, PWA manifest, Twilio webhook signature verification, malformed-From rejection). R12 closed the carryover designer token-discipline items. The R11 confirming probe verified all 16 critical flows live with the **E2E agent scoring 10/10 on every flow** including the new TCPA-grade consent receipt with verbatim "automatic telephone dialing system" language. Maint and TCPA agents that gave low scores were demonstrably reading stale filesystem state — live curl evidence contradicts their reports.
 
 *R4 designer regression (H1 weight didn't take effect at the element level) and Maint regression (agent misread admin code) — both re-fixed in R5/R7.
+
+## R14 additions (further-improve pass)
+
+After R13 the user asked for one more push. R14 ships five additions that lift the product on three independent axes — public features, production hardening, accessibility:
+
+**Public features:**
+- **iCal feed at `/api/events.ics`** — RFC 5545 VCALENDAR of upcoming public events. Brothers and rushees can subscribe (webcal://) for auto-refresh or one-shot download. Feed window is -30d to +6mo so calendar "this month" views still render attended events. Cached 1h browser / 6h edge. Excludes private (invite-only) events.
+- **"Subscribe in Apple Calendar" + "Download .ics" buttons** in the homepage Schedule section — one-tap calendar add for rushees on iPhone.
+
+**Production hardening:**
+- **Rate limiting on `/api/rush`.** New `RushSubmitLog` Prisma model. Five+ submits from the same IP in 60 minutes → HTTP 429 with `Retry-After`. Real rushees submit once; bots and copy-paste spammers hit repeatedly. Fails open if the rate-limit query itself errors — never blocks a legit PNM. Verified live: attempts 1-5 succeed, attempts 6-7 return the cap message.
+
+**Accessibility (WCAG 2.4.7, 2.3.3, 4.1.2):**
+- **Skip-to-content link** as the first tab stop on every page. Hidden until focused, jumps to `id="main-content"` (added to all four `<main>` elements).
+- **Visible focus rings** — `*:focus-visible` outline 2px cardinal + 2px white offset. Tailwind's invisible defaults failed WCAG 2.4.7 against red surfaces.
+- **`prefers-reduced-motion` honored** — kills long animations and smooth scrolling for users who set the OS-level preference. WCAG 2.3.3.
+- **Age-toggle ARIA** — `role="radiogroup"` + `role="radio"` + `aria-checked` so screen readers announce "1 of 2 selected" instead of just "button".
+
+**SEO + structured data:**
+- **JSON-LD enriched** — schema graph with two nodes now. `CollegeOrUniversity` adds `logo`, `image`, `description`, `foundingLocation`, `PostalAddress` (800 Lincoln, Columbia SC 29201), and a second `contactPoint` for anti-hazing reports. New `WebSite` node enables Google in-result search and ties the org as `publisher`. `alternateName` includes "ΦΣΚ Gamma Triton" for Greek-search recall.
 
 ## R13 additions (post-FINAL "improve further" pass)
 
