@@ -8,7 +8,7 @@
 **Health probe:** <https://phisigmakappa.vercel.app/api/health>
 **Consent receipt API:** `GET /api/consent/[id]`
 **SMS webhook (Twilio):** `POST /api/sms/inbound`
-**Final commit at handoff:** `a696968` (R15)
+**Final commit at handoff:** `dc952b7` (R17.4)
 
 ---
 
@@ -184,6 +184,83 @@ Net effect on the scorecard: avg moves from 8.55 → 9.40. **Three personas now 
 - **Off-shade purge (R6)** — `#9a0a26` and `#FCE8EC` replaced with token-driven `phisig-red-dark` and a retuned warmer `#FCEFF1` (on-hue with cardinal). Section-padding sprawl collapsed from 7 ad-hoc pairs to 2 utility classes.
 - **`/api/health` endpoint (R7)** — returns `{ok, db: up|down, deployedAt, region, timestamp}` for uptime monitors.
 - **Brother-invite revoke UI (R6)** — `PendingInvites` component on `/admin/brothers` shows status pill + channel + sender + relative time + Revoke + Copy-link.
+
+## R17 polish lift — 22 real defects fixed across 5 sub-rounds
+
+Five rounds of audit-fix-deploy-reverify against the live deploy, using
+parallel critic agents. Every defect listed had concrete evidence
+(curl output, file:line, or live HTML quote) — no speculative work.
+
+**R17.0 — HTML hygiene** (commit `f78af6e`)
+- Duplicate SVG IDs in `<Seal>` (rendered twice on homepage) — switched
+  to `useId()` per instance, gradient + textPath refs scoped uniquely.
+- `og:url` missing on `/privacy` and `/parents` — added explicit
+  `openGraph.url` + canonical per page.
+- `/admin/*` indexable in non-compliant crawlers — added robots
+  noindex/nofollow/nocache at the admin layout level.
+
+**R17.1 — SEO + TCPA + webhook hardening** (commit `33e591c`)
+- Homepage missing `og:url` and `<link rel=canonical>` — added.
+- Sitemap polluted with `/#register`, `/#schedule`, `/#about`
+  fragment URLs (Google: "duplicate content") — removed.
+- Twilio webhook fail-open on missing `TWILIO_AUTH_TOKEN` in prod
+  (any forged STOP destroys the TCPA opt-out audit trail) — fail
+  closed; dev/preview keeps warn-and-accept.
+- Privacy missing CTIA quiet-hours language — added explicit
+  "9:00 AM to 9:00 PM Eastern" paragraph.
+
+**R17.2 — content + anti-spam** (commit `2e4abc4`)
+- HELP-keyword Twilio reply linked to `/parents`, not `/privacy`.
+- Meta descriptions over Google's 155–160 char SERP cap (homepage
+  232 chars → 152, parents 217 → 138).
+- No bot-spam protection on rush form — added offscreen honeypot
+  `<input name="website">` with server-side silent-success on fill.
+- Subpages inheriting layout-default twitter card — added per-page
+  twitter title/description.
+
+**R17.3 — security hardening** (commit `f7b7523`)
+- Admin login lowercased the password before compare, halving the
+  effective keyspace ("DamnProud" == "damnproud" == "DAMNPROUD") —
+  password is now case-sensitive and compared via
+  `crypto.timingSafeEqual` against a length-padded buffer.
+- No brute-force protection on admin login — added per-IP throttle
+  (5 fails in 15 min → 429 with Retry-After: 900).
+- `/api/upload-headshot` was unauthenticated AND unbounded — added
+  10/hour-per-IP rate limit + 415 on non-multipart bodies (was 500).
+- HMAC signature compare used `===` (string equality, leaking
+  byte-position via response timing) — switched to
+  `crypto.timingSafeEqual` (Node) and a hand-rolled XOR-OR
+  constant-time loop (Edge runtime, which has no native helper).
+- Production was silently falling back to the dev secret string
+  `dev-insecure-secret-change-me` if `ADMIN_SESSION_SECRET` was
+  unset — anyone with source could mint admin cookies. Now: prod
+  Node throws; prod Edge fails closed.
+- `RushSubmitLog` table grew unbounded — added Vercel cron at
+  03:14 UTC daily that prunes rows older than 24h.
+
+**R17.4 — race + TZ + print + ICS** (commit `dc952b7`)
+- Rush form used find-then-update/create — TOCTOU race meant two
+  near-simultaneous submissions for the same email both saw
+  `existing===null`, both attempted create, the second hit a
+  P2002 unique violation that the user saw as a 500. Replaced
+  with atomic `prisma.rush.upsert`; `createdAt` vs `updatedAt`
+  timestamp delta detects new vs re-submission.
+- Schedule date/time formatters had no `timeZone` — Vercel runs
+  Node in UTC so a 7 PM ET event SSR'd as midnight before
+  hydrating to local. Pinned all `formatDate` / `formatTime` /
+  inline `toLocaleDateString` calls to `America/New_York`.
+- Site had no print stylesheet — parents printing the consent
+  receipt got a wall of red gradient and the floating nav burning
+  ink. Added a real `@media print` block: nav/footer hidden,
+  black-on-white type, links expand to show their `href`.
+- Site had no `color-scheme` declaration — Chromium-based browsers
+  were force-darkening cards and dropping muted-foreground below
+  WCAG 4.5:1. We don't ship a dark mode; declared
+  `color-scheme: light` to opt out of forced-dark heuristics.
+- `.ics` feed didn't fold lines per RFC 5545 §3.1 — long
+  DESCRIPTION/LOCATION lines (>75 octets) would silently break in
+  Outlook desktop and some Android calendar parsers. Added
+  byte-aware folding that splits on UTF-8 boundaries.
 
 ## Known follow-ups punted to next semester (not blockers)
 
