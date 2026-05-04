@@ -40,3 +40,6 @@ prisma/migrations/dev*
 
 .vercel
 .env*.local
+
+# claude-code worktrees / artifacts
+.claude/
