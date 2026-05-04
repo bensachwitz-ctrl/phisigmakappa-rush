@@ -322,7 +322,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             { key: "show.highlightsBanner", label: "Highlights banner (icon row under stats)" },
             { key: "show.values", label: "Brotherhood / Scholarship / Character cards" },
             { key: "show.instagramFeed", label: "Instagram feed grid" },
-            { key: "show.timeline", label: "How rush works (4-week timeline)" },
+            { key: "show.timeline", label: "How rush works (3-week timeline: Open → Closed → Interviews & Bid Day)" },
             { key: "show.testimonial", label: "Alumni testimonial quote" },
             { key: "show.spotlight", label: "Brother of the Month spotlight" },
             { key: "show.eboard", label: "2026 Executive Board card grid" },

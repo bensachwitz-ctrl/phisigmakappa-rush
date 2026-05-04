@@ -27,10 +27,9 @@ const VALUES = [
 ];
 
 const TIMELINE = [
-  { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house." },
-  { week: "Week 2", title: "Brotherhood", body: "Smaller events. Get to know individual brothers." },
-  { week: "Week 3", title: "Invite-only", body: "Formal dinners and one-on-ones with the e-board." },
-  { week: "Week 4", title: "Bid Night", body: "Bids extended. Welcome ceremony for new members." },
+  { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
+  { week: "Week 2", title: "Closed events", body: "Invite-only smaller events. Spend more time with individual brothers and start to feel out the fit." },
+  { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
 ];
 
 const FAQ = [
@@ -383,13 +382,13 @@ export default async function Home({
               <Calendar className="h-3 w-3" /> How rush works
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
-              Four weeks. Zero pressure.
+              Three weeks. Zero pressure.
             </h2>
             <p className="mt-2 text-muted-foreground max-w-xl">
               We're not interested in hazing or hoops. We're interested in finding the right men.
             </p>
           </div>
-          <ol className="grid md:grid-cols-4 gap-3 sm:gap-4 stagger">
+          <ol className="grid md:grid-cols-3 gap-3 sm:gap-4 stagger">
             {TIMELINE.map((t, i) => (
               <li
                 key={t.week}
