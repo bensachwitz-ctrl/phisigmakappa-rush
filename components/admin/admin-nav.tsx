@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
-  HelpCircle, Menu, X,
+  HelpCircle, Menu, X, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +73,17 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
           >
             <HelpCircle className="h-4 w-4" />
             <span className="hidden sm:inline">Help</span>
+          </Link>
+
+          <Link
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+            title="Open the public homepage in a new tab"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-phisig-red" />
+            <span className="hidden md:inline">View site</span>
           </Link>
 
           <Button variant="outline" size="sm" onClick={logout} className="hidden sm:inline-flex">
