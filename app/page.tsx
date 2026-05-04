@@ -833,7 +833,6 @@ function PostTile({
         alt={caption}
         loading="lazy"
         className="relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
       <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
