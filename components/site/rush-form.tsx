@@ -34,7 +34,7 @@ const initial: FormData = {
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Transfer"];
 
-const STEPS = [
+const FULL_STEPS = [
   { id: "intro", label: "Start" },
   { id: "contact", label: "Contact" },
   { id: "profile", label: "Profile" },
@@ -42,7 +42,27 @@ const STEPS = [
   { id: "review", label: "Submit" },
 ] as const;
 
-type StepId = (typeof STEPS)[number]["id"];
+const BOOTH_STEPS = [
+  { id: "contact", label: "Contact" },
+  { id: "profile", label: "Profile" },
+  { id: "review", label: "Submit" },
+] as const;
+
+type StepId =
+  | (typeof FULL_STEPS)[number]["id"]
+  | (typeof BOOTH_STEPS)[number]["id"];
+
+// Express-written-consent disclosure shown above the phone field on Step 1
+// (TCPA / CTIA best practice — disclosure must precede phone collection).
+// The form-wide affirmative checkbox is on the final Review step.
+const SMS_PRE_DISCLOSURE =
+  "We'll text you when the Fall '26 schedule drops and as rush events approach — about 6–8 messages per rush cycle. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
+
+// The line that appears next to the express-consent checkbox on the Review step.
+// Identifies the sender by full legal name, the program, frequency, opt-out keywords,
+// age affirmation, and links to the privacy policy. This is the recorded consent text.
+const SMS_EXPRESS_CONSENT =
+  "I am 18 or older and I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
 
 export function RushForm() {
   const { push } = useToast();
@@ -51,37 +71,59 @@ export function RushForm() {
     if (typeof window === "undefined") return;
     setBooth(new URLSearchParams(window.location.search).get("booth") === "1");
   }, []);
-  const [step, setStep] = React.useState<StepId>("intro");
+  // Steps depend on booth mode: standard flow has intro+photo, booth flow skips both.
+  const STEPS = booth ? BOOTH_STEPS : FULL_STEPS;
+  const FIRST_STEP: StepId = booth ? "contact" : "intro";
+  const [step, setStep] = React.useState<StepId>(FIRST_STEP);
+
+  // Reset to the right starting step the moment we detect booth=1 after hydration.
+  React.useEffect(() => {
+    setStep(booth ? "contact" : "intro");
+  }, [booth]);
+
   const [data, setData] = React.useState<FormData>(initial);
   const [submitting, setSubmitting] = React.useState(false);
   const [done, setDone] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [consent, setConsent] = React.useState(false);
+  const [idleSecondsLeft, setIdleSecondsLeft] = React.useState<number | null>(null);
 
   // Booth-mode safety net: if a rushee abandons mid-form and the tablet sits idle for
-  // 90 seconds, auto-clear the form so the next rushee doesn't see the previous one's email.
+  // 60 seconds, auto-clear the form so the next rushee doesn't see the previous one's email.
+  // Also surface a visible countdown chip so the volunteer can see the timer.
   React.useEffect(() => {
-    if (!booth || step === "intro" || done) return;
+    if (!booth || done) return;
+    const total = 60;
+    setIdleSecondsLeft(total);
+    let remaining = total;
+    const tick = window.setInterval(() => {
+      remaining -= 1;
+      setIdleSecondsLeft(Math.max(0, remaining));
+    }, 1_000);
     const timer = window.setTimeout(() => {
       setData(initial);
-      setStep("intro");
+      setStep(FIRST_STEP);
       setErrors({});
       setConsent(false);
-    }, 90_000);
-    return () => window.clearTimeout(timer);
-  }, [booth, step, data, done]);
+    }, total * 1_000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(tick);
+      setIdleSecondsLeft(null);
+    };
+  }, [booth, step, data, done, FIRST_STEP]);
 
-  // Booth-mode auto-restart: 8 seconds after success, reset everything for the next rushee.
+  // Booth-mode auto-restart: 6 seconds after success, reset everything for the next rushee.
   React.useEffect(() => {
     if (!booth || !done) return;
     const timer = window.setTimeout(() => {
       setDone(false);
       setData(initial);
-      setStep("intro");
+      setStep(FIRST_STEP);
       setConsent(false);
-    }, 8_000);
+    }, 6_000);
     return () => window.clearTimeout(timer);
-  }, [booth, done]);
+  }, [booth, done, FIRST_STEP]);
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const progress = (stepIndex / (STEPS.length - 1)) * 100;
@@ -159,7 +201,7 @@ export function RushForm() {
   }
 
   if (done) {
-    return <SuccessCard data={data} onRestart={() => { setDone(false); setData(initial); setStep("intro"); }} />;
+    return <SuccessCard data={data} booth={booth} onRestart={() => { setDone(false); setData(initial); setStep(FIRST_STEP); }} />;
   }
 
   return (
@@ -170,6 +212,12 @@ export function RushForm() {
           style={{ width: `${progress}%` }}
         />
       </div>
+
+      {booth && idleSecondsLeft !== null && idleSecondsLeft <= 20 && (
+        <div className="bg-phisig-red-soft border-b border-phisig-red/20 px-4 py-2 text-center text-xs text-phisig-red font-semibold">
+          Auto-clearing in {idleSecondsLeft}s — tap any field to keep going.
+        </div>
+      )}
 
       <div className="px-4 sm:px-6 pt-6 pb-2">
         <ol className="flex items-center justify-between gap-1 sm:gap-2 text-xs">
@@ -202,21 +250,23 @@ export function RushForm() {
       <CardContent className="p-5 sm:p-8 md:p-10">
         <div key={step} className="animate-fade-in">
           {step === "intro" && <IntroStep onStart={() => setStep("contact")} />}
-          {step === "contact" && <ContactStep data={data} errors={errors} update={update} />}
-          {step === "profile" && <ProfileStep data={data} errors={errors} update={update} />}
-          {step === "photo" && <PhotoStep data={data} update={update} />}
+          {step === "contact" && <ContactStep data={data} errors={errors} update={update} booth={booth} totalSteps={STEPS.length} />}
+          {step === "profile" && <ProfileStep data={data} errors={errors} update={update} booth={booth} totalSteps={STEPS.length} />}
+          {step === "photo" && <PhotoStep data={data} update={update} totalSteps={STEPS.length} />}
           {step === "review" && (
             <>
-              <ReviewStep data={data} />
+              <ReviewStep data={data} totalSteps={STEPS.length} booth={booth} />
               <label className="mt-6 flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-4 cursor-pointer hover:bg-secondary/60 transition-colors">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                   className="mt-1 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                  aria-describedby="sms-consent-text"
                 />
-                <span className="text-xs text-muted-foreground leading-relaxed">
-                  By submitting, I agree to receive rush event updates from Phi Sigma Kappa USC by email and text message. Message and data rates may apply. Reply STOP to opt out at any time. My information will be used only to communicate about Fall '26 rush — never sold or shared. See our{" "}
+                <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
+                  {SMS_EXPRESS_CONSENT}{" "}
+                  See our{" "}
                   <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">
                     privacy policy
                   </a>.
@@ -228,7 +278,7 @@ export function RushForm() {
 
         {step !== "intro" && (
           <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 border-t border-border pt-5 sm:pt-6">
-            <Button variant="ghost" onClick={prev} disabled={submitting}>
+            <Button variant="ghost" onClick={prev} disabled={submitting || (booth && stepIndex === 0)}>
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
             {step === "review" ? (
@@ -236,7 +286,7 @@ export function RushForm() {
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                 ) : (
-                  <>Submit registration <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
+                  <>{booth ? "Add rushee" : "Submit registration"} <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
                 )}
               </Button>
             ) : (
@@ -300,15 +350,21 @@ function IntroStep({ onStart }: { onStart: () => void }) {
 }
 
 function ContactStep({
-  data, errors, update,
+  data, errors, update, booth, totalSteps,
 }: {
   data: FormData;
   errors: Record<string, string>;
   update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
+  booth: boolean;
+  totalSteps: number;
 }) {
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 1 of 4" title="How do we reach you?" sub="Phone is required — that's how we'll text the schedule." />
+      <Header
+        eyebrow={`Step 1 of ${totalSteps - (booth ? 0 : 1)}`}
+        title={booth ? "Name & phone" : "How do we reach you?"}
+        sub={booth ? "Two fields. Then year. Then you're done." : "Phone is required — that's how we'll text the schedule."}
+      />
       <Field id="name" label="Full name" required error={errors.name} icon={User}>
         <Input
           id="name" autoComplete="name" autoFocus
@@ -323,30 +379,39 @@ function ContactStep({
           placeholder="(803) 555-0142" className="pl-9"
         />
       </Field>
-      <Field id="email" label="Email (optional)" error={errors.email} icon={Mail}>
-        <Input
-          id="email" type="email" autoComplete="email"
-          value={data.email} onChange={(e) => update("email", e.target.value)}
-          placeholder="you@email.sc.edu" className="pl-9"
-        />
-      </Field>
-      <p className="text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3">
-        We'll text you the moment the Fall '26 rush schedule drops in August.
+      {!booth && (
+        <Field id="email" label="Email (optional)" error={errors.email} icon={Mail}>
+          <Input
+            id="email" type="email" autoComplete="email"
+            value={data.email} onChange={(e) => update("email", e.target.value)}
+            placeholder="you@email.sc.edu" className="pl-9"
+          />
+        </Field>
+      )}
+      {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
+      <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3 leading-relaxed">
+        <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE} You'll affirm consent on the final step before submitting.
       </p>
     </div>
   );
 }
 
 function ProfileStep({
-  data, errors, update,
+  data, errors, update, booth, totalSteps,
 }: {
   data: FormData;
   errors: Record<string, string>;
   update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
+  booth: boolean;
+  totalSteps: number;
 }) {
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 2 of 4" title="At USC" sub="Tap your year, then add major and hometown." />
+      <Header
+        eyebrow={`Step 2 of ${totalSteps - (booth ? 0 : 1)}`}
+        title={booth ? "Year & major" : "At USC"}
+        sub={booth ? "Tap your year. Major optional." : "Tap your year, then add major and hometown."}
+      />
       <Field id="year" label="Year" required error={errors.year}>
         <div className="flex flex-wrap gap-2">
           {YEARS.map((y) => (
@@ -411,8 +476,8 @@ function ProfileStep({
 }
 
 function PhotoStep({
-  data, update,
-}: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void }) {
+  data, update, totalSteps,
+}: { data: FormData; update: <K extends keyof FormData>(k: K, v: FormData[K]) => void; totalSteps: number }) {
   const { push } = useToast();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = React.useState(false);
@@ -450,7 +515,7 @@ function PhotoStep({
   return (
     <div className="space-y-5">
       <Header
-        eyebrow="Step 3 of 4"
+        eyebrow={`Step 3 of ${totalSteps - 1}`}
         title="Headshot"
         sub="Helps brothers put a face to your name. Skip if you'd rather not."
       />
@@ -522,18 +587,20 @@ function PhotoStep({
   );
 }
 
-function ReviewStep({ data }: { data: FormData }) {
+function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: number; booth: boolean }) {
   const lines = [
     { label: "Name", value: data.name || "—" },
     { label: "Phone", value: data.phone || "—" },
     { label: "Year", value: data.year || "—" },
     { label: "Major", value: data.major || "—" },
-    { label: "Hometown", value: data.hometown || "—" },
-    { label: "Email", value: data.email || "—" },
+    ...(booth ? [] : [
+      { label: "Hometown", value: data.hometown || "—" },
+      { label: "Email", value: data.email || "—" },
+    ]),
   ];
   return (
     <div className="space-y-5">
-      <Header eyebrow="Step 4 of 4" title="Review and submit" sub="Quick check — anything off?" />
+      <Header eyebrow={`Step ${totalSteps} of ${totalSteps - (booth ? 0 : 1)}`} title={booth ? "Confirm & submit" : "Review and submit"} sub={booth ? "Tap submit — next rushee in 6 seconds." : "Quick check — anything off?"} />
       <div className="rounded-xl border border-border bg-secondary/40 p-5">
         <div className="flex items-start gap-5">
           {data.headshotUrl ? (
@@ -562,14 +629,14 @@ function ReviewStep({ data }: { data: FormData }) {
           </div>
         )}
       </div>
-      <p className="text-xs text-muted-foreground text-center">
-        By submitting, you agree to receive event-related emails and texts. We never share your info.
+      <p className="text-[11px] text-muted-foreground text-center leading-relaxed max-w-md mx-auto">
+        Confirm the box below to submit. Reply HELP for help, STOP to opt out at any time.
       </p>
     </div>
   );
 }
 
-function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => void }) {
+function SuccessCard({ data, booth, onRestart }: { data: FormData; booth: boolean; onRestart: () => void }) {
   const first = data.name.split(" ")[0] || "there";
   const { push } = useToast();
 
@@ -586,6 +653,30 @@ function SuccessCard({ data, onRestart }: { data: FormData; onRestart: () => voi
     }
   }
 
+  if (booth) {
+    return (
+      <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10">
+        <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
+        <CardContent className="py-14 px-6 text-center animate-fade-in">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
+            <CheckCircle2 className="h-10 w-10" />
+          </div>
+          <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight">Got it, {first}.</h3>
+          <p className="mt-3 text-muted-foreground max-w-md mx-auto">
+            You're on the rush list. We'll text you when the Fall '26 schedule drops.
+          </p>
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-phisig-red-soft border border-phisig-red/20 px-4 py-2 text-xs font-semibold text-phisig-red">
+            <Sparkles className="h-3.5 w-3.5" /> Next rushee in 6 seconds…
+          </div>
+          <div className="mt-4">
+            <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">
+              Or tap to add the next rushee now
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10">
       <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />

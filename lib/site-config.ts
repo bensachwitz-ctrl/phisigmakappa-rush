@@ -36,11 +36,62 @@ export const DEFAULTS = {
   "hero.subline":
     "Gamma Triton at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, $25k+ raised for Special Olympics. Get on the Fall '26 list — we'll text you the second the schedule drops in August.",
 
-  // Stats
+  // Stats — display-formatted strings (e.g. "60+"). The CountUp component parses
+  // out the numeric prefix; everything else (e.g. "+", "k+") becomes the suffix.
   "stats.brothers": "60+",
   "stats.gpa": "3.45",
   "stats.years": "150+",
   "stats.charity": "$25k+",
+
+  // Hero headline & CTA
+  "hero.h1.lead": "The chapter that built",
+  "hero.h1.tail": "the men of",
+  "hero.h1.highlight": "Carolina",
+  "hero.cta.label": "Get on the interest list",
+  "hero.cta.href": "#register",
+
+  // Executive board — 5 slots; leave any slot empty to hide it.
+  "eboard.1.name": "Mark Laughery",
+  "eboard.1.role": "President",
+  "eboard.1.headshotUrl": "",
+  "eboard.2.name": "Jake Benoudiz",
+  "eboard.2.role": "Vice President",
+  "eboard.2.headshotUrl": "",
+  "eboard.3.name": "Mitchell West",
+  "eboard.3.role": "Secretary",
+  "eboard.3.headshotUrl": "",
+  "eboard.4.name": "Charlie Moore",
+  "eboard.4.role": "Treasurer",
+  "eboard.4.headshotUrl": "",
+  "eboard.5.name": "Joshua Barteet",
+  "eboard.5.role": "Sentinel",
+  "eboard.5.headshotUrl": "",
+
+  // Contact — every public-facing email, address, and social link comes from here.
+  "contact.rushEmail": "rush@phisig-usc.com",
+  "contact.advisorName": "Chapter Advisor",
+  "contact.advisorTitle": "Alumni Chapter Advisor, Gamma Triton",
+  "contact.advisorEmail": "advisor@phisig-usc.com",
+  "contact.rushPhone": "",
+  "contact.address": "800 Lincoln St",
+  "contact.cityState": "Columbia, SC 29201",
+  "contact.instagramHandle": "@phisig_usc",
+  "contact.instagramUrl": "https://www.instagram.com/phisig_usc/",
+  "contact.mapsUrl": "https://maps.google.com/?q=800+Lincoln+St+Columbia+SC",
+
+  // Philanthropy — beneficiary + concrete dollars raised. Used in highlights, testimonial, etc.
+  "philanthropy.beneficiary": "Special Olympics South Carolina",
+  "philanthropy.beneficiaryShort": "Special Olympics SC",
+  "philanthropy.raisedYear": "2025",
+  "philanthropy.raisedAmount": "$700",
+  "philanthropy.raisedTotal": "$25k+",
+
+  // Anti-hazing — chapter affirmation + national hotline (visible on About + Privacy)
+  "antiHazing.hotline": "1-800-NOT-HAZE",
+  "antiHazing.hotlineUrl": "https://hazingprevention.org/help/",
+
+  // Privacy
+  "privacy.lastUpdated": "May 2026",
 
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",

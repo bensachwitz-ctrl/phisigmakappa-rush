@@ -2,13 +2,19 @@ import Link from "next/link";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { getSiteConfig } from "@/lib/site-config";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Privacy — Phi Sigma Kappa @ USC",
-  description: "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
+  description:
+    "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const cfg = await getSiteConfig();
+  const rushEmail = cfg["contact.rushEmail"];
   return (
     <main className="min-h-screen bg-background">
       <PublicNav />
@@ -27,7 +33,7 @@ export default function PrivacyPage() {
           What we collect, why, and how we protect it.
         </h1>
         <p className="mt-4 text-muted-foreground leading-relaxed">
-          Phi Sigma Kappa Gamma Triton at the University of South Carolina ("the chapter," "we") respects your privacy. This page explains exactly what data we collect from prospective new members and how we use it.
+          Phi Sigma Kappa Gamma Triton at the University of South Carolina ("the chapter," "we") respects your privacy. This page explains exactly what data we collect from prospective new members ("PNMs"), how we use it, and the rights you have over your data.
         </p>
 
         <section className="mt-10 space-y-2">
@@ -38,9 +44,24 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mt-8 space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">How we use it</h2>
+          <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (TCPA)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your information is used solely to communicate with you about Fall 2026 rush at the Gamma Triton chapter — specifically: event reminders, schedule updates, and bid-night logistics. By submitting the form you consent to receive these communications by email and SMS. Message and data rates may apply. Reply <span className="font-mono text-foreground">STOP</span> to opt out of texts at any time, or email <a href="mailto:rush@phisig-usc.com" className="text-phisig-red hover:underline">rush@phisig-usc.com</a> to be removed from all communications.
+            Your information is used solely to communicate with you about Fall 2026 rush at the Gamma Triton chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent to receive recurring text and email messages from <span className="text-foreground font-medium">Phi Sigma Kappa Gamma Triton (USC)</span>. You can expect approximately 6–8 messages per rush cycle. Message and data rates may apply. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
+            <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">
+              {rushEmail}
+            </a>{" "}
+            to be removed from all communications. Consent to receive texts is not a condition of any membership consideration.
+          </p>
+        </section>
+
+        <section className="mt-8 space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight">Age &amp; minor protections</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            By submitting the rush form you affirm you are <span className="font-medium text-foreground">18 years of age or older</span>. If you are under 18 and would like to express interest, please have a parent or legal guardian email{" "}
+            <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">
+              {cfg["contact.advisorEmail"]}
+            </a>{" "}
+            on your behalf. We do not knowingly collect personal information from anyone under 13. If we learn we have inadvertently collected data from a minor, we will delete it promptly upon request.
           </p>
         </section>
 
@@ -61,26 +82,56 @@ export default function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Retention</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Rush data is retained through the Fall 2026 recruitment cycle. After Bid Night, records of rushees who declined or were not extended a bid are deleted within 90 days unless you explicitly opt in to future communications. Records of accepted brothers move to the active member directory and are retained while you remain in the chapter.
+            Rush data is retained through the Fall 2026 recruitment cycle. After Bid Night, records of rushees who declined or were not extended a bid are deleted within 90 days unless you explicitly opt in to future communications by emailing{" "}
+            <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">
+              {rushEmail}
+            </a>
+            . Records of accepted brothers move to the active member directory and are retained while you remain in the chapter. We retain proof of SMS consent (timestamp + IP) for four years as required by TCPA recordkeeping rules.
           </p>
         </section>
 
         <section className="mt-8 space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">Your rights</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Your rights — including California &amp; Virginia</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You can request a copy of your data, ask for it to be corrected, or request deletion at any time by emailing <a href="mailto:rush@phisig-usc.com" className="text-phisig-red hover:underline">rush@phisig-usc.com</a>. We will respond within 30 days.
+            You have the right to request a copy of your data, ask for it to be corrected, or request deletion at any time by emailing{" "}
+            <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">
+              {rushEmail}
+            </a>
+            . We will respond within 30 days. California (CCPA/CPRA) and Virginia (VCDPA) residents have additional rights to know, correct, delete, and opt out of the sale or sharing of personal information for cross-context behavioral advertising. <span className="font-medium text-foreground">We do not sell or share your personal information for cross-context behavioral advertising.</span>
+          </p>
+        </section>
+
+        <section className="mt-8 space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight">Cookies</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            This site uses only first-party functional cookies necessary to keep brothers signed in to the admin area and to remember booth-mode settings. We do not use advertising or analytics cookies. No third-party trackers are loaded.
           </p>
         </section>
 
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Hazing reports</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Phi Sigma Kappa national and the Gamma Triton chapter have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to the chapter advisor or to Phi Sigma Kappa national headquarters at <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">phisigmakappa.org</a>.
+            Phi Sigma Kappa national and the Gamma Triton chapter have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
+            <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">
+              {cfg["contact.advisorEmail"]}
+            </a>
+            , via the national anti-hazing hotline{" "}
+            <a href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">
+              {cfg["antiHazing.hotline"]}
+            </a>
+            , or through{" "}
+            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
+              phisigmakappa.org
+            </a>
+            .
           </p>
         </section>
 
         <p className="mt-12 text-xs text-muted-foreground">
-          Last updated: May 2026 · Questions: <a href="mailto:rush@phisig-usc.com" className="text-phisig-red hover:underline">rush@phisig-usc.com</a>
+          Last updated: {cfg["privacy.lastUpdated"]} · Questions:{" "}
+          <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">
+            {rushEmail}
+          </a>
         </p>
       </div>
       <PublicFooter />

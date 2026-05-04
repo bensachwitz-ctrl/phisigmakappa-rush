@@ -25,7 +25,7 @@ export async function GET(
         status: 200,
         headers: {
           "Content-Type": r.headers.get("Content-Type") || "image/jpeg",
-          "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
         },
       });
     } catch {
@@ -115,7 +115,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": imgRes.headers.get("Content-Type") || "image/jpeg",
-        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+        "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
       },
     });
   } catch {

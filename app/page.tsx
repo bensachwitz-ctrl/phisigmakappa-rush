@@ -22,19 +22,12 @@ export const dynamic = "force-dynamic";
 
 const VALUES = [
   { icon: Users, title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
-  { icon: GraduationCap, title: "Scholarship", body: "3.45 chapter GPA, 3.50 new-member GPA. Study halls, mentorship, alumni network across every field." },
-  { icon: Heart, title: "Character", body: "We measure men by what they do — service, integrity, courage in conviction." },
-];
-
-const USC_FACTS = [
-  { num: 60, suffix: "+", label: "Active brothers", icon: Users },
-  { num: 3.45, decimals: 2, label: "Chapter GPA", icon: GraduationCap, sub: "3.50 NM GPA" },
-  { num: 150, suffix: "+", label: "Years strong", icon: ShieldCheck, sub: "Founded 1873" },
-  { num: 25, prefix: "$", suffix: "k+", label: "Raised for charity", icon: HandHeart, sub: "2025 alone" },
+  { icon: GraduationCap, title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
+  { icon: Heart, title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
 ];
 
 const TIMELINE = [
-  { week: "Week 1", title: "Open events", body: "Cookouts, tailgates, low-pressure hangs at the house." },
+  { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house." },
   { week: "Week 2", title: "Brotherhood", body: "Smaller events. Get to know individual brothers." },
   { week: "Week 3", title: "Invite-only", body: "Formal dinners and one-on-ones with the e-board." },
   { week: "Week 4", title: "Bid Night", body: "Bids extended. Welcome ceremony for new members." },
@@ -47,7 +40,7 @@ const FAQ = [
   },
   {
     q: "Is there a GPA requirement?",
-    a: "We expect a minimum 2.5 to receive a bid. Our chapter average is 3.45 — scholarship is one of our three cardinal principles.",
+    a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles.",
   },
   {
     q: "How much does it cost?",
@@ -55,11 +48,11 @@ const FAQ = [
   },
   {
     q: "Is there hazing?",
-    a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New member education is built around brotherhood, history, and leadership development.",
+    a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ.",
   },
   {
     q: "What's the time commitment?",
-    a: "About 4-6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want.",
+    a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want.",
   },
   {
     q: "Can I rush if I'm already in another organization?",
@@ -71,8 +64,8 @@ const HIGHLIGHTS = [
   { icon: HandHeart, label: "Special Olympics SC partners" },
   { icon: Trophy, label: "Polar Plunge fundraisers" },
   { icon: Building2, label: "On-campus chapter house" },
-  { icon: GraduationCap, label: "3.45 Chapter GPA" },
-  { icon: Flame, label: "Annual paintball + NOLA formal" },
+  { icon: GraduationCap, label: "Above-average chapter GPA" },
+  { icon: Flame, label: "Brotherhood events year-round" },
   { icon: Star, label: "#DamnProud" },
 ];
 
@@ -80,19 +73,44 @@ const RECENT = [
   { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: HandHeart },
   { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: Trophy },
   { tag: "Formals", title: "Spring formal in New Orleans — #BeignetsWithTheBoys", icon: Award },
-  { tag: "Service", title: "Cantina 76 percent night for Leukemia & Lymphoma Society", icon: Heart },
+  { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: Heart },
 ];
 
-const EBOARD = [
-  { name: "Mark Laughery", role: "President" },
-  { name: "Jake Benoudiz", role: "Vice President" },
-  { name: "Mitchell West", role: "Secretary" },
-  { name: "Charlie Moore", role: "Treasurer" },
-  { name: "Joshua Barteet", role: "Sentinel" },
-];
+// Parse a stat value string like "3.45", "60+", "$25k+" into the bits CountUp needs.
+function parseStat(raw: string): { num: number; prefix?: string; suffix?: string; decimals?: number } {
+  if (!raw) return { num: 0 };
+  const m = raw.match(/^(\$)?\s*([\d.]+)\s*([\w+]*)$/);
+  if (!m) return { num: 0 };
+  const numStr = m[2];
+  const num = Number.parseFloat(numStr);
+  const decimals = numStr.includes(".") ? numStr.split(".")[1].length : 0;
+  return { num: Number.isFinite(num) ? num : 0, prefix: m[1] || undefined, suffix: m[3] || undefined, decimals: decimals || undefined };
+}
 
 export default async function Home() {
   const cfg = await getSiteConfig();
+  type StatRow = {
+    num: number;
+    prefix?: string;
+    suffix?: string;
+    decimals?: number;
+    label: string;
+    icon: React.ElementType;
+    sub?: string;
+  };
+  const stats: StatRow[] = [
+    { ...parseStat(cfg["stats.brothers"]), label: "Active brothers", icon: Users },
+    { ...parseStat(cfg["stats.gpa"]), label: "Chapter GPA", icon: GraduationCap, sub: "Above the all-fraternity average" },
+    { ...parseStat(cfg["stats.years"]), label: "Years strong", icon: ShieldCheck, sub: "Founded 1873" },
+    { ...parseStat(cfg["stats.charity"]), label: "Raised for charity", icon: HandHeart, sub: cfg["philanthropy.beneficiaryShort"] },
+  ];
+  const eboard = [1, 2, 3, 4, 5]
+    .map((n) => ({
+      name: cfg[`eboard.${n}.name`] || "",
+      role: cfg[`eboard.${n}.role`] || "",
+      headshotUrl: cfg[`eboard.${n}.headshotUrl`] || "",
+    }))
+    .filter((m) => m.name && m.role);
 
   return (
     <main className="min-h-screen bg-background">
@@ -106,24 +124,24 @@ export default async function Home() {
           <Crest className="h-[280px] w-[280px] text-phisig-red" />
         </div>
 
-        <div className="container py-12 sm:py-16 lg:py-20">
+        <div className="container py-16 sm:py-24">
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
             <div className="max-w-2xl animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
               {cfg["hero.eyebrow"]}
             </span>
-            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.02]">
-              The chapter that built<br className="hidden sm:block" />
-              the men of <span className="text-phisig-red">Carolina</span>.
+            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.02] [text-wrap:balance]">
+              {cfg["hero.h1.lead"]}{" "}<br className="hidden sm:block" />
+              {cfg["hero.h1.tail"]}{" "}<span className="text-phisig-red">{cfg["hero.h1.highlight"]}</span>.
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl">
               {cfg["hero.subline"]}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow">
-                <Link href="#register">
-                  Get on the interest list
+                <Link href={cfg["hero.cta.href"] || "#register"}>
+                  {cfg["hero.cta.label"] || "Get on the interest list"}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
@@ -134,7 +152,7 @@ export default async function Home() {
 
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" /> 800 Lincoln St, Columbia SC
+                <MapPin className="h-3.5 w-3.5" /> {cfg["contact.address"]}, {cfg["contact.cityState"]}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5" /> Reply within 24h
@@ -143,12 +161,12 @@ export default async function Home() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Gamma Triton chapter
               </span>
               <Link
-                href="https://www.instagram.com/phisig_usc/"
+                href={cfg["contact.instagramUrl"]}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-phisig-red hover:underline"
               >
-                <Instagram className="h-3.5 w-3.5" /> @phisig_usc
+                <Instagram className="h-3.5 w-3.5" /> {cfg["contact.instagramHandle"]}
               </Link>
             </div>
             </div>
@@ -161,6 +179,7 @@ export default async function Home() {
                   caption={cfg["hero.tile1.caption"]}
                   icon={iconFor(cfg["hero.tile1.icon"])}
                   className="col-span-2 aspect-[4/5] sm:aspect-[4/4]"
+                  priority
                 />
                 <PostTile
                   slug={cfg["hero.tile2.slug"]}
@@ -193,8 +212,8 @@ export default async function Home() {
         <div className="absolute -right-20 -top-20 opacity-10">
           <Seal className="w-[300px] h-[300px] text-white" />
         </div>
-        <div className="relative container py-8 sm:py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-          {USC_FACTS.map((s, i) => (
+        <div className="relative container py-10 sm:py-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+          {stats.map((s, i) => (
             <Reveal key={s.label} delay={i * 80} className="flex items-center gap-4">
               <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 shrink-0">
                 <s.icon className="h-5 w-5" />
@@ -234,7 +253,7 @@ export default async function Home() {
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
             <ShieldCheck className="h-3 w-3" /> Three principles
           </span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+          <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
             Brotherhood. Scholarship. Character.
           </h2>
         </div>
@@ -281,7 +300,7 @@ export default async function Home() {
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <Instagram className="h-3 w-3" /> @phisig_usc
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">A year in the life.</h2>
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl">
             Polar Plunge for Special Olympics, paintball before finals, formal in New Orleans,
@@ -325,7 +344,7 @@ export default async function Home() {
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <Calendar className="h-3 w-3" /> How rush works
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Four weeks. Zero pressure.
             </h2>
             <p className="mt-2 text-muted-foreground max-w-xl">
@@ -419,7 +438,7 @@ export default async function Home() {
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <Star className="h-3 w-3" /> Brother of the Month
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Real men. Real recognition.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
@@ -430,8 +449,8 @@ export default async function Home() {
             <ul className="mt-6 space-y-2.5 text-sm">
               {[
                 "Philanthropy Chair (freshman)",
-                "Led Polar Plunge — $700 raised for Special Olympics SC",
-                "Cantina 76 Percent Night for L&L Society",
+                `Led Polar Plunge — ${cfg["philanthropy.raisedAmount"]} raised for ${cfg["philanthropy.beneficiaryShort"]}`,
+                "Dry fundraiser dinner for Leukemia & Lymphoma Society",
                 "Embodies the cardinal principle of Character",
               ].map((p) => (
                 <li key={p} className="flex items-start gap-3">
@@ -454,6 +473,8 @@ export default async function Home() {
               <img
                 src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}?v=3`}
                 alt={`Brother of the Month — ${cfg["spotlight.name"]}`}
+                width={640}
+                height={800}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -476,34 +497,46 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* ─── 2026 EXECUTIVE BOARD ─── */}
-      {cfg["show.eboard"] !== "false" && (
+      {/* ─── EXECUTIVE BOARD ─── */}
+      {cfg["show.eboard"] !== "false" && eboard.length > 0 && (
       <section className="border-t border-border">
-        <div className="container py-14 sm:py-18">
+        <div className="container py-16 sm:py-24">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                <Crown className="h-3 w-3" /> 2026 leadership
+                <Crown className="h-3 w-3" /> Chapter leadership
               </span>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+              <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Meet the e-board.
               </h2>
             </div>
             <p className="text-muted-foreground max-w-xl">
               The Gamma Triton chapter elects its leadership annually. These are the brothers
-              running the show in 2026 — happy to talk to any rush who wants to learn more.
+              running the show — happy to talk to any rush who wants to learn more.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 stagger">
-            {EBOARD.map((m) => (
+            {eboard.map((m) => (
               <div
                 key={m.name}
                 className="relative rounded-2xl border border-border bg-card p-5 lift overflow-hidden"
               >
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-base font-semibold shadow-md shadow-phisig-red/20">
-                  {m.name.split(" ").map((s) => s[0]).join("")}
-                </div>
+                {m.headshotUrl ? (
+                  <img
+                    src={/^https?:\/\//.test(m.headshotUrl) ? m.headshotUrl : `/api/photo/${m.headshotUrl}`}
+                    alt={`${m.name}, ${m.role}`}
+                    width={56}
+                    height={56}
+                    loading="lazy"
+                    className="h-14 w-14 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card shadow-md shadow-phisig-red/20"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-base font-semibold shadow-md shadow-phisig-red/20">
+                    {m.name.split(" ").map((s) => s[0]).join("")}
+                  </div>
+                )}
                 <div className="mt-4">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-phisig-red font-semibold">
                     {m.role}
@@ -536,16 +569,19 @@ export default async function Home() {
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               Parents and prospective members:{" "}
-              <a href="mailto:advisor@phisig-usc.com" className="text-phisig-red hover:underline font-medium">
-                advisor@phisig-usc.com
-              </a>{" "}
-              reaches our chapter advisor.
+              <span className="font-medium text-foreground">{cfg["contact.advisorName"]}</span>
+              {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} —{" "}
+              <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline font-medium">
+                {cfg["contact.advisorEmail"]}
+              </a>{cfg["contact.rushPhone"] && (
+                <>{" "}· <a href={`tel:${cfg["contact.rushPhone"].replace(/[^\d+]/g, "")}`} className="text-phisig-red hover:underline font-medium">{cfg["contact.rushPhone"]}</a></>
+              )}.
             </p>
 
             <ul className="mt-6 space-y-2.5 stagger">
               {[
                 "Top-tier academic support and mentorship",
-                "Year-round philanthropy with The Special Olympics",
+                `Year-round philanthropy with ${cfg["philanthropy.beneficiary"]}`,
                 "Strong alumni network across the Southeast",
                 "Brotherhood that lasts well beyond graduation",
               ].map((p) => (
@@ -557,9 +593,9 @@ export default async function Home() {
             </ul>
 
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <ContactPill icon={MapPin} label="800 Lincoln St" sub="Columbia, SC" />
-              <ContactPill icon={Mail} label="rush@phisig-usc.com" sub="Rush questions" />
-              <ContactPill icon={Instagram} label="@phisig_usc" sub="Daily chapter life" />
+              <ContactPill icon={MapPin} label={cfg["contact.address"]} sub={cfg["contact.cityState"]} />
+              <ContactPill icon={Mail} label={cfg["contact.rushEmail"]} sub="Rush questions" />
+              <ContactPill icon={Instagram} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
             </div>
 
             <div className="mt-8 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4">
@@ -568,7 +604,8 @@ export default async function Home() {
                 <div className="text-xs leading-relaxed">
                   <p className="font-semibold text-foreground">Zero-tolerance anti-hazing policy.</p>
                   <p className="mt-1 text-muted-foreground">
-                    Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm. Concerns can be reported anonymously to the chapter advisor or to Phi Sigma Kappa national HQ.
+                    Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm. Concerns can be reported anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at <a className="text-phisig-red hover:underline" href={`mailto:${cfg["contact.advisorEmail"]}`}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
+                    <a className="text-phisig-red hover:underline font-medium" href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer">{cfg["antiHazing.hotline"]}</a>.
                   </p>
                 </div>
               </div>
@@ -585,6 +622,8 @@ export default async function Home() {
               <img
                 src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}?v=3`}
                 alt={cfg["about.caption"]}
+                width={640}
+                height={800}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: cfg["about.objectPosition"] || "50% 50%" }}
@@ -627,21 +666,21 @@ export default async function Home() {
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
                 <Sparkles className="h-3 w-3" /> FAQ
               </span>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+              <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Common questions.
               </h2>
               <p className="mt-3 text-muted-foreground max-w-md">
                 Got something else? DM us on{" "}
                 <Link
-                  href="https://www.instagram.com/phisig_usc/"
+                  href={cfg["contact.instagramUrl"]}
                   target="_blank"
                   rel="noreferrer"
                   className="text-phisig-red hover:underline font-medium"
                 >
-                  @phisig_usc
+                  {cfg["contact.instagramHandle"]}
                 </Link>{" "}
                 or email{" "}
-                <span className="text-foreground font-medium">rush@phisig-usc.com</span>.
+                <a href={`mailto:${cfg["contact.rushEmail"]}`} className="text-foreground font-medium hover:underline">{cfg["contact.rushEmail"]}</a>.
               </p>
             </div>
             <ul className="space-y-3">
@@ -681,8 +720,10 @@ export default async function Home() {
           >
             <img
               src="/api/photo/DRxIVRXkYCn?v=3"
-              alt="Game day at Williams-Brice Stadium"
+              alt="Phi Sigma Kappa brothers on Williams-Brice Stadium game day at the University of South Carolina"
               loading="lazy"
+              width={800}
+              height={640}
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
@@ -691,7 +732,7 @@ export default async function Home() {
                 <MapPin className="h-3 w-3" /> Game day · Williams-Brice
               </span>
               <p className="mt-2 text-lg font-semibold tracking-tight">
-                We tailgate every home game.
+                Williams-Brice gameday — dry tailgate, every home game.
               </p>
             </div>
           </a>
@@ -699,8 +740,8 @@ export default async function Home() {
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <MapPin className="h-3 w-3" /> Where we live
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
-              The house at 800 Lincoln.
+            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+              The house at {cfg["contact.address"]}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
               The Phi Sigma Kappa chapter house sits on Lincoln Street, a block off Greek Village
@@ -710,7 +751,7 @@ export default async function Home() {
             </p>
             <div className="mt-6 grid sm:grid-cols-2 gap-3">
               <Link
-                href="https://maps.google.com/?q=800+Lincoln+St+Columbia+SC"
+                href={cfg["contact.mapsUrl"]}
                 target="_blank"
                 rel="noreferrer"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
@@ -718,11 +759,11 @@ export default async function Home() {
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <MapPin className="h-3 w-3" /> Address
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">800 Lincoln St</p>
-                <p className="text-xs text-muted-foreground">Columbia, SC 29201</p>
+                <p className="mt-1.5 text-sm font-semibold">{cfg["contact.address"]}</p>
+                <p className="text-xs text-muted-foreground">{cfg["contact.cityState"]}</p>
               </Link>
               <Link
-                href="https://www.instagram.com/phisig_usc/"
+                href={cfg["contact.instagramUrl"]}
                 target="_blank"
                 rel="noreferrer"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
@@ -730,17 +771,17 @@ export default async function Home() {
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <Instagram className="h-3 w-3" /> Daily updates
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">@phisig_usc</p>
+                <p className="mt-1.5 text-sm font-semibold">{cfg["contact.instagramHandle"]}</p>
                 <p className="text-xs text-muted-foreground">Follow for chapter life</p>
               </Link>
               <Link
-                href="mailto:rush@phisig-usc.com"
+                href={`mailto:${cfg["contact.rushEmail"]}`}
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <Mail className="h-3 w-3" /> Rush questions
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">rush@phisig-usc.com</p>
+                <p className="mt-1.5 text-sm font-semibold">{cfg["contact.rushEmail"]}</p>
                 <p className="text-xs text-muted-foreground">We reply within 24h</p>
               </Link>
               <Link
@@ -763,7 +804,7 @@ export default async function Home() {
 
       {/* ─── FINAL CTA ─── */}
       <section className="container pb-16 sm:pb-20">
-        <div className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-[#7a0a1f] text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
+        <div className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
           <div className="absolute -right-12 -bottom-12 opacity-15">
             <Seal className="w-[420px] h-[420px] text-white" />
@@ -783,13 +824,13 @@ export default async function Home() {
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg" variant="secondary" className="group">
-                <Link href="#register">
+                <Link href={cfg["hero.cta.href"] || "#register"}>
                   Sign me up
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white">
-                <Link href="https://www.instagram.com/phisig_usc/" target="_blank">
+                <Link href={cfg["contact.instagramUrl"]} target="_blank">
                   <Instagram className="h-4 w-4" /> Follow us
                 </Link>
               </Button>
@@ -834,12 +875,13 @@ function ContactPill({
  * Falls back to a designed cardinal-red Crest tile if the photo can't load.
  */
 function PostTile({
-  slug, caption, icon: Icon, className,
+  slug, caption, icon: Icon, className, priority,
 }: {
   slug: string;
   caption: string;
   icon: React.ElementType;
   className?: string;
+  priority?: boolean;
 }) {
   const isUrl = /^https?:\/\//.test(slug);
   const imgSrc = isUrl ? slug : `/api/photo/${slug}?v=3`;
@@ -849,16 +891,22 @@ function PostTile({
       href={linkHref}
       target="_blank"
       rel="noreferrer"
+      aria-label={`View ${caption} on Instagram`}
       className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
     >
       {/* Fallback layer — cardinal gradient with chapter crest, visible until image loads */}
-      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-[#7a0a1f] flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
         <Crest className="h-20 w-20 text-white/25" />
       </div>
       <img
         src={imgSrc}
-        alt={caption}
-        loading="lazy"
+        alt={`Phi Sigma Kappa Gamma Triton chapter at USC — ${caption}`}
+        width={640}
+        height={640}
+        loading={priority ? "eager" : "lazy"}
+        // @ts-expect-error: fetchPriority is a valid HTML attribute, types still catching up.
+        fetchpriority={priority ? "high" : "auto"}
+        decoding={priority ? "sync" : "async"}
         className="relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />

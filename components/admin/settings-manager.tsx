@@ -12,7 +12,8 @@ import {
 import { useToast } from "@/components/ui/toast";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
-  RotateCcw, ExternalLink, Upload,
+  RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -84,6 +85,121 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
               placeholder="Phi Sigma Kappa, Gamma Triton at the University of South Carolina…"
               rows={3}
             />
+          </Field>
+          <Field label="Headline part 1">
+            <Input value={values["hero.h1.lead"] || ""} onChange={(e) => set("hero.h1.lead", e.target.value)} placeholder="The chapter that built" />
+          </Field>
+          <Field label="Headline part 2">
+            <Input value={values["hero.h1.tail"] || ""} onChange={(e) => set("hero.h1.tail", e.target.value)} placeholder="the men of" />
+          </Field>
+          <Field label="Headline highlight (red word)">
+            <Input value={values["hero.h1.highlight"] || ""} onChange={(e) => set("hero.h1.highlight", e.target.value)} placeholder="Carolina" />
+          </Field>
+          <Field label="Primary CTA label">
+            <Input value={values["hero.cta.label"] || ""} onChange={(e) => set("hero.cta.label", e.target.value)} placeholder="Get on the interest list" />
+          </Field>
+          <Field label="Primary CTA link" className="sm:col-span-2">
+            <Input value={values["hero.cta.href"] || ""} onChange={(e) => set("hero.cta.href", e.target.value)} placeholder="#register or https://…" />
+          </Field>
+        </div>
+      </Section>
+
+      {/* E-BOARD */}
+      <Section title="Executive board" eyebrow="5 leadership cards on homepage" icon={Crown}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Fill in the brothers' names and roles. Leave a row blank to hide that slot. Headshot optional — paste an Instagram slug or upload a photo.
+        </p>
+        <div className="grid lg:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <div key={n} className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Slot {n}</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Field label="Name">
+                  <Input value={values[`eboard.${n}.name`] || ""} onChange={(e) => set(`eboard.${n}.name`, e.target.value)} placeholder="Mark Laughery" />
+                </Field>
+                <Field label="Role">
+                  <Input value={values[`eboard.${n}.role`] || ""} onChange={(e) => set(`eboard.${n}.role`, e.target.value)} placeholder="President" />
+                </Field>
+              </div>
+              <Field label="Headshot (optional)">
+                <EboardHeadshotInput
+                  value={values[`eboard.${n}.headshotUrl`] || ""}
+                  onChange={(v) => set(`eboard.${n}.headshotUrl`, v)}
+                />
+              </Field>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* CONTACT */}
+      <Section title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Rush email">
+            <Input value={values["contact.rushEmail"] || ""} onChange={(e) => set("contact.rushEmail", e.target.value)} placeholder="rush@phisig-usc.com" />
+          </Field>
+          <Field label="Rush phone (optional)">
+            <Input value={values["contact.rushPhone"] || ""} onChange={(e) => set("contact.rushPhone", e.target.value)} placeholder="(803) 555-0142" />
+          </Field>
+          <Field label="Chapter advisor — name">
+            <Input value={values["contact.advisorName"] || ""} onChange={(e) => set("contact.advisorName", e.target.value)} placeholder="Dr. Jane Doe" />
+          </Field>
+          <Field label="Chapter advisor — title">
+            <Input value={values["contact.advisorTitle"] || ""} onChange={(e) => set("contact.advisorTitle", e.target.value)} placeholder="Alumni Chapter Advisor, Gamma Triton" />
+          </Field>
+          <Field label="Chapter advisor — email">
+            <Input value={values["contact.advisorEmail"] || ""} onChange={(e) => set("contact.advisorEmail", e.target.value)} placeholder="advisor@phisig-usc.com" />
+          </Field>
+          <Field label="Address">
+            <Input value={values["contact.address"] || ""} onChange={(e) => set("contact.address", e.target.value)} placeholder="800 Lincoln St" />
+          </Field>
+          <Field label="City / state / zip">
+            <Input value={values["contact.cityState"] || ""} onChange={(e) => set("contact.cityState", e.target.value)} placeholder="Columbia, SC 29201" />
+          </Field>
+          <Field label="Google Maps URL">
+            <Input value={values["contact.mapsUrl"] || ""} onChange={(e) => set("contact.mapsUrl", e.target.value)} placeholder="https://maps.google.com/?q=…" />
+          </Field>
+          <Field label="Instagram handle">
+            <Input value={values["contact.instagramHandle"] || ""} onChange={(e) => set("contact.instagramHandle", e.target.value)} placeholder="@phisig_usc" />
+          </Field>
+          <Field label="Instagram URL">
+            <Input value={values["contact.instagramUrl"] || ""} onChange={(e) => set("contact.instagramUrl", e.target.value)} placeholder="https://www.instagram.com/phisig_usc/" />
+          </Field>
+        </div>
+      </Section>
+
+      {/* PHILANTHROPY */}
+      <Section title="Philanthropy" eyebrow="Beneficiary, dollars raised" icon={HandHeart}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Beneficiary (full name)">
+            <Input value={values["philanthropy.beneficiary"] || ""} onChange={(e) => set("philanthropy.beneficiary", e.target.value)} placeholder="Special Olympics South Carolina" />
+          </Field>
+          <Field label="Beneficiary (short label)">
+            <Input value={values["philanthropy.beneficiaryShort"] || ""} onChange={(e) => set("philanthropy.beneficiaryShort", e.target.value)} placeholder="Special Olympics SC" />
+          </Field>
+          <Field label="Most recent year">
+            <Input value={values["philanthropy.raisedYear"] || ""} onChange={(e) => set("philanthropy.raisedYear", e.target.value)} placeholder="2025" />
+          </Field>
+          <Field label="Most recent event total">
+            <Input value={values["philanthropy.raisedAmount"] || ""} onChange={(e) => set("philanthropy.raisedAmount", e.target.value)} placeholder="$700" />
+          </Field>
+          <Field label="All-time total" className="sm:col-span-2">
+            <Input value={values["philanthropy.raisedTotal"] || ""} onChange={(e) => set("philanthropy.raisedTotal", e.target.value)} placeholder="$25k+" />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ANTI-HAZING + PRIVACY */}
+      <Section title="Anti-hazing &amp; privacy" eyebrow="Compliance copy" icon={ShieldCheck}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="National anti-hazing hotline (display)">
+            <Input value={values["antiHazing.hotline"] || ""} onChange={(e) => set("antiHazing.hotline", e.target.value)} placeholder="1-888-NOT-HAZE" />
+          </Field>
+          <Field label="Anti-hazing resource URL">
+            <Input value={values["antiHazing.hotlineUrl"] || ""} onChange={(e) => set("antiHazing.hotlineUrl", e.target.value)} placeholder="https://hazingprevention.org/help/" />
+          </Field>
+          <Field label="Privacy policy &lsquo;Last updated&rsquo;" className="sm:col-span-2">
+            <Input value={values["privacy.lastUpdated"] || ""} onChange={(e) => set("privacy.lastUpdated", e.target.value)} placeholder="May 2026" />
           </Field>
         </div>
       </Section>
@@ -318,6 +434,73 @@ function PhotoCard({
           </SelectContent>
         </Select>
       </Field>
+    </div>
+  );
+}
+
+function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { push } = useToast();
+  const [uploading, setUploading] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-photo", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
+      onChange(json.url);
+      push({ title: "Photo uploaded — click Save to apply", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {value ? (
+        <img
+          src={/^https?:\/\//.test(value) ? value : `/api/photo/${value}`}
+          alt="Headshot preview"
+          className="h-12 w-12 rounded-full object-cover ring-2 ring-phisig-red/20"
+        />
+      ) : (
+        <div className="h-12 w-12 rounded-full bg-secondary border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">
+          —
+        </div>
+      )}
+      <div className="flex-1 space-y-2">
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Slug or URL" />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {uploading ? "Uploading…" : "Upload"}
+        </Button>
+        {value && (
+          <Button type="button" size="sm" variant="ghost" onClick={() => onChange("")}>
+            Clear
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
