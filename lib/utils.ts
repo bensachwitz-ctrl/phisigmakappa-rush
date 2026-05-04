@@ -47,3 +47,58 @@ export function formatTime(d: Date | string) {
     minute: "2-digit",
   });
 }
+
+/**
+ * Sanitize a config-driven URL or email for safe rendering inside an `href`.
+ *
+ * Live audit caught two recurring bugs traced to admin-pasted values that had
+ * trailing junk: (a) a URL like "https://hazingprevention.org/help/…." with a
+ * literal Unicode ellipsis that 404s, and (b) mailto values like
+ * "advisor@phisig-usc.com\" with a trailing backslash from a copy-paste.
+ *
+ * This strips:
+ *   • trailing whitespace, line endings
+ *   • trailing single backslash
+ *   • trailing single horizontal-ellipsis or run of ASCII dots / periods
+ *     beyond a single ".tld" — i.e. removes ".." or "...." but leaves ".com"
+ *   • smart quotes that snuck in via auto-replace
+ *
+ * Apply at the LAST point of use (right inside `href={...}` / `<a href=`) —
+ * not at admin-save time, because the chair might intentionally paste a URL
+ * with a trailing slash that we want to preserve.
+ */
+export function cleanUrl(raw: string | undefined | null): string {
+  if (!raw) return "";
+  let s = String(raw).trim();
+  // Strip trailing punctuation pollution: backslash, ellipsis, repeated dots.
+  // Run iteratively in case multiple bad chars are stacked.
+  while (s.length > 0) {
+    const last = s[s.length - 1];
+    if (last === "\\" || last === "…" || last === " " || last === "\n" || last === "\r" || last === "\t") {
+      s = s.slice(0, -1);
+      continue;
+    }
+    // Strip trailing run of 2+ ASCII dots (".." or "...") but keep a single
+    // dot since it's needed for .com / .org / .edu TLDs.
+    if (last === "." && s.length >= 2 && s[s.length - 2] === ".") {
+      s = s.slice(0, -1);
+      continue;
+    }
+    break;
+  }
+  // Normalize smart quotes that sometimes appear after WYSIWYG copy-paste.
+  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  return s;
+}
+
+/** Convenience for `mailto:` hrefs. Strips trailing junk + leading "mailto:" if doubled. */
+export function cleanMailto(email: string | undefined | null): string {
+  const cleaned = cleanUrl(email).replace(/^mailto:/i, "");
+  return cleaned ? `mailto:${cleaned}` : "";
+}
+
+/** Convenience for `tel:` hrefs. Strips junk + non-dial chars except + and digits. */
+export function cleanTel(phone: string | undefined | null): string {
+  const cleaned = cleanUrl(phone).replace(/[^\d+]/g, "");
+  return cleaned ? `tel:${cleaned}` : "";
+}

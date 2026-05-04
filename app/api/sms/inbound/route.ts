@@ -1,8 +1,52 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Verify the X-Twilio-Signature header on inbound webhooks.
+ *
+ * Twilio computes HMAC-SHA1 of (full URL + sorted form params) using the
+ * account auth token, base64-encoded. This blocks an attacker from forging
+ * STOP / opt-out events for arbitrary phone numbers — without verification,
+ * anyone could destroy our TCPA audit trail by spamming this endpoint.
+ *
+ * Returns true if the signature is valid (or if TWILIO_AUTH_TOKEN isn't set,
+ * which is dev / preview mode — log a warning but still accept so local
+ * testing isn't blocked).
+ */
+function verifyTwilioSignature(
+  url: string,
+  params: Record<string, string>,
+  signatureHeader: string | null
+): boolean {
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  if (!token) {
+    console.warn("[sms/inbound] TWILIO_AUTH_TOKEN not set — accepting unverified");
+    return true;
+  }
+  if (!signatureHeader) return false;
+  // Concatenate URL with sorted (key + value) pairs per Twilio's spec.
+  const sorted = Object.keys(params).sort();
+  let signed = url;
+  for (const k of sorted) signed += k + params[k];
+  const expected = crypto
+    .createHmac("sha1", token)
+    .update(signed, "utf-8")
+    .digest("base64");
+  // Constant-time compare to avoid timing attacks.
+  if (expected.length !== signatureHeader.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signatureHeader));
+}
+
+/** Strict E.164 / domestic US-style validator — at least 7 digits, optional +. */
+function isValidPhone(raw: string): boolean {
+  const digits = raw.replace(/[^\d+]/g, "");
+  // E.164: + followed by 7-15 digits. Domestic: 10-11 digits.
+  return /^\+?\d{7,15}$/.test(digits);
+}
 
 /**
  * Twilio inbound-SMS webhook. Configure Twilio Messaging Service to point its
@@ -20,14 +64,19 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   let from = "";
   let body = "";
+  let allParams: Record<string, string> = {};
   try {
     const ct = req.headers.get("content-type") || "";
     if (ct.includes("application/json")) {
       const json = await req.json();
+      allParams = Object.fromEntries(
+        Object.entries(json).map(([k, v]) => [k, String(v ?? "")])
+      );
       from = String(json.From || json.from || "");
       body = String(json.Body || json.body || "");
     } else {
       const form = await req.formData();
+      form.forEach((v, k) => { allParams[k] = String(v); });
       from = String(form.get("From") || "");
       body = String(form.get("Body") || "");
     }
@@ -36,10 +85,25 @@ export async function POST(req: Request) {
     return twiml("");
   }
 
+  // Verify Twilio signed this request. In production with TWILIO_AUTH_TOKEN
+  // set, an unsigned/forged POST is rejected with 403 — this stops an attacker
+  // from using this webhook to opt out arbitrary phone numbers.
+  const signature = req.headers.get("x-twilio-signature");
+  // Twilio signs against the exact URL it called (incl. query string).
+  const url = new URL(req.url).toString();
+  if (!verifyTwilioSignature(url, allParams, signature)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   const phone = (from || "").trim();
   const keyword = (body || "").trim().toUpperCase();
 
-  if (!phone) return twiml("");
+  // Reject malformed phone numbers — anything that isn't roughly E.164 means
+  // either Twilio gave us junk or a forged request slipped past signature
+  // verification. Returning 400 keeps garbage out of the suppression list.
+  if (!phone || !isValidPhone(phone)) {
+    return new NextResponse("Bad Request: invalid From", { status: 400 });
+  }
 
   // CRITICAL CTIA / 10DLC RULE: STOP and HELP must ALWAYS produce a correct
   // reply, regardless of whether the sending phone is on file. Carriers test

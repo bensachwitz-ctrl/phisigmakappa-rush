@@ -4,6 +4,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
+import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
 import {
   ShieldCheck, ArrowLeft, Mail, Phone, MapPin, GraduationCap,
   HandHeart, Lock, FileText, Users, Heart, Building2, ArrowRight,
@@ -73,14 +74,14 @@ export default async function ParentsPage() {
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-phisig-red" />
-                <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">
+                <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
                   {cfg["contact.advisorEmail"]}
                 </a>
               </li>
               {phonePresent && (
                 <li className="flex items-center gap-2">
                   <Phone className="h-3.5 w-3.5 text-phisig-red" />
-                  <a href={`tel:${cfg["contact.rushPhone"].replace(/[^\d+]/g, "")}`} className="text-phisig-red hover:underline">
+                  <a href={cleanTel(cfg["contact.rushPhone"])} className="text-phisig-red hover:underline">
                     {cfg["contact.rushPhone"]}
                   </a>
                 </li>
@@ -93,7 +94,7 @@ export default async function ParentsPage() {
             {advisorPlaceholder && (
               <p className="mt-4 text-xs text-muted-foreground bg-amber-50 border border-amber-200 rounded-md p-2.5">
                 The chapter is finalizing the advisor of record for the {new Date().getFullYear()} year — until then,{" "}
-                <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="underline">
+                <a href={cleanMailto(cfg["contact.advisorEmail"])} className="underline">
                   {cfg["contact.advisorEmail"]}
                 </a>{" "}
                 routes to the e-board for any parent concern.
@@ -114,13 +115,13 @@ export default async function ParentsPage() {
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-phisig-red" />
-                <a href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
+                <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
                   National anti-hazing hotline · {cfg["antiHazing.hotline"]}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-phisig-red" />
-                <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">
+                <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
                   {cfg["contact.advisorEmail"]} (advisor, anonymous OK)
                 </a>
               </li>
@@ -199,14 +200,14 @@ export default async function ParentsPage() {
             </DataCard>
             <DataCard icon={FileText} title="When it's deleted">
               90 days after Bid Night for any rushee who declines or doesn&apos;t receive a bid.
-              Email <a href={`mailto:${cfg["contact.rushEmail"]}`} className="text-phisig-red hover:underline">{cfg["contact.rushEmail"]}</a> to request deletion sooner.
+              Email <a href={cleanMailto(cfg["contact.rushEmail"])} className="text-phisig-red hover:underline">{cfg["contact.rushEmail"]}</a> to request deletion sooner.
             </DataCard>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             Full <Link href="/privacy" className="text-phisig-red hover:underline">privacy policy</Link>{" "}
             covers TCPA SMS consent, CCPA/Virginia rights, cookies, and the 4-year recordkeeping window.
             If your son is 17, a parent or guardian can email{" "}
-            <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>{" "}
+            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>{" "}
             to confirm consent on his behalf.
           </p>
         </section>
@@ -219,8 +220,8 @@ export default async function ParentsPage() {
               Have a question we didn&apos;t answer?
             </h2>
             <p className="mt-3 text-white/85">
-              Email <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="underline font-medium">{cfg["contact.advisorEmail"]}</a>{" "}
-              or <a href={`mailto:${cfg["contact.rushEmail"]}`} className="underline font-medium">{cfg["contact.rushEmail"]}</a>.
+              Email <a href={cleanMailto(cfg["contact.advisorEmail"])} className="underline font-medium">{cfg["contact.advisorEmail"]}</a>{" "}
+              or <a href={cleanMailto(cfg["contact.rushEmail"])} className="underline font-medium">{cfg["contact.rushEmail"]}</a>.
               We reply within 24 hours.
             </p>
             <Link

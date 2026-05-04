@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
+import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
 
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
@@ -17,7 +18,7 @@ export async function PublicFooter() {
             <span className="font-medium text-foreground">Chapter advisor:</span>{" "}
             {cfg["contact.advisorName"]}
             {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} —{" "}
-            <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>.
+            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>.
           </p>
         </div>
         <div className="text-xs text-muted-foreground space-y-1 text-left sm:text-right">
@@ -25,7 +26,7 @@ export async function PublicFooter() {
           <p>{cfg["contact.address"]} · {cfg["contact.cityState"]}</p>
           {cfg["contact.rushPhone"] && (
             <p>
-              <a href={`tel:${cfg["contact.rushPhone"].replace(/[^\d+]/g, "")}`} className="hover:text-foreground transition-colors">
+              <a href={cleanTel(cfg["contact.rushPhone"])} className="hover:text-foreground transition-colors">
                 {cfg["contact.rushPhone"]}
               </a>
             </p>
@@ -37,9 +38,9 @@ export async function PublicFooter() {
             <span aria-hidden>·</span>
             <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">National HQ</a>
             <span aria-hidden>·</span>
-            <a href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Anti-hazing hotline</a>
+            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Anti-hazing hotline</a>
             <span aria-hidden>·</span>
-            <a href={`mailto:${cfg["contact.rushEmail"]}`} className="hover:text-foreground transition-colors">Contact</a>
+            <a href={cleanMailto(cfg["contact.rushEmail"])} className="hover:text-foreground transition-colors">Contact</a>
           </p>
         </div>
       </div>

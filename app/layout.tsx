@@ -43,6 +43,42 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * JSON-LD Organization schema. Helps Google rich results, Knowledge Panel,
+ * and parent-side trust signals (verified org card in search).
+ */
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "CollegeOrUniversity",
+  "@id": "https://phisigmakappa.vercel.app/#organization",
+  name: "Phi Sigma Kappa, Gamma Triton chapter",
+  alternateName: "Phi Sig USC",
+  url: "https://phisigmakappa.vercel.app",
+  parentOrganization: {
+    "@type": "Organization",
+    name: "Phi Sigma Kappa",
+    url: "https://phisigmakappa.org",
+    foundingDate: "1873",
+  },
+  memberOf: {
+    "@type": "CollegeOrUniversity",
+    name: "University of South Carolina",
+    url: "https://sc.edu",
+  },
+  foundingDate: "1975",
+  sameAs: [
+    "https://www.instagram.com/phisig_usc/",
+    "https://phisigmakappa.org",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "Recruitment",
+    email: "rush@phisig-usc.com",
+    areaServed: "US",
+    availableLanguage: "English",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -50,6 +86,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+        />
+        <link rel="manifest" href="/manifest.webmanifest" />
+      </head>
       <body>
         <ToastProvider>{children}</ToastProvider>
       </body>

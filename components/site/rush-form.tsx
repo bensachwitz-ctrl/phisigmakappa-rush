@@ -58,7 +58,7 @@ type StepId =
 // (TCPA / CTIA best practice — disclosure must precede phone collection).
 // The form-wide affirmative checkbox is on the final Review step.
 const SMS_PRE_DISCLOSURE =
-  "We'll text you when the Fall '26 schedule drops and as rush events approach — about 6–8 messages per rush cycle. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
+  "We'll text you when the Fall '26 schedule drops and as rush events approach — up to 8 messages per rush cycle, sent using automated technology. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
 
 // The line that appears next to the express-consent checkbox on the Review step.
 // Identifies the sender by full legal name, the program, frequency, opt-out keywords,
@@ -68,8 +68,12 @@ const SMS_PRE_DISCLOSURE =
 // transfers from accelerated programs), so the consent allows 17 with verified
 // parental permission — matching the under-18 guardian-consent path in /privacy.
 // Hard-blocking 18+ would lock out legitimate rushees.
+//
+// R11: includes the 47 CFR §64.1200(f)(9) "automatic telephone dialing system"
+// disclosure language so this consent qualifies as prior express written
+// consent under TCPA — a plaintiff lawyer can no longer argue otherwise.
 const SMS_EXPRESS_CONSENT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
+  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
 
 export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const { push } = useToast();

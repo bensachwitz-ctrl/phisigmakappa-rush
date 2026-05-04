@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -233,7 +234,7 @@ export default async function Home({
                 <ShieldCheck className="h-3.5 w-3.5" /> Gamma Triton chapter
               </span>
               <Link
-                href={cfg["contact.instagramUrl"]}
+                href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-phisig-red hover:underline"
@@ -660,10 +661,10 @@ export default async function Home({
               Parents and prospective members:{" "}
               <span className="font-medium text-foreground">{cfg["contact.advisorName"]}</span>
               {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} —{" "}
-              <a href={`mailto:${cfg["contact.advisorEmail"]}`} className="text-phisig-red hover:underline font-medium">
+              <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline font-medium">
                 {cfg["contact.advisorEmail"]}
               </a>{cfg["contact.rushPhone"] && (
-                <>{" "}· <a href={`tel:${cfg["contact.rushPhone"].replace(/[^\d+]/g, "")}`} className="text-phisig-red hover:underline font-medium">{cfg["contact.rushPhone"]}</a></>
+                <>{" "}· <a href={cleanTel(cfg["contact.rushPhone"])} className="text-phisig-red hover:underline font-medium">{cfg["contact.rushPhone"]}</a></>
               )}.
             </p>
 
@@ -696,8 +697,8 @@ export default async function Home({
                     {cfg["antiHazing.body"]}{" "}
                     Concerns can be reported anonymously to{" "}
                     <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
-                    <a className="text-phisig-red hover:underline" href={`mailto:${cfg["contact.advisorEmail"]}`}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
-                    <a className="text-phisig-red hover:underline font-medium" href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer">{cfg["antiHazing.hotline"]}</a>.
+                    <a className="text-phisig-red hover:underline" href={cleanMailto(cfg["contact.advisorEmail"])}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
+                    <a className="text-phisig-red hover:underline font-medium" href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer">{cfg["antiHazing.hotline"]}</a>.
                   </p>
                 </div>
               </div>
@@ -764,7 +765,7 @@ export default async function Home({
               <p className="mt-3 text-muted-foreground max-w-md">
                 Got something else? DM us on{" "}
                 <Link
-                  href={cfg["contact.instagramUrl"]}
+                  href={cleanUrl(cfg["contact.instagramUrl"])}
                   target="_blank"
                   rel="noreferrer"
                   className="text-phisig-red hover:underline font-medium"
@@ -772,7 +773,7 @@ export default async function Home({
                   {cfg["contact.instagramHandle"]}
                 </Link>{" "}
                 or email{" "}
-                <a href={`mailto:${cfg["contact.rushEmail"]}`} className="text-foreground font-medium hover:underline">{cfg["contact.rushEmail"]}</a>.
+                <a href={cleanMailto(cfg["contact.rushEmail"])} className="text-foreground font-medium hover:underline">{cfg["contact.rushEmail"]}</a>.
               </p>
             </div>
             <ul className="space-y-3">
@@ -844,7 +845,7 @@ export default async function Home({
             </p>
             <div className="mt-6 grid sm:grid-cols-2 gap-3">
               <Link
-                href={cfg["contact.mapsUrl"]}
+                href={cleanUrl(cfg["contact.mapsUrl"])}
                 target="_blank"
                 rel="noreferrer"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
@@ -856,7 +857,7 @@ export default async function Home({
                 <p className="text-xs text-muted-foreground">{cfg["contact.cityState"]}</p>
               </Link>
               <Link
-                href={cfg["contact.instagramUrl"]}
+                href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
@@ -868,7 +869,7 @@ export default async function Home({
                 <p className="text-xs text-muted-foreground">Follow for chapter life</p>
               </Link>
               <Link
-                href={`mailto:${cfg["contact.rushEmail"]}`}
+                href={cleanMailto(cfg["contact.rushEmail"])}
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
@@ -923,7 +924,7 @@ export default async function Home({
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white">
-                <Link href={cfg["contact.instagramUrl"]} target="_blank">
+                <Link href={cleanUrl(cfg["contact.instagramUrl"])} target="_blank">
                   <Instagram className="h-4 w-4" /> Follow us
                 </Link>
               </Button>

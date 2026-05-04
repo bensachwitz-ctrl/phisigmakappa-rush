@@ -9,9 +9,13 @@ export const dynamic = "force-dynamic";
 // Bump this whenever the legal disclosure copy changes. Persisted alongside
 // each consent receipt so we can prove what the user saw at consent time
 // even after the on-page wording is updated. TCPA defense relies on this.
-const DISCLOSURE_VERSION = "2026-05-04";
+//
+// 2026-05-05 (R11): added the 47 CFR §64.1200(f)(9) "automated technology"
+// disclosure language so the receipt qualifies as prior express written
+// consent under TCPA. The R10 audit caught its absence as a class-action vector.
+const DISCLOSURE_VERSION = "2026-05-05";
 const SMS_DISCLOSURE_TEXT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall '26 rush and is never sold or shared.";
+  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent to receive these messages is not a condition of any membership consideration. My information will only be used to communicate about Fall '26 rush and is never sold or shared.";
 
 /**
  * Fire a confirmation SMS to the rushee asking them to reply YES to confirm.
