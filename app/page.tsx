@@ -8,6 +8,7 @@ import { InstagramFeed } from "@/components/site/instagram-feed";
 import { StickyCTA } from "@/components/site/sticky-cta";
 import { Reveal, CountUp } from "@/components/site/reveal";
 import { Button } from "@/components/ui/button";
+import { getSiteConfig } from "@/lib/site-config";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
   GraduationCap, Sparkles, Quote, Star, Calendar,
@@ -90,7 +91,9 @@ const EBOARD = [
   { name: "Joshua Barteet", role: "Sentinel" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const cfg = await getSiteConfig();
+
   return (
     <main className="min-h-screen bg-background">
       <PublicNav />
@@ -108,15 +111,14 @@ export default function Home() {
             <div className="max-w-2xl animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
-              Fall Rush 2026 — Interest list now open
+              {cfg["hero.eyebrow"]}
             </span>
             <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.02]">
               The chapter that built<br className="hidden sm:block" />
               the men of <span className="text-phisig-red">Carolina</span>.
             </h1>
             <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl">
-              Phi Sigma Kappa, Gamma Triton at the University of South Carolina. Sign up
-              now — we'll text you the second the Fall '26 schedule drops in August.
+              {cfg["hero.subline"]}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow">
@@ -154,9 +156,24 @@ export default function Home() {
             {/* Hero photo collage — real chapter posts via Instagram embed */}
             <div className="relative animate-slide-up [animation-delay:200ms] hidden md:block">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <PostTile slug="DRzyoVciZCh" caption="2026 Executive Board" icon={Crown} className="col-span-2 aspect-[4/3]" />
-                <PostTile slug="DRxIVRXkYCn" caption="Game Day" icon={Trophy} className="aspect-square" />
-                <PostTile slug="DUyvfpokpy6" caption="Polar Plunge" icon={HandHeart} className="aspect-square" />
+                <PostTile
+                  slug={cfg["hero.tile1.slug"]}
+                  caption={cfg["hero.tile1.caption"]}
+                  icon={iconFor(cfg["hero.tile1.icon"])}
+                  className="col-span-2 aspect-[4/3]"
+                />
+                <PostTile
+                  slug={cfg["hero.tile2.slug"]}
+                  caption={cfg["hero.tile2.caption"]}
+                  icon={iconFor(cfg["hero.tile2.icon"])}
+                  className="aspect-square"
+                />
+                <PostTile
+                  slug={cfg["hero.tile3.slug"]}
+                  caption={cfg["hero.tile3.caption"]}
+                  icon={iconFor(cfg["hero.tile3.icon"])}
+                  className="aspect-square"
+                />
               </div>
               <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10 pointer-events-none">
                 <span className="text-center leading-tight">
@@ -395,10 +412,8 @@ export default function Home() {
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
               Every month the chapter recognizes a brother who's gone above and beyond — in
-              the classroom, in service, on the field, in leadership. Michael McCarthy,
-              this April's Brother of the Month, joined as a freshman and within a semester
-              took over Philanthropy Chair, transforming the chapter's Special Olympics
-              partnership.
+              the classroom, in service, on the field, in leadership.{" "}
+              {cfg["spotlight.bio"]}
             </p>
             <ul className="mt-6 space-y-2.5 text-sm">
               {[
@@ -419,27 +434,27 @@ export default function Home() {
           </div>
           <div className="order-1 lg:order-2 relative">
             <a
-              href="https://www.instagram.com/p/DXzzTaFjSyj/"
+              href={`https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
               target="_blank"
               rel="noreferrer"
               className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
               <img
-                src="/api/photo/DXzzTaFjSyj"
-                alt="Brother of the Month — Michael McCarthy"
+                src={`/api/photo/${cfg["spotlight.slug"]}`}
+                alt={`Brother of the Month — ${cfg["spotlight.name"]}`}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Star className="h-3 w-3" /> April · Brother of the Month
+                  <Star className="h-3 w-3" /> {cfg["spotlight.month"]} · Brother of the Month
                 </span>
                 <p className="mt-2 text-white text-xl font-semibold tracking-tight">
-                  Michael McCarthy
+                  {cfg["spotlight.name"]}
                 </p>
                 <p className="text-white/80 text-xs">
-                  Freshman · Philanthropy Chair
+                  {cfg["spotlight.role"]}
                 </p>
               </div>
             </a>
@@ -537,10 +552,11 @@ export default function Home() {
               className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
               <img
-                src="/api/photo/DWmioxGCaBG"
-                alt="Spring formal in New Orleans"
+                src={`/api/photo/${cfg["about.slug"]}`}
+                alt={cfg["about.caption"]}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: cfg["about.objectPosition"] || "50% 50%" }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
@@ -751,6 +767,15 @@ export default function Home() {
       <StickyCTA />
     </main>
   );
+}
+
+// Map config string → icon component
+function iconFor(name: string): React.ElementType {
+  const map: Record<string, React.ElementType> = {
+    Crown, Trophy, HandHeart, Users, Award, Star, Heart, GraduationCap,
+    BookOpen, Music, Building2, Flame, ShieldCheck, Calendar, MapPin,
+  };
+  return map[name] || Crown;
 }
 
 function ContactPill({

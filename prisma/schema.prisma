@@ -113,6 +113,22 @@ model Document {
   createdAt   DateTime @default(now())
 }
 
+/**
+ * Key/value site settings the chapter can tweak without a code deploy:
+ *  hero.tile1.slug | hero.tile1.caption | hero.tile1.icon
+ *  hero.tile2.slug | hero.tile2.caption | hero.tile2.icon
+ *  hero.tile3.slug | hero.tile3.caption | hero.tile3.icon
+ *  spotlight.slug | spotlight.name | spotlight.role | spotlight.month
+ *  about.slug
+ *  hero.tagline
+ *  ... etc.
+ */
+model SiteConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model Vote {
   id        String   @id @default(cuid())
   rushId    String
