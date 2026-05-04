@@ -97,7 +97,7 @@ export default function LoginClient() {
           <Card>
             <CardContent className="p-6 sm:p-8">
               {/* Mode tabs */}
-              <div className="grid grid-cols-2 gap-2 mb-6 rounded-lg bg-secondary p-1">
+              <div className="grid grid-cols-2 gap-2 mb-6 rounded-xl bg-secondary p-1">
                 <button
                   type="button"
                   onClick={() => setMode("brother")}

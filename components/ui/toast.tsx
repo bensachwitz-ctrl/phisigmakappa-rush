@@ -33,7 +33,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              "pointer-events-auto rounded-lg border bg-card px-4 py-3 shadow-lg animate-fade-in",
+              "pointer-events-auto rounded-xl border bg-card px-4 py-3 shadow-lg animate-fade-in",
               t.variant === "destructive" && "border-red-200 bg-red-50",
               t.variant === "success" && "border-emerald-200 bg-emerald-50"
             )}

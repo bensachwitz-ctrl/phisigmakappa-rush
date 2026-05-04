@@ -31,6 +31,8 @@ export async function PublicFooter() {
             </p>
           )}
           <p className="flex flex-wrap gap-x-3 gap-y-1 sm:justify-end pt-1">
+            <Link href="/parents" className="hover:text-foreground transition-colors">For Parents</Link>
+            <span aria-hidden>·</span>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <span aria-hidden>·</span>
             <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">National HQ</a>

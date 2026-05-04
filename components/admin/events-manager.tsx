@@ -494,7 +494,7 @@ function AttendanceDialog({
             <span className="text-muted-foreground">of {rushes.length} attended</span>
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+        <div className="flex-1 overflow-y-auto rounded-xl border border-border divide-y divide-border">
           {loading ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin inline-block mr-2" /> Loading…

@@ -215,7 +215,7 @@ export default function HelpPage() {
           {COMMON_TASKS.map((t) => (
             <Card key={t.title} className="lift">
               <CardContent className="p-5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-phisig-red text-white shadow-md shadow-phisig-red/20">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-phisig-red text-white shadow-md shadow-phisig-red/20">
                   <t.icon className="h-4 w-4" />
                 </span>
                 <h3 className="mt-3 text-base font-semibold tracking-tight">{t.title}</h3>

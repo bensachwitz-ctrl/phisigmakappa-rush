@@ -373,7 +373,7 @@ export function BrothersManager({
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: any; icon: React.ElementType }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
+    <div className="rounded-xl border border-border bg-card p-3">
       <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
         <Icon className="h-3 w-3 text-phisig-red" /> {label}
       </div>
@@ -491,7 +491,7 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
               <div className="text-sm">
                 <p className="font-medium">Invite created.</p>

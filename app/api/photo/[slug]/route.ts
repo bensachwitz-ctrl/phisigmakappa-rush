@@ -1,36 +1,72 @@
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// 30 days at the edge, 24h at the browser. URL is keyed by Instagram slug, which
+// is itself stable per post — so the bytes effectively are immutable at this URL.
+const CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
+  // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control is
+  // honored separately by Vercel's edge cache and sets a 30-day TTL.
+  "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
+  "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
+  // Two variants per URL (WebP vs JPEG fallback) — Vary so caches store both.
+  Vary: "Accept",
+};
+
 /**
- * Resolves an Instagram post's hero photo and proxies the bytes through our domain.
- * Uses Instagram's public /embed/ endpoint which doesn't require login (the regular
- * post URL hits a login wall and returns the IG logo as og:image).
+ * If the client supports WebP, transcode the JPEG bytes to WebP at quality 80.
+ * Falls back silently to the original JPEG if sharp can't read the input
+ * (corrupt JPEG, animated GIF, etc.). Returns { buf, contentType }.
+ */
+async function maybeWebp(buf: Buffer, originalContentType: string, accept: string | null) {
+  const wantsWebp = !!accept && accept.toLowerCase().includes("image/webp");
+  if (!wantsWebp) return { buf, contentType: originalContentType };
+  try {
+    const webp = await sharp(buf, { failOn: "none" })
+      .rotate() // honor EXIF orientation
+      .webp({ quality: 80, effort: 4 })
+      .toBuffer();
+    // Only ship WebP if it's actually smaller — sometimes already-compressed
+    // JPEGs grow when re-encoded; in that case keep the original.
+    if (webp.byteLength < buf.byteLength) {
+      return { buf: webp, contentType: "image/webp" };
+    }
+    return { buf, contentType: originalContentType };
+  } catch {
+    return { buf, contentType: originalContentType };
+  }
+}
+
+/**
+ * Resolves an Instagram post's hero photo and proxies the bytes through our
+ * domain. Uses Instagram's public /embed/ endpoint which doesn't require login
+ * (the regular post URL hits a login wall and returns the IG logo as og:image).
+ *
+ * If the request `Accept` header includes `image/webp` (every modern browser
+ * does), we transcode to WebP at q=80 — typically 30-50% smaller than IG's JPEG.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { slug: string } }
 ) {
+  const accept = req.headers.get("accept");
   const raw = decodeURIComponent(params.slug || "");
 
-  // If the "slug" is actually a full URL (admin uploaded a direct image to Vercel Blob, etc.),
-  // proxy it through this route so we apply the same caching headers.
+  // If the "slug" is actually a full URL (admin uploaded a direct image to
+  // Vercel Blob, etc.), proxy it through this route so we apply caching + WebP.
   if (/^https?:\/\//.test(raw)) {
     try {
       const r = await fetch(raw, { cache: "no-store" });
       if (!r.ok) return transparentPixel();
-      const buf = Buffer.from(await r.arrayBuffer());
-      return new NextResponse(buf, {
+      const original = Buffer.from(await r.arrayBuffer());
+      const originalCt = r.headers.get("Content-Type") || "image/jpeg";
+      const { buf, contentType } = await maybeWebp(original, originalCt, accept);
+      return new NextResponse(buf as unknown as BodyInit, {
         status: 200,
-        headers: {
-          "Content-Type": r.headers.get("Content-Type") || "image/jpeg",
-          "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
-          // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control
-          // is honored separately by Vercel's edge cache + sets a 30-day TTL.
-          "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
-          "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
-        },
+        headers: { "Content-Type": contentType, ...CACHE_HEADERS },
       });
     } catch {
       return transparentPixel();
@@ -48,8 +84,6 @@ export async function GET(
   ];
 
   // Patterns to find image URLs inside Instagram's embed HTML.
-  // The embed page renders the post's main image in an <img class="EmbeddedMediaImage">
-  // and also stashes higher-res variants in inline JSON.
   const patterns = [
     /class="EmbeddedMediaImage"[^>]*\bsrc="([^"]+)"/i,
     /<img[^>]*class="[^"]*EmbeddedMediaImage[^"]*"[^>]*src="([^"]+)"/i,
@@ -79,7 +113,7 @@ export async function GET(
         const m = html.match(re);
         if (m?.[1]) {
           imgUrl = m[1].replace(/&amp;/g, "&").replace(/\\u0026/g, "&").replace(/\\\//g, "/");
-          // Skip the generic "Login • Instagram" og:image (the brand logo)
+          // Skip the generic "Login • Instagram" og:image (brand logo fallback)
           if (imgUrl && !/instagram\.com\/static\/.+InstagramLogo/i.test(imgUrl)) {
             break;
           }
@@ -105,26 +139,22 @@ export async function GET(
       cache: "no-store",
     });
     if (!imgRes.ok) throw new Error(`img status ${imgRes.status}`);
-    const buf = Buffer.from(await imgRes.arrayBuffer());
+    const original = Buffer.from(await imgRes.arrayBuffer());
 
     // Sanity check: real Phi Sig chapter photos from Instagram are 100KB+.
     // Anything under 30KB is almost certainly the IG branding/logo asset
     // returned by a login-wall fallback path. Reject so we don't poison
     // browser caches with the wrong image.
-    if (buf.byteLength < 30_000) {
-      throw new Error(`suspiciously small image: ${buf.byteLength} bytes`);
+    if (original.byteLength < 30_000) {
+      throw new Error(`suspiciously small image: ${original.byteLength} bytes`);
     }
 
-    return new NextResponse(buf, {
+    const originalCt = imgRes.headers.get("Content-Type") || "image/jpeg";
+    const { buf, contentType } = await maybeWebp(original, originalCt, accept);
+
+    return new NextResponse(buf as unknown as BodyInit, {
       status: 200,
-      headers: {
-        "Content-Type": imgRes.headers.get("Content-Type") || "image/jpeg",
-        "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
-          // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control
-          // is honored separately by Vercel's edge cache + sets a 30-day TTL.
-          "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
-          "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
-      },
+      headers: { "Content-Type": contentType, ...CACHE_HEADERS },
     });
   } catch {
     return transparentPixel();

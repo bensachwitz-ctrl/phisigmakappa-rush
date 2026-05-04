@@ -345,7 +345,7 @@ function IntroStep({ onStart }: { onStart: () => void }) {
         ].map((s, i) => (
           <li
             key={s.label}
-            className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-sm hover:border-phisig-red/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+            className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-sm hover:border-phisig-red/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-phisig-red-soft text-phisig-red">
               <s.icon className="h-3.5 w-3.5" />
@@ -403,7 +403,7 @@ function ContactStep({
         </Field>
       )}
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
-      <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3 leading-relaxed">
+      <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
         <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
@@ -753,7 +753,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
             { num: "2", label: "We'll text & email you" },
             { num: "3", label: "Show up & meet the brothers" },
           ].map((s) => (
-            <div key={s.num} className="rounded-lg border border-border bg-card px-3 py-2.5">
+            <div key={s.num} className="rounded-xl border border-border bg-card px-3 py-2.5">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white text-[11px] font-semibold">
                 {s.num}
               </div>

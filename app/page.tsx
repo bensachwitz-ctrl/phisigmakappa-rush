@@ -364,8 +364,9 @@ export default async function Home({
               we'll text and email everyone on this list the moment it's live.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              You must be 18 or older — or 17 with a parent or legal guardian's permission — to sign up.{" "}
-              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy &amp; consent</Link>.
+              You must be 18 or older — or 17 with a parent or legal guardian&apos;s permission — to sign up.{" "}
+              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy &amp; consent</Link>{" "}·{" "}
+              <Link href="/parents" className="text-phisig-red hover:underline">For parents</Link>.
             </p>
           </div>
           <div className="max-w-3xl mx-auto">
@@ -559,7 +560,7 @@ export default async function Home({
               href={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
               target="_blank"
               rel="noreferrer"
-              className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
+              className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
               <img
                 src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}`}
@@ -708,7 +709,7 @@ export default async function Home({
               href={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `https://www.instagram.com/p/${cfg["about.slug"]}/`}
               target="_blank"
               rel="noreferrer"
-              className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
+              className="aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
               <img
                 src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}`}
@@ -807,7 +808,7 @@ export default async function Home({
             href="https://www.instagram.com/p/DRxIVRXkYCn/"
             target="_blank"
             rel="noreferrer"
-            className="relative aspect-[5/4] rounded-3xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
+            className="relative aspect-[5/4] rounded-2xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
           >
             <img
               src="/api/photo/DRxIVRXkYCn"
@@ -895,7 +896,7 @@ export default async function Home({
 
       {/* ─── FINAL CTA ─── */}
       <section className="container pb-16 sm:pb-20">
-        <div className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
+        <div className="rounded-2xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
           <div className="absolute -right-12 -bottom-12 opacity-15">
             <Seal className="w-[420px] h-[420px] text-white" />
@@ -949,7 +950,7 @@ function ContactPill({
   icon: Icon, label, sub,
 }: { icon: React.ElementType; label: string; sub: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-3 lift">
+    <div className="rounded-xl border border-border bg-card p-3 lift">
       <div className="flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0" />
         <span className="text-xs font-medium truncate">{label}</span>

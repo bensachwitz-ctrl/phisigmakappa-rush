@@ -136,7 +136,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       {/* CONTACT */}
       <Section title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
         {(values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
-          <div className="mb-4 rounded-lg border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
+          <div className="mb-4 rounded-xl border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
             <strong className="font-semibold">Heads up — visible on the public site:</strong>{" "}
             {values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"]
               ? "Replace “Chapter Advisor” with the real advisor's full name. "
@@ -481,7 +481,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             return (
               <label
                 key={s.key}
-                className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:border-phisig-red/40 transition-colors"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 cursor-pointer hover:border-phisig-red/40 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -670,7 +670,7 @@ function JsonArrayEditor({
         {rows.map((row, i) => {
           const open = openIdx === i;
           return (
-            <li key={i} className="rounded-lg border border-border bg-card overflow-hidden">
+            <li key={i} className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between gap-2 px-3 py-2.5">
                 <button
                   type="button"
@@ -828,13 +828,13 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
 }
 
 function PhotoPreview({ slug, className, objectPosition }: { slug?: string; className?: string; objectPosition?: string }) {
-  if (!slug) return <div className={`aspect-[4/3] rounded-lg bg-secondary border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground ${className ?? ""}`}>No slug yet</div>;
+  if (!slug) return <div className={`aspect-[4/3] rounded-xl bg-secondary border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground ${className ?? ""}`}>No slug yet</div>;
   return (
     <Link
       href={`https://www.instagram.com/p/${slug}/`}
       target="_blank"
       rel="noreferrer"
-      className={`block relative aspect-[4/3] rounded-lg overflow-hidden border border-border bg-secondary ${className ?? ""}`}
+      className={`block relative aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary ${className ?? ""}`}
     >
       <img
         src={`/api/photo/${slug}`}
