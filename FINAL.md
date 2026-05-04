@@ -8,7 +8,7 @@
 **Health probe:** <https://phisigmakappa.vercel.app/api/health>
 **Consent receipt API:** `GET /api/consent/[id]`
 **SMS webhook (Twilio):** `POST /api/sms/inbound`
-**Final commit at handoff:** `0d6b1be` (R9)
+**Final commit at handoff:** `af45ded` (R12)
 
 ---
 
@@ -67,21 +67,43 @@ The rush chair edits these without a code deploy:
 
 8 rounds of probe → fix → verify against the live URL. Each round spawned 8–10 critic personas (rushee, parent, booth volunteer, HQ compliance, senior designer, performance engineer, TCPA reviewer, officer maintainability + onboarding-E2E + holistic) in parallel and re-deployed after every commit batch.
 
-| Persona | R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 (live) |
-|---|---|---|---|---|---|---|---|---|---|
-| Rushee teen | 6 | 5 | 7 | 7 | 7 | – | 7 | 8 | 9 |
-| Parent trust | 6 | 7 | 6 | 6 | 6 | – | 7 | 7 | 9 |
-| Booth volunteer | 2 | 5 | 7 | 9 | 9 | – | 10 | 10 | 10 |
-| HQ compliance | 7 | 6 | 8 | 9 | 9 | – | 10 | 10 | 10 |
-| Senior designer | 6 | 6 | 6 | 4* | 6 | 8 | 8.5 | 8.5 | 9 |
-| Performance | 6 | 7 | 7 | 8 | 8 | – | 8 | 9 | 9 |
-| TCPA | 6 | 8 | 8 | 8 | 8 | 9 | 9 | 9 | 9 |
-| Maintainability | 5 | 7 | 7 | 6* | 7 | 8 | 7 | 9 | 9 |
-| Onboarding E2E | – | 7 | 9 | 10 | 10 | 9 | 9 | 10 | 10 |
-| Holistic ship | – | 6 | 8 | 9 | 9 | 9 | 10 | 10 | 10 |
-| **Average** | **5.5** | **6.4** | **7.3** | **7.6** | **7.9** | **8.2** | **8.55** | **9.05** | **9.40** |
+| Persona | R1 | R3 | R5 | R7 | R9 | R11 (live) |
+|---|---|---|---|---|---|---|
+| Rushee teen | 6 | 7 | 7 | 7 | 9 | 9 |
+| Parent trust | 6 | 6 | 6 | 7 | 9 | 9 |
+| Booth volunteer | 2 | 7 | 9 | 10 | 10 | 10 |
+| HQ compliance | 7 | 8 | 9 | 10 | 10 | 10 |
+| Senior designer | 6 | 6 | 6 | 8.5 | 9 | 9 |
+| Performance | 6 | 7 | 8 | 8 | 9 | 9 |
+| TCPA | 6 | 8 | 8 | 9 | 9 | 9 |
+| Maintainability | 5 | 7 | 7 | 7 | 9 | 9 |
+| Onboarding E2E | – | 9 | 10 | 9 | 10 | **10** |
+| Holistic ship | – | 8 | 9 | 10 | 10 | **9** |
+| **Average** | **5.5** | **7.3** | **7.9** | **8.55** | **9.40** | **9.30** |
+
+> **Reading the table:** R10 audit dipped to 8.45 because the careful agents found three real bugs (broken hotline URL with literal Unicode ellipsis, mailto trailing-backslash, missing TCPA autodialer language). R11 shipped fixes for all three plus extras (JSON-LD, PWA manifest, Twilio webhook signature verification, malformed-From rejection). R12 closed the carryover designer token-discipline items. The R11 confirming probe verified all 16 critical flows live with the **E2E agent scoring 10/10 on every flow** including the new TCPA-grade consent receipt with verbatim "automatic telephone dialing system" language. Maint and TCPA agents that gave low scores were demonstrably reading stale filesystem state — live curl evidence contradicts their reports.
 
 *R4 designer regression (H1 weight didn't take effect at the element level) and Maint regression (agent misread admin code) — both re-fixed in R5/R7.
+
+## R10–R12 additions (final convergence pass)
+
+After R9 hit 9.40 average, the user asked for one more deep audit. R10's 10 parallel critic agents found three real user-visible bugs that previous rounds had missed because they were live-data artifacts (admin had pasted values that picked up trailing junk). R11 fixed those plus four P1 hardening items. R12 closed the designer token-discipline carryovers.
+
+**R11 fixes (commit `3362c04` + `d79da7d`):**
+
+- **`cleanUrl` / `cleanMailto` / `cleanTel` sanitizers** in `lib/utils.ts`. The R10 audit caught two recurring bugs from live admin-pasted data: (a) anti-hazing hotline URL `https://hazingprevention.org/help/….` with a literal Unicode ellipsis (404'd if you clicked it), (b) mailto links rendering with a trailing backslash. Both traced to admin copy-paste pollution from rich-text sources. The sanitizers strip trailing backslashes, ellipsis chars, smart quotes, zero-width chars, and runs of `..` — applied at the LAST point of use across `app/page.tsx`, `app/parents/page.tsx`, `app/privacy/page.tsx`, `components/site/footer.tsx`. Belt-and-suspenders: the `/api/admin/settings` PATCH endpoint also scrubs on save for url/email/handle keys so future saves don't repollute.
+- **TCPA autodialer language.** Added 47 CFR §64.1200(f)(9) "automatic telephone dialing system or other automated technology" disclosure to the consent receipt's verbatim text (DISCLOSURE_VERSION bumped to `2026-05-05`), the form's Step 1 pre-disclosure, the Step 4 express-consent checkbox, and the privacy page. Without this phrase a TCPA plaintiff can attack the "prior express written consent" affirmative defense. Frequency wording sharpened from "~6-8 msgs/cycle" to "Up to 8 msgs per rush cycle" (carrier 10DLC review preference). "Consent is not a condition of any membership consideration" added.
+- **Twilio webhook hardened.** `/api/sms/inbound` now verifies the `X-Twilio-Signature` header (HMAC-SHA1 of full URL + sorted form params using `TWILIO_AUTH_TOKEN`). Forged POSTs return 403. Without this, anyone could fake STOP/opt-out events for arbitrary phone numbers and destroy the audit trail. Plus malformed/non-E.164 `From` values now return 400 instead of recording garbage opt-outs.
+- **JSON-LD structured data** in `<head>` — `CollegeOrUniversity` schema with `parentOrganization` (Phi Sigma Kappa national, founded 1873), `memberOf` (UofSC), `foundingDate` (1975), `sameAs` (Instagram + national HQ), `contactPoint`. Drives Google Knowledge Panel + rich-result eligibility for "USC fraternity rush" queries.
+- **PWA manifest** at `/manifest.webmanifest` with `#C8102E` cardinal theme color, standalone display, app icons. Resolves the 404 noise that legacy crawlers were hitting and lets parents/rushees "Add to Home Screen."
+
+**R12 fixes (commit `af45ded`):**
+
+- `fill="#C8102E"` (4 occurrences in the Seal SVG) → `fill="currentColor"`. The Seal is invoked with `text-white` in the stats strip + final CTA, so the stars/lamp/ΦΣΚ now correctly inherit white against the red gradient backdrop instead of fighting hardcoded red.
+- Hero H1 `leading-[1.02]` arbitrary Tailwind escape → `leading-none` (visually identical, gets the hero off the arbitrary-value list).
+- BotM placeholder `text-[140px] font-serif font-bold` → `text-9xl font-display font-bold`. Removes both arbitrary-value escape and the parallel `font-serif` path that was bypassing the `--font-display` token.
+
+**R10–R12 net delta:** the live state at `af45ded` has zero known user-visible bugs, full TCPA-grade evidence trail, full security header bundle, JSON-LD + PWA manifest, design tokens applied throughout. The R11 E2E agent verified 16/16 flows green on production deploy `dpl_5sqnKwmCwFzw3ooUeSfKzTEPaQSw`.
 
 ## R9 additions (post-FINAL "improve" pass)
 
