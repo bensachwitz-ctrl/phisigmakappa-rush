@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2,
   User, Mail, Phone, Sparkles, Send, Check,
   Camera, Upload, X as XIcon, ImagePlus,
-  GraduationCap, MapPin, BookOpen,
+  GraduationCap, MapPin, BookOpen, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,11 +47,39 @@ type StepId = (typeof STEPS)[number]["id"];
 
 export function RushForm() {
   const { push } = useToast();
+  const params = useSearchParams();
+  const booth = params.get("booth") === "1";
   const [step, setStep] = React.useState<StepId>("intro");
   const [data, setData] = React.useState<FormData>(initial);
   const [submitting, setSubmitting] = React.useState(false);
   const [done, setDone] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [consent, setConsent] = React.useState(false);
+
+  // Booth-mode safety net: if a rushee abandons mid-form and the tablet sits idle for
+  // 90 seconds, auto-clear the form so the next rushee doesn't see the previous one's email.
+  React.useEffect(() => {
+    if (!booth || step === "intro" || done) return;
+    const timer = window.setTimeout(() => {
+      setData(initial);
+      setStep("intro");
+      setErrors({});
+      setConsent(false);
+    }, 90_000);
+    return () => window.clearTimeout(timer);
+  }, [booth, step, data, done]);
+
+  // Booth-mode auto-restart: 8 seconds after success, reset everything for the next rushee.
+  React.useEffect(() => {
+    if (!booth || !done) return;
+    const timer = window.setTimeout(() => {
+      setDone(false);
+      setData(initial);
+      setStep("intro");
+      setConsent(false);
+    }, 8_000);
+    return () => window.clearTimeout(timer);
+  }, [booth, done]);
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const progress = (stepIndex / (STEPS.length - 1)) * 100;
@@ -174,7 +203,22 @@ export function RushForm() {
           {step === "contact" && <ContactStep data={data} errors={errors} update={update} />}
           {step === "profile" && <ProfileStep data={data} errors={errors} update={update} />}
           {step === "photo" && <PhotoStep data={data} update={update} />}
-          {step === "review" && <ReviewStep data={data} />}
+          {step === "review" && (
+            <>
+              <ReviewStep data={data} />
+              <label className="mt-6 flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-4 cursor-pointer hover:bg-secondary/60 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  By submitting, I agree to receive rush event updates from Phi Sigma Kappa USC by email and text message. Message and data rates may apply. Reply STOP to opt out at any time. My information will be used only to communicate about Fall '26 rush — never sold or shared.
+                </span>
+              </label>
+            </>
+          )}
         </div>
 
         {step !== "intro" && (
@@ -183,7 +227,7 @@ export function RushForm() {
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
             {step === "review" ? (
-              <Button onClick={submit} disabled={submitting} size="lg" className="group">
+              <Button onClick={submit} disabled={submitting || !consent} size="lg" className="group" title={!consent ? "Please review and accept the consent disclosure to submit." : undefined}>
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                 ) : (
