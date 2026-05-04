@@ -9,9 +9,10 @@ export const dynamic = "force-dynamic";
 
 const AdminSchema = z.object({
   mode: z.literal("admin"),
-  name: z.string().min(2).max(80),
   username: z.string().min(1).max(80),
   password: z.string().min(1).max(120),
+  // legacy field — accepted but ignored
+  name: z.string().optional(),
 });
 
 const BrotherSchema = z.object({
@@ -45,7 +46,10 @@ export async function POST(req: Request) {
     if (data.username.trim() !== expectedUser || data.password !== expectedPass) {
       return NextResponse.json({ ok: false, error: "Invalid admin credentials" }, { status: 401 });
     }
-    const cleanName = data.name.trim();
+    // Single shared admin record — username = the credential. If the legacy "name"
+    // field was supplied (older client), prefer it so existing admin Brothers keep
+    // their attribution. Otherwise use a stable "Chapter Admin" record.
+    const cleanName = (data.name && data.name.trim()) || "Chapter Admin";
     let brother = await prisma.brother.findUnique({ where: { name: cleanName } });
     if (!brother) {
       brother = await prisma.brother.create({ data: { name: cleanName, role: "ADMIN" } });

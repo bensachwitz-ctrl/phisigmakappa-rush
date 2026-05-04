@@ -25,8 +25,7 @@ export default function LoginClient() {
   const [firstName, setFirstName] = React.useState("");
   const [brotherPw, setBrotherPw] = React.useState("");
 
-  // Admin fields
-  const [adminName, setAdminName] = React.useState("");
+  // Admin fields — username + password only (no personal name)
   const [adminUser, setAdminUser] = React.useState("");
   const [adminPw, setAdminPw] = React.useState("");
 
@@ -35,10 +34,7 @@ export default function LoginClient() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem("phisig_brother_name");
-    if (stored) {
-      setAdminName(stored);
-      setFirstName(stored.split(" ")[0]);
-    }
+    if (stored) setFirstName(stored.split(" ")[0]);
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,7 +43,7 @@ export default function LoginClient() {
     try {
       const body =
         mode === "admin"
-          ? { mode: "admin", name: adminName, username: adminUser, password: adminPw }
+          ? { mode: "admin", username: adminUser, password: adminPw }
           : { mode: "brother", firstName, password: brotherPw };
       const res = await fetch("/api/admin/login", {
         method: "POST",
@@ -60,8 +56,7 @@ export default function LoginClient() {
         return;
       }
       try {
-        if (mode === "admin") localStorage.setItem("phisig_brother_name", adminName);
-        else localStorage.setItem("phisig_brother_name", j.brother?.name || firstName);
+        if (mode === "brother") localStorage.setItem("phisig_brother_name", j.brother?.name || firstName);
       } catch {}
       const from = params.get("from") || "/admin";
       router.push(from);
@@ -158,28 +153,12 @@ export default function LoginClient() {
                 ) : (
                   <>
                     <div>
-                      <Label htmlFor="aname" className="mb-1.5 inline-block">Your name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="aname"
-                          autoFocus
-                          autoComplete="name"
-                          value={adminName}
-                          onChange={(e) => setAdminName(e.target.value)}
-                          placeholder="Mark Laughery"
-                          className="pl-9"
-                          required
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">Used to attribute votes and notes you leave.</p>
-                    </div>
-                    <div>
                       <Label htmlFor="auser" className="mb-1.5 inline-block">Admin username</Label>
                       <div className="relative">
                         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="auser"
+                          autoFocus
                           autoComplete="username"
                           value={adminUser}
                           onChange={(e) => setAdminUser(e.target.value)}
@@ -204,6 +183,9 @@ export default function LoginClient() {
                           required
                         />
                       </div>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Single shared admin credential. Distribute to e-board only.
+                      </p>
                     </div>
                   </>
                 )}

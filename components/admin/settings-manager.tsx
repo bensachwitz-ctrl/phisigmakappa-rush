@@ -183,6 +183,43 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           </Field>
         </div>
       </Section>
+
+      {/* Section visibility */}
+      <Section title="What shows on the homepage" eyebrow="Toggle any section on/off" icon={Sparkles}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Hide any section if it's not ready or not relevant. Toggle off, click Save, and that section disappears from the homepage. Toggle back on whenever.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {[
+            { key: "show.statsStrip", label: "Stats strip (60+ brothers / 3.45 GPA / etc.)" },
+            { key: "show.highlightsBanner", label: "Highlights banner (icon row under stats)" },
+            { key: "show.values", label: "Brotherhood / Scholarship / Character cards" },
+            { key: "show.instagramFeed", label: "Instagram feed grid" },
+            { key: "show.timeline", label: "How rush works (4-week timeline)" },
+            { key: "show.testimonial", label: "Alumni testimonial quote" },
+            { key: "show.spotlight", label: "Brother of the Month spotlight" },
+            { key: "show.eboard", label: "2026 Executive Board card grid" },
+            { key: "show.faq", label: "FAQ accordion" },
+            { key: "show.whereWeLive", label: "Where We Live (chapter house section)" },
+          ].map((s) => {
+            const on = (values[s.key] ?? "true") !== "false";
+            return (
+              <label
+                key={s.key}
+                className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:border-phisig-red/40 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={(e) => set(s.key, e.target.checked ? "true" : "false")}
+                  className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                />
+                <span className="text-sm">{s.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </Section>
     </div>
   );
 }

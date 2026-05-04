@@ -34,13 +34,25 @@ export const DEFAULTS = {
   // Hero tagline
   "hero.eyebrow": "Fall Rush 2026 — Interest list now open",
   "hero.subline":
-    "Phi Sigma Kappa, Gamma Triton at the University of South Carolina. Sign up now — we'll text you the second the Fall '26 schedule drops in August.",
+    "Gamma Triton at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, $25k+ raised for Special Olympics. Get on the Fall '26 list — we'll text you the second the schedule drops in August.",
 
   // Stats
   "stats.brothers": "60+",
   "stats.gpa": "3.45",
   "stats.years": "150+",
   "stats.charity": "$25k+",
+
+  // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
+  "show.statsStrip": "true",
+  "show.highlightsBanner": "true",
+  "show.values": "true",
+  "show.instagramFeed": "true",
+  "show.timeline": "true",
+  "show.testimonial": "true",
+  "show.spotlight": "true",
+  "show.eboard": "true",
+  "show.faq": "true",
+  "show.whereWeLive": "true",
 } as const;
 
 export type ConfigKey = keyof typeof DEFAULTS;

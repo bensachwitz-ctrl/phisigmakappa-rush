@@ -187,6 +187,7 @@ export default async function Home() {
       </section>
 
       {/* ─── STATS STRIP ─── */}
+      {cfg["show.statsStrip"] !== "false" && (
       <section className="relative bg-phisig-red text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
         <div className="absolute -right-20 -top-20 opacity-10">
@@ -209,8 +210,10 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* ─── HIGHLIGHTS BANNER ─── */}
+      {cfg["show.highlightsBanner"] !== "false" && (
       <section className="border-b border-border bg-secondary/30 overflow-hidden">
         <div className="container py-4 flex flex-wrap items-center gap-x-8 gap-y-2 justify-center text-xs sm:text-sm text-muted-foreground">
           {HIGHLIGHTS.map((h, i) => (
@@ -222,8 +225,10 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* ─── VALUES ─── */}
+      {cfg["show.values"] !== "false" && (
       <section className="container py-14 sm:py-18">
         <div className="max-w-2xl mb-8">
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -247,6 +252,7 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* ─── REGISTER ─── */}
       <section id="register" className="bg-phisig-mist border-y border-border scroll-mt-20">
