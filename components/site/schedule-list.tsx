@@ -19,7 +19,7 @@ export async function ScheduleList() {
     return (
       <Card className="relative overflow-hidden border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white">
         <div className="absolute -top-8 -right-8 opacity-10 select-none">
-          <span className="text-[140px] font-serif font-bold text-phisig-red leading-none">ΦΣΚ</span>
+          <span className="text-9xl font-display font-bold text-phisig-red leading-none">ΦΣΚ</span>
         </div>
         <CardContent className="relative py-12 px-6 sm:px-10">
           <div className="max-w-md">

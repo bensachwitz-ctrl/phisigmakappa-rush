@@ -114,15 +114,15 @@ export function Seal({ className }: { className?: string }) {
         <path
           key={`${cx}-${cy}`}
           d={`M ${cx} ${cy - 6} l 1.6 4.6 4.8 0 -3.9 2.9 1.5 4.6 -4 -2.8 -4 2.8 1.5 -4.6 -3.9 -2.9 4.8 0 z`}
-          fill="#C8102E"
+          fill="currentColor"
         />
       ))}
 
       {/* Lamp */}
-      <path d="M96 124 H124 L127 134 H93 Z" fill="#C8102E" />
+      <path d="M96 124 H124 L127 134 H93 Z" fill="currentColor" />
       <path
         d="M110 102 C104 108 104 116 110 122 C116 116 116 108 110 102 Z"
-        fill="#C8102E"
+        fill="currentColor"
       />
 
       <text
@@ -132,7 +132,7 @@ export function Seal({ className }: { className?: string }) {
         fontFamily='ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", "Times New Roman", serif'
         fontWeight="700"
         fontSize="34"
-        fill="#C8102E"
+        fill="currentColor"
         letterSpacing="2"
       >
         ΦΣΚ

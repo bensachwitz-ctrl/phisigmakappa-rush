@@ -204,7 +204,7 @@ export default async function Home({
               <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
               {cfg["hero.eyebrow"]}
             </span>
-            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.02] [text-wrap:balance]">
+            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none [text-wrap:balance]">
               {cfg["hero.h1.lead"]}{" "}<br className="hidden sm:block" />
               {cfg["hero.h1.tail"]}{" "}<span className="text-phisig-red">{cfg["hero.h1.highlight"]}</span>.
             </h1>
