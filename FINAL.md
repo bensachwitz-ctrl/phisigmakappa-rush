@@ -8,7 +8,7 @@
 **Health probe:** <https://phisigmakappa.vercel.app/api/health>
 **Consent receipt API:** `GET /api/consent/[id]`
 **SMS webhook (Twilio):** `POST /api/sms/inbound`
-**Final commit at handoff:** `af45ded` (R12)
+**Final commit at handoff:** `52c6293` (R13)
 
 ---
 
@@ -84,6 +84,22 @@ The rush chair edits these without a code deploy:
 > **Reading the table:** R10 audit dipped to 8.45 because the careful agents found three real bugs (broken hotline URL with literal Unicode ellipsis, mailto trailing-backslash, missing TCPA autodialer language). R11 shipped fixes for all three plus extras (JSON-LD, PWA manifest, Twilio webhook signature verification, malformed-From rejection). R12 closed the carryover designer token-discipline items. The R11 confirming probe verified all 16 critical flows live with the **E2E agent scoring 10/10 on every flow** including the new TCPA-grade consent receipt with verbatim "automatic telephone dialing system" language. Maint and TCPA agents that gave low scores were demonstrably reading stale filesystem state — live curl evidence contradicts their reports.
 
 *R4 designer regression (H1 weight didn't take effect at the element level) and Maint regression (agent misread admin code) — both re-fixed in R5/R7.
+
+## R13 additions (post-FINAL "improve further" pass)
+
+The user asked for one more push after R12. R13 ships five high-leverage features that lift every persona's "what's still missing" list:
+
+- **Live event countdown chip in the hero.** New `components/site/rush-countdown.tsx` reads the next public Event from the database server-side and ships an initial chip in the SSR HTML, then ticks every second client-side. Three states: pre-event countdown ("Next event: Cookout in 12d 04h 22m"), live event ("Happening now: Cookout · Phi Sig House"), and a quiet placeholder when no event is scheduled. The Rushee critic's 5-round-running complaint about "vague August" copy is now a concrete, ticking call-to-action whenever the chair adds an event.
+
+- **Admin "Get rush ready" checklist on `/admin` home.** Six-item card with status pills + Fix links: real advisor name, rush phone, e-board roster, hero photos, first public event, brothers directory. Each pending item has an amber `AlertCircle` and a one-click jump to the right `/admin/settings` anchor. When everything's green, the section disappears. Closes the data-vs-code feedback loop the parent persona had been flagging — the chair sees what's pending the moment they sign in.
+
+- **AVIF format negotiation in the photo proxy.** Modern browsers send `image/avif` in `Accept`; the proxy now tries AVIF first (q=60, 25-35% smaller than WebP), falls back to WebP (q=80), falls back to original. Verified live: `Content-Type: image/avif` is returned to browsers that advertise support.
+
+- **TCPA quiet-hours gate on `/api/admin/broadcast`.** SMS broadcast sends are blocked outside 8am-9pm America/New_York with a structured 425 (Too Early) response. `forceQuietHours: true` bypasses for genuine emergencies. Closes the R10 TCPA agent's "no quiet-hours enforcement at send time" mustFix that had been carrying for 3 rounds. Verified live: at 7:05am ET the endpoint correctly returns `{"ok":false,"error":"Outside SMS quiet hours...","quietHours":{...}}`.
+
+- **Reduced eager `<img>` count from 4 to 1** (LCP candidate only). Instagram feed tiles are ~3 viewports below the fold, so eager-loading the first three was bandwidth-competing with the actual hero image. Lighthouse mobile lift expected.
+
+- **HELP TwiML wording sharpened** from "~6-8 msgs/cycle" (tilde range — 10DLC carrier review preference is a hard cap) to "Up to 8 msgs per rush cycle." Plus added `/parents` URL as a non-email help channel per CTIA HELP keyword guidance.
 
 ## R10–R12 additions (final convergence pass)
 
