@@ -12,7 +12,28 @@ export async function GET(
   _req: Request,
   { params }: { params: { slug: string } }
 ) {
-  const slug = (params.slug || "").replace(/[^A-Za-z0-9_-]/g, "");
+  const raw = decodeURIComponent(params.slug || "");
+
+  // If the "slug" is actually a full URL (admin uploaded a direct image to Vercel Blob, etc.),
+  // proxy it through this route so we apply the same caching headers.
+  if (/^https?:\/\//.test(raw)) {
+    try {
+      const r = await fetch(raw, { cache: "no-store" });
+      if (!r.ok) return transparentPixel();
+      const buf = Buffer.from(await r.arrayBuffer());
+      return new NextResponse(buf, {
+        status: 200,
+        headers: {
+          "Content-Type": r.headers.get("Content-Type") || "image/jpeg",
+          "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+        },
+      });
+    } catch {
+      return transparentPixel();
+    }
+  }
+
+  const slug = raw.replace(/[^A-Za-z0-9_-]/g, "");
   if (!slug) {
     return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
   }

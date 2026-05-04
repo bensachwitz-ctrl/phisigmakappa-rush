@@ -433,13 +433,13 @@ export default async function Home() {
           </div>
           <div className="order-1 lg:order-2 relative">
             <a
-              href={`https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
+              href={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
               target="_blank"
               rel="noreferrer"
               className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
               <img
-                src={`/api/photo/${cfg["spotlight.slug"]}?v=3`}
+                src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}?v=3`}
                 alt={`Brother of the Month — ${cfg["spotlight.name"]}`}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
@@ -562,13 +562,13 @@ export default async function Home() {
 
           <div className="relative">
             <a
-              href="https://www.instagram.com/p/DWmioxGCaBG/"
+              href={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `https://www.instagram.com/p/${cfg["about.slug"]}/`}
               target="_blank"
               rel="noreferrer"
               className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
               <img
-                src={`/api/photo/${cfg["about.slug"]}?v=3`}
+                src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}?v=3`}
                 alt={cfg["about.caption"]}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
@@ -809,9 +809,10 @@ function ContactPill({
 }
 
 /**
- * Real Instagram photo rendered through our /api/photo proxy with object-cover cropping.
- * The proxy scrapes the public /embed/ page for the og:image and proxies bytes through our domain.
- * Falls back to a designed cardinal-red gradient tile if the proxy can't resolve a real image.
+ * Renders a chapter photo. The "slug" can be either:
+ *   1. An Instagram post code (e.g. "DRzyoVciZCh") — proxied through /api/photo
+ *   2. A direct image URL (e.g. https://...vercel-storage.com/...) from the admin upload
+ * Falls back to a designed cardinal-red Crest tile if the photo can't load.
  */
 function PostTile({
   slug, caption, icon: Icon, className,
@@ -821,9 +822,12 @@ function PostTile({
   icon: React.ElementType;
   className?: string;
 }) {
+  const isUrl = /^https?:\/\//.test(slug);
+  const imgSrc = isUrl ? slug : `/api/photo/${slug}?v=3`;
+  const linkHref = isUrl ? slug : `https://www.instagram.com/p/${slug}/`;
   return (
     <a
-      href={`https://www.instagram.com/p/${slug}/`}
+      href={linkHref}
       target="_blank"
       rel="noreferrer"
       className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
@@ -833,7 +837,7 @@ function PostTile({
         <Crest className="h-20 w-20 text-white/25" />
       </div>
       <img
-        src={`/api/photo/${slug}?v=3`}
+        src={imgSrc}
         alt={caption}
         loading="lazy"
         className="relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

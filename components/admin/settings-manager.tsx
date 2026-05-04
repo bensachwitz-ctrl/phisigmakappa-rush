@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
-  RotateCcw, ExternalLink,
+  RotateCcw, ExternalLink, Upload,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -225,12 +225,50 @@ function PhotoCard({
   title: string; slug: string; caption: string; icon: string;
   onChangeSlug: (v: string) => void; onChangeCaption: (v: string) => void; onChangeIcon: (v: string) => void;
 }) {
+  const { push } = useToast();
+  const [uploading, setUploading] = React.useState(false);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-photo", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
+      onChangeSlug(json.url); // store the full Vercel Blob URL as the "slug"
+      push({ title: "Photo uploaded — click Save to apply", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
       <PhotoPreview slug={slug} />
-      <Field label="Slug">
-        <Input value={slug} onChange={(e) => onChangeSlug(e.target.value)} placeholder="DXzzTaFjSyj" />
+      <label className="block cursor-pointer">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+        <span className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-phisig-red text-white px-3 py-2 text-sm font-medium hover:bg-phisig-red-dark transition-colors">
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {uploading ? "Uploading…" : "Upload photo"}
+        </span>
+      </label>
+      <p className="text-[10px] text-muted-foreground">
+        Or paste an Instagram post slug below (the part after <code className="text-foreground">/p/</code>):
+      </p>
+      <Field label="Image source">
+        <Input value={slug} onChange={(e) => onChangeSlug(e.target.value)} placeholder="DXzzTaFjSyj or full URL" />
       </Field>
       <Field label="Caption">
         <Input value={caption} onChange={(e) => onChangeCaption(e.target.value)} placeholder="Game Day" />
