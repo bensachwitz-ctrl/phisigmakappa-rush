@@ -45,9 +45,12 @@ export function InstagramFeed({
         >
           <img
             src={`/api/photo/${p.slug}`}
-            alt={p.caption}
+            alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
+            width={520}
+            height={520}
             loading={i < 3 ? "eager" : "lazy"}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            decoding={i === 0 ? "sync" : "async"}
+            className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {/* gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-90" aria-hidden />
@@ -90,9 +93,11 @@ export function InstagramStrip() {
           >
             <img
               src={`/api/photo/${p.slug}`}
-              alt={p.caption}
+              alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
+              width={320}
+              height={320}
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </Link>

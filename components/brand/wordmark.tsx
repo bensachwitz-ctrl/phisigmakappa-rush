@@ -46,9 +46,10 @@ export function Wordmark({
 }
 
 /**
- * Original heraldic mark inspired by the Phi Sigma Kappa coat of arms:
- * shield with three stars in chief, lamp of knowledge at center, ΦΣΚ banner.
- * Drawn from scratch — no copyrighted artwork referenced.
+ * Heraldic shield mark — three stars in chief, lamp of knowledge.
+ * Pure-path, no inline OS-font text (was Georgia, an inconsistency a senior
+ * designer rightly flagged across 18+ duplications). Kept symbolic and quiet
+ * so the lockup pairs cleanly with any nearby typography.
  */
 export function Crest({ className }: { className?: string }) {
   return (
@@ -82,21 +83,9 @@ export function Crest({ className }: { className?: string }) {
         d="M32 28 C30 30 30 33 32 35 C34 33 34 30 32 28 Z"
         fill="currentColor"
       />
-      {/* ΦΣΚ */}
-      <text
-        x="32"
-        y="50"
-        textAnchor="middle"
-        fontFamily="Georgia, serif"
-        fontWeight="700"
-        fontSize="9"
-        letterSpacing="0.5"
-        fill="currentColor"
-      >
-        ΦΣΚ
-      </text>
       {/* Bottom ribbon line */}
-      <line x1="14" y1="55" x2="50" y2="55" stroke="currentColor" strokeWidth="0.8" opacity="0.4" />
+      <line x1="14" y1="48" x2="50" y2="48" stroke="currentColor" strokeWidth="0.8" opacity="0.4" />
+      <line x1="20" y1="52" x2="44" y2="52" stroke="currentColor" strokeWidth="0.8" opacity="0.25" />
     </svg>
   );
 }
@@ -140,7 +129,7 @@ export function Seal({ className }: { className?: string }) {
         x="110"
         y="158"
         textAnchor="middle"
-        fontFamily="Georgia, serif"
+        fontFamily='ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", "Times New Roman", serif'
         fontWeight="700"
         fontSize="34"
         fill="#C8102E"

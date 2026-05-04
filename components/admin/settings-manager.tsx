@@ -134,6 +134,17 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
 
       {/* CONTACT */}
       <Section title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
+        {(values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
+          <div className="mb-4 rounded-lg border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
+            <strong className="font-semibold">Heads up — visible on the public site:</strong>{" "}
+            {values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"]
+              ? "Replace “Chapter Advisor” with the real advisor's full name. "
+              : ""}
+            {!values["contact.rushPhone"]
+              ? "Add a chapter or rush-chair phone number — parents reviewing the site expect a callable contact, not just an email."
+              : ""}
+          </div>
+        )}
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Rush email">
             <Input value={values["contact.rushEmail"] || ""} onChange={(e) => set("contact.rushEmail", e.target.value)} placeholder="rush@phisig-usc.com" />
@@ -263,7 +274,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             <Input value={values["about.slug"] || ""} onChange={(e) => set("about.slug", e.target.value)} placeholder="DWmioxGCaBG" />
           </Field>
           <Field label="Caption">
-            <Input value={values["about.caption"] || ""} onChange={(e) => set("about.caption", e.target.value)} placeholder="Spring formal · NOLA" />
+            <Input value={values["about.caption"] || ""} onChange={(e) => set("about.caption", e.target.value)} placeholder="Chapter formal — FIPG-compliant" />
           </Field>
           <Field label="Image crop position (CSS object-position)">
             <Select value={values["about.objectPosition"] || "50% 50%"} onValueChange={(v) => set("about.objectPosition", v)}>

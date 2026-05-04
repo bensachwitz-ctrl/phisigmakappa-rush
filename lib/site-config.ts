@@ -69,8 +69,10 @@ export const DEFAULTS = {
 
   // Contact — every public-facing email, address, and social link comes from here.
   "contact.rushEmail": "rush@phisig-usc.com",
+  // Default is generic role so the live site doesn't 404-feel; admin should
+  // overwrite with the real human's name from /admin/settings → Contact &amp; social.
   "contact.advisorName": "Chapter Advisor",
-  "contact.advisorTitle": "Alumni Chapter Advisor, Gamma Triton",
+  "contact.advisorTitle": "Alumni Chapter Advisor · Gamma Triton",
   "contact.advisorEmail": "advisor@phisig-usc.com",
   "contact.rushPhone": "",
   "contact.address": "800 Lincoln St",

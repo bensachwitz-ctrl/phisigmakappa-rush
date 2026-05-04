@@ -64,9 +64,12 @@ const SMS_PRE_DISCLOSURE =
 const SMS_EXPRESS_CONSENT =
   "I am 18 or older and I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
 
-export function RushForm() {
+export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const { push } = useToast();
-  const [booth, setBooth] = React.useState(false);
+  // If a parent server component already detected ?booth=1 and passed it as a
+  // prop, use that as the SSR-correct initial state so the Contact step (with
+  // its TCPA pre-disclosure) renders on first paint without waiting for hydration.
+  const [booth, setBooth] = React.useState(!!boothProp);
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     setBooth(new URLSearchParams(window.location.search).get("booth") === "1");
@@ -391,7 +394,7 @@ function ContactStep({
       )}
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-lg p-3 leading-relaxed">
-        <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE} You'll affirm consent on the final step before submitting.
+        <span className="font-semibold text-foreground">SMS &amp; age notice: </span>{SMS_PRE_DISCLOSURE} You must be 18 or older to submit. You&apos;ll affirm consent on the final step before submitting.
       </p>
     </div>
   );

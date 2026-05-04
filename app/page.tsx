@@ -116,7 +116,7 @@ export default async function Home({
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
-            <RushForm />
+            <RushForm booth />
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-6">
             Tablet auto-clears between rushees · {cfg["contact.instagramHandle"] || "@phisig_usc"}
@@ -340,8 +340,9 @@ export default async function Home({
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl">
-            Polar Plunge for Special Olympics, paintball before finals, formal in New Orleans,
-            tailgates at Williams-Brice. The Gamma Triton chapter shows up — all year.{" "}
+            Polar Plunge for Special Olympics, paintball before finals, the chapter formal
+            (FIPG-compliant, third-party vendor, sober transportation), and dry tailgates at
+            Williams-Brice. The Gamma Triton chapter shows up — all year.{" "}
             <span className="text-phisig-red font-medium">#DamnProud</span>
           </p>
         </div>
