@@ -103,6 +103,20 @@ model Announcement {
   author    Brother? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 }
 
+model BrotherInvite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String?
+  phone       String?
+  prefillName String?
+  invitedBy   String?   // sender brother name
+  status      String    @default("PENDING") // PENDING | COMPLETED | EXPIRED | REVOKED
+  brotherId   String?   @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
 model Document {
   id          String   @id @default(cuid())
   name        String

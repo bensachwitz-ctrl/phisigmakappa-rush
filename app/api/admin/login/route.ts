@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const LoginSchema = z.object({
   name: z.string().min(2).max(80),
+  username: z.string().min(1).max(80),
   password: z.string().min(1).max(120),
 });
 
@@ -21,13 +22,15 @@ export async function POST(req: Request) {
 
   const parsed = LoginSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Fill every field." }, { status: 400 });
   }
-  const { name, password } = parsed.data;
+  const { name, username, password } = parsed.data;
 
-  const expected = process.env.ADMIN_PASSWORD || "phisig-dev";
-  if (password !== expected) {
-    return NextResponse.json({ ok: false, error: "Invalid password" }, { status: 401 });
+  const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
+  const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
+
+  if (username.trim() !== expectedUser || password !== expectedPass) {
+    return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
   const cleanName = name.trim();

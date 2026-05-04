@@ -14,7 +14,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
-  CheckCircle2, Clock, BookOpen, Crown, Users,
+  CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +47,7 @@ export function BrothersManager({ initial }: { initial: Brother[] }) {
   const [query, setQuery] = React.useState("");
   const [editing, setEditing] = React.useState<Brother | null>(null);
   const [open, setOpen] = React.useState(false);
+  const [inviteOpen, setInviteOpen] = React.useState(false);
   const [form, setForm] = React.useState(empty);
   const [busy, setBusy] = React.useState(false);
 
@@ -184,10 +185,16 @@ export function BrothersManager({ initial }: { initial: Brother[] }) {
             className="pl-9"
           />
         </div>
+        <Button variant="outline" onClick={() => setInviteOpen(true)}>
+          <Send className="h-4 w-4" /> Invite brother
+        </Button>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4" /> Add brother
         </Button>
       </div>
+
+      <InviteBrotherDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+
 
       {filtered.length === 0 ? (
         <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
@@ -357,3 +364,151 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: any; ico
     </div>
   );
 }
+
+function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { push } = useToast();
+  const [channel, setChannel] = React.useState<"email" | "sms" | "link">("email");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [link, setLink] = React.useState("");
+
+  function reset() {
+    setEmail(""); setPhone(""); setName(""); setLink(""); setChannel("email");
+  }
+
+  async function send() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/brother-invites", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          channel,
+          email: channel === "email" ? email : "",
+          phone: channel === "sms" ? phone : "",
+          prefillName: name,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Send failed");
+      setLink(json.link);
+
+      if (channel === "email") {
+        if (json.delivery?.sent) push({ title: `Email sent to ${email}`, variant: "success" });
+        else push({ title: "Email API not configured — copy the link", variant: "default" });
+      } else if (channel === "sms") {
+        if (json.delivery?.sent) push({ title: `Text sent to ${phone}`, variant: "success" });
+        else push({ title: "SMS API not configured — copy the link", variant: "default" });
+      } else {
+        push({ title: "Link generated — copy & share", variant: "success" });
+      }
+    } catch (err: any) {
+      push({ title: err.message || "Send failed", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copyLink() {
+    if (!link) return;
+    navigator.clipboard.writeText(link);
+    push({ title: "Link copied", variant: "success" });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Invite a brother</DialogTitle>
+        </DialogHeader>
+
+        {!link ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Send a one-time onboarding link. They'll fill in their year, major, headshot, and contact info — and land in the directory automatically.
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              {(["email", "sms", "link"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setChannel(c)}
+                  className={
+                    "rounded-md border px-3 py-2 text-sm capitalize transition " +
+                    (channel === c
+                      ? "bg-phisig-red text-white border-phisig-red"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {c === "link" ? "Copy link" : c}
+                </button>
+              ))}
+            </div>
+
+            <div>
+              <Label className="mb-1.5 inline-block">Their name (optional)</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Mark Laughery" />
+            </div>
+
+            {channel === "email" && (
+              <div>
+                <Label className="mb-1.5 inline-block">Email address</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="brother@email.sc.edu" />
+              </div>
+            )}
+            {channel === "sms" && (
+              <div>
+                <Label className="mb-1.5 inline-block">Phone number</Label>
+                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(803) 555-0142" />
+                <p className="mt-1 text-xs text-muted-foreground">US numbers only. Standard message rates apply.</p>
+              </div>
+            )}
+            {channel === "link" && (
+              <p className="text-xs text-muted-foreground rounded-md bg-secondary p-3">
+                We'll generate a one-time link you can paste into iMessage, GroupMe, or anywhere else.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">Invite created.</p>
+                <p className="text-muted-foreground">Link expires in 30 days. Share it however you want:</p>
+              </div>
+            </div>
+            <div className="rounded-md border border-border bg-card p-3 flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-xs font-mono break-all flex-1">{link}</span>
+            </div>
+            <Button onClick={copyLink} className="w-full">
+              <Copy className="h-4 w-4" /> Copy link
+            </Button>
+          </div>
+        )}
+
+        <DialogFooter>
+          {!link ? (
+            <>
+              <Button variant="outline" onClick={() => { reset(); onClose(); }} disabled={busy}>Cancel</Button>
+              <Button
+                onClick={send}
+                disabled={busy || (channel === "email" && !email) || (channel === "sms" && !phone)}
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {channel === "link" ? "Generate link" : "Send invite"}
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => { reset(); onClose(); }}>Done</Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

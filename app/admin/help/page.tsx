@@ -14,15 +14,15 @@ const SECTIONS = [
     title: "Getting in",
     body: (
       <>
-        Anyone with the chapter password can sign in at <code className="text-foreground">/admin/login</code>.
-        Type your name and the password — your name is used to attribute votes and notes you leave.
-        Sessions last 12 hours, then you sign back in.
+        Sign in at <code className="text-foreground">/admin/login</code> with three fields:
+        your real name (for vote attribution), the chapter username, and the chapter password. Sessions last 12 hours.
       </>
     ),
     bullets: [
-      "Chapter password is set in Vercel → Settings → Environment Variables (ADMIN_PASSWORD).",
-      "Rotate the password by changing that env var and redeploying.",
-      "First time you sign in with a new name, the system creates a Brother record automatically.",
+      "Default credentials — username: Phisig · password: DamnProud.",
+      "Override at Vercel → Settings → Environment Variables (ADMIN_USERNAME, ADMIN_PASSWORD), then redeploy.",
+      "First time a brother signs in with a new name, the system creates a Brother record automatically.",
+      "To onboard a brother with year, major, headshot, and contact info, use Brothers → Invite brother — sends a one-time link they fill out themselves.",
     ],
   },
   {
@@ -115,6 +115,18 @@ const SECTIONS = [
 ];
 
 const COMMON_TASKS = [
+  {
+    icon: Send,
+    title: "Add a brother (invite + onboard)",
+    steps: [
+      "Brothers tab → click Invite brother.",
+      "Pick channel: Email, Text, or Copy link.",
+      "Type their name (optional) + their email or phone.",
+      "Click Send — they get a one-time link.",
+      "They open it, fill out year/major/pledge class/headshot, and submit.",
+      "Their profile lands in the Brothers directory automatically — no manual data entry.",
+    ],
+  },
   {
     icon: Sparkles,
     title: "Drop the rush schedule",

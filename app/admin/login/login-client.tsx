@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Wordmark } from "@/components/brand/wordmark";
-import { Loader2, Lock, ArrowLeft, User } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, User, KeyRound } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function LoginClient() {
@@ -16,6 +16,7 @@ export default function LoginClient() {
   const params = useSearchParams();
   const { push } = useToast();
   const [name, setName] = React.useState("");
+  const [username, setUsername] = React.useState("");
   const [pw, setPw] = React.useState("");
   const [busy, setBusy] = React.useState(false);
 
@@ -31,7 +32,7 @@ export default function LoginClient() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, password: pw }),
+        body: JSON.stringify({ name, username, password: pw }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -59,7 +60,7 @@ export default function LoginClient() {
           <ArrowLeft className="h-4 w-4" /> Back to public site
         </Link>
       </div>
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="flex-1 flex items-center justify-center px-4 pb-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Wordmark className="justify-center" />
@@ -67,12 +68,12 @@ export default function LoginClient() {
               Brothers Sign In
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Active members only. Use the chapter password.
+              Active members only.
             </p>
           </div>
           <Card>
             <CardContent className="p-6 sm:p-8">
-              <form onSubmit={onSubmit} className="space-y-5">
+              <form onSubmit={onSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="name" className="mb-1.5 inline-block">Your name</Label>
                   <div className="relative">
@@ -80,12 +81,23 @@ export default function LoginClient() {
                     <Input
                       id="name" autoFocus autoComplete="name"
                       value={name} onChange={(e) => setName(e.target.value)}
-                      placeholder="James Carter" className="pl-9" required
+                      placeholder="Mark Laughery" className="pl-9" required
                     />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Used to track your votes and notes.
+                    Used to attribute your votes and notes.
                   </p>
+                </div>
+                <div>
+                  <Label htmlFor="username" className="mb-1.5 inline-block">Chapter username</Label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="username" autoComplete="username"
+                      value={username} onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Phisig" className="pl-9" required
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="pw" className="mb-1.5 inline-block">Chapter password</Label>
@@ -105,7 +117,7 @@ export default function LoginClient() {
             </CardContent>
           </Card>
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Forgot the password? Ask the rush chair.
+            Forgot the credentials? Ask the rush chair or the e-board.
           </p>
         </div>
       </div>
