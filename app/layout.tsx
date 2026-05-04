@@ -11,23 +11,23 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Phi Sigma Kappa @ USC — Rush",
-    template: "%s · Phi Sigma Kappa USC",
+    default: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+    template: "%s · Phi Sigma Kappa Gamma Triton",
   },
   description:
-    "Rush Phi Sigma Kappa at the University of South Carolina. Sign up for events, meet the brothers, and find your home.",
+    "Phi Sigma Kappa Gamma Triton at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, founded 1873 nationally. Get on the Fall 2026 rush interest list.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app"),
   openGraph: {
-    title: "Phi Sigma Kappa @ USC — Rush",
+    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
     description:
-      "Sign up for rush events and meet the brothers of Phi Sigma Kappa at USC.",
+      "60+ brothers · 3.45 chapter GPA · Founded 1873. Get on the Fall '26 rush interest list — we'll text you when the schedule drops.",
     type: "website",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Phi Sigma Kappa @ USC — Rush",
-    description: "Sign up for rush events and meet the brothers.",
+    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+    description: "60+ brothers · 3.45 GPA · Founded 1873. Get on the Fall '26 interest list.",
   },
   robots: { index: true, follow: true },
 };

@@ -216,7 +216,10 @@ export function RushForm() {
                   className="mt-1 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
                 />
                 <span className="text-xs text-muted-foreground leading-relaxed">
-                  By submitting, I agree to receive rush event updates from Phi Sigma Kappa USC by email and text message. Message and data rates may apply. Reply STOP to opt out at any time. My information will be used only to communicate about Fall '26 rush — never sold or shared.
+                  By submitting, I agree to receive rush event updates from Phi Sigma Kappa USC by email and text message. Message and data rates may apply. Reply STOP to opt out at any time. My information will be used only to communicate about Fall '26 rush — never sold or shared. See our{" "}
+                  <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">
+                    privacy policy
+                  </a>.
                 </span>
               </label>
             </>
