@@ -437,13 +437,13 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
                   type="button"
                   onClick={() => setChannel(c)}
                   className={
-                    "rounded-md border px-3 py-2 text-sm capitalize transition " +
+                    "rounded-md border px-3 py-2 text-sm transition " +
                     (channel === c
                       ? "bg-phisig-red text-white border-phisig-red"
                       : "border-border bg-card text-muted-foreground hover:text-foreground")
                   }
                 >
-                  {c === "link" ? "Copy link" : c}
+                  {c === "link" ? "Copy link" : c === "sms" ? "Text" : "Email"}
                 </button>
               ))}
             </div>

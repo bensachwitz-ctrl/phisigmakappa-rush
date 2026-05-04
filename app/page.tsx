@@ -160,7 +160,7 @@ export default async function Home() {
                   slug={cfg["hero.tile1.slug"]}
                   caption={cfg["hero.tile1.caption"]}
                   icon={iconFor(cfg["hero.tile1.icon"])}
-                  className="col-span-2 aspect-[4/3]"
+                  className="col-span-2 aspect-[4/5] sm:aspect-[4/4]"
                 />
                 <PostTile
                   slug={cfg["hero.tile2.slug"]}
