@@ -32,10 +32,12 @@ type Announcement = {
   author: { id: string; name: string } | null;
 };
 
-const initial = {
+type Audience = "ALL" | "BROTHERS" | "RUSHES" | "EBOARD";
+
+const initial: { title: string; body: string; audience: Audience; pinned: boolean } = {
   title: "",
   body: "",
-  audience: "ALL" as const,
+  audience: "ALL",
   pinned: false,
 };
 
