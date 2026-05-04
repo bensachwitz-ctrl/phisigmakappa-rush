@@ -154,8 +154,8 @@ export default async function Home() {
             </div>
 
             {/* Hero photo collage — real chapter posts via Instagram embed */}
-            <div className="relative animate-slide-up [animation-delay:200ms] hidden md:block">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="relative animate-slide-up [animation-delay:200ms]">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:gap-4">
                 <PostTile
                   slug={cfg["hero.tile1.slug"]}
                   caption={cfg["hero.tile1.caption"]}
