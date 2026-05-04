@@ -63,14 +63,15 @@ export async function ScheduleList() {
             <CardContent className="p-0">
               <div className="grid grid-cols-[88px_1fr] sm:grid-cols-[120px_1fr]">
                 <div className="bg-phisig-red text-white flex flex-col items-center justify-center text-center p-4">
+                  {/* Pinned to America/New_York so SSR (UTC) and CSR don't mismatch. */}
                   <div className="text-[10px] uppercase tracking-[0.18em] opacity-85">
-                    {new Date(e.startsAt).toLocaleDateString("en-US", { month: "short" })}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { month: "short", timeZone: "America/New_York" })}
                   </div>
                   <div className="text-3xl sm:text-4xl font-semibold leading-none mt-1">
-                    {new Date(e.startsAt).getDate()}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { day: "numeric", timeZone: "America/New_York" })}
                   </div>
                   <div className="text-[11px] mt-1 opacity-85">
-                    {new Date(e.startsAt).toLocaleDateString("en-US", { weekday: "short" })}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { weekday: "short", timeZone: "America/New_York" })}
                   </div>
                 </div>
                 <div className="p-5">

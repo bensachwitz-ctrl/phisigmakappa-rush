@@ -4,6 +4,13 @@
 
 @layer base {
   :root {
+    /* Lock the page to a light appearance. We don't ship a dark mode, and
+       Chromium-based browsers' "auto-darken" feature drops --muted-foreground
+       below WCAG 4.5:1 against forced-dark card backgrounds. Declaring
+       color-scheme: light makes UA form controls match and opts the document
+       out of forced-dark heuristics. */
+    color-scheme: light;
+
     --background: 0 0% 100%;
     --foreground: 240 6% 8%;
 
@@ -279,5 +286,58 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print stylesheet — parents printing the consent receipt or rush schedule
+   should get a clean black-on-white document, not a wall of red gradient and
+   the floating nav. Hides chrome (nav, footer, decorative gradients), forces
+   readable type, expands abbreviated links so the printed copy stands alone. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+  /* Hide site chrome and decorative-only sections. */
+  nav, header[role="banner"], footer,
+  .skip-to-content,
+  [aria-hidden="true"],
+  video, canvas {
+    display: none !important;
+  }
+  /* Strip every gradient/dark hero section back to white. */
+  *, *::before, *::after {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    color: black !important;
+  }
+  a, a:visited {
+    color: black !important;
+    text-decoration: underline;
+  }
+  /* Reveal the underlying URL of every link in print so a paper handout still
+     points the reader somewhere they can act. */
+  a[href^="http"]::after,
+  a[href^="mailto:"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #444 !important;
+  }
+  img, svg {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  /* Don't split a heading away from its first paragraph. */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  /* Don't break tiles/cards across pages. */
+  section, article, .card, [class*="rounded-"] {
+    page-break-inside: avoid;
   }
 }

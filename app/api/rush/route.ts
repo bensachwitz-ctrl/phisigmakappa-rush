@@ -155,45 +155,26 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    const existing = await prisma.rush.findUnique({ where: { email: data.email } });
-    if (existing) {
-      const updated = await prisma.rush.update({
-        where: { email: data.email },
-        data: {
-          name: data.name,
-          phone: data.phone,
-          hometown: data.hometown || null,
-          major: data.major || null,
-          year: data.year || null,
-          highSchoolInfo: data.highSchoolInfo || null,
-          backgroundInfo: data.backgroundInfo || null,
-          headshotUrl: data.headshotUrl || existing.headshotUrl || null,
-        },
-      });
-
-      // Re-affirmation: write a fresh consent receipt because the user just
-      // re-checked the box on the new submission. Old receipts are retained.
-      const receipt = await prisma.rushConsent.create({
-        data: {
-          rushId: updated.id,
-          disclosureVersion: DISCLOSURE_VERSION,
-          disclosureText: SMS_DISCLOSURE_TEXT,
-          ipAddress,
-          userAgent,
-          ageAttestation,
-        },
-      });
-
-      return NextResponse.json({
-        ok: true,
-        id: updated.id,
-        updated: true,
-        consentReceipt: { id: receipt.id, version: DISCLOSURE_VERSION, createdAt: receipt.createdAt },
-      });
-    }
-
-    const created = await prisma.rush.create({
-      data: {
+    // Atomic upsert closes the find-then-update/create TOCTOU race: two
+    // simultaneous submissions of the same email previously both saw
+    // `existing === null`, both attempted create, and the second hit a
+    // P2002 unique violation that fell into the outer catch as a 500 the
+    // user saw as "Server error". Single upsert + the unique email index
+    // guarantees one row per email regardless of concurrency.
+    const headshotPreserve = data.headshotUrl || undefined; // undefined = leave as-is on update
+    const upserted = await prisma.rush.upsert({
+      where: { email: data.email },
+      update: {
+        name: data.name,
+        phone: data.phone,
+        hometown: data.hometown || null,
+        major: data.major || null,
+        year: data.year || null,
+        highSchoolInfo: data.highSchoolInfo || null,
+        backgroundInfo: data.backgroundInfo || null,
+        ...(headshotPreserve ? { headshotUrl: headshotPreserve } : {}),
+      },
+      create: {
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -205,6 +186,33 @@ export async function POST(req: Request) {
         headshotUrl: data.headshotUrl || null,
       },
     });
+    // We don't get a clean "was-this-an-update" signal from upsert. Use
+    // createdAt vs updatedAt timestamps as a heuristic — within 2s of
+    // creation = first write, otherwise treat as re-submission.
+    const isNewRecord = upserted.updatedAt.getTime() - upserted.createdAt.getTime() < 2_000;
+
+    if (!isNewRecord) {
+      // Re-affirmation: write a fresh consent receipt because the user just
+      // re-checked the box on the new submission. Old receipts are retained.
+      const receipt = await prisma.rushConsent.create({
+        data: {
+          rushId: upserted.id,
+          disclosureVersion: DISCLOSURE_VERSION,
+          disclosureText: SMS_DISCLOSURE_TEXT,
+          ipAddress,
+          userAgent,
+          ageAttestation,
+        },
+      });
+      return NextResponse.json({
+        ok: true,
+        id: upserted.id,
+        updated: true,
+        consentReceipt: { id: receipt.id, version: DISCLOSURE_VERSION, createdAt: receipt.createdAt },
+      });
+    }
+
+    const created = upserted;
 
     // First-submission consent receipt
     const receipt = await prisma.rushConsent.create({

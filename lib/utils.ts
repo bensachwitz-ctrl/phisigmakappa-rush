@@ -31,12 +31,22 @@ export const STATUS_STYLES: Record<RushStatus, string> = {
   DECLINED: "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200",
 };
 
+// Pin every server-side render to America/New_York. The chapter is at USC
+// (Columbia, SC) so all event times are local to the East Coast, but Vercel's
+// Node runtime is UTC. Without timeZone the SSR HTML rendered "midnight" for a
+// 7 PM ET event, then hydration replaced it with the user's local time —
+// causing both a hydration mismatch and a misleading initial paint for
+// non-Eastern visitors. Pinning to America/New_York is correct for this
+// chapter; a multi-tenant white-label fork should read this from cfg.
+const SCHEDULE_TZ = "America/New_York";
+
 export function formatDate(d: Date | string) {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone: SCHEDULE_TZ,
   });
 }
 
@@ -45,6 +55,8 @@ export function formatTime(d: Date | string) {
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: SCHEDULE_TZ,
+    timeZoneName: "short",
   });
 }
 

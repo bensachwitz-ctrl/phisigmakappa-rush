@@ -80,8 +80,12 @@ export async function GET(req: Request) {
 
   lines.push("END:VCALENDAR");
 
-  // Filter empty lines (the optional ones above) and CRLF-terminate per RFC 5545.
-  const body = lines.filter(Boolean).join("\r\n") + "\r\n";
+  // Filter empty lines (the optional ones above), fold each line at 75 octets
+  // per RFC 5545 §3.1, and CRLF-terminate. Outlook desktop and some Android
+  // calendar parsers silently reject events whose DESCRIPTION/LOCATION line
+  // exceeds 75 octets unless folded.
+  const body =
+    lines.filter(Boolean).map(foldIcsLine).join("\r\n") + "\r\n";
 
   return new NextResponse(body, {
     status: 200,
@@ -119,4 +123,31 @@ function escapeIcs(s: string): string {
     .replace(/,/g, "\\,")
     .replace(/\n/g, "\\n")
     .replace(/\r/g, "");
+}
+
+/**
+ * RFC 5545 §3.1 line folding. Lines longer than 75 octets MUST be split, and
+ * each continuation MUST start with a single whitespace character (space).
+ * We fold by UTF-8 byte length (not JS string length) because RFC measures
+ * octets — a non-ASCII char like "—" is 3 octets but 1 JS code unit.
+ */
+function foldIcsLine(line: string): string {
+  const MAX = 75;
+  const bytes = Buffer.from(line, "utf-8");
+  if (bytes.length <= MAX) return line;
+  const chunks: string[] = [];
+  let cursor = 0;
+  while (cursor < bytes.length) {
+    // First chunk uses the full 75 octets; continuation chunks reserve one
+    // octet for the leading space, so use 74.
+    const room = chunks.length === 0 ? MAX : MAX - 1;
+    let end = Math.min(cursor + room, bytes.length);
+    // Don't slice mid-multibyte. Walk back until we land on a UTF-8 boundary.
+    while (end > cursor && (bytes[end] & 0b1100_0000) === 0b1000_0000) end--;
+    if (end === cursor) end = Math.min(cursor + room, bytes.length);
+    const chunk = bytes.subarray(cursor, end).toString("utf-8");
+    chunks.push(chunks.length === 0 ? chunk : " " + chunk);
+    cursor = end;
+  }
+  return chunks.join("\r\n");
 }
