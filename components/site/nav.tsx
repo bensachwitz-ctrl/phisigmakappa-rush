@@ -1,17 +1,19 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 
 export function PublicNav() {
-  const params = useSearchParams();
-  const booth = params.get("booth") === "1";
+  // Read ?booth=1 from window after hydration so we never throw during SSR.
+  const [booth, setBooth] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    setBooth(new URLSearchParams(window.location.search).get("booth") === "1");
+  }, []);
 
-  // Booth mode: hide all nav links so rushees can't wander off the page.
-  // Show a discreet "Booth mode" badge instead so the volunteer can confirm it's active.
   if (booth) {
     return (
       <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">

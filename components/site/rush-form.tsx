@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,8 +46,11 @@ type StepId = (typeof STEPS)[number]["id"];
 
 export function RushForm() {
   const { push } = useToast();
-  const params = useSearchParams();
-  const booth = params.get("booth") === "1";
+  const [booth, setBooth] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    setBooth(new URLSearchParams(window.location.search).get("booth") === "1");
+  }, []);
   const [step, setStep] = React.useState<StepId>("intro");
   const [data, setData] = React.useState<FormData>(initial);
   const [submitting, setSubmitting] = React.useState(false);
