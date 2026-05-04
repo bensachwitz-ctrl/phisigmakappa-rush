@@ -24,12 +24,14 @@ type FormData = {
   hometown: string;
   about: string;
   headshotUrl: string;
+  ageAttestation: "ADULT_18_PLUS" | "MINOR_17_WITH_GUARDIAN_PERMISSION";
 };
 
 const initial: FormData = {
   name: "", phone: "", email: "",
   year: "", major: "", hometown: "",
   about: "", headshotUrl: "",
+  ageAttestation: "ADULT_18_PLUS",
 };
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Transfer"];
@@ -94,6 +96,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const [done, setDone] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [consent, setConsent] = React.useState(false);
+  const [receiptId, setReceiptId] = React.useState<string | null>(null);
   const [idleSecondsLeft, setIdleSecondsLeft] = React.useState<number | null>(null);
 
   // Booth-mode safety net: if a rushee abandons mid-form and the tablet sits idle for
@@ -183,6 +186,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
         hometown: data.hometown.trim(),
         backgroundInfo: data.about.trim(),
         headshotUrl: data.headshotUrl,
+        ageAttestation: data.ageAttestation,
       };
       const res = await fetch("/api/rush", {
         method: "POST",
@@ -191,10 +195,11 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Submission failed");
+      setReceiptId(json?.consentReceipt?.id || null);
       setDone(true);
       push({
         title: json.updated ? "Info updated" : "You're in",
-        description: "Watch your email and texts.",
+        description: "Watch your email and texts. Reply YES to the confirmation text.",
         variant: "success",
       });
     } catch (err: any) {
@@ -209,7 +214,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   }
 
   if (done) {
-    return <SuccessCard data={data} booth={booth} onRestart={() => { setDone(false); setData(initial); setStep(FIRST_STEP); }} />;
+    return <SuccessCard data={data} booth={booth} receiptId={receiptId} onRestart={() => { setDone(false); setData(initial); setStep(FIRST_STEP); setReceiptId(null); }} />;
   }
 
   return (
@@ -402,6 +407,37 @@ function ContactStep({
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
         <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
+
+      {/* Age attestation — separate one-tap toggle so the consent record is
+          unambiguous about WHICH path the rushee chose. */}
+      <Field id="ageAttestation" label="Age">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => update("ageAttestation", "ADULT_18_PLUS")}
+            className={cn(
+              "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
+              data.ageAttestation === "ADULT_18_PLUS"
+                ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
+                : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+            )}
+          >
+            I&apos;m 18 or older
+          </button>
+          <button
+            type="button"
+            onClick={() => update("ageAttestation", "MINOR_17_WITH_GUARDIAN_PERMISSION")}
+            className={cn(
+              "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
+              data.ageAttestation === "MINOR_17_WITH_GUARDIAN_PERMISSION"
+                ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
+                : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+            )}
+          >
+            I&apos;m 17, with parent permission
+          </button>
+        </div>
+      </Field>
     </div>
   );
 }
@@ -646,7 +682,7 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
   );
 }
 
-function SuccessCard({ data, booth, onRestart }: { data: FormData; booth: boolean; onRestart: () => void }) {
+function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; booth: boolean; receiptId: string | null; onRestart: () => void }) {
   const first = data.name.split(" ")[0] || "there";
   const { push } = useToast();
 
@@ -673,8 +709,13 @@ function SuccessCard({ data, booth, onRestart }: { data: FormData; booth: boolea
           </div>
           <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight">Got it, {first}.</h3>
           <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-            You're on the rush list. We'll text you when the Fall '26 schedule drops.
+            You're on the rush list. Reply <span className="font-mono text-foreground">YES</span> to the confirmation text we just sent.
           </p>
+          {receiptId && (
+            <p className="mt-2 text-[10px] text-muted-foreground/80 font-mono">
+              Consent receipt: {receiptId.slice(0, 12)}…
+            </p>
+          )}
           <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-phisig-red-soft border border-phisig-red/20 px-4 py-2 text-xs font-semibold text-phisig-red">
             <Sparkles className="h-3.5 w-3.5" /> Next rushee in 6 seconds…
           </div>
@@ -698,8 +739,13 @@ function SuccessCard({ data, booth, onRestart }: { data: FormData; booth: boolea
           You're on the list, {first}.
         </h3>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          We've got your number. Watch for a text the second the Fall '26 schedule drops in August.
+          We just sent a confirmation text. <span className="font-medium text-foreground">Reply YES</span> to lock it in. Then watch for the Fall '26 schedule in August.
         </p>
+        {receiptId && (
+          <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono">
+            Consent receipt: <a className="hover:text-phisig-red" href={`/api/consent/${receiptId}`} target="_blank" rel="noreferrer">{receiptId.slice(0, 12)}…</a>
+          </p>
+        )}
 
         <div className="mt-7 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
           {[

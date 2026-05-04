@@ -37,6 +37,27 @@ model Rush {
   smsLogs         SmsLog[]
   attendances     Attendance[]
   votes           Vote[]
+  consents        RushConsent[]
+}
+
+// TCPA-grade consent receipt: snapshots the EXACT disclosure text + timestamp
+// + IP + user-agent at the moment of submission, plus a double-opt-in confirm
+// flag. We retain these for 4 years (TCPA recordkeeping).
+model RushConsent {
+  id              String    @id @default(cuid())
+  rushId          String
+  disclosureVersion String              // e.g. "2026-05-04" — bumps when the legal copy changes
+  disclosureText  String              // verbatim copy shown to user at consent time
+  ipAddress       String?
+  userAgent       String?
+  ageAttestation  String              // "ADULT_18_PLUS" | "MINOR_17_WITH_GUARDIAN_PERMISSION"
+  smsConfirmed    Boolean  @default(false)   // true once user replies YES to confirmation SMS
+  smsConfirmedAt  DateTime?
+  optedOut        Boolean  @default(false)   // true once STOP / opt-out received
+  optedOutAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  rush            Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
 }
 
 model Event {

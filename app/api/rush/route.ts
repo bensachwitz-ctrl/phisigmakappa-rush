@@ -6,6 +6,42 @@ import { enrichRushee } from "@/lib/enrich";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Bump this whenever the legal disclosure copy changes. Persisted alongside
+// each consent receipt so we can prove what the user saw at consent time
+// even after the on-page wording is updated. TCPA defense relies on this.
+const DISCLOSURE_VERSION = "2026-05-04";
+const SMS_DISCLOSURE_TEXT =
+  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring text and email rush updates from Phi Sigma Kappa Gamma Triton (USC). Approximately 6–8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out. My information will only be used to communicate about Fall '26 rush and is never sold or shared.";
+
+/**
+ * Fire a confirmation SMS to the rushee asking them to reply YES to confirm.
+ * Best-effort: if Twilio is not configured or fails, we log and move on. The
+ * RushConsent record is what determines TCPA compliance, not the send result.
+ */
+async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string) {
+  try {
+    const sid = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_PHONE_NUMBER;
+    if (!sid || !token || !from) {
+      console.info("[double-opt-in] Twilio env not set; skipping confirmation SMS for", receiptId);
+      return;
+    }
+    const body = `Phi Sig USC Gamma Triton: hey ${firstName}! Reply YES to confirm rush updates (about 6-8 msgs/cycle). Reply HELP for help, STOP to opt out. Msg & data rates may apply.`;
+    const auth = Buffer.from(`${sid}:${token}`).toString("base64");
+    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ From: from, To: phone, Body: body }),
+    });
+  } catch (err) {
+    console.warn("[double-opt-in]", err);
+  }
+}
+
 /**
  * Auto-enrich a rushee in the background — non-blocking. The submission
  * response goes back to the rushee immediately; enrichment writes to DB
@@ -39,6 +75,10 @@ const RushSchema = z.object({
   highSchoolInfo: z.string().max(2000).optional().or(z.literal("")),
   backgroundInfo: z.string().max(2000).optional().or(z.literal("")),
   headshotUrl: z.string().url().max(2048).optional().or(z.literal("")),
+  // Optional age attestation flag from the form. Defaults to ADULT_18_PLUS
+  // for older clients that don't send this field; the express-consent text
+  // they checked covers both 18+ and 17+with-guardian paths.
+  ageAttestation: z.enum(["ADULT_18_PLUS", "MINOR_17_WITH_GUARDIAN_PERMISSION"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -51,6 +91,14 @@ export async function POST(req: Request) {
       name: parsed.name.trim(),
       phone: parsed.phone.trim(),
     };
+
+    // TCPA evidence — captured at the moment of submission.
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    const userAgent = req.headers.get("user-agent") || null;
+    const ageAttestation = data.ageAttestation || "ADULT_18_PLUS";
 
     const existing = await prisma.rush.findUnique({ where: { email: data.email } });
     if (existing) {
@@ -67,7 +115,26 @@ export async function POST(req: Request) {
           headshotUrl: data.headshotUrl || existing.headshotUrl || null,
         },
       });
-      return NextResponse.json({ ok: true, id: updated.id, updated: true });
+
+      // Re-affirmation: write a fresh consent receipt because the user just
+      // re-checked the box on the new submission. Old receipts are retained.
+      const receipt = await prisma.rushConsent.create({
+        data: {
+          rushId: updated.id,
+          disclosureVersion: DISCLOSURE_VERSION,
+          disclosureText: SMS_DISCLOSURE_TEXT,
+          ipAddress,
+          userAgent,
+          ageAttestation,
+        },
+      });
+
+      return NextResponse.json({
+        ok: true,
+        id: updated.id,
+        updated: true,
+        consentReceipt: { id: receipt.id, version: DISCLOSURE_VERSION, createdAt: receipt.createdAt },
+      });
     }
 
     const created = await prisma.rush.create({
@@ -84,6 +151,18 @@ export async function POST(req: Request) {
       },
     });
 
+    // First-submission consent receipt
+    const receipt = await prisma.rushConsent.create({
+      data: {
+        rushId: created.id,
+        disclosureVersion: DISCLOSURE_VERSION,
+        disclosureText: SMS_DISCLOSURE_TEXT,
+        ipAddress,
+        userAgent,
+        ageAttestation,
+      },
+    });
+
     // Fire auto-enrichment — searches Google/LinkedIn/IG/USC directory/MaxPreps
     // for additional info about the rushee. Doesn't block the response.
     await autoEnrichInBackground(created.id, {
@@ -93,7 +172,15 @@ export async function POST(req: Request) {
       year: data.year || null,
     });
 
-    return NextResponse.json({ ok: true, id: created.id, updated: false });
+    // Fire double-opt-in confirmation SMS in the background.
+    sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id);
+
+    return NextResponse.json({
+      ok: true,
+      id: created.id,
+      updated: false,
+      consentReceipt: { id: receipt.id, version: DISCLOSURE_VERSION, createdAt: receipt.createdAt },
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json(

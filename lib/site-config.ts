@@ -95,6 +95,65 @@ export const DEFAULTS = {
   // Privacy
   "privacy.lastUpdated": "May 2026",
 
+  // ── ADMIN-EDITABLE CONTENT ARRAYS (stored as JSON strings) ──
+  // Each is parsed at render time; if parse fails or value is empty, the page
+  // falls back to a built-in default. Lets the rush chair add/edit/remove items
+  // without a code deploy. Edited via /admin/settings repeater UIs.
+
+  // Timeline cards: [{ week, title, body }]
+  "timeline.json": JSON.stringify([
+    { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
+    { week: "Week 2", title: "Closed events", body: "Invite-only smaller events. Spend more time with individual brothers and start to feel out the fit." },
+    { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
+  ]),
+
+  // FAQ accordion items: [{ q, a }]
+  "faq.json": JSON.stringify([
+    { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you." },
+    { q: "Is there a GPA requirement?", a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles." },
+    { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
+    { q: "Is there hazing?", a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ." },
+    { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
+    { q: "Can I rush if I'm already in another organization?", a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it." },
+  ]),
+
+  // Three Cardinal Principles cards: [{ icon, title, body }]
+  "values.json": JSON.stringify([
+    { icon: "Users", title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
+    { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
+    { icon: "Heart", title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
+  ]),
+
+  // Highlights ribbon: [{ icon, label }]
+  "highlights.json": JSON.stringify([
+    { icon: "HandHeart", label: "Special Olympics SC partners" },
+    { icon: "Trophy", label: "Polar Plunge fundraisers" },
+    { icon: "Building2", label: "On-campus chapter house" },
+    { icon: "GraduationCap", label: "Above-average chapter GPA" },
+    { icon: "Flame", label: "Brotherhood events year-round" },
+    { icon: "Star", label: "#DamnProud" },
+  ]),
+
+  // Recent activity strip: [{ tag, title, icon }]
+  "recent.json": JSON.stringify([
+    { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: "HandHeart" },
+    { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: "Trophy" },
+    { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
+    { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: "Heart" },
+  ]),
+
+  // Testimonial
+  "testimonial.quote": "Phi Sig isn't a four-year decision — it's a forty-year one. The brothers I met during rush are the same guys standing next to me at every wedding, every promotion, every milestone.",
+  "testimonial.author": "A. Mitchell",
+  "testimonial.classYear": "'22",
+  "testimonial.attribution": "Gamma Triton alumnus, finance",
+
+  // About-section history paragraph (Founded 1873 / Gamma Triton 1975)
+  "about.history": "Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873 on three cardinal principles: Brotherhood, Scholarship, and Character. The Gamma Triton chapter chartered at the University of South Carolina in 1975 and has built USC men around those same principles for fifty years — leaders in the classroom, in the community, and beyond.",
+
+  // Anti-hazing block body (the long paragraph under the Zero-Tolerance heading)
+  "antiHazing.body": "Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm.",
+
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",
   "show.highlightsBanner": "true",

@@ -13,7 +13,8 @@ import { useToast } from "@/components/ui/toast";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
   RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
-  FileText,
+  FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
+  CalendarDays, ListChecks, Activity,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -196,6 +197,142 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           </Field>
           <Field label="All-time total" className="sm:col-span-2">
             <Input value={values["philanthropy.raisedTotal"] || ""} onChange={(e) => set("philanthropy.raisedTotal", e.target.value)} placeholder="$25k+" />
+          </Field>
+        </div>
+      </Section>
+
+      {/* TIMELINE — admin repeater */}
+      <Section title="How rush works (timeline)" eyebrow="Week-by-week schedule cards" icon={CalendarDays}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Three weeks by default. Add or remove rows as your chapter&apos;s schedule changes.
+        </p>
+        <JsonArrayEditor
+          value={values["timeline.json"]}
+          onChange={(v) => set("timeline.json", v)}
+          fields={[
+            { key: "week", label: "Week label", placeholder: "Week 1" },
+            { key: "title", label: "Title", placeholder: "Open events" },
+            { key: "body", label: "Body", placeholder: "What happens this week", textarea: true },
+          ]}
+          newRow={{ week: "", title: "", body: "" }}
+          rowLabel={(r) => `${r.week || "(unnamed)"} — ${r.title || "untitled"}`}
+        />
+      </Section>
+
+      {/* FAQ — admin repeater */}
+      <Section title="FAQ" eyebrow="Common questions accordion" icon={Sparkles}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Add as many Q&amp;A pairs as you want. They render in the order shown here.
+        </p>
+        <JsonArrayEditor
+          value={values["faq.json"]}
+          onChange={(v) => set("faq.json", v)}
+          fields={[
+            { key: "q", label: "Question", placeholder: "Is there a GPA requirement?" },
+            { key: "a", label: "Answer", placeholder: "Our chapter average is…", textarea: true },
+          ]}
+          newRow={{ q: "", a: "" }}
+          rowLabel={(r) => r.q || "(empty question)"}
+        />
+      </Section>
+
+      {/* VALUES cards */}
+      <Section title="Three Cardinal Principles" eyebrow="Brotherhood / Scholarship / Character cards" icon={ShieldCheck}>
+        <JsonArrayEditor
+          value={values["values.json"]}
+          onChange={(v) => set("values.json", v)}
+          fields={[
+            { key: "title", label: "Title", placeholder: "Brotherhood" },
+            { key: "body", label: "Body", placeholder: "Lifelong friendships…", textarea: true },
+            { key: "icon", label: "Icon", placeholder: "Users", iconPicker: true },
+          ]}
+          newRow={{ title: "", body: "", icon: "Users" }}
+          rowLabel={(r) => r.title || "(unnamed)"}
+        />
+      </Section>
+
+      {/* HIGHLIGHTS ribbon */}
+      <Section title="Highlights ribbon" eyebrow="Compact icon + label row under stats" icon={ListChecks}>
+        <JsonArrayEditor
+          value={values["highlights.json"]}
+          onChange={(v) => set("highlights.json", v)}
+          fields={[
+            { key: "label", label: "Label", placeholder: "Special Olympics SC partners" },
+            { key: "icon", label: "Icon", placeholder: "HandHeart", iconPicker: true },
+          ]}
+          newRow={{ label: "", icon: "HandHeart" }}
+          rowLabel={(r) => r.label || "(empty)"}
+        />
+      </Section>
+
+      {/* RECENT activity strip */}
+      <Section title="Recent activity strip" eyebrow="4 cards under the Instagram feed" icon={Activity}>
+        <JsonArrayEditor
+          value={values["recent.json"]}
+          onChange={(v) => set("recent.json", v)}
+          fields={[
+            { key: "tag", label: "Tag", placeholder: "Philanthropy" },
+            { key: "title", label: "Title", placeholder: "Polar Plunge raised $700…" },
+            { key: "icon", label: "Icon", placeholder: "HandHeart", iconPicker: true },
+          ]}
+          newRow={{ tag: "", title: "", icon: "Trophy" }}
+          rowLabel={(r) => `${r.tag || "(no tag)"} — ${r.title || "no title"}`}
+        />
+      </Section>
+
+      {/* TESTIMONIAL */}
+      <Section title="Alumni testimonial" eyebrow="Quote in the testimonial section" icon={MessageSquareQuote}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Quote" className="sm:col-span-2">
+            <Textarea
+              value={values["testimonial.quote"] || ""}
+              onChange={(e) => set("testimonial.quote", e.target.value)}
+              rows={4}
+              placeholder="Phi Sig isn't a four-year decision…"
+            />
+          </Field>
+          <Field label="Author">
+            <Input
+              value={values["testimonial.author"] || ""}
+              onChange={(e) => set("testimonial.author", e.target.value)}
+              placeholder="A. Mitchell"
+            />
+          </Field>
+          <Field label="Class year">
+            <Input
+              value={values["testimonial.classYear"] || ""}
+              onChange={(e) => set("testimonial.classYear", e.target.value)}
+              placeholder="'22"
+            />
+          </Field>
+          <Field label="Attribution / role" className="sm:col-span-2">
+            <Input
+              value={values["testimonial.attribution"] || ""}
+              onChange={(e) => set("testimonial.attribution", e.target.value)}
+              placeholder="Gamma Triton alumnus, finance"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ABOUT history paragraph + anti-hazing body */}
+      <Section title="Long-form copy" eyebrow="History paragraph + anti-hazing block body" icon={FileText}>
+        <div className="space-y-4">
+          <Field label="About-section history paragraph (Founded 1873 / Gamma Triton 1975 etc.)">
+            <Textarea
+              value={values["about.history"] || ""}
+              onChange={(e) => set("about.history", e.target.value)}
+              rows={5}
+              placeholder="Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873…"
+            />
+          </Field>
+          <Field label="Anti-hazing block body (the paragraph above the hotline)">
+            <Textarea
+              value={values["antiHazing.body"] || ""}
+              onChange={(e) => set("antiHazing.body", e.target.value)}
+              rows={4}
+              placeholder="Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form…"
+            />
           </Field>
         </div>
       </Section>
@@ -445,6 +582,169 @@ function PhotoCard({
           </SelectContent>
         </Select>
       </Field>
+    </div>
+  );
+}
+
+/**
+ * Generic admin repeater for JSON arrays stored as cfg strings.
+ * Renders an expandable list with add/remove/reorder + inline field editing.
+ * On any change it re-serializes the array as JSON and bubbles up.
+ *
+ * `value` is the raw JSON string from cfg. If empty/invalid, starts with [].
+ */
+type FieldDef = {
+  key: string;
+  label: string;
+  placeholder?: string;
+  textarea?: boolean;
+  iconPicker?: boolean;
+};
+
+function JsonArrayEditor({
+  value,
+  onChange,
+  fields,
+  newRow,
+  rowLabel,
+}: {
+  value: string | undefined;
+  onChange: (json: string) => void;
+  fields: FieldDef[];
+  newRow: Record<string, string>;
+  rowLabel: (row: Record<string, string>) => string;
+}) {
+  const rows = React.useMemo<Record<string, string>[]>(() => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [value]);
+
+  const [openIdx, setOpenIdx] = React.useState<number | null>(0);
+
+  function commit(next: Record<string, string>[]) {
+    onChange(JSON.stringify(next));
+  }
+  function update(i: number, key: string, v: string) {
+    const next = rows.map((r, j) => (i === j ? { ...r, [key]: v } : r));
+    commit(next);
+  }
+  function add() {
+    const next = [...rows, { ...newRow }];
+    commit(next);
+    setOpenIdx(next.length - 1);
+  }
+  function remove(i: number) {
+    if (!confirm("Remove this row?")) return;
+    const next = rows.filter((_, j) => j !== i);
+    commit(next);
+    setOpenIdx(null);
+  }
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= rows.length) return;
+    const next = [...rows];
+    [next[i], next[j]] = [next[j], next[i]];
+    commit(next);
+    setOpenIdx(j);
+  }
+
+  return (
+    <div className="space-y-3">
+      <ul className="space-y-2">
+        {rows.map((row, i) => {
+          const open = openIdx === i;
+          return (
+            <li key={i} className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(open ? null : i)}
+                  className="flex-1 text-left text-sm font-medium hover:text-phisig-red transition-colors truncate"
+                >
+                  <span className="text-muted-foreground mr-2 text-xs">#{i + 1}</span>
+                  {rowLabel(row)}
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => move(i, -1)}
+                    disabled={i === 0}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
+                    aria-label="Move up"
+                    title="Move up"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(i, 1)}
+                    disabled={i === rows.length - 1}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
+                    aria-label="Move down"
+                    title="Move down"
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(i)}
+                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-red-50 text-red-600"
+                    aria-label="Remove"
+                    title="Remove"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              {open && (
+                <div className="px-3 pb-3 pt-1 space-y-2.5 border-t border-border bg-secondary/30">
+                  {fields.map((f) => (
+                    <div key={f.key}>
+                      <Label className="mb-1 inline-block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {f.label}
+                      </Label>
+                      {f.iconPicker ? (
+                        <Select
+                          value={row[f.key] || ""}
+                          onValueChange={(v) => update(i, f.key, v)}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Pick an icon" /></SelectTrigger>
+                          <SelectContent>
+                            {ICONS.map((ic) => (
+                              <SelectItem key={ic} value={ic}>{ic}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : f.textarea ? (
+                        <Textarea
+                          value={row[f.key] || ""}
+                          onChange={(e) => update(i, f.key, e.target.value)}
+                          rows={3}
+                          placeholder={f.placeholder}
+                        />
+                      ) : (
+                        <Input
+                          value={row[f.key] || ""}
+                          onChange={(e) => update(i, f.key, e.target.value)}
+                          placeholder={f.placeholder}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <Button type="button" size="sm" variant="outline" onClick={add}>
+        <Plus className="h-3.5 w-3.5" /> Add row
+      </Button>
     </div>
   );
 }

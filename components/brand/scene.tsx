@@ -33,15 +33,15 @@ const THEMES: Record<
   brotherhood: {
     label: "Brotherhood",
     icon: Users,
-    gradient: "from-phisig-red via-phisig-red-dark to-[#7a0a1f]",
-    accent: "#FCE8EC",
+    gradient: "from-phisig-red via-phisig-red-dark to-phisig-red-dark",
+    accent: "#FCEFF1",
     pattern: "rays",
     motif: "letters",
   },
   gameday: {
     label: "Game Day",
     icon: Trophy,
-    gradient: "from-[#73000a] via-phisig-red to-[#3a0008]",
+    gradient: "from-phisig-red-dark via-phisig-red to-phisig-ink",
     accent: "#FFFFFF",
     pattern: "stripes",
     motif: "stars",
@@ -50,14 +50,14 @@ const THEMES: Record<
     label: "Formals",
     icon: Award,
     gradient: "from-zinc-900 via-zinc-800 to-phisig-red-dark",
-    accent: "#FCE8EC",
+    accent: "#FCEFF1",
     pattern: "dots",
     motif: "crown",
   },
   philanthropy: {
     label: "Philanthropy",
     icon: HandHeart,
-    gradient: "from-phisig-red-dark via-phisig-red to-rose-300",
+    gradient: "from-phisig-red-dark via-phisig-red to-phisig-red-soft",
     accent: "#FFFFFF",
     pattern: "arch",
     motif: "shield",
@@ -65,15 +65,15 @@ const THEMES: Record<
   scholarship: {
     label: "Scholarship",
     icon: BookOpen,
-    gradient: "from-[#1a1a1f] via-zinc-800 to-phisig-red",
-    accent: "#FCE8EC",
+    gradient: "from-phisig-ink via-zinc-800 to-phisig-red",
+    accent: "#FCEFF1",
     pattern: "checker",
     motif: "columns",
   },
   socials: {
     label: "Socials",
     icon: Music,
-    gradient: "from-phisig-red via-rose-500 to-amber-400",
+    gradient: "from-phisig-red via-phisig-red-dark to-phisig-red",
     accent: "#FFFFFF",
     pattern: "rays",
     motif: "torch",
@@ -82,14 +82,14 @@ const THEMES: Record<
     label: "The Chapter",
     icon: Building2,
     gradient: "from-zinc-900 to-phisig-red-dark",
-    accent: "#FCE8EC",
+    accent: "#FCEFF1",
     pattern: "arch",
     motif: "shield",
   },
   tradition: {
     label: "Tradition",
     icon: Crown,
-    gradient: "from-phisig-red-dark via-phisig-red to-[#9a0a26]",
+    gradient: "from-phisig-red-dark via-phisig-red to-phisig-red-dark",
     accent: "#FFFFFF",
     pattern: "stripes",
     motif: "letters",
@@ -289,7 +289,7 @@ function LettersMotif({ className }: { className?: string }) {
       <text
         x="50" y="68"
         textAnchor="middle"
-        fontFamily="Georgia, serif"
+        fontFamily='ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", Cambria, "Times New Roman", serif'
         fontWeight="700"
         fontSize="60"
         fill="currentColor"

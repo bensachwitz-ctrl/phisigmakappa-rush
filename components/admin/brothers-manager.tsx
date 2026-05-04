@@ -207,6 +207,7 @@ export function BrothersManager({
 
       {isAdmin && <InviteBrotherDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />}
 
+      {isAdmin && <PendingInvites />}
 
       {filtered.length === 0 ? (
         <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
@@ -525,6 +526,169 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+type Invite = {
+  id: string;
+  token: string;
+  email: string | null;
+  phone: string | null;
+  prefillName: string | null;
+  invitedBy: string | null;
+  status: string;
+  brotherId: string | null;
+  expiresAt: string;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+/**
+ * Pending brother invites with a Revoke action. Lazy-loads on mount and
+ * after any user-triggered revoke. Shows email/phone/link channel + sender +
+ * relative time + status pill + copy-link button.
+ */
+function PendingInvites() {
+  const { push } = useToast();
+  const [invites, setInvites] = React.useState<Invite[] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/brother-invites");
+      const json = await res.json();
+      if (json?.ok && Array.isArray(json.invites)) setInvites(json.invites);
+      else setInvites([]);
+    } catch {
+      setInvites([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  React.useEffect(() => { load(); }, []);
+
+  async function revoke(id: string) {
+    if (!confirm("Revoke this invite? The link will stop working immediately.")) return;
+    const prev = invites || [];
+    setInvites((xs) => (xs || []).map((i) => (i.id === id ? { ...i, status: "REVOKED" } : i)));
+    try {
+      const res = await fetch("/api/admin/brother-invites", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error();
+      push({ title: "Invite revoked", variant: "success" });
+    } catch {
+      setInvites(prev);
+      push({ title: "Revoke failed", variant: "destructive" });
+    }
+  }
+
+  async function copyLink(token: string) {
+    const url = `${window.location.origin}/onboard/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      push({ title: "Link copied", variant: "success" });
+    } catch {
+      push({ title: url, description: "Copy manually", variant: "default" });
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-4 px-5 text-xs text-muted-foreground inline-flex items-center gap-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading pending invites…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!invites || invites.length === 0) return null;
+
+  const pending = invites.filter((i) => i.status === "PENDING");
+  const recent = invites.filter((i) => i.status !== "PENDING").slice(0, 3);
+
+  if (pending.length === 0 && recent.length === 0) return null;
+
+  return (
+    <Card className="border-border/60">
+      <CardContent className="p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-phisig-red">Brother invites</p>
+            <p className="text-sm font-medium mt-0.5">
+              {pending.length} pending{recent.length > 0 ? ` · ${recent.length} recent` : ""}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={load}>Refresh</Button>
+        </div>
+        <ul className="divide-y divide-border">
+          {[...pending, ...recent].map((iv) => {
+            const isExpired = new Date(iv.expiresAt) < new Date();
+            const channel = iv.email ? "email" : iv.phone ? "sms" : "link";
+            const target = iv.email || iv.phone || "Manual link";
+            const created = new Date(iv.createdAt);
+            const ageHours = (Date.now() - created.getTime()) / 1000 / 3600;
+            const ageLabel =
+              ageHours < 1 ? `${Math.round(ageHours * 60)} min ago`
+              : ageHours < 24 ? `${Math.round(ageHours)}h ago`
+              : `${Math.round(ageHours / 24)}d ago`;
+            const statusColor =
+              iv.status === "REVOKED" ? "bg-zinc-100 text-zinc-600"
+              : iv.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700"
+              : isExpired ? "bg-amber-50 text-amber-700"
+              : "bg-phisig-red-soft text-phisig-red";
+            const statusLabel =
+              iv.status === "REVOKED" ? "Revoked"
+              : iv.status === "COMPLETED" ? "Completed"
+              : isExpired ? "Expired"
+              : "Pending";
+            return (
+              <li key={iv.id} className="py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-[10px] uppercase tracking-wide font-semibold rounded px-1.5 py-0.5", statusColor)}>
+                      {statusLabel}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{channel}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">{ageLabel}</span>
+                    {iv.invitedBy && (
+                      <>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <span className="text-xs text-muted-foreground">by {iv.invitedBy}</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate mt-0.5">
+                    {iv.prefillName || target}
+                  </p>
+                  {iv.prefillName && target !== iv.prefillName && (
+                    <p className="text-xs text-muted-foreground truncate">{target}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {iv.status === "PENDING" && !isExpired && (
+                    <>
+                      <Button variant="ghost" size="sm" onClick={() => copyLink(iv.token)} title="Copy link">
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => revoke(iv.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Trash2 className="h-3.5 w-3.5" /> Revoke
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 

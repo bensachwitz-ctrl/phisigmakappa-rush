@@ -20,59 +20,61 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-const VALUES = [
-  { icon: Users, title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
-  { icon: GraduationCap, title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
-  { icon: Heart, title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
+// Safe JSON-array parser used to read admin-editable repeaters from cfg.
+// On any error (empty value, malformed JSON, wrong shape), falls back to the
+// supplied default so the page never breaks because of a typo in admin.
+function parseJsonArray<T>(raw: string | undefined, fallback: T[]): T[] {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed as T[];
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+type ValueRow = { icon: string; title: string; body: string };
+type TimelineRow = { week: string; title: string; body: string };
+type FaqRow = { q: string; a: string };
+type HighlightRow = { icon: string; label: string };
+type RecentRow = { tag: string; title: string; icon: string };
+
+const VALUES_DEFAULT: ValueRow[] = [
+  { icon: "Users", title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
+  { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
+  { icon: "Heart", title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
 ];
 
-const TIMELINE = [
+const TIMELINE_DEFAULT: TimelineRow[] = [
   { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
   { week: "Week 2", title: "Closed events", body: "Invite-only smaller events. Spend more time with individual brothers and start to feel out the fit." },
   { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
 ];
 
-const FAQ = [
-  {
-    q: "Do I need to be a freshman?",
-    a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you.",
-  },
-  {
-    q: "Is there a GPA requirement?",
-    a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles.",
-  },
-  {
-    q: "How much does it cost?",
-    a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises.",
-  },
-  {
-    q: "Is there hazing?",
-    a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ.",
-  },
-  {
-    q: "What's the time commitment?",
-    a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want.",
-  },
-  {
-    q: "Can I rush if I'm already in another organization?",
-    a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it.",
-  },
+const FAQ_DEFAULT: FaqRow[] = [
+  { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you." },
+  { q: "Is there a GPA requirement?", a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles." },
+  { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
+  { q: "Is there hazing?", a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ." },
+  { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
+  { q: "Can I rush if I'm already in another organization?", a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it." },
 ];
 
-const HIGHLIGHTS = [
-  { icon: HandHeart, label: "Special Olympics SC partners" },
-  { icon: Trophy, label: "Polar Plunge fundraisers" },
-  { icon: Building2, label: "On-campus chapter house" },
-  { icon: GraduationCap, label: "Above-average chapter GPA" },
-  { icon: Flame, label: "Brotherhood events year-round" },
-  { icon: Star, label: "#DamnProud" },
+const HIGHLIGHTS_DEFAULT: HighlightRow[] = [
+  { icon: "HandHeart", label: "Special Olympics SC partners" },
+  { icon: "Trophy", label: "Polar Plunge fundraisers" },
+  { icon: "Building2", label: "On-campus chapter house" },
+  { icon: "GraduationCap", label: "Above-average chapter GPA" },
+  { icon: "Flame", label: "Brotherhood events year-round" },
+  { icon: "Star", label: "#DamnProud" },
 ];
 
-const RECENT = [
-  { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: HandHeart },
-  { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: Trophy },
-  { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: Award },
-  { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: Heart },
+const RECENT_DEFAULT: RecentRow[] = [
+  { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: "HandHeart" },
+  { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: "Trophy" },
+  { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
+  { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: "Heart" },
 ];
 
 // Parse a stat value string like "3.45", "60+", "$25k+" into the bits CountUp needs.
@@ -148,6 +150,13 @@ export default async function Home({
     }))
     .filter((m) => m.name && m.role);
 
+  // Admin-editable repeater arrays — parsed JSON with safe fallbacks
+  const VALUES = parseJsonArray<ValueRow>(cfg["values.json"], VALUES_DEFAULT);
+  const TIMELINE = parseJsonArray<TimelineRow>(cfg["timeline.json"], TIMELINE_DEFAULT);
+  const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT);
+  const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
+  const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT);
+
   return (
     <main className="min-h-screen bg-background">
       <PublicNav />
@@ -160,7 +169,7 @@ export default async function Home({
           <Crest className="h-[280px] w-[280px] text-phisig-red" />
         </div>
 
-        <div className="container py-16 sm:py-24">
+        <div className="container section-y">
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
             <div className="max-w-2xl animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
@@ -248,7 +257,7 @@ export default async function Home({
         <div className="absolute -right-20 -top-20 opacity-10">
           <Seal className="w-[300px] h-[300px] text-white" />
         </div>
-        <div className="relative container py-10 sm:py-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+        <div className="relative container section-y-tight grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
           {stats.map((s, i) => (
             <Reveal key={s.label} delay={i * 80} className="flex items-center gap-4">
               <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 shrink-0">
@@ -271,20 +280,23 @@ export default async function Home({
       {cfg["show.highlightsBanner"] !== "false" && (
       <section className="border-b border-border bg-secondary/30 overflow-hidden">
         <div className="container py-4 flex flex-wrap items-center gap-x-8 gap-y-2 justify-center text-xs sm:text-sm text-muted-foreground">
-          {HIGHLIGHTS.map((h, i) => (
-            <span key={h.label} className="inline-flex items-center gap-1.5 whitespace-nowrap">
-              <h.icon className="h-3.5 w-3.5 text-phisig-red" />
-              <span>{h.label}</span>
-              {i < HIGHLIGHTS.length - 1 && <span className="hidden sm:inline opacity-30 ml-2">·</span>}
-            </span>
-          ))}
+          {HIGHLIGHTS.map((h, i) => {
+            const Icon = iconFor(h.icon);
+            return (
+              <span key={h.label} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <Icon className="h-3.5 w-3.5 text-phisig-red" />
+                <span>{h.label}</span>
+                {i < HIGHLIGHTS.length - 1 && <span className="hidden sm:inline opacity-30 ml-2">·</span>}
+              </span>
+            );
+          })}
         </div>
       </section>
       )}
 
       {/* ─── VALUES ─── */}
       {cfg["show.values"] !== "false" && (
-      <section className="container py-14 sm:py-18">
+      <section className="container section-y">
         <div className="max-w-2xl mb-8">
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
             <ShieldCheck className="h-3 w-3" /> Three principles
@@ -294,24 +306,27 @@ export default async function Home({
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-4 stagger">
-          {VALUES.map((v) => (
-            <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden group">
-              <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
-              <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25">
-                <v.icon className="h-5 w-5" />
-              </span>
-              <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
-              <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
-              <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" />
-            </div>
-          ))}
+          {VALUES.map((v) => {
+            const Icon = iconFor(v.icon);
+            return (
+              <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden group">
+                <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
+                <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
+                <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
+                <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" />
+              </div>
+            );
+          })}
         </div>
       </section>
       )}
 
       {/* ─── REGISTER ─── */}
       <section id="register" className="bg-phisig-mist border-y border-border scroll-mt-20">
-        <div className="container py-14 sm:py-20">
+        <div className="container section-y">
           <div className="max-w-2xl mx-auto text-center mb-8 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <Sparkles className="h-3 w-3" /> Get on the list
@@ -330,7 +345,7 @@ export default async function Home({
 
       {/* ─── INSTAGRAM FEED — real photos from @phisig_usc ─── */}
       {cfg["show.instagramFeed"] !== "false" && (
-      <section className="container py-14 sm:py-20">
+      <section className="container section-y">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -349,14 +364,17 @@ export default async function Home({
 
         {/* Recent activity strip */}
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {RECENT.map((r) => (
-            <div key={r.title} className="rounded-xl border border-border bg-card p-4 lift">
-              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                <r.icon className="h-3 w-3" /> {r.tag}
+          {RECENT.map((r) => {
+            const Icon = iconFor(r.icon);
+            return (
+              <div key={r.title} className="rounded-xl border border-border bg-card p-4 lift">
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <Icon className="h-3 w-3" /> {r.tag}
+                </div>
+                <p className="mt-2 text-sm font-medium leading-snug">{r.title}</p>
               </div>
-              <p className="mt-2 text-sm font-medium leading-snug">{r.title}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-8 text-center">
@@ -376,7 +394,7 @@ export default async function Home({
       {/* ─── HOW RUSH WORKS ─── */}
       {cfg["show.timeline"] !== "false" && (
       <section className="border-y border-border bg-secondary/40">
-        <div className="container py-14 sm:py-18">
+        <div className="container section-y">
           <div className="max-w-2xl mb-10">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
               <Calendar className="h-3 w-3" /> How rush works
@@ -413,7 +431,7 @@ export default async function Home({
       )}
 
       {/* ─── SCHEDULE ─── */}
-      <section id="schedule" className="container py-14 sm:py-20 scroll-mt-20">
+      <section id="schedule" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -436,18 +454,22 @@ export default async function Home({
       {/* ─── TESTIMONIAL + ABOUT (combined for density) ─── */}
       {cfg["show.testimonial"] !== "false" && (
       <section className="border-t border-border bg-gradient-to-b from-phisig-red-soft/40 via-background to-background">
-        <div className="container py-14 sm:py-20">
+        <div className="container section-y">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="animate-slide-up">
               <Quote className="h-8 w-8 text-phisig-red mb-3" />
               <blockquote className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
-                "Phi Sig isn't a four-year decision — it's a forty-year one. The brothers
-                I met during rush are the same guys standing next to me at every wedding,
-                every promotion, every milestone."
+                &ldquo;{cfg["testimonial.quote"]}&rdquo;
               </blockquote>
               <div className="mt-5 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-phisig-red text-white flex items-center justify-center font-semibold text-sm">
-                  AM
+                  {(cfg["testimonial.author"] || "A. Mitchell")
+                    .split(/\s+/)
+                    .map((s) => s[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
@@ -456,7 +478,8 @@ export default async function Home({
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    <span className="text-foreground font-medium">A. Mitchell '22</span> · Gamma Triton alumnus, finance
+                    <span className="text-foreground font-medium">{cfg["testimonial.author"]} {cfg["testimonial.classYear"]}</span>
+                    {cfg["testimonial.attribution"] && (<> · {cfg["testimonial.attribution"]}</>)}
                   </p>
                 </div>
               </div>
@@ -469,7 +492,7 @@ export default async function Home({
 
       {/* ─── BROTHER SPOTLIGHT ─── */}
       {cfg["show.spotlight"] !== "false" && (
-      <section className="container py-14 sm:py-18">
+      <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -539,7 +562,7 @@ export default async function Home({
       {/* ─── EXECUTIVE BOARD ─── */}
       {cfg["show.eboard"] !== "false" && eboard.length > 0 && (
       <section className="border-t border-border">
-        <div className="container py-16 sm:py-24">
+        <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -589,7 +612,7 @@ export default async function Home({
       )}
 
       {/* ─── ABOUT THE CHAPTER ─── */}
-      <section id="about" className="container py-14 sm:py-20 scroll-mt-20">
+      <section id="about" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -599,10 +622,7 @@ export default async function Home({
               Founded in 1873.<br/> Built for what's next.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873 on three
-              cardinal principles: Brotherhood, Scholarship, and Character. The Gamma Triton chapter
-              chartered at the University of South Carolina in 1975 and has built USC men around those
-              same principles for fifty years — leaders in the classroom, in the community, and beyond.
+              {cfg["about.history"]}
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               Parents and prospective members:{" "}
@@ -641,7 +661,10 @@ export default async function Home({
                 <div className="text-xs leading-relaxed">
                   <p className="font-semibold text-foreground">Zero-tolerance anti-hazing policy.</p>
                   <p className="mt-1 text-muted-foreground">
-                    Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm. Concerns can be reported anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at <a className="text-phisig-red hover:underline" href={`mailto:${cfg["contact.advisorEmail"]}`}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
+                    {cfg["antiHazing.body"]}{" "}
+                    Concerns can be reported anonymously to{" "}
+                    <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
+                    <a className="text-phisig-red hover:underline" href={`mailto:${cfg["contact.advisorEmail"]}`}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
                     <a className="text-phisig-red hover:underline font-medium" href={cfg["antiHazing.hotlineUrl"]} target="_blank" rel="noreferrer">{cfg["antiHazing.hotline"]}</a>.
                   </p>
                 </div>
@@ -697,7 +720,7 @@ export default async function Home({
       {/* ─── FAQ ─── */}
       {cfg["show.faq"] !== "false" && (
       <section className="border-y border-border bg-secondary/30">
-        <div className="container py-14 sm:py-20">
+        <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -747,7 +770,7 @@ export default async function Home({
 
       {/* ─── WHERE TO FIND US ─── */}
       {cfg["show.whereWeLive"] !== "false" && (
-      <section className="container py-14 sm:py-18">
+      <section className="container section-y">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <a
             href="https://www.instagram.com/p/DRxIVRXkYCn/"

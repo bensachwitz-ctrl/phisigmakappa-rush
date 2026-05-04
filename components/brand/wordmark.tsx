@@ -100,7 +100,7 @@ export function Seal({ className }: { className?: string }) {
         </radialGradient>
         <linearGradient id="seal-fill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#FCE8EC" />
+          <stop offset="100%" stopColor="#FCEFF1" />
         </linearGradient>
       </defs>
       <circle cx="110" cy="110" r="108" fill="url(#seal-glow)" />
