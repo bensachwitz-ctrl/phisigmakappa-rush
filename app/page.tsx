@@ -102,7 +102,7 @@ export default async function Home({
   if (booth) {
     return (
       <main className="min-h-screen bg-phisig-mist">
-        <PublicNav />
+        <PublicNav booth />
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">

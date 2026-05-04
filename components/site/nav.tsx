@@ -6,9 +6,11 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 
-export function PublicNav() {
+export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
   // Read ?booth=1 from window after hydration so we never throw during SSR.
-  const [booth, setBooth] = React.useState(false);
+  // If a parent server component already detected booth and passed it down, use
+  // that as the SSR-correct initial state (avoids a nav-link flash on first paint).
+  const [booth, setBooth] = React.useState(!!boothProp);
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     setBooth(new URLSearchParams(window.location.search).get("booth") === "1");
