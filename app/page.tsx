@@ -17,8 +17,35 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Homepage metadata reads CURRENT cfg so the description / OG / Twitter tags
+ * stay in sync with admin-edited stats. Round-7 maintainability critic flagged
+ * the layout-level static description as a regression: admin could edit stat
+ * tiles to "45 brothers / 3.20 GPA" while meta still said "60+ / 3.45".
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getSiteConfig();
+  const summary = `${cfg["stats.brothers"]} brothers · ${cfg["stats.gpa"]} GPA · ${cfg["philanthropy.raisedTotal"]} raised for ${cfg["philanthropy.beneficiaryShort"]}.`;
+  const desc = `Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina. ${summary} Get on the Fall '26 rush interest list — we'll text you when the schedule drops.`;
+  return {
+    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+    description: desc,
+    openGraph: {
+      title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+      description: `${summary} Get on the Fall '26 rush interest list.`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+      description: summary,
+    },
+  };
+}
 
 // Safe JSON-array parser used to read admin-editable repeaters from cfg.
 // On any error (empty value, malformed JSON, wrong shape), falls back to the
@@ -336,6 +363,10 @@ export default async function Home({
               Three steps. Sixty seconds. The Fall '26 rush schedule drops in August —
               we'll text and email everyone on this list the moment it's live.
             </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              You must be 18 or older — or 17 with a parent or legal guardian's permission — to sign up.{" "}
+              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy &amp; consent</Link>.
+            </p>
           </div>
           <div className="max-w-3xl mx-auto">
             <RushForm />
@@ -531,7 +562,7 @@ export default async function Home({
               className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
               <img
-                src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}?v=3`}
+                src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}`}
                 alt={`Brother of the Month — ${cfg["spotlight.name"]}`}
                 width={640}
                 height={800}
@@ -680,7 +711,7 @@ export default async function Home({
               className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
               <img
-                src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}?v=3`}
+                src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}`}
                 alt={cfg["about.caption"]}
                 width={640}
                 height={800}
@@ -779,7 +810,7 @@ export default async function Home({
             className="relative aspect-[5/4] rounded-3xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
           >
             <img
-              src="/api/photo/DRxIVRXkYCn?v=3"
+              src="/api/photo/DRxIVRXkYCn"
               alt="Phi Sigma Kappa brothers on Williams-Brice Stadium game day at the University of South Carolina"
               loading="lazy"
               width={800}
@@ -944,7 +975,7 @@ function PostTile({
   priority?: boolean;
 }) {
   const isUrl = /^https?:\/\//.test(slug);
-  const imgSrc = isUrl ? slug : `/api/photo/${slug}?v=3`;
+  const imgSrc = isUrl ? slug : `/api/photo/${slug}`;
   const linkHref = isUrl ? slug : `https://www.instagram.com/p/${slug}/`;
   return (
     <a

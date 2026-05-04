@@ -26,6 +26,10 @@ export async function GET(
         headers: {
           "Content-Type": r.headers.get("Content-Type") || "image/jpeg",
           "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
+          // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control
+          // is honored separately by Vercel's edge cache + sets a 30-day TTL.
+          "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
+          "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
         },
       });
     } catch {
@@ -116,6 +120,10 @@ export async function GET(
       headers: {
         "Content-Type": imgRes.headers.get("Content-Type") || "image/jpeg",
         "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
+          // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control
+          // is honored separately by Vercel's edge cache + sets a 30-day TTL.
+          "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
+          "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
       },
     });
   } catch {

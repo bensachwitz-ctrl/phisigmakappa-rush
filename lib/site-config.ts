@@ -32,9 +32,9 @@ export const DEFAULTS = {
   "about.caption": "Chapter formal · third-party vendor, sober transportation, FIPG-compliant",
 
   // Hero tagline
-  "hero.eyebrow": "Phi Sigma Kappa · Gamma Triton · USC · Fall Rush 2026",
+  "hero.eyebrow": "USC · Fall Rush 2026 · Gamma Triton chapter",
   "hero.subline":
-    "Phi Sigma Kappa at the University of South Carolina. 60+ brothers, 3.45 chapter GPA, $25k+ raised for Special Olympics SC. Drop your number — we'll text you the moment the Fall '26 schedule goes live.",
+    "Drop your number and we'll text you the date and location of every rush event the moment it's confirmed. No spam — about 6–8 messages across the whole rush cycle, then we're done.",
 
   // Stats — display-formatted strings (e.g. "60+"). The CountUp component parses
   // out the numeric prefix; everything else (e.g. "+", "k+") becomes the suffix.
@@ -46,18 +46,24 @@ export const DEFAULTS = {
   "stats.gpa": "3.45",
   "stats.gpa.label": "Chapter GPA",
   "stats.gpa.sub": "Above the all-fraternity average",
-  "stats.years": "150+",
-  "stats.years.label": "Years strong",
-  "stats.years.sub": "Founded 1873",
+  // The "years" slot was previously "150+ / Years strong / Founded 1873" —
+  // round-1 through round-7 Rushee critic flagged that as a museum-plaque stat
+  // an 18yo has no reason to care about. Defaults now lead with USC-relevant
+  // chapter age (Gamma Triton at USC since 1975 ≈ 50 years).
+  "stats.years": "50+",
+  "stats.years.label": "Years at USC",
+  "stats.years.sub": "Gamma Triton chartered 1975",
   "stats.charity": "$25k+",
   "stats.charity.label": "Raised for charity",
   "stats.charity.sub": "Special Olympics SC",
 
-  // Hero headline & CTA
-  "hero.h1.lead": "Rush Phi Sigma Kappa.",
-  "hero.h1.tail": "Fall '26 at",
-  "hero.h1.highlight": "USC",
-  "hero.cta.label": "Text me when rush drops",
+  // Hero headline & CTA — punchier, single-beat reading. Round-7 Rushee critic
+  // called the previous "Rush Phi Sigma Kappa. Fall '26 at USC." two-fragment
+  // construction "two stiff facts mashed together." Now reads as one line.
+  "hero.h1.lead": "Rush Phi Sig at USC.",
+  "hero.h1.tail": "Fall '26",
+  "hero.h1.highlight": "starts soon.",
+  "hero.cta.label": "Drop my number",
   "hero.cta.href": "#register",
 
   // Executive board — 5 slots; leave any slot empty to hide it.

@@ -141,7 +141,7 @@ export function Seal({ className }: { className?: string }) {
         x="110"
         y="178"
         textAnchor="middle"
-        fontFamily="Inter, sans-serif"
+        fontFamily='ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", Cambria, "Times New Roman", serif'
         fontSize="8"
         letterSpacing="3"
         fill="#0B0B0C"
