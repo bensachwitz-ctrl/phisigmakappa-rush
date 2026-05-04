@@ -113,8 +113,15 @@ export async function GET(
         const m = html.match(re);
         if (m?.[1]) {
           imgUrl = m[1].replace(/&amp;/g, "&").replace(/\\u0026/g, "&").replace(/\\\//g, "/");
-          // Skip the generic "Login • Instagram" og:image (brand logo fallback)
-          if (imgUrl && !/instagram\.com\/static\/.+InstagramLogo/i.test(imgUrl)) {
+          // Skip Instagram's generic branding/logo fallbacks. These appear when
+          // a post is private, deleted, age-gated, or the embed page falls
+          // back to the IG app icon/login splash. Any of these patterns means
+          // we got the wrong image and should fall through to the next pattern
+          // or candidate URL.
+          const isIgBranding = /instagram\.com\/static\/.+(InstagramLogo|InstagramApp|InstagramSplash|branding|app[-_]?icon|favicon|glyph)/i.test(imgUrl)
+            || /instagram\.com\/static\/images\//i.test(imgUrl)
+            || /\/static\/bundles\//i.test(imgUrl);
+          if (imgUrl && !isIgBranding) {
             break;
           }
           imgUrl = null;
@@ -142,10 +149,12 @@ export async function GET(
     const original = Buffer.from(await imgRes.arrayBuffer());
 
     // Sanity check: real Phi Sig chapter photos from Instagram are 100KB+.
-    // Anything under 30KB is almost certainly the IG branding/logo asset
-    // returned by a login-wall fallback path. Reject so we don't poison
-    // browser caches with the wrong image.
-    if (original.byteLength < 30_000) {
+    // Anything under 60KB is almost certainly an IG branding/logo asset
+    // returned by a login-wall or private-post fallback path (the IG app
+    // icon at high res tops out around 50KB). Reject so we don't poison
+    // browser caches with the wrong image — the client gets a transparent
+    // pixel and the page-level <img> falls back to the heraldic-Crest tile.
+    if (original.byteLength < 60_000) {
       throw new Error(`suspiciously small image: ${original.byteLength} bytes`);
     }
 

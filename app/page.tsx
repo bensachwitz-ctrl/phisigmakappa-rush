@@ -812,19 +812,20 @@ export default async function Home({
           >
             <img
               src="/api/photo/DRxIVRXkYCn"
-              alt="Phi Sigma Kappa brothers on Williams-Brice Stadium game day at the University of South Carolina"
+              alt="Phi Sigma Kappa brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's mental health"
               loading="lazy"
               width={800}
               height={640}
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: "center 80%" }}
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                <MapPin className="h-3 w-3" /> Game day · Williams-Brice
+                <HandHeart className="h-3 w-3" /> Movember · $1,600 raised
               </span>
               <p className="mt-2 text-lg font-semibold tracking-tight">
-                Williams-Brice gameday — dry tailgate, every home game.
+                Grow a beard. Make a difference. — men&apos;s mental health.
               </p>
             </div>
           </a>

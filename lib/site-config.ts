@@ -5,18 +5,21 @@ import { prisma } from "@/lib/prisma";
  * The admin /admin/settings page lets brothers override any of these values.
  */
 export const DEFAULTS = {
-  // Hero photo collage tiles
+  // Hero photo collage tiles. Slugs must point at IG posts whose og:image
+  // resolves to the actual chapter photo, not Instagram's branding asset.
+  // Verified working: DUyvfpokpy6 (Polar Plunge), DRxIVRXkYCn (Movember
+  // fundraiser group photo), DXHwOJCkUbi (paintball at Trigger Tyme).
   "hero.tile1.slug": "DUyvfpokpy6",
   "hero.tile1.caption": "Polar Plunge for Special Olympics SC",
   "hero.tile1.icon": "HandHeart",
 
   "hero.tile2.slug": "DRxIVRXkYCn",
-  "hero.tile2.caption": "Williams-Brice gameday",
-  "hero.tile2.icon": "Trophy",
+  "hero.tile2.caption": "No Shave November · Movember $1,600",
+  "hero.tile2.icon": "HandHeart",
 
-  "hero.tile3.slug": "DRzyoVciZCh",
-  "hero.tile3.caption": "Chapter leadership",
-  "hero.tile3.icon": "Crown",
+  "hero.tile3.slug": "DXHwOJCkUbi",
+  "hero.tile3.caption": "Annual paintball at Trigger Tyme",
+  "hero.tile3.icon": "Trophy",
 
   // Brother of the Month
   "spotlight.slug": "DXzzTaFjSyj",
