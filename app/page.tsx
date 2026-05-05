@@ -400,18 +400,34 @@ export default async function Home({
       {/* ─── REGISTER ─── */}
       <section id="register" className="bg-phisig-mist border-y border-border scroll-mt-20">
         <div className="container section-y">
-          <div className="max-w-2xl mx-auto text-center mb-8 animate-slide-up">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+          <div className="max-w-xl mx-auto text-center mb-8 animate-slide-up">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
               <Sparkles className="h-3 w-3" /> Get on the list
             </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">Register your interest</h2>
-            <p className="mt-2 text-muted-foreground">
-              Sixty seconds, four short steps. The Fall '26 rush schedule drops in August —
-              we'll text and email everyone on this list the moment it's live.
+            <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
+              Drop your number.
+            </h2>
+            <p className="mt-3 text-muted-foreground text-base sm:text-lg">
+              No spam, no ceremony — about 60 seconds. We'll text the second the
+              Fall '26 schedule drops.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              You must be 18 or older — or 17 with a parent or legal guardian&apos;s permission — to sign up.{" "}
-              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy &amp; consent</Link>{" "}·{" "}
+            <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <li className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                Goes straight to the rush chair
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                Up to 8 texts per cycle, opt out anytime
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                Never sold or shared
+              </li>
+            </ul>
+            <p className="mt-4 text-[11px] text-muted-foreground">
+              18+, or 17 with a parent's permission.{" "}
+              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy</Link>{" "}·{" "}
               <Link href="/parents" className="text-phisig-red hover:underline">For parents</Link>.
             </p>
           </div>
