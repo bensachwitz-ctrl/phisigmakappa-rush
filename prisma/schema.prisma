@@ -82,10 +82,42 @@ model Event {
   startsAt    DateTime
   endsAt      DateTime?
   isPrivate   Boolean      @default(false)
+  // Event category — drives color/icon on the brother-facing calendar and
+  // lets the e-board filter at a glance. Stored as a String (no native enum
+  // in SQLite when used for local dev). Allowed values:
+  //   RUSH        — open rush events, philanthropy, public-facing
+  //   DATE        — date events, formals with dates
+  //   BROTHERHOOD — internal brotherhood-only events, retreats
+  //   CHAPTER     — required chapter meetings, ritual, business
+  //   SOCIAL      — non-required social, mixers, parties
+  //   OTHER       — fallback for events that don't fit cleanly above
+  category    String       @default("OTHER")
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   attendances Attendance[]
+  rsvps       BrotherRSVP[]
+}
+
+// Per-brother RSVP for each Event. Brothers can RSVP "going / not going /
+// maybe" so the e-board has a real headcount and the chapter can see who's
+// committed. Composite unique on (eventId, brotherId) means each brother
+// has at most one RSVP per event — `update` semantics on re-submit.
+model BrotherRSVP {
+  id        String   @id @default(cuid())
+  eventId   String
+  brotherId String
+  // GOING | NOT_GOING | MAYBE — string for SQLite-portability.
+  status    String
+  note      String?  // optional one-liner ("driving from class, will be 5min late")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  brother   Brother  @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, brotherId])
+  @@index([eventId, status])
 }
 
 model Attendance {
@@ -123,6 +155,7 @@ model Brother {
 
   votes     Vote[]
   announcements Announcement[]
+  rsvps     BrotherRSVP[]
 }
 
 model Announcement {

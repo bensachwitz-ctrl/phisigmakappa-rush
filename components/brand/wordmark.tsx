@@ -47,46 +47,80 @@ export function Wordmark({
 }
 
 /**
- * Heraldic shield mark — three stars in chief, lamp of knowledge.
- * Pure-path, no inline OS-font text (was Georgia, an inconsistency a senior
- * designer rightly flagged across 18+ duplications). Kept symbolic and quiet
- * so the lockup pairs cleanly with any nearby typography.
+ * Chapter heraldic crest — solid cardinal shield with three Greek-letter
+ * glyphs in the chief (ΦΣΚ → stylized as three vertical "T" forms in the
+ * Phi Sig wordmark tradition) and the chapter quartering below the band.
+ *
+ * Updated to match the chapter's official supplied crest art: bold red fill,
+ * heavy white outline, three-glyph chief, three-segment quartering at the
+ * base separated by a center bar.
+ *
+ * Pure-path SVG, no inline fonts (cross-OS-safe), inherits `currentColor`
+ * for the fill so the same component works in red on white pages and in
+ * white on red sections (hero, footer-on-dark, etc.) without re-export.
  */
 export function Crest({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      {/* Shield outline */}
+      {/* Solid shield body — single fill so the mark reads at every size,
+          including 16×16 favicon. White outline gives separation against
+          dark photo backgrounds without a second pass. */}
       <path
-        d="M32 2 L60 11 V30 C60 47 47 58 32 62 C17 58 4 47 4 30 V11 Z"
-        stroke="currentColor"
-        strokeWidth="2.4"
+        d="M32 2 L60 10 V28 C60 46 47 58 32 62 C17 58 4 46 4 28 V10 Z"
         fill="currentColor"
-        fillOpacity="0.06"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinejoin="round"
       />
-      {/* Chief band */}
+      {/* Inner shield highlight ring — subtle separation between body and
+          chief band. Hairline, .25 opacity, only visible on >32px renders. */}
       <path
-        d="M5 14 L59 14 L59 21 L5 21 Z"
-        fill="currentColor"
-        fillOpacity="0.2"
+        d="M32 6 L56 13 V28 C56 43 45 54 32 58 C19 54 8 43 8 28 V13 Z"
+        fill="none"
+        stroke="white"
+        strokeWidth="0.6"
+        strokeOpacity="0.35"
       />
-      {/* Three stars in chief */}
-      {[18, 32, 46].map((x) => (
-        <path
-          key={x}
-          d={`M ${x} 14.5 l 1 2 2.2 .3 -1.6 1.55 .4 2.2 -2 -1 -2 1 .4 -2.2 -1.6 -1.55 2.2 -.3 z`}
-          fill="currentColor"
-        />
+
+      {/* Three-glyph chief — Greek-letter abbreviations of the chapter,
+          stylized as bold T-forms in the heraldic tradition of the supplied
+          art. Each glyph has a horizontal cap and a vertical stem. */}
+      {[
+        { x: 16 },
+        { x: 32 },
+        { x: 48 },
+      ].map(({ x }) => (
+        <g key={x}>
+          {/* Cap */}
+          <rect
+            x={x - 5}
+            y={14}
+            width={10}
+            height={2.4}
+            fill="white"
+            rx="0.4"
+          />
+          {/* Stem */}
+          <rect
+            x={x - 1.2}
+            y={16}
+            width={2.4}
+            height={9}
+            fill="white"
+            rx="0.4"
+          />
+        </g>
       ))}
-      {/* Lamp body */}
-      <path d="M28 36 L36 36 L37 41 L27 41 Z" fill="currentColor" fillOpacity="0.9" />
-      {/* Lamp flame */}
-      <path
-        d="M32 28 C30 30 30 33 32 35 C34 33 34 30 32 28 Z"
-        fill="currentColor"
-      />
-      {/* Bottom ribbon line */}
-      <line x1="14" y1="48" x2="50" y2="48" stroke="currentColor" strokeWidth="0.8" opacity="0.4" />
-      <line x1="20" y1="52" x2="44" y2="52" stroke="currentColor" strokeWidth="0.8" opacity="0.25" />
+
+      {/* Mid horizontal divider — separates chief glyphs from base quartering */}
+      <rect x="6" y="32.5" width="52" height="2" fill="white" />
+
+      {/* Base quartering — three white dividers radiating from the center
+          to give the lower half its segmented look (matches the chapter's
+          official crest panel pattern). */}
+      <path d="M32 35 L32 60" stroke="white" strokeWidth="2" />
+      <path d="M32 47 L8 47" stroke="white" strokeWidth="2" />
+      <path d="M32 47 L56 47" stroke="white" strokeWidth="2" />
     </svg>
   );
 }

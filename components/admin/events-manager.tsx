@@ -19,10 +19,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import {
   CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
-  ClipboardCheck, Users, Search, Sparkles, Wand2, Edit3,
+  ClipboardCheck, Users, Search, Sparkles, Edit3, Globe,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+
+// Event category presets — same six values used by the brother calendar.
+// Color tokens here MUST stay in sync with components/brother/event-calendar.tsx
+// so admins see the same color stripe on a card that brothers see post-publish.
+export const EVENT_CATEGORIES = [
+  { id: "RUSH",        label: "Rush event",      tone: "bg-phisig-red text-white",            stripe: "bg-phisig-red"    },
+  { id: "DATE",        label: "Date event",      tone: "bg-pink-500 text-white",              stripe: "bg-pink-500"      },
+  { id: "BROTHERHOOD", label: "Brotherhood",     tone: "bg-blue-500 text-white",              stripe: "bg-blue-500"      },
+  { id: "CHAPTER",     label: "Chapter meeting", tone: "bg-amber-500 text-white",             stripe: "bg-amber-500"     },
+  { id: "SOCIAL",      label: "Social",          tone: "bg-emerald-500 text-white",           stripe: "bg-emerald-500"   },
+  { id: "OTHER",       label: "Other",           tone: "bg-zinc-500 text-white",              stripe: "bg-zinc-500"      },
+] as const;
+export type EventCategoryId = (typeof EVENT_CATEGORIES)[number]["id"];
+
+function categoryMeta(id: string | undefined) {
+  return EVENT_CATEGORIES.find((c) => c.id === id) || EVENT_CATEGORIES[5]; // OTHER fallback
+}
 
 type Event = {
   id: string;
@@ -33,6 +50,7 @@ type Event = {
   startsAt: string;
   endsAt: string | null;
   isPrivate: boolean;
+  category?: string | null;
 };
 
 type Rush = { id: string; name: string; email: string; phone: string };
@@ -45,6 +63,7 @@ const initial = {
   startsAt: "",
   endsAt: "",
   isPrivate: false,
+  category: "OTHER" as EventCategoryId,
 };
 
 export function EventsManager({ initial: initialEvents }: { initial: Event[] }) {
@@ -77,6 +96,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       startsAt: tz(new Date(e.startsAt)),
       endsAt: e.endsAt ? tz(new Date(e.endsAt)) : "",
       isPrivate: e.isPrivate,
+      category: ((e.category as EventCategoryId) || "OTHER"),
     });
     setOpen(true);
   }
@@ -88,19 +108,13 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     }
     setBusy(true);
     try {
-      if (editingId) {
-        // Edit = delete + recreate (current API doesn't have PATCH; this preserves the
-        // attendance/votes if we keep the same id, but we don't, so warn the user about that)
-        await fetch("/api/admin/events", {
-          method: "DELETE",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ id: editingId }),
-        });
-      }
+      // POST handles both create (no id) and edit (id supplied) — preserves
+      // attendance + RSVP rows on edit because we no longer delete-then-recreate.
+      const payload = editingId ? { ...form, id: editingId } : form;
       const res = await fetch("/api/admin/events", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
@@ -164,91 +178,13 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     }
   }
 
-  // Quick-fill: typical 4-week Phi Sig USC rush starting from a chosen anchor date.
-  // Pre-fills the dialog so admin can review and tweak before saving.
-  function applyFallTemplate() {
-    const open = new Date();
-    open.setHours(18, 0, 0, 0);
-    // Default: anchor to next Sunday so the wizard has a sensible start date.
-    while (open.getDay() !== 0) open.setDate(open.getDate() + 1);
-    const fmt = (d: Date) => {
-      const tz = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
-      return tz.toISOString().slice(0, 16);
-    };
-    setForm({
-      name: "Meet the Brothers — Cookout",
-      description:
-        "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, get a feel for the chapter.",
-      location: "Phi Sigma Kappa House — 1525 College St",
-      dressCode: "Casual",
-      startsAt: fmt(open),
-      endsAt: "",
-      isPrivate: false,
-    });
-    setOpen(true);
-    push({
-      title: "Template applied",
-      description: "Edit and save — repeat for each event in your week.",
-    });
-  }
-
-  async function bulkAddFallRush() {
-    if (!confirm("Add the standard 4-week Fall rush schedule? You can edit each one after.")) return;
-    setBusy(true);
-    const day = 24 * 60 * 60 * 1000;
-    const anchor = new Date();
-    anchor.setHours(18, 0, 0, 0);
-    while (anchor.getDay() !== 0) anchor.setDate(anchor.getDate() + 1);
-    const fmt = (offsetDays: number, hour: number) => {
-      const d = new Date(anchor.getTime() + offsetDays * day);
-      d.setHours(hour, 0, 0, 0);
-      const tz = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
-      return tz.toISOString().slice(0, 16);
-    };
-    const template = [
-      { name: "Meet the Brothers — Cookout", description: "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, get a feel for the chapter.", location: "Phi Sigma Kappa House — 1525 College St", dressCode: "Casual", startsAt: fmt(0, 18), isPrivate: false },
-      { name: "Tailgate at Williams-Brice (Dry)", description: "Pre-game dry tailgate before the Gamecocks home opener — FIPG-compliant, all ages welcome.", location: "Williams-Brice Stadium — Lot 5", dressCode: "Garnet & Black gameday", startsAt: fmt(6, 12), isPrivate: false },
-      { name: "Brotherhood Paintball", description: "Annual paintball at Trigger Tyme. Bring your A-game.", location: "Trigger Tyme Paintball, Columbia SC", dressCode: "Athletic / clothes you can ruin", startsAt: fmt(12, 14), isPrivate: false },
-      { name: "Service Dinner Fundraiser", description: "Dry fundraiser dinner — proceeds donated to the Leukemia & Lymphoma Society.", location: "Phi Sigma Kappa House — 1525 College St", dressCode: "Casual", startsAt: fmt(16, 16), isPrivate: false },
-      { name: "Formal Dinner — Invite Only", description: "Sit-down dinner for select rushes with the executive board.", location: "Capital City Club, downtown Columbia", dressCode: "Coat & tie", startsAt: fmt(21, 19), isPrivate: true },
-      { name: "Bid Night", description: "Bid extension and welcome ceremony for accepting members. #DamnProud", location: "Phi Sigma Kappa House — 1525 College St", dressCode: "Smart casual", startsAt: fmt(25, 19), isPrivate: true },
-    ];
-    const created: Event[] = [];
-    try {
-      for (const ev of template) {
-        const res = await fetch("/api/admin/events", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(ev),
-        });
-        const json = await res.json();
-        if (json?.ok && json.event) {
-          created.push({
-            ...json.event,
-            startsAt: new Date(json.event.startsAt).toISOString(),
-            endsAt: json.event.endsAt ? new Date(json.event.endsAt).toISOString() : null,
-          });
-        }
-      }
-      setEvents((es) => [...es, ...created].sort((a, b) => a.startsAt.localeCompare(b.startsAt)));
-      push({ title: `Added ${created.length} events`, description: "Edit dates/times to match your real schedule.", variant: "success" });
-    } catch {
-      push({ title: "Bulk add failed", variant: "destructive" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {events.length === 0 ? "No events yet — set up your Fall '26 schedule below." : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
+          {events.length === 0 ? "No events yet — add events one at a time below." : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={bulkAddFallRush} disabled={busy}>
-            <Wand2 className="h-3.5 w-3.5" /> Add Fall rush template
-          </Button>
           {events.length > 0 && (
             <Button variant="ghost" size="sm" onClick={deleteAll} className="text-muted-foreground hover:text-destructive" disabled={busy}>
               <Trash2 className="h-3.5 w-3.5" /> Clear all
@@ -266,16 +202,13 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
               <Sparkles className="h-6 w-6" />
             </div>
-            <h3 className="text-lg font-semibold tracking-tight">Set up your Fall '26 schedule</h3>
+            <h3 className="text-lg font-semibold tracking-tight">No events yet</h3>
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              Click <span className="font-medium text-foreground">"Add Fall rush template"</span> to seed the standard 4-week schedule (cookout, tailgate, paintball, percent night, formal, Bid Night), then edit dates to match your real plan.
+              Click <span className="font-medium text-foreground">"Add event"</span> to schedule the chapter's first event. Choose a category (Rush, Date, Brotherhood, Chapter, Social) — each shows up color-coded on the brother calendar. Toggle <span className="font-medium text-foreground">Invite-only</span> to hide it from the public website while keeping it visible to logged-in brothers.
             </p>
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <Button onClick={bulkAddFallRush} disabled={busy} size="sm">
-                <Wand2 className="h-3.5 w-3.5" /> Apply template
-              </Button>
-              <Button variant="outline" onClick={openCreate} size="sm">
-                <Plus className="h-3.5 w-3.5" /> Add manually
+            <div className="mt-5 flex items-center justify-center">
+              <Button onClick={openCreate} size="sm">
+                <Plus className="h-3.5 w-3.5" /> Add event
               </Button>
             </div>
           </CardContent>
@@ -284,11 +217,15 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
         <div className="grid gap-3">
           {events.map((e) => {
             const isPast = new Date(e.startsAt).getTime() < Date.now() - 1000 * 60 * 60 * 24;
+            const cat = categoryMeta(e.category || "OTHER");
             return (
               <Card key={e.id} className={cn("overflow-hidden", isPast && "opacity-90")}>
                 <CardContent className="p-0">
-                  <div className="grid grid-cols-[88px_1fr_auto] items-stretch">
-                    <div className="bg-phisig-red text-white flex flex-col items-center justify-center text-center p-4">
+                  <div className="grid grid-cols-[6px_88px_1fr_auto] items-stretch">
+                    {/* Category color stripe — matches the brother-calendar stripe so admins
+                        see the same visual cue at-a-glance that brothers do. */}
+                    <div className={cn("w-1.5", cat.stripe)} aria-hidden />
+                    <div className={cn("text-white flex flex-col items-center justify-center text-center p-4", cat.stripe)}>
                       <div className="text-[10px] uppercase tracking-[0.18em] opacity-85">
                         {format(new Date(e.startsAt), "MMM")}
                       </div>
@@ -300,12 +237,19 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
                         <h3 className="font-semibold">{e.name}</h3>
-                        <div className="flex gap-1">
-                          {e.isPrivate && (
+                        <div className="flex flex-wrap gap-1">
+                          <Badge className={cn(cat.tone, "ring-0")}>
+                            {cat.label}
+                          </Badge>
+                          {e.isPrivate ? (
                             <Badge className="bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200">
-                              <Lock className="h-3 w-3 mr-1" /> Private
+                              <Lock className="h-3 w-3 mr-1" /> Invite only
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                              <Globe className="h-3 w-3 mr-1" /> Public
                             </Badge>
                           )}
                           {isPast && (
@@ -392,11 +336,45 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
             </div>
             <div>
               <Label className="mb-1 inline-block">Description</Label>
-              <Textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Open-house BBQ. Meet active brothers, eat well…" />
+              <Textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="What it is, who it's for, anything brothers should know." />
             </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <Checkbox checked={form.isPrivate} onCheckedChange={(v) => update("isPrivate", !!v)} />
-              Invite-only (won't show on public schedule)
+            <div>
+              <Label className="mb-1.5 inline-block">Category</Label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                {EVENT_CATEGORIES.map((c) => {
+                  const active = form.category === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => update("category", c.id)}
+                      className={cn(
+                        "press rounded-md text-[11px] font-medium px-2 py-2 leading-tight transition-all border",
+                        active
+                          ? cn(c.tone, "border-transparent shadow-sm")
+                          : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"
+                      )}
+                      aria-pressed={active}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Drives the event-card color brothers see on their calendar.
+              </p>
+            </div>
+            <label className="flex items-start gap-2 text-sm cursor-pointer rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2.5">
+              <Checkbox checked={form.isPrivate} onCheckedChange={(v) => update("isPrivate", !!v)} className="mt-0.5" />
+              <span>
+                <span className="font-medium">Invite only</span>
+                <span className="block text-[12px] text-muted-foreground mt-0.5">
+                  Hides this event from the public website. It still appears on the brother
+                  calendar (logged-in brothers only). Leave unchecked to publish it on the
+                  public homepage schedule.
+                </span>
+              </span>
             </label>
           </div>
           <DialogFooter>

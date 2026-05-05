@@ -1,5 +1,6 @@
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
+import { MobileBottomNav } from "@/components/site/mobile-nav";
 import { RushForm } from "@/components/site/rush-form";
 import { ScheduleList } from "@/components/site/schedule-list";
 import { Seal, Crest } from "@/components/brand/wordmark";
@@ -995,6 +996,16 @@ export default async function Home({
 
       <PublicFooter />
       <StickyCTA />
+      {/* Mobile-only fixed bottom nav. Hidden at md+ where the desktop top
+          nav handles primary navigation. Phone + Calendar + Brothers are
+          one-thumb away on a phone. */}
+      <MobileBottomNav
+        rushPhone={cfg["contact.rushPhone"]}
+        rushEmail={cfg["contact.rushEmail"]}
+      />
+      {/* Spacer so the bottom nav doesn't overlap the footer copyright on
+          mobile. The 80px (4rem + safe-area) matches MobileBottomNav height. */}
+      <div className="md:hidden h-20" aria-hidden />
     </main>
   );
 }
