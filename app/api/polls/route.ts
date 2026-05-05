@@ -160,9 +160,23 @@ export async function POST(req: Request) {
   let closesAtDate: Date | null = null;
   if (parsed.data.closesAt) {
     const d = new Date(parsed.data.closesAt);
-    if (Number.isFinite(d.getTime()) && d.getTime() > Date.now()) {
-      closesAtDate = d;
+    if (!Number.isFinite(d.getTime())) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid close time" },
+        { status: 400 },
+      );
     }
+    // A "closes-by" datetime in the past is almost certainly user error —
+    // the brother likely meant a year ahead and typed the wrong year, or
+    // their browser didn't apply the timezone offset they expected. Reject
+    // explicitly so they fix it instead of silently dropping the value.
+    if (d.getTime() <= Date.now()) {
+      return NextResponse.json(
+        { ok: false, error: "Close time must be in the future" },
+        { status: 400 },
+      );
+    }
+    closesAtDate = d;
   }
 
   const poll = await prisma.poll.create({

@@ -70,7 +70,19 @@ async function autoEnrichInBackground(rushId: string, rushee: {
 }
 
 const RushSchema = z.object({
-  name: z.string().min(2).max(120),
+  // Names must contain at least two letter characters (any Unicode letter
+  // category — supports José / Lin Wei-Lo / Kai'lani / etc.). The prior
+  // permissive `.min(2).max(120)` accepted strings of pure question marks
+  // ("??????") or punctuation that resulted from upstream encoding loss.
+  // We don't lock to ASCII because that would reject legitimate non-Western
+  // names — we just demand SOME letters.
+  name: z
+    .string()
+    .min(2)
+    .max(120)
+    .refine((s) => (s.match(/\p{L}/gu) || []).length >= 2, {
+      message: "Name must contain at least two letters",
+    }),
   // Email is OPTIONAL per the form ("Email (optional)" label). The form
   // synthesizes a "<name>-<ts>@noemail.local" fallback before sending, but
   // we ALSO accept truly empty strings or omitted fields here so any direct

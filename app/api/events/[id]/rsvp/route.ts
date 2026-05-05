@@ -62,10 +62,8 @@ export async function GET(
     },
   });
 
-  // Active-brother roster who HASN'T responded — built by left-joining all
-  // password-bearing brothers with the RSVP table for this event. Lets the
-  // modal show "12 going · 3 maybe · 2 not going · 8 still need to respond"
-  // so the e-board can chase down stragglers before the event.
+  // Active-brother "no-response" chase list — fully-onboarded brothers (have
+  // a password hash, i.e. completed the invite flow) who haven't RSVP'd.
   const allActive = await prisma.brother.findMany({
     where: { passwordHash: { not: null } },
     select: { id: true, name: true, position: true, headshotUrl: true },
@@ -74,12 +72,20 @@ export async function GET(
   const respondedIds = new Set(roster.map((r) => r.brother.id));
   const noResponse = allActive.filter((b) => !respondedIds.has(b.id));
 
+  // Total brothers shown in the modal footer = anyone who's RSVP'd OR
+  // anyone fully onboarded who hasn't. The shared admin record (no
+  // passwordHash) wouldn't otherwise count, but if the admin RSVPs we
+  // want to count them — so union the two sets. Math: total = roster +
+  // noResponse, since rosters only contain brothers who clicked an
+  // RSVP button and noResponse contains every other active brother.
+  const totalBrothers = roster.length + noResponse.length;
+
   const counts = {
     GOING: roster.filter((r) => r.status === "GOING").length,
     NOT_GOING: roster.filter((r) => r.status === "NOT_GOING").length,
     MAYBE: roster.filter((r) => r.status === "MAYBE").length,
     NO_RESPONSE: noResponse.length,
-    TOTAL_BROTHERS: allActive.length,
+    TOTAL_BROTHERS: totalBrothers,
   };
 
   return NextResponse.json({ ok: true, event, mine, roster, noResponse, counts });

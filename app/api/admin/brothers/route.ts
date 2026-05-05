@@ -24,7 +24,23 @@ const Schema = z.object({
 
 export async function GET() {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  const brothers = await prisma.brother.findMany({ orderBy: { name: "asc" } });
+  // Explicit select — never ship passwordHash in the response. Even though
+  // /api/admin/brothers is admin-only, an XSS in the admin panel or a
+  // forwarded log could leak the bcrypt hash. The hash is needed only at
+  // login time (verifyPassword reads it server-side); brothers managers
+  // never need it client-side.
+  const brothers = await prisma.brother.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      id: true, name: true, email: true, phone: true,
+      year: true, major: true, position: true, pledgeClass: true,
+      bio: true, headshotUrl: true,
+      duesPaid: true, serviceHours: true, studyHours: true,
+      role: true,
+      createdAt: true, updatedAt: true, lastSeen: true,
+      // passwordHash intentionally omitted
+    },
+  });
   return NextResponse.json({ brothers });
 }
 
