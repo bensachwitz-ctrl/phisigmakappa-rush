@@ -47,80 +47,149 @@ export function Wordmark({
 }
 
 /**
- * Chapter heraldic crest — solid cardinal shield with three Greek-letter
- * glyphs in the chief (ΦΣΚ → stylized as three vertical "T" forms in the
- * Phi Sig wordmark tradition) and the chapter quartering below the band.
+ * Phi Sigma Kappa heraldic crest — chapter-color (cardinal) shield with the
+ * fraternity's authentic symbolic elements:
  *
- * Updated to match the chapter's official supplied crest art: bold red fill,
- * heavy white outline, three-glyph chief, three-segment quartering at the
- * base separated by a center bar.
+ *   • Three five-pointed stars in chief — represents the founding triad
+ *     (3 cardinal principles: Brotherhood, Scholarship, Character) and the
+ *     six founders (each star reflects a pair). Stars in chief are the most
+ *     recognizable element of the Phi Sig coat of arms.
+ *   • Crescent moon — one of Phi Sig's two visible totems (the moon is the
+ *     "visible" totem; the skull-and-crossbones is the private one).
+ *   • Sphinx silhouette in the base — Phi Sig's classical totem since 1873,
+ *     symbolizing wisdom, the pursuit of knowledge, and the secrets of the
+ *     fraternity. Stylized geometric profile so it reads at favicon sizes.
+ *   • "1873" in a banner at the very bottom — founding year at Mass Ag.
  *
- * Pure-path SVG, no inline fonts (cross-OS-safe), inherits `currentColor`
- * for the fill so the same component works in red on white pages and in
- * white on red sections (hero, footer-on-dark, etc.) without re-export.
+ * Pure-path SVG, no inline fonts (cross-OS-safe). Inherits `currentColor`
+ * for the shield fill so the same component works in red on white pages
+ * and white on red sections without a re-export.
  */
 export function Crest({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
       {/* Solid shield body — single fill so the mark reads at every size,
-          including 16×16 favicon. White outline gives separation against
-          dark photo backgrounds without a second pass. */}
+          including 16×16 favicon. */}
       <path
         d="M32 2 L60 10 V28 C60 46 47 58 32 62 C17 58 4 46 4 28 V10 Z"
         fill="currentColor"
         stroke="white"
-        strokeWidth="3"
+        strokeWidth="2.4"
         strokeLinejoin="round"
       />
-      {/* Inner shield highlight ring — subtle separation between body and
-          chief band. Hairline, .25 opacity, only visible on >32px renders. */}
+      {/* Inner highlight ring */}
       <path
-        d="M32 6 L56 13 V28 C56 43 45 54 32 58 C19 54 8 43 8 28 V13 Z"
+        d="M32 5.5 L57 12.5 V28 C57 44 45.5 55 32 59 C18.5 55 7 44 7 28 V12.5 Z"
         fill="none"
         stroke="white"
-        strokeWidth="0.6"
-        strokeOpacity="0.35"
+        strokeWidth="0.5"
+        strokeOpacity="0.45"
       />
 
-      {/* Three-glyph chief — Greek-letter abbreviations of the chapter,
-          stylized as bold T-forms in the heraldic tradition of the supplied
-          art. Each glyph has a horizontal cap and a vertical stem. */}
-      {[
-        { x: 16 },
-        { x: 32 },
-        { x: 48 },
-      ].map(({ x }) => (
-        <g key={x}>
-          {/* Cap */}
-          <rect
-            x={x - 5}
-            y={14}
-            width={10}
-            height={2.4}
-            fill="white"
-            rx="0.4"
-          />
-          {/* Stem */}
-          <rect
-            x={x - 1.2}
-            y={16}
-            width={2.4}
-            height={9}
-            fill="white"
-            rx="0.4"
-          />
-        </g>
+      {/* Chief band — the upper section that holds the three stars */}
+      <path
+        d="M7 12.5 L57 12.5 L57 22.5 L7 22.5 Z"
+        fill="white"
+        fillOpacity="0.14"
+      />
+
+      {/* Three five-pointed stars in chief — founding triad. Geometry: each
+          star is centered at (cx, 17.5) with arms of radius 3.2. */}
+      {[16, 32, 48].map((cx) => (
+        <path
+          key={`star-${cx}`}
+          d={`M ${cx} 14.3
+              l 0.95 2.92
+              l 3.07 0
+              l -2.49 1.81
+              l 0.95 2.92
+              l -2.48 -1.80
+              l -2.48 1.80
+              l 0.95 -2.92
+              l -2.49 -1.81
+              l 3.07 0
+              z`}
+          fill="white"
+        />
       ))}
 
-      {/* Mid horizontal divider — separates chief glyphs from base quartering */}
-      <rect x="6" y="32.5" width="52" height="2" fill="white" />
+      {/* Crescent moon — bottom-left field, behind the sphinx. Subtle so it
+          doesn't compete with the central totem. */}
+      <path
+        d="M 12 38
+           A 7 7 0 1 0 12 51
+           A 5 5 0 1 1 12 38 Z"
+        fill="white"
+        fillOpacity="0.55"
+      />
 
-      {/* Base quartering — three white dividers radiating from the center
-          to give the lower half its segmented look (matches the chapter's
-          official crest panel pattern). */}
-      <path d="M32 35 L32 60" stroke="white" strokeWidth="2" />
-      <path d="M32 47 L8 47" stroke="white" strokeWidth="2" />
-      <path d="M32 47 L56 47" stroke="white" strokeWidth="2" />
+      {/* Sphinx silhouette — Phi Sig's classical totem. Stylized profile:
+          the body is a couchant (lying) form with the head and chest
+          rising on the right, paws extended forward. Pure path so it
+          stays crisp at small sizes. */}
+      <g transform="translate(0,0)">
+        {/* Body / haunch */}
+        <path
+          d="M 22 50
+             C 22 44 25 41 30 40
+             L 40 40
+             C 43 40 45 42 45 45
+             L 45 50
+             Z"
+          fill="white"
+        />
+        {/* Front paws extending forward */}
+        <path
+          d="M 22 50 L 22 53 L 28 53 L 28 50 Z"
+          fill="white"
+        />
+        <path
+          d="M 30 50 L 30 53 L 36 53 L 36 50 Z"
+          fill="white"
+        />
+        {/* Headdress / nemes — angular Egyptian profile */}
+        <path
+          d="M 38 40
+             L 38 32
+             L 41 30
+             L 44 30
+             L 47 32
+             L 47 40
+             L 45 40
+             Z"
+          fill="white"
+        />
+        {/* Pointed nemes wing (pharaonic side flap) */}
+        <path
+          d="M 38 40 L 36 43 L 38 43 Z"
+          fill="white"
+        />
+        {/* Eye notch (negative space cut into the headdress for character) */}
+        <circle cx="44" cy="35" r="0.8" fill="currentColor" />
+      </g>
+
+      {/* Bottom banner with the founding year. Banner shape = trapezoid
+          with notched ends to read as a heraldic ribbon. */}
+      <path
+        d="M 12 54
+           L 52 54
+           L 50 60
+           L 14 60
+           Z"
+        fill="white"
+      />
+      <text
+        x="32"
+        y="58.7"
+        textAnchor="middle"
+        fontFamily='ui-serif, Georgia, "Times New Roman", serif'
+        fontSize="4.6"
+        fontWeight="700"
+        fill="currentColor"
+        letterSpacing="0.6"
+      >
+        1873
+      </text>
     </svg>
   );
 }

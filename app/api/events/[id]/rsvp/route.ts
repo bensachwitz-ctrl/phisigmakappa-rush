@@ -62,13 +62,27 @@ export async function GET(
     },
   });
 
+  // Active-brother roster who HASN'T responded — built by left-joining all
+  // password-bearing brothers with the RSVP table for this event. Lets the
+  // modal show "12 going · 3 maybe · 2 not going · 8 still need to respond"
+  // so the e-board can chase down stragglers before the event.
+  const allActive = await prisma.brother.findMany({
+    where: { passwordHash: { not: null } },
+    select: { id: true, name: true, position: true, headshotUrl: true },
+    orderBy: { name: "asc" },
+  });
+  const respondedIds = new Set(roster.map((r) => r.brother.id));
+  const noResponse = allActive.filter((b) => !respondedIds.has(b.id));
+
   const counts = {
     GOING: roster.filter((r) => r.status === "GOING").length,
     NOT_GOING: roster.filter((r) => r.status === "NOT_GOING").length,
     MAYBE: roster.filter((r) => r.status === "MAYBE").length,
+    NO_RESPONSE: noResponse.length,
+    TOTAL_BROTHERS: allActive.length,
   };
 
-  return NextResponse.json({ ok: true, event, mine, roster, counts });
+  return NextResponse.json({ ok: true, event, mine, roster, noResponse, counts });
 }
 
 export async function POST(

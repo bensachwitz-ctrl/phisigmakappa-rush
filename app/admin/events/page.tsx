@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { EventsManager } from "@/components/admin/events-manager";
-import { EventCalendar } from "@/components/brother/event-calendar";
+import { AddEventButton } from "@/components/admin/add-event-button";
+import { BrotherEventsSection } from "@/components/brother/brother-events-section";
 import { getCurrentSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -28,13 +29,20 @@ export default async function AdminEventsPage() {
 
   return (
     <main className="container py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Events</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {isAdmin
-            ? "Public events show on the rush page. Private events are invite-only."
-            : "RSVP for upcoming chapter events."}
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Events</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isAdmin
+              ? "Public events show on the rush page. Private events are invite-only."
+              : "RSVP for upcoming chapter events."}
+          </p>
+        </div>
+        {/* Page-header "+ Add event" — lives at the top of the events page
+            for admins so they can drop a new event without scrolling past the
+            brother calendar. Triggers the EventsManager dialog via a custom
+            DOM event. */}
+        {isAdmin && <AddEventButton />}
       </div>
 
       {isBrother && (
@@ -53,12 +61,12 @@ export default async function AdminEventsPage() {
               </p>
             </div>
           </div>
-          <EventCalendar />
+          <BrotherEventsSection />
         </section>
       )}
 
       {isAdmin && (
-        <section aria-labelledby="admin-events-heading">
+        <section id="manage-events" aria-labelledby="admin-events-heading" className="scroll-mt-24">
           <div className="mb-4">
             <h2
               id="admin-events-heading"

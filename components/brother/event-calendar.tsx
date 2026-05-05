@@ -93,7 +93,13 @@ function styleFor(category: string): CategoryStyle {
   return CATEGORY_STYLES[category] || CATEGORY_STYLES.OTHER;
 }
 
-export function EventCalendar() {
+export function EventCalendar({
+  onEventClick,
+}: {
+  // Optional: lets the parent page open an EventDetailsModal when the card
+  // header is clicked. If not supplied, cards still expand inline.
+  onEventClick?: (eventId: string) => void;
+} = {}) {
   const { push } = useToast();
   const [events, setEvents] = React.useState<CalendarEvent[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -169,6 +175,7 @@ export function EventCalendar() {
           // calendar doesn't take 2s to settle.
           delayMs={Math.min(i * 40, 320)}
           onChange={(next) => onRsvpChange(e.id, next)}
+          onOpenDetails={onEventClick ? () => onEventClick(e.id) : undefined}
         />
       ))}
     </div>
@@ -179,10 +186,15 @@ function EventCard({
   event,
   onChange,
   delayMs,
+  onOpenDetails,
 }: {
   event: CalendarEvent;
   onChange: (next: CalendarEvent) => void;
   delayMs: number;
+  // When supplied, the card title becomes a button that opens the
+  // EventDetailsModal — letting brothers see the full RSVP breakdown
+  // (Going / Maybe / Not going / No response) without leaving the page.
+  onOpenDetails?: () => void;
 }) {
   const { push } = useToast();
   const cat = styleFor(event.category);
@@ -315,8 +327,9 @@ function EventCard({
 
   return (
     <Card
+      id={`event-card-${event.id}`}
       className={cn(
-        "lift overflow-hidden animate-soft-enter",
+        "lift overflow-hidden animate-soft-enter scroll-mt-24 transition-shadow",
         isPast && "opacity-85",
       )}
       style={{ animationDelay: `${delayMs}ms` }}
@@ -351,7 +364,18 @@ function EventCard({
                   )}
                 </div>
                 <h3 className="mt-2 text-base font-semibold tracking-tight leading-snug">
-                  {event.name}
+                  {onOpenDetails ? (
+                    <button
+                      type="button"
+                      onClick={onOpenDetails}
+                      className="press text-left hover:text-phisig-red transition-colors underline-offset-4 hover:underline"
+                      aria-label={`See full RSVP breakdown for ${event.name}`}
+                    >
+                      {event.name}
+                    </button>
+                  ) : (
+                    event.name
+                  )}
                 </h3>
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">

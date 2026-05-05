@@ -85,6 +85,16 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     setOpen(true);
   }
 
+  // Listen for a custom DOM event so the page-header "+ Add event" button
+  // (rendered higher up in the tree, outside this component) can pop the
+  // create dialog without prop-drilling. Scoped to a unique event name so
+  // it can't collide with anything else.
+  React.useEffect(() => {
+    const handler = () => openCreate();
+    window.addEventListener("phisig:open-add-event", handler);
+    return () => window.removeEventListener("phisig:open-add-event", handler);
+  }, []);
+
   function openEdit(e: Event) {
     setEditingId(e.id);
     const tz = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
