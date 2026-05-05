@@ -59,7 +59,18 @@ export default async function ParentsPage() {
         </Link>
 
         <div className="relative overflow-hidden rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/60 via-white to-white p-8 sm:p-12 mb-10">
-          <Crest className="absolute -bottom-6 -right-6 h-44 w-44 text-phisig-red opacity-10" />
+          {/* Formal Phi Sigma Kappa coat of arms — sits in the upper-right
+              corner as the brand authority signal for parents reading this
+              page. This is the supplied national heraldic mark. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/coat-of-arms-formal.jpg"
+            alt="Phi Sigma Kappa coat of arms"
+            width={140}
+            height={164}
+            className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"
+            aria-hidden="true"
+          />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-phisig-red/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red shadow-sm">
             <ShieldCheck className="h-3 w-3" /> For Parents &amp; Guardians
           </span>

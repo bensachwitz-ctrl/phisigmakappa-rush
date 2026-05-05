@@ -16,7 +16,18 @@ export function Wordmark({
           className
         )}
       >
-        <Crest className="h-7 w-7 text-phisig-red" />
+        {/* Real modern Phi Sigma Kappa shield logo (the official national mark).
+            Cropped via aspect-square + object-contain to show just the shield —
+            the source image includes "PHI SIGMA KAPPA" text below the shield
+            which we render separately. */}
+        <span className="relative inline-block h-7 w-7 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/phisigmakappa-shield.jpg"
+            alt="Phi Sigma Kappa shield"
+            className="absolute inset-0 h-[170%] w-[170%] -translate-x-[18%] -translate-y-[8%] object-contain"
+          />
+        </span>
         <span className="font-display">ΦΣΚ</span>
         <span className="text-muted-foreground font-normal text-sm">USC</span>
       </span>
@@ -30,12 +41,15 @@ export function Wordmark({
         className
       )}
     >
-      <Crest
-        className={cn(
-          "h-9 w-9",
-          variant === "white" ? "text-white" : "text-phisig-red"
-        )}
-      />
+      {/* Real modern Phi Sig shield — same image cropped to show only the shield. */}
+      <span className="relative inline-block h-9 w-9 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/phisigmakappa-shield.jpg"
+          alt="Phi Sigma Kappa shield"
+          className="absolute inset-0 h-[170%] w-[170%] -translate-x-[18%] -translate-y-[8%] object-contain"
+        />
+      </span>
       <span className="flex flex-col leading-none">
         <span className="text-[11px] uppercase tracking-[0.22em] opacity-70 font-medium">
           Phi Sigma Kappa

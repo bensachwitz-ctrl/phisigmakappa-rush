@@ -222,8 +222,17 @@ export default async function Home({
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
-        <div className="absolute right-[6%] top-[6%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.07] select-none pointer-events-none">
-          <Crest className="h-[280px] w-[280px] text-phisig-red" />
+        <div className="absolute right-[6%] top-[6%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.08] select-none pointer-events-none">
+          {/* Real modern Phi Sigma Kappa shield mark — drifts subtly behind the
+              hero copy as a watermark. opacity-8% so it's a quiet brand
+              presence, not visual competition with the rush headline. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/phisigmakappa-shield.jpg"
+            alt=""
+            className="h-[320px] w-[320px] object-contain"
+            aria-hidden="true"
+          />
         </div>
 
         <div className="container section-y">
@@ -742,6 +751,35 @@ export default async function Home({
                 </li>
               ))}
             </ul>
+
+            {/* Heritage block — the original Phi Sigma Kappa coat of arms in
+                gold-and-red engraving alongside three cardinal-red Greek
+                glyphs. Both pulled from the supplied chapter brand kit. Sits
+                here in the About section so a parent or rushee scrolling for
+                "is this a real chapter" answer gets the visual confirmation
+                of national heritage in one glance. */}
+            <div className="mt-7 rounded-xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/30 via-white to-phisig-red-soft/10 p-4 flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/coat-of-arms-vintage.jpg"
+                alt="Original Phi Sigma Kappa coat of arms — engraved 1873"
+                width={84}
+                height={104}
+                loading="lazy"
+                className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-phisig-red font-semibold">Heritage</p>
+                <p className="mt-1 text-sm font-semibold leading-snug">
+                  One of the oldest Greek letter societies in the country.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  Founded at Massachusetts Agricultural College on March 15, 1873.
+                  Gamma Triton has carried the chapter forward at the University
+                  of South Carolina since 1975.
+                </p>
+              </div>
+            </div>
 
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
               <ContactPill icon={MapPin} label={titleCaseAddress(cfg["contact.address"])} sub={titleCaseAddress(cfg["contact.cityState"])} />

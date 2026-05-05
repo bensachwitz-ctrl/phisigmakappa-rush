@@ -10,6 +10,24 @@ export async function PublicFooter() {
       <div className="container py-10 grid sm:grid-cols-[1.4fr_1fr] items-start gap-6">
         <div>
           <Wordmark variant="compact" />
+          {/* National brand wordmark — discrete affirmation that this is an
+              authorized Phi Sigma Kappa chapter site, not a rogue clone. The
+              chapter wordmark above shows USC; this strip below shows the
+              parent fraternity. */}
+          <div className="mt-4 inline-flex items-center gap-3 rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/phisigmakappa-letters.jpg"
+              alt="Phi Sigma Kappa"
+              width={86}
+              height={32}
+              className="h-6 w-auto"
+              loading="lazy"
+            />
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              National brotherhood · Founded 1873
+            </span>
+          </div>
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
             Phi Sigma Kappa, Gamma Triton chapter at the University of South Carolina.
             Three Cardinal Principles: Brotherhood, Scholarship, Character.
