@@ -105,6 +105,18 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ ok: false, error: "Invalid admin credentials" }, { status: 401 });
     }
+    // SUCCESSFUL LOGIN — clear the failure log for this IP. Without this, an
+    // admin who fat-fingered their password 4 times before nailing it on the
+    // 5th would still be locked out for 15 min on their NEXT login attempt.
+    // Standard practice: any successful auth proves the actor is legitimate,
+    // so the failure counter resets. Best-effort — DB hiccup must not block
+    // the login response.
+    if (ipAddress) {
+      prisma.rushSubmitLog.deleteMany({
+        where: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
+      }).catch(() => {});
+    }
+
     // Single shared admin record — username = the credential. If the legacy "name"
     // field was supplied (older client), prefer it so existing admin Brothers keep
     // their attribution. Otherwise use a stable "Chapter Admin" record.

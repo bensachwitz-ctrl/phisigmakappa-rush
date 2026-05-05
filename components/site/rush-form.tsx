@@ -354,7 +354,7 @@ function IntroStep({ onStart }: { onStart: () => void }) {
         <Sparkles className="h-7 w-7" />
       </div>
       <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-        Sixty seconds. Four questions.
+        Sixty seconds. A few quick questions.
       </h3>
       <p className="mt-2 text-xs uppercase tracking-[0.18em] text-phisig-red font-semibold">
         Fall Rush 2026 · Interest list

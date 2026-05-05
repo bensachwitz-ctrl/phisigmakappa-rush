@@ -25,7 +25,11 @@ export const DEFAULTS = {
   "spotlight.slug": "DXzzTaFjSyj",
   "spotlight.name": "Michael McCarthy",
   "spotlight.role": "Freshman · Philanthropy Chair",
-  "spotlight.month": "April",
+  // Default empty so a stale "April" label never ships in production. The
+  // page suppresses the month chip when this is blank — so until the rush
+  // chair updates it, the spotlight shows the brother without a month
+  // attribution. Better than ?WRONG MONTH? on May 1.
+  "spotlight.month": "",
   "spotlight.bio":
     "Michael joined as a freshman and within a semester took over Philanthropy Chair, transforming the chapter's Special Olympics partnership.",
 
@@ -102,17 +106,18 @@ export const DEFAULTS = {
 
   // Contact — every public-facing email, address, and social link comes from here.
   "contact.rushEmail": "rush@phisig-usc.com",
-  // Default is generic role so the live site doesn't 404-feel; admin should
-  // overwrite with the real human's name from /admin/settings → Contact &amp; social.
-  "contact.advisorName": "Chapter Advisor",
-  "contact.advisorTitle": "Alumni Chapter Advisor · Gamma Triton",
+  // Default is a friendly placeholder until the admin sets the real name.
+  // "Our Chapter Advisor" reads as a role rather than an unfilled template
+  // field — even before the chapter sets the actual person.
+  "contact.advisorName": "Our Chapter Advisor",
+  "contact.advisorTitle": "Alumni Advisor · Gamma Triton",
   "contact.advisorEmail": "advisor@phisig-usc.com",
   "contact.rushPhone": "",
-  "contact.address": "800 Lincoln St",
-  "contact.cityState": "Columbia, SC 29201",
+  "contact.address": "1525 College Street",
+  "contact.cityState": "Columbia, SC 29208",
   "contact.instagramHandle": "@phisig_usc",
   "contact.instagramUrl": "https://www.instagram.com/phisig_usc/",
-  "contact.mapsUrl": "https://maps.google.com/?q=800+Lincoln+St+Columbia+SC",
+  "contact.mapsUrl": "https://maps.google.com/?q=1525+College+St+Columbia+SC+29208",
 
   // Philanthropy — beneficiary + concrete dollars raised. Used in highlights, testimonial, etc.
   "philanthropy.beneficiary": "Special Olympics South Carolina",
@@ -121,8 +126,11 @@ export const DEFAULTS = {
   "philanthropy.raisedAmount": "$700",
   "philanthropy.raisedTotal": "$25k+",
 
-  // Anti-hazing — chapter affirmation + national hotline (visible on About + Privacy)
-  "antiHazing.hotline": "1-800-NOT-HAZE",
+  // Anti-hazing — chapter affirmation + national hotline (visible on About + Privacy).
+  // The REAL National Anti-Hazing Hotline number is 1-888-NOT-HAZE (888-668-4293) —
+  // older listings use 1-800 by mistake; that's wrong and embarrassing on a hazing
+  // page. Source: hazingprevention.org/help.
+  "antiHazing.hotline": "1-888-NOT-HAZE",
   "antiHazing.hotlineUrl": "https://hazingprevention.org/help/",
 
   // Privacy

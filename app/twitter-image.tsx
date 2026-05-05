@@ -5,6 +5,11 @@ export const alt = "Phi Sigma Kappa @ USC — Fall Rush 2026";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Twitter share card. Shares the same layout as opengraph-image.tsx — keep
+// in lockstep so a fix in one updates both. Watermark moved to corner well
+// above the title band (was overlapping subtitle + stat row in the rendered
+// PNG); pill rendered with explicit gap (was missing entirely from output
+// because margin-auto over-claimed space).
 export default async function TwitterImage() {
   return new ImageResponse(
     (
@@ -14,11 +19,12 @@ export default async function TwitterImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
+          justifyContent: "space-between",
           background:
             "linear-gradient(135deg, #C8102E 0%, #A20D26 50%, #6e0918 100%)",
           color: "#FFFFFF",
           fontFamily: "Inter, system-ui, sans-serif",
-          padding: 80,
+          padding: 64,
           position: "relative",
         }}
       >
@@ -35,11 +41,11 @@ export default async function TwitterImage() {
         <div
           style={{
             position: "absolute",
-            right: -40,
-            top: -60,
-            fontSize: 540,
+            right: -60,
+            top: -180,
+            fontSize: 360,
             fontWeight: 800,
-            opacity: 0.12,
+            opacity: 0.10,
             color: "#FFFFFF",
             letterSpacing: -8,
             fontFamily: "Georgia, serif",
@@ -50,7 +56,7 @@ export default async function TwitterImage() {
           ΦΣΚ
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 16, position: "relative" }}>
           <div
             style={{
               width: 72,
@@ -78,7 +84,7 @@ export default async function TwitterImage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", marginBottom: "auto", position: "relative" }}>
+        <div style={{ display: "flex", flexShrink: 0, flexDirection: "column", gap: 24, position: "relative" }}>
           <div
             style={{
               display: "flex",
@@ -93,12 +99,12 @@ export default async function TwitterImage() {
           >
             Fall Rush 2026 — Interest list now open
           </div>
-          <div style={{ display: "flex", fontSize: 110, fontWeight: 700, lineHeight: 1.02, marginTop: 24, letterSpacing: -3 }}>
+          <div style={{ display: "flex", fontSize: 96, fontWeight: 700, lineHeight: 1.04, letterSpacing: -3 }}>
             The chapter that built the men of Carolina.
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: 22, position: "relative" }}>
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: 22, position: "relative" }}>
           <div style={{ display: "flex", gap: 28 }}>
             <span style={{ display: "flex" }}>60+ brothers</span>
             <span style={{ display: "flex", opacity: 0.5 }}>·</span>

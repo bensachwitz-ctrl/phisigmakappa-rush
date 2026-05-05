@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 const POSTS: { slug: string; caption: string; tag: string; objectPosition?: string }[] = [
   { slug: "DUyvfpokpy6", caption: "Polar Plunge raised $700 for Special Olympics SC", tag: "Philanthropy", objectPosition: "center 65%" },
   { slug: "DXHwOJCkUbi", caption: "Annual paintball at Trigger Tyme", tag: "Brotherhood", objectPosition: "center 80%" },
-  { slug: "DRxIVRXkYCn", caption: "No Shave November — $1,600 raised for Movember (men's mental health)", tag: "Philanthropy", objectPosition: "center 80%" },
+  { slug: "DRxIVRXkYCn", caption: "No Shave November — $1,600 raised for Movember (men's health & mental-health awareness)", tag: "Philanthropy", objectPosition: "center 80%" },
   { slug: "DWmioxGCaBG", caption: "Chapter formal — third-party vendor, sober transportation", tag: "Formals", objectPosition: "center 50%" },
-  { slug: "DU80cXJidhH", caption: "Dry fundraiser dinner — donations to L&L Society", tag: "Service" },
+  { slug: "DU80cXJidhH", caption: "Dry fundraiser dinner — donations to the Leukemia & Lymphoma Society", tag: "Service" },
   { slug: "DUBvmpfktF3", caption: "Above-average chapter GPA", tag: "Scholarship" },
   { slug: "DXzzTaFjSyj", caption: "Brother of the Month spotlight", tag: "Leadership", objectPosition: "center 40%" },
   { slug: "DW9-fTTibRF", caption: "Welcome to our newest brothers", tag: "New members", objectPosition: "center 45%" },

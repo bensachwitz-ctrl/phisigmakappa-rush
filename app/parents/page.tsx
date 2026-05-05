@@ -4,7 +4,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
-import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
+import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import {
   ShieldCheck, ArrowLeft, Mail, Phone, MapPin, GraduationCap,
   HandHeart, Lock, FileText, Users, Heart, Building2, ArrowRight,
@@ -103,7 +103,7 @@ export default async function ParentsPage() {
               )}
               <li className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-phisig-red" />
-                {cfg["contact.address"]}, {cfg["contact.cityState"]}
+                {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
               </li>
             </ul>
             {advisorPlaceholder && (

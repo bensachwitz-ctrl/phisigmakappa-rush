@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
+import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -261,10 +261,10 @@ export default async function Home({
 
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" /> {cfg["contact.address"]}, {cfg["contact.cityState"]}
+                <MapPin className="h-3.5 w-3.5" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5" /> Reply within 24h
+                <Zap className="h-3.5 w-3.5" /> Reply within 24 hours
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5" /> Gamma Triton chapter
@@ -397,7 +397,7 @@ export default async function Home({
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">Register your interest</h2>
             <p className="mt-2 text-muted-foreground">
-              Three steps. Sixty seconds. The Fall '26 rush schedule drops in August —
+              Sixty seconds, four short steps. The Fall '26 rush schedule drops in August —
               we'll text and email everyone on this list the moment it's live.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -515,21 +515,28 @@ export default async function Home({
               Full Fall &apos;26 rush schedule drops in August. Get on the interest list above —
               we&apos;ll text everyone the second it&apos;s live. Private events go out by invitation only.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <a
-                href="webcal://phisigmakappa.vercel.app/api/events.ics"
-                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
-              >
-                <Calendar className="h-3 w-3" /> Subscribe in Apple Calendar
-              </a>
-              <a
-                href="/api/events.ics"
-                download="phisigmakappa-rush.ics"
-                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
-              >
-                <Calendar className="h-3 w-3" /> Download .ics
-              </a>
-            </div>
+            {/* Hide calendar-subscribe CTAs while the rush schedule hasn't
+                been published yet. A user clicking through to a 0-event .ics
+                feed gets nothing and feels like the site is broken. Once the
+                rush chair adds the first public event in /admin/events, both
+                CTAs appear automatically (nextEvent goes non-null). */}
+            {nextEvent && (
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="webcal://phisigmakappa.vercel.app/api/events.ics"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+                >
+                  <Calendar className="h-3 w-3" /> Subscribe in Apple Calendar
+                </a>
+                <a
+                  href="/api/events.ics"
+                  download="phisigmakappa-rush.ics"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+                >
+                  <Calendar className="h-3 w-3" /> Download .ics
+                </a>
+              </div>
+            )}
           </div>
         </div>
         <div className="max-w-3xl">
@@ -627,7 +634,7 @@ export default async function Home({
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Star className="h-3 w-3" /> {cfg["spotlight.month"]} · Brother of the Month
+                  <Star className="h-3 w-3" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}Brother of the Month
                 </span>
                 <p className="mt-2 text-white text-xl font-semibold tracking-tight">
                   {cfg["spotlight.name"]}
@@ -736,7 +743,7 @@ export default async function Home({
             </ul>
 
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <ContactPill icon={MapPin} label={cfg["contact.address"]} sub={cfg["contact.cityState"]} />
+              <ContactPill icon={MapPin} label={titleCaseAddress(cfg["contact.address"])} sub={titleCaseAddress(cfg["contact.cityState"])} />
               <ContactPill icon={Mail} label={cfg["contact.rushEmail"]} sub="Rush questions" />
               <ContactPill icon={Instagram} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
             </div>
@@ -866,7 +873,7 @@ export default async function Home({
           >
             <img
               src="/api/photo/DRxIVRXkYCn"
-              alt="Phi Sigma Kappa brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's mental health"
+              alt="Phi Sigma Kappa brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's health and mental health awareness"
               loading="lazy"
               width={800}
               height={640}
@@ -888,10 +895,10 @@ export default async function Home({
               <MapPin className="h-3 w-3" /> Where we live
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
-              The house at {cfg["contact.address"]}.
+              The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The Phi Sigma Kappa chapter house sits at <span className="text-foreground font-medium">{cfg["contact.address"]}</span>, walking
+              The Phi Sigma Kappa chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, walking
               distance to Russell House and the Horseshoe. It&apos;s where the cookouts,
               chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
               for the first time.
@@ -906,8 +913,8 @@ export default async function Home({
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <MapPin className="h-3 w-3" /> Address
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">{cfg["contact.address"]}</p>
-                <p className="text-xs text-muted-foreground">{cfg["contact.cityState"]}</p>
+                <p className="mt-1.5 text-sm font-semibold">{titleCaseAddress(cfg["contact.address"])}</p>
+                <p className="text-xs text-muted-foreground">{titleCaseAddress(cfg["contact.cityState"])}</p>
               </Link>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
@@ -929,7 +936,7 @@ export default async function Home({
                   <Mail className="h-3 w-3" /> Rush questions
                 </div>
                 <p className="mt-1.5 text-sm font-semibold">{cfg["contact.rushEmail"]}</p>
-                <p className="text-xs text-muted-foreground">We reply within 24h</p>
+                <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
               </Link>
               <Link
                 href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
@@ -967,7 +974,7 @@ export default async function Home({
               Get on the interest list.
             </h2>
             <p className="mt-3 text-white/85 max-w-md text-base sm:text-lg">
-              Three questions. Sixty seconds. We'll text the second the schedule drops in August.
+              Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild size="lg" variant="secondary" className="group">

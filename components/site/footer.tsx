@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
-import { cleanUrl, cleanMailto, cleanTel } from "@/lib/utils";
+import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
@@ -23,7 +23,7 @@ export async function PublicFooter() {
         </div>
         <div className="text-xs text-muted-foreground space-y-1 text-left sm:text-right">
           <p>© {new Date().getFullYear()} Phi Sigma Kappa, Gamma Triton at USC</p>
-          <p>{cfg["contact.address"]} · {cfg["contact.cityState"]}</p>
+          <p>{titleCaseAddress(cfg["contact.address"])} · {titleCaseAddress(cfg["contact.cityState"])}</p>
           {cfg["contact.rushPhone"] && (
             <p>
               <a href={cleanTel(cfg["contact.rushPhone"])} className="hover:text-foreground transition-colors">

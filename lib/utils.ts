@@ -61,6 +61,41 @@ export function formatTime(d: Date | string) {
 }
 
 /**
+ * Idiot-proof title-case for short admin-entered strings (chapter address,
+ * city/state, names). Capitalizes the first letter of each word, lowercases
+ * the rest, but preserves common all-caps tokens like state codes ("SC", "NC")
+ * and Roman-numeral suffixes ("II", "III", "IV") — so "1525 college street, columbia, sc"
+ * becomes "1525 College Street, Columbia, SC" without breaking edge cases.
+ *
+ * Defends against admin pasting all-lowercase addresses from typing tests or
+ * autofill — the live site renders title-cased even if the cfg row has bad
+ * casing.
+ */
+const ROMAN_SUFFIXES = new Set(["II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]);
+const STATE_CODES = new Set([
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID",
+  "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
+  "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK",
+  "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+  "WI", "WY", "DC",
+]);
+export function titleCaseAddress(input: string | undefined | null): string {
+  if (!input) return "";
+  return String(input)
+    .split(/(\s+|,)/)
+    .map((tok) => {
+      if (/^\s+$/.test(tok) || tok === ",") return tok;
+      const upper = tok.toUpperCase();
+      if (STATE_CODES.has(upper) || ROMAN_SUFFIXES.has(upper)) return upper;
+      // Numbers stay as-is.
+      if (/^\d+$/.test(tok)) return tok;
+      // Mixed alphanumeric (e.g. "29208"): keep digits; capitalize letters.
+      return tok.charAt(0).toUpperCase() + tok.slice(1).toLowerCase();
+    })
+    .join("");
+}
+
+/**
  * Sanitize a config-driven URL or email for safe rendering inside an `href`.
  *
  * Live audit caught two recurring bugs traced to admin-pasted values that had

@@ -14,11 +14,12 @@ export default async function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
+          justifyContent: "space-between",
           background:
             "linear-gradient(135deg, #C8102E 0%, #A20D26 50%, #6e0918 100%)",
           color: "#FFFFFF",
           fontFamily: "Inter, system-ui, sans-serif",
-          padding: 80,
+          padding: 64,
           position: "relative",
         }}
       >
@@ -34,15 +35,18 @@ export default async function Image() {
           }}
         />
 
-        {/* Watermark Greek letters */}
+        {/* Watermark Greek letters — moved to top-right corner well above the
+            text columns and shrunk so the glyph never crosses readable lines.
+            Old version (fontSize 540, top -60) overlapped the subtitle and
+            stat row simultaneously and made the share image hard to read. */}
         <div
           style={{
             position: "absolute",
-            right: -40,
-            top: -60,
-            fontSize: 540,
+            right: -60,
+            top: -180,
+            fontSize: 360,
             fontWeight: 800,
-            opacity: 0.12,
+            opacity: 0.10,
             color: "#FFFFFF",
             letterSpacing: -8,
             fontFamily: "Georgia, serif",
@@ -54,7 +58,7 @@ export default async function Image() {
         </div>
 
         {/* TOP: brand row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 16, position: "relative" }}>
           <div
             style={{
               width: 72,
@@ -90,8 +94,10 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* MIDDLE: headline */}
-        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", marginBottom: "auto", position: "relative" }}>
+        {/* MIDDLE: headline. Use explicit flex gap (not margin auto) so the
+            "Fall Rush 2026" pill renders deterministically — older code lost
+            the pill at render time when margin auto over-claimed space. */}
+        <div style={{ display: "flex", flexShrink: 0, flexDirection: "column", gap: 24, position: "relative" }}>
           <div
             style={{
               display: "flex",
@@ -109,10 +115,9 @@ export default async function Image() {
           <div
             style={{
               display: "flex",
-              fontSize: 110,
+              fontSize: 96,
               fontWeight: 700,
-              lineHeight: 1.02,
-              marginTop: 24,
+              lineHeight: 1.04,
               letterSpacing: -3,
             }}
           >
@@ -124,6 +129,7 @@ export default async function Image() {
         <div
           style={{
             display: "flex",
+            flexShrink: 0,
             alignItems: "center",
             justifyContent: "space-between",
             width: "100%",

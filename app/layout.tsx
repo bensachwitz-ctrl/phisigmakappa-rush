@@ -86,10 +86,14 @@ const STRUCTURED_DATA = {
       },
       address: {
         "@type": "PostalAddress",
-        streetAddress: "800 Lincoln Street",
+        // Stays in sync with the visible "Where we live" address in
+        // lib/site-config.ts → "contact.address". Mismatch between visible
+        // address and JSON-LD address gets the chapter the wrong pin in
+        // Google's Knowledge Panel.
+        streetAddress: "1525 College Street",
         addressLocality: "Columbia",
         addressRegion: "SC",
-        postalCode: "29201",
+        postalCode: "29208",
         addressCountry: "US",
       },
       sameAs: [
