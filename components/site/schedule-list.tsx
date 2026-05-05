@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CalendarDays, MapPin, Shirt, Lock } from "lucide-react";
+import { CalendarDays, MapPin, Shirt } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/utils";
 
 export async function ScheduleList() {
@@ -75,16 +74,13 @@ export async function ScheduleList() {
                   </div>
                 </div>
                 <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base sm:text-lg font-semibold leading-tight">
-                      {e.name}
-                    </h3>
-                    {e.isPrivate && (
-                      <Badge className="bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200">
-                        <Lock className="h-3 w-3 mr-1" /> Invite only
-                      </Badge>
-                    )}
-                  </div>
+                  {/* Dead code removed: the WHERE filter `isPrivate: false`
+                      above already excludes invite-only events from this
+                      public list, so the "Invite only" badge below was
+                      unreachable. Keep just the title. */}
+                  <h3 className="text-base sm:text-lg font-semibold leading-tight">
+                    {e.name}
+                  </h3>
                   {e.description && (
                     <p className="mt-1 text-sm text-muted-foreground">
                       {e.description}

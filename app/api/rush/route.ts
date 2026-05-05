@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enrichRushee } from "@/lib/enrich";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,10 +136,14 @@ export async function POST(req: Request) {
           await prisma.rushSubmitLog.create({
             data: { ipAddress, status: "RATE_LIMITED" },
           }).catch(() => {});
+          // Pull rush email from cfg so a chapter that changes their address
+          // in admin doesn't dead-letter rate-limited rushees to the default.
+          const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+          const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
           return NextResponse.json(
             {
               ok: false,
-              error: "Too many submissions. If this isn't a typo, email rush@phisig-usc.com and we'll get you on the list.",
+              error: `Too many submissions. If this isn't a typo, email ${rushEmail} and we'll get you on the list.`,
             },
             { status: 429, headers: { "Retry-After": "3600" } },
           );

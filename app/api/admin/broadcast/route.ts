@@ -127,7 +127,18 @@ export async function POST(req: Request) {
             to: r.email,
             subject: subject || "Phi Sigma Kappa USC — Chapter Update",
             text: msg,
-            html: `<p>${msg.replace(/\n/g, "<br/>")}</p>`,
+            // HTML-escape the admin-typed message before HTML-interpolating
+            // into the email body. Admin-only field, but defense-in-depth —
+            // a malicious admin shouldn't be able to ship arbitrary HTML
+            // (cloaked links, tracking pixels) to brothers/rushees via the
+            // chapter's verified Resend domain.
+            html: `<p>${msg
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#39;")
+              .replace(/\n/g, "<br/>")}</p>`,
           });
           sentEmail++;
         } catch { /* skip */ }

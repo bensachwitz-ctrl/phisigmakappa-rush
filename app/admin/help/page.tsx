@@ -56,8 +56,8 @@ const SECTIONS = [
     bullets: [
       "Click Add brother to add a new member — name, position, year, major, pledge class, contact info.",
       "Click the Dues badge on any card to toggle paid / unpaid (one-click).",
-      "Service & study hours stack — log hours per brother as they're earned.",
-      "Stats at the top show total brothers, % dues paid, e-board count, total hours.",
+      "Service and study hours show on each card; bulk-update by editing brothers individually.",
+      "Stats at the top show total brothers and % dues paid.",
       "Click phone or email on any card to call / open mail.",
     ],
   },
@@ -67,15 +67,17 @@ const SECTIONS = [
     body: (
       <>
         The <Link href="/admin/events" className="text-phisig-red hover:underline">Events</Link> tab feeds the public schedule
-        on the homepage. Public events show on the rush page; private (invite-only) events only appear in admin.
+        on the homepage. Public events show on the rush page; invite-only events stay hidden from the public site
+        but appear on the brother calendar.
       </>
     ),
     bullets: [
-      "Click Add event to create — name, start/end time, location, dress code, description, public or private.",
-      "Click Edit on any event to update dates, times, location, etc. — the homepage updates instantly.",
-      "Click Add Fall rush template to seed the standard 4-week schedule (cookout / dry tailgate / paintball / service dinner / formal / Bid Night).",
+      "Click Add event to create — name, start/end time, location, dress code, description, category, and public/invite-only.",
+      "Pick a category (Rush / Date / Brotherhood / Chapter / Social / Other) — drives the color stripe brothers see on the calendar.",
+      "Toggle Invite-only to hide from the public site while keeping it visible to logged-in brothers.",
+      "Click Edit on any event to update — RSVPs are preserved on edit.",
       "Click Attendance on any event to mark who showed up — search PNMs and toggle check-marks.",
-      "Click Clear all to wipe the schedule and start fresh (use with care).",
+      "Brothers RSVP from /admin/events — Going / Maybe / Not going. Click an event to see the full breakdown including who hasn't responded yet.",
     ],
   },
   {
@@ -132,10 +134,10 @@ const COMMON_TASKS = [
     title: "Drop the rush schedule",
     steps: [
       "Go to Events tab.",
-      "If empty: click Add Fall rush template — seeds the 6 typical events anchored to next Sunday.",
-      "Click Edit on each one to set the real date/time/location.",
-      "Toggle Invite-only on the formal and Bid Night so they don't show on the public page.",
-      "Done — public homepage schedule updates instantly.",
+      "Click Add event for each rush event — fill in name, date/time, location, dress code, and category (Rush / Brotherhood / Social / etc.).",
+      "Toggle Invite-only on the formal and Bid Night so they don't appear on the public page.",
+      "Brothers will see all events (public + invite-only) on their calendar with RSVP buttons.",
+      "Public homepage schedule updates instantly with each new event.",
     ],
   },
   {

@@ -40,7 +40,7 @@ export default async function AdminDashboard() {
     {
       label: "Real chapter advisor name",
       ok: !!cfg["contact.advisorName"] && cfg["contact.advisorName"] !== "Chapter Advisor",
-      hint: "Replace the “Chapter Advisor” placeholder so parents can identify a real adult.",
+      hint: 'Replace the "Chapter Advisor" placeholder so parents can identify a real adult.',
       href: "/admin/settings#contact",
     },
     {
@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
     {
       label: "E-board roster (5 slots)",
       ok: [1, 2, 3, 4, 5].every((n) => !!cfg[`eboard.${n}.name`] && !!cfg[`eboard.${n}.role`]),
-      hint: "Fill every slot or hide the section so the public site doesn’t look incomplete.",
+      hint: "Fill every slot or hide the section so the public site doesn't look incomplete.",
       href: "/admin/settings",
     },
     {

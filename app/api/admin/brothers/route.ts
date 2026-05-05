@@ -6,6 +6,18 @@ import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Public-safe brother fields — used in select on every response so passwordHash
+// never ships to the client (audit-flagged HIGH risk on POST + PATCH paths;
+// GET was already safe). Helper centralizes the column list.
+const PUBLIC_BROTHER_SELECT = {
+  id: true, name: true, email: true, phone: true,
+  year: true, major: true, position: true, pledgeClass: true,
+  bio: true, headshotUrl: true,
+  duesPaid: true, serviceHours: true, studyHours: true,
+  role: true,
+  createdAt: true, updatedAt: true, lastSeen: true,
+} as const;
+
 const Schema = z.object({
   name: z.string().min(2).max(120),
   email: z.string().email().max(160).optional().or(z.literal("")),
@@ -31,15 +43,7 @@ export async function GET() {
   // never need it client-side.
   const brothers = await prisma.brother.findMany({
     orderBy: { name: "asc" },
-    select: {
-      id: true, name: true, email: true, phone: true,
-      year: true, major: true, position: true, pledgeClass: true,
-      bio: true, headshotUrl: true,
-      duesPaid: true, serviceHours: true, studyHours: true,
-      role: true,
-      createdAt: true, updatedAt: true, lastSeen: true,
-      // passwordHash intentionally omitted
-    },
+    select: PUBLIC_BROTHER_SELECT,
   });
   return NextResponse.json({ brothers });
 }
@@ -55,7 +59,10 @@ export async function POST(req: Request) {
     Object.entries(parsed.data).map(([k, v]) => [k, v === "" ? null : v])
   );
   try {
-    const created = await prisma.brother.create({ data: data as any });
+    const created = await prisma.brother.create({
+      data: data as any,
+      select: PUBLIC_BROTHER_SELECT,
+    });
     return NextResponse.json({ ok: true, brother: created });
   } catch (err: any) {
     if (err?.code === "P2002") {
@@ -87,7 +94,11 @@ export async function PATCH(req: Request) {
   const data = Object.fromEntries(
     Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v])
   );
-  const updated = await prisma.brother.update({ where: { id }, data: data as any });
+  const updated = await prisma.brother.update({
+    where: { id },
+    data: data as any,
+    select: PUBLIC_BROTHER_SELECT,
+  });
   return NextResponse.json({ ok: true, brother: updated });
 }
 

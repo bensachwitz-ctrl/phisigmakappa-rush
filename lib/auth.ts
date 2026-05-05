@@ -144,3 +144,50 @@ export async function getCurrentSession(): Promise<{ brother: any; isAdmin: bool
 }
 
 export const ADMIN_COOKIE = COOKIE_NAME;
+
+/**
+ * CSRF defense — Origin / Referer allowlist for state-changing admin routes.
+ *
+ * SameSite=Lax on the session cookie blocks cross-site XHR cookie-attachment
+ * but does NOT cover top-level form-POST navigations or Chromium's "Lax+POST"
+ * 2-minute grace window. Combined with the universal CORS-permissive nature
+ * of Vercel's static-asset edge, an admin clicking a malicious link within
+ * minutes of login could fire a forged top-level POST. Belt-and-suspenders
+ * defense: every state-changing handler should call this and return 403 if
+ * the request isn't from our own origin.
+ *
+ * Returns true if the request looks same-origin OR has no Origin/Referer at
+ * all (curl, server-to-server). Returns false only when there's an explicit
+ * cross-origin signal — i.e. Origin or Referer pointing to a foreign host.
+ */
+export function isSameOrigin(req: Request): boolean {
+  const expected = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  let expectedHost: string;
+  try {
+    expectedHost = new URL(expected).host;
+  } catch {
+    return true; // Misconfigured env — fail open to keep prod working.
+  }
+  const origin = req.headers.get("origin");
+  if (origin) {
+    try {
+      const o = new URL(origin).host;
+      return o === expectedHost;
+    } catch {
+      return false;
+    }
+  }
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      const r = new URL(referer).host;
+      return r === expectedHost;
+    } catch {
+      return false;
+    }
+  }
+  // No Origin and no Referer — typically server-to-server, curl, or
+  // Vercel cron. Trust other auth gates (cookie HMAC, signature checks,
+  // etc.) to do their job.
+  return true;
+}

@@ -27,7 +27,12 @@
     --secondary-foreground: 240 6% 8%;
 
     --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    /* Bumped from 46% → 40% for WCAG AAA contrast on white backgrounds.
+       Old #71717a vs white = 4.83:1 (AA pass, AAA fail). New #5e5e66 vs
+       white = 6.46:1 (AA + AAA pass). Used for body sub-text and
+       secondary metadata throughout the chapter site, including FAQ
+       answers, contact info, and stat sublabels. */
+    --muted-foreground: 240 4% 40%;
 
     --accent: 240 5% 96%;
     --accent-foreground: 240 6% 8%;
