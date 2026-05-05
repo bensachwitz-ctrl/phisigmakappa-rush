@@ -22,7 +22,7 @@ export default async function SettingsPage() {
         <Link
           href="/"
           target="_blank"
-          rel="noreferrer"
+          rel="noreferrer noopener"
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
         >
           <ExternalLink className="h-3.5 w-3.5 text-phisig-red" /> View live site

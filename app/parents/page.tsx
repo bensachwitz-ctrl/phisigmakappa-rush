@@ -130,7 +130,7 @@ export default async function ParentsPage() {
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-phisig-red" />
-                <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
+                <a href="tel:+18886684293" className="text-phisig-red hover:underline">
                   National anti-hazing hotline · {cfg["antiHazing.hotline"]}
                 </a>
               </li>
@@ -140,9 +140,29 @@ export default async function ParentsPage() {
                   {cfg["contact.advisorEmail"]} (advisor, anonymous OK)
                 </a>
               </li>
+              <li className="flex items-start gap-2">
+                <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" />
+                <span>
+                  <a
+                    href="https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-phisig-red hover:underline"
+                  >
+                    USC Office of Fraternity &amp; Sorority Life
+                  </a>
+                  <span className="text-muted-foreground"> · the school's escalation channel above any chapter</span>
+                </span>
+              </li>
               <li className="flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5 text-phisig-red" />
-                <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
+                <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                  hazingprevention.org · 24/7 reporting + resources
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-phisig-red" />
+                <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
                   phisigmakappa.org · National HQ
                 </a>
               </li>

@@ -12,7 +12,7 @@ async function main() {
         name: "Meet the Brothers — Cookout",
         description:
           "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, and get a feel for the chapter.",
-        location: "Phi Sigma Kappa House — 800 Lincoln St",
+        location: "Phi Sigma Kappa House — 1525 College St",
         dressCode: "Casual (shorts/t-shirt)",
         startsAt: new Date(new Date().setDate(new Date().getDate() + 2)),
       },

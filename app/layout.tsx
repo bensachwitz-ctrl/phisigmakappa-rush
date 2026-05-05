@@ -165,6 +165,13 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <link rel="manifest" href="/manifest.webmanifest" />
+        {/* Preconnect to Instagram CDN — every IG photo on the homepage proxies
+            through /api/photo/[slug] which ultimately fetches from these
+            origins. Pre-warming the TLS handshake on initial paint trims a few
+            hundred ms off the first IG tile's TTFB. */}
+        <link rel="preconnect" href="https://www.instagram.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://scontent.cdninstagram.com" />
         <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
       </head>
       <body>

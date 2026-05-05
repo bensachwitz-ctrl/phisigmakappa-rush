@@ -115,7 +115,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; body: string }> = {
 
 const SMS_TEMPLATES: Record<string, string> = {
   blank: "",
-  reminder: "Reminder: rush event tonight at 7 PM at the Phi Sig house, 800 Lincoln. Hope to see you there.",
+  reminder: "Reminder: rush event tonight at 7 PM at the Phi Sig house, 1525 College St. Hope to see you there.",
   invite: "We'd love to have you at our private dinner this Friday. Reply YES to confirm your seat.",
   bid: "Phi Sig USC: we're extending you a bid. Bid night is Thursday 7 PM at the house. Reply YES to accept.",
 };

@@ -272,7 +272,7 @@ export default async function Home({
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
-                rel="noreferrer"
+                rel="noreferrer noopener"
                 className="inline-flex items-center gap-1.5 text-phisig-red hover:underline"
               >
                 <Instagram className="h-3.5 w-3.5" /> {cfg["contact.instagramHandle"]}
@@ -450,7 +450,7 @@ export default async function Home({
           <Link
             href="https://www.instagram.com/phisig_usc/"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
           >
             <Instagram className="h-4 w-4" /> Follow @phisig_usc for the latest
@@ -620,7 +620,7 @@ export default async function Home({
             <a
               href={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
               target="_blank"
-              rel="noreferrer"
+              rel="noreferrer noopener"
               className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary lift shadow-xl shadow-phisig-red/10 block"
             >
               <img
@@ -758,7 +758,7 @@ export default async function Home({
                     Concerns can be reported anonymously to{" "}
                     <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
                     <a className="text-phisig-red hover:underline" href={cleanMailto(cfg["contact.advisorEmail"])}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
-                    <a className="text-phisig-red hover:underline font-medium" href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer">{cfg["antiHazing.hotline"]}</a>.
+                    <a className="text-phisig-red hover:underline font-medium" href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener">{cfg["antiHazing.hotline"]}</a>.
                   </p>
                 </div>
               </div>
@@ -769,7 +769,7 @@ export default async function Home({
             <a
               href={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `https://www.instagram.com/p/${cfg["about.slug"]}/`}
               target="_blank"
-              rel="noreferrer"
+              rel="noreferrer noopener"
               className="aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary tilt shadow-xl block relative"
             >
               <img
@@ -827,7 +827,7 @@ export default async function Home({
                 <Link
                   href={cleanUrl(cfg["contact.instagramUrl"])}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noreferrer noopener"
                   className="text-phisig-red hover:underline font-medium"
                 >
                   {cfg["contact.instagramHandle"]}
@@ -868,7 +868,7 @@ export default async function Home({
           <a
             href="https://www.instagram.com/p/DRxIVRXkYCn/"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             className="relative aspect-[5/4] rounded-2xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
           >
             <img
@@ -907,7 +907,7 @@ export default async function Home({
               <Link
                 href={cleanUrl(cfg["contact.mapsUrl"])}
                 target="_blank"
-                rel="noreferrer"
+                rel="noreferrer noopener"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
@@ -919,7 +919,7 @@ export default async function Home({
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
-                rel="noreferrer"
+                rel="noreferrer noopener"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
@@ -941,7 +941,7 @@ export default async function Home({
               <Link
                 href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
                 target="_blank"
-                rel="noreferrer"
+                rel="noreferrer noopener"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
@@ -1044,7 +1044,7 @@ function PostTile({
     <a
       href={linkHref}
       target="_blank"
-      rel="noreferrer"
+      rel="noreferrer noopener"
       aria-label={`View ${caption} on Instagram`}
       className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
     >

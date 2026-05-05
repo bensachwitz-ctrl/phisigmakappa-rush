@@ -134,11 +134,11 @@ export default async function PrivacyPage() {
               {cfg["contact.advisorEmail"]}
             </a>
             , via the national anti-hazing hotline{" "}
-            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">
+            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
               {cfg["antiHazing.hotline"]}
             </a>
             , or through{" "}
-            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline">
+            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
               phisigmakappa.org
             </a>
             .

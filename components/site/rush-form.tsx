@@ -311,7 +311,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
                 <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
                   {SMS_EXPRESS_CONSENT}{" "}
                   See our{" "}
-                  <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">
+                  <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
                     privacy policy
                   </a>.
                 </span>
@@ -436,7 +436,7 @@ function ContactStep({
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
-        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
+        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
 
       {/* Age attestation — separate one-tap toggle so the consent record is
@@ -779,7 +779,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
         </p>
         {receiptId && (
           <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono">
-            Consent receipt: <a className="hover:text-phisig-red" href={`/api/consent/${receiptId}`} target="_blank" rel="noreferrer">{receiptId.slice(0, 12)}…</a>
+            Consent receipt: <a className="hover:text-phisig-red" href={`/api/consent/${receiptId}`} target="_blank" rel="noreferrer noopener">{receiptId.slice(0, 12)}…</a>
           </p>
         )}
 
@@ -803,7 +803,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
             <Send className="h-4 w-4" /> Tell your buddies
           </Button>
           <Button asChild variant="outline">
-            <a href="https://www.instagram.com/phisig_usc/" target="_blank" rel="noreferrer">
+            <a href="https://www.instagram.com/phisig_usc/" target="_blank" rel="noreferrer noopener">
               Follow @phisig_usc
             </a>
           </Button>

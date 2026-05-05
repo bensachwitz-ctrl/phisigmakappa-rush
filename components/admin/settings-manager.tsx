@@ -226,10 +226,10 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             <Input value={values["contact.advisorEmail"] || ""} onChange={(e) => set("contact.advisorEmail", e.target.value)} placeholder="advisor@phisig-usc.com" />
           </Field>
           <Field label="Address">
-            <Input value={values["contact.address"] || ""} onChange={(e) => set("contact.address", e.target.value)} placeholder="800 Lincoln St" />
+            <Input value={values["contact.address"] || ""} onChange={(e) => set("contact.address", e.target.value)} placeholder="1525 College St" />
           </Field>
           <Field label="City / state / zip">
-            <Input value={values["contact.cityState"] || ""} onChange={(e) => set("contact.cityState", e.target.value)} placeholder="Columbia, SC 29201" />
+            <Input value={values["contact.cityState"] || ""} onChange={(e) => set("contact.cityState", e.target.value)} placeholder="Columbia, SC 29208" />
           </Field>
           <Field label="Google Maps URL">
             <Input value={values["contact.mapsUrl"] || ""} onChange={(e) => set("contact.mapsUrl", e.target.value)} placeholder="https://maps.google.com/?q=…" />
@@ -896,7 +896,7 @@ function PhotoPreview({ slug, className, objectPosition }: { slug?: string; clas
     <Link
       href={`https://www.instagram.com/p/${slug}/`}
       target="_blank"
-      rel="noreferrer"
+      rel="noreferrer noopener"
       className={`block relative aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary ${className ?? ""}`}
     >
       <img

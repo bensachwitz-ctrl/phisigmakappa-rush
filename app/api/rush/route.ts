@@ -71,7 +71,15 @@ async function autoEnrichInBackground(rushId: string, rushee: {
 
 const RushSchema = z.object({
   name: z.string().min(2).max(120),
-  email: z.string().email().max(160),
+  // Email is OPTIONAL per the form ("Email (optional)" label). The form
+  // synthesizes a "<name>-<ts>@noemail.local" fallback before sending, but
+  // we ALSO accept truly empty strings or omitted fields here so any direct
+  // API client (booth tablet shortcut, automated test, third-party form)
+  // doesn't get a 400 just because the PNM didn't have a personal email.
+  // Empty values land in the server fallback path below.
+  email: z
+    .union([z.string().email().max(160), z.literal(""), z.undefined()])
+    .optional(),
   phone: z.string().min(7).max(40),
   hometown: z.string().max(120).optional().or(z.literal("")),
   major: z.string().max(120).optional().or(z.literal("")),
@@ -139,9 +147,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, updated: false }, { status: 200 });
     }
 
+    // Email fallback: if the PNM submitted without an email (or the form
+    // skipped the synthesizer for some reason), generate a stable
+    // <slugified-name>-<random>@noemail.local placeholder. Same shape the
+    // form synthesizer used to create — keeps the unique-email Prisma index
+    // happy without forcing PNMs to invent a fake address.
+    const rawEmail = (parsed.email || "").toString().trim();
+    const synthEmail =
+      rawEmail ||
+      `${parsed.name.replace(/\s+/g, ".").toLowerCase()}-${Date.now()}@noemail.local`;
+
     const data = {
       ...parsed,
-      email: parsed.email.trim().toLowerCase(),
+      email: synthEmail.toLowerCase(),
       name: parsed.name.trim(),
       phone: parsed.phone.trim(),
     };

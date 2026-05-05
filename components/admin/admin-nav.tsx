@@ -78,7 +78,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
           <Link
             href="/"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
             title="Open the public homepage in a new tab"
           >

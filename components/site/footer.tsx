@@ -36,9 +36,9 @@ export async function PublicFooter() {
             <span aria-hidden>·</span>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <span aria-hidden>·</span>
-            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">National HQ</a>
+            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">National HQ</a>
             <span aria-hidden>·</span>
-            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Anti-hazing hotline</a>
+            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">Anti-hazing hotline</a>
             <span aria-hidden>·</span>
             <a href={cleanMailto(cfg["contact.rushEmail"])} className="hover:text-foreground transition-colors">Contact</a>
           </p>

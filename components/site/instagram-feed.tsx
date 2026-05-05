@@ -46,7 +46,7 @@ export function InstagramFeed({
           key={p.slug}
           href={`https://www.instagram.com/p/${p.slug}/`}
           target="_blank"
-          rel="noreferrer"
+          rel="noreferrer noopener"
           aria-label={`Open ${p.caption} on Instagram`}
           className={cn(
             "group relative rounded-2xl overflow-hidden border border-border bg-secondary lift",
@@ -109,7 +109,7 @@ export function InstagramStrip() {
             key={p.slug}
             href={`https://www.instagram.com/p/${p.slug}/`}
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             aria-label={`Open ${p.caption} on Instagram`}
             className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-secondary lift"
           >
@@ -130,7 +130,7 @@ export function InstagramStrip() {
         <Link
           href="https://www.instagram.com/phisig_usc/"
           target="_blank"
-          rel="noreferrer"
+          rel="noreferrer noopener"
           className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
         >
           <Instagram className="h-4 w-4" /> See more on @phisig_usc
