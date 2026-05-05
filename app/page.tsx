@@ -229,7 +229,7 @@ export default async function Home({
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
             <div className="max-w-2xl animate-slide-up">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
+              <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm animate-heartbeat">
                 <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
                 {cfg["hero.eyebrow"]}
               </span>
@@ -248,13 +248,13 @@ export default async function Home({
               {cfg["hero.subline"]}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow">
+              <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   {cfg["hero.cta.label"] || "Get on the interest list"}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="press">
                 <Link href="#about">About the chapter</Link>
               </Button>
             </div>
@@ -977,13 +977,13 @@ export default async function Home({
               Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="secondary" className="group">
+              <Button asChild size="lg" variant="secondary" className="group cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   Sign me up
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white">
+              <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
                 <Link href={cleanUrl(cfg["contact.instagramUrl"])} target="_blank">
                   <Instagram className="h-4 w-4" /> Follow us
                 </Link>
@@ -1061,7 +1061,7 @@ function PostTile({
         // @ts-expect-error: fetchPriority is a valid HTML attribute, types still catching up.
         fetchpriority={priority ? "high" : "auto"}
         decoding={priority ? "sync" : "async"}
-        className="relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        className={`relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${priority ? "animate-ken-burns-in" : ""}`}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
       <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">

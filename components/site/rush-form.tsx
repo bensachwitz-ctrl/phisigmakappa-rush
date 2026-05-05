@@ -737,7 +737,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
 
   if (booth) {
     return (
-      <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10">
+      <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10 animate-spring-in">
         <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
         <CardContent className="py-14 px-6 text-center animate-fade-in">
           <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
@@ -765,7 +765,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
     );
   }
   return (
-    <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10">
+    <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10 animate-spring-in">
       <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
       <CardContent className="py-12 px-6 text-center animate-fade-in">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
@@ -839,11 +839,16 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <div className={cn(error && "animate-shake-x")}>
       <Label htmlFor={id} className="mb-1.5 inline-block">
         {label} {required && <span className="text-phisig-red">*</span>}
       </Label>
-      <div className="relative">
+      {/* field-glow paints a soft cardinal ring on focus — better feedback
+          than the default browser outline, still WCAG-visible. The shake
+          on .animate-shake-x above gives a 320ms horizontal nudge when
+          validation flags this field, drawing the eye without aggressive
+          red flashes. */}
+      <div className={cn("relative rounded-md", "field-glow")}>
         {Icon && (
           <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
         )}
