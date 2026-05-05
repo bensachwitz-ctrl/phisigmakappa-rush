@@ -33,6 +33,17 @@ export function GET() {
           type: "image/png",
           purpose: "any",
         },
+        // Maskable variant — Android adaptive-icon launchers (Pixel, Samsung
+        // OneUI, etc.) clip the icon into the system shape. Without a maskable
+        // entry the OS letterboxes our glyph; with it, the entire 512×512
+        // canvas is available and the launcher's mask only crops the safe-zone
+        // padding instead of the chapter wordmark itself.
+        {
+          src: "/maskable-icon",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
+        },
       ],
     },
     {

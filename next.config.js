@@ -6,6 +6,15 @@ const nextConfig = {
       bodySizeLimit: '5mb',
     },
   },
+  // Browsers and many crawlers (Slack unfurl, RSS readers, older Safari) hard-
+  // code a request for /favicon.ico before reading <link rel="icon"> in HTML.
+  // Without this rewrite the request 404s; redirecting to /icon (the App-Router
+  // generated PNG icon) gives every client a valid 200.
+  async rewrites() {
+    return [
+      { source: '/favicon.ico', destination: '/icon' },
+    ];
+  },
   // Security + privacy headers applied to every route. Vercel adds HSTS in
   // front of this in production, but we set the others ourselves.
   async headers() {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
@@ -6,15 +7,36 @@ export const dynamic = "force-dynamic";
 
 // 30 days at the edge, 24h at the browser. URL is keyed by Instagram slug, which
 // is itself stable per post — so the bytes effectively are immutable at this URL.
+//
+// Vary: Accept covers AVIF/WebP/JPEG variants (3-way negotiation).
+// Vary: Width is added to disambiguate per-?w= variants when responsive
+// srcset is in play, so a phone request never mistakenly receives a 4K asset
+// (or vice versa) cached at the same URL.
 const CACHE_HEADERS = {
   "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=2592000, immutable",
-  // Vercel sometimes strips s-maxage from Cache-Control; CDN-Cache-Control is
-  // honored separately by Vercel's edge cache and sets a 30-day TTL.
   "CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
   "Vercel-CDN-Cache-Control": "public, max-age=2592000, stale-while-revalidate=2592000, immutable",
-  // Two variants per URL (WebP vs JPEG fallback) — Vary so caches store both.
   Vary: "Accept",
 };
+
+// Allowed widths — the only DPR/viewport multipliers we actually emit in
+// srcset. Restricting the set prevents a `?w=99999` cache-key explosion attack
+// and lets the edge cache hit ratio stay near 100%.
+const ALLOWED_WIDTHS = new Set([320, 480, 640, 960, 1280, 1600, 1920]);
+function clampWidth(input: string | null): number | null {
+  if (!input) return null;
+  const n = parseInt(input, 10);
+  if (!Number.isFinite(n)) return null;
+  if (ALLOWED_WIDTHS.has(n)) return n;
+  // Snap to nearest allowed width if a client sends an odd value.
+  let best: number = 640;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const w of ALLOWED_WIDTHS) {
+    const d = Math.abs(w - n);
+    if (d < bestDist) { best = w; bestDist = d; }
+  }
+  return best;
+}
 
 /**
  * Negotiate the best image format the client supports. Prefer AVIF (≈ 25-35%
@@ -25,19 +47,28 @@ const CACHE_HEADERS = {
 async function negotiateFormat(
   buf: Buffer,
   originalContentType: string,
-  accept: string | null
+  accept: string | null,
+  resizeWidth: number | null
 ): Promise<{ buf: Buffer; contentType: string }> {
   const lower = (accept || "").toLowerCase();
   const wantsAvif = lower.includes("image/avif");
   const wantsWebp = lower.includes("image/webp");
 
+  // Helper: optionally resize to the requested width. We never upscale.
+  // If the source is smaller than the requested width, sharp's `withoutEnlargement`
+  // returns the original size — preserving sharpness on already-small assets.
+  const pipeline = () => {
+    let p = sharp(buf, { failOn: "none" }).rotate();
+    if (resizeWidth) {
+      p = p.resize({ width: resizeWidth, withoutEnlargement: true });
+    }
+    return p;
+  };
+
   // Try AVIF first — biggest savings.
   if (wantsAvif) {
     try {
-      const avif = await sharp(buf, { failOn: "none" })
-        .rotate()
-        .avif({ quality: 60, effort: 4 })
-        .toBuffer();
+      const avif = await pipeline().avif({ quality: 60, effort: 4 }).toBuffer();
       if (avif.byteLength < buf.byteLength) {
         return { buf: avif, contentType: "image/avif" };
       }
@@ -49,10 +80,7 @@ async function negotiateFormat(
   // WebP — universally supported, 16-30% smaller than JPEG.
   if (wantsWebp) {
     try {
-      const webp = await sharp(buf, { failOn: "none" })
-        .rotate()
-        .webp({ quality: 80, effort: 4 })
-        .toBuffer();
+      const webp = await pipeline().webp({ quality: 80, effort: 4 }).toBuffer();
       if (webp.byteLength < buf.byteLength) {
         return { buf: webp, contentType: "image/webp" };
       }
@@ -61,7 +89,31 @@ async function negotiateFormat(
     }
   }
 
+  // No preferred format requested OR transcoding lost. Still resize the
+  // original if a width was requested — saves bandwidth on phones that
+  // happen to have an Accept-image-policy stripped by their proxy.
+  if (resizeWidth) {
+    try {
+      const resized = await pipeline().jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+      if (resized.byteLength < buf.byteLength) {
+        return { buf: resized, contentType: "image/jpeg" };
+      }
+    } catch {
+      // fall through to original bytes
+    }
+  }
+
   return { buf, contentType: originalContentType };
+}
+
+/**
+ * Build a strong, content-derived ETag. Hash of the bytes ensures revalidation
+ * works correctly across width/format variants — two clients requesting the
+ * same URL with the same Accept + width get the same ETag and can 304 cleanly.
+ */
+function buildETag(buf: Buffer): string {
+  const h = crypto.createHash("sha1").update(buf).digest("hex").slice(0, 16);
+  return `"${h}"`;
 }
 
 /**
@@ -78,6 +130,9 @@ export async function GET(
 ) {
   const accept = req.headers.get("accept");
   const raw = decodeURIComponent(params.slug || "");
+  const reqUrl = new URL(req.url);
+  const reqWidth = clampWidth(reqUrl.searchParams.get("w"));
+  const ifNoneMatch = req.headers.get("if-none-match");
 
   // If the "slug" is actually a full URL (admin uploaded a direct image to
   // Vercel Blob, etc.), proxy it through this route so we apply caching + WebP.
@@ -87,10 +142,14 @@ export async function GET(
       if (!r.ok) return transparentPixel();
       const original = Buffer.from(await r.arrayBuffer());
       const originalCt = r.headers.get("Content-Type") || "image/jpeg";
-      const { buf, contentType } = await negotiateFormat(original, originalCt, accept);
+      const { buf, contentType } = await negotiateFormat(original, originalCt, accept, reqWidth);
+      const etag = buildETag(buf);
+      if (ifNoneMatch && ifNoneMatch === etag) {
+        return new NextResponse(null, { status: 304, headers: { ETag: etag, ...CACHE_HEADERS } });
+      }
       return new NextResponse(buf as unknown as BodyInit, {
         status: 200,
-        headers: { "Content-Type": contentType, ...CACHE_HEADERS },
+        headers: { "Content-Type": contentType, ETag: etag, ...CACHE_HEADERS },
       });
     } catch {
       return transparentPixel();
@@ -183,11 +242,18 @@ export async function GET(
     }
 
     const originalCt = imgRes.headers.get("Content-Type") || "image/jpeg";
-    const { buf, contentType } = await negotiateFormat(original, originalCt, accept);
+    const { buf, contentType } = await negotiateFormat(original, originalCt, accept, reqWidth);
+    const etag = buildETag(buf);
 
+    // Honor If-None-Match — clients that already have this exact byte sequence
+    // get a 304 with no body. Saves bandwidth post the 30-day max-age window
+    // when the photo proxy revalidates.
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new NextResponse(null, { status: 304, headers: { ETag: etag, ...CACHE_HEADERS } });
+    }
     return new NextResponse(buf as unknown as BodyInit, {
       status: 200,
-      headers: { "Content-Type": contentType, ...CACHE_HEADERS },
+      headers: { "Content-Type": contentType, ETag: etag, ...CACHE_HEADERS },
     });
   } catch {
     return transparentPixel();

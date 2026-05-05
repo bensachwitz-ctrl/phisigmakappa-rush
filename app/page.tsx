@@ -1054,6 +1054,11 @@ function PostTile({
       </div>
       <img
         src={imgSrc}
+        // Responsive srcset — phones get a 480-width WebP, tablets 960, 4K
+        // displays 1600. Photo proxy honors ?w= and snaps to ALLOWED_WIDTHS.
+        // Keeping the URL stable means the cache key matches across requests.
+        srcSet={isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
+        sizes={priority ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"}
         alt={`Phi Sigma Kappa Gamma Triton chapter at USC — ${caption}`}
         width={640}
         height={640}

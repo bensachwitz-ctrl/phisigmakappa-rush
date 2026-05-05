@@ -60,7 +60,9 @@ export function InstagramFeed({
           )}
         >
           <img
-            src={`/api/photo/${p.slug}`}
+            src={`/api/photo/${p.slug}?w=640`}
+            srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w, /api/photo/${p.slug}?w=960 960w`}
+            sizes={i === 0 ? "(min-width: 1024px) 480px, 50vw" : "(min-width: 1024px) 240px, 33vw"}
             alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
             width={520}
             height={i === 0 ? 650 : 520}
@@ -114,7 +116,9 @@ export function InstagramStrip() {
             className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-secondary lift"
           >
             <img
-              src={`/api/photo/${p.slug}`}
+              src={`/api/photo/${p.slug}?w=320`}
+              srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w`}
+              sizes="(min-width: 640px) 25vw, 50vw"
               alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
               width={320}
               height={320}
