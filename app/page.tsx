@@ -223,14 +223,13 @@ export default async function Home({
         <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
         <div className="absolute right-[6%] top-[6%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.08] select-none pointer-events-none">
-          {/* Real modern Phi Sigma Kappa shield mark — drifts subtly behind the
-              hero copy as a watermark. opacity-8% so it's a quiet brand
-              presence, not visual competition with the rush headline. */}
+          {/* Real Phi Sig shield (cropped — no text) — drifts subtly behind
+              the hero copy as a watermark at 8% opacity. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/phisigmakappa-shield.jpg"
+            src="/brand/phisigmakappa-shield-only.jpg"
             alt=""
-            className="h-[320px] w-[320px] object-contain"
+            className="h-[320px] w-auto object-contain"
             aria-hidden="true"
           />
         </div>

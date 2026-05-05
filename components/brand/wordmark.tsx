@@ -16,18 +16,19 @@ export function Wordmark({
           className
         )}
       >
-        {/* Real modern Phi Sigma Kappa shield logo (the official national mark).
-            Cropped via aspect-square + object-contain to show just the shield —
-            the source image includes "PHI SIGMA KAPPA" text below the shield
-            which we render separately. */}
-        <span className="relative inline-block h-7 w-7 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/phisigmakappa-shield.jpg"
-            alt="Phi Sigma Kappa shield"
-            className="absolute inset-0 h-[170%] w-[170%] -translate-x-[18%] -translate-y-[8%] object-contain"
-          />
-        </span>
+        {/* Real Phi Sigma Kappa shield — pre-cropped to show only the shield
+            silhouette (the source modern brand JPG had "PHI SIGMA KAPPA" text
+            stacked below the shield; that text was visible in earlier crops
+            because object-contain couldn't push it out of the small nav box).
+            phisigmakappa-shield-only.jpg is 150×132, tight bounds. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/phisigmakappa-shield-only.jpg"
+          alt="Phi Sigma Kappa"
+          width={28}
+          height={28}
+          className="h-7 w-auto object-contain"
+        />
         <span className="font-display">ΦΣΚ</span>
         <span className="text-muted-foreground font-normal text-sm">USC</span>
       </span>
@@ -41,15 +42,15 @@ export function Wordmark({
         className
       )}
     >
-      {/* Real modern Phi Sig shield — same image cropped to show only the shield. */}
-      <span className="relative inline-block h-9 w-9 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/phisigmakappa-shield.jpg"
-          alt="Phi Sigma Kappa shield"
-          className="absolute inset-0 h-[170%] w-[170%] -translate-x-[18%] -translate-y-[8%] object-contain"
-        />
-      </span>
+      {/* Real Phi Sig shield — pre-cropped (150×132, shield only, no text). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/phisigmakappa-shield-only.jpg"
+        alt="Phi Sigma Kappa"
+        width={36}
+        height={36}
+        className="h-9 w-auto object-contain"
+      />
       <span className="flex flex-col leading-none">
         <span className="text-[11px] uppercase tracking-[0.22em] opacity-70 font-medium">
           Phi Sigma Kappa

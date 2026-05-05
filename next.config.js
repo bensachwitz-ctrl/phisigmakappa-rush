@@ -20,6 +20,16 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Brand image assets (chapter logos, coats of arms) are content-hashed
+        // by filename — when an asset changes, the chapter ships a new file at
+        // a new path. So the cached asset can be considered immutable for a
+        // year. Saves a revalidate roundtrip on every page paint.
+        source: '/brand/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           // Tightened from R8: locks script-src/style-src/img-src to known
