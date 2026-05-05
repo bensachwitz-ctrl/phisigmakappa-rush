@@ -156,6 +156,8 @@ model Brother {
   votes     Vote[]
   announcements Announcement[]
   rsvps     BrotherRSVP[]
+  pollsCreated Poll[] @relation("createdBy")
+  pollVotes PollVote[]
 }
 
 model Announcement {
@@ -243,4 +245,48 @@ model SmsLog {
   status     String   @default("SENT")
 
   rush       Rush?    @relation(fields: [rushId], references: [id], onDelete: SetNull)
+}
+
+// Quick chapter polls. Any logged-in brother (member or admin) can spin one
+// up to take the chapter's pulse — "When should we host the next mixer?",
+// "What philanthropy do we want next semester?", etc. Vote tallies are
+// aggregate-only (we never expose who voted for what), enforced by the API
+// layer; the underlying PollVote table records (pollId, brotherId, optionId)
+// purely so each brother gets exactly one vote and can change it.
+//
+// Options are stored as a JSON-encoded String (works on both Postgres and
+// SQLite without a separate row-per-option table). Shape is:
+//   [{ id: "cuid...", label: "Option text" }, ...]
+// Server is the source of truth for option ids — it generates them at create
+// time and never mutates them so vote rows stay valid.
+model Poll {
+  id          String     @id @default(cuid())
+  question    String     // <= 280 chars enforced at API layer
+  options     String     // JSON: [{id, label}]
+  createdById String
+  closesAt    DateTime?  // optional auto-close timestamp
+  closedAt    DateTime?  // set when manually closed by creator/admin
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
+  createdBy   Brother    @relation("createdBy", fields: [createdById], references: [id], onDelete: Cascade)
+  votes       PollVote[]
+
+  @@index([createdAt])
+  @@index([closedAt])
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  brotherId String
+  optionId  String   // matches an entry in Poll.options
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  brother   Brother  @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, brotherId])
+  @@index([pollId])
 }

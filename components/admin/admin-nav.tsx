@@ -7,13 +7,14 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
-  HelpCircle, Menu, X, ExternalLink,
+  HelpCircle, Menu, X, ExternalLink, Vote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/admin", label: "Rush", icon: LayoutDashboard, adminOnly: false },
   { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false },
+  { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true },
   { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true },
   { href: "/admin/settings", label: "Site", icon: Settings, adminOnly: true },

@@ -217,9 +217,17 @@ export function Roster({
     }
   }
 
-  async function castVote(rushId: string, value: number) {
+  // value=0 means "clear my vote" — translates to a DELETE request instead
+  // of POSTing 0. Optional comment is forwarded to the API.
+  async function castVote(rushId: string, value: number, comment?: string) {
     const prev = rushes;
     const apply = (r: Rush): Rush => {
+      if (value === 0) {
+        // Clearing: subtract our prior vote from the sum, decrement count.
+        const newSum = r.voteSum - (r.myVote ?? 0);
+        const newCount = r.myVote != null ? Math.max(0, r.voteCount - 1) : r.voteCount;
+        return { ...r, voteSum: newSum, voteCount: newCount, myVote: null };
+      }
       const had = r.myVote != null;
       const newSum = r.voteSum - (r.myVote ?? 0) + value;
       const newCount = had ? r.voteCount : r.voteCount + 1;
@@ -228,13 +236,23 @@ export function Roster({
     setRushes((rs) => rs.map((r) => (r.id === rushId ? apply(r) : r)));
     if (detail?.id === rushId) setDetail(apply(detail));
     try {
-      const res = await fetch("/api/admin/vote", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ rushId, value }),
-      });
+      const res =
+        value === 0
+          ? await fetch("/api/admin/vote", {
+              method: "DELETE",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ rushId }),
+            })
+          : await fetch("/api/admin/vote", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ rushId, value, comment: comment || "" }),
+            });
       if (!res.ok) throw new Error();
-      push({ title: "Vote recorded", variant: "success" });
+      push({
+        title: value === 0 ? "Vote cleared" : "Vote recorded",
+        variant: "success",
+      });
     } catch {
       setRushes(prev);
       if (detail?.id === rushId) {
@@ -489,42 +507,91 @@ function Avatar({ rush, size = 36 }: { rush: Rush; size?: number }) {
   );
 }
 
+/**
+ * 5-point voting scale: Strong no | No | (neutral / cleared) | Yes | Strong yes.
+ *
+ * Visual: tally pill on the left (sum / count), then a 4-button segmented
+ * control on the right. Each button is color-toned to its sentiment so a
+ * brother glances and instantly sees what they (and the chapter) said.
+ *
+ * Re-clicking the active button DELETEs the vote (not POST 0), keeping
+ * voteCount honest. Vote values are -2 (strong no), -1 (no), +1 (yes),
+ * +2 (strong yes).
+ */
+const VOTE_BUTTONS: { v: -2 | -1 | 1 | 2; label: string; activeClass: string; idleClass: string }[] = [
+  {
+    v: -2,
+    label: "−−",
+    activeClass: "bg-rose-600 text-white border-rose-600",
+    idleClass: "text-rose-700 hover:bg-rose-50 border-rose-200",
+  },
+  {
+    v: -1,
+    label: "−",
+    activeClass: "bg-rose-400 text-white border-rose-400",
+    idleClass: "text-rose-600 hover:bg-rose-50 border-rose-200",
+  },
+  {
+    v: 1,
+    label: "+",
+    activeClass: "bg-emerald-500 text-white border-emerald-500",
+    idleClass: "text-emerald-700 hover:bg-emerald-50 border-emerald-200",
+  },
+  {
+    v: 2,
+    label: "++",
+    activeClass: "bg-emerald-700 text-white border-emerald-700",
+    idleClass: "text-emerald-800 hover:bg-emerald-50 border-emerald-200",
+  },
+];
+
 function VotePill({ rush, onVote }: { rush: Rush; onVote: (v: number) => void }) {
-  const tone =
+  const sumColor =
     rush.voteSum > 1
       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
       : rush.voteSum < -1
       ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
       : "bg-zinc-50 text-zinc-700 ring-1 ring-zinc-200";
   return (
-    <div className="flex items-center gap-2">
-      <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", tone)}>
+    <div className="flex items-center gap-1.5" data-stop>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+          sumColor,
+        )}
+        title={`${rush.voteSum > 0 ? "+" : ""}${rush.voteSum} from ${rush.voteCount} vote${rush.voteCount === 1 ? "" : "s"}`}
+      >
         {rush.voteSum > 0 ? "+" : ""}
         {rush.voteSum}
-        <span className="opacity-60">·</span>
+        <span className="opacity-50">·</span>
         <span className="opacity-70">{rush.voteCount}</span>
       </span>
-      <div className="flex items-center gap-0.5" data-stop>
-        <button
-          aria-label="Vote yes"
-          className={cn(
-            "h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors",
-            rush.myVote === 1 ? "bg-emerald-600 text-white" : "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700"
-          )}
-          onClick={() => onVote(rush.myVote === 1 ? 0 : 1)}
-        >
-          <ThumbsUp className="h-3.5 w-3.5" />
-        </button>
-        <button
-          aria-label="Vote no"
-          className={cn(
-            "h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors",
-            rush.myVote === -1 ? "bg-rose-600 text-white" : "text-muted-foreground hover:bg-rose-50 hover:text-rose-700"
-          )}
-          onClick={() => onVote(rush.myVote === -1 ? 0 : -1)}
-        >
-          <ThumbsDown className="h-3.5 w-3.5" />
-        </button>
+      <div className="inline-flex items-center rounded-md overflow-hidden border border-zinc-200 divide-x divide-zinc-200">
+        {VOTE_BUTTONS.map((b) => {
+          const active = rush.myVote === b.v;
+          return (
+            <button
+              key={b.v}
+              type="button"
+              aria-label={
+                b.v === -2 ? "Strong no" : b.v === -1 ? "No" : b.v === 1 ? "Yes" : "Strong yes"
+              }
+              aria-pressed={active}
+              onClick={() => onVote(active ? 0 : b.v)}
+              className={cn(
+                "h-7 min-w-[24px] px-1.5 text-[11px] font-bold tabular-nums leading-none transition-colors",
+                active ? b.activeClass : b.idleClass,
+              )}
+              title={
+                active
+                  ? "Click again to clear your vote"
+                  : b.v === -2 ? "Strong no" : b.v === -1 ? "No" : b.v === 1 ? "Yes" : "Strong yes"
+              }
+            >
+              {b.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

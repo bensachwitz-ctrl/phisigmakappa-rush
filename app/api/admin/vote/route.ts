@@ -6,9 +6,13 @@ import { getCurrentBrotherId, isAdminAuthed } from "@/lib/auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Allowed values: -2 strong-no, -1 no, 1 yes, 2 strong-yes.
+// 0 is intentionally rejected — the prior version accepted 0 and stored a
+// neutral row that then counted toward voteCount even though the brother
+// hadn't really voted. The UI now sends DELETE to clear instead.
 const VoteSchema = z.object({
   rushId: z.string().min(1),
-  value: z.number().int().min(-2).max(2),
+  value: z.union([z.literal(-2), z.literal(-1), z.literal(1), z.literal(2)]),
   comment: z.string().max(2000).optional().or(z.literal("")),
 });
 
