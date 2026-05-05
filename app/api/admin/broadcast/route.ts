@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -68,6 +68,10 @@ async function twilioSend(to: string, msg: string) {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Broadcast can fan out SMS + email to the whole chapter / rushee list.
+  // Once Twilio + Resend keys are set in prod, a member could otherwise
+  // spam every brother. Admin-only.
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }

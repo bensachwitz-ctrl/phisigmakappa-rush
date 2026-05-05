@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,6 +56,11 @@ async function tavilySearch(name: string, hints: string) {
 export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  // Tavily API costs money per call (1k free / month, then paid). Members
+  // shouldn't be able to fire enrichment lookups; admin-only.
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
 
   let body: any;

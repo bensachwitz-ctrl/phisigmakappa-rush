@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +15,9 @@ const Schema = z.object({
 export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
   const body = await req.json().catch(() => null);
   const parsed = Schema.safeParse(body);

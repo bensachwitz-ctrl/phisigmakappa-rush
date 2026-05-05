@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
@@ -19,6 +19,10 @@ const PatchSchema = z.object({
 
 export async function PATCH(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Privilege escalation guard — settings change is admin-only. R30 chapter
+  // simulation caught that any logged-in MEMBER could PATCH this and
+  // overwrite advisor name, e-board roster, every chapter cfg knob.
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   const parsed = PatchSchema.safeParse(body);

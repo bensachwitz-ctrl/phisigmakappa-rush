@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { RUSH_STATUSES } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -31,6 +31,12 @@ export async function PATCH(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
+  // Status changes (ACCEPTED / DROPPED / BID_EXTENDED) and notes are
+  // chapter business decisions — admin-only. Members vote on rushees but
+  // don't change their status.
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  }
   try {
     const body = await req.json();
     const data = PatchSchema.parse(body);
@@ -54,6 +60,9 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
   try {
     const body = await req.json();

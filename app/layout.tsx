@@ -36,12 +36,29 @@ export const metadata: Metadata = {
     description: "Get on the Fall '26 interest list.",
   },
   robots: { index: true, follow: true },
+  // iOS Safari "Add to Home Screen" — without these, a bookmarked icon
+  // launches in-Safari with the URL bar visible instead of full-screen.
+  // The manifest's display:standalone is honored only by Android; iOS uses
+  // these legacy meta tags. Title is the launcher caption (≤12 chars
+  // recommended).
+  appleWebApp: {
+    capable: true,
+    title: "Phi Sig USC",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#C8102E",
   width: "device-width",
   initialScale: 1,
+  // iOS Safari: when the on-screen keyboard slides up over a focused form
+  // input, the visual viewport stays the same size so position:fixed
+  // bottom-nav floats over the focused field. interactive-widget=
+  // "resizes-content" tells iOS to actually shrink the layout viewport
+  // under the keyboard, so the bottom nav scrolls with the content and
+  // doesn't occlude the input the user is typing into.
+  interactiveWidget: "resizes-content",
 };
 
 /**

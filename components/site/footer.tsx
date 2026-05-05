@@ -6,7 +6,7 @@ import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
   return (
-    <footer className="border-t border-border/70 mt-24">
+    <footer className="border-t border-border/70 mt-12">
       <div className="container py-10 grid sm:grid-cols-[1.4fr_1fr] items-start gap-6">
         <div>
           <Wordmark variant="compact" />

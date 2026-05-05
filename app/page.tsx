@@ -404,7 +404,7 @@ export default async function Home({
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
               <Sparkles className="h-3 w-3" /> Get on the list
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
+            <h2 className="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight">
               Drop your number.
             </h2>
             <p className="mt-3 text-muted-foreground text-base sm:text-lg">

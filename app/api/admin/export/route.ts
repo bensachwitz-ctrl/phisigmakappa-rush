@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +15,11 @@ function csvEscape(v: unknown): string {
 export async function GET() {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  // Export ships full PII (names, phones, emails, hometowns, vote sums,
+  // background notes). Admin-only — members get the public roster only.
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
 
   const rushes = await prisma.rush.findMany({

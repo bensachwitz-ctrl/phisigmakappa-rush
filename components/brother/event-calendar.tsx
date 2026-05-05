@@ -596,7 +596,7 @@ function RsvpButton({
       aria-pressed={active}
       aria-label={`RSVP ${label}`}
       className={cn(
-        "press inline-flex h-10 items-center justify-center gap-1.5 rounded-md border text-sm font-medium transition-all",
+        "press inline-flex h-11 items-center justify-center gap-1.5 rounded-md border text-sm font-medium transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50 focus-visible:ring-offset-1",
         "disabled:opacity-60 disabled:cursor-not-allowed",
         active
