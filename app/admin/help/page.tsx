@@ -258,34 +258,6 @@ export default function HelpPage() {
         ))}
       </section>
 
-      <section className="mt-10 rounded-2xl border border-border bg-secondary/40 p-6">
-        <h3 className="font-semibold tracking-tight">Need a developer?</h3>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          The site lives at <code className="text-foreground">github.com/bensachwitz-ctrl/phisigmakappa-rush</code>.
-          Hosting is on Vercel, database is Neon Postgres, image storage is Vercel Blob.
-          Email + text use Resend + Twilio. Edit env vars in Vercel → Settings → Environment Variables.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs">
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            ADMIN_PASSWORD
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            ADMIN_SESSION_SECRET
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            RESEND_API_KEY
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            TWILIO_ACCOUNT_SID
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            TWILIO_AUTH_TOKEN
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1 font-mono">
-            TWILIO_PHONE_NUMBER
-          </span>
-        </div>
-      </section>
     </main>
   );
 }
