@@ -19,8 +19,7 @@ const SECTIONS = [
       </>
     ),
     bullets: [
-      "Default credentials — username: Phisig · password: DamnProud.",
-      "Override at Vercel → Settings → Environment Variables (ADMIN_USERNAME, ADMIN_PASSWORD), then redeploy.",
+      "The chapter has one shared admin login distributed via the e-board's password manager.",
       "First time a brother signs in with a new name, the system creates a Brother record automatically.",
       "To onboard a brother with year, major, headshot, and contact info, use Brothers → Invite brother — sends a one-time link they fill out themselves.",
     ],
