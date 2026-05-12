@@ -7,35 +7,48 @@ import { cleanUrl, cleanMailto } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Privacy — Phi Sigma Kappa @ USC",
-  description:
-    "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
-  alternates: { canonical: "/privacy" },
-  openGraph: {
-    title: "Privacy — Phi Sigma Kappa @ USC",
-    description:
-      "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
-    url: "/privacy",
-    type: "website",
-    // Falls back through metadataBase (set in app/layout.tsx) to the
-    // homepage opengraph-image. Explicit so social unfurls of /privacy
-    // render with the chapter brand card instead of a blank gray box.
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Phi Sigma Kappa @ USC" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Privacy — Phi Sigma Kappa @ USC",
-    description:
-      "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
-    images: ["/twitter-image"],
-  },
-};
+// Generated dynamically so a chapter rename (e.g. Beta Sigma @ Maryland)
+// updates the privacy page title + social-share copy without code edits.
+export async function generateMetadata() {
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const title = `Privacy — ${fraternityName} @ ${schoolShort}`;
+  const description = `How the ${greekLetters} chapter collects, uses, and protects information from rushees.`;
+  const ogAlt = `${fraternityName} @ ${schoolShort}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: "/privacy" },
+    openGraph: {
+      title,
+      description,
+      url: "/privacy",
+      type: "website" as const,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: ogAlt }],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title,
+      description,
+      images: ["/twitter-image"],
+    },
+  };
+}
 
 export default async function PrivacyPage() {
   const cfg = await getSiteConfig();
   const rushEmail = cfg["contact.rushEmail"];
   const rushMailto = cleanMailto(rushEmail);
+  // Chapter identity — fall back to USC reference values so the page never
+  // 500s on a fresh deploy before /admin/setup has been run.
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const chapterAttribution = `${fraternityName} ${greekLetters} at the ${schoolName}`;
+  const chapterShortAttribution = `${fraternityName} ${greekLetters} (${schoolShort})`;
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
       <div className="container section-y max-w-3xl">
@@ -53,7 +66,7 @@ export default async function PrivacyPage() {
           What we collect, why, and how we protect it.
         </h1>
         <p className="mt-4 text-muted-foreground leading-relaxed">
-          Phi Sigma Kappa Gamma Triton at the University of South Carolina ("the chapter," "we") respects your privacy. This page explains exactly what data we collect from prospective new members ("PNMs"), how we use it, and the rights you have over your data.
+          {chapterAttribution} ("the chapter," "we") respects your privacy. This page explains exactly what data we collect from prospective new members ("PNMs"), how we use it, and the rights you have over your data.
         </p>
 
         <section className="mt-10 space-y-2">
@@ -66,7 +79,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (<abbr title="Telephone Consumer Protection Act — the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted">TCPA</abbr>)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your information is used solely to communicate with you about Fall 2026 rush at the Gamma Triton chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">Phi Sigma Kappa Gamma Triton (USC)</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
+            Your information is used solely to communicate with you about rush at the {greekLetters} chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">{chapterShortAttribution}</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>{" "}
@@ -83,7 +96,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Age &amp; minor protections</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming USC freshmen are 17 at orientation — a parent or guardian may also email{" "}
+            By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming {schoolShort} freshmen are 17 at orientation — a parent or guardian may also email{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>{" "}
@@ -137,7 +150,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Hazing reports</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Phi Sigma Kappa national and the Gamma Triton chapter have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
+            {fraternityName} national and the {greekLetters} chapter have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>
@@ -146,8 +159,8 @@ export default async function PrivacyPage() {
               {cfg["antiHazing.hotline"]}
             </a>
             , or through{" "}
-            <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
-              phisigmakappa.org
+            <a href={cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org"} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+              {(cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org").replace(/^https?:\/\//, "")}
             </a>
             .
           </p>

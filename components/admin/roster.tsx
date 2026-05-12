@@ -94,39 +94,69 @@ const VOTE_OPTIONS = [
   { value: -2, label: "Strong no", icon: ThumbsDown, tone: "bg-rose-600 text-white" },
 ] as const;
 
-const EMAIL_TEMPLATES: Record<string, { subject: string; body: string }> = {
-  blank: { subject: "", body: "" },
-  invite_private: {
-    subject: "You're invited — Formal Dinner",
-    body:
-      "We'd like to invite you to a private formal dinner with our chapter.\n\nDate: \nLocation: \nDress code: Coat & tie\n\nPlease reply to confirm your attendance.\n\nFraternally,\nPhi Sigma Kappa USC",
-  },
-  bid_extension: {
-    subject: "Bid Extension — Phi Sigma Kappa USC",
-    body:
-      "After much deliberation, the brothers of Phi Sigma Kappa at USC are formally extending you a bid to join our chapter.\n\nWe're impressed by your character and want you in this brotherhood.\n\nBid night details:\nDate: \nLocation: Phi Sig House\nTime: \n\nReply to this email to accept.\n\nFraternally,\nThe Brothers of Phi Sigma Kappa",
-  },
-  reminder: {
-    subject: "Reminder — upcoming rush event",
-    body:
-      "Quick reminder about our next rush event.\n\nDate: \nLocation: \nDress code: \n\nLooking forward to seeing you there.\n\nFraternally,\nPhi Sigma Kappa USC",
-  },
+// Chapter identity passed via prop so templates re-brand when the chapter
+// customizes Site content. All literal "Phi Sig USC" / "Phi Sig house" /
+// chapter-name references have been generalized to read from cfg.
+type ChapterBrand = {
+  fraternityName: string;   // "Phi Sigma Kappa"
+  fraternityShort: string;  // "Phi Sig"
+  schoolShort: string;      // "USC"
+  chapterAttribution: string; // "Phi Sig USC" (derived)
+  houseAddress: string;     // "1525 College St" — first line for SMS brevity
 };
 
-const SMS_TEMPLATES: Record<string, string> = {
-  blank: "",
-  reminder: "Reminder: rush event tonight at 7 PM at the Phi Sig house, 1525 College St. Hope to see you there.",
-  invite: "We'd love to have you at our private dinner this Friday. Reply YES to confirm your seat.",
-  bid: "Phi Sig USC: we're extending you a bid. Bid night is Thursday 7 PM at the house. Reply YES to accept.",
-};
+function buildEmailTemplates(b: ChapterBrand): Record<string, { subject: string; body: string }> {
+  return {
+    blank: { subject: "", body: "" },
+    invite_private: {
+      subject: "You're invited — Formal Dinner",
+      body:
+        `We'd like to invite you to a private formal dinner with our chapter.\n\nDate: \nLocation: \nDress code: Coat & tie\n\nPlease reply to confirm your attendance.\n\nFraternally,\n${b.chapterAttribution}`,
+    },
+    bid_extension: {
+      subject: `Bid Extension — ${b.chapterAttribution}`,
+      body:
+        `After much deliberation, the brothers of ${b.fraternityName} at ${b.schoolShort} are formally extending you a bid to join our chapter.\n\nWe're impressed by your character and want you in this brotherhood.\n\nBid night details:\nDate: \nLocation: ${b.fraternityShort} House\nTime: \n\nReply to this email to accept.\n\nFraternally,\nThe Brothers of ${b.fraternityName}`,
+    },
+    reminder: {
+      subject: "Reminder — upcoming rush event",
+      body:
+        `Quick reminder about our next rush event.\n\nDate: \nLocation: \nDress code: \n\nLooking forward to seeing you there.\n\nFraternally,\n${b.chapterAttribution}`,
+    },
+  };
+}
+
+function buildSmsTemplates(b: ChapterBrand): Record<string, string> {
+  return {
+    blank: "",
+    reminder: `Reminder: rush event tonight at 7 PM at the ${b.fraternityShort} house${b.houseAddress ? `, ${b.houseAddress}` : ""}. Hope to see you there.`,
+    invite: "We'd love to have you at our private dinner this Friday. Reply YES to confirm your seat.",
+    bid: `${b.chapterAttribution}: we're extending you a bid. Bid night is Thursday 7 PM at the house. Reply YES to accept.`,
+  };
+}
 
 export function Roster({
   initial,
   brotherName,
+  chapterBrand,
 }: {
   initial: Rush[];
   brotherName: string | null;
+  // Optional so existing callers that haven't migrated still compile against
+  // the USC reference defaults. New callers pass cfg-derived values.
+  chapterBrand?: ChapterBrand;
 }) {
+  // Brand fallback: matches the lib/site-config DEFAULTS so the email/SMS
+  // templates always render with the Phi Sig USC reference if cfg unset.
+  const brand: ChapterBrand = chapterBrand ?? {
+    fraternityName: "Phi Sigma Kappa",
+    fraternityShort: "Phi Sig",
+    schoolShort: "USC",
+    chapterAttribution: "Phi Sig USC",
+    houseAddress: "1525 College St",
+  };
+  const EMAIL_TEMPLATES = React.useMemo(() => buildEmailTemplates(brand), [brand.fraternityName, brand.fraternityShort, brand.schoolShort, brand.chapterAttribution]);
+  const SMS_TEMPLATES = React.useMemo(() => buildSmsTemplates(brand), [brand.fraternityShort, brand.chapterAttribution, brand.houseAddress]);
   const { push } = useToast();
   const [rushes, setRushes] = React.useState<Rush[]>(initial);
   const [query, setQuery] = React.useState("");
@@ -539,6 +569,7 @@ export function Roster({
         rushIds={Array.from(selected)}
         rushes={rushes.filter((r) => selected.has(r.id))}
         onSent={() => { setEmailOpen(false); setSelected(new Set()); }}
+        templates={EMAIL_TEMPLATES}
       />
 
       <SmsComposer
@@ -547,6 +578,7 @@ export function Roster({
         rushIds={Array.from(selected)}
         rushes={rushes.filter((r) => selected.has(r.id))}
         onSent={() => { setSmsOpen(false); setSelected(new Set()); }}
+        templates={SMS_TEMPLATES}
       />
 
       <RushDetail
@@ -962,13 +994,16 @@ function NotesEditor({ rush, onSaved }: { rush: Rush; onSaved: (notes: string) =
 /* ---------- Email composer ---------- */
 
 function EmailComposer({
-  open, onOpenChange, rushIds, rushes, onSent,
+  open, onOpenChange, rushIds, rushes, onSent, templates,
 }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
   rushIds: string[];
   rushes: Rush[];
   onSent: () => void;
+  // Templates injected from Roster so the chapter rebrand propagates without
+  // this composer needing to know about cfg.
+  templates: Record<string, { subject: string; body: string }>;
 }) {
   const { push } = useToast();
   const [template, setTemplate] = React.useState("blank");
@@ -978,11 +1013,11 @@ function EmailComposer({
 
   React.useEffect(() => {
     if (open) {
-      const t = EMAIL_TEMPLATES[template] || EMAIL_TEMPLATES.blank;
+      const t = templates[template] || templates.blank;
       setSubject(t.subject);
       setBody(t.body);
     }
-  }, [open, template]);
+  }, [open, template, templates]);
 
   async function send() {
     if (!subject.trim() || !body.trim()) {
@@ -1066,13 +1101,14 @@ function EmailComposer({
 /* ---------- SMS composer ---------- */
 
 function SmsComposer({
-  open, onOpenChange, rushIds, rushes, onSent,
+  open, onOpenChange, rushIds, rushes, onSent, templates,
 }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
   rushIds: string[];
   rushes: Rush[];
   onSent: () => void;
+  templates: Record<string, string>;
 }) {
   const { push } = useToast();
   const [template, setTemplate] = React.useState("blank");
@@ -1080,8 +1116,8 @@ function SmsComposer({
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
-    if (open) setBody(SMS_TEMPLATES[template] || "");
-  }, [open, template]);
+    if (open) setBody(templates[template] || "");
+  }, [open, template, templates]);
 
   const remaining = 320 - body.length;
 

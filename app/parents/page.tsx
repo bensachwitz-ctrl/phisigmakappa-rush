@@ -12,29 +12,34 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "For Parents",
-  // Trimmed from 217 to ~155 chars so the description is not truncated in
-  // Google SERP. Longer pitch lives on the page body.
-  description:
-    "Anti-hazing policy, advisor contact, GPA standards, and how Phi Sigma Kappa @ USC handles your son's data when he joins the rush list.",
-  alternates: { canonical: "/parents" },
-  openGraph: {
-    title: "For Parents — Phi Sigma Kappa Gamma Triton",
-    description:
-      "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
-    url: "/parents",
-    type: "website",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Phi Sigma Kappa @ USC" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "For Parents — Phi Sigma Kappa Gamma Triton",
-    description:
-      "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
-    images: ["/twitter-image"],
-  },
-};
+// Dynamic so a chapter rename updates the SERP card without a code edit.
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const title = `For Parents — ${fraternityName} ${greekLetters}`;
+  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your son's data when he joins the rush list.`;
+  const ogAlt = `${fraternityName} @ ${schoolShort}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: "/parents" },
+    openGraph: {
+      title,
+      description,
+      url: "/parents",
+      type: "website",
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: ogAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/twitter-image"],
+    },
+  };
+}
 
 /**
  * Parent-facing landing page. Round-7 parent critic flagged the absence of a
@@ -48,6 +53,12 @@ export default async function ParentsPage() {
   const advisorPlaceholder =
     !cfg["contact.advisorName"] || cfg["contact.advisorName"] === "Chapter Advisor";
   const phonePresent = !!cfg["contact.rushPhone"];
+  // White-label fallbacks
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const chapterAttribution = `${fraternityName} ${greekLetters}`;
 
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
@@ -80,7 +91,7 @@ export default async function ParentsPage() {
             Your son&apos;s safety, academics, and contact info — straight talk.
           </h1>
           <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
-            Phi Sigma Kappa Gamma Triton is the chapter at the University of South Carolina. We
+            {chapterAttribution} is the chapter at {schoolName}. We
             run a dry, FIPG-compliant rush with a hard zero-tolerance hazing policy. This page
             answers the questions you&apos;ll want answered before your son fills out our interest
             form — and tells you exactly how to reach a real adult if you have a concern.
@@ -162,7 +173,7 @@ export default async function ParentsPage() {
                     rel="noreferrer noopener"
                     className="text-phisig-red hover:underline"
                   >
-                    USC Office of Fraternity &amp; Sorority Life
+                    {schoolShort} Office of Fraternity &amp; Sorority Life
                   </a>
                   <span className="text-muted-foreground"> · the school's escalation channel above any chapter</span>
                 </span>

@@ -92,6 +92,62 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </div>
       )}
 
+      {/* CHAPTER IDENTITY — the white-label foundation. Every page title,
+          social-share card, JSON-LD knowledge-panel record, PWA launcher,
+          email signature, and footer attribution reads from these fields.
+          Fill these out once and the site re-brands end-to-end. */}
+      <Section id="chapter" title="Chapter identity" eyebrow="Who and where — drives page titles, social shares, JSON-LD, footer" icon={ShieldCheck}>
+        <p className="text-xs text-muted-foreground mb-4">
+          These fields white-label the entire site. A net-new chapter spinning up the platform fills these
+          in once on the <Link href="/admin/setup" className="text-phisig-red hover:underline font-medium">setup wizard</Link>.
+          Existing deployments can tweak any line below — changes apply on next page load.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Fraternity name (full)">
+            <Input value={values["chapter.fraternityName"] || ""} onChange={(e) => set("chapter.fraternityName", e.target.value)} placeholder="Phi Sigma Kappa" />
+          </Field>
+          <Field label="Fraternity short name">
+            <Input value={values["chapter.fraternityShort"] || ""} onChange={(e) => set("chapter.fraternityShort", e.target.value)} placeholder="Phi Sig" />
+          </Field>
+          <Field label="Greek letters (chapter designation)">
+            <Input value={values["chapter.greekLetters"] || ""} onChange={(e) => set("chapter.greekLetters", e.target.value)} placeholder="Gamma Triton" />
+          </Field>
+          <Field label="Greek-letter glyphs (optional)">
+            <Input value={values["chapter.greekLettersGlyphs"] || ""} onChange={(e) => set("chapter.greekLettersGlyphs", e.target.value)} placeholder="ΓΤ" />
+          </Field>
+          <Field label="School / university name (full)">
+            <Input value={values["chapter.schoolName"] || ""} onChange={(e) => set("chapter.schoolName", e.target.value)} placeholder="University of South Carolina" />
+          </Field>
+          <Field label="School short / acronym">
+            <Input value={values["chapter.schoolShort"] || ""} onChange={(e) => set("chapter.schoolShort", e.target.value)} placeholder="USC" />
+          </Field>
+          <Field label="School URL">
+            <Input value={values["chapter.schoolUrl"] || ""} onChange={(e) => set("chapter.schoolUrl", e.target.value)} placeholder="https://sc.edu" />
+          </Field>
+          <Field label="National fraternity HQ URL">
+            <Input value={values["chapter.nationalHqUrl"] || ""} onChange={(e) => set("chapter.nationalHqUrl", e.target.value)} placeholder="https://phisigmakappa.org" />
+          </Field>
+          <Field label="Chapter charter year">
+            <Input value={values["chapter.charterYear"] || ""} onChange={(e) => set("chapter.charterYear", e.target.value)} placeholder="1975" />
+          </Field>
+          <Field label="National founding year">
+            <Input value={values["chapter.foundingYear"] || ""} onChange={(e) => set("chapter.foundingYear", e.target.value)} placeholder="1873" />
+          </Field>
+          <Field label="National founding location">
+            <Input value={values["chapter.foundingLocation"] || ""} onChange={(e) => set("chapter.foundingLocation", e.target.value)} placeholder="Massachusetts Agricultural College" />
+          </Field>
+          <Field label="Cardinal principles / motto line">
+            <Input value={values["chapter.cardinalPrinciples"] || ""} onChange={(e) => set("chapter.cardinalPrinciples", e.target.value)} placeholder="Brotherhood, Scholarship, Character" />
+          </Field>
+          <Field label="Chapter tagline / hashtag">
+            <Input value={values["chapter.tagline"] || ""} onChange={(e) => set("chapter.tagline", e.target.value)} placeholder="#DamnProud" />
+          </Field>
+          <Field label="iOS home-screen launcher title (≤12 chars)">
+            <Input value={values["chapter.appShortTitle"] || ""} onChange={(e) => set("chapter.appShortTitle", e.target.value)} placeholder="Phi Sig USC" maxLength={12} />
+          </Field>
+        </div>
+      </Section>
+
       {/* BRAND COLORS — chapter-level theme override (white-label) */}
       <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={Sparkles}>
         <p className="text-xs text-muted-foreground mb-4">

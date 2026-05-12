@@ -5,6 +5,32 @@ import { prisma } from "@/lib/prisma";
  * The admin /admin/settings page lets brothers override any of these values.
  */
 export const DEFAULTS = {
+  // ── CHAPTER IDENTITY (white-label) ───────────────────────────────────
+  // These are the chapter's "who and where". Every page metadata, JSON-LD,
+  // footer attribution, email signature, and PWA manifest reads from here
+  // so a new chapter spinning up the platform only needs to fill these out
+  // once on the /admin/setup wizard. NO source code changes required to
+  // re-brand for Beta Sigma @ Maryland, Epsilon @ Drexel, etc.
+  //
+  // The Phi Sig + Gamma Triton + USC defaults are reference values only.
+  // A net-new chapter run through /admin/setup overrides every line below.
+  "chapter.fraternityName": "Phi Sigma Kappa",
+  "chapter.fraternityShort": "Phi Sig",
+  "chapter.greekLetters": "Gamma Triton",
+  "chapter.greekLettersGlyphs": "ΓΤ",
+  "chapter.schoolName": "University of South Carolina",
+  "chapter.schoolShort": "USC",
+  "chapter.schoolUrl": "https://sc.edu",
+  "chapter.charterYear": "1975",
+  "chapter.foundingYear": "1873",
+  "chapter.foundingLocation": "Massachusetts Agricultural College",
+  "chapter.nationalName": "Phi Sigma Kappa",
+  "chapter.nationalHqUrl": "https://phisigmakappa.org",
+  "chapter.cardinalPrinciples": "Brotherhood, Scholarship, Character",
+  "chapter.tagline": "#DamnProud",
+  // Max 12 chars — iOS home-screen launcher caption.
+  "chapter.appShortTitle": "Phi Sig USC",
+
   // Hero photo collage tiles. Slugs must point at IG posts whose og:image
   // resolves to the actual chapter photo, not Instagram's branding asset.
   // Verified working: DUyvfpokpy6 (Polar Plunge), DRxIVRXkYCn (Movember

@@ -15,41 +15,56 @@ const inter = Inter({
 // app/page.tsx that reads cfg so the description / OG / Twitter tags pull
 // the LATEST admin-edited stats and headline copy. Keep these strings
 // evergreen — no specific numbers — so admin edits to stats don't go stale here.
-export const metadata: Metadata = {
-  title: {
-    default: "Phi Sigma Kappa Gamma Triton — Rush at USC",
-    template: "%s · Phi Sigma Kappa Gamma Triton",
-  },
-  description:
-    "Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina. Get on the Fall 2026 rush interest list — we'll text you when the schedule drops.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app"),
-  openGraph: {
-    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+//
+// generateMetadata() reads from the SiteConfig table so chapter-identity
+// edits in /admin/settings → "Chapter identity" propagate to every page's
+// <title>, social-share card, and iOS launcher caption WITHOUT a code deploy.
+// Net-new chapter spinning up the platform fills out /admin/setup once and
+// every <title> in the build re-brands to match.
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
+  const appShortTitle = cfg["chapter.appShortTitle"] || "Phi Sig USC";
+  const chapterFullName = `${fraternityName} ${greekLetters}`;
+  const titleDefault = `${chapterFullName} — Rush at ${schoolShort}`;
+
+  return {
+    title: {
+      default: titleDefault,
+      template: `%s · ${chapterFullName}`,
+    },
     description:
-      "Get on the Fall '26 rush interest list — we'll text you when the schedule drops.",
-    type: "website",
-    url: "/",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
-    description: "Get on the Fall '26 interest list.",
-  },
-  robots: { index: true, follow: true },
-  // iOS Safari "Add to Home Screen" — without these, a bookmarked icon
-  // launches in-Safari with the URL bar visible instead of full-screen.
-  // The manifest's display:standalone is honored only by Android; iOS uses
-  // these legacy meta tags. Title is the launcher caption (≤12 chars
-  // recommended).
-  appleWebApp: {
-    capable: true,
-    title: "Phi Sig USC",
-    // "black-translucent" lets the cardinal-red theme color bleed under the
-    // iOS status bar instead of leaving a stark white strip above the nav.
-    // The viewport themeColor (#C8102E) becomes visible behind status icons.
-    statusBarStyle: "black-translucent",
-  },
-};
+      `${chapterFullName} chapter at ${schoolName}. Get on the rush interest list — we'll text you when the schedule drops.`,
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app"),
+    openGraph: {
+      title: titleDefault,
+      description: `Get on the rush interest list at ${chapterFullName} — we'll text you when the schedule drops.`,
+      type: "website",
+      url: "/",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleDefault,
+      description: `Rush ${chapterFullName} at ${schoolShort}.`,
+    },
+    robots: { index: true, follow: true },
+    // iOS Safari "Add to Home Screen" — without these, a bookmarked icon
+    // launches in-Safari with the URL bar visible instead of full-screen.
+    // The manifest's display:standalone is honored only by Android; iOS uses
+    // these legacy meta tags. Title is the launcher caption (≤12 chars
+    // recommended) — admin-configurable so a re-brand updates the launcher.
+    appleWebApp: {
+      capable: true,
+      title: appShortTitle,
+      // "black-translucent" lets the brand theme color bleed under the iOS
+      // status bar instead of leaving a stark white strip above the nav.
+      statusBarStyle: "black-translucent",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#C8102E",
@@ -71,82 +86,109 @@ export const viewport: Viewport = {
  *   2. WebSite — site-wide search action so Google can offer in-result search
  *   3. PostalAddress — physical chapter house address linked from the org
  *
- * Round-12 holistic critic suggested adding `address`, `logo`, and `WebSite`;
- * R14 ships all three plus expands `sameAs` and adds `foundingLocation`.
+ * Every field reads from SiteConfig so a re-brand for another chapter (Beta
+ * Sigma @ Maryland, etc.) updates the Knowledge Panel record without code
+ * changes. Falls back to the USC reference values if a field is unset.
+ *
+ * Address fields are parsed from the visible contact.address / contact.cityState
+ * so the JSON-LD pin and the rendered "Where we live" address always match
+ * (a mismatch gets the chapter the wrong pin in Google's Knowledge Panel).
  */
-const SITE_URL = "https://phisigmakappa.vercel.app";
-const STRUCTURED_DATA = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "CollegeOrUniversity",
-      "@id": `${SITE_URL}/#organization`,
-      name: "Phi Sigma Kappa, Gamma Triton chapter",
-      alternateName: ["Phi Sig USC", "ΦΣΚ Gamma Triton"],
-      url: SITE_URL,
-      logo: `${SITE_URL}/icon`,
-      image: `${SITE_URL}/opengraph-image`,
-      description:
-        "Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina — fraternity rush, philanthropy, brotherhood, and the Three Cardinal Principles since 1975.",
-      foundingDate: "1975",
-      foundingLocation: {
-        "@type": "Place",
-        name: "University of South Carolina, Columbia SC",
-      },
-      parentOrganization: {
-        "@type": "Organization",
-        name: "Phi Sigma Kappa",
-        url: "https://phisigmakappa.org",
-        foundingDate: "1873",
-      },
-      memberOf: {
+function parseCityState(cityState: string): { city: string; region: string; postal: string } {
+  // "Columbia, SC 29208" → { city: "Columbia", region: "SC", postal: "29208" }
+  // Defensive — handles missing comma, missing zip, extra whitespace.
+  const m = (cityState || "").trim().match(/^(.+?)\s*,\s*([A-Z]{2})(?:\s+(\d{5}(?:-\d{4})?))?$/);
+  return {
+    city: m?.[1] || cityState || "",
+    region: m?.[2] || "",
+    postal: m?.[3] || "",
+  };
+}
+
+function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const fraternityShort = cfg["chapter.fraternityShort"] || "Phi Sig";
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  const greekGlyphs = cfg["chapter.greekLettersGlyphs"] || "ΦΣΚ";
+  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
+  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
+  const charterYear = cfg["chapter.charterYear"] || "1975";
+  const foundingYear = cfg["chapter.foundingYear"] || "1873";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
+  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+  const advisorEmail = cfg["contact.advisorEmail"] || "advisor@phisig-usc.com";
+  const igUrl = cfg["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/";
+  const antiHazingUrl = cfg["antiHazing.hotlineUrl"] || "https://hazingprevention.org/help/";
+
+  const addr = parseCityState(cfg["contact.cityState"] || "Columbia, SC 29208");
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
         "@type": "CollegeOrUniversity",
-        name: "University of South Carolina",
-        url: "https://sc.edu",
-      },
-      address: {
-        "@type": "PostalAddress",
-        // Stays in sync with the visible "Where we live" address in
-        // lib/site-config.ts → "contact.address". Mismatch between visible
-        // address and JSON-LD address gets the chapter the wrong pin in
-        // Google's Knowledge Panel.
-        streetAddress: "1525 College Street",
-        addressLocality: "Columbia",
-        addressRegion: "SC",
-        postalCode: "29208",
-        addressCountry: "US",
-      },
-      sameAs: [
-        "https://www.instagram.com/phisig_usc/",
-        "https://phisigmakappa.org",
-      ],
-      contactPoint: [
-        {
-          "@type": "ContactPoint",
-          contactType: "Recruitment",
-          email: "rush@phisig-usc.com",
-          areaServed: "US",
-          availableLanguage: "English",
+        "@id": `${siteUrl}/#organization`,
+        name: `${fraternityName}, ${greekLetters} chapter`,
+        alternateName: [`${fraternityShort} ${schoolShort}`, `${greekGlyphs} ${greekLetters}`],
+        url: siteUrl,
+        logo: `${siteUrl}/icon`,
+        image: `${siteUrl}/opengraph-image`,
+        description: `${fraternityName} ${greekLetters} chapter at ${schoolName} — fraternity rush, philanthropy, brotherhood, and ${cardinalPrinciples} since ${charterYear}.`,
+        foundingDate: charterYear,
+        foundingLocation: {
+          "@type": "Place",
+          name: `${schoolName}, ${addr.city} ${addr.region}`,
         },
-        {
-          "@type": "ContactPoint",
-          contactType: "Anti-hazing report",
-          email: "advisor@phisig-usc.com",
-          url: "https://hazingprevention.org/help/",
-          areaServed: "US",
+        parentOrganization: {
+          "@type": "Organization",
+          name: fraternityName,
+          url: nationalHqUrl,
+          foundingDate: foundingYear,
         },
-      ],
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      url: SITE_URL,
-      name: "Phi Sigma Kappa Gamma Triton — Rush at USC",
-      publisher: { "@id": `${SITE_URL}/#organization` },
-      inLanguage: "en-US",
-    },
-  ],
-};
+        memberOf: {
+          "@type": "CollegeOrUniversity",
+          name: schoolName,
+          url: schoolUrl,
+        },
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: cfg["contact.address"] || "1525 College Street",
+          addressLocality: addr.city,
+          addressRegion: addr.region,
+          postalCode: addr.postal,
+          addressCountry: "US",
+        },
+        sameAs: [igUrl, nationalHqUrl].filter(Boolean),
+        contactPoint: [
+          {
+            "@type": "ContactPoint",
+            contactType: "Recruitment",
+            email: rushEmail,
+            areaServed: "US",
+            availableLanguage: "English",
+          },
+          {
+            "@type": "ContactPoint",
+            contactType: "Anti-hazing report",
+            email: advisorEmail,
+            url: antiHazingUrl,
+            areaServed: "US",
+          },
+        ],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        url: siteUrl,
+        name: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,
+        publisher: { "@id": `${siteUrl}/#organization` },
+        inLanguage: "en-US",
+      },
+    ],
+  };
+}
 
 /**
  * Validate a hex color string (#RGB or #RRGGBB). Defends against admin
@@ -177,12 +219,17 @@ export default async function RootLayout({
   // no FOUC, no rebuild needed when admin saves.
   const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};}`;
 
+  // JSON-LD built per-request from current cfg so a chapter rename / school
+  // change propagates to the Knowledge Panel record without a redeploy.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  const structuredData = buildStructuredData(cfg, siteUrl);
+
   return (
     <html lang="en" className={inter.variable}>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <link rel="manifest" href="/manifest.webmanifest" />
         {/* Preconnect to Instagram CDN — every IG photo on the homepage proxies

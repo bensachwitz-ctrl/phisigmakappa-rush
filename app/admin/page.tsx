@@ -81,6 +81,36 @@ export default async function AdminDashboard() {
   const bidsExtendedCount = rushes.filter((r) => r.status === "BID_EXTENDED" || r.status === "ACCEPTED" || r.status === "DECLINED").length;
   const acceptedCount = rushes.filter((r) => r.status === "ACCEPTED").length;
 
+  // ── Brand readiness ──────────────────────────────────────────────────────
+  // Detect whether the chapter has run the /admin/setup wizard. We compare
+  // each tracked field against the reference Phi Sig USC default — any field
+  // the chapter has overridden (even to a different string) counts as
+  // "customized". Setup is "complete" when ≥80% of fields are non-default
+  // (gives a chapter latitude to keep e.g. the cardinal principles wording).
+  const BRAND_FIELDS: Array<[string, string]> = [
+    ["chapter.fraternityName", "Phi Sigma Kappa"],
+    ["chapter.fraternityShort", "Phi Sig"],
+    ["chapter.greekLetters", "Gamma Triton"],
+    ["chapter.schoolName", "University of South Carolina"],
+    ["chapter.schoolShort", "USC"],
+    ["chapter.charterYear", "1975"],
+    ["chapter.appShortTitle", "Phi Sig USC"],
+    ["contact.rushEmail", "rush@phisig-usc.com"],
+    ["contact.advisorEmail", "advisor@phisig-usc.com"],
+    ["contact.address", "1525 College Street"],
+    ["contact.cityState", "Columbia, SC 29208"],
+    ["contact.instagramHandle", "@phisig_usc"],
+  ];
+  const customizedFields = BRAND_FIELDS.filter(([key, def]) => {
+    const v = cfg[key];
+    return v && v.trim() !== "" && v !== def;
+  }).length;
+  const brandReadiness = {
+    customizedFields,
+    totalFields: BRAND_FIELDS.length,
+    isSetupComplete: customizedFields >= Math.ceil(BRAND_FIELDS.length * 0.8),
+  };
+
   const checklist = [
     {
       label: "Real chapter advisor name",
@@ -167,6 +197,7 @@ export default async function AdminDashboard() {
         myBrotherId={me?.id || null}
         bidsExtendedCount={bidsExtendedCount}
         acceptedCount={acceptedCount}
+        brandReadiness={brandReadiness}
       />
 
       {remaining > 0 && (
@@ -221,7 +252,17 @@ export default async function AdminDashboard() {
         </div>
       )}
 
-      <Roster initial={serializable as any} brotherName={me?.name || null} />
+      <Roster
+        initial={serializable as any}
+        brotherName={me?.name || null}
+        chapterBrand={{
+          fraternityName: cfg["chapter.fraternityName"] || "Phi Sigma Kappa",
+          fraternityShort: cfg["chapter.fraternityShort"] || "Phi Sig",
+          schoolShort: cfg["chapter.schoolShort"] || "USC",
+          chapterAttribution: `${cfg["chapter.fraternityShort"] || "Phi Sig"} ${cfg["chapter.schoolShort"] || "USC"}`,
+          houseAddress: (cfg["contact.address"] || "1525 College Street").split(",")[0].trim(),
+        }}
+      />
     </main>
   );
 }
