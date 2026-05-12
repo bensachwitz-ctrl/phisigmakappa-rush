@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrotherId, isAdminAuthed } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,10 +53,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Rush not found" }, { status: 404 });
   }
 
+  // Capture prior vote value (if any) for the audit diff so the log reads
+  // "+1 → +2" not just "+2".
+  const prior = await prisma.vote.findUnique({
+    where: { rushId_brotherId: { rushId, brotherId } },
+    select: { value: true },
+  }).catch(() => null);
+
   const vote = await prisma.vote.upsert({
     where: { rushId_brotherId: { rushId, brotherId } },
     update: { value, comment: comment || null },
     create: { rushId, brotherId, value, comment: comment || null },
+  });
+
+  await audit({
+    action: prior ? "RUSH_VOTE_CHANGE" : "RUSH_VOTE_CAST",
+    subjectType: "Rush",
+    subjectId: rushId,
+    subjectName: rush.name,
+    details: prior
+      ? `${prior.value >= 0 ? "+" : ""}${prior.value} → ${value >= 0 ? "+" : ""}${value}`
+      : `${value >= 0 ? "+" : ""}${value}`,
+    req,
   });
 
   return NextResponse.json({ ok: true, vote });
@@ -72,9 +91,27 @@ export async function DELETE(req: Request) {
   const parsed = DeleteSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
 
+  // Snapshot rush name + prior value for the audit trail before deletion.
+  const [rush, prior] = await Promise.all([
+    prisma.rush.findUnique({ where: { id: parsed.data.rushId }, select: { name: true } }).catch(() => null),
+    prisma.vote.findUnique({
+      where: { rushId_brotherId: { rushId: parsed.data.rushId, brotherId } },
+      select: { value: true },
+    }).catch(() => null),
+  ]);
   await prisma.vote
     .delete({ where: { rushId_brotherId: { rushId: parsed.data.rushId, brotherId } } })
     .catch(() => null);
+  if (prior) {
+    await audit({
+      action: "RUSH_VOTE_CLEARED",
+      subjectType: "Rush",
+      subjectId: parsed.data.rushId,
+      subjectName: rush?.name || null,
+      details: `cleared (was ${prior.value >= 0 ? "+" : ""}${prior.value})`,
+      req,
+    });
+  }
   return NextResponse.json({ ok: true });
 }
 

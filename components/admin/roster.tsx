@@ -54,7 +54,9 @@ import {
   Wand2,
   ExternalLink,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
+import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
 import {
   RUSH_STATUSES,
   STATUS_LABELS,
@@ -166,6 +168,7 @@ export function Roster({
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [emailOpen, setEmailOpen] = React.useState(false);
   const [smsOpen, setSmsOpen] = React.useState(false);
+  const [compareOpen, setCompareOpen] = React.useState(false);
   const [detail, setDetail] = React.useState<Rush | null>(null);
 
   function toggle(id: string) {
@@ -416,6 +419,24 @@ export function Roster({
               <span className="hidden sm:inline">Export</span>
             </a>
           </Button>
+          {/* Compare opens a side-by-side decision modal. Only enabled with
+              2-4 selected — fewer than 2 isn't a comparison, more than 4
+              breaks the side-by-side layout on a 1280px laptop. */}
+          <Button
+            variant="outline"
+            onClick={() => setCompareOpen(true)}
+            disabled={selected.size < 2 || selected.size > 4}
+            title={
+              selected.size < 2
+                ? "Select 2-4 PNMs to compare"
+                : selected.size > 4
+                ? "Comparison view shows up to 4 PNMs at once"
+                : `Compare ${selected.size} selected PNMs`
+            }
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Compare</span> {selected.size >= 2 && selected.size <= 4 && `(${selected.size})`}
+          </Button>
           <Button
             variant="outline"
             onClick={() => setSmsOpen(true)}
@@ -579,6 +600,12 @@ export function Roster({
         rushes={rushes.filter((r) => selected.has(r.id))}
         onSent={() => { setSmsOpen(false); setSelected(new Set()); }}
         templates={SMS_TEMPLATES}
+      />
+
+      <PnmCompareModal
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        rushes={rushes.filter((r) => selected.has(r.id))}
       />
 
       <RushDetail

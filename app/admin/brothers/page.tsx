@@ -1,16 +1,28 @@
 import { prisma } from "@/lib/prisma";
 import { BrothersManager } from "@/components/admin/brothers-manager";
+import { BrotherLeaderboard, type LeaderboardBrother } from "@/components/admin/brother-leaderboard";
 import { getCurrentSession } from "@/lib/auth";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
 export default async function BrothersPage() {
   let brothers: any[] = [];
   try {
-    brothers = await prisma.brother.findMany({ orderBy: { name: "asc" } });
+    // Single round-trip pulls every brother + their engagement counts.
+    // Prisma _count aggregates in SQL so the payload stays small even
+    // with 60+ brothers and hundreds of votes/RSVPs.
+    brothers = await prisma.brother.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        _count: { select: { votes: true, rsvps: true } },
+      },
+    });
   } catch { brothers = []; }
 
   const session = await getCurrentSession();
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
 
   const serializable = brothers.map((b) => ({
     ...b,
@@ -19,14 +31,28 @@ export default async function BrothersPage() {
     lastSeen: b.lastSeen.toISOString(),
   }));
 
+  // Leaderboard data — separate shape so BrothersManager isn't bloated with
+  // engagement counts it doesn't render. The leaderboard component handles
+  // sorting + slicing client-side from this flat list.
+  const leaderboardBrothers: LeaderboardBrother[] = brothers.map((b) => ({
+    id: b.id,
+    name: b.name,
+    position: b.position,
+    headshotUrl: b.headshotUrl,
+    pledgeClass: b.pledgeClass,
+    voteCount: b._count?.votes ?? 0,
+    rsvpCount: b._count?.rsvps ?? 0,
+    serviceHours: b.serviceHours,
+  }));
+
   return (
-    <main className="container py-8">
-      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+    <main className="container py-8 space-y-6">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Brother directory</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {session?.isAdmin
-              ? "Active brothers of the Gamma Triton chapter. Track contact, position, dues, service hours, and study hours."
+              ? `Active brothers of the ${greekLetters} chapter. Track contact, position, dues, service hours, and study hours.`
               : "Browse the chapter directory. You can edit your own profile from the card with the pencil icon."}
           </p>
         </div>
@@ -36,6 +62,9 @@ export default async function BrothersPage() {
           </span>
         )}
       </div>
+
+      <BrotherLeaderboard brothers={leaderboardBrothers} />
+
       <BrothersManager
         initial={serializable as any}
         isAdmin={!!session?.isAdmin}

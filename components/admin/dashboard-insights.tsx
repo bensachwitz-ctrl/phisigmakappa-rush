@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Calendar,
   ThumbsUp, ThumbsDown, Sparkles, ArrowRight, Vote, Mail,
-  Download, FileText, Palette,
+  Download, FileText, Palette, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -418,6 +418,12 @@ export function DashboardInsights({
         >
           <FileText className="h-3 w-3" aria-hidden="true" /> Weekly digest (JSON)
         </a>
+        <Link
+          href="/admin/audit"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+        >
+          <ScrollText className="h-3 w-3" aria-hidden="true" /> Audit log
+        </Link>
         <span className="text-muted-foreground/60">·</span>
         <span className="text-muted-foreground tabular-nums">
           Chapter avg vote {avgVoteScore >= 0 ? "+" : ""}{avgVoteScore.toFixed(2)}

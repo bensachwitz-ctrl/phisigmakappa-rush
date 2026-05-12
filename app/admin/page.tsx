@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Roster } from "@/components/admin/roster";
 import { DashboardInsights, type InsightEvent } from "@/components/admin/dashboard-insights";
+import { RushFunnel } from "@/components/admin/rush-funnel";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { CheckCircle2, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
@@ -199,6 +200,20 @@ export default async function AdminDashboard() {
         acceptedCount={acceptedCount}
         brandReadiness={brandReadiness}
       />
+
+      {/* Funnel visualization — drop-off between every stage made visible.
+          Sits below the KPI strip + consensus panels so it's available when
+          the e-board wants to dig into "where are we losing PNMs". */}
+      {rushes.length > 0 && (
+        <div className="mb-6">
+          <RushFunnel
+            submitted={rushes.length}
+            active={rushes.filter((r) => r.status === "ACTIVE").length}
+            bid={bidsExtendedCount}
+            accepted={acceptedCount}
+          />
+        </div>
+      )}
 
       {remaining > 0 && (
         <div className="mb-6 rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white p-5">

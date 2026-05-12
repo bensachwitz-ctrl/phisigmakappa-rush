@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { RUSH_STATUSES } from "@/lib/utils";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,11 @@ export async function PATCH(req: Request) {
   try {
     const body = await req.json();
     const data = PatchSchema.parse(body);
+    // Capture the prior state for the audit trail before we mutate.
+    const before = await prisma.rush.findUnique({
+      where: { id: data.id },
+      select: { status: true, notes: true, name: true },
+    });
     const updated = await prisma.rush.update({
       where: { id: data.id },
       data: {
@@ -47,6 +53,27 @@ export async function PATCH(req: Request) {
         ...(typeof data.notes === "string" ? { notes: data.notes } : {}),
       },
     });
+    // Audit — best-effort, never blocks the response.
+    if (before && data.status && before.status !== data.status) {
+      await audit({
+        action: "RUSH_STATUS",
+        subjectType: "Rush",
+        subjectId: data.id,
+        subjectName: updated.name,
+        details: `${before.status} → ${data.status}`,
+        req,
+      });
+    }
+    if (before && typeof data.notes === "string" && before.notes !== data.notes) {
+      await audit({
+        action: "RUSH_NOTES",
+        subjectType: "Rush",
+        subjectId: data.id,
+        subjectName: updated.name,
+        details: `notes updated (${(data.notes || "").length} chars)`,
+        req,
+      });
+    }
     return NextResponse.json({ ok: true, rush: updated });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -67,7 +94,17 @@ export async function DELETE(req: Request) {
   try {
     const body = await req.json();
     const { id } = DeleteSchema.parse(body);
+    // Capture name for audit BEFORE deletion (cascade removes the row).
+    const victim = await prisma.rush.findUnique({ where: { id }, select: { name: true, status: true } });
     await prisma.rush.delete({ where: { id } });
+    await audit({
+      action: "RUSH_DELETED",
+      subjectType: "Rush",
+      subjectId: id,
+      subjectName: victim?.name || null,
+      details: victim?.status ? `last status: ${victim.status}` : null,
+      req,
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof z.ZodError) {

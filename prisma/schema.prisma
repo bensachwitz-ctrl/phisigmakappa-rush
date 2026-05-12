@@ -290,3 +290,34 @@ model PollVote {
   @@unique([pollId, brotherId])
   @@index([pollId])
 }
+
+// AuditLog — chapter governance trail. Every PNM status change, vote change,
+// dues toggle, brother deletion, broadcast, and settings change writes one
+// row here so the e-board can answer "who changed what, when" months later.
+//
+// Intentionally NOT linked via FK to actor/subject — we want the row to
+// outlive the actor (a brother who left the chapter) and the subject
+// (a deleted PNM). Names + IDs are denormalized for retrieval forensics.
+//
+// Retained for 1 year (cron-pruned). TCPA / risk-management value > storage.
+model AuditLog {
+  id          String   @id @default(cuid())
+  // Who: brother who triggered the action ("admin" for shared-creds admin)
+  actorId     String?  // null for shared-admin session (no per-person brother row)
+  actorName   String   // denormalized — survives actor deletion
+  // What: short code (RUSH_STATUS, RUSH_VOTE, BROTHER_DUES, BROADCAST_SENT, etc.)
+  action      String
+  // Subject: the entity being acted on
+  subjectType String   // "Rush" | "Brother" | "Event" | "Announcement" | "Settings"
+  subjectId   String?  // ID of the row touched (nullable for bulk ops)
+  subjectName String?  // denormalized name for retrieval (PNM name, brother name)
+  // Detail: before → after, formatted for human reading at retrieval time
+  details     String?  // e.g. "ACTIVE → BID_EXTENDED" or "vote: +1 → +2"
+  // Context
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([subjectType, subjectId])
+  @@index([actorId])
+}
