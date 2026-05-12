@@ -6,6 +6,7 @@
 **Health probe:** https://phisigmakappa.vercel.app/api/health
 **Build at convergence:** `84c8b9d` (R37) — deploy `dpl_HjfzA6PY5DyH3Hisj5a3Q9V5Dyon`
 **Convergence floor:** **10 / 10 across accessibility, usability, and functional axes**
+**Post-convergence layer (R38):** `65cf586` — deploy `dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG` — organizational decision-support panel for the e-board
 
 ---
 
@@ -22,6 +23,7 @@ axes cleared the 10 / 10 floor.
 | R35   | `2dba1ea` | —     | —         | —          | Functional HIGH closed (rush cooldown + robots scope) |
 | R36   | `66d6eb4` | 9.5   | **10**    | 9          | Contrast MED, footer L4, login L2, privacy M3 closed; 3 LOWs remain |
 | R37   | `84c8b9d` | **10**| **10**    | **10**     | All LOWs closed — idempotency live-verified, abbr glosses on privacy, codemod aria-hidden across decorative icons |
+| R38   | `65cf586` | —     | —         | —          | Post-convergence: organizational decision-support layer (KPI strip + decision-ready panels + smart-filter chips + new exports) |
 
 ---
 
@@ -156,6 +158,80 @@ Live verification:
 <abbr title="California Consumer Privacy Act / California Privacy Rights…"
 <abbr title="Virginia Consumer Data Protection Act — Virginia's state…"
 ```
+
+---
+
+## R38 — organizational decision-support layer (commit `65cf586`)
+
+After the 10/10 convergence floor was sealed, R38 ships a
+post-convergence layer focused on **making the chapter easier to run as
+an organization**. The e-board no longer has to scroll a flat roster
+to find what needs their attention — the data tells them.
+
+### Dashboard insights (new top of `/admin`)
+
+- **6-tile KPI strip** with tap-through shortcuts and tone hints
+  (green = on track, amber = behind, muted = no data):
+  Active PNMs · Ready-to-decide · Vote-participation % (7-day) ·
+  Dues-collected % · Bid-conversion % · Next event.
+- **Strong-yes consensus panel** (green) — lists up to 5 active PNMs
+  with ≥5 votes and average ≥ +1.0. These are bid candidates.
+- **Strong-no consensus panel** (red) — same threshold inverted.
+  Likely drops.
+- **Your unvoted PNMs panel** (cardinal) — signed-in brother sees the
+  active PNMs closest to a decision that they personally haven't voted
+  on, sorted by vote count desc so their input matters most.
+- **Jump-to row** — one-tap shortcuts to Brothers, Events, PNM roster
+  CSV, Brothers CSV, Weekly digest JSON.
+
+### Roster smart-filter chips (orthogonal to status filter)
+
+One-tap "quick views" with live counts:
+- **Ready to decide (N)** — active PNMs with ≥5 votes
+- **Needs my vote (N)** — active PNMs the signed-in brother hasn't
+  weighed in on yet
+- **Bid pending (N)** — `BID_EXTENDED` rows so the chapter can chase
+  responses
+
+### New exports
+
+| Endpoint                         | Format | Use case                                                |
+|----------------------------------|--------|---------------------------------------------------------|
+| `/api/admin/export`              | CSV    | Existing — full PNM roster                              |
+| `/api/admin/export/brothers`     | CSV    | **NEW** — every brother + position, year, dues, hours, votes cast (all-time + 7d), RSVPs, last seen. Paste into the weekly meeting deck. |
+| `/api/admin/digest`              | JSON   | **NEW** — weekly snapshot: rush funnel counts, top-5 bid + top-5 drop, vote-participation %, dues %, dormant brothers (no vote 14d), upcoming events 7d. Paste into Slack or the advisor email. |
+
+All three are admin-only (verified 401 unauth on live deploy
+`dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG`). Single Prisma `_count` aggregate
+per CSV row keeps payload small.
+
+### Help page updates
+
+- New reference section **"Dashboard — decisions at a glance"**
+  explains every KPI tile and the consensus thresholds.
+- Two new common-task cards: **"Send the weekly chapter digest"** and
+  **"Decide bids fast (with consensus thresholds)"**.
+
+### Decision thresholds (consistent across UI + API)
+
+| Constant            | Value | Used by                                          |
+|---------------------|:-----:|--------------------------------------------------|
+| `DECISION_MIN_VOTES`| 5     | dashboard insights, smart filter, digest         |
+| `BID_RECOMMEND_AVG` | +1.0  | strong-yes panel, digest `recommendBid`          |
+| `DROP_RECOMMEND_AVG`| -1.0  | strong-no panel, digest `recommendDrop`          |
+
+### R38 live verification
+
+```
+GET  /api/health                            → deploy dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG, db up
+GET  /api/admin/digest          (unauth)    → 401 {"ok":false}
+GET  /api/admin/export/brothers (unauth)    → 401 {"ok":false}
+GET  /admin                     (unauth)    → 307 → /admin/login?from=%2Fadmin
+GET  /admin/help                (unauth)    → 307 → /admin/login?from=%2Fadmin%2Fhelp
+```
+
+All endpoints behave correctly. `tsc --noEmit` clean. 6 files
+(+828 / -1) — pure additive, no behavior changes to existing flows.
 
 ---
 
