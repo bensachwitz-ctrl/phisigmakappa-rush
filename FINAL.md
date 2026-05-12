@@ -7,6 +7,7 @@
 **Build at convergence:** `84c8b9d` (R37) — deploy `dpl_HjfzA6PY5DyH3Hisj5a3Q9V5Dyon`
 **Convergence floor:** **10 / 10 across accessibility, usability, and functional axes**
 **Post-convergence layer (R38):** `65cf586` — deploy `dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG` — organizational decision-support panel for the e-board
+**White-label foundation (R39):** `232d295` — deploy `dpl_GZ4gzzCXYPHrdr8vKTWxLT78hmaJ` — any chapter can re-brand in 5 minutes via `/admin/setup` wizard (USC reference defaults preserved end-to-end)
 
 ---
 
@@ -24,6 +25,7 @@ axes cleared the 10 / 10 floor.
 | R36   | `66d6eb4` | 9.5   | **10**    | 9          | Contrast MED, footer L4, login L2, privacy M3 closed; 3 LOWs remain |
 | R37   | `84c8b9d` | **10**| **10**    | **10**     | All LOWs closed — idempotency live-verified, abbr glosses on privacy, codemod aria-hidden across decorative icons |
 | R38   | `65cf586` | —     | —         | —          | Post-convergence: organizational decision-support layer (KPI strip + decision-ready panels + smart-filter chips + new exports) |
+| R39   | `232d295` | —     | —         | —          | White-label foundation: 14 cfg keys + dynamic generateMetadata + JSON-LD + `/admin/setup` wizard + brand readiness panel + WHITE-LABEL.md runbook |
 
 ---
 
@@ -232,6 +234,108 @@ GET  /admin/help                (unauth)    → 307 → /admin/login?from=%2Fadm
 
 All endpoints behave correctly. `tsc --noEmit` clean. 6 files
 (+828 / -1) — pure additive, no behavior changes to existing flows.
+
+---
+
+## R39 — white-label foundation (commit `232d295`)
+
+R39 turns the platform into a chapter-rollout product sellable to
+nationals. A net-new chapter (Beta Sigma @ Maryland, Epsilon @ Drexel,
+Theta Pentagon @ Drexel, etc.) goes from `git clone` to "ready for a
+real PNM to register" in **~30 minutes** without touching any code.
+The USC reference deploy is untouched — every chapter-specific string
+falls back to the existing default if the chapter hasn't overridden it.
+
+### 14 new chapter-identity cfg keys
+
+All defaulting to the current USC reference values in `lib/site-config.ts`:
+
+- `chapter.fraternityName` · `chapter.fraternityShort`
+- `chapter.greekLetters` · `chapter.greekLettersGlyphs`
+- `chapter.schoolName` · `chapter.schoolShort` · `chapter.schoolUrl`
+- `chapter.charterYear` · `chapter.foundingYear` · `chapter.foundingLocation`
+- `chapter.nationalName` · `chapter.nationalHqUrl`
+- `chapter.cardinalPrinciples` · `chapter.tagline` · `chapter.appShortTitle`
+
+### Dynamic surfaces (read cfg with USC fallback)
+
+- **`app/layout.tsx`** — converted to `generateMetadata()`. Title, OG,
+  Twitter, `appleWebApp.title` all derived from cfg. JSON-LD
+  `STRUCTURED_DATA` rebuilt per-request by `buildStructuredData(cfg, siteUrl)`
+  so the Knowledge Panel record (`name`, `parentOrganization`,
+  `memberOf`, `address`, `sameAs`, `contactPoint`) updates on chapter
+  rename without a redeploy.
+- **`components/site/footer.tsx`** — chapter attribution + cardinal
+  principles + national HQ URL + national-brand `alt` all cfg-driven.
+- **`/privacy` + `/parents`** — both converted to `generateMetadata()`;
+  in-body chapter-name references derived from cfg with USC fallback.
+- **`components/admin/roster.tsx`** — `EMAIL_TEMPLATES` + `SMS_TEMPLATES`
+  refactored into `buildEmailTemplates(brand)` / `buildSmsTemplates(brand)`
+  injected as props to `EmailComposer` / `SmsComposer`. Bid template
+  signature, SMS chapter-house references, etc. all re-brand on rename.
+
+### `/admin/setup` — 5-step chapter onboarding wizard (new)
+
+- **Step 1 — Chapter identity:** Fraternity name, Greek letters, school
+- **Step 2 — Brand colors:** Primary / dark / soft hexes with native color pickers
+- **Step 3 — Contact:** Rush inbox, advisor of record, chapter house
+- **Step 4 — Anti-hazing:** National hotline + body paragraph
+- **Step 5 — Launch:** Review + next-action cards (view homepage, advanced settings, invite brothers, add events)
+
+Step rail with progress dots + done checkmarks + back/forward nav.
+Each step saves a subset of keys via `/api/admin/settings` PATCH so the
+wizard is idempotent — refresh and your inputs are still there.
+
+### Brand readiness panel (new — on `/admin` dashboard)
+
+Compares 12 tracked cfg fields against their reference defaults:
+
+| Field                            | Default                          |
+|----------------------------------|----------------------------------|
+| `chapter.fraternityName`         | `Phi Sigma Kappa`                |
+| `chapter.fraternityShort`        | `Phi Sig`                        |
+| `chapter.greekLetters`           | `Gamma Triton`                   |
+| `chapter.schoolName`             | `University of South Carolina`   |
+| `chapter.schoolShort`            | `USC`                            |
+| `chapter.charterYear`            | `1975`                           |
+| `chapter.appShortTitle`          | `Phi Sig USC`                    |
+| `contact.rushEmail`              | `rush@phisig-usc.com`            |
+| `contact.advisorEmail`           | `advisor@phisig-usc.com`         |
+| `contact.address`                | `1525 College Street`            |
+| `contact.cityState`              | `Columbia, SC 29208`             |
+| `contact.instagramHandle`        | `@phisig_usc`                    |
+
+Setup is "complete" when ≥80% of fields are customized — gives
+latitude to keep generic phrasings (e.g. cardinal principles wording).
+An amber banner with progress bar nudges the chapter toward
+`/admin/setup` until the threshold is met, then auto-hides.
+ARIA `progressbar` with `valuemin` / `valuemax` / `valuenow`.
+
+### `WHITE-LABEL.md` — nationals runbook (new)
+
+- 30-minute deploy procedure (infra → wizard → assets → events → handover)
+- Asset table: 4 files in `public/brand/` to swap (national wordmark,
+  coat of arms, seal SVG, chapter wordmark)
+- Architecture diagram of where cfg lives and how overrides work
+- Path-to-nationals: multi-tenant routing, nationals admin aggregator,
+  branded onboarding flow, pooled Twilio + Resend
+- Cost-to-run table — free tiers cover most chapters, ~$25/mo on Pro
+- 11-item live verification checklist post-rebrand
+
+### R39 live verification (USC reference defaults preserved)
+
+| Check                                                  | Result                                              |
+|--------------------------------------------------------|-----------------------------------------------------|
+| `/api/health` deploy id                                | `dpl_GZ4gzzCXYPHrdr8vKTWxLT78hmaJ` (changed) ✓     |
+| `<title>` on `/`                                       | `Phi Sigma Kappa Gamma Triton — Rush at USC` ✓     |
+| `<title>` on `/privacy`                                | `Privacy — Phi Sigma Kappa @ USC · Phi Sigma Kappa Gamma Triton` ✓ |
+| JSON-LD `name` on `/`                                  | `Phi Sigma Kappa, Gamma Triton chapter` ✓          |
+| Footer attribution                                     | `Gamma Triton at USC` rendered 3× ✓                |
+| `/admin/setup` unauth                                  | `307 → /admin/login` ✓                              |
+
+The reference USC deploy is byte-for-byte unchanged to a public
+visitor. A different chapter running `/admin/setup` would see every
+one of those strings reshape to their identity on the next page load.
 
 ---
 
