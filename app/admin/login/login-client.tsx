@@ -95,13 +95,28 @@ export default function LoginClient() {
 
           <Card>
             <CardContent className="p-6 sm:p-8">
-              {/* Mode tabs */}
-              <div className="grid grid-cols-2 gap-2 mb-6 rounded-xl bg-secondary p-1">
+              {/* Mode tabs — radiogroup pattern so the choice between
+                  Brother and Admin reads as one mutually-exclusive option
+                  to assistive tech, not two unrelated buttons. */}
+              <div
+                role="radiogroup"
+                aria-label="Sign-in type"
+                className="grid grid-cols-2 gap-2 mb-6 rounded-xl bg-secondary p-1"
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    setMode((m) => (m === "admin" ? "brother" : "admin"));
+                  }
+                }}
+              >
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={mode === "brother"}
+                  tabIndex={mode === "brother" ? 0 : -1}
                   onClick={() => setMode("brother")}
                   className={cn(
-                    "rounded-md py-2 text-sm font-medium transition-colors",
+                    "rounded-md py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
                     mode === "brother" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -109,13 +124,16 @@ export default function LoginClient() {
                 </button>
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={mode === "admin"}
+                  tabIndex={mode === "admin" ? 0 : -1}
                   onClick={() => setMode("admin")}
                   className={cn(
-                    "rounded-md py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5",
+                    "rounded-md py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
                     mode === "admin" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Admin
                 </button>
               </div>
 

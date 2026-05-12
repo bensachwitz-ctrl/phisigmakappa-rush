@@ -231,9 +231,18 @@ export async function POST(req: Request) {
     const isNewRecord = upserted.updatedAt.getTime() - upserted.createdAt.getTime() < 2_000;
 
     if (!isNewRecord) {
-      // Re-affirmation: write a fresh consent receipt because the user just
-      // re-checked the box on the new submission. Old receipts are retained.
-      const receipt = await prisma.rushConsent.create({
+      // Per-email cooldown: if this email already wrote a consent receipt in
+      // the last 60s, return that same receipt instead of inserting a fresh
+      // one. Prevents DB bloat from F5-hammer / curl-loop / accidental
+      // double-submit, while still recording one genuine re-affirmation per
+      // browser session. Real users never re-submit within 60s by accident.
+      const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
+      const recentReceipt = await prisma.rushConsent.findFirst({
+        where: { rushId: upserted.id, createdAt: { gte: sixtySecondsAgo } },
+        orderBy: { createdAt: "desc" },
+      }).catch(() => null);
+
+      const receipt = recentReceipt ?? await prisma.rushConsent.create({
         data: {
           rushId: upserted.id,
           disclosureVersion: DISCLOSURE_VERSION,
