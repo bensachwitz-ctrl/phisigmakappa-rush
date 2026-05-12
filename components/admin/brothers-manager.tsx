@@ -218,8 +218,35 @@ export function BrothersManager({
 
       {filtered.length === 0 ? (
         <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            {list.length === 0 ? "No brothers yet. Click \"Add brother\" to start the directory." : "No brothers match your search."}
+          <CardContent className="py-12 px-6 text-center">
+            {list.length === 0 ? (
+              <div className="max-w-sm mx-auto">
+                <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red text-white mb-4 shadow-md shadow-phisig-red/20" aria-hidden="true">
+                  <Users className="h-6 w-6" />
+                </span>
+                <h3 className="text-base font-semibold tracking-tight">Brotherhood directory is empty.</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                  Send an invite link so each brother sets their own password and fills out their year, major, headshot, and pledge class.
+                  {isAdmin ? " Or add a brother manually if they need to be on the roster before they fully onboard." : ""}
+                </p>
+                {isAdmin && (
+                  <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
+                    <Button onClick={() => setInviteOpen(true)}>
+                      <Send className="h-4 w-4" /> Invite first brother
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={openCreate}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      or add manually
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No brothers match "{query}". Try a different search.</p>
+            )}
           </CardContent>
         </Card>
       ) : (

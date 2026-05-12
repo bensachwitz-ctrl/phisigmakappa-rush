@@ -82,6 +82,9 @@ function humanVerb(action: string): string {
     case "RUSH_VOTE_CAST": return "voted on";
     case "RUSH_VOTE_CHANGE": return "changed vote on";
     case "RUSH_VOTE_CLEARED": return "cleared vote on";
+    case "BID_TOKEN_GENERATED": return "issued bid for";
+    case "BID_ACCEPTED": return "got bid acceptance from";
+    case "BID_DECLINED": return "got bid decline from";
     case "BROTHER_CREATED": return "added";
     case "BROTHER_UPDATED": return "updated";
     case "BROTHER_DUES": return "toggled dues for";

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { RUSH_STATUSES } from "@/lib/utils";
 import { audit } from "@/lib/audit";
+
+// Bid token TTL — long enough for a thoughtful decision, short enough that
+// an uncollected token doesn't sit as a phishing surface forever.
+const BID_TOKEN_TTL_DAYS = 14;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,13 +49,31 @@ export async function PATCH(req: Request) {
     // Capture the prior state for the audit trail before we mutate.
     const before = await prisma.rush.findUnique({
       where: { id: data.id },
-      select: { status: true, notes: true, name: true },
+      select: { status: true, notes: true, name: true, bidToken: true },
     });
+
+    // Auto-generate a bid token the FIRST time status flips to BID_EXTENDED.
+    // Re-extending after a decline doesn't regenerate — keeps token churn
+    // low. To re-issue, admin must explicitly null the token first (future
+    // "Re-issue bid link" button) — for now status change is the trigger.
+    const isFirstBidExtension =
+      data.status === "BID_EXTENDED" &&
+      before?.status !== "BID_EXTENDED" &&
+      !before?.bidToken;
+    const bidTokenFields = isFirstBidExtension
+      ? {
+          // 32 hex chars = 128 bits of entropy. Crypto-strong, URL-safe.
+          bidToken: crypto.randomBytes(16).toString("hex"),
+          bidTokenExpiresAt: new Date(Date.now() + BID_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
+        }
+      : {};
+
     const updated = await prisma.rush.update({
       where: { id: data.id },
       data: {
         ...(data.status ? { status: data.status } : {}),
         ...(typeof data.notes === "string" ? { notes: data.notes } : {}),
+        ...bidTokenFields,
       },
     });
     // Audit — best-effort, never blocks the response.
@@ -61,6 +84,16 @@ export async function PATCH(req: Request) {
         subjectId: data.id,
         subjectName: updated.name,
         details: `${before.status} → ${data.status}`,
+        req,
+      });
+    }
+    if (isFirstBidExtension) {
+      await audit({
+        action: "BID_TOKEN_GENERATED",
+        subjectType: "Rush",
+        subjectId: data.id,
+        subjectName: updated.name,
+        details: `expires ${updated.bidTokenExpiresAt?.toISOString().slice(0, 10)}`,
         req,
       });
     }

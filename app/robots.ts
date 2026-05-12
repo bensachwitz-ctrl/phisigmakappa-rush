@@ -15,6 +15,10 @@ export default function robots(): MetadataRoute.Robots {
           // misbehaving crawler that ignores robots metas still won't even
           // request these one-time-use invite URLs from us.
           "/onboard",
+          // /bid/[token] — single-use PNM bid-response landing. Same
+          // reasoning as /onboard; the page also ships noindex metas.
+          "/bid",
+          "/api/bid",
           // /api/rush, /api/upload-headshot, /api/photo are public POST/GET
           // endpoints for the rush funnel — there's nothing for a crawler
           // to index (they return JSON or proxied images), and disallowing

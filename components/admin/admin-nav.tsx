@@ -67,6 +67,25 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* ⌘K discovery hint — desktop only, dispatches a synthetic ⌘K
+              keydown so users who click it open the CommandPalette without
+              having to know the shortcut. The palette listens at the window
+              level and toggles on (meta|ctrl)+K. */}
+          <button
+            type="button"
+            onClick={() => {
+              const ev = new KeyboardEvent("keydown", { key: "k", metaKey: true, ctrlKey: true });
+              window.dispatchEvent(ev);
+            }}
+            className="hidden lg:inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-medium text-muted-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+            title="Open command palette (⌘K)"
+            aria-label="Open command palette"
+          >
+            <Menu className="h-3.5 w-3.5" />
+            Quick jump
+            <kbd className="ml-1 rounded border border-border bg-secondary px-1 text-[10px]">⌘K</kbd>
+          </button>
+
           {/* Quick Help button — always visible */}
           <Link
             href="/admin/help"

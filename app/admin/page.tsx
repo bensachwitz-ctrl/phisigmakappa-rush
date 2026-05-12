@@ -24,6 +24,9 @@ export default async function AdminDashboard() {
   } catch {
     rushes = [];
   }
+  // Surface bid token + response state so the roster can show a "Copy bid
+  // link" button on PNMs with a live token, and a green/red pill when a
+  // response has come in.
 
   // "Get rush ready" checklist — the 6 things every chapter must populate
   // before the public site reads as a finished product. Status pills + jump-
@@ -182,6 +185,10 @@ export default async function AdminDashboard() {
     voteCount: r.votes.length,
     myVote: me ? r.votes.find((v: any) => v.brotherId === me.id)?.value ?? null : null,
     attendanceCount: r.attendances.length,
+    bidToken: r.bidToken,
+    bidTokenExpiresAt: r.bidTokenExpiresAt ? r.bidTokenExpiresAt.toISOString() : null,
+    bidRespondedAt: r.bidRespondedAt ? r.bidRespondedAt.toISOString() : null,
+    bidResponseChoice: r.bidResponseChoice,
   }));
 
   return (

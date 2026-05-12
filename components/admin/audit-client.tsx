@@ -234,6 +234,9 @@ function humanAction(action: string): string {
     case "RUSH_VOTE_CAST": return "voted on";
     case "RUSH_VOTE_CHANGE": return "changed vote on";
     case "RUSH_VOTE_CLEARED": return "cleared vote on";
+    case "BID_TOKEN_GENERATED": return "generated bid link for";
+    case "BID_ACCEPTED": return "accepted bid —";
+    case "BID_DECLINED": return "declined bid —";
     case "BROTHER_CREATED": return "added brother";
     case "BROTHER_UPDATED": return "updated brother";
     case "BROTHER_DUES": return "toggled dues for";

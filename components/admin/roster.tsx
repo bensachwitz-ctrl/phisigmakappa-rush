@@ -55,6 +55,7 @@ import {
   ExternalLink,
   RefreshCw,
   Sparkles,
+  Copy,
 } from "lucide-react";
 import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
 import {
@@ -84,6 +85,12 @@ type Rush = {
   voteCount: number;
   myVote: number | null;
   attendanceCount: number;
+  // Bid response workflow (R42). When status is BID_EXTENDED a token is
+  // generated and the chapter shares /bid/{bidToken} with the PNM.
+  bidToken?: string | null;
+  bidTokenExpiresAt?: string | null;
+  bidRespondedAt?: string | null;
+  bidResponseChoice?: string | null;
 };
 
 type SortKey = "createdAt" | "name" | "status" | "voteSum";
@@ -254,6 +261,41 @@ export function Roster({
     }
   }
 
+  // Apply a single status update to every selected PNM. Optimistic — we
+  // patch local state first, then fire N PATCH requests in parallel. On
+  // any failure we revert the whole set (rare; partial-success would
+  // require finer-grained rollback that's not worth the code complexity).
+  async function bulkSetStatus(status: RushStatus) {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`Set ${ids.length} PNM${ids.length === 1 ? "" : "s"} to ${STATUS_LABELS[status]}?`)) return;
+    const prev = rushes;
+    setRushes((rs) => rs.map((r) => (selected.has(r.id) ? { ...r, status } : r)));
+    try {
+      const results = await Promise.all(ids.map((id) =>
+        fetch("/api/admin/rush", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        })
+      ));
+      const failed = results.filter((r) => !r.ok).length;
+      if (failed > 0) {
+        setRushes(prev);
+        push({ title: `${failed} of ${ids.length} updates failed`, variant: "destructive" });
+        return;
+      }
+      push({
+        title: `${ids.length} PNM${ids.length === 1 ? "" : "s"} → ${STATUS_LABELS[status]}`,
+        variant: "success",
+      });
+      setSelected(new Set());
+    } catch {
+      setRushes(prev);
+      push({ title: "Bulk update failed", variant: "destructive" });
+    }
+  }
+
   async function remove(id: string) {
     if (!confirm("Remove this rush from the database? This cannot be undone.")) return;
     const prev = rushes;
@@ -419,6 +461,26 @@ export function Roster({
               <span className="hidden sm:inline">Export</span>
             </a>
           </Button>
+          {/* Bulk status — applies one status to every selected PNM. Saves
+              the rush chair from clicking 30 status pills one at a time when
+              moving a cohort from ACTIVE to BID_EXTENDED. */}
+          {selected.size > 0 && (
+            <Select
+              value=""
+              onValueChange={(v) => v && bulkSetStatus(v as RushStatus)}
+            >
+              <SelectTrigger className="sm:w-[150px]" aria-label="Bulk set status">
+                <SelectValue placeholder={`Set ${selected.size} →`} />
+              </SelectTrigger>
+              <SelectContent>
+                {RUSH_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    Mark as {STATUS_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {/* Compare opens a side-by-side decision modal. Only enabled with
               2-4 selected — fewer than 2 isn't a comparison, more than 4
               breaks the side-by-side layout on a 1280px laptop. */}
@@ -490,10 +552,28 @@ export function Roster({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-16 text-muted-foreground">
-                  {rushes.length === 0
-                    ? "No rushes yet. Share the rush page to start collecting submissions."
-                    : "No matches for your filters."}
+                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                  {rushes.length === 0 ? (
+                    <div className="max-w-sm mx-auto">
+                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red mb-3" aria-hidden="true">
+                        <User className="h-5 w-5" />
+                      </span>
+                      <p className="text-sm font-semibold text-foreground">No PNMs yet.</p>
+                      <p className="mt-1 text-xs leading-relaxed">
+                        Share your public homepage and the rush interest form will populate this roster automatically as kids sign up.
+                      </p>
+                      <a
+                        href="/"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-phisig-red text-white px-3 py-1.5 text-xs font-medium hover:bg-phisig-red-dark transition-colors"
+                      >
+                        View public homepage <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    </div>
+                  ) : (
+                    <span className="text-sm">No matches for your filters. Try a different search or clear the quick view above.</span>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -857,6 +937,14 @@ function RushDetail({
           <Info icon={GraduationCap} label="Major / year" value={[rush.major, rush.year].filter(Boolean).join(" · ") || "—"} />
         </div>
 
+        {/* Bid response panel — visible when status is BID_EXTENDED (token
+            live) or when the PNM has already responded. Lets the rush chair
+            copy the link to re-share, see the response status, and (future)
+            re-issue. Hidden for ACTIVE / DROPPED / etc. where it's noise. */}
+        {(rush.status === "BID_EXTENDED" || rush.status === "ACCEPTED" || rush.status === "DECLINED" || rush.bidToken) && (
+          <BidStatusCard rush={rush} />
+        )}
+
         {rush.highSchoolInfo && (
           <Section label="High school sports & activities" content={rush.highSchoolInfo} />
         )}
@@ -937,6 +1025,95 @@ function RushDetail({
       </DialogContent>
     </Dialog>
   );
+}
+
+function BidStatusCard({ rush }: { rush: Rush }) {
+  const { push } = useToast();
+  const [copied, setCopied] = React.useState(false);
+  const bidUrl = rush.bidToken
+    ? (typeof window !== "undefined" ? `${window.location.origin}/bid/${rush.bidToken}` : `/bid/${rush.bidToken}`)
+    : null;
+
+  async function copyLink() {
+    if (!bidUrl) return;
+    try {
+      await navigator.clipboard.writeText(bidUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      push({ title: "Bid link copied", variant: "success" });
+    } catch {
+      push({ title: "Couldn't copy — try selecting the link manually", variant: "destructive" });
+    }
+  }
+
+  // Already responded — show the response state.
+  if (rush.bidRespondedAt && rush.bidResponseChoice) {
+    const accepted = rush.bidResponseChoice === "ACCEPTED";
+    return (
+      <div className={cn(
+        "rounded-xl border p-4 flex items-start gap-3",
+        accepted ? "border-emerald-200 bg-emerald-50/40" : "border-zinc-200 bg-zinc-50/40"
+      )}>
+        <span className={cn(
+          "inline-flex h-8 w-8 items-center justify-center rounded-full shrink-0",
+          accepted ? "bg-emerald-500 text-white" : "bg-zinc-500 text-white"
+        )}>
+          {accepted ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
+        </span>
+        <div>
+          <p className="text-sm font-semibold">
+            {accepted ? "PNM accepted their bid." : "PNM declined their bid."}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Responded {format(new Date(rush.bidRespondedAt), "MMM d, yyyy 'at' h:mm a")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Live token — show the share link.
+  if (rush.bidToken && bidUrl) {
+    const expires = rush.bidTokenExpiresAt ? new Date(rush.bidTokenExpiresAt) : null;
+    const daysLeft = expires ? Math.max(0, Math.ceil((expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : null;
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+        <div className="flex items-start gap-3 mb-3">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white shrink-0">
+            <Send className="h-4 w-4" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Bid link is live — share with {rush.name.split(" ")[0]}.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              One-click accept/decline. Expires in {daysLeft} day{daysLeft === 1 ? "" : "s"}. Single-use.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            value={bidUrl}
+            readOnly
+            onFocus={(e) => e.currentTarget.select()}
+            className="flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-mono text-foreground"
+            aria-label="Bid link URL"
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={copyLink}
+          >
+            {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Status is bid-related but token is null (shouldn't normally happen) — fail quiet.
+  return null;
 }
 
 function VoteValuePill({ value }: { value: number }) {

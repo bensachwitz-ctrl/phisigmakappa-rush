@@ -33,6 +33,20 @@ model Rush {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // ── Bid response workflow ──────────────────────────────────────────────
+  // Generated when admin sets status to BID_EXTENDED. PNM gets the URL
+  // `/bid/{bidToken}` by email + SMS and clicks one button to accept or
+  // decline — status auto-updates, no manual admin follow-up needed.
+  //
+  // Token is single-use: cleared after first response so a forwarded link
+  // can't be replayed. Expiry is 14 days — bid windows shouldn't drag
+  // longer than that, and uncollected tokens auto-expire instead of
+  // hanging around forever as a phishing surface.
+  bidToken           String?   @unique
+  bidTokenExpiresAt  DateTime?
+  bidRespondedAt     DateTime?
+  bidResponseChoice  String?   // "ACCEPTED" | "DECLINED"
+
   emailLogs       EmailLog[]
   smsLogs         SmsLog[]
   attendances     Attendance[]
