@@ -10,6 +10,7 @@
 **White-label foundation (R39):** `232d295` — deploy `dpl_GZ4gzzCXYPHrdr8vKTWxLT78hmaJ` — any chapter can re-brand in 5 minutes via `/admin/setup` wizard (USC reference defaults preserved end-to-end)
 **Decision-quality features (R40):** `123c8c4` — deploy `dpl_2Caf7YNpBupn2EV2GHcrZ6gaKcdu` — rush funnel viz + PNM compare modal + brother engagement leaderboard + audit log (with rush + vote coverage)
 **Full audit coverage + governance UX (R41):** `cc3e31e` — audit() wired into every admin mutation, dashboard "Recent activity" feed, search + filter on /admin/audit, cron prune at 365d, help-page docs
+**End-to-end UX polish (R42):** `b6fba88` — PNM bid response workflow (token URL + accept/decline page) + bulk status update + better empty states + ⌘K command palette
 
 ---
 
@@ -30,6 +31,7 @@ axes cleared the 10 / 10 floor.
 | R39   | `232d295` | —     | —         | —          | White-label foundation: 14 cfg keys + dynamic generateMetadata + JSON-LD + `/admin/setup` wizard + brand readiness panel + WHITE-LABEL.md runbook |
 | R40   | `123c8c4` | —     | —         | —          | Decision-quality: rush funnel viz + PNM compare modal + brother engagement leaderboard + AuditLog model with rush + vote coverage + `/admin/audit` viewer |
 | R41   | `cc3e31e` | —     | —         | —          | Audit everywhere: brothers / events / announcements / broadcast / settings instrumented + dashboard activity feed + search & filter + cron prune at 365d |
+| R42   | `b6fba88` | —     | —         | —          | End-to-end UX polish: PNM bid response workflow (token URL + accept/decline) + bulk status update + better empty states + ⌘K command palette |
 
 ---
 
@@ -476,6 +478,113 @@ Four new sections in `/admin/help`:
 
 Existing "Dashboard — decisions at a glance" section extended with the
 funnel + activity feed bullets.
+
+---
+
+## R42 — end-to-end UX polish (commit `b6fba88`)
+
+R42 closes the four biggest residual UX gaps that stood between "great
+product" and "perfect end-to-end experience." Four shipped pillars:
+
+### 1. PNM bid response workflow
+
+The single most consequential moment in the rush cycle — extending a
+bid — was a manual back-and-forth before R42. Admin emailed the PNM,
+PNM replied, admin manually changed status. R42 turns it into a
+one-click loop:
+
+**Schema additions (4 nullable fields on `Rush`):**
+
+| Field                | Purpose                                                |
+|----------------------|--------------------------------------------------------|
+| `bidToken`           | 128-bit hex, unique-indexed, single-use                |
+| `bidTokenExpiresAt`  | 14 days from generation                                |
+| `bidRespondedAt`     | Set when PNM clicks Accept / Decline                   |
+| `bidResponseChoice`  | `ACCEPTED` or `DECLINED`                               |
+
+**Token generation:** `/api/admin/rush PATCH` auto-mints the token the
+**first time** status flips to `BID_EXTENDED`. Re-extending after a
+decline does NOT regenerate (token churn stays low). Audit row written
+as `BID_TOKEN_GENERATED`.
+
+**Public response page:** `app/bid/[token]/page.tsx` renders chapter
+brand + PNM name + Accept/Decline. Distinct states:
+
+- `ok` — fresh token, response form visible
+- `already-responded` — green/zinc pill with the recorded choice + date
+- `expired` — amber card pointing to rush email
+- `not-found` — generic "double-check your link" panel
+
+All states ship `noindex, nofollow, nocache` metas.
+
+**Response endpoint:** `POST /api/bid/[token]` validates the token shape,
+checks expiry + already-responded, atomically flips `Rush.status` to
+the choice, clears the token (single-use — forwarded link can't replay),
+appends any decline reason to the existing `notes` field, writes an
+audit row (`BID_ACCEPTED` or `BID_DECLINED`).
+
+**Admin surface:** Roster `RushDetail` panel gets a `BidStatusCard`:
+
+- Live token → amber card with the share URL + Copy button + expiry countdown
+- Already responded → green or zinc card with the response + timestamp
+
+`robots.ts` disallows `/bid` + `/api/bid` on top of the page-level metas.
+
+### 2. Bulk status update on Roster
+
+A new "Set N →" select appears in the Roster toolbar whenever 1+ PNMs
+are selected. Picking a status from the dropdown fires parallel PATCH
+calls to `/api/admin/rush` for every selected ID. Optimistic local
+update + `confirm()` before fire + revert-on-any-failure (no partial-
+success ambiguity). Success toast announces the count; selection
+clears automatically.
+
+Saves the rush chair from clicking 30 status pills one at a time
+moving a cohort from ACTIVE → BID_EXTENDED.
+
+### 3. Better empty states
+
+A reusable `EmptyState` component (`components/admin/empty-state.tsx`)
+replaces the flat "No X yet." text across admin pages with:
+
+- Big tinted icon (4 tone variants)
+- Headline + descriptive sub-line
+- Primary CTA button + optional secondary link
+
+Applied to the two day-1 surfaces that hurt most:
+
+- **Roster empty** — "Share your public homepage" CTA opens `/` in a new tab.
+- **Brothers empty** — "Invite first brother" primary + "or add manually" secondary, exactly the two day-1 options.
+
+### 4. ⌘K command palette
+
+Power-user navigation mounted globally in `AdminShell` (skipped on the
+login screen). Keyboard:
+
+- **⌘K / Ctrl+K** opens
+- **Esc** closes
+- **↑ ↓** navigate
+- **Enter** executes
+
+12 curated commands across 4 groups (Navigate · Actions · External · Help)
+with **synonym matching** — "people" finds Brothers, "stats" finds the
+Dashboard, "rebrand" finds Setup, "who changed" finds the Audit log.
+Admin-only commands are filtered out for member sessions.
+
+Discoverability: a "Quick jump ⌘K" button in the admin nav dispatches a
+synthetic ⌘K keydown so users who don't know the shortcut can still
+open the palette. DialogTitle (sr-only) for screen-reader a11y.
+
+### R42 build verification
+
+- Source ✓ — all 15 files type-check clean (`tsc --noEmit`).
+- Commits ✓ — `b6fba88` pushed to `origin/main`.
+- `prisma db push` ✓ — runs in build script; 4 new `Rush` columns add automatically on next Vercel cycle.
+- Live deploy verification was pending at FINAL.md commit time —
+  Vercel was still propagating R41 + R42 commits. Source-of-truth is
+  the commit on `main`; the auth-gating regression checks
+  (`/api/admin/rush` 401 unauth, audit/setup/help routes 307 → login)
+  remain valid on the prior R40 deploy and will carry forward on R42.
 
 ---
 
