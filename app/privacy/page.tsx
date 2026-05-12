@@ -43,11 +43,11 @@ export default async function PrivacyPage() {
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to home
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to home
         </Link>
 
         <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-          <ShieldCheck className="h-3 w-3" /> Privacy
+          <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Privacy
         </span>
         <h1 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
           What we collect, why, and how we protect it.
@@ -64,9 +64,9 @@ export default async function PrivacyPage() {
         </section>
 
         <section className="mt-8 space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (TCPA)</h2>
+          <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (<abbr title="Telephone Consumer Protection Act — the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted">TCPA</abbr>)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your information is used solely to communicate with you about Fall 2026 rush at the Gamma Triton chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under 47 CFR §64.1200(f)(9) to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">Phi Sigma Kappa Gamma Triton (USC)</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
+            Your information is used solely to communicate with you about Fall 2026 rush at the Gamma Triton chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">Phi Sigma Kappa Gamma Triton (USC)</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>{" "}
@@ -123,7 +123,7 @@ export default async function PrivacyPage() {
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>
-            . We will respond within 30 days. California (CCPA/CPRA) and Virginia (VCDPA) residents have additional rights to know, correct, delete, and opt out of the sale or sharing of personal information for cross-context behavioral advertising. <span className="font-medium text-foreground">We do not sell or share your personal information for cross-context behavioral advertising.</span>
+            . We will respond within 30 days. California (<abbr title="California Consumer Privacy Act / California Privacy Rights Act — state laws giving California residents control over their personal data" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">CCPA/CPRA</abbr>) and Virginia (<abbr title="Virginia Consumer Data Protection Act — Virginia&apos;s state privacy law" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">VCDPA</abbr>) residents have additional rights to know, correct, delete, and opt out of the sale or sharing of personal information for cross-context behavioral advertising. <span className="font-medium text-foreground">We do not sell or share your personal information for cross-context behavioral advertising.</span>
           </p>
         </section>
 

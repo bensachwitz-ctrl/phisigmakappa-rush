@@ -143,7 +143,7 @@ export default async function Home({
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Sparkles className="h-3 w-3" /> Phi Sigma Kappa at USC · Booth
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> Phi Sigma Kappa at USC · Booth
             </span>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the Fall&nbsp;&apos;26 rush list.
@@ -260,7 +260,7 @@ export default async function Home({
               <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   {cfg["hero.cta.label"] || "Get on the interest list"}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="press">
@@ -270,13 +270,13 @@ export default async function Home({
 
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
+                <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5" /> Reply within 24 hours
+                <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Reply within 24 hours
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" /> Gamma Triton chapter
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Gamma Triton chapter
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
@@ -284,7 +284,7 @@ export default async function Home({
                 rel="noreferrer noopener"
                 className="inline-flex items-center gap-1.5 text-phisig-red hover:underline"
               >
-                <Instagram className="h-3.5 w-3.5" /> {cfg["contact.instagramHandle"]}
+                <Instagram className="h-3.5 w-3.5" aria-hidden="true" /> {cfg["contact.instagramHandle"]}
               </Link>
             </div>
             </div>
@@ -328,7 +328,7 @@ export default async function Home({
       <section className="relative bg-phisig-red text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
         <div className="absolute -right-20 -top-20 opacity-10">
-          <Seal className="w-[300px] h-[300px] text-white" />
+          <Seal className="w-[300px] h-[300px] text-white" aria-hidden="true" />
         </div>
         <div className="relative container section-y-tight grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
           {stats.map((s, i) => (
@@ -357,7 +357,7 @@ export default async function Home({
             const Icon = iconFor(h.icon);
             return (
               <span key={h.label} className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                <Icon className="h-3.5 w-3.5 text-phisig-red" />
+                <Icon className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <span>{h.label}</span>
                 {i < HIGHLIGHTS.length - 1 && <span className="hidden sm:inline opacity-30 ml-2">·</span>}
               </span>
@@ -372,7 +372,7 @@ export default async function Home({
       <section className="container section-y">
         <div className="max-w-2xl mb-8">
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-            <ShieldCheck className="h-3 w-3" /> Three principles
+            <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Three principles
           </span>
           <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
             Brotherhood. Scholarship. Character.
@@ -385,11 +385,11 @@ export default async function Home({
               <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden group">
                 <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
                 <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25">
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
                 <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
-                <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" />
+                <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" aria-hidden="true" />
               </div>
             );
           })}
@@ -402,7 +402,7 @@ export default async function Home({
         <div className="container section-y">
           <div className="max-w-xl mx-auto text-center mb-8 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
-              <Sparkles className="h-3 w-3" /> Get on the list
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> Get on the list
             </span>
             <h2 className="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight">
               Drop your number.
@@ -413,15 +413,15 @@ export default async function Home({
             </p>
             <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
               <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
                 Goes straight to the rush chair
               </li>
               <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
                 Up to 8 texts per cycle, opt out anytime
               </li>
               <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
                 Never sold or shared
               </li>
             </ul>
@@ -443,7 +443,7 @@ export default async function Home({
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Instagram className="h-3 w-3" /> @phisig_usc
+              <Instagram className="h-3 w-3" aria-hidden="true" /> @phisig_usc
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
@@ -463,7 +463,7 @@ export default async function Home({
             return (
               <div key={r.title} className="rounded-xl border border-border bg-card p-4 lift">
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Icon className="h-3 w-3" /> {r.tag}
+                  <Icon className="h-3 w-3" aria-hidden="true" /> {r.tag}
                 </div>
                 <p className="mt-2 text-sm font-medium leading-snug">{r.title}</p>
               </div>
@@ -478,8 +478,8 @@ export default async function Home({
             rel="noreferrer noopener"
             className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
           >
-            <Instagram className="h-4 w-4" /> Follow @phisig_usc for the latest
-            <ArrowRight className="h-3 w-3" />
+            <Instagram className="h-4 w-4" aria-hidden="true" /> Follow @phisig_usc for the latest
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -491,7 +491,7 @@ export default async function Home({
         <div className="container section-y">
           <div className="max-w-2xl mb-10">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" /> How rush works
+              <Calendar className="h-3 w-3" aria-hidden="true" /> How rush works
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Three weeks. Zero pressure.
@@ -529,7 +529,7 @@ export default async function Home({
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" /> Fall '26 calendar
+              <Calendar className="h-3 w-3" aria-hidden="true" /> Fall '26 calendar
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
@@ -551,14 +551,14 @@ export default async function Home({
                   href="webcal://phisigmakappa.vercel.app/api/events.ics"
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
-                  <Calendar className="h-3 w-3" /> Subscribe in Apple Calendar
+                  <Calendar className="h-3 w-3" aria-hidden="true" /> Subscribe in Apple Calendar
                 </a>
                 <a
                   href="/api/events.ics"
                   download="phisigmakappa-rush.ics"
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
-                  <Calendar className="h-3 w-3" /> Download .ics
+                  <Calendar className="h-3 w-3" aria-hidden="true" /> Download .ics
                 </a>
               </div>
             )}
@@ -575,7 +575,7 @@ export default async function Home({
         <div className="container section-y">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="animate-slide-up">
-              <Quote className="h-8 w-8 text-phisig-red mb-3" />
+              <Quote className="h-8 w-8 text-phisig-red mb-3" aria-hidden="true" />
               <blockquote className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
                 &ldquo;{cfg["testimonial.quote"]}&rdquo;
               </blockquote>
@@ -614,7 +614,7 @@ export default async function Home({
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Star className="h-3 w-3" /> Brother of the Month
+              <Star className="h-3 w-3" aria-hidden="true" /> Brother of the Month
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Real men. Real recognition.
@@ -632,7 +632,7 @@ export default async function Home({
                 "Embodies the cardinal principle of Character",
               ].map((p) => (
                 <li key={p} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" aria-hidden="true" />
                   <span>{p}</span>
                 </li>
               ))}
@@ -659,7 +659,7 @@ export default async function Home({
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Star className="h-3 w-3" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}Brother of the Month
+                  <Star className="h-3 w-3" aria-hidden="true" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}Brother of the Month
                 </span>
                 <p className="mt-2 text-white text-xl font-semibold tracking-tight">
                   {cfg["spotlight.name"]}
@@ -670,7 +670,7 @@ export default async function Home({
               </div>
             </a>
             <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/30 rotate-[-6deg] pointer-events-none">
-              <Star className="h-6 w-6" />
+              <Star className="h-6 w-6" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -684,7 +684,7 @@ export default async function Home({
           <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                <Crown className="h-3 w-3" /> Chapter leadership
+                <Crown className="h-3 w-3" aria-hidden="true" /> Chapter leadership
               </span>
               <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Meet the e-board.
@@ -721,7 +721,7 @@ export default async function Home({
                   </p>
                   <p className="mt-0.5 text-sm font-semibold">{m.name}</p>
                 </div>
-                <Crest className="absolute -bottom-3 -right-3 h-16 w-16 text-phisig-red opacity-10" />
+                <Crest className="absolute -bottom-3 -right-3 h-16 w-16 text-phisig-red opacity-10" aria-hidden="true" />
               </div>
             ))}
           </div>
@@ -734,7 +734,7 @@ export default async function Home({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <ShieldCheck className="h-3 w-3" /> About the chapter
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" /> About the chapter
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Founded in 1873.<br/> Built for what's next.
@@ -804,7 +804,7 @@ export default async function Home({
 
             <div className="mt-8 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="h-4 w-4 text-phisig-red mt-0.5 shrink-0" />
+                <ShieldCheck className="h-4 w-4 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
                 <div className="text-xs leading-relaxed">
                   <p className="font-semibold text-foreground">Zero-tolerance anti-hazing policy.</p>
                   <p className="mt-1 text-muted-foreground">
@@ -838,7 +838,7 @@ export default async function Home({
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Award className="h-3 w-3" /> {cfg["about.caption"] || "Chapter formal"}
+                  <Award className="h-3 w-3" aria-hidden="true" /> {cfg["about.caption"] || "Chapter formal"}
                 </span>
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
                   Brotherhood you can count on — every weekend, every milestone, every year.
@@ -871,7 +871,7 @@ export default async function Home({
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                <Sparkles className="h-3 w-3" /> FAQ
+                <Sparkles className="h-3 w-3" aria-hidden="true" /> FAQ
               </span>
               <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Common questions.
@@ -900,7 +900,7 @@ export default async function Home({
                     <summary className="flex items-center justify-between gap-4 px-5 py-4 list-none">
                       <span className="text-base font-medium tracking-tight">{item.q}</span>
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red shrink-0 transition-transform group-open:rotate-45">
-                        <ArrowRight className="h-3.5 w-3.5 -rotate-45 group-open:rotate-0 transition-transform" />
+                        <ArrowRight className="h-3.5 w-3.5 -rotate-45 group-open:rotate-0 transition-transform" aria-hidden="true" />
                       </span>
                     </summary>
                     <div className="px-5 pb-5 -mt-1">
@@ -937,7 +937,7 @@ export default async function Home({
             <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                <HandHeart className="h-3 w-3" /> Movember · $1,600 raised
+                <HandHeart className="h-3 w-3" aria-hidden="true" /> Movember · $1,600 raised
               </span>
               <p className="mt-2 text-lg font-semibold tracking-tight">
                 Grow a beard. Make a difference. — men&apos;s mental health.
@@ -946,7 +946,7 @@ export default async function Home({
           </a>
           <div className="order-1 lg:order-2">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <MapPin className="h-3 w-3" /> Where we live
+              <MapPin className="h-3 w-3" aria-hidden="true" /> Where we live
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               The house at {titleCaseAddress(cfg["contact.address"])}.
@@ -965,7 +965,7 @@ export default async function Home({
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <MapPin className="h-3 w-3" /> Address
+                  <MapPin className="h-3 w-3" aria-hidden="true" /> Address
                 </div>
                 <p className="mt-1.5 text-sm font-semibold">{titleCaseAddress(cfg["contact.address"])}</p>
                 <p className="text-xs text-muted-foreground">{titleCaseAddress(cfg["contact.cityState"])}</p>
@@ -977,7 +977,7 @@ export default async function Home({
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Instagram className="h-3 w-3" /> Daily updates
+                  <Instagram className="h-3 w-3" aria-hidden="true" /> Daily updates
                 </div>
                 <p className="mt-1.5 text-sm font-semibold">{cfg["contact.instagramHandle"]}</p>
                 <p className="text-xs text-muted-foreground">Follow for chapter life</p>
@@ -987,7 +987,7 @@ export default async function Home({
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Mail className="h-3 w-3" /> Rush questions
+                  <Mail className="h-3 w-3" aria-hidden="true" /> Rush questions
                 </div>
                 <p className="mt-1.5 text-sm font-semibold">{cfg["contact.rushEmail"]}</p>
                 <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
@@ -999,7 +999,7 @@ export default async function Home({
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Building2 className="h-3 w-3" /> USC chapter info
+                  <Building2 className="h-3 w-3" aria-hidden="true" /> USC chapter info
                 </div>
                 <p className="mt-1.5 text-sm font-semibold">UofSC FSL</p>
                 <p className="text-xs text-muted-foreground">Fraternity & Sorority Life</p>
@@ -1015,14 +1015,14 @@ export default async function Home({
         <div className="rounded-2xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
           <div className="absolute -right-12 -bottom-12 opacity-15">
-            <Seal className="w-[420px] h-[420px] text-white" />
+            <Seal className="w-[420px] h-[420px] text-white" aria-hidden="true" />
           </div>
           <div className="absolute right-[8%] top-[12%] opacity-10 hidden sm:block">
-            <Crest className="h-32 w-32 text-white" />
+            <Crest className="h-32 w-32 text-white" aria-hidden="true" />
           </div>
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/90">
-              <Sparkles className="h-3 w-3" /> Fall Rush 2026
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> Fall Rush 2026
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Get on the interest list.
@@ -1034,12 +1034,12 @@ export default async function Home({
               <Button asChild size="lg" variant="secondary" className="group cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   Sign me up
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
                 <Link href={cleanUrl(cfg["contact.instagramUrl"])} target="_blank">
-                  <Instagram className="h-4 w-4" /> Follow us
+                  <Instagram className="h-4 w-4" aria-hidden="true" /> Follow us
                 </Link>
               </Button>
             </div>
@@ -1078,7 +1078,7 @@ function ContactPill({
   return (
     <div className="rounded-xl border border-border bg-card p-3 lift">
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0" />
+        <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0" aria-hidden="true" />
         <span className="text-xs font-medium truncate">{label}</span>
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{sub}</p>
@@ -1114,7 +1114,7 @@ function PostTile({
     >
       {/* Fallback layer — cardinal gradient with chapter crest, visible until image loads */}
       <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
-        <Crest className="h-20 w-20 text-white/25" />
+        <Crest className="h-20 w-20 text-white/25" aria-hidden="true" />
       </div>
       <img
         src={imgSrc}
@@ -1134,7 +1134,7 @@ function PostTile({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
       <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
-        <Icon className="h-3 w-3" /> {caption}
+        <Icon className="h-3 w-3" aria-hidden="true" /> {caption}
       </span>
     </a>
   );

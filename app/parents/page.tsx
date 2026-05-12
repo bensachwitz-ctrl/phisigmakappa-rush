@@ -57,7 +57,7 @@ export default async function ParentsPage() {
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to home
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to home
         </Link>
 
         <div className="relative overflow-hidden rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/60 via-white to-white p-8 sm:p-12 mb-10">
@@ -74,7 +74,7 @@ export default async function ParentsPage() {
             aria-hidden="true"
           />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-phisig-red/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red shadow-sm">
-            <ShieldCheck className="h-3 w-3" /> For Parents &amp; Guardians
+            <ShieldCheck className="h-3 w-3" aria-hidden="true" /> For Parents &amp; Guardians
           </span>
           <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
             Your son&apos;s safety, academics, and contact info — straight talk.
@@ -91,7 +91,7 @@ export default async function ParentsPage() {
         <section className="grid sm:grid-cols-2 gap-4 mb-10">
           <article className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-              <Users className="h-3 w-3" /> Chapter advisor
+              <Users className="h-3 w-3" aria-hidden="true" /> Chapter advisor
             </div>
             <h2 className="mt-2 text-lg font-semibold tracking-tight">
               {advisorPlaceholder ? "Pending — see below" : cfg["contact.advisorName"]}
@@ -101,21 +101,21 @@ export default async function ParentsPage() {
             )}
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-phisig-red" />
+                <Mail className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
                   {cfg["contact.advisorEmail"]}
                 </a>
               </li>
               {phonePresent && (
                 <li className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 text-phisig-red" />
+                  <Phone className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                   <a href={cleanTel(cfg["contact.rushPhone"])} className="text-phisig-red hover:underline">
                     {cfg["contact.rushPhone"]}
                   </a>
                 </li>
               )}
               <li className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-phisig-red" />
+                <MapPin className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
               </li>
             </ul>
@@ -132,7 +132,7 @@ export default async function ParentsPage() {
 
           <article className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-              <ShieldCheck className="h-3 w-3" /> Anti-hazing — zero tolerance
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Anti-hazing — zero tolerance
             </div>
             <h2 className="mt-2 text-lg font-semibold tracking-tight">
               Report any concern — anonymously if you prefer.
@@ -142,19 +142,19 @@ export default async function ParentsPage() {
             </p>
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-phisig-red" />
+                <Phone className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href="tel:+18886684293" className="text-phisig-red hover:underline">
                   National anti-hazing hotline · {cfg["antiHazing.hotline"]}
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-phisig-red" />
+                <Mail className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
                   {cfg["contact.advisorEmail"]} (advisor, anonymous OK)
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" />
+                <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
                 <span>
                   <a
                     href="https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php"
@@ -168,13 +168,13 @@ export default async function ParentsPage() {
                 </span>
               </li>
               <li className="flex items-center gap-2">
-                <FileText className="h-3.5 w-3.5 text-phisig-red" />
+                <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
                   hazingprevention.org · 24/7 reporting + resources
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <FileText className="h-3.5 w-3.5 text-phisig-red" />
+                <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
                   phisigmakappa.org · National HQ
                 </a>
@@ -316,7 +316,7 @@ export default async function ParentsPage() {
 
         {/* CTA */}
         <section className="rounded-2xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-8 sm:p-10 relative overflow-hidden">
-          <Crest className="absolute -bottom-6 -right-6 h-40 w-40 text-white opacity-10" />
+          <Crest className="absolute -bottom-6 -right-6 h-40 w-40 text-white opacity-10" aria-hidden="true" />
           <div className="relative max-w-xl">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
               Have a question we didn&apos;t answer?
@@ -330,7 +330,7 @@ export default async function ParentsPage() {
               href="/"
               className="mt-6 inline-flex items-center gap-2 rounded-md bg-white text-phisig-red px-4 py-2 text-sm font-semibold hover:bg-phisig-red-soft transition-colors"
             >
-              Back to chapter home <ArrowRight className="h-3.5 w-3.5" />
+              Back to chapter home <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
         </section>
@@ -347,7 +347,7 @@ function Fact({
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-        <Icon className="h-3 w-3" /> {label}
+        <Icon className="h-3 w-3" aria-hidden="true" /> {label}
       </div>
       <p className="mt-2 text-2xl font-semibold tracking-tight">{value || "—"}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
@@ -361,7 +361,7 @@ function DataCard({
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-        <Icon className="h-3 w-3" /> {title}
+        <Icon className="h-3 w-3" aria-hidden="true" /> {title}
       </div>
       <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{children}</p>
     </div>

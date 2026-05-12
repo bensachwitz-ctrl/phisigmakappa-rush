@@ -225,24 +225,45 @@ export async function POST(req: Request) {
         headshotUrl: data.headshotUrl || null,
       },
     });
+
+    // ── Per-email idempotency window ─────────────────────────────────────
+    // BEFORE the new-vs-update split: if this email already produced a
+    // consent receipt within the last 60s, return that same receipt as the
+    // canonical response. This covers both branches of the isNewRecord
+    // heuristic (which fails on rapid <2s back-to-back submits because
+    // updatedAt - createdAt is near zero). The result: any duplicate POST
+    // from the same email within 60s is fully idempotent — same rush.id,
+    // same consentReceipt.id, no duplicate Twilio SMS, no DB bloat.
+    const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
+    const recentReceipt = await prisma.rushConsent.findFirst({
+      where: { rushId: upserted.id, createdAt: { gte: sixtySecondsAgo } },
+      orderBy: { createdAt: "desc" },
+    }).catch(() => null);
+
+    if (recentReceipt) {
+      return NextResponse.json({
+        ok: true,
+        id: upserted.id,
+        updated: true,
+        consentReceipt: {
+          id: recentReceipt.id,
+          version: recentReceipt.disclosureVersion,
+          createdAt: recentReceipt.createdAt,
+        },
+      });
+    }
+
     // We don't get a clean "was-this-an-update" signal from upsert. Use
     // createdAt vs updatedAt timestamps as a heuristic — within 2s of
     // creation = first write, otherwise treat as re-submission.
     const isNewRecord = upserted.updatedAt.getTime() - upserted.createdAt.getTime() < 2_000;
 
     if (!isNewRecord) {
-      // Per-email cooldown: if this email already wrote a consent receipt in
-      // the last 60s, return that same receipt instead of inserting a fresh
-      // one. Prevents DB bloat from F5-hammer / curl-loop / accidental
-      // double-submit, while still recording one genuine re-affirmation per
-      // browser session. Real users never re-submit within 60s by accident.
-      const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
-      const recentReceipt = await prisma.rushConsent.findFirst({
-        where: { rushId: upserted.id, createdAt: { gte: sixtySecondsAgo } },
-        orderBy: { createdAt: "desc" },
-      }).catch(() => null);
-
-      const receipt = recentReceipt ?? await prisma.rushConsent.create({
+      // Re-affirmation outside the 60s idempotency window: this is a
+      // genuine fresh re-submit (real users coming back hours/days later
+      // to update their info). Record a brand-new consent receipt because
+      // they just re-checked the disclosure box.
+      const receipt = await prisma.rushConsent.create({
         data: {
           rushId: upserted.id,
           disclosureVersion: DISCLOSURE_VERSION,
