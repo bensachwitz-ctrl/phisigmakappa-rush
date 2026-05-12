@@ -8,6 +8,8 @@
 **Convergence floor:** **10 / 10 across accessibility, usability, and functional axes**
 **Post-convergence layer (R38):** `65cf586` — deploy `dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG` — organizational decision-support panel for the e-board
 **White-label foundation (R39):** `232d295` — deploy `dpl_GZ4gzzCXYPHrdr8vKTWxLT78hmaJ` — any chapter can re-brand in 5 minutes via `/admin/setup` wizard (USC reference defaults preserved end-to-end)
+**Decision-quality features (R40):** `123c8c4` — deploy `dpl_2Caf7YNpBupn2EV2GHcrZ6gaKcdu` — rush funnel viz + PNM compare modal + brother engagement leaderboard + audit log (with rush + vote coverage)
+**Full audit coverage + governance UX (R41):** `cc3e31e` — audit() wired into every admin mutation, dashboard "Recent activity" feed, search + filter on /admin/audit, cron prune at 365d, help-page docs
 
 ---
 
@@ -26,6 +28,8 @@ axes cleared the 10 / 10 floor.
 | R37   | `84c8b9d` | **10**| **10**    | **10**     | All LOWs closed — idempotency live-verified, abbr glosses on privacy, codemod aria-hidden across decorative icons |
 | R38   | `65cf586` | —     | —         | —          | Post-convergence: organizational decision-support layer (KPI strip + decision-ready panels + smart-filter chips + new exports) |
 | R39   | `232d295` | —     | —         | —          | White-label foundation: 14 cfg keys + dynamic generateMetadata + JSON-LD + `/admin/setup` wizard + brand readiness panel + WHITE-LABEL.md runbook |
+| R40   | `123c8c4` | —     | —         | —          | Decision-quality: rush funnel viz + PNM compare modal + brother engagement leaderboard + AuditLog model with rush + vote coverage + `/admin/audit` viewer |
+| R41   | `cc3e31e` | —     | —         | —          | Audit everywhere: brothers / events / announcements / broadcast / settings instrumented + dashboard activity feed + search & filter + cron prune at 365d |
 
 ---
 
@@ -336,6 +340,142 @@ ARIA `progressbar` with `valuemin` / `valuemax` / `valuenow`.
 The reference USC deploy is byte-for-byte unchanged to a public
 visitor. A different chapter running `/admin/setup` would see every
 one of those strings reshape to their identity on the next page load.
+
+---
+
+## R40 — decision-quality features (commit `123c8c4`)
+
+Four new surfaces that turn the dashboard from "list of PNMs" into "make
+better decisions, faster."
+
+### Rush funnel viz (`components/admin/rush-funnel.tsx`)
+
+Horizontal bar chart: **Submitted → Active → Bid → Accepted**. Each stage
+shows its count, % of total submitted, and drop-off % from the previous
+stage with trend arrow (amber when leakage, emerald when no drop). Overall
+conversion in the header. Pure Tailwind + server-rendered — no chart
+library, no client JS. Hides when the funnel is empty.
+
+### PNM comparison modal (`components/admin/pnm-compare-modal.tsx`)
+
+Roster gets a new **Compare** button (enabled only when 2–4 PNMs are
+selected — fewer than 2 isn't a comparison, more than 4 breaks layout
+on a 1280px laptop). Side-by-side card grid with 7 comparison rows:
+
+- Vote average
+- Votes cast
+- Year · Major · Hometown
+- Events attended
+- Days in cycle
+
+Best value per row gets a subtle emerald highlight + star marker so the
+e-board's eye lands on the leader instantly. Contact links at the bottom
+for one-click outreach.
+
+### Brother engagement leaderboard (`components/admin/brother-leaderboard.tsx`)
+
+Top 5 in 3 categories on `/admin/brothers`:
+
+| Column           | Metric                          |
+|------------------|---------------------------------|
+| Top voters       | Most PNM votes cast (all-time)  |
+| Top RSVPs        | Most event RSVPs sent           |
+| Top service hrs  | Most logged service hours       |
+
+Crown for #1, silver/bronze for #2/#3. Auto-hides any column with zero
+data (no "1. Joe — 0 votes" before the chapter has voted). Read-only —
+brothers see it too. Single Prisma `_count` round-trip.
+
+### Audit log (governance trail)
+
+New `AuditLog` Prisma model with denormalized actor/subject fields
+(intentional — survives FK deletion of either party). `lib/audit.ts`
+helper: best-effort, never throws back to caller.
+
+R40 instruments rush + vote routes:
+
+| Endpoint                   | Actions logged                                                  |
+|----------------------------|-----------------------------------------------------------------|
+| `/api/admin/rush PATCH`    | `RUSH_STATUS` (before → after), `RUSH_NOTES`                    |
+| `/api/admin/rush DELETE`   | `RUSH_DELETED` with last-status snapshot                        |
+| `/api/admin/vote POST`     | `RUSH_VOTE_CAST` or `RUSH_VOTE_CHANGE` (e.g. `+1 → +2`)         |
+| `/api/admin/vote DELETE`   | `RUSH_VOTE_CLEARED` (with prior value)                          |
+
+`/admin/audit` viewer page (admin-only, 307 to login otherwise) — 50 most
+recent entries with action-typed icons + actor name + verb + subject +
+timestamp.
+
+---
+
+## R41 — full audit coverage + governance UX (commit `cc3e31e`)
+
+R40 introduced the audit log but only covered the rush + vote routes.
+R41 finishes the job: every admin mutation is now logged, the dashboard
+has an ambient activity feed, and the viewer has search + filters.
+
+### Audit instrumentation across every admin route
+
+| Endpoint                          | Actions logged                                                                 |
+|-----------------------------------|--------------------------------------------------------------------------------|
+| `/api/admin/brothers POST`        | `BROTHER_CREATED`                                                              |
+| `/api/admin/brothers PATCH`       | `BROTHER_DUES` (paid ↔ unpaid), `BROTHER_ROLE`, `BROTHER_UPDATED` (catch-all)  |
+| `/api/admin/brothers DELETE`      | `BROTHER_DELETED` with last position                                           |
+| `/api/admin/events POST` (create) | `EVENT_CREATED` with category + date                                           |
+| `/api/admin/events POST` (edit)   | `EVENT_UPDATED` with category + private flag                                   |
+| `/api/admin/events DELETE`        | `EVENT_DELETED`                                                                |
+| `/api/admin/announcements POST`   | `ANNOUNCEMENT_CREATED` with audience + pinned                                  |
+| `/api/admin/announcements PATCH`  | `ANNOUNCEMENT_PINNED` / `UNPINNED` (split from generic `UPDATED`)              |
+| `/api/admin/announcements DELETE` | `ANNOUNCEMENT_DELETED`                                                         |
+| `/api/admin/broadcast POST`       | `BROADCAST_SENT` with channel + recipient counts                               |
+| `/api/admin/settings PATCH`       | `SETTINGS_UPDATED` — single row per save with changed-key list in details      |
+
+Settings updates intentionally write **one** audit row per PATCH (typical
+saves touch 1–5 keys; per-key rows would flood the trail). Pin / unpin
+splits because "who pinned that announcement?" is the most-asked
+governance question. Brother dues toggle gets its own action code for
+the same reason.
+
+### Recent activity feed on dashboard (`components/admin/recent-activity.tsx`)
+
+Compact 8-row feed on `/admin` showing last audit entries with relative
+timestamps (`now` / `Xm ago` / `Xh ago` / `Xd ago` / `MMM d`). Renders in
+a 2-column grid alongside the rush funnel on lg screens. Auto-hides on
+empty. Action-typed icon dots match the `/admin/audit` viewer's colorway.
+"Full log →" link bottom-right jumps to `/admin/audit`.
+
+### Search + filter on `/admin/audit` (`components/admin/audit-client.tsx`)
+
+`/admin/audit` was converted from static server-render to a server page
+that wraps the new `AuditClient` component. All filtering is client-side
+against the 50 server-rendered rows so the page stays snappy.
+
+- **Free-text search** across actor name, subject name, action code, details
+- **Subject-type chips** derived from the loaded slice (Rush · Brother · Event · Announcement · Broadcast · Settings) — toggle to focus
+- **Actor chips** listing every unique actor in the loaded slice
+- **Clear all filters** reset chip when any filter is active
+- Results count line: "3 of 50 entries match"
+
+### Cron prune at 365d (`app/api/cron/cleanup/route.ts`)
+
+The existing daily cleanup cron now prunes BOTH `RushSubmitLog` (>24h)
+and `AuditLog` (>365d). Partial-success-safe — a failure on one table
+doesn't block the other from pruning on subsequent runs. Response
+includes pruned counts + cutoffs per table.
+
+Closes the governance promise documented in the `AuditLog` model
+comment: "Retained for 1 year, then pruned by a cron job."
+
+### Help-page docs
+
+Four new sections in `/admin/help`:
+
+- **Compare PNMs side-by-side** — how to use the multi-select Compare button
+- **Brother engagement leaderboard** — what it shows and why
+- **Audit log — chapter governance trail** — search, filter, retention
+- **Chapter setup wizard** — re-brand in 5 minutes
+
+Existing "Dashboard — decisions at a glance" section extended with the
+funnel + activity feed bullets.
 
 ---
 
