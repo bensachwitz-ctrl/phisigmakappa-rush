@@ -664,7 +664,7 @@ export default async function Home({
                 <p className="mt-2 text-white text-xl font-semibold tracking-tight">
                   {cfg["spotlight.name"]}
                 </p>
-                <p className="text-white/80 text-xs">
+                <p className="text-white/95 text-xs">
                   {cfg["spotlight.role"]}
                 </p>
               </div>
@@ -843,7 +843,7 @@ export default async function Home({
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
                   Brotherhood you can count on — every weekend, every milestone, every year.
                 </p>
-                <p className="mt-1 text-xs text-white/80">#DamnProud · {cfg["contact.instagramHandle"] || "@phisig_usc"}</p>
+                <p className="mt-1 text-xs text-white/95">#DamnProud · {cfg["contact.instagramHandle"] || "@phisig_usc"}</p>
               </div>
             </a>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">
@@ -1027,7 +1027,7 @@ export default async function Home({
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Get on the interest list.
             </h2>
-            <p className="mt-3 text-white/85 max-w-md text-base sm:text-lg">
+            <p className="mt-3 text-white/95 max-w-md text-base sm:text-lg">
               Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">

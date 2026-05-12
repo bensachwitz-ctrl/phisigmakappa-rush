@@ -49,14 +49,26 @@ export async function PublicFooter() {
               </a>
             </p>
           )}
+          {/* Footer link order signals chapter priorities. Anti-hazing hotline
+              is placed FIRST so it's the most visible safety lifeline for
+              skeptical parents and any concerned PNM — every page on the site
+              ends with this link in the most-noticed position. National HQ
+              second to reinforce authenticity. */}
           <p className="flex flex-wrap gap-x-3 gap-y-1 sm:justify-end pt-1">
-            <Link href="/parents" className="hover:text-foreground transition-colors">For Parents</Link>
-            <span aria-hidden>·</span>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <a
+              href={cleanUrl(cfg["antiHazing.hotlineUrl"])}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-medium text-phisig-red hover:text-phisig-red-dark transition-colors"
+            >
+              Anti-hazing hotline
+            </a>
             <span aria-hidden>·</span>
             <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">National HQ</a>
             <span aria-hidden>·</span>
-            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">Anti-hazing hotline</a>
+            <Link href="/parents" className="hover:text-foreground transition-colors">For Parents</Link>
+            <span aria-hidden>·</span>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <span aria-hidden>·</span>
             <a href={cleanMailto(cfg["contact.rushEmail"])} className="hover:text-foreground transition-colors">Contact</a>
           </p>

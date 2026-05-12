@@ -321,7 +321,7 @@ export default async function ParentsPage() {
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
               Have a question we didn&apos;t answer?
             </h2>
-            <p className="mt-3 text-white/85">
+            <p className="mt-3 text-white/95">
               Email <a href={cleanMailto(cfg["contact.advisorEmail"])} className="underline font-medium">{cfg["contact.advisorEmail"]}</a>{" "}
               or <a href={cleanMailto(cfg["contact.rushEmail"])} className="underline font-medium">{cfg["contact.rushEmail"]}</a>.
               We reply within 24 hours.

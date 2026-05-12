@@ -191,6 +191,20 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
 
   async function submit() {
     setSubmitting(true);
+
+    // Offline guard — fail fast before the POST so the user sees a clear
+    // "you're offline" message instead of a generic "submission failed"
+    // 4 seconds later when fetch eventually times out.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setSubmitting(false);
+      push({
+        title: "You're offline",
+        description: "Reconnect and try again — your info is still typed in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const payload = {
         name: data.name.trim(),
@@ -209,6 +223,28 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // Branch on HTTP status so the user sees an actionable message instead
+      // of the generic catch-all. 429 = throttled, 5xx = our problem, 4xx =
+      // their problem (usually validation), 2xx = success path.
+      if (res.status === 429) {
+        const j = await res.json().catch(() => ({}));
+        push({
+          title: "Slow down a sec",
+          description: j.error || "Too many submissions from your network. Try again in an hour.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (res.status >= 500) {
+        push({
+          title: "Server hiccup",
+          description: "Not your fault. Refresh and try again in a moment.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Submission failed");
       setReceiptId(json?.consentReceipt?.id || null);
@@ -813,10 +849,12 @@ function Field({
   // current input value passes light client-side validation.
   valid?: boolean;
 }) {
+  const errorId = `${id}-error`;
   return (
     <div className={cn(error && "animate-shake-x")}>
       <Label htmlFor={id} className="mb-1.5 inline-block">
-        {label} {required && <span className="text-phisig-red">*</span>}
+        {label} {required && <span className="text-phisig-red" aria-hidden="true">*</span>}
+        {required && <span className="sr-only"> (required)</span>}
       </Label>
       {/* field-glow paints a soft cardinal ring on focus — better feedback
           than the default browser outline, still WCAG-visible. The shake
@@ -824,9 +862,18 @@ function Field({
           validation flags this field. */}
       <div className={cn("relative rounded-md", "field-glow")}>
         {Icon && (
-          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" aria-hidden="true" />
         )}
-        {children}
+        {/* Clone children to inject aria-invalid + aria-describedby on the
+            actual <Input> so screen readers announce the error in context
+            without us having to thread these props through every callsite. */}
+        {React.isValidElement(children)
+          ? React.cloneElement(children as React.ReactElement<any>, {
+              "aria-invalid": error ? true : undefined,
+              "aria-describedby": error ? errorId : undefined,
+              "aria-required": required ? true : undefined,
+            })
+          : children}
         {valid && !error && (
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm pointer-events-none animate-spring-in z-10"
@@ -837,7 +884,11 @@ function Field({
           </span>
         )}
       </div>
-      {error && <p className="mt-1 text-xs text-phisig-red animate-fade-in">{error}</p>}
+      {error && (
+        <p id={errorId} className="mt-1 text-xs text-phisig-red animate-fade-in" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

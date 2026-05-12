@@ -226,6 +226,12 @@ export default function LoginClient() {
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Forgot your password? Ask the admin to send you a fresh onboarding link.
           </p>
+          {/* Honest disclosure: brute-force throttle is real, so make the rule
+              public. Tells legitimate users why a 5th wrong attempt locks them
+              out and gives the e-board cover when a teammate complains. */}
+          <p className="mt-2 text-center text-[11px] text-muted-foreground/80">
+            After 5 failed attempts the account locks for 15 minutes.
+          </p>
         </div>
       </div>
     </main>

@@ -73,6 +73,9 @@ export default async function PrivacyPage() {
             to be removed from all communications. Consent to receive texts is not a condition of any membership consideration.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground">Double opt-in:</span> after you submit the rush form we send one confirmation text to the number you provided asking you to reply <span className="font-mono text-foreground">YES</span> to confirm. We do not send any further marketing messages until you confirm, and your reply (or non-reply) is logged alongside the original consent receipt. If you never reply <span className="font-mono text-foreground">YES</span>, the chapter contacts you only by the email address on the form (if any).
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
             <span className="font-medium text-foreground">Quiet hours:</span> we send messages only between <span className="font-medium text-foreground">9:00&nbsp;AM and 9:00&nbsp;PM Eastern</span>. We do not text outside this window, in line with CTIA SMS Best Practices. Time-sensitive event reminders fired by automation are similarly throttled to this window.
           </p>
         </section>
