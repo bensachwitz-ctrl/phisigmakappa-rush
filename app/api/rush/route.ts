@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enrichRushee } from "@/lib/enrich";
 import { getSiteConfig } from "@/lib/site-config";
+import { isAdminAuthed } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,17 +123,20 @@ export async function POST(req: Request) {
     const userAgent = req.headers.get("user-agent") || null;
 
     // ── Rate limit ────────────────────────────────────────────────────────
-    // Block more than 5 submits from the same IP in 60 minutes. Real rushees
-    // submit once; bots and copy-paste spam accounts hit the form repeatedly.
-    // Returning 429 short-circuits the parse + DB write so we don't poison
-    // the consent ledger with junk records.
-    if (ipAddress) {
+    // Block > 30 submits from the same IP in 60 minutes. Real rushees submit
+    // once; bots and spam loops hit the form repeatedly. 30/hour gives a
+    // booth-tablet on chapter Wi-Fi enough headroom to enter a full day of
+    // PNMs (Fall rush booths routinely capture 20-50 walk-ups in a session).
+    // Authenticated admin sessions skip the limit entirely — the rush chair
+    // running booth from the admin laptop shouldn't be throttled at all.
+    const adminBooth = isAdminAuthed();
+    if (ipAddress && !adminBooth) {
       try {
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const recent = await prisma.rushSubmitLog.count({
           where: { ipAddress, createdAt: { gte: oneHourAgo } },
         });
-        if (recent >= 5) {
+        if (recent >= 30) {
           await prisma.rushSubmitLog.create({
             data: { ipAddress, status: "RATE_LIMITED" },
           }).catch(() => {});

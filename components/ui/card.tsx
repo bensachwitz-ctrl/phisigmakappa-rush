@@ -8,7 +8,10 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-border bg-card text-card-foreground shadow-sm",
+      // rounded-2xl is the dominant card-radius across hero, About, Parents,
+      // brother events, polls; the prior `rounded-xl` default mismatched
+      // those ad-hoc 2xl overrides. Standardizing on 2xl as the system token.
+      "rounded-2xl border border-border bg-card text-card-foreground shadow-sm",
       className
     )}
     {...props}

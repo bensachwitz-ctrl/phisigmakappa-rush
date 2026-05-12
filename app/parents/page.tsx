@@ -50,7 +50,7 @@ export default async function ParentsPage() {
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
 
-      <div className="container py-12 sm:py-16 max-w-4xl">
+      <div className="container section-y max-w-4xl">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
@@ -74,7 +74,7 @@ export default async function ParentsPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-phisig-red/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red shadow-sm">
             <ShieldCheck className="h-3 w-3" /> For Parents &amp; Guardians
           </span>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-bold tracking-tight max-w-2xl leading-[1.05]">
+          <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
             Your son&apos;s safety, academics, and contact info — straight talk.
           </h1>
           <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">

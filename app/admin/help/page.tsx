@@ -200,7 +200,7 @@ export default function HelpPage() {
         <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
           <BookOpen className="h-3 w-3" /> Chapter handbook
         </span>
-        <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
           How to run the chapter from this site.
         </h1>
         <p className="mt-2 text-muted-foreground max-w-2xl">

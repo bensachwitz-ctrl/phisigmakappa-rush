@@ -215,15 +215,9 @@ export function PollsFeed({ isAdmin = false }: Props) {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">
-            Brotherhood polls
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Quick chapter pulse-checks. Anyone can start one.
-          </p>
-        </div>
+      {/* Section title removed — page-level <h1> in app/admin/polls/page.tsx
+          serves as the top heading. This row is now just the action bar. */}
+      <div className="flex items-end justify-end gap-3">
         <Button onClick={() => setCreateOpen(true)} className="press">
           <Plus className="h-4 w-4" />
           <span>Create poll</span>

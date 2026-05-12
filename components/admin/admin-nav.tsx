@@ -17,7 +17,7 @@ const ITEMS = [
   { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true },
   { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true },
-  { href: "/admin/settings", label: "Site", icon: Settings, adminOnly: true },
+  { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true },
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false },
 ];
 

@@ -33,7 +33,7 @@ export default async function PrivacyPage() {
   const rushMailto = cleanMailto(rushEmail);
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
-      <div className="container py-12 sm:py-16 max-w-3xl">
+      <div className="container section-y max-w-3xl">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"

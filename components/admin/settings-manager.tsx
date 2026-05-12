@@ -169,7 +169,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* E-BOARD */}
-      <Section title="Executive board" eyebrow="5 leadership cards on homepage" icon={Crown}>
+      <Section id="eboard" title="Executive board" eyebrow="5 leadership cards on homepage" icon={Crown}>
         <p className="text-xs text-muted-foreground mb-4">
           Fill in the brothers' names and roles. Leave a row blank to hide that slot. Headshot optional — paste an Instagram slug or upload a photo.
         </p>
@@ -197,7 +197,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* CONTACT */}
-      <Section title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
+      <Section id="contact" title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
         {(values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
           <div className="mb-4 rounded-xl border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
             <strong className="font-semibold">Heads up — visible on the public site:</strong>{" "}
@@ -562,16 +562,28 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
   );
 }
 
+/**
+ * Settings panel section. Renders a card with eyebrow + title + content, and
+ * exposes an HTML id so the admin "Get rush ready" checklist deep-links
+ * (/admin/settings#contact, /admin/settings#eboard, etc.) actually scroll
+ * the admin to the right panel. If `id` is omitted, a slug is derived from
+ * the title (lower, alphanumeric only) so every section is anchorable.
+ *
+ * `scroll-mt-24` keeps the section heading from sitting flush under the
+ * sticky admin nav on jump-to-anchor.
+ */
 function Section({
-  title, eyebrow, icon: Icon, children,
+  title, eyebrow, icon: Icon, children, id,
 }: {
   title: string;
   eyebrow: string;
   icon: React.ElementType;
   children: React.ReactNode;
+  id?: string;
 }) {
+  const anchorId = id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return (
-    <Card>
+    <Card id={anchorId} className="scroll-mt-24">
       <CardContent className="p-5 sm:p-6">
         <div className="mb-5">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
