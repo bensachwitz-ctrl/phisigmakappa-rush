@@ -44,13 +44,14 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav aria-label="Admin sections" className="hidden lg:flex items-center gap-1">
           {items.map((it) => {
             const active = pathname === it.href || (it.href !== "/admin" && pathname.startsWith(it.href));
             return (
               <Link
                 key={it.href}
                 href={it.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors whitespace-nowrap",
                   active
@@ -58,7 +59,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
-                <it.icon className="h-3.5 w-3.5" />
+                <it.icon className="h-3.5 w-3.5" aria-hidden="true" />
                 {it.label}
               </Link>
             );
@@ -95,29 +96,32 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
           <button
             onClick={() => setMenuOpen((s) => !s)}
             className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
-            aria-label="Open menu"
+            aria-label={menuOpen ? "Close admin menu" : "Open admin menu"}
+            aria-expanded={menuOpen}
+            aria-controls="admin-mobile-menu"
           >
-            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {menuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="lg:hidden border-t border-border bg-background animate-fade-in">
-          <nav className="container py-2 grid grid-cols-2 gap-1">
+        <div id="admin-mobile-menu" className="lg:hidden border-t border-border bg-background animate-fade-in">
+          <nav aria-label="Admin sections (mobile)" className="container py-2 grid grid-cols-2 gap-1">
             {items.map((it) => {
               const active = pathname === it.href || (it.href !== "/admin" && pathname.startsWith(it.href));
               return (
                 <Link
                   key={it.href}
                   href={it.href}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors",
                     active ? "bg-phisig-red text-white" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
-                  <it.icon className="h-4 w-4" />
+                  <it.icon className="h-4 w-4" aria-hidden="true" />
                   {it.label}
                 </Link>
               );
@@ -126,7 +130,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
               onClick={logout}
               className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground col-span-2 border-t border-border mt-2 pt-3"
             >
-              <LogOut className="h-4 w-4" /> Sign out
+              <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
             </button>
           </nav>
         </div>

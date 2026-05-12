@@ -37,7 +37,7 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <Wordmark variant="compact" />
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Primary" className="flex items-center gap-1 sm:gap-2">
           <Link
             href="#schedule"
             className="hidden sm:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"

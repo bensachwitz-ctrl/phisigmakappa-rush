@@ -199,12 +199,29 @@ export function EventDetailsModal({
           )}
         </div>
 
-        {/* RSVP buttons row */}
+        {/* RSVP buttons row — radiogroup pattern: 3 mutually-exclusive options.
+            Roving tabindex + arrow keys per WAI-ARIA radio group practice. */}
         <div className="px-6 pt-4 pb-3 border-b">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+          <div id="rsvp-group-label" className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
             Your RSVP
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div
+            role="radiogroup"
+            aria-labelledby="rsvp-group-label"
+            className="grid grid-cols-3 gap-2"
+            onKeyDown={(e) => {
+              const opts = ["GOING", "MAYBE", "NOT_GOING"] as const;
+              const cur = (data?.mine?.status as typeof opts[number]) ?? "GOING";
+              const i = opts.indexOf(cur);
+              if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                e.preventDefault();
+                setRsvp(opts[(i + 1) % opts.length]);
+              } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                setRsvp(opts[(i - 1 + opts.length) % opts.length]);
+              }
+            }}
+          >
             {(["GOING", "MAYBE", "NOT_GOING"] as const).map((s) => {
               const active = data?.mine?.status === s;
               const isSubmitting = submitting === s;
@@ -221,7 +238,9 @@ export function EventDetailsModal({
                   type="button"
                   onClick={() => setRsvp(s)}
                   disabled={!!submitting}
-                  aria-pressed={active}
+                  role="radio"
+                  aria-checked={active}
+                  tabIndex={active || (!data?.mine?.status && s === "GOING") ? 0 : -1}
                   className={cn(
                     "press flex items-center justify-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-medium border transition-all",
                     active && config.color === "emerald" && "bg-emerald-500 text-white border-emerald-500 shadow-sm",
@@ -231,9 +250,9 @@ export function EventDetailsModal({
                   )}
                 >
                   {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   )}
                   {config.label}
                 </button>
@@ -242,9 +261,30 @@ export function EventDetailsModal({
           </div>
         </div>
 
-        {/* Tabs: who's going / maybe / not going / no response */}
+        {/* Tabs: who's going / maybe / not going / no response — full WAI-ARIA tabs pattern. */}
         <div className="px-2 sm:px-4 pt-3 border-b overflow-x-auto">
-          <div className="flex gap-1 text-sm">
+          <div
+            role="tablist"
+            aria-label="RSVP breakdown"
+            className="flex gap-1 text-sm"
+            onKeyDown={(e) => {
+              const ids: Tab[] = ["GOING", "MAYBE", "NOT_GOING", "NO_RESPONSE"];
+              const i = ids.indexOf(tab);
+              if (e.key === "ArrowRight") {
+                e.preventDefault();
+                setTab(ids[(i + 1) % ids.length]);
+              } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                setTab(ids[(i - 1 + ids.length) % ids.length]);
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                setTab(ids[0]);
+              } else if (e.key === "End") {
+                e.preventDefault();
+                setTab(ids[ids.length - 1]);
+              }
+            }}
+          >
             {(
               [
                 { id: "GOING",        label: "Going",        color: "text-emerald-600 border-emerald-500" },
@@ -258,16 +298,20 @@ export function EventDetailsModal({
               return (
                 <button
                   key={id}
+                  id={`rsvp-tab-${id}`}
                   onClick={() => setTab(id)}
                   className={cn(
                     "press relative px-3 py-2 text-xs sm:text-sm font-medium border-b-2 -mb-px whitespace-nowrap",
                     active ? color : "text-muted-foreground border-transparent hover:text-foreground",
                   )}
                   aria-selected={active}
+                  aria-controls="rsvp-tabpanel"
                   role="tab"
+                  tabIndex={active ? 0 : -1}
                 >
                   {label}
                   <span
+                    aria-label={`${count} ${label.toLowerCase()}`}
                     className={cn(
                       "ml-1.5 inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full text-[10px] px-1.5 font-semibold",
                       active ? "bg-current text-white" : "bg-zinc-100 text-zinc-600",
@@ -282,7 +326,13 @@ export function EventDetailsModal({
         </div>
 
         {/* Roster body — scrollable */}
-        <div className="max-h-[44vh] overflow-y-auto px-6 py-4">
+        <div
+          id="rsvp-tabpanel"
+          role="tabpanel"
+          aria-labelledby={`rsvp-tab-${tab}`}
+          tabIndex={0}
+          className="max-h-[44vh] overflow-y-auto px-6 py-4"
+        >
           {loading && !data ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (

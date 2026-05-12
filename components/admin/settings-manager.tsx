@@ -26,6 +26,21 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
   const [dirty, setDirty] = React.useState<Set<string>>(new Set());
   const [busy, setBusy] = React.useState(false);
 
+  // Guard against accidental tab-close / refresh / back-nav while the rush
+  // chair has unsaved edits. Modern browsers ignore the returnValue string
+  // and show a generic "leave site?" prompt, but the prompt itself is the
+  // safety net — they can't lose 20 minutes of copy edits to a stray Cmd-W.
+  React.useEffect(() => {
+    if (dirty.size === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty.size]);
+
   function set(key: string, v: string) {
     setValues((s) => ({ ...s, [key]: v }));
     setDirty((d) => new Set(d).add(key));
@@ -55,17 +70,21 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
   return (
     <div className="space-y-6">
       {dirty.size > 0 && (
-        <div className="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div
+          role="region"
+          aria-label={`${dirty.size} unsaved change${dirty.size === 1 ? "" : "s"}`}
+          className="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-0"
+        >
           <div className="rounded-xl border border-phisig-red/30 bg-white shadow-lg p-3 flex items-center justify-between gap-3">
             <p className="text-sm">
               <span className="font-semibold">{dirty.size}</span> unsaved change{dirty.size === 1 ? "" : "s"}
             </p>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => { setValues(initial); setDirty(new Set()); }}>
-                <RotateCcw className="h-3.5 w-3.5" /> Discard
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Discard
               </Button>
               <Button size="sm" onClick={save} disabled={busy}>
-                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Save className="h-3.5 w-3.5" aria-hidden="true" />}
                 Save
               </Button>
             </div>

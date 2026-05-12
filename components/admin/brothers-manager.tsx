@@ -58,6 +58,13 @@ export function BrothersManager({
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const [form, setForm] = React.useState(empty);
   const [busy, setBusy] = React.useState(false);
+  // Pagination cap — chapters with 60+ brothers ship 60+ Cards on first paint
+  // which jank LCP on mid-tier Android. Cap at PAGE_SIZE, expand on demand.
+  // Reset when the search query changes so the user sees fresh results from
+  // the top — never partial.
+  const PAGE_SIZE = 30;
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE);
+  React.useEffect(() => { setVisibleCount(PAGE_SIZE); }, [query]);
 
   function openCreate() {
     setEditing(null);
@@ -217,7 +224,7 @@ export function BrothersManager({
         </Card>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((b) => (
+          {filtered.slice(0, visibleCount).map((b) => (
             <Card key={b.id} className="lift overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
@@ -296,6 +303,34 @@ export function BrothersManager({
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {filtered.length > visibleCount && (
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <p className="text-xs text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{visibleCount}</span> of{" "}
+            <span className="font-semibold text-foreground">{filtered.length}</span> brothers
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisibleCount((n) => Math.min(filtered.length, n + PAGE_SIZE))}
+            >
+              Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+            </Button>
+            {filtered.length > PAGE_SIZE && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setVisibleCount(filtered.length)}
+                className="text-muted-foreground"
+              >
+                Show all {filtered.length}
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

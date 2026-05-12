@@ -389,10 +389,11 @@ export function EventCalendarGrid({
         </div>
 
         <div className="flex-1 text-center">
-          <h3
-            className="text-base font-semibold tracking-tight sm:text-lg"
-            aria-live="polite"
-          >
+          {/* Static heading — does NOT use aria-live; the prev/next buttons
+              below carry aria-label updates so screen readers announce the new
+              month via the button's accessible name on click, not on every
+              re-render of this heading (which would double-announce). */}
+          <h3 className="text-base font-semibold tracking-tight sm:text-lg">
             {monthLabel(focused)}
           </h3>
         </div>
@@ -476,15 +477,20 @@ export function EventCalendarGrid({
           })}
         </div>
 
-        {/* Empty-state overlay when the focused month has zero events. */}
-        {!monthHasEvents && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="pointer-events-none rounded-full bg-background/80 px-4 py-2 text-xs text-muted-foreground shadow-sm ring-1 ring-border">
-              No events scheduled this month
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Empty-state notice — rendered below the grid (not overlaid) so it never
+          blocks taps on empty day cells. Brothers can still click a future day
+          to view it in the day panel, even on a month with no events. */}
+      {!monthHasEvents && (
+        <div className="border-t border-border px-3 py-2.5 sm:px-4">
+          <p className="text-center text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 ring-1 ring-border">
+              No events scheduled this month
+            </span>
+          </p>
+        </div>
+      )}
 
       {/* Inline day panel */}
       {selectedDate && selectedEvents.length > 0 && (

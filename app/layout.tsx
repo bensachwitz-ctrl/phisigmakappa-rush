@@ -44,7 +44,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Phi Sig USC",
-    statusBarStyle: "default",
+    // "black-translucent" lets the cardinal-red theme color bleed under the
+    // iOS status bar instead of leaving a stark white strip above the nav.
+    // The viewport themeColor (#C8102E) becomes visible behind status icons.
+    statusBarStyle: "black-translucent",
   },
 };
 

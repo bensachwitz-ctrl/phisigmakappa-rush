@@ -339,13 +339,31 @@ function PollCard({
             onClear={() => onUnvote(poll.id)}
           />
         ) : (
-          <div className="grid gap-2">
-            {poll.options.map((o) => (
+          <div
+            role="radiogroup"
+            aria-label={`Vote options for: ${poll.question}`}
+            className="grid gap-2"
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              e.preventDefault();
+              const target = e.target as HTMLElement;
+              const buttons = Array.from(target.closest('[role="radiogroup"]')?.querySelectorAll<HTMLButtonElement>('[role="radio"]') ?? []);
+              const i = buttons.indexOf(target as HTMLButtonElement);
+              if (i === -1) return;
+              const dir = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+              const next = buttons[(i + dir + buttons.length) % buttons.length];
+              next?.focus();
+            }}
+          >
+            {poll.options.map((o, idx) => (
               <button
                 key={o.id}
                 type="button"
+                role="radio"
+                aria-checked={false}
+                tabIndex={idx === 0 ? 0 : -1}
                 onClick={() => onVote(poll.id, o.id)}
-                className="press group inline-flex w-full items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-left text-sm font-medium transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft"
+                className="press group inline-flex w-full items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-left text-sm font-medium transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft focus-visible:border-phisig-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
               >
                 <span className="truncate pr-3">{o.label}</span>
                 <span className="text-xs text-muted-foreground transition-colors group-hover:text-phisig-red">
@@ -391,11 +409,28 @@ function PollResults({
 }) {
   const total = Math.max(1, poll.totalVotes);
   return (
-    <div className="space-y-2">
-      {poll.options.map((o) => {
+    <div
+      role="radiogroup"
+      aria-label={`Results for: ${poll.question}`}
+      className="space-y-2"
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        e.preventDefault();
+        const target = e.target as HTMLElement;
+        const buttons = Array.from(target.closest('[role="radiogroup"]')?.querySelectorAll<HTMLButtonElement>('[role="radio"]:not([disabled])') ?? []);
+        const i = buttons.indexOf(target as HTMLButtonElement);
+        if (i === -1) return;
+        const dir = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+        const next = buttons[(i + dir + buttons.length) % buttons.length];
+        next?.focus();
+      }}
+    >
+      {poll.options.map((o, idx) => {
         const count = poll.counts[o.id] ?? 0;
         const pct = Math.round((count / total) * 100);
         const mine = poll.mineOptionId === o.id;
+        const firstFocusable = !disabled && (mine || (!poll.mineOptionId && idx === 0));
         return (
           <button
             key={o.id}
@@ -405,9 +440,12 @@ function PollResults({
               if (disabled) return;
               if (!mine) onSwitch(o.id);
             }}
-            aria-pressed={mine}
+            role="radio"
+            aria-checked={mine}
+            aria-label={`${o.label} — ${pct} percent, ${count} ${count === 1 ? "vote" : "votes"}`}
+            tabIndex={firstFocusable ? 0 : -1}
             className={cn(
-              "press group relative w-full overflow-hidden rounded-lg border bg-background text-left transition-colors",
+              "press group relative w-full overflow-hidden rounded-lg border bg-background text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
               mine
                 ? "border-phisig-red bg-phisig-red-soft"
                 : "border-border hover:border-phisig-red/40",
@@ -416,7 +454,7 @@ function PollResults({
           >
             {/* Bar fill — width transitions on count change. */}
             <span
-              aria-hidden
+              aria-hidden="true"
               className={cn(
                 "absolute inset-y-0 left-0 transition-[width] duration-500 ease-out",
                 mine ? "bg-phisig-red/20" : "bg-secondary",
@@ -426,11 +464,11 @@ function PollResults({
             <span className="relative flex items-center justify-between gap-3 px-4 py-3">
               <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
                 {mine && (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-phisig-red" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-phisig-red" aria-hidden="true" />
                 )}
                 <span className="truncate">{o.label}</span>
               </span>
-              <span className="flex shrink-0 items-baseline gap-2 text-xs text-muted-foreground tabular-nums">
+              <span aria-hidden="true" className="flex shrink-0 items-baseline gap-2 text-xs text-muted-foreground tabular-nums">
                 <span className="font-semibold text-foreground">{pct}%</span>
                 <span>·</span>
                 <span>
