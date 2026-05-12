@@ -14,8 +14,11 @@ const SECTIONS = [
     title: "Getting in",
     body: (
       <>
-        Sign in at <code className="text-foreground">/admin/login</code> with three fields:
-        your real name (for vote attribution), the chapter username, and the chapter password. Sessions last 12 hours.
+        Sign in at <code className="text-foreground">/admin/login</code>. Two tabs:
+        <span className="font-medium text-foreground"> Admin</span> uses the chapter
+        username + password,{" "}
+        <span className="font-medium text-foreground">Brother</span> uses your first
+        name + the password you set on your invite link. Sessions last 12 hours.
       </>
     ),
     bullets: [

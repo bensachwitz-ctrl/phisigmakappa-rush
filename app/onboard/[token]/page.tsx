@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { OnboardingForm } from "@/components/site/onboarding-form";
 import { Wordmark } from "@/components/brand/wordmark";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+// One-time invite pages must never be indexed — each token URL is unique
+// to one brother and shouldn't be in any search engine's database.
+export const metadata: Metadata = {
+  title: "Welcome to Gamma Triton",
+  robots: { index: false, follow: false, nocache: true },
+};
 
 async function fetchInvite(token: string, base: string) {
   try {

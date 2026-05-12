@@ -25,12 +25,14 @@ export const metadata: Metadata = {
       "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
     url: "/parents",
     type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Phi Sigma Kappa @ USC" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "For Parents — Phi Sigma Kappa Gamma Triton",
     description:
       "Anti-hazing policy, advisor contact, GPA standards, and how we handle your son's data when he joins the rush list.",
+    images: ["/twitter-image"],
   },
 };
 
@@ -230,6 +232,60 @@ export default async function ParentsPage() {
                 </div>
               </li>
             </ol>
+          </div>
+        </section>
+
+        {/* Texting policy — surface the TCPA / CTIA disclosures that the
+            full privacy policy spells out, in parent-friendly language. ────── */}
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold tracking-tight mb-5">Texting policy</h2>
+          <div className="rounded-2xl border border-phisig-red/15 bg-phisig-red-soft/30 p-5 sm:p-6">
+            <ul className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                <span>
+                  <span className="font-semibold">Up to 8 messages per rush cycle.</span>{" "}
+                  Schedule announcements and event reminders only — never marketing
+                  spam.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                <span>
+                  <span className="font-semibold">Quiet hours: 9:00 AM – 9:00 PM Eastern.</span>{" "}
+                  We never text outside this window (per CTIA SMS best
+                  practices §5.1.7).
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                <span>
+                  <span className="font-semibold">Reply STOP to opt out</span> at any time —
+                  takes effect immediately, no questions asked. Reply HELP for help
+                  or our advisor's contact.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                <span>
+                  <span className="font-semibold">Express written consent</span> recorded
+                  under 47 CFR §64.1200(f)(9) at signup — disclosure text, timestamp,
+                  IP, and user-agent retained for the 4-year TCPA recordkeeping
+                  window. Your son can audit his own receipt at any time.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                <span>
+                  <span className="font-semibold">Msg & data rates may apply.</span>{" "}
+                  Standard carrier rates from your son's plan. We don't charge
+                  anything.
+                </span>
+              </li>
+            </ul>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Full disclosure on the <Link href="/privacy" className="text-phisig-red hover:underline">privacy policy</Link>.
+            </p>
           </div>
         </section>
 

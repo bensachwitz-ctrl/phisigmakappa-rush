@@ -192,19 +192,35 @@ export async function GET(
       }).then((r) => (r.ok ? r.text() : ""));
       if (!html) continue;
 
+      // Sanity gate: if the embed HTML doesn't contain post-specific
+      // markup (EmbeddedMediaImage class, display_url JSON, or a Caption
+      // div), Instagram returned the generic "this page isn't available"
+      // shell — its og:image is the IG hero/branding asset, not a real
+      // post. Skip extracting from this candidate.
+      const hasPostMarkup =
+        /class="EmbeddedMediaImage"/i.test(html) ||
+        /"display_url"\s*:/i.test(html) ||
+        /class="Caption/i.test(html) ||
+        /class="EmbedHeader"/i.test(html);
+      if (!hasPostMarkup) continue;
+
       for (const re of patterns) {
         const m = html.match(re);
         if (m?.[1]) {
           imgUrl = m[1].replace(/&amp;/g, "&").replace(/\\u0026/g, "&").replace(/\\\//g, "/");
-          // Skip Instagram's generic branding/logo fallbacks. These appear when
-          // a post is private, deleted, age-gated, or the embed page falls
-          // back to the IG app icon/login splash. Any of these patterns means
-          // we got the wrong image and should fall through to the next pattern
-          // or candidate URL.
-          const isIgBranding = /instagram\.com\/static\/.+(InstagramLogo|InstagramApp|InstagramSplash|branding|app[-_]?icon|favicon|glyph)/i.test(imgUrl)
+          // Skip Instagram's generic branding/logo fallbacks. These appear
+          // when a post is private, deleted, age-gated, or the embed page
+          // falls back to the IG app icon/login splash. Reject anything
+          // not served from a known IG CDN host (real post photos always
+          // come from *.cdninstagram.com or *.fbcdn.net).
+          const isIgBranding =
+            /instagram\.com\/static\/.+(InstagramLogo|InstagramApp|InstagramSplash|branding|app[-_]?icon|favicon|glyph)/i.test(imgUrl)
             || /instagram\.com\/static\/images\//i.test(imgUrl)
             || /\/static\/bundles\//i.test(imgUrl);
-          if (imgUrl && !isIgBranding) {
+          const isCdnHosted =
+            /\.cdninstagram\.com\//i.test(imgUrl) ||
+            /\.fbcdn\.net\//i.test(imgUrl);
+          if (imgUrl && !isIgBranding && isCdnHosted) {
             break;
           }
           imgUrl = null;

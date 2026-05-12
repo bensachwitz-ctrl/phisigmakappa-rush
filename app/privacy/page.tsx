@@ -18,12 +18,17 @@ export const metadata = {
       "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
     url: "/privacy",
     type: "website",
+    // Falls back through metadataBase (set in app/layout.tsx) to the
+    // homepage opengraph-image. Explicit so social unfurls of /privacy
+    // render with the chapter brand card instead of a blank gray box.
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Phi Sigma Kappa @ USC" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Privacy — Phi Sigma Kappa @ USC",
     description:
       "How the Gamma Triton chapter collects, uses, and protects information from rushees.",
+    images: ["/twitter-image"],
   },
 };
 
