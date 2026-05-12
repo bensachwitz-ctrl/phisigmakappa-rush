@@ -147,6 +147,14 @@ export function Roster({
     });
   }
 
+  // Smart filter chips — orthogonal to status. Lets the e-board jump to
+  // "what needs my attention" without typing into search or twiddling the
+  // status select. Mirrors the thresholds used by the dashboard insights
+  // panel so the two views always agree.
+  type SmartFilter = "none" | "decidable" | "needs-my-vote" | "bid-pending";
+  const [smartFilter, setSmartFilter] = React.useState<SmartFilter>("none");
+  const DECISION_MIN_VOTES = 5;
+
   const filtered = React.useMemo(() => {
     let list = rushes;
     if (query.trim()) {
@@ -162,6 +170,13 @@ export function Roster({
     if (statusFilter !== "all") {
       list = list.filter((r) => r.status === statusFilter);
     }
+    if (smartFilter === "decidable") {
+      list = list.filter((r) => r.status === "ACTIVE" && r.voteCount >= DECISION_MIN_VOTES);
+    } else if (smartFilter === "needs-my-vote") {
+      list = list.filter((r) => r.status === "ACTIVE" && (r.myVote === null || r.myVote === undefined));
+    } else if (smartFilter === "bid-pending") {
+      list = list.filter((r) => r.status === "BID_EXTENDED");
+    }
     list = [...list].sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       const av = (a as any)[sortBy] ?? "";
@@ -170,7 +185,15 @@ export function Roster({
       return av < bv ? -1 * dir : 1 * dir;
     });
     return list;
-  }, [rushes, query, statusFilter, sortBy, sortDir]);
+  }, [rushes, query, statusFilter, smartFilter, sortBy, sortDir]);
+
+  // Counts for the smart-filter chips so the e-board sees "Decide (3)" not
+  // just "Decide". Updates as votes come in via the same useMemo dep chain.
+  const smartCounts = React.useMemo(() => ({
+    decidable: rushes.filter((r) => r.status === "ACTIVE" && r.voteCount >= DECISION_MIN_VOTES).length,
+    needsMyVote: rushes.filter((r) => r.status === "ACTIVE" && (r.myVote === null || r.myVote === undefined)).length,
+    bidPending: rushes.filter((r) => r.status === "BID_EXTENDED").length,
+  }), [rushes]);
 
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((r) => selected.has(r.id));
@@ -270,6 +293,70 @@ export function Roster({
 
   return (
     <div className="space-y-4">
+      {/* Smart-filter chips — one-tap shortcuts that mirror the dashboard
+          insights thresholds. Each chip carries a live count so the e-board
+          sees "Ready to decide (3)" not just "Ready to decide". The "Clear"
+          chip restores the unfiltered view in one click. */}
+      <div
+        role="group"
+        aria-label="Smart filters"
+        className="flex flex-wrap items-center gap-1.5 text-xs"
+      >
+        <span className="text-muted-foreground font-medium mr-1">Quick views:</span>
+        <button
+          type="button"
+          onClick={() => setSmartFilter(smartFilter === "decidable" ? "none" : "decidable")}
+          aria-pressed={smartFilter === "decidable"}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            smartFilter === "decidable"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+              : "border-border bg-card text-muted-foreground hover:border-emerald-300 hover:text-foreground"
+          )}
+        >
+          Ready to decide
+          <span className="font-semibold tabular-nums">({smartCounts.decidable})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSmartFilter(smartFilter === "needs-my-vote" ? "none" : "needs-my-vote")}
+          aria-pressed={smartFilter === "needs-my-vote"}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            smartFilter === "needs-my-vote"
+              ? "border-phisig-red bg-phisig-red-soft text-phisig-red"
+              : "border-border bg-card text-muted-foreground hover:border-phisig-red/40 hover:text-foreground"
+          )}
+        >
+          Needs my vote
+          <span className="font-semibold tabular-nums">({smartCounts.needsMyVote})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSmartFilter(smartFilter === "bid-pending" ? "none" : "bid-pending")}
+          aria-pressed={smartFilter === "bid-pending"}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            smartFilter === "bid-pending"
+              ? "border-amber-300 bg-amber-50 text-amber-900"
+              : "border-border bg-card text-muted-foreground hover:border-amber-300 hover:text-foreground"
+          )}
+        >
+          Bid pending
+          <span className="font-semibold tabular-nums">({smartCounts.bidPending})</span>
+        </button>
+        {smartFilter !== "none" && (
+          <button
+            type="button"
+            onClick={() => setSmartFilter("none")}
+            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-muted-foreground hover:text-foreground"
+            title="Clear quick view"
+          >
+            <X className="h-3 w-3" aria-hidden="true" /> Clear
+          </button>
+        )}
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <div className="relative flex-1">

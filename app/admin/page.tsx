@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Roster } from "@/components/admin/roster";
+import { DashboardInsights, type InsightEvent } from "@/components/admin/dashboard-insights";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { CheckCircle2, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
@@ -35,6 +36,50 @@ export default async function AdminDashboard() {
   try {
     brotherCount = await prisma.brother.count();
   } catch {}
+
+  // ── Aggregates for the DashboardInsights panel ───────────────────────────
+  // All queries wrapped in try/catch so the dashboard never blank-screens on a
+  // single failed query — every metric falls back to a sensible zero so the
+  // rush chair at least sees the page load.
+  let totalActiveBrothers = brotherCount;
+  let duesPaidCount = 0;
+  let votingBrothersLast7Days = 0;
+  let upcomingEvents: InsightEvent[] = [];
+  try {
+    // Schema has no "active" flag — every row in Brother represents an
+    // active chapter member (revocations delete the row). Use total count
+    // as the participation denominator.
+    [totalActiveBrothers, duesPaidCount] = await Promise.all([
+      prisma.brother.count(),
+      prisma.brother.count({ where: { duesPaid: true } }),
+    ]);
+  } catch {}
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentVoters = await prisma.vote.findMany({
+      where: { createdAt: { gte: sevenDaysAgo } },
+      select: { brotherId: true },
+      distinct: ["brotherId"],
+    });
+    votingBrothersLast7Days = recentVoters.length;
+  } catch {}
+  try {
+    const upcoming = await prisma.event.findMany({
+      where: { startsAt: { gte: new Date() } },
+      orderBy: { startsAt: "asc" },
+      take: 5,
+      select: { id: true, name: true, startsAt: true, category: true },
+    });
+    upcomingEvents = upcoming.map((e) => ({
+      id: e.id,
+      name: e.name,
+      startsAt: e.startsAt.toISOString(),
+      category: e.category,
+    }));
+  } catch {}
+  // Rush funnel: bid → accepted conversion ratio
+  const bidsExtendedCount = rushes.filter((r) => r.status === "BID_EXTENDED" || r.status === "ACCEPTED" || r.status === "DECLINED").length;
+  const acceptedCount = rushes.filter((r) => r.status === "ACCEPTED").length;
 
   const checklist = [
     {
@@ -111,6 +156,18 @@ export default async function AdminDashboard() {
           </p>
         </div>
       </div>
+
+      <DashboardInsights
+        rushes={serializable}
+        totalBrothers={brotherCount}
+        totalActiveBrothers={totalActiveBrothers}
+        votingBrothersLast7Days={votingBrothersLast7Days}
+        upcomingEvents={upcomingEvents}
+        duesPaidCount={duesPaidCount}
+        myBrotherId={me?.id || null}
+        bidsExtendedCount={bidsExtendedCount}
+        acceptedCount={acceptedCount}
+      />
 
       {remaining > 0 && (
         <div className="mb-6 rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white p-5">

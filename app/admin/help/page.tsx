@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Users, CalendarDays, Megaphone, Settings,
   Send, ClipboardCheck, ThumbsUp, Mail, MessageSquare,
   Wand2, Download, Sparkles, ShieldCheck, BookOpen,
+  TrendingUp, FileText,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,25 @@ const SECTIONS = [
       "The chapter has one shared admin login distributed via the e-board's password manager.",
       "First time a brother signs in with a new name, the system creates a Brother record automatically.",
       "To onboard a brother with year, major, headshot, and contact info, use Brothers → Invite brother — sends a one-time link they fill out themselves.",
+    ],
+  },
+  {
+    icon: TrendingUp,
+    title: "Dashboard — decisions at a glance",
+    body: (
+      <>
+        The top of the <Link href="/admin" className="text-phisig-red hover:underline">Rush</Link> tab now
+        shows a 6-tile insight strip plus a "Ready to decide" panel — so the e-board knows what needs
+        attention without scrolling the roster.
+      </>
+    ),
+    bullets: [
+      "KPI tiles: active PNMs, ready-to-decide count, vote participation %, dues collected %, bid conversion %, next event.",
+      "Strong-yes panel (green): PNMs with ≥5 votes and an average score of +1 or higher — these are bid candidates.",
+      "Strong-no panel (red): PNMs with ≥5 votes averaging -1 or lower — likely drops.",
+      "Your unvoted PNMs (cardinal): the ones the chapter is closest to deciding that you haven't weighed in on yet.",
+      'Smart-filter chips above the roster: "Ready to decide", "Needs my vote", "Bid pending" — one tap to focus on what matters.',
+      "Three CSV/JSON exports: PNM roster, Brothers participation, Weekly digest (paste into Slack or the advisor email).",
     ],
   },
   {
@@ -181,6 +201,28 @@ const COMMON_TASKS = [
       "Click New announcement.",
       "Title, body, audience, pin if urgent.",
       "Optionally also click Broadcast to text/email everyone immediately.",
+    ],
+  },
+  {
+    icon: FileText,
+    title: "Send the weekly chapter digest",
+    steps: [
+      "Go to Rush.",
+      "Click 'Weekly digest (JSON)' in the Jump-to row under the KPI tiles — opens the live snapshot.",
+      "Either copy the JSON into a Slack message, OR paste the highlights into the advisor's weekly email.",
+      "Want it formatted? Click 'Brothers CSV' for the engagement roster (votes-cast / RSVPs / dues / last-seen) and paste into your meeting deck.",
+      "Pro tip: pin /api/admin/digest as a bookmark — it's auth-gated so only signed-in admins can open it.",
+    ],
+  },
+  {
+    icon: ThumbsUp,
+    title: "Decide bids fast (with consensus thresholds)",
+    steps: [
+      "Open Rush — the dashboard now shows a green 'Strong consensus — bid candidates' panel.",
+      "Each PNM listed there has ≥5 votes with an average of +1 or higher. Confident bid.",
+      "Click a name → opens the PNM profile with full vote breakdown so you can sanity-check.",
+      "Change status to Bid Extended. Use the bulk Email button to send the bid template.",
+      "Watch the Bid Conversion KPI tile climb as PNMs accept/decline.",
     ],
   },
   {
