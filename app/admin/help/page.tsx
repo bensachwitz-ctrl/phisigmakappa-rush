@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, CalendarDays, Megaphone, Settings,
   Send, ClipboardCheck, ThumbsUp, Mail, MessageSquare,
   Wand2, Download, Sparkles, ShieldCheck, BookOpen,
-  TrendingUp, FileText,
+  TrendingUp, FileText, ScrollText, Trophy, GitCompare, Palette,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +44,83 @@ const SECTIONS = [
       "Strong-no panel (red): PNMs with ≥5 votes averaging -1 or lower — likely drops.",
       "Your unvoted PNMs (cardinal): the ones the chapter is closest to deciding that you haven't weighed in on yet.",
       'Smart-filter chips above the roster: "Ready to decide", "Needs my vote", "Bid pending" — one tap to focus on what matters.',
+      "Rush funnel chart: Submitted → Active → Bid → Accepted with drop-off % at every step. Spot where the cycle is leaking.",
+      "Recent activity feed: last 8 audit entries so you see what the chapter just did the moment you sign in.",
       "Three CSV/JSON exports: PNM roster, Brothers participation, Weekly digest (paste into Slack or the advisor email).",
+    ],
+  },
+  {
+    icon: GitCompare,
+    title: "Compare PNMs side-by-side",
+    body: (
+      <>
+        When the chapter has 2–4 similar PNMs and needs to pick, multi-select them on the Rush roster
+        and click <strong>Compare</strong> — a side-by-side decision view opens with 7 metrics per PNM.
+      </>
+    ),
+    bullets: [
+      "Select 2–4 PNMs using the row checkboxes.",
+      'Click the "Compare (N)" button in the toolbar — opens a modal with 2, 3, or 4 columns.',
+      "Per-PNM metrics: vote average, vote count, year, major, hometown, events attended, days in cycle.",
+      "Best value per metric gets a green star — visual cue, not prescriptive.",
+      "Contact links (email + phone) at the bottom of each card for one-click outreach.",
+    ],
+  },
+  {
+    icon: Trophy,
+    title: "Brother engagement leaderboard",
+    body: (
+      <>
+        On the <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers</Link> tab
+        a leaderboard panel shows top 5 in three categories — drives healthy competition and exposes who
+        needs a tap on the shoulder.
+      </>
+    ),
+    bullets: [
+      "Top voters: most PNM votes cast all-time.",
+      "Top RSVPs: most event RSVPs sent — proxy for engagement.",
+      "Top service hours: most logged service hours.",
+      "Crown for #1, silver/bronze for #2/#3.",
+      "Read-only — brothers see this too, which is the point (visible motivation > admin shaming).",
+    ],
+  },
+  {
+    icon: ScrollText,
+    title: "Audit log — chapter governance trail",
+    body: (
+      <>
+        Every status change, vote, dues toggle, broadcast, event create/delete, announcement, and settings
+        save is recorded with actor + subject + before/after diff at{" "}
+        <Link href="/admin/audit" className="text-phisig-red hover:underline">/admin/audit</Link>. Admin-only.
+      </>
+    ),
+    bullets: [
+      "Open from Rush dashboard → Jump-to row → Audit log (or directly at /admin/audit).",
+      "Search box at the top filters across actor name, subject name, action, and details.",
+      "Subject-type chips: filter to just Rush / Brother / Event / Announcement / Broadcast / Settings.",
+      "Actor chips: filter to a specific person's activity (great for chapter-officer reviews).",
+      "Each row shows actor name + verb + subject + before/after diff (e.g. ACTIVE → BID_EXTENDED).",
+      "Retained 1 year, then auto-pruned by the daily cleanup cron.",
+    ],
+  },
+  {
+    icon: Palette,
+    title: "Chapter setup wizard — re-brand in 5 minutes",
+    body: (
+      <>
+        Net-new chapters spinning up the platform fill out the{" "}
+        <Link href="/admin/setup" className="text-phisig-red hover:underline">5-step setup wizard</Link>{" "}
+        — fraternity, school, brand colors, contact, anti-hazing — and the whole site re-brands on the
+        next page load. Existing chapters can tweak any of it later in Site content → Chapter identity.
+      </>
+    ),
+    bullets: [
+      "Step 1: Fraternity name (full + short), Greek letters, school.",
+      "Step 2: Brand colors — paste your school's hex code; primary + dark + soft tint pickers.",
+      "Step 3: Rush inbox, advisor of record, chapter house address.",
+      "Step 4: Anti-hazing hotline + body paragraph.",
+      "Step 5: Launch — review + next-action cards.",
+      "Dashboard shows a 'Finish chapter setup' progress bar until ≥80% of fields are customized off USC defaults.",
     ],
   },
   {

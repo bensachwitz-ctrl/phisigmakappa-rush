@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export async function PATCH(req: Request) {
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
 
+  const changedKeys: string[] = [];
   for (const [key, rawValue] of Object.entries(parsed.data.updates)) {
     // Defense in depth: scrub trailing junk that creeps in from copy-paste —
     // unicode ellipses, trailing backslashes, smart quotes, double-dot trails.
@@ -39,6 +41,23 @@ export async function PATCH(req: Request) {
       where: { key },
       update: { value },
       create: { key, value },
+    });
+    changedKeys.push(key);
+  }
+  // Single audit row per PATCH (a typical save touches 1-5 keys; logging one
+  // row per touched field would flood the trail). Detail field carries the
+  // changed key list so the e-board can answer "what got changed?" without
+  // an extra DB read.
+  if (changedKeys.length > 0) {
+    await audit({
+      action: "SETTINGS_UPDATED",
+      subjectType: "Settings",
+      subjectId: null,
+      subjectName: changedKeys.length === 1 ? changedKeys[0] : `${changedKeys.length} keys`,
+      details: changedKeys.length <= 5
+        ? changedKeys.join(", ")
+        : `${changedKeys.slice(0, 5).join(", ")} +${changedKeys.length - 5} more`,
+      req,
     });
   }
   return NextResponse.json({ ok: true });

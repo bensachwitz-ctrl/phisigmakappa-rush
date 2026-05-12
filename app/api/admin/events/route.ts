@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,6 +64,14 @@ export async function POST(req: Request) {
           category: data.category || "OTHER",
         },
       });
+      await audit({
+        action: "EVENT_UPDATED",
+        subjectType: "Event",
+        subjectId: updated.id,
+        subjectName: updated.name,
+        details: `${updated.category}${updated.isPrivate ? " · private" : ""}`,
+        req,
+      });
       return NextResponse.json({ ok: true, event: updated });
     }
 
@@ -77,6 +86,14 @@ export async function POST(req: Request) {
         isPrivate: !!data.isPrivate,
         category: data.category || "OTHER",
       },
+    });
+    await audit({
+      action: "EVENT_CREATED",
+      subjectType: "Event",
+      subjectId: created.id,
+      subjectName: created.name,
+      details: `${created.category} · ${new Date(created.startsAt).toLocaleDateString()}${created.isPrivate ? " · private" : ""}`,
+      req,
     });
     return NextResponse.json({ ok: true, event: created });
   } catch (err) {
@@ -96,6 +113,18 @@ export async function DELETE(req: Request) {
   }
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
+  const victim = await prisma.event.findUnique({
+    where: { id },
+    select: { name: true, category: true, startsAt: true },
+  }).catch(() => null);
   await prisma.event.delete({ where: { id } });
+  await audit({
+    action: "EVENT_DELETED",
+    subjectType: "Event",
+    subjectId: id,
+    subjectName: victim?.name || null,
+    details: victim ? `${victim.category} · was ${new Date(victim.startsAt).toLocaleDateString()}` : null,
+    req,
+  });
   return NextResponse.json({ ok: true });
 }

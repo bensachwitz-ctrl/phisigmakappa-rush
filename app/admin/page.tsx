@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Roster } from "@/components/admin/roster";
 import { DashboardInsights, type InsightEvent } from "@/components/admin/dashboard-insights";
 import { RushFunnel } from "@/components/admin/rush-funnel";
+import { RecentActivity, type RecentEntry } from "@/components/admin/recent-activity";
+import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { CheckCircle2, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
@@ -112,6 +114,12 @@ export default async function AdminDashboard() {
     isSetupComplete: customizedFields >= Math.ceil(BRAND_FIELDS.length * 0.8),
   };
 
+  // Recent chapter activity — last 8 audit entries. Best-effort: if the
+  // AuditLog table is unreachable (fresh deploy before db push, network blip)
+  // the helper returns []. The component auto-hides on empty so the
+  // dashboard layout stays clean.
+  const recentEntries: RecentEntry[] = await getRecentAudit(8);
+
   const checklist = [
     {
       label: "Real chapter advisor name",
@@ -201,17 +209,22 @@ export default async function AdminDashboard() {
         brandReadiness={brandReadiness}
       />
 
-      {/* Funnel visualization — drop-off between every stage made visible.
-          Sits below the KPI strip + consensus panels so it's available when
-          the e-board wants to dig into "where are we losing PNMs". */}
-      {rushes.length > 0 && (
-        <div className="mb-6">
-          <RushFunnel
-            submitted={rushes.length}
-            active={rushes.filter((r) => r.status === "ACTIVE").length}
-            bid={bidsExtendedCount}
-            accepted={acceptedCount}
-          />
+      {/* Funnel + recent activity in a 2-column grid on lg screens so the
+          dashboard reads top-to-bottom: KPIs → consensus → funnel + activity
+          → setup checklist → roster. Stacks on mobile. */}
+      {(rushes.length > 0 || recentEntries.length > 0) && (
+        <div className="mb-6 grid lg:grid-cols-2 gap-4">
+          {rushes.length > 0 && (
+            <RushFunnel
+              submitted={rushes.length}
+              active={rushes.filter((r) => r.status === "ACTIVE").length}
+              bid={bidsExtendedCount}
+              accepted={acceptedCount}
+            />
+          )}
+          {recentEntries.length > 0 && (
+            <RecentActivity entries={recentEntries} />
+          )}
         </div>
       )}
 

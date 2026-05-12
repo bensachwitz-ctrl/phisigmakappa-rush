@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,6 +64,14 @@ export async function POST(req: Request) {
       data: data as any,
       select: PUBLIC_BROTHER_SELECT,
     });
+    await audit({
+      action: "BROTHER_CREATED",
+      subjectType: "Brother",
+      subjectId: created.id,
+      subjectName: created.name,
+      details: created.position ? `position: ${created.position}` : null,
+      req,
+    });
     return NextResponse.json({ ok: true, brother: created });
   } catch (err: any) {
     if (err?.code === "P2002") {
@@ -94,11 +103,55 @@ export async function PATCH(req: Request) {
   const data = Object.fromEntries(
     Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v])
   );
+  // Snapshot prior dues state so dues toggle gets its own audit row (it's
+  // the single most-asked "who changed that?" question per chapter).
+  const before = await prisma.brother.findUnique({
+    where: { id },
+    select: { duesPaid: true, role: true, position: true, name: true },
+  }).catch(() => null);
+
   const updated = await prisma.brother.update({
     where: { id },
     data: data as any,
     select: PUBLIC_BROTHER_SELECT,
   });
+
+  if (before) {
+    if (typeof data.duesPaid === "boolean" && before.duesPaid !== data.duesPaid) {
+      await audit({
+        action: "BROTHER_DUES",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `${before.duesPaid ? "paid" : "unpaid"} → ${data.duesPaid ? "paid" : "unpaid"}`,
+        req,
+      });
+    }
+    if (typeof (data as any).role === "string" && before.role !== (data as any).role) {
+      await audit({
+        action: "BROTHER_ROLE",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `${before.role} → ${(data as any).role}`,
+        req,
+      });
+    }
+    // Generic catch-all for other profile edits — only logged when nothing
+    // more-specific fired, to avoid double-rows when only dues changed.
+    const dueChanged = typeof data.duesPaid === "boolean" && before.duesPaid !== data.duesPaid;
+    const roleChanged = typeof (data as any).role === "string" && before.role !== (data as any).role;
+    if (!dueChanged && !roleChanged) {
+      await audit({
+        action: "BROTHER_UPDATED",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `fields: ${Object.keys(data).join(", ")}`,
+        req,
+      });
+    }
+  }
   return NextResponse.json({ ok: true, brother: updated });
 }
 
@@ -107,6 +160,19 @@ export async function DELETE(req: Request) {
   if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
+  // Snapshot name + position for the audit trail before cascading delete.
+  const victim = await prisma.brother.findUnique({
+    where: { id },
+    select: { name: true, position: true },
+  }).catch(() => null);
   await prisma.brother.delete({ where: { id } });
+  await audit({
+    action: "BROTHER_DELETED",
+    subjectType: "Brother",
+    subjectId: id,
+    subjectName: victim?.name || null,
+    details: victim?.position ? `was ${victim.position}` : null,
+    req,
+  });
   return NextResponse.json({ ok: true });
 }

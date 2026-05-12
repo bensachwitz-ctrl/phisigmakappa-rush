@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -159,6 +160,17 @@ export async function POST(req: Request) {
       if (result.ok) sentSms++;
     }
   }
+
+  // Audit the broadcast so the e-board can answer "who blasted that?"
+  // months later. Subject = the audience name, details = channel + counts.
+  await audit({
+    action: "BROADCAST_SENT",
+    subjectType: "Broadcast",
+    subjectId: null,
+    subjectName: `${audience} (${recipients.length} recipients)`,
+    details: `${channel}${sentEmail ? ` · ${sentEmail} email` : ""}${sentSms ? ` · ${sentSms} sms` : ""}${mockMode ? " · mock mode" : ""}`,
+    req,
+  });
 
   return NextResponse.json({
     ok: true,
