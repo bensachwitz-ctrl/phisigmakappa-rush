@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
-import { parsePollOptions } from "@/app/api/polls/route";
+import { parsePollOptions } from "@/lib/poll-options";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
+import { parsePollOptions, newOptionId, type PollOption } from "@/lib/poll-options";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,32 +41,10 @@ const CreatePollSchema = z.object({
   closesAt: z.string().datetime().optional().nullable(),
 });
 
-export type PollOption = { id: string; label: string };
-
-/** Best-effort parse of the JSON-stored options column. Returns [] on any error. */
-export function parsePollOptions(raw: string): PollOption[] {
-  try {
-    const v = JSON.parse(raw);
-    if (!Array.isArray(v)) return [];
-    return v
-      .filter(
-        (o): o is PollOption =>
-          o &&
-          typeof o === "object" &&
-          typeof (o as { id?: unknown }).id === "string" &&
-          typeof (o as { label?: unknown }).label === "string",
-      )
-      .map((o) => ({ id: o.id, label: o.label }));
-  } catch {
-    return [];
-  }
-}
-
-function newOptionId(): string {
-  // cuid-like opaque id — we don't need full cuid here, just unique within
-  // the poll. 12 hex chars is collision-safe for 6 options per poll.
-  return "o_" + crypto.randomBytes(8).toString("hex");
-}
+// Poll-option helpers moved to lib/poll-options.ts — Next.js App Router
+// forbids non-route-handler exports from route.ts files starting with
+// the typed-routes build (any extra named export breaks `next build`).
+// Re-imported below as a single line so existing call sites still work.
 
 export async function GET() {
   const brother = await getCurrentBrother();
