@@ -78,7 +78,7 @@ export default async function ParentsPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/coat-of-arms-formal.jpg"
-            alt="Phi Sigma Kappa coat of arms"
+            alt={`${fraternityName} coat of arms`}
             width={140}
             height={164}
             className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,10 +137,20 @@ export async function POST(req: Request) {
     orderBy: { createdAt: "desc" },
   }) : null;
 
+  // Pull chapter identity once for all CTIA-mandated replies. Falls back to
+  // the Phi Sig USC reference values if cfg is empty — so an existing deploy
+  // with no overrides reads identical to the pre-R43 build.
+  const identity = await getChapterIdentity();
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  const chapterSig = `${identity.fraternityName} ${identity.greekLetters} (${identity.schoolShort})`;
+  const shortSig = identity.chapterAttribution;
+
   // ── HELP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
   if (isHelp) {
     return twiml(
-      "Phi Sigma Kappa Gamma Triton (USC) rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out. Help: rush@phisig-usc.com. Privacy: https://phisigmakappa.vercel.app/privacy"
+      `${chapterSig} rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out. Help: ${rushEmail}. Privacy: ${siteUrl}/privacy`
     );
   }
 
@@ -155,7 +167,7 @@ export async function POST(req: Request) {
       });
     }
     return twiml(
-      "Phi Sigma Kappa Gamma Triton (USC): you're opted out. No further messages. Reply START to resubscribe. Msg & data rates may apply."
+      `${chapterSig}: you're opted out. No further messages. Reply START to resubscribe. Msg & data rates may apply.`
     );
   }
 
@@ -172,17 +184,17 @@ export async function POST(req: Request) {
       const first = rushee.name.split(/\s+/)[0] || "there";
       return twiml(
         isYes
-          ? `Phi Sig USC: confirmed — thanks ${first}! We'll text when the Fall '26 rush schedule drops. Reply STOP anytime.`
-          : `Phi Sig USC: welcome back ${first}. Reply STOP anytime.`
+          ? `${shortSig}: confirmed — thanks ${first}! We'll text when the rush schedule drops. Reply STOP anytime.`
+          : `${shortSig}: welcome back ${first}. Reply STOP anytime.`
       );
     }
     // Unknown number replying YES/START — friendly redirect.
-    return twiml("Phi Sigma Kappa Gamma Triton (USC): we don't have your info on file. Sign up at https://phisigmakappa.vercel.app or email rush@phisig-usc.com.");
+    return twiml(`${chapterSig}: we don't have your info on file. Sign up at ${siteUrl} or email ${rushEmail}.`);
   }
 
   // ── Unrecognized keyword ───────────────────────────────────────────────
   return twiml(
-    "Phi Sigma Kappa Gamma Triton (USC): reply YES to confirm rush updates, STOP to opt out, HELP for help. Msg & data rates may apply."
+    `${chapterSig}: reply YES to confirm rush updates, STOP to opt out, HELP for help. Msg & data rates may apply.`
   );
 }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,14 +39,23 @@ export async function GET(req: Request) {
     events = [];
   }
 
-  const calendarName = "Phi Sigma Kappa Gamma Triton — Rush at USC";
+  // Chapter identity drives the calendar name, PRODID, and UID host so a
+  // re-brand (Beta Sigma @ Maryland → "Beta Sigma — Rush at Maryland", PRODID
+  // "Beta Sigma //Rush Maryland//EN") propagates without a code change.
+  const identity = chapterIdentityFromCfg(cfg);
+  const calendarName = `${identity.chapterFullName} — Rush at ${identity.schoolShort}`;
   const calendarDesc =
-    "Public rush events for Phi Sigma Kappa Gamma Triton at the University of South Carolina. Subscribe to get every event automatically.";
+    `Public rush events for ${identity.chapterFullName} at ${identity.schoolName}. Subscribe to get every event automatically.`;
+  // UID host derived from deploy origin so the same Event row exported from
+  // two different deploys still produces RFC-unique UIDs.
+  const uidHost = new URL(origin).host;
+  // PRODID per RFC 5545 — vendor token; safe to derive from chapter name.
+  const prodId = `-//${identity.chapterFullName}//Rush ${identity.schoolShort}//EN`;
 
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Phi Sigma Kappa Gamma Triton//Rush USC//EN",
+    `PRODID:${prodId}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeIcs(calendarName)}`,
@@ -58,7 +68,7 @@ export async function GET(req: Request) {
   for (const e of events) {
     const start = formatIcsDate(e.startsAt);
     const end = formatIcsDate(e.endsAt ?? new Date(e.startsAt.getTime() + 2 * 60 * 60 * 1000));
-    const uid = `${e.id}@phisigmakappa.vercel.app`;
+    const uid = `${e.id}@${uidHost}`;
     const stamp = formatIcsDate(e.updatedAt || e.createdAt || now);
     lines.push(
       "BEGIN:VEVENT",

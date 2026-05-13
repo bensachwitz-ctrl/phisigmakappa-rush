@@ -17,23 +17,26 @@ export type Enrichment = {
   searchedAt: string;
 };
 
-export function quickLinks(name: string) {
-  const q = encodeURIComponent(`${name} University of South Carolina`);
+export function quickLinks(name: string, schoolName = "University of South Carolina", schoolShort = "USC", schoolUrl = "https://www.sc.edu") {
+  const q = encodeURIComponent(`${name} ${schoolName}`);
   const qSimple = encodeURIComponent(name);
+  // Strip protocol + trailing slash from schoolUrl for the directory URL pattern;
+  // most universities expose a /about/directory search at the canonical host.
+  const directoryHost = schoolUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return [
     { label: "Google", url: `https://www.google.com/search?q=${q}` },
     { label: "LinkedIn", url: `https://www.linkedin.com/search/results/people/?keywords=${q}` },
     { label: "Instagram", url: `https://www.instagram.com/explore/search/keyword/?q=${qSimple}` },
     { label: "Facebook", url: `https://www.facebook.com/search/people/?q=${q}` },
-    { label: "USC directory", url: `https://www.sc.edu/about/directory/?q=${qSimple}` },
+    { label: `${schoolShort} directory`, url: `https://${directoryHost}/about/directory/?q=${qSimple}` },
     { label: "MaxPreps (HS sports)", url: `https://www.maxpreps.com/search/default.aspx?search=${qSimple}` },
   ];
 }
 
-async function tavilySearch(name: string, hints: string) {
+async function tavilySearch(name: string, hints: string, schoolName = "University of South Carolina") {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) return null;
-  const query = `${name} University of South Carolina ${hints}`.trim();
+  const query = `${name} ${schoolName} ${hints}`.trim();
   try {
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
@@ -62,9 +65,18 @@ export async function enrichRushee(opts: {
   hometown?: string | null;
   major?: string | null;
   year?: string | null;
+  // Optional chapter context — pass cfg-derived values to scope the search to
+  // the right school. Defaults to USC for backward compat (callers that haven't
+  // migrated still work; their PNM auto-research just queries the USC corpus).
+  schoolName?: string;
+  schoolShort?: string;
+  schoolUrl?: string;
 }): Promise<Enrichment> {
+  const schoolName = opts.schoolName || "University of South Carolina";
+  const schoolShort = opts.schoolShort || "USC";
+  const schoolUrl = opts.schoolUrl || "https://www.sc.edu";
   const hints = [opts.hometown, opts.major, opts.year].filter(Boolean).join(" ");
-  const tav = await tavilySearch(opts.name, hints);
+  const tav = await tavilySearch(opts.name, hints, schoolName);
   if (tav) {
     const bullets = (tav.results || [])
       .slice(0, 6)
@@ -88,7 +100,7 @@ export async function enrichRushee(opts: {
   }
   return {
     summary: `Auto-enrichment is in manual mode. Set TAVILY_API_KEY in Vercel to auto-pull from the web. Use the links below to research ${opts.name} manually.`,
-    links: quickLinks(opts.name),
+    links: quickLinks(opts.name, schoolName, schoolShort, schoolUrl),
     source: "search-links",
     searchedAt: new Date().toISOString(),
   };

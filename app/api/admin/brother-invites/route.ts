@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
+import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,34 +19,34 @@ function baseUrl(req: Request) {
   return process.env.SITE_URL || `${new URL(req.url).origin}`;
 }
 
-async function sendEmail(to: string, link: string, sender: string) {
+async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { sent: false, reason: "no-resend" };
-  const from = process.env.RESEND_FROM || "Phi Sigma Kappa USC <onboarding@phisig-usc.com>";
+  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@phisig-usc.com>`;
   const html = `
     <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-      <h1 style="font-size:22px;margin:0 0 6px">You're being added to Phi Sig.</h1>
-      <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the brothers directory at Gamma Triton, USC.</p>
+      <h1 style="font-size:22px;margin:0 0 6px">You're being added to ${identity.fraternityShort}.</h1>
+      <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the brothers directory at ${identity.greekLetters}, ${identity.schoolShort}.</p>
       <p style="margin:18px 0">
         <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Complete your brother profile</a>
       </p>
       <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
-      <p style="color:#71717a;font-size:12px">Link expires in 30 days. #DamnProud</p>
+      <p style="color:#71717a;font-size:12px">Link expires in 30 days. ${identity.tagline}</p>
     </div>`;
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ from, to, subject: "Welcome to Phi Sigma Kappa — finish your profile", html }),
+    body: JSON.stringify({ from, to, subject: `Welcome to ${identity.fraternityName} — finish your profile`, html }),
   });
   return { sent: r.ok, reason: r.ok ? "ok" : `resend-${r.status}` };
 }
 
-async function sendSms(to: string, link: string, sender: string) {
+async function sendSms(to: string, link: string, sender: string, identity: ChapterIdentity) {
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_PHONE_NUMBER;
   if (!sid || !token || !from) return { sent: false, reason: "no-twilio" };
-  const msg = `${sender || "Phi Sig USC"}: you're being added as a brother. Finish your profile here: ${link}`;
+  const msg = `${sender || identity.chapterAttribution}: you're being added as a brother. Finish your profile here: ${link}`;
   const auth = Buffer.from(`${sid}:${token}`).toString("base64");
   const body = new URLSearchParams({ To: to, From: from, Body: msg });
   const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
@@ -100,13 +101,15 @@ export async function POST(req: Request) {
 
   const link = `${baseUrl(req)}/onboard/${token}`;
   const senderName = sender?.name || "";
+  // Pull identity once so both channels share the same chapter signature.
+  const identity = await getChapterIdentity();
 
   let delivery: { channel: string; sent: boolean; reason: string } = { channel: "link", sent: false, reason: "manual" };
   if (channel === "email" && email) {
-    const r = await sendEmail(email, link, senderName);
+    const r = await sendEmail(email, link, senderName, identity);
     delivery = { channel: "email", ...r };
   } else if (channel === "sms" && phone) {
-    const r = await sendSms(phone, link, senderName);
+    const r = await sendSms(phone, link, senderName, identity);
     delivery = { channel: "sms", ...r };
   }
 

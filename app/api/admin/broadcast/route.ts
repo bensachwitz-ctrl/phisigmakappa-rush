@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -114,12 +115,15 @@ export async function POST(req: Request) {
   }
 
   let sentEmail = 0, sentSms = 0, mockMode = false;
+  // Chapter identity is the From-line. Falls back to Phi Sig USC reference
+  // values, so an existing deploy renders identically.
+  const identity = await getChapterIdentity();
 
   // Email
   if (channel === "EMAIL" || channel === "BOTH") {
     const apiKey = process.env.RESEND_API_KEY;
     const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
-    const fromHeader = `Phi Sigma Kappa USC <${fromAddr}>`;
+    const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
     if (!apiKey || apiKey.startsWith("re_xxxxx")) {
       mockMode = true;
     } else {
@@ -130,7 +134,7 @@ export async function POST(req: Request) {
           await resend.emails.send({
             from: fromHeader,
             to: r.email,
-            subject: subject || "Phi Sigma Kappa USC — Chapter Update",
+            subject: subject || `${identity.chapterAttribution} — Chapter Update`,
             text: msg,
             // HTML-escape the admin-typed message before HTML-interpolating
             // into the email body. Admin-only field, but defense-in-depth —

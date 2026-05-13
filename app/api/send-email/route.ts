@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/auth";
+import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,8 +15,8 @@ const PayloadSchema = z.object({
   replyTo: z.string().email().optional(),
 });
 
-function htmlTemplate(opts: { subject: string; body: string }) {
-  const { subject, body } = opts;
+function htmlTemplate(opts: { subject: string; body: string; identity: ChapterIdentity }) {
+  const { subject, body, identity } = opts;
   // Body is plain text — convert newlines to <br/> and escape HTML
   const escaped = body
     .replace(/&/g, "&amp;")
@@ -29,14 +30,14 @@ function htmlTemplate(opts: { subject: string; body: string }) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #eaeaef;">
         <tr><td style="background:#C8102E;padding:28px 32px;color:#fff;">
-          <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;">Phi Sigma Kappa &middot; University of South Carolina</div>
+          <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;">${identity.fraternityName} &middot; ${identity.schoolName}</div>
           <div style="font-size:22px;font-weight:600;margin-top:6px;">${subject.replace(/</g, "&lt;")}</div>
         </td></tr>
         <tr><td style="padding:28px 32px;font-size:15px;line-height:1.65;">
           ${html}
         </td></tr>
         <tr><td style="padding:18px 32px 28px;font-size:12px;color:#71717a;border-top:1px solid #eaeaef;">
-          You received this because you registered as a potential new member with Phi Sigma Kappa at USC.
+          You received this because you registered as a potential new member with ${identity.fraternityName} at ${identity.schoolShort}.
         </td></tr>
       </table>
     </td></tr>
@@ -65,10 +66,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "No matching rushes" }, { status: 404 });
   }
 
+  // Chapter identity drives the From header + the masthead in the HTML
+  // template. Reference defaults preserve the existing Phi Sig USC look.
+  const identity = await getChapterIdentity();
   const apiKey = process.env.RESEND_API_KEY;
   const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
-  const fromHeader = `Phi Sigma Kappa USC <${fromAddr}>`;
-  const html = htmlTemplate({ subject: payload.subject, body: payload.body });
+  const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
+  const html = htmlTemplate({ subject: payload.subject, body: payload.body, identity });
 
   // No Resend key — log & return success in mock mode (useful for dev)
   if (!apiKey || apiKey.startsWith("re_xxxxx")) {

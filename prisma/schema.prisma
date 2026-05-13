@@ -247,16 +247,6 @@ model BrotherInvite {
   completedAt DateTime?
 }
 
-model Document {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  url         String   // Vercel Blob URL
-  category    String   @default("GENERAL")  // BYLAWS | CALENDAR | DUES | RITUAL | GENERAL
-  size        Int?
-  createdAt   DateTime @default(now())
-}
-
 // Key/value site settings the chapter can tweak without a code deploy:
 //  hero.tile1.slug | hero.tile1.caption | hero.tile1.icon
 //  hero.tile2.slug | hero.tile2.caption | hero.tile2.icon

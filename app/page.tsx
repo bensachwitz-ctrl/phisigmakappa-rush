@@ -11,6 +11,7 @@ import { Reveal, CountUp } from "@/components/site/reveal";
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
@@ -33,25 +34,26 @@ export const dynamic = "force-dynamic";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
+  const identity = chapterIdentityFromCfg(cfg);
   const summary = `${cfg["stats.brothers"]} brothers · ${cfg["stats.gpa"]} GPA · ${cfg["philanthropy.raisedTotal"]} raised for ${cfg["philanthropy.beneficiaryShort"]}.`;
   // Google truncates SERP descriptions around 155–160 chars. Keeping the meta
   // description under that ceiling prevents the trailing "we'll text you when
   // the schedule drops" from showing as "...". The longer pitch lives in the
   // hero copy, which is what users see after they click.
-  const desc = `Phi Sigma Kappa @ USC. ${summary} Join the Fall '26 rush list — we'll text when the schedule drops.`;
+  const desc = `${identity.ogAlt}. ${summary} Join the rush interest list — we'll text when the schedule drops.`;
   return {
-    title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+    title: identity.pageTitle,
     description: desc,
     alternates: { canonical: "/" },
     openGraph: {
-      title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
-      description: `${summary} Get on the Fall '26 rush interest list.`,
+      title: identity.pageTitle,
+      description: `${summary} Get on the rush interest list.`,
       type: "website",
       url: "/",
     },
     twitter: {
       card: "summary_large_image",
-      title: "Phi Sigma Kappa Gamma Triton — Rush at USC",
+      title: identity.pageTitle,
       description: summary,
     },
   };
