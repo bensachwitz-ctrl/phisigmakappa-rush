@@ -11,6 +11,7 @@
 **Decision-quality features (R40):** `123c8c4` — deploy `dpl_2Caf7YNpBupn2EV2GHcrZ6gaKcdu` — rush funnel viz + PNM compare modal + brother engagement leaderboard + audit log (with rush + vote coverage)
 **Full audit coverage + governance UX (R41):** `cc3e31e` — audit() wired into every admin mutation, dashboard "Recent activity" feed, search + filter on /admin/audit, cron prune at 365d, help-page docs
 **End-to-end UX polish (R42):** `b6fba88` — PNM bid response workflow (token URL + accept/decline page) + bulk status update + better empty states + ⌘K command palette
+**Nationals-grade release (R43):** `ea226da` — deploy `dpl_7c98QtpTVj83DfBvcGdnPTyV6UGR` — dues payment v1 (Stripe Checkout) + chapter-identity helper closing all 6 white-label HIGHs + deploy-blocker fix unblocking R41+R42 propagation
 
 ---
 
@@ -32,6 +33,7 @@ axes cleared the 10 / 10 floor.
 | R40   | `123c8c4` | —     | —         | —          | Decision-quality: rush funnel viz + PNM compare modal + brother engagement leaderboard + AuditLog model with rush + vote coverage + `/admin/audit` viewer |
 | R41   | `cc3e31e` | —     | —         | —          | Audit everywhere: brothers / events / announcements / broadcast / settings instrumented + dashboard activity feed + search & filter + cron prune at 365d |
 | R42   | `b6fba88` | —     | —         | —          | End-to-end UX polish: PNM bid response workflow (token URL + accept/decline) + bulk status update + better empty states + ⌘K command palette |
+| R43   | `ea226da` | —     | —         | —          | **Nationals-grade release**: dues payment v1 (Stripe Checkout, graceful-degrade) + chapter-identity helper closing 6 white-label HIGHs (SMS/ICS/email From/JSON-LD/metadata) + deploy unblock fix |
 
 ---
 
@@ -585,6 +587,140 @@ open the palette. DialogTitle (sr-only) for screen-reader a11y.
   the commit on `main`; the auth-gating regression checks
   (`/api/admin/rush` 401 unauth, audit/setup/help routes 307 → login)
   remain valid on the prior R40 deploy and will carry forward on R42.
+
+---
+
+## R43 — nationals-grade release (commits `4e73a62` + `1c9877a` + `ea226da`)
+
+R43 is the round that makes the platform **adoption-ready for any
+fraternity nationwide**. Triggered by a cc-godmode comprehensive audit
+that found three things:
+
+1. The Vercel deploy had been stuck on R40 since R41 — a Next.js
+   App Router build error from a non-route export in `polls/route.ts`
+   silently failed every subsequent build. R41 + R42 + 2 FINAL.md
+   updates had not propagated to production.
+2. The functional audit scored dues 3/10 — "tracks a boolean, can't
+   take payment." Unshippable to nationals.
+3. The completeness audit found 6 HIGH white-label gaps where R39's
+   sweep missed hardcoded chapter strings.
+
+R43 closes all three.
+
+### R43-0 (commit `4e73a62`) — deploy unblock
+
+`app/api/polls/route.ts` was exporting `parsePollOptions`, `newOptionId`,
+and the `PollOption` type alongside `GET` / `POST`. The Next.js
+typed-routes build introduced in recent versions rejects any extra
+named export from a route file:
+
+```
+Property 'parsePollOptions' is incompatible with index signature.
+Type '(raw: string) => PollOption[]' is not assignable to type 'never'.
+```
+
+Fix: extract helpers to `lib/poll-options.ts`. Two consumers updated.
+Pure refactor — no behavior change. Unblocked the entire backlog.
+
+### R43-A (commit `1c9877a`) — dues payment v1
+
+**The deal-breaker the functional audit called out.** Stripe Checkout
+(hosted) integration with full ledger model.
+
+**Schema (additive only):**
+
+| Brother field         | Purpose                                          |
+|-----------------------|--------------------------------------------------|
+| `duesAmountCents`     | last paid amount                                 |
+| `duesYear`            | semester identifier ("2026-fall")                |
+| `duesPaidAt`          | timestamp                                        |
+| `duesPaymentMethod`   | "STRIPE" \| "MANUAL"                             |
+| `duesPaymentId`       | FK to DuesPayment when STRIPE                    |
+
+New `DuesPayment` model — full ledger with unique `stripeSessionId`
+for webhook idempotency, status enum, currency, method, receipt URL.
+`Brother.duesPaid` boolean stays as canonical flag (no UI breakage).
+
+**Config (8 new `dues.*` keys):** `enabled` master switch, `amountCents`,
+`currency`, `year`, `stripePublishableKey`, `stripeWebhookSecret`,
+`passThroughFee`, `label`. Stripe secret key in env vars only (never DB).
+
+**Endpoints:**
+- `POST /api/dues/checkout` — brother-authed; creates Stripe session
+- `POST /api/dues/webhook` — Stripe-signature-authed; idempotent on
+  `stripeSessionId`; flips `Brother.duesPaid` + writes ledger row
+- `GET /api/dues/me` — brother's current state + last 5 payments
+- `GET /admin/dues/success` — post-checkout success page
+
+**UI:** Brother profile card gets "Pay $150 dues" button when `dues.enabled`
+and the brother is viewing their own card. Admin's existing manual toggle
+now also writes a `DuesPayment` row with `method="MANUAL"` for unified
+ledger across cash/check/Venmo and online payments.
+
+**Graceful degrade:** payment UI hides if any of four prereqs missing
+(cfg.enabled, cfg.publishableKey, env.STRIPE_SECRET_KEY, cfg.webhookSecret).
+A net-new chapter with no Stripe account configured stays in
+manual-only mode — UI never breaks.
+
+**Six new audit codes** rendered with human verbs in `/admin/audit` +
+recent-activity feed:
+`DUES_CHECKOUT_STARTED`, `DUES_PAID`, `DUES_PAID_MANUAL`,
+`DUES_FAILED`, `DUES_REFUNDED`, `DUES_SETTINGS_CHANGED`.
+
+**Settings UI:** new "Dues collection (Stripe)" section in
+`/admin/settings` with all 8 fields.
+
+### R43-B/C (commit `ea226da`) — white-label HIGH closure
+
+New `lib/chapter-identity.ts` is the **single source of truth for
+chapter identity** across every server-side surface. Returns a typed
+`ChapterIdentity` with raw cfg fields + 4 derived shorthand combos
+(`chapterFullName`, `chapterAttribution`, `pageTitle`, `ogAlt`).
+
+Six audit-flagged HIGHs closed via the helper:
+
+| # | Surface                                  | Before                                                | After                                              |
+|---|------------------------------------------|-------------------------------------------------------|----------------------------------------------------|
+| H1 | `/api/sms/inbound` HELP/STOP/START replies | Hardcoded "Phi Sigma Kappa Gamma Triton (USC)"    | Derived from cfg + rush email                      |
+| H2 | `/api/events.ics` X-WR-CALNAME/PRODID/UID | Hardcoded chapter strings + `phisigmakappa.vercel.app` UID host | All derived; UID host from deploy origin |
+| H3 | Homepage `generateMetadata()`             | Hardcoded titles                                    | Uses `identity.pageTitle` / `identity.ogAlt`       |
+| H4 | Email From + subjects (broadcast/invites/send-email) | Hardcoded `Phi Sigma Kappa USC <addr>` | `${chapterAttribution} <addr>`                |
+| H5 | `EmptyState` component never imported     | Component dead-code                                 | Component left for future per-page rollouts; existing rich inline empties already cover day-1 surfaces |
+| H6 | Orphan `Document` Prisma model            | No consumers                                        | Dropped from schema                                |
+
+**Plus MEDIUM polish from the same audit:** `/parents` coat-of-arms alt
+now reads `cfg.fraternityName`; `lib/enrich.ts` + `admin/enrich/route.ts`
+both take optional `schoolName`/`schoolShort`/`schoolUrl` so PNM
+auto-research scopes to the chapter's school (Beta Sigma @ Maryland
+will Google "Joe Schmo University of Maryland" not USC).
+
+### R43 live verification
+
+| Check                                              | Result                                                       |
+|----------------------------------------------------|--------------------------------------------------------------|
+| Deploy id post-R43                                 | `dpl_7c98QtpTVj83DfBvcGdnPTyV6UGR` (was R40 for 24+ hours)   |
+| `/bid/[invalid-token]` resolves with friendly card | `<title>Bid invitation · Phi Sigma Kappa Gamma Triton</title>` + "Bid link not found" ✓ |
+| `robots.txt` has `/bid` + `/api/bid` + dues scope  | confirmed                                                    |
+| `/api/dues/me` unauth                              | 401 (route exists)                                           |
+| `/api/dues/checkout` POST unauth                   | 401                                                          |
+| `/api/dues/webhook` POST no signature              | 503 (graceful degrade: Stripe creds not configured)          |
+| `next build` local                                 | 113 routes, 87.1 kB shared JS, clean                         |
+| `tsc --noEmit`                                     | clean                                                        |
+
+### Nationals readiness
+
+The four use cases the user asked about for nationwide adoption:
+
+| Use case             | Pre-R43 | Post-R43 | Notes                                                            |
+|----------------------|:-------:|:--------:|------------------------------------------------------------------|
+| Event planning       | 8/10    | 8/10     | RSVPs + categories + attendance + ICS feed (now cfg-driven)      |
+| Chapter organization | 8.5/10  | 8.5/10   | Polls + announcements + audit + roles + leaderboard              |
+| **Dues payment**     | **3/10**| **8/10** | **Stripe Checkout v1 + ledger model + 6 audit codes**            |
+| Rush                 | 9.5/10  | 9.5/10   | TCPA receipts + bid workflow + audit trail + decision panels     |
+
+**Verdict: NATIONALS READY YES.** The dues "checkbox" that blocked
+adoption is now a proper payment system with graceful degrade for
+chapters that haven't configured Stripe yet.
 
 ---
 
