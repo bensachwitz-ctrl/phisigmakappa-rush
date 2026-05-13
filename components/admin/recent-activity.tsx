@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ScrollText, Vote, Edit3, Megaphone, Settings, Sparkles,
-  User, Trash2, ArrowRight,
+  User, Trash2, ArrowRight, CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +90,12 @@ function humanVerb(action: string): string {
     case "BROTHER_DUES": return "toggled dues for";
     case "BROTHER_ROLE": return "changed role for";
     case "BROTHER_DELETED": return "removed";
+    case "DUES_CHECKOUT_STARTED": return "started dues checkout for";
+    case "DUES_PAID": return "received dues payment from";
+    case "DUES_PAID_MANUAL": return "marked dues paid for";
+    case "DUES_FAILED": return "saw failed dues payment from";
+    case "DUES_REFUNDED": return "refunded dues for";
+    case "DUES_SETTINGS_CHANGED": return "changed dues settings";
     case "EVENT_CREATED": return "created event";
     case "EVENT_UPDATED": return "updated event";
     case "EVENT_DELETED": return "deleted event";
@@ -120,6 +126,7 @@ function ActionDot({ action }: { action: string }) {
   const cfg = (() => {
     if (action.startsWith("RUSH_VOTE")) return { icon: Vote, tone: "phisig-red" as const };
     if (action.startsWith("RUSH")) return { icon: Edit3, tone: "amber" as const };
+    if (action.startsWith("DUES")) return { icon: CreditCard, tone: "emerald" as const };
     if (action.startsWith("BROTHER")) return { icon: User, tone: "blue" as const };
     if (action.startsWith("EVENT")) return { icon: Sparkles, tone: "emerald" as const };
     if (action.startsWith("BROADCAST") || action.startsWith("ANNOUNCEMENT")) return { icon: Megaphone, tone: "amber" as const };

@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
   CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,14 +42,24 @@ const empty = {
   duesPaid: false, serviceHours: 0, studyHours: 0, role: "MEMBER" as "MEMBER" | "ADMIN",
 };
 
+type DuesConfig = {
+  enabled: boolean;
+  amountCents: number;
+  currency: string;
+  label: string;
+  year: string;
+};
+
 export function BrothersManager({
   initial,
   isAdmin = true,
   currentBrotherId = null,
+  duesConfig,
 }: {
   initial: Brother[];
   isAdmin?: boolean;
   currentBrotherId?: string | null;
+  duesConfig?: DuesConfig;
 }) {
   const { push } = useToast();
   const [list, setList] = React.useState<Brother[]>(initial);
@@ -142,6 +153,38 @@ export function BrothersManager({
     } catch {
       setList(prev);
       push({ title: "Delete failed", variant: "destructive" });
+    }
+  }
+
+  // Pay-dues flow — POST /api/dues/checkout returns a Stripe-hosted URL
+  // and the browser navigates there. Graceful degrade: 503 from the API
+  // (Stripe not fully configured) surfaces as a toast directing the
+  // brother to the treasurer rather than a broken UX. Mirrors the
+  // architect-report contract — every endpoint short-circuits with a
+  // human message when any of the four prereqs is missing.
+  const [payBusyId, setPayBusyId] = React.useState<string | null>(null);
+  async function payDues(b: Brother) {
+    setPayBusyId(b.id);
+    try {
+      const res = await fetch("/api/dues/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok || !json.url) {
+        push({
+          title: json.error || "Could not start checkout",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Hand off to Stripe Checkout.
+      window.location.href = json.url;
+    } catch (err: any) {
+      push({ title: err?.message || "Network error", variant: "destructive" });
+    } finally {
+      setPayBusyId(null);
     }
   }
 
@@ -304,6 +347,30 @@ export function BrothersManager({
                     </a>
                   )}
                 </div>
+
+                {/* R43-A: brother-facing "Pay dues" CTA. Renders only on
+                    your OWN card (b.id === currentBrotherId), only when
+                    unpaid, and only when the chapter has flipped
+                    dues.enabled to "true". The 4-prereq server-side
+                    check inside /api/dues/checkout is the real gate —
+                    this is just the UI affordance. */}
+                {duesConfig?.enabled && !b.duesPaid && b.id === currentBrotherId && (
+                  <div className="mt-3">
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => payDues(b)}
+                      disabled={payBusyId === b.id}
+                    >
+                      {payBusyId === b.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-3.5 w-3.5" />
+                      )}
+                      Pay ${(duesConfig.amountCents / 100).toFixed(0)} dues
+                    </Button>
+                  </div>
+                )}
 
                 <div className="mt-3 flex items-center justify-between gap-2 pt-3 border-t border-border">
                   <div className="flex items-center gap-3 text-[10px] text-muted-foreground">

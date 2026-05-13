@@ -24,6 +24,20 @@ export default async function BrothersPage() {
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
 
+  // Dues config — all four prereqs must be present client-side for the
+  // Pay button to render. We deliberately do NOT leak the secret key
+  // (lives in process.env only) or the webhook secret (admin-only); the
+  // client only needs to know dues are enabled + the label + the amount
+  // to render. The /api/dues/checkout endpoint does the real
+  // server-side prereq check before creating a Stripe session.
+  const duesConfig = {
+    enabled: cfg["dues.enabled"] === "true",
+    amountCents: parseInt(cfg["dues.amountCents"] || "15000", 10) || 15000,
+    currency: cfg["dues.currency"] || "usd",
+    label: cfg["dues.label"] || "Chapter dues",
+    year: cfg["dues.year"] || "",
+  };
+
   const serializable = brothers.map((b) => ({
     ...b,
     createdAt: b.createdAt.toISOString(),
@@ -69,6 +83,7 @@ export default async function BrothersPage() {
         initial={serializable as any}
         isAdmin={!!session?.isAdmin}
         currentBrotherId={session?.brother?.id || null}
+        duesConfig={duesConfig}
       />
     </main>
   );

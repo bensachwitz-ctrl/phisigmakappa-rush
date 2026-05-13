@@ -159,6 +159,21 @@ model Brother {
   bio       String?
   headshotUrl String?
   duesPaid  Boolean  @default(false)
+  // ── R43-A: dues payment ledger (additive) ────────────────────────────
+  // `duesPaid` stays as the canonical boolean — every existing UI keeps
+  // working unchanged. The fields below are metadata layered on top so
+  // the chapter can record per-brother amounts, the academic period the
+  // payment covers, when it landed, how it was collected (Stripe vs.
+  // cash / Venmo / check), and a pointer to the DuesPayment row that
+  // generated the most-recent settlement.
+  //
+  // All nullable so chapters NOT using online dues see zero behavior
+  // change — the manual badge-toggle path still flips `duesPaid` alone.
+  duesAmountCents    Int?
+  duesYear           String?    // e.g. "2026-fall" — academic period
+  duesPaidAt         DateTime?
+  duesPaymentMethod  String?    // "STRIPE" | "MANUAL"
+  duesPaymentId      String?    // pointer to DuesPayment.id when method=STRIPE
   serviceHours Int   @default(0)
   studyHours Int    @default(0)
   role      String   @default("MEMBER")  // MEMBER | ADMIN
@@ -172,6 +187,37 @@ model Brother {
   rsvps     BrotherRSVP[]
   pollsCreated Poll[] @relation("createdBy")
   pollVotes PollVote[]
+  duesPayments DuesPayment[]
+}
+
+// DuesPayment — payment-history ledger for chapter dues. One row per
+// payment attempt (Stripe Checkout session OR manual admin-recorded
+// cash/Venmo/check entry). Lets the e-board show a real ledger view,
+// survive multiple years of payments per brother, and reconcile Stripe
+// webhook retries without clobbering prior state.
+//
+// `stripeSessionId @unique` is the idempotency key: every webhook
+// handler keys mutation off this column so a duplicate
+// checkout.session.completed delivery is a no-op rather than a double
+// flip of Brother.duesPaid.
+model DuesPayment {
+  id                    String   @id @default(cuid())
+  brotherId             String
+  amountCents           Int
+  currency              String   @default("usd")
+  year                  String                       // semester identifier, e.g. "2026-fall"
+  status                String   @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
+  method                String                       // STRIPE | MANUAL
+  stripeSessionId       String?  @unique             // cs_live_... / cs_test_... — webhook idempotency
+  stripePaymentIntentId String?
+  receiptUrl            String?                      // Stripe hosted receipt URL
+  notes                 String?                      // admin free-text (mostly for MANUAL rows)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
+
+  brother               Brother  @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@index([brotherId, status])
 }
 
 model Announcement {

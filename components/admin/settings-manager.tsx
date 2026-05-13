@@ -14,7 +14,7 @@ import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
   RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
   FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
-  CalendarDays, ListChecks, Activity,
+  CalendarDays, ListChecks, Activity, CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -207,6 +207,102 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
                 className="font-mono"
               />
             </div>
+          </Field>
+        </div>
+      </Section>
+
+      {/* DUES COLLECTION — Stripe Checkout (R43-A).
+          Optional white-label payment acceptance. Off by default; flip
+          dues.enabled to "true" once all four prereqs are filled and a
+          brother-facing "Pay $X dues" button appears on their own
+          profile card. Graceful degrade if any prereq missing — the
+          existing manual badge-toggle is the chapter's universal
+          fallback for cash/Venmo/check. */}
+      <Section
+        id="dues"
+        title="Dues collection (Stripe)"
+        eyebrow="Optional — accept dues online via Stripe Checkout"
+        icon={CreditCard}
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Leave <span className="font-mono">dues.enabled</span> as <span className="font-mono">false</span> to
+          keep manual-only mode (admin toggles a brother&apos;s dues badge — same as today). To enable
+          online payment, every chapter must (1) create a Stripe account, (2) paste the publishable
+          key here, (3) set <span className="font-mono">STRIPE_SECRET_KEY</span> as a server env var
+          (Vercel dashboard — never lives in this DB), and (4) create a webhook in Stripe pointing
+          at <span className="font-mono">/api/dues/webhook</span> and paste the signing secret here.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Enable online dues (true / false)">
+            <Input
+              value={values["dues.enabled"] || "false"}
+              onChange={(e) => set("dues.enabled", e.target.value)}
+              placeholder="false"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Display label (shown on Stripe Checkout)">
+            <Input
+              value={values["dues.label"] || ""}
+              onChange={(e) => set("dues.label", e.target.value)}
+              placeholder="Chapter dues — Fall 2026"
+            />
+          </Field>
+          <Field label="Amount (cents — e.g. 15000 = $150.00)">
+            <Input
+              type="number"
+              min={100}
+              value={values["dues.amountCents"] || "15000"}
+              onChange={(e) => set("dues.amountCents", e.target.value)}
+              placeholder="15000"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Currency (3-letter ISO)">
+            <Input
+              value={values["dues.currency"] || "usd"}
+              onChange={(e) => set("dues.currency", e.target.value)}
+              placeholder="usd"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Academic period (stamped on payment row)">
+            <Input
+              value={values["dues.year"] || ""}
+              onChange={(e) => set("dues.year", e.target.value)}
+              placeholder="2026-fall"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Pass Stripe fee to brother (true / false)">
+            <Input
+              value={values["dues.passThroughFee"] || "false"}
+              onChange={(e) => set("dues.passThroughFee", e.target.value)}
+              placeholder="false"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Stripe publishable key (pk_live_… or pk_test_…)" className="sm:col-span-2">
+            <Input
+              value={values["dues.stripePublishableKey"] || ""}
+              onChange={(e) => set("dues.stripePublishableKey", e.target.value)}
+              placeholder="pk_live_…"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Stripe webhook signing secret (whsec_…)" className="sm:col-span-2">
+            <Input
+              type="password"
+              value={values["dues.stripeWebhookSecret"] || ""}
+              onChange={(e) => set("dues.stripeWebhookSecret", e.target.value)}
+              placeholder="whsec_…"
+              className="font-mono"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Different from <span className="font-mono">STRIPE_SECRET_KEY</span> (the
+              server env var — never paste a secret key here). Get this from the Stripe
+              dashboard after creating a webhook pointing at <span className="font-mono">/api/dues/webhook</span>.
+            </p>
           </Field>
         </div>
       </Section>

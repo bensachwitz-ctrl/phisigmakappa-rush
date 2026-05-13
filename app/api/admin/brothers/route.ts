@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -126,6 +127,53 @@ export async function PATCH(req: Request) {
         details: `${before.duesPaid ? "paid" : "unpaid"} → ${data.duesPaid ? "paid" : "unpaid"}`,
         req,
       });
+      // R43-A: when admin manually toggles dues → PAID, also write a
+      // DuesPayment ledger row with method="MANUAL" so the chapter has
+      // a unified payment history regardless of channel (Stripe vs.
+      // cash/check/Venmo collected at chapter meeting). Audit row is
+      // DUES_PAID_MANUAL so the recent-activity feed reads cleanly.
+      if (data.duesPaid === true) {
+        try {
+          const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+          const year = cfg["dues.year"] || "2026-fall";
+          const amountCents = parseInt(cfg["dues.amountCents"] || "15000", 10) || 15000;
+          const currency = (cfg["dues.currency"] || "usd").toLowerCase();
+          const manualPayment = await prisma.duesPayment.create({
+            data: {
+              brotherId: id,
+              amountCents,
+              currency,
+              year,
+              method: "MANUAL",
+              status: "PAID",
+              notes: "Marked paid manually by admin",
+            },
+          });
+          await prisma.brother.update({
+            where: { id },
+            data: {
+              duesPaidAt: new Date(),
+              duesPaymentMethod: "MANUAL",
+              duesPaymentId: manualPayment.id,
+              duesAmountCents: amountCents,
+              duesYear: year,
+            },
+          });
+          await audit({
+            action: "DUES_PAID_MANUAL",
+            subjectType: "Brother",
+            subjectId: id,
+            subjectName: updated.name,
+            details: `$${(amountCents / 100).toFixed(2)} — ${year} (marked paid by admin)`,
+            req,
+          });
+        } catch {
+          // Ledger write is best-effort — the canonical Brother.duesPaid
+          // flip already happened, so the existing UI keeps working
+          // even if the ledger row fails (e.g. DuesPayment table not
+          // yet migrated).
+        }
+      }
     }
     if (typeof (data as any).role === "string" && before.role !== (data as any).role) {
       await audit({

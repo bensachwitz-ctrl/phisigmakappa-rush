@@ -221,6 +221,24 @@ export const DEFAULTS = {
   // Anti-hazing block body (the long paragraph under the Zero-Tolerance heading)
   "antiHazing.body": "Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm.",
 
+  // ── DUES COLLECTION (Stripe Checkout — R43-A) ─────────────────────
+  // Optional white-label payment acceptance. All four prereqs must be
+  // present to enable the Pay button:
+  //   1. dues.enabled === "true"
+  //   2. dues.stripePublishableKey set (public half — fine in DB)
+  //   3. process.env.STRIPE_SECRET_KEY set (private — env-var only,
+  //      never lives in SiteConfig so it stays out of /admin/help)
+  //   4. dues.stripeWebhookSecret set (whsec_... signing secret)
+  // Missing ANY → manual-only mode (existing badge-toggle still works).
+  "dues.enabled": "false",
+  "dues.amountCents": "15000",            // $150.00 default
+  "dues.currency": "usd",
+  "dues.year": "2026-fall",               // academic period stamped on each payment row
+  "dues.stripePublishableKey": "",        // pk_live_... — admin pastes here
+  "dues.stripeWebhookSecret": "",         // whsec_... — DIFFERENT from STRIPE_SECRET_KEY env var
+  "dues.passThroughFee": "false",         // if true, add 2.9% + 30¢ to brother's total
+  "dues.label": "Chapter dues — Fall 2026",
+
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",
   "show.highlightsBanner": "true",

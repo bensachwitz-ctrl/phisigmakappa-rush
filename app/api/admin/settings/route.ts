@@ -49,6 +49,22 @@ export async function PATCH(req: Request) {
   // changed key list so the e-board can answer "what got changed?" without
   // an extra DB read.
   if (changedKeys.length > 0) {
+    // R43-A: if any dues.* key changed, also emit a dedicated
+    // DUES_SETTINGS_CHANGED row so the dues ledger view can filter on
+    // "settings touched" without scanning every SETTINGS_UPDATED entry.
+    // We do NOT log the actual values — webhook secrets / publishable
+    // keys would leak into the audit trail otherwise.
+    const duesKeys = changedKeys.filter((k) => k.startsWith("dues."));
+    if (duesKeys.length > 0) {
+      await audit({
+        action: "DUES_SETTINGS_CHANGED",
+        subjectType: "Settings",
+        subjectId: null,
+        subjectName: duesKeys.length === 1 ? duesKeys[0] : `${duesKeys.length} dues keys`,
+        details: duesKeys.join(", "),
+        req,
+      });
+    }
     await audit({
       action: "SETTINGS_UPDATED",
       subjectType: "Settings",
