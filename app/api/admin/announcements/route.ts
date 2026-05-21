@@ -7,11 +7,18 @@ import { audit } from "@/lib/audit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// W4 — channels comma-list: any subset of inapp|sms|email, comma-separated.
+// The default "inapp" preserves R41 behaviour (in-app card only).
+const ChannelsRegex = /^(inapp|sms|email)(,(inapp|sms|email))*$/;
+
 const Schema = z.object({
   title: z.string().min(2).max(160),
   body: z.string().min(2).max(8000),
   audience: z.enum(["ALL", "BROTHERS", "RUSHES", "EBOARD"]).default("ALL"),
   pinned: z.boolean().default(false),
+  // ── W4 scheduled-send + multi-channel additions (optional, additive) ────
+  scheduledFor: z.string().datetime().optional().nullable(),
+  channels: z.string().regex(ChannelsRegex).default("inapp"),
 });
 
 export async function GET() {
@@ -32,19 +39,38 @@ export async function POST(req: Request) {
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
 
+  // W4 — derive status + sentAt from scheduledFor. A future scheduledFor flips
+  // the row to status='scheduled' so the cron will pick it up; null or past
+  // dates send immediately (status='sent'). Legacy callers omitting scheduledFor
+  // get the R41 behaviour (immediate publish).
+  const now = new Date();
+  const scheduledForDate = parsed.data.scheduledFor ? new Date(parsed.data.scheduledFor) : null;
+  const isScheduled = scheduledForDate !== null && scheduledForDate.getTime() > now.getTime();
+  const status = isScheduled ? "scheduled" : "sent";
+
   const created = await prisma.announcement.create({
     data: {
-      ...parsed.data,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      audience: parsed.data.audience,
+      pinned: parsed.data.pinned,
       authorId: brotherId || undefined,
+      status,
+      scheduledFor: scheduledForDate,
+      sentAt: isScheduled ? null : now,
+      channels: parsed.data.channels,
     },
     include: { author: { select: { id: true, name: true } } },
   });
   await audit({
-    action: "ANNOUNCEMENT_CREATED",
+    action: isScheduled ? "ANNOUNCEMENT_SCHEDULED" : "ANNOUNCEMENT_CREATED",
     subjectType: "Announcement",
     subjectId: created.id,
     subjectName: created.title,
-    details: `audience: ${created.audience}${created.pinned ? " · pinned" : ""}`,
+    details:
+      `audience: ${created.audience}${created.pinned ? " · pinned" : ""}` +
+      (isScheduled && scheduledForDate ? ` · scheduled for ${scheduledForDate.toISOString()}` : "") +
+      (parsed.data.channels !== "inapp" ? ` · channels: ${parsed.data.channels}` : ""),
     req,
   });
   return NextResponse.json({ ok: true, announcement: created });
