@@ -59,6 +59,35 @@ model Rush {
   attendances Attendance[]
   votes       Vote[]
   consents    RushConsent[]
+  impressions RushImpression[]
+}
+
+// ── PNM impression notes (rush-cycle feature 1) ────────────────────────────
+// One-line "vibe" notes any brother can drop on a PNM after a rush event —
+// "great kid, easy to talk to" / "noticed he stayed late and helped clean up"
+// / "concern: showed up smashed". Three tones (positive/neutral/concern)
+// power a single-glance signal on the /admin/rushees list (newest tone =
+// the rushee's "last impression").
+//
+// authorName is denormalized (not an FK to Brother) so the row survives if
+// the brother who left the impression later leaves the chapter. Same
+// reasoning as AuditLog — these are forensic chapter memory and shouldn't
+// disappear when a roster row does.
+//
+// onDelete: Cascade on rushee — when a Rush row is deleted (DROPPED clean-up,
+// etc.) the impressions disappear with it, so the table never accumulates
+// dangling rows.
+model RushImpression {
+  id         String   @id @default(cuid())
+  rushId     String
+  rush       Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  authorName String
+  // Allowed: "positive" | "neutral" | "concern"
+  tone       String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([rushId, createdAt])
 }
 
 // Rate-limit log for /api/rush. Each row = one submit attempt. Indexed on

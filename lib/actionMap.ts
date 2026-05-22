@@ -233,6 +233,34 @@ export const actionMap: Record<string, ActionMapEntry> = {
     rolesToNotify: ["super-admin", "president"],
   },
 
+  // ── PNM rushee workflow (rush-cycle feature 1) ──────────────────────────
+  "rushee.create": {
+    verb: "added a PNM",
+    rolesToNotify: ["president", "secretary", "recruitment-chair"],
+  },
+  "rushee.update": {
+    verb: "updated the PNM record for",
+    rolesToNotify: ["president", "secretary", "recruitment-chair"],
+  },
+  "rushee.impression": {
+    verb: "left an impression on",
+    rolesToNotify: ["president", "recruitment-chair"],
+  },
+  "rushee.bid.send": {
+    verb: "sent a bid to",
+    rolesToNotify: ["president", "secretary", "recruitment-chair"],
+  },
+  "rushee.bulk_text": {
+    verb: "texted a group of PNMs",
+    rolesToNotify: ["president", "recruitment-chair"],
+  },
+
+  // ── Rush event check-in (rush-cycle feature 2) ──────────────────────────
+  "rushee.checkin": {
+    verb: "checked into a rush event —",
+    rolesToNotify: ["recruitment-chair", "president"],
+  },
+
   // ── W4 announcements cron + lifecycle ───────────────────────────────────
   "announcements.cron.run": {
     verb: "fired scheduled announcements —",
