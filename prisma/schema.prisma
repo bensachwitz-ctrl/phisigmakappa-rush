@@ -142,11 +142,45 @@ model Event {
   //   SOCIAL      — non-required social, mixers, parties
   //   OTHER       — fallback for events that don't fit cleanly above
   category    String    @default("OTHER")
+  // ── QR check-in code (rush-cycle feature 2) ──────────────────────────────
+  // Per-event short code. PNMs scan a QR at the door of a rush event whose
+  // URL is `/check-in/{checkInCode}`. The code is auto-generated lazily on
+  // first /qr request (admin clicks "Show QR") so existing events without a
+  // code keep working. Nullable + unique.
+  checkInCode String?   @unique
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  attendances Attendance[]
-  rsvps       BrotherRSVP[]
+  attendances    Attendance[]
+  rsvps          BrotherRSVP[]
+  checkInRecords EventCheckIn[]
+}
+
+// ── Rush event check-in log (rush-cycle feature 2) ──────────────────────────
+// Public-friendly check-in trail — one row per (eventCode, contact) scan.
+// Distinct from the existing `Attendance` model because that one is tied
+// to a Rush row via rushId; check-ins happen BEFORE we know whether the
+// visitor is going to become a PNM or not. The row carries everything we
+// need to identify a returning visitor by phone (we normalize to E.164):
+//   • eventId — FK to Event (cascade)
+//   • name    — what the visitor typed
+//   • phone   — normalized E.164
+//   • rushId  — populated when we link the row to an existing or newly-
+//               promoted Rush record (matched on phone)
+// `@@unique([eventId, phone])` keeps a single visitor from accidentally
+// double-counting in the same event (a re-scan is idempotent).
+model EventCheckIn {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  rushId    String?
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, phone])
+  @@index([eventId, createdAt])
+  @@index([phone])
 }
 
 // Per-brother RSVP for each Event. Brothers can RSVP "going / not going /
@@ -849,4 +883,63 @@ model HqExportRun {
   errorMessage String?
 
   @@index([exportType, termCode])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Multi-Portal Architecture (Brothers / Alumni / PNM)
+// Each portal has its own login surface but they all funnel through
+// PortalUser. The `role` column gates which dashboard a session can hit;
+// `brotherId`/`alumniId` are optional pointers back to the canonical
+// roster row for cross-system continuity (a Brother who graduates can
+// keep the same PortalUser row, role flips to 'alumni').
+// ─────────────────────────────────────────────────────────────────────────────
+model PortalUser {
+  id           String    @id @default(cuid())
+  // Allowed: 'brother' | 'alumni' | 'pnm'
+  role         String
+  email        String    @unique
+  // Optional — magic-link-only accounts have null passwordHash. Scrypt format
+  // (see lib/password.ts) so the existing hashing helpers work unchanged.
+  passwordHash String?
+  // Cross-system pointers — nullable so the same PortalUser can outlive a
+  // membership transition (Brother → AlumniProfile).
+  brotherId    String?
+  alumniId     String?
+  // Magic-link one-time token + expiry. Single-use: cleared on successful
+  // verify so a forwarded link can't be replayed.
+  magicToken          String?   @unique
+  magicTokenExpiresAt DateTime?
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+
+  @@index([role])
+  @@index([brotherId])
+  @@index([alumniId])
+}
+
+// W2-style dues ledger for Stripe Connect destination charges. Lives
+// alongside the existing R43 DuesPayment (which is the canonical write
+// path for chapter-side Stripe Checkout). This sibling table captures
+// the *platform-fee* metadata that destination-charge flows need —
+// applicationFeeAmount + destinationAccount — so Ben's platform-fee
+// reconciliation can be re-derived from the row alone.
+//
+// Why a second table instead of widening DuesPayment: the existing
+// shape is tied to siteConfig-driven chapter-as-merchant Stripe Checkout.
+// The Connect flow is fundamentally different (platform charges, then
+// transfers to chapter's connected account), and the R43 path keeps
+// working for any chapter that prefers the simpler direct integration.
+model PortalDuesPayment {
+  id                    String   @id @default(cuid())
+  brotherId             String
+  amount                Int // cents
+  stripeSessionId       String?  @unique
+  stripePaymentIntentId String?
+  applicationFeeAmount  Int? // platform fee taken (cents)
+  destinationAccount    String? // connected account for chapter
+  paidAt                DateTime @default(now())
+  // 'paid' | 'pending' | 'failed' | 'refunded'
+  status                String
+
+  @@index([brotherId, status])
 }
