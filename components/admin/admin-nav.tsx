@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
-  HelpCircle, Menu, X, ExternalLink, Vote, UserPlus,
+  HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,9 @@ const ITEMS = [
   { href: "/admin", label: "Rush", icon: LayoutDashboard, adminOnly: false },
   { href: "/admin/rushees", label: "PNMs", icon: UserPlus, adminOnly: true },
   { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false },
+  { href: "/admin/academic", label: "Academic", icon: GraduationCap, adminOnly: false },
+  { href: "/admin/chores", label: "Chores", icon: CheckSquare, adminOnly: false },
+  { href: "/admin/risk", label: "Risk Desk", icon: ShieldAlert, adminOnly: false },
   { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true },
   { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true },

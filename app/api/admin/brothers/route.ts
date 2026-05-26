@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getSiteConfig } from "@/lib/site-config";
+import { getCurrentOfficerPermissions, hasPermission } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,12 @@ const PUBLIC_BROTHER_SELECT = {
   duesPaid: true, serviceHours: true, studyHours: true,
   role: true,
   createdAt: true, updatedAt: true, lastSeen: true,
+  status: true,
+  pledgeClassName: true,
+  pledgeLineNumber: true,
+  initiationDate: true,
+  graduationYear: true,
+  academicStanding: true,
 } as const;
 
 const Schema = z.object({
@@ -34,6 +41,12 @@ const Schema = z.object({
   serviceHours: z.number().int().min(0).optional(),
   studyHours: z.number().int().min(0).optional(),
   role: z.enum(["MEMBER", "ADMIN"]).optional(),
+  status: z.string().max(40).optional(),
+  pledgeClassName: z.string().max(80).optional().nullable(),
+  pledgeLineNumber: z.number().int().min(0).optional().nullable(),
+  initiationDate: z.string().optional().nullable(),
+  graduationYear: z.number().int().min(1900).max(2100).optional().nullable(),
+  academicStanding: z.string().max(40).optional().nullable(),
 });
 
 export async function GET() {
@@ -58,7 +71,12 @@ export async function POST(req: Request) {
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   const data = Object.fromEntries(
-    Object.entries(parsed.data).map(([k, v]) => [k, v === "" ? null : v])
+    Object.entries(parsed.data).map(([k, v]) => {
+      if (k === "initiationDate" && typeof v === "string" && v !== "") {
+        return [k, new Date(v)];
+      }
+      return [k, v === "" ? null : v];
+    })
   );
   try {
     const created = await prisma.brother.create({
@@ -89,20 +107,45 @@ export async function PATCH(req: Request) {
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   const { id, ...rest } = parsed.data;
-  // Non-admins can only edit their own profile.
-  if (!isAdminRole()) {
+  const perms = await getCurrentOfficerPermissions();
+  const isSuperOrBrothersWriter = isAdminRole() || hasPermission(perms, "brothers", "write");
+
+  // Non-admins and non-authorized officers have restrictions.
+  if (!isSuperOrBrothersWriter) {
     const me = getCurrentBrotherId();
     if (!me || me !== id) {
-      return NextResponse.json({ ok: false, error: "You can only edit your own profile" }, { status: 403 });
+      // If the user has academic write perm, they can ONLY update studyHours and academicStanding
+      const isAcademicWriter = hasPermission(perms, "academic", "write");
+      if (isAcademicWriter) {
+        const allowedKeys = new Set(["id", "studyHours", "academicStanding"]);
+        for (const key of Object.keys(rest)) {
+          if (!allowedKeys.has(key)) {
+            delete (rest as any)[key];
+          }
+        }
+      } else {
+        return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+      }
+    } else {
+      // Editing own profile - cannot elevate role or edit dues/hours/role flags.
+      delete (rest as any).role;
+      delete (rest as any).duesPaid;
+      delete (rest as any).serviceHours;
+      const isAcademicWriter = hasPermission(perms, "academic", "write");
+      if (!isAcademicWriter) {
+        delete (rest as any).studyHours;
+        delete (rest as any).academicStanding;
+      }
     }
-    // Members can't elevate their own role or edit dues/hours/role flags.
-    delete (rest as any).role;
-    delete (rest as any).duesPaid;
-    delete (rest as any).serviceHours;
-    delete (rest as any).studyHours;
   }
+
   const data = Object.fromEntries(
-    Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v])
+    Object.entries(rest).map(([k, v]) => {
+      if (k === "initiationDate" && typeof v === "string" && v !== "") {
+        return [k, new Date(v)];
+      }
+      return [k, v === "" ? null : v];
+    })
   );
   // Snapshot prior dues state so dues toggle gets its own audit row (it's
   // the single most-asked "who changed that?" question per chapter).
