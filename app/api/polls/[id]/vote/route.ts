@@ -3,19 +3,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { parsePollOptions } from "@/lib/poll-options";
+import { getPortalSession } from "@/lib/portal-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * POST   — auth-gated. Body: { optionId }. Upserts the current brother's
- *          vote on this poll. Rejects if the poll is closed (manually or
- *          via closesAt < now). The composite unique on (pollId, brotherId)
- *          guarantees one row per (poll, brother).
- *
- * DELETE — auth-gated. Clears the current brother's vote on this poll. No-op
- *          if they hadn't voted yet.
- */
 const VoteSchema = z.object({ optionId: z.string().min(1).max(64) });
 
 function isClosed(p: { closedAt: Date | null; closesAt: Date | null }): boolean {
@@ -24,12 +16,37 @@ function isClosed(p: { closedAt: Date | null; closesAt: Date | null }): boolean 
   return false;
 }
 
+// Helper to resolve voter details
+async function getVoter(req: Request) {
+  const brother = await getCurrentBrother();
+  if (brother) {
+    return { brotherId: brother.id, alumniId: null };
+  }
+
+  const sess = getPortalSession();
+  if (sess) {
+    const portalUser = await prisma.portalUser.findUnique({
+      where: { id: sess.userId },
+    });
+    if (portalUser) {
+      if (portalUser.role === "brother" && portalUser.brotherId) {
+        return { brotherId: portalUser.brotherId, alumniId: null };
+      }
+      if (portalUser.role === "alumni" && portalUser.alumniId) {
+        return { brotherId: null, alumniId: portalUser.alumniId };
+      }
+    }
+  }
+
+  return { brotherId: null, alumniId: null };
+}
+
 export async function POST(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const brother = await getCurrentBrother();
-  if (!brother) {
+  const { brotherId, alumniId } = await getVoter(req);
+  if (!brotherId && !alumniId) {
     return NextResponse.json({ ok: false, error: "Sign in first" }, { status: 401 });
   }
 
@@ -56,31 +73,50 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Invalid option" }, { status: 400 });
   }
 
-  const vote = await prisma.pollVote.upsert({
-    where: { pollId_brotherId: { pollId: poll.id, brotherId: brother.id } },
-    update: { optionId: parsed.data.optionId },
-    create: {
-      pollId: poll.id,
-      brotherId: brother.id,
-      optionId: parsed.data.optionId,
-    },
-  });
+  let vote;
+  if (brotherId) {
+    vote = await prisma.pollVote.upsert({
+      where: { pollId_brotherId: { pollId: poll.id, brotherId } },
+      update: { optionId: parsed.data.optionId },
+      create: {
+        pollId: poll.id,
+        brotherId,
+        optionId: parsed.data.optionId,
+      },
+    });
+  } else if (alumniId) {
+    vote = await prisma.pollVote.upsert({
+      where: { pollId_alumniId: { pollId: poll.id, alumniId } },
+      update: { optionId: parsed.data.optionId },
+      create: {
+        pollId: poll.id,
+        alumniId,
+        optionId: parsed.data.optionId,
+      },
+    });
+  }
 
-  return NextResponse.json({ ok: true, vote: { optionId: vote.optionId } });
+  return NextResponse.json({ ok: true, vote: { optionId: vote?.optionId } });
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
-  const brother = await getCurrentBrother();
-  if (!brother) {
+  const { brotherId, alumniId } = await getVoter(req);
+  if (!brotherId && !alumniId) {
     return NextResponse.json({ ok: false, error: "Sign in first" }, { status: 401 });
   }
 
-  await prisma.pollVote
-    .delete({ where: { pollId_brotherId: { pollId: params.id, brotherId: brother.id } } })
-    .catch(() => {});
+  if (brotherId) {
+    await prisma.pollVote
+      .delete({ where: { pollId_brotherId: { pollId: params.id, brotherId } } })
+      .catch(() => {});
+  } else if (alumniId) {
+    await prisma.pollVote
+      .delete({ where: { pollId_alumniId: { pollId: params.id, alumniId } } })
+      .catch(() => {});
+  }
 
   return NextResponse.json({ ok: true });
 }

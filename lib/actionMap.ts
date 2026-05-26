@@ -286,4 +286,8 @@ export const actionMap: Record<string, ActionMapEntry> = {
     verb: "fan-out broadcast to",
     rolesToNotify: ["president", "secretary", "super-admin"],
   },
+  "alumni.register": {
+    verb: "registered as an alumnus",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
 };

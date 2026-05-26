@@ -54,12 +54,13 @@ model Rush {
   bidRespondedAt    DateTime?
   bidResponseChoice String? // "ACCEPTED" | "DECLINED"
 
-  emailLogs   EmailLog[]
-  smsLogs     SmsLog[]
-  attendances Attendance[]
-  votes       Vote[]
-  consents    RushConsent[]
-  impressions RushImpression[]
+  emailLogs      EmailLog[]
+  smsLogs        SmsLog[]
+  attendances    Attendance[]
+  votes          Vote[]
+  consents       RushConsent[]
+  impressions    RushImpression[]
+  alumniVouches  AlumniVouch[]
 }
 
 // ── PNM impression notes (rush-cycle feature 1) ────────────────────────────
@@ -148,6 +149,7 @@ model Event {
   // first /qr request (admin clicks "Show QR") so existing events without a
   // code keep working. Nullable + unique.
   checkInCode String?   @unique
+  audience    String    @default("ALL")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -555,6 +557,7 @@ model Poll {
   createdById String
   closesAt    DateTime? // optional auto-close timestamp
   closedAt    DateTime? // set when manually closed by creator/admin
+  audience    String    @default("BROTHERS")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
@@ -568,15 +571,18 @@ model Poll {
 model PollVote {
   id        String   @id @default(cuid())
   pollId    String
-  brotherId String
+  brotherId String?
+  alumniId  String?
   optionId  String // matches an entry in Poll.options
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  poll    Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  brother Brother @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+  poll    Poll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  brother Brother?       @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+  alumni  AlumniProfile? @relation(fields: [alumniId], references: [id], onDelete: Cascade)
 
   @@unique([pollId, brotherId])
+  @@unique([pollId, alumniId])
   @@index([pollId])
 }
 
@@ -828,9 +834,13 @@ model AlumniProfile {
   bio             String?
   optInDirectory  Boolean          @default(true)
   optInNewsletter Boolean          @default(true)
+  age             Int?
+  major           String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   donations       AlumniDonation[]
+  pollVotes       PollVote[]
+  vouches         AlumniVouch[]
 
   @@index([graduationYear])
 }
@@ -942,4 +952,19 @@ model PortalDuesPayment {
   status                String
 
   @@index([brotherId, status])
+}
+
+model AlumniVouch {
+  id        String   @id @default(cuid())
+  rushId    String
+  alumniId  String
+  note      String?
+  createdAt DateTime @default(now())
+
+  rush   Rush          @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  alumni AlumniProfile @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, alumniId])
+  @@index([rushId])
+  @@index([alumniId])
 }

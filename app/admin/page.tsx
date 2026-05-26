@@ -7,11 +7,12 @@ import { RecentActivity, type RecentEntry } from "@/components/admin/recent-acti
 import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, GraduationCap, Gift, Building, Calendar, Vote, User } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ searchParams }: { searchParams?: { view?: string } }) {
+  const currentView = searchParams?.view === "alumni" ? "alumni" : "brothers";
   let rushes: any[] = [];
   try {
     rushes = await prisma.rush.findMany({
@@ -167,6 +168,40 @@ export default async function AdminDashboard() {
 
   const me = await getCurrentBrother();
 
+  // Alumni View metrics
+  let totalAlumni = 0;
+  let optedInDirectoryCount = 0;
+  let totalDonationsCents = 0;
+  let activeAlumniPollsCount = 0;
+  let recentAlumniList: any[] = [];
+  let recentDonations: any[] = [];
+
+  try {
+    [totalAlumni, optedInDirectoryCount, activeAlumniPollsCount] = await Promise.all([
+      prisma.alumniProfile.count(),
+      prisma.alumniProfile.count({ where: { optInDirectory: true } }),
+      prisma.poll.count({ where: { audience: "ALUMNI", closedAt: null } }),
+    ]);
+
+    const donationsSum = await prisma.alumniDonation.aggregate({
+      _sum: { amountCents: true }
+    });
+    totalDonationsCents = donationsSum._sum.amountCents || 0;
+
+    recentAlumniList = await prisma.alumniProfile.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+
+    recentDonations = await prisma.alumniDonation.findMany({
+      orderBy: { recordedAt: "desc" },
+      take: 5,
+      include: { alumni: true },
+    });
+  } catch (err) {
+    console.error("Failed to fetch alumni dashboard metrics", err);
+  }
+
   const serializable = rushes.map((r) => ({
     id: r.id,
     name: r.name,
@@ -193,111 +228,259 @@ export default async function AdminDashboard() {
 
   return (
     <main className="container py-8">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Rush Roster</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {me ? <>Signed in as <span className="text-foreground font-medium">{me.name}</span> · </> : null}
-            Manage potential new members. Update status, vote, take notes, send mass email or text.
-          </p>
+      {/* E-Board View Slider Toggle */}
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex rounded-xl bg-muted p-1 border border-border">
+          <Link
+            href="/admin?view=brothers"
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+              currentView === "brothers" ? "bg-background text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Brothers/Rush View
+          </Link>
+          <Link
+            href="/admin?view=alumni"
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+              currentView === "alumni" ? "bg-background text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Alumni Network View
+          </Link>
         </div>
       </div>
 
-      <DashboardInsights
-        rushes={serializable}
-        totalBrothers={brotherCount}
-        totalActiveBrothers={totalActiveBrothers}
-        votingBrothersLast7Days={votingBrothersLast7Days}
-        upcomingEvents={upcomingEvents}
-        duesPaidCount={duesPaidCount}
-        myBrotherId={me?.id || null}
-        bidsExtendedCount={bidsExtendedCount}
-        acceptedCount={acceptedCount}
-        brandReadiness={brandReadiness}
-      />
+      {currentView === "alumni" ? (
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Alumni Network Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Monitor alumni network metrics, recent registrations, campaign donations, and active polls.
+            </p>
+          </div>
 
-      {/* Funnel + recent activity in a 2-column grid on lg screens so the
-          dashboard reads top-to-bottom: KPIs → consensus → funnel + activity
-          → setup checklist → roster. Stacks on mobile. */}
-      {(rushes.length > 0 || recentEntries.length > 0) && (
-        <div className="mb-6 grid lg:grid-cols-2 gap-4">
-          {rushes.length > 0 && (
-            <RushFunnel
-              submitted={rushes.length}
-              active={rushes.filter((r) => r.status === "ACTIVE").length}
-              bid={bidsExtendedCount}
-              accepted={acceptedCount}
-            />
-          )}
-          {recentEntries.length > 0 && (
-            <RecentActivity entries={recentEntries} />
-          )}
+          {/* Alumni KPI Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <div className="flex items-center justify-between space-y-0 pb-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Alumni</p>
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-2xl font-bold">{totalAlumni}</div>
+              <p className="text-xs text-muted-foreground mt-1">Graduated brothers cataloged</p>
+            </div>
+
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <div className="flex items-center justify-between space-y-0 pb-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Directory Opt-In</p>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-2xl font-bold">{optedInDirectoryCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Visible on public directory</p>
+            </div>
+
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <div className="flex items-center justify-between space-y-0 pb-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Donations</p>
+                <Gift className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-2xl font-bold">${(totalDonationsCents / 100).toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">Raised from alumni network</p>
+            </div>
+
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <div className="flex items-center justify-between space-y-0 pb-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Active Polls</p>
+                <Vote className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-2xl font-bold">{activeAlumniPollsCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Surveys currently open</p>
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Recent Registrations Card */}
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <User className="h-4 w-4 text-amber-500" />
+                Recent Alumni Registrations
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase">
+                      <th className="pb-2">Name</th>
+                      <th className="pb-2">Class</th>
+                      <th className="pb-2">Company</th>
+                      <th className="pb-2">City/State</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {recentAlumniList.length > 0 ? (
+                      recentAlumniList.map((a) => (
+                        <tr key={a.id} className="hover:bg-muted/50 transition">
+                          <td className="py-2.5 font-medium">{a.fullName}</td>
+                          <td className="py-2.5">{a.graduationYear}</td>
+                          <td className="py-2.5 truncate max-w-[120px]">{a.employer || "N/A"}</td>
+                          <td className="py-2.5">{a.city ? `${a.city}, ${a.state || ""}` : "N/A"}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">No recent registrations.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Donations Card */}
+            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <Gift className="h-4 w-4 text-amber-500" />
+                Recent Alumni Donations
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase">
+                      <th className="pb-2">Alumnus</th>
+                      <th className="pb-2">Amount</th>
+                      <th className="pb-2">Campaign</th>
+                      <th className="pb-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {recentDonations.length > 0 ? (
+                      recentDonations.map((d) => (
+                        <tr key={d.id} className="hover:bg-muted/50 transition">
+                          <td className="py-2.5 font-medium">{d.alumni?.fullName || "Anonymous"}</td>
+                          <td className="py-2.5 font-bold">${(d.amountCents / 100).toFixed(2)}</td>
+                          <td className="py-2.5 truncate max-w-[120px]">{d.campaign || "General"}</td>
+                          <td className="py-2.5">{new Date(d.recordedAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">No donations recorded yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      {remaining > 0 && (
-        <div className="mb-6 rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white p-5">
-          <div className="flex items-start gap-3 mb-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-phisig-red text-white shrink-0">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold tracking-tight">
-                Get rush ready — {remaining} item{remaining === 1 ? "" : "s"} pending
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Wrap these up so the public site reads as a finished product to parents and freshmen.
+      ) : (
+        <>
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Rush Roster</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {me ? <>Signed in as <span className="text-foreground font-medium">{me.name}</span> · </> : null}
+                Manage potential new members. Update status, vote, take notes, send mass email or text.
               </p>
             </div>
           </div>
-          <ul className="space-y-2">
-            {checklist.map((c) => (
-              <li
-                key={c.label}
-                className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${
-                  c.ok
-                    ? "border-emerald-200 bg-emerald-50/40"
-                    : "border-amber-200 bg-amber-50/40"
-                }`}
-              >
-                {c.ok ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${c.ok ? "text-emerald-900" : "text-amber-900"}`}>
-                    {c.label}
-                  </p>
-                  {!c.ok && (
-                    <p className="text-xs text-amber-800/80 mt-0.5">{c.hint}</p>
-                  )}
-                </div>
-                {!c.ok && (
-                  <Link
-                    href={c.href}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-phisig-red hover:underline shrink-0"
-                  >
-                    Fix <ArrowRight className="h-3 w-3" />
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
-      <Roster
-        initial={serializable as any}
-        brotherName={me?.name || null}
-        chapterBrand={{
-          fraternityName: cfg["chapter.fraternityName"] || "Phi Sigma Kappa",
-          fraternityShort: cfg["chapter.fraternityShort"] || "Phi Sig",
-          schoolShort: cfg["chapter.schoolShort"] || "USC",
-          chapterAttribution: `${cfg["chapter.fraternityShort"] || "Phi Sig"} ${cfg["chapter.schoolShort"] || "USC"}`,
-          houseAddress: (cfg["contact.address"] || "1525 College Street").split(",")[0].trim(),
-        }}
-      />
+          <DashboardInsights
+            rushes={serializable}
+            totalBrothers={brotherCount}
+            totalActiveBrothers={totalActiveBrothers}
+            votingBrothersLast7Days={votingBrothersLast7Days}
+            upcomingEvents={upcomingEvents}
+            duesPaidCount={duesPaidCount}
+            myBrotherId={me?.id || null}
+            bidsExtendedCount={bidsExtendedCount}
+            acceptedCount={acceptedCount}
+            brandReadiness={brandReadiness}
+          />
+
+          {/* Funnel + recent activity in a 2-column grid on lg screens so the
+              dashboard reads top-to-bottom: KPIs → consensus → funnel + activity
+              → setup checklist → roster. Stacks on mobile. */}
+          {(rushes.length > 0 || recentEntries.length > 0) && (
+            <div className="mb-6 grid lg:grid-cols-2 gap-4">
+              {rushes.length > 0 && (
+                <RushFunnel
+                  submitted={rushes.length}
+                  active={rushes.filter((r) => r.status === "ACTIVE").length}
+                  bid={bidsExtendedCount}
+                  accepted={acceptedCount}
+                />
+              )}
+              {recentEntries.length > 0 && (
+                <RecentActivity entries={recentEntries} />
+              )}
+            </div>
+          )}
+
+          {remaining > 0 && (
+            <div className="mb-6 rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-phisig-red text-white shrink-0">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold tracking-tight">
+                    Get rush ready — {remaining} item{remaining === 1 ? "" : "s"} pending
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Wrap these up so the public site reads as a finished product to parents and freshmen.
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2">
+                {checklist.map((c) => (
+                  <li
+                    key={c.label}
+                    className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${
+                      c.ok
+                        ? "border-emerald-200 bg-emerald-50/40"
+                        : "border-amber-200 bg-amber-50/40"
+                    }`}
+                  >
+                    {c.ok ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium ${c.ok ? "text-emerald-900" : "text-amber-900"}`}>
+                        {c.label}
+                      </p>
+                      {!c.ok && (
+                        <p className="text-xs text-amber-800/80 mt-0.5">{c.hint}</p>
+                      )}
+                    </div>
+                    {!c.ok && (
+                      <Link
+                        href={c.href}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-phisig-red hover:underline shrink-0"
+                      >
+                        Fix <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <Roster
+            initial={serializable as any}
+            brotherName={me?.name || null}
+            chapterBrand={{
+              fraternityName: cfg["chapter.fraternityName"] || "Phi Sigma Kappa",
+              fraternityShort: cfg["chapter.fraternityShort"] || "Phi Sig",
+              schoolShort: cfg["chapter.schoolShort"] || "USC",
+              chapterAttribution: `${cfg["chapter.fraternityShort"] || "Phi Sig"} ${cfg["chapter.schoolShort"] || "USC"}`,
+              houseAddress: (cfg["contact.address"] || "1525 College Street").split(",")[0].trim(),
+            }}
+          />
+        </>
+      )}
     </main>
   );
 }
