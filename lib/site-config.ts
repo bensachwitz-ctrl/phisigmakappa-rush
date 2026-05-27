@@ -238,6 +238,7 @@ export const DEFAULTS = {
   "dues.stripeWebhookSecret": "",         // whsec_... — DIFFERENT from STRIPE_SECRET_KEY env var
   "dues.passThroughFee": "false",         // if true, add 2.9% + 30¢ to brother's total
   "dues.label": "Chapter dues — Fall 2026",
+  "calendar.calDiyUrl": "",
 
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",

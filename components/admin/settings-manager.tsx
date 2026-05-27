@@ -307,6 +307,27 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </div>
       </Section>
 
+      {/* CALENDAR & SCHEDULING (Cal.diy) */}
+      <Section
+        id="calendar"
+        title="Calendar &amp; Scheduling (Cal.diy)"
+        eyebrow="Connect Cal.diy / Cal.com for scheduling events"
+        icon={CalendarDays}
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Enable self-serve event scheduling for brothers and visitors. Clone and host <code className="font-mono text-foreground">https://github.com/calcom/cal.diy.git</code> and paste your instance booking URL or Cal.com username below (e.g. <code className="font-mono">phisigusc</code> or <code className="font-mono">https://cal.phisigusc.com/rush-coffee</code>). If left blank, the site will use a gorgeous, fully-functional built-in scheduler that records events directly to the database and sends confirmations via Resend.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Cal.diy / Cal.com Username or Booking URL">
+            <Input
+              value={values["calendar.calDiyUrl"] || ""}
+              onChange={(e) => set("calendar.calDiyUrl", e.target.value)}
+              placeholder="e.g. phisigusc or https://cal.phisigusc.com/meeting"
+            />
+          </Field>
+        </div>
+      </Section>
+
       {/* HERO */}
       <Section title="Hero" eyebrow="Top of homepage" icon={Sparkles}>
         <div className="grid sm:grid-cols-2 gap-4">

@@ -49,7 +49,7 @@ export function MobileBottomNav({
     >
       <div className="grid grid-cols-4 max-w-md mx-auto">
         <BottomTab href="#register" icon={Sparkles} label="Register" emphasis />
-        <BottomTab href="#schedule" icon={Calendar} label="Schedule" />
+        <BottomTab href="/schedule" icon={Calendar} label="Schedule" />
         <BottomTab href={callHref} icon={Phone} label="Call" />
         <BottomTab href="/admin/login" icon={ShieldCheck} label="Brothers" />
       </div>

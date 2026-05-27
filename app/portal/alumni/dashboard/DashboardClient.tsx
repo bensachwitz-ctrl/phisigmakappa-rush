@@ -19,7 +19,8 @@ import {
   MessageSquare,
   ShieldAlert,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicFooter } from "@/components/site/footer";
@@ -132,6 +133,13 @@ export default function DashboardClient({
   // Poll voting states
   const [pollList, setPollList] = useState<Poll[]>(polls);
   const [votingOnPollId, setVotingOnPollId] = useState<string | null>(null);
+
+  // Donation states
+  const [donationAmount, setDonationAmount] = useState("100");
+  const [isCustomAmount, setIsCustomAmount] = useState(false);
+  const [campaignFund, setCampaignFund] = useState("General");
+  const [donationNote, setDonationNote] = useState("");
+  const [submittingDonation, setSubmittingDonation] = useState(false);
 
   // Logout handler
   const handleLogout = async () => {
@@ -253,6 +261,40 @@ export default function DashboardClient({
     }
   };
 
+  const handleDonationCheckout = async () => {
+    const amount = parseFloat(donationAmount);
+    if (isNaN(amount) || amount < 5) {
+      alert("Please enter a valid amount of at least $5.00");
+      return;
+    }
+
+    setSubmittingDonation(true);
+    try {
+      const res = await fetch("/api/alumni/donate/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          alumniId: alumni.id,
+          amountCents: Math.round(amount * 100),
+          campaign: campaignFund,
+          notes: donationNote,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Failed to create donation session.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setSubmittingDonation(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
@@ -298,6 +340,7 @@ export default function DashboardClient({
               { id: "alumni", label: "Alumni Directory", icon: GraduationCap },
               { id: "polls", label: "Surveys & Polls", icon: Vote },
               { id: "events", label: "Events Calendar", icon: Calendar },
+              { id: "donate", label: "Donate & Support", icon: Heart },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -861,6 +904,112 @@ export default function DashboardClient({
                   <div className="col-span-full bg-white rounded-2xl border border-maroon-100 p-8 text-center text-sm text-maroon-500">
                     No upcoming events scheduled.
                   </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* DONATE & SUPPORT TAB */}
+          {activeTab === "donate" && (
+            <div className="space-y-6 max-w-xl mx-auto">
+              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-maroon-900 mb-1">Donate &amp; Support Chapter</h2>
+                <p className="text-sm text-maroon-700">
+                  Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and we take a 5% platform fee on all online donations.
+                </p>
+              </div>
+
+              {/* Donation Form */}
+              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-maroon-900 uppercase tracking-wider mb-2">1. Select Amount</label>
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {[50, 100, 250, 500].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => {
+                          setDonationAmount(amt.toString());
+                          setIsCustomAmount(false);
+                        }}
+                        className={`py-2 rounded-xl text-sm font-bold border transition ${
+                          donationAmount === amt.toString() && !isCustomAmount
+                            ? "bg-maroon-800 text-cream-50 border-transparent shadow"
+                            : "bg-cream-50 text-maroon-900 border-maroon-100/55 hover:border-maroon-300"
+                        }`}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-sm text-maroon-600 font-bold">$</span>
+                    <input
+                      type="number"
+                      placeholder="Custom Amount"
+                      value={isCustomAmount ? donationAmount : ""}
+                      onChange={(e) => {
+                        setDonationAmount(e.target.value);
+                        setIsCustomAmount(true);
+                      }}
+                      className="w-full pl-7 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-maroon-900 uppercase tracking-wider mb-2">2. Select Campaign Fund</label>
+                  <select
+                    value={campaignFund}
+                    onChange={(e) => setCampaignFund(e.target.value)}
+                    className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900 font-semibold"
+                  >
+                    <option value="General">General Fund</option>
+                    <option value="Scholarship Fund">Scholarship Fund</option>
+                    <option value="Housing Renovation">Housing Renovation</option>
+                    <option value="Alumni Weekend">Alumni Weekend / Homecoming</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-maroon-900 uppercase tracking-wider mb-2">3. Donation Note / Dedication (Optional)</label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. In memory of pledge class 1994, or general note..."
+                    value={donationNote}
+                    onChange={(e) => setDonationNote(e.target.value)}
+                    className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
+                  />
+                </div>
+
+                <div className="bg-cream-50/50 rounded-xl border border-maroon-50 p-4 space-y-2 text-xs text-maroon-700">
+                  <div className="flex justify-between">
+                    <span>Donation Amount:</span>
+                    <span className="font-bold">${Number(donationAmount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-maroon-100 pt-2 font-bold text-maroon-900">
+                    <span>Total Charged:</span>
+                    <span>${Number(donationAmount || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={submittingDonation || !donationAmount || Number(donationAmount) < 5}
+                  onClick={handleDonationCheckout}
+                  className="w-full bg-maroon-800 hover:bg-maroon-900 disabled:bg-maroon-800/50 text-cream-50 font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2 font-semibold"
+                >
+                  {submittingDonation ? (
+                    <span>Creating checkout...</span>
+                  ) : (
+                    <>
+                      <Heart className="w-4 h-4 fill-current" />
+                      Proceed to Secure Checkout
+                    </>
+                  )}
+                </button>
+                {Number(donationAmount) > 0 && Number(donationAmount) < 5 && (
+                  <p className="text-[10px] text-red-600 text-center font-medium">Minimum donation is $5.00</p>
                 )}
               </div>
             </div>

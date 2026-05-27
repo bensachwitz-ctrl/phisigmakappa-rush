@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
+import { sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,6 +95,15 @@ async function handleCheckoutCompleted(
   });
 
   if (!payment) {
+    // Check if it's an alumni donation instead
+    const donation = await prisma.alumniDonation.findUnique({
+      where: { stripeSessionId: sessionId },
+    });
+    if (donation) {
+      await handleDonationCompleted(donation, session);
+      return;
+    }
+
     // Session ID we don't know — could be a test event, or session was
     // created outside our flow. Log and ignore.
     console.warn("[/api/dues/webhook] unknown session:", sessionId);
@@ -178,7 +188,19 @@ async function handleCheckoutFailed(
   const payment = await prisma.duesPayment.findUnique({
     where: { stripeSessionId: session.id },
   });
-  if (!payment) return;
+  if (!payment) {
+    const donation = await prisma.alumniDonation.findUnique({
+      where: { stripeSessionId: session.id },
+    });
+    if (donation) {
+      if (donation.status === "PAID") return;
+      await prisma.alumniDonation.update({
+        where: { id: donation.id },
+        data: { status: "FAILED", notes: `Session ${reason}` },
+      });
+    }
+    return;
+  }
   if (payment.status === "PAID") return; // already paid → ignore the noise
 
   await prisma.duesPayment.update({
@@ -214,7 +236,22 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
   const payment = await prisma.duesPayment.findFirst({
     where: { stripePaymentIntentId: pi.id },
   });
-  if (!payment) return;
+  if (!payment) {
+    const donation = await prisma.alumniDonation.findFirst({
+      where: { stripePaymentIntentId: pi.id },
+    });
+    if (donation) {
+      if (donation.status === "PAID") return;
+      await prisma.alumniDonation.update({
+        where: { id: donation.id },
+        data: {
+          status: "FAILED",
+          notes: pi.last_payment_error?.message || "Payment failed",
+        },
+      });
+    }
+    return;
+  }
   if (payment.status === "PAID") return;
 
   await prisma.duesPayment.update({
@@ -239,6 +276,68 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
       subjectId: payment.brotherId,
       subjectName: brother?.name || null,
       details: pi.last_payment_error?.message || "Payment failed",
+      ipAddress: null,
+    },
+  }).catch(() => {});
+}
+
+async function handleDonationCompleted(
+  donation: any,
+  session: Stripe.Checkout.Session,
+) {
+  if (donation.status === "PAID") return;
+
+  let paymentIntentId: string | null = null;
+  if (session.payment_intent && typeof session.payment_intent === "string") {
+    paymentIntentId = session.payment_intent;
+  }
+
+  await prisma.alumniDonation.update({
+    where: { id: donation.id },
+    data: {
+      status: "PAID",
+      stripePaymentIntentId: paymentIntentId,
+      recordedAt: new Date(),
+    },
+  });
+
+  const alumni = await prisma.alumniProfile.findUnique({
+    where: { id: donation.alumniId },
+  });
+
+  if (!alumni) return;
+
+  // Send thank you email to alumnus
+  const html = `
+    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
+      <h1 style="font-size:22px;margin:0 0 6px">Thank you for your donation!</h1>
+      <p style="color:#52525b;margin:0 0 18px">Dear ${alumni.fullName}, we have successfully received your donation of $${(donation.amountCents / 100).toFixed(2)} to the chapter.</p>
+      <div style="background:#f4f4f5;padding:16px;border-radius:8px;margin:18px 0;">
+        <p style="margin:0 0 8px;"><strong>Campaign:</strong> ${donation.campaign || "General"}</p>
+        <p style="margin:0 0 8px;"><strong>Amount:</strong> $${(donation.amountCents / 100).toFixed(2)}</p>
+        <p style="margin:0 0 8px;"><strong>Date:</strong> ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}</p>
+      </div>
+      <p style="color:#52525b;margin:18px 0;">Your contribution directly supports our active brothers, housing operations, and scholarship programs. Thank you for your continued dedication and character.</p>
+      <p style="color:#71717a;font-size:12px;margin-top:24px">Phi Sigma Kappa Fraternity &middot; USC</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: alumni.email || "",
+    subject: `Thank you for your donation to Phi Sigma Kappa`,
+    html,
+  }).catch((e) => console.error("Failed to send thank you email:", e));
+
+  // Write audit log
+  await prisma.auditLog.create({
+    data: {
+      actorId: null,
+      actorName: "stripe-webhook",
+      action: "ALUMNI_DONATION",
+      subjectType: "AlumniProfile",
+      subjectId: donation.alumniId,
+      subjectName: alumni.fullName,
+      details: `$${(donation.amountCents / 100).toFixed(2)} via Stripe — campaign: ${donation.campaign || "General"}`,
       ipAddress: null,
     },
   }).catch(() => {});

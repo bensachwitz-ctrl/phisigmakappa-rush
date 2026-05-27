@@ -10,7 +10,8 @@
 // dues path is the canonical payment surface for now.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -847,14 +848,17 @@ model AlumniProfile {
 
 // W5: Alumni donation log (campaign-tagged).
 model AlumniDonation {
-  id           String        @id @default(cuid())
-  alumniId     String
-  alumni       AlumniProfile @relation(fields: [alumniId], references: [id])
-  amountCents  Int
-  campaign     String?
-  recordedAt   DateTime      @default(now())
-  notes        String?
-  recordedById String?
+  id                    String        @id @default(cuid())
+  alumniId              String
+  alumni                AlumniProfile @relation(fields: [alumniId], references: [id])
+  amountCents           Int
+  campaign              String?
+  recordedAt            DateTime      @default(now())
+  notes                 String?
+  recordedById          String?
+  stripeSessionId       String?       @unique
+  stripePaymentIntentId String?
+  status                String        @default("PENDING") // PENDING | PAID | FAILED
 
   @@index([alumniId, recordedAt])
   @@index([campaign])
