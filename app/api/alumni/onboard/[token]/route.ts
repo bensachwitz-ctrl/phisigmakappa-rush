@@ -4,9 +4,52 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { setPortalCookie } from "@/lib/portal-auth";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
+import { sendEmail } from "@/lib/email";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// R47 — branded welcome email sent the moment an alum finishes onboarding.
+// Fire-and-forget: never blocks the response, and sendEmail() already
+// no-ops gracefully (mock mode) when RESEND_API_KEY isn't configured, so
+// this is safe in every environment.
+async function sendWelcomeEmail(opts: { to: string; firstName: string; siteUrl: string }) {
+  let identity;
+  try {
+    identity = await getChapterIdentity();
+  } catch {
+    identity = null;
+  }
+  const fratName = identity?.fraternityName || "Phi Sigma Kappa";
+  const fratShort = identity?.fraternityShort || "Phi Sig";
+  const greek = identity?.greekLetters || "";
+  const school = identity?.schoolShort || "";
+  const tagline = identity?.tagline || "";
+  const dash = `${opts.siteUrl.replace(/\/$/, "")}/portal/alumni/dashboard`;
+  const html = `
+    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
+      <h1 style="font-size:22px;margin:0 0 6px">Welcome to the ${fratShort} alumni portal, ${opts.firstName}.</h1>
+      <p style="color:#52525b;margin:0 0 18px">Your account is live. You're now connected to ${greek ? greek + " · " : ""}${school} — the active chapter and your fellow alumni.</p>
+      <p style="color:#3f3f46;margin:0 0 8px;font-weight:600">From your dashboard you can:</p>
+      <ul style="color:#52525b;margin:0 0 18px;padding-left:18px;line-height:1.6">
+        <li>See the active brother roster and your alumni network</li>
+        <li>Vote in alumni polls and RSVP to chapter events</li>
+        <li>Vouch for PNMs during rush</li>
+        <li>Support the chapter with a secure donation</li>
+      </ul>
+      <p style="margin:18px 0">
+        <a href="${dash}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Open your dashboard</a>
+      </p>
+      <p style="color:#71717a;font-size:12px;margin-top:24px">You're receiving this because you created a ${fratName} alumni portal account. ${tagline}</p>
+    </div>`;
+  return sendEmail({
+    to: opts.to,
+    subject: `Welcome to the ${fratName} alumni portal`,
+    html,
+    text: `Welcome to the ${fratShort} alumni portal, ${opts.firstName}. Your account is live — open your dashboard: ${dash}`,
+  });
+}
 
 // R45 — Alumni portal onboarding redemption.
 //
@@ -225,6 +268,20 @@ export async function POST(req: Request, { params }: { params: { token: string }
     });
   } catch {
     /* ignore audit failures */
+  }
+
+  // R47 — fire-and-forget welcome email. Resolves the origin from the
+  // request so it works on any deploy domain; never blocks the response,
+  // and no-ops gracefully when RESEND isn't configured.
+  try {
+    const siteUrl =
+      process.env.SITE_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      new URL(req.url).origin;
+    const firstName = (profileData.preferredName || profileData.fullName).split(" ")[0] || "brother";
+    void sendWelcomeEmail({ to: email, firstName, siteUrl }).catch(() => {});
+  } catch {
+    /* never let email setup break onboarding */
   }
 
   return NextResponse.json({

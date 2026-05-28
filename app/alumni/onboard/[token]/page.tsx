@@ -50,6 +50,10 @@ export default function AlumniOnboardPage() {
   const [load, setLoad] = useState<LoadState>({ phase: "loading" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // R47 — brief success micro-state: show a checkmark + "you're in" beat
+  // before redirecting, so account creation feels like an arrival rather
+  // than an abrupt page swap.
+  const [succeeded, setSucceeded] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -143,12 +147,32 @@ export default function AlumniOnboardPage() {
         setSubmitting(false);
         return;
       }
-      router.push(data.redirectTo || "/portal/alumni/dashboard");
+      // Success beat → then redirect. The account + auto-login cookie are
+      // already set server-side, so the short delay is purely UX polish.
+      setSucceeded(true);
+      const dest = data.redirectTo || "/portal/alumni/dashboard";
+      setTimeout(() => router.push(dest), 1100);
     } catch {
       setError("A connection error occurred. Please try again.");
       setSubmitting(false);
     }
   };
+
+  // ── Success beat ─────────────────────────────────────────────────────
+  if (succeeded) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center py-24 text-center animate-in fade-in duration-500">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 mb-5 animate-spring-in">
+            <CheckCircle className="w-9 h-9" aria-hidden="true" />
+          </div>
+          <h1 className="text-2xl font-bold text-maroon-900">You&apos;re in.</h1>
+          <p className="text-sm text-maroon-600 mt-1">Taking you to your dashboard…</p>
+          <Loader2 className="w-5 h-5 animate-spin text-maroon-400 mt-5" aria-hidden="true" />
+        </div>
+      </Shell>
+    );
+  }
 
   // ── Loading ──────────────────────────────────────────────────────────
   if (load.phase === "loading") {
@@ -196,8 +220,8 @@ export default function AlumniOnboardPage() {
   // ── Ready: onboarding form ───────────────────────────────────────────
   return (
     <Shell>
-      <div className="mb-6 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500 text-cream-50 mb-3 shadow-sm">
+      <div className="mb-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500 text-cream-50 mb-3 shadow-sm animate-spring-in">
           <GraduationCap className="w-6 h-6" aria-hidden="true" />
         </div>
         <h1 className="text-2xl font-bold text-maroon-900">Welcome back, brother.</h1>
@@ -207,7 +231,7 @@ export default function AlumniOnboardPage() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-5">
+      <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700">
         {error && (
           <div role="alert" className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
             {error}
