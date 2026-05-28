@@ -108,10 +108,13 @@ export default async function AlumniDashboardPage() {
     where: { alumniId },
   });
 
-  // Fetch active polls open to alumni
+  // Fetch active polls open to alumni. R46 — include "ALL"-audience polls
+  // too (mirrors the events query above which is audience IN [ALL, ALUMNI]),
+  // so a poll created for the whole chapter reaches alumni, not only
+  // alumni-exclusive ones.
   const polls = await prisma.poll.findMany({
-    where: { 
-      audience: "ALUMNI",
+    where: {
+      audience: { in: ["ALUMNI", "ALL"] },
       closedAt: null,
     },
     include: {

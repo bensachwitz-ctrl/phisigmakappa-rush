@@ -31,6 +31,7 @@ type PollOption = { id: string; label: string };
 type Poll = {
   id: string;
   question: string;
+  audience?: string;
   options: PollOption[];
   counts: Record<string, number>;
   totalVotes: number;
@@ -526,6 +527,9 @@ function CreatePollDialog({
   const [question, setQuestion] = React.useState("");
   const [options, setOptions] = React.useState<string[]>(["", ""]);
   const [closesAt, setClosesAt] = React.useState("");
+  // R46 — audience selector. Default BROTHERS (matches prior behavior);
+  // ALUMNI routes the poll to the alumni portal feed; ALL reaches both.
+  const [audience, setAudience] = React.useState<"BROTHERS" | "ALUMNI" | "ALL">("BROTHERS");
   const [submitting, setSubmitting] = React.useState(false);
 
   // Reset on close.
@@ -534,6 +538,7 @@ function CreatePollDialog({
       setQuestion("");
       setOptions(["", ""]);
       setClosesAt("");
+      setAudience("BROTHERS");
       setSubmitting(false);
     }
   }, [open]);
@@ -577,9 +582,10 @@ function CreatePollDialog({
     setSubmitting(true);
     try {
       const cleaned = options.map((o) => o.trim()).filter((o) => o.length > 0);
-      const body: { question: string; options: string[]; closesAt?: string } = {
+      const body: { question: string; options: string[]; closesAt?: string; audience: string } = {
         question: question.trim(),
         options: cleaned,
+        audience,
       };
       if (closesAt) {
         // datetime-local is in local TZ — convert to ISO for the API.
@@ -699,6 +705,30 @@ function CreatePollDialog({
               value={closesAt}
               onChange={(e) => setClosesAt(e.target.value)}
             />
+          </div>
+
+          {/* R46 — audience selector. Routes the poll to the right feed:
+              brothers (default), alumni portal, or both. */}
+          <div className="field-glow space-y-1.5">
+            <label
+              htmlFor="poll-audience"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              Who can vote?
+            </label>
+            <select
+              id="poll-audience"
+              value={audience}
+              onChange={(e) => setAudience(e.target.value as "BROTHERS" | "ALUMNI" | "ALL")}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="BROTHERS">Active brothers only</option>
+              <option value="ALUMNI">Alumni only</option>
+              <option value="ALL">Everyone (brothers + alumni)</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground/70">
+              Alumni see their polls in the alumni portal dashboard.
+            </p>
           </div>
 
           {validation && (

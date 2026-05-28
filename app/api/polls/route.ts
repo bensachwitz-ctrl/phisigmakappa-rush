@@ -39,6 +39,11 @@ const CreatePollSchema = z.object({
     .min(POLL_OPTION_MIN)
     .max(POLL_OPTION_MAX),
   closesAt: z.string().datetime().optional().nullable(),
+  // R46 — who can see + vote on this poll. Before this, audience was never
+  // set on create so every poll defaulted to "BROTHERS" and the alumni
+  // dashboard's audience:"ALUMNI" feed was permanently empty. ALL = both
+  // brothers and alumni see it (mirrors the events audience model).
+  audience: z.enum(["BROTHERS", "ALUMNI", "ALL"]).default("BROTHERS"),
 });
 
 // Poll-option helpers moved to lib/poll-options.ts — Next.js App Router
@@ -58,6 +63,10 @@ export async function GET() {
   // (closedAt within the 14-day window). We sort newest-first by createdAt.
   const polls = await prisma.poll.findMany({
     where: {
+      // R46 — this is the brother-facing feed: show brother-audience and
+      // all-audience polls, but NOT alumni-only polls. (The alumni feed
+      // lives in the alumni dashboard and filters audience IN [ALUMNI, ALL].)
+      audience: { in: ["BROTHERS", "ALL"] },
       OR: [{ closedAt: null }, { closedAt: { gte: cutoff } }],
     },
     orderBy: { createdAt: "desc" },
@@ -79,6 +88,7 @@ export async function GET() {
     return {
       id: p.id,
       question: p.question,
+      audience: p.audience,
       options,
       counts,
       totalVotes: p.votes.length,
@@ -163,6 +173,7 @@ export async function POST(req: Request) {
       options: JSON.stringify(options),
       createdById: brother.id,
       closesAt: closesAtDate,
+      audience: parsed.data.audience,
     },
     include: { createdBy: { select: { id: true, name: true } } },
   });
@@ -172,6 +183,7 @@ export async function POST(req: Request) {
     poll: {
       id: poll.id,
       question: poll.question,
+      audience: poll.audience,
       options,
       counts: Object.fromEntries(options.map((o) => [o.id, 0])),
       totalVotes: 0,
