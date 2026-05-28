@@ -404,6 +404,34 @@ model BrotherInvite {
   completedAt DateTime?
 }
 
+// R45 — Alumni portal onboarding invite. Mirrors BrotherInvite so the
+// alumni-relations officer can generate a single-use, expiring link and
+// text/email it to an alum, who then sets a password + confirms consent
+// to create their portal account. `alumniId` optionally binds the invite
+// to an existing AlumniProfile row (created from an HQ CSV import or
+// manual add) so the onboarding form pre-fills their known details and
+// the redemption attaches the new PortalUser to that exact profile
+// instead of creating a duplicate. Tokens are random (crypto.randomBytes),
+// 30-day expiry, single-use (status → COMPLETED on redeem), and carry NO
+// PII in the token itself — so a forwarded/leaked link reveals nothing and
+// can't be replayed once redeemed or revoked.
+model AlumniInvite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String?
+  phone       String?
+  prefillName String?
+  invitedBy   String? // sender admin / officer name
+  alumniId    String? // optional bind to an existing AlumniProfile for prefill + attach
+  status      String    @default("PENDING") // PENDING | COMPLETED | EXPIRED | REVOKED
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([alumniId])
+}
+
 // ── W1 document library ─────────────────────────────────────────────────────
 // Shared chapter documents — bylaws, ritual binders, calendars, dues forms.
 // Soft-versioned via versionOfId so the chapter can keep a paper-trail when

@@ -1,19 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  GraduationCap, 
-  Search, 
-  Trash2, 
-  UserPlus, 
-  Upload, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  GraduationCap,
+  Search,
+  Trash2,
+  UserPlus,
+  Upload,
+  Mail,
+  Phone,
+  MapPin,
   Building,
   CheckCircle,
   XCircle,
-  Plus
+  Plus,
+  Send,
+  Copy,
+  Link2,
+  X,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -63,6 +68,53 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
 
   // CSV states
   const [csvText, setCsvText] = useState("");
+
+  // R45 — portal-invite state. `inviteFor` is the alumnus we're inviting;
+  // `inviteResult` holds the generated link + delivery outcome to display.
+  const [inviteFor, setInviteFor] = useState<Alumnus | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteResult, setInviteResult] = useState<{ link: string; delivery: { channel: string; sent: boolean; reason: string } } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function generateInvite(alumnus: Alumnus, channel: "link" | "email" | "sms") {
+    setInviteLoading(true);
+    setInviteError("");
+    try {
+      const res = await fetch("/api/admin/alumni-invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alumniId: alumnus.id, channel }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setInviteError(data.error || "Could not generate the invite.");
+        return;
+      }
+      setInviteResult({ link: data.link, delivery: data.delivery });
+    } catch {
+      setInviteError("A connection error occurred. Please try again.");
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  function openInvite(alumnus: Alumnus) {
+    setInviteFor(alumnus);
+    setInviteResult(null);
+    setInviteError("");
+    setCopied(false);
+  }
+
+  async function copyLink(link: string) {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setInviteError("Couldn't copy — select and copy the link manually.");
+    }
+  }
 
   // Search filter
   const filtered = alumniList.filter((a) => {
@@ -274,13 +326,24 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDelete(alumni.id, alumni.fullName)}
-                        className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition"
-                        title="Delete Alumnus"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openInvite(alumni)}
+                          className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg transition"
+                          title="Send portal invite link"
+                          aria-label={`Send portal invite to ${alumni.fullName}`}
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(alumni.id, alumni.fullName)}
+                          className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition"
+                          title="Delete Alumnus"
+                          aria-label={`Delete ${alumni.fullName}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -295,6 +358,95 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
           </table>
         </div>
       </div>
+
+      {/* R45 — PORTAL INVITE MODAL */}
+      {inviteFor && (
+        <div className="fixed inset-0 bg-maroon-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setInviteFor(null); }}>
+          <div className="bg-white rounded-2xl border border-maroon-100 max-w-md w-full p-6 shadow-xl space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-maroon-900 flex items-center gap-1.5">
+                  <Send className="w-5 h-5 text-amber-500" />
+                  Invite to alumni portal
+                </h3>
+                <p className="text-xs text-muted-foreground">{inviteFor.fullName} · Class of {inviteFor.graduationYear}</p>
+              </div>
+              <button onClick={() => setInviteFor(null)} className="p-1.5 hover:bg-cream-100 rounded-lg text-maroon-600" aria-label="Close">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {inviteError && (
+              <div role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">{inviteError}</div>
+            )}
+
+            {!inviteResult ? (
+              <>
+                <p className="text-xs text-maroon-600">
+                  Generates a secure single-use link (expires in 30 days) that lets {inviteFor.preferredName || inviteFor.fullName.split(" ")[0]} set a password and create their portal account. Their existing details are pre-filled.
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => generateInvite(inviteFor, "email")}
+                    disabled={inviteLoading || !inviteFor.email}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-maroon-700 hover:bg-maroon-800 text-cream-50 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition min-h-[44px]"
+                    title={inviteFor.email ? `Email ${inviteFor.email}` : "No email on file"}
+                  >
+                    {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                    Send by email {inviteFor.email ? `→ ${inviteFor.email}` : "(no email on file)"}
+                  </button>
+                  <button
+                    onClick={() => generateInvite(inviteFor, "sms")}
+                    disabled={inviteLoading || !inviteFor.phone}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-maroon-700 hover:bg-maroon-800 text-cream-50 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition min-h-[44px]"
+                    title={inviteFor.phone ? `Text ${inviteFor.phone}` : "No phone on file"}
+                  >
+                    {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+                    Send by text {inviteFor.phone ? `→ ${inviteFor.phone}` : "(no phone on file)"}
+                  </button>
+                  <button
+                    onClick={() => generateInvite(inviteFor, "link")}
+                    disabled={inviteLoading}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-maroon-900 border border-maroon-200 text-sm font-semibold disabled:opacity-40 transition min-h-[44px]"
+                  >
+                    {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                    Just generate a copy-paste link
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                  inviteResult.delivery.sent ? "bg-green-50 border border-green-200 text-green-800"
+                  : inviteResult.delivery.channel === "link" ? "bg-cream-50 border border-maroon-100 text-maroon-700"
+                  : "bg-amber-50 border border-amber-200 text-amber-800"
+                }`}>
+                  {inviteResult.delivery.sent ? <CheckCircle className="w-4 h-4 shrink-0" /> : <Link2 className="w-4 h-4 shrink-0" />}
+                  {inviteResult.delivery.sent
+                    ? `Sent via ${inviteResult.delivery.channel}. Share the link below as a backup.`
+                    : inviteResult.delivery.channel === "link"
+                      ? "Link ready — copy it and send however you like."
+                      : `Couldn't auto-send (${inviteResult.delivery.reason}). Copy the link below and send it manually.`}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input readOnly value={inviteResult.link} onFocus={(e) => e.target.select()}
+                    className="flex-1 px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl text-xs text-maroon-900 truncate" />
+                  <button onClick={() => copyLink(inviteResult.link)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-maroon-700 hover:bg-maroon-800 text-cream-50 text-xs font-semibold transition shrink-0 min-h-[40px]">
+                    {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <button onClick={() => setInviteFor(null)}
+                  className="w-full py-2.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-maroon-900 border border-maroon-200 text-sm font-semibold transition">
+                  Done
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ADD ALUMNUS MODAL */}
       {showAddModal && (

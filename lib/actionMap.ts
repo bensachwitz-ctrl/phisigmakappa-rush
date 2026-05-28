@@ -190,6 +190,15 @@ export const actionMap: Record<string, ActionMapEntry> = {
     verb: "recorded a donation from",
     rolesToNotify: ["secretary", "president", "super-admin"],
   },
+  // R45 — alumni portal onboarding lifecycle.
+  "alumni.invite": {
+    verb: "sent an alumni portal invite to",
+    rolesToNotify: ["secretary", "president", "super-admin"],
+  },
+  "alumni.onboard": {
+    verb: "created an alumni portal account",
+    rolesToNotify: ["secretary", "president", "super-admin"],
+  },
 
   // ── W5 polls ────────────────────────────────────────────────────────────
   "poll.create": {
