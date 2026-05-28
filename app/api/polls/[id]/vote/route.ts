@@ -58,13 +58,28 @@ export async function POST(
 
   const poll = await prisma.poll.findUnique({
     where: { id: params.id },
-    select: { id: true, options: true, closedAt: true, closesAt: true },
+    select: { id: true, options: true, closedAt: true, closesAt: true, audience: true },
   });
   if (!poll) {
     return NextResponse.json({ ok: false, error: "Poll not found" }, { status: 404 });
   }
   if (isClosed(poll)) {
     return NextResponse.json({ ok: false, error: "Poll is closed" }, { status: 409 });
+  }
+
+  // R48 — enforce poll audience at the vote layer, not just in the feed
+  // filters. Before this, a signed-in user who knew a poll id outside their
+  // audience (e.g. an alum hitting a BROTHERS-only poll, or vice-versa)
+  // could POST a vote even though the UI never surfaces it. Brothers may
+  // vote on BROTHERS/ALL polls; alumni on ALUMNI/ALL. Anything else → 403.
+  const aud = poll.audience || "BROTHERS";
+  const brotherAllowed = aud === "BROTHERS" || aud === "ALL";
+  const alumniAllowed = aud === "ALUMNI" || aud === "ALL";
+  if ((brotherId && !brotherAllowed) || (alumniId && !alumniAllowed)) {
+    return NextResponse.json(
+      { ok: false, error: "This poll isn't open to your group." },
+      { status: 403 }
+    );
   }
 
   const options = parsePollOptions(poll.options);
