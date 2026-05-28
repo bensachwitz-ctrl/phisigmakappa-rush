@@ -40,6 +40,11 @@ export default async function AlumniDashboardPage() {
   // Fetch the Alumnus profile
   const alumniProfile = await prisma.alumniProfile.findUnique({
     where: { id: alumniId },
+    include: {
+      donations: {
+        orderBy: { recordedAt: "desc" }
+      }
+    }
   });
 
   if (!alumniProfile) {
@@ -153,6 +158,11 @@ export default async function AlumniDashboardPage() {
     endsAt: e.endsAt ? e.endsAt.toISOString() : null,
   }));
 
+  const formattedDonations = (alumniProfile?.donations || []).map(d => ({
+    ...d,
+    recordedAt: d.recordedAt.toISOString(),
+  }));
+
   return (
     <DashboardClient
       alumni={formattedAlumni}
@@ -162,6 +172,7 @@ export default async function AlumniDashboardPage() {
       vouches={vouches}
       polls={polls}
       events={formattedEvents}
+      donations={formattedDonations}
       isAdmin={sess.isAdmin}
     />
   );

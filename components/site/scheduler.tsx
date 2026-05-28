@@ -255,7 +255,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "
               </a>
             </div>
             {/* Cal.diy iframe */}
-            <div className="relative w-full h-[650px] bg-zinc-50">
+            <div className="relative w-full h-[500px] sm:h-[650px] bg-zinc-50">
               <iframe
                 src={embedUrl}
                 title="Cal.diy Scheduling Portal"
@@ -266,18 +266,18 @@ export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "
           </CardContent>
         </Card>
       ) : (
-        <form onSubmit={handleBook} className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
+        <form onSubmit={handleBook} className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
           {/* Left panel: Event Type Selection */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-maroon-800 px-1">1. Choose Meeting</h2>
-            <div className="space-y-2.5">
+            <div className="flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
               {EVENT_TYPES.map((type) => (
                 <button
                   key={type.name}
                   type="button"
                   onClick={() => setSelectedType(type.name)}
                   className={cn(
-                    "w-full text-left p-4 rounded-xl border transition-all text-xs flex flex-col gap-1 shadow-sm",
+                    "w-full text-left p-4 rounded-xl border transition-all text-xs flex flex-col gap-1 shadow-sm shrink-0 lg:shrink min-w-[200px] lg:min-w-0",
                     selectedType === type.name
                       ? "bg-maroon-800 text-cream-50 border-transparent scale-[1.01]"
                       : "bg-white text-maroon-900 border-maroon-100/60 hover:border-maroon-200"
@@ -311,7 +311,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "
                         setSelectedTime(""); // Reset time on date change
                       }}
                       className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-lg border transition-all",
+                        "flex flex-col items-center justify-center p-3 rounded-lg border transition-all min-h-[56px]",
                         selectedDate === d.iso
                           ? "bg-maroon-700 text-cream-50 border-transparent font-semibold"
                           : "bg-cream-50 text-maroon-900 border-maroon-100/40 hover:border-maroon-200"
@@ -339,7 +339,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "
                         type="button"
                         onClick={() => setSelectedTime(t)}
                         className={cn(
-                          "py-2.5 rounded-lg border text-xs font-semibold transition-all",
+                          "py-2.5 rounded-lg border text-xs font-semibold transition-all min-h-[44px]",
                           selectedTime === t
                             ? "bg-maroon-700 text-cream-50 border-transparent"
                             : "bg-white text-maroon-800 border-maroon-100/60 hover:border-maroon-200"
@@ -418,11 +418,11 @@ export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "
                     />
                   </div>
 
-                  <div className="pt-4 flex justify-end">
+                  <div className="pt-4 flex flex-col sm:flex-row sm:justify-end gap-3">
                     <Button
                       type="submit"
                       disabled={busy}
-                      className="bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold px-6 py-5 rounded-xl shadow-lg shadow-maroon-800/10"
+                      className="w-full sm:w-auto bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold px-6 py-5 rounded-xl shadow-lg shadow-maroon-800/10"
                     >
                       {busy ? (
                         <>

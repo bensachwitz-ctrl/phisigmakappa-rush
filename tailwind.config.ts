@@ -1,5 +1,15 @@
 import type { Config } from "tailwindcss";
 
+// R44 — Tailwind's default breakpoint set, inlined so we can prepend an
+// `xs` (480px) tier without pulling in tailwindcss/defaultTheme internals.
+const defaultScreens = {
+  sm: "640px",
+  md: "768px",
+  lg: "1024px",
+  xl: "1280px",
+  "2xl": "1536px",
+};
+
 const config: Config = {
   darkMode: ["class"],
   content: [
@@ -14,6 +24,15 @@ const config: Config = {
       screens: {
         "2xl": "1280px",
       },
+    },
+    // R44 — register the `xs` breakpoint (480px) so the responsive
+    // `xs:grid-cols-2` polish added on the homepage contact grid actually
+    // generates. Tailwind's default screen set has no `xs`, so the class
+    // was silently dead before this. Spreading defaultTheme.screens keeps
+    // sm/md/lg/xl/2xl intact and just prepends xs.
+    screens: {
+      xs: "480px",
+      ...defaultScreens,
     },
     extend: {
       colors: {
@@ -64,6 +83,24 @@ const config: Config = {
           ink: "#0B0B0C",
           paper: "#FFFFFF",
           mist: "#F5F5F7",
+        },
+        maroon: {
+          50: '#fef2f2',
+          100: '#fde6e7',
+          200: '#f9c1c3',
+          400: '#c8505a',
+          500: '#a83040',
+          600: '#8b2234',
+          700: '#6f1b2a',
+          800: '#5a1523',
+          900: '#4a111d',
+          950: '#2d0a12',
+        },
+        cream: {
+          50: '#fefdfb',
+          100: '#fdf8f0',
+          200: '#f8ecd8',
+          300: '#f2dbb8',
         },
       },
       borderRadius: {

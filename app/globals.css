@@ -411,6 +411,33 @@
   transition: box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* ─── Mobile-first touch helpers ─── */
+@media (max-width: 639px) {
+  /* Ensure all interactive elements meet 44px min tap target */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Full-width buttons on mobile */
+  .mobile-full {
+    width: 100%;
+  }
+  /* Horizontal scroll container for chips/pills on mobile */
+  .mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  /* Safe area padding for fixed elements */
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+}
+
 /* Reduce motion — every animation collapses to a near-instant flash so
    vestibular-sensitive users get the final state without movement. */
 @media (prefers-reduced-motion: reduce) {

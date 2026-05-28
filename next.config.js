@@ -2,7 +2,18 @@
 const nextConfig = {
   reactStrictMode: true,
   optimizeFonts: false,
+  // R44 — REMOVED the `config.optimization.minimize = false` webpack
+  // override that a prior in-progress wave left behind. It disabled JS
+  // minification in PRODUCTION builds, which would have shipped the full
+  // unminified bundle to chapter members on every page load (multi-MB
+  // payloads, slow first paint). Minification is now restored — Next's
+  // default Terser/SWC minifier runs in prod as intended. The
+  // `workerThreads/cpus` experimental caps are KEPT: they only constrain
+  // build-time parallelism (a stability aid on resource-limited machines)
+  // and have zero effect on the shipped output.
   experimental: {
+    workerThreads: false,
+    cpus: 1,
     serverActions: {
       bodySizeLimit: '5mb',
     },

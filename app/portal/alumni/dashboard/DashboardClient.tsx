@@ -95,6 +95,15 @@ interface Event {
   category: string;
 }
 
+interface Donation {
+  id: string;
+  amountCents: number;
+  campaign: string | null;
+  recordedAt: string;
+  status: string;
+  notes: string | null;
+}
+
 interface DashboardClientProps {
   alumni: Alumnus;
   brothers: Brother[];
@@ -103,6 +112,7 @@ interface DashboardClientProps {
   vouches: Vouch[];
   polls: Poll[];
   events: Event[];
+  donations: Donation[];
   isAdmin: boolean;
 }
 
@@ -114,6 +124,7 @@ export default function DashboardClient({
   vouches,
   polls,
   events,
+  donations,
   isAdmin,
 }: DashboardClientProps) {
   const router = useRouter();
@@ -299,7 +310,7 @@ export default function DashboardClient({
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
         {/* Top Header / Portal Banner */}
-        <header className="bg-white border-b border-maroon-100 px-6 py-4 shadow-sm sticky top-0 z-10">
+        <header className="bg-white border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-cream-50 flex items-center justify-center font-bold shadow-sm">
@@ -332,7 +343,7 @@ export default function DashboardClient({
 
         {/* Inner Navigation Tabs */}
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex flex-wrap gap-2 border-b border-maroon-100 pb-3 mb-6">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { id: "overview", label: "Overview", icon: Users },
               { id: "pnms", label: "Hometown PNMs", icon: MapPin },
@@ -348,7 +359,7 @@ export default function DashboardClient({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap shrink-0 min-h-[44px] ${
                     active 
                       ? "bg-maroon-800 text-cream-50 shadow" 
                       : "text-maroon-700 hover:bg-white hover:text-maroon-900"
@@ -365,8 +376,8 @@ export default function DashboardClient({
 
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
                   <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
                   <p className="text-sm text-maroon-700 leading-relaxed mb-4">
@@ -403,7 +414,7 @@ export default function DashboardClient({
 
                 <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-maroon-900 mb-4">Quick Stats & Insights</h2>
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                     <div className="p-3 bg-cream-50/50 rounded-xl border border-maroon-50">
                       <p className="text-2xl font-black text-maroon-800">{brothers.length}</p>
                       <p className="text-xs text-maroon-600 font-medium">Actives</p>
@@ -417,6 +428,47 @@ export default function DashboardClient({
                       <p className="text-xs text-maroon-600 font-medium">PNMs in Rush</p>
                     </div>
                   </div>
+                </div>
+
+                {/* DONATION HISTORY */}
+                <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-maroon-900 mb-4 flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-amber-600 fill-amber-600/10" />
+                    Your Donation History
+                  </h2>
+                  {donations && donations.length > 0 ? (
+                    <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                      {donations.map((d) => (
+                        <div key={d.id} className="flex justify-between items-center p-3 rounded-xl border border-maroon-50 bg-cream-50/20 text-sm">
+                          <div>
+                            <p className="font-bold text-maroon-900">{d.campaign || "General Donation"}</p>
+                            <p className="text-[10px] text-maroon-500">
+                              {new Date(d.recordedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}
+                              {d.notes ? ` · ${d.notes}` : ""}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-black text-maroon-800">${(d.amountCents / 100).toFixed(2)}</span>
+                            <span className={`block text-[9px] font-bold uppercase tracking-wider ${
+                              d.status === "PAID" ? "text-emerald-600" : "text-amber-600"
+                            }`}>
+                              {d.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-cream-50/30 rounded-xl border border-maroon-50/60 border-dashed">
+                      <p className="text-xs text-maroon-600 mb-2">No donations recorded yet.</p>
+                      <button 
+                        onClick={() => setActiveTab("donate")} 
+                        className="inline-flex items-center gap-1 text-xs font-bold text-maroon-800 hover:text-maroon-950 underline"
+                      >
+                        Make your first donation &rarr;
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -490,7 +542,7 @@ export default function DashboardClient({
                   Recommended candidates from {alumni.city || alumni.state || "your area"} ({hometownPnms.length})
                 </h3>
                 {hometownPnms.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {hometownPnms.map(pnm => {
                       const isVouched = vouchList.some(v => v.rushId === pnm.id);
                       const vouch = vouchList.find(v => v.rushId === pnm.id);
@@ -880,18 +932,18 @@ export default function DashboardClient({
                         </div>
 
                         {/* Calendar export options */}
-                        <div className="mt-6 pt-4 border-t border-maroon-50 flex gap-2">
+                        <div className="mt-6 pt-4 border-t border-maroon-50 flex flex-wrap gap-2">
                           <a
                             href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}/${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}&details=${encodeURIComponent(event.description || "")}&location=${encodeURIComponent(event.location || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 text-center bg-cream-50 hover:bg-cream-100 text-maroon-900 border border-maroon-200 text-xs font-semibold py-2 rounded-lg transition"
+                            className="flex-1 text-center bg-cream-50 hover:bg-cream-100 text-maroon-900 border border-maroon-200 text-xs font-semibold py-2 rounded-lg transition min-w-0"
                           >
                             Add to Google Calendar
                           </a>
                           <a
                             href={`/api/events.ics?eventId=${event.id}`}
-                            className="px-3 bg-cream-50 hover:bg-cream-100 text-maroon-900 border border-maroon-200 text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center"
+                            className="px-3 bg-cream-50 hover:bg-cream-100 text-maroon-900 border border-maroon-200 text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center text-center"
                             title="Download ICS File"
                           >
                             Download ICS
@@ -923,7 +975,7 @@ export default function DashboardClient({
               <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm space-y-6">
                 <div>
                   <label className="block text-xs font-bold text-maroon-900 uppercase tracking-wider mb-2">1. Select Amount</label>
-                  <div className="grid grid-cols-4 gap-2 mb-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                     {[50, 100, 250, 500].map((amt) => (
                       <button
                         key={amt}
@@ -1019,8 +1071,8 @@ export default function DashboardClient({
 
       {/* VOUCH MODAL */}
       {vouchingPnm && (
-        <div className="fixed inset-0 bg-maroon-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-maroon-100 max-w-md w-full p-6 shadow-xl space-y-4">
+        <div className="fixed inset-0 bg-maroon-950/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-maroon-100 w-full sm:max-w-md p-6 shadow-xl space-y-4">
             <div>
               <h3 className="text-lg font-bold text-maroon-900">Vouch for {vouchingPnm.name}</h3>
               <p className="text-xs text-maroon-600">Provide a note explaining how you know this candidate and why they are a good fit.</p>

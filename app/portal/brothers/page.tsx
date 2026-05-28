@@ -35,10 +35,10 @@ export default async function BrothersPortalPage() {
   const id = chapterIdentityFromCfg(cfg);
 
   return (
-    <div className="min-h-screen bg-cream-50 text-maroon-950">
+    <div className="min-h-screen bg-cream-50 text-maroon-950 overflow-x-hidden">
       <PublicNav />
 
-      <main className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-8 sm:py-14">
         <Link
           href="/portal"
           className="inline-flex items-center gap-1.5 text-sm text-maroon-700 hover:text-maroon-900 mb-6"
@@ -52,7 +52,7 @@ export default async function BrothersPortalPage() {
             <Users className="w-3.5 h-3.5" aria-hidden />
             Brothers Portal
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-maroon-900 mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-maroon-900 mb-2">
             Welcome back, brother.
           </h1>
           <p className="text-base text-maroon-700">
@@ -63,13 +63,13 @@ export default async function BrothersPortalPage() {
         </header>
 
         {/* Feature preview */}
-        <div className="grid sm:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-10">
           {FEATURES.map((f) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.label}
-                className="bg-white rounded-xl border border-maroon-100 p-4 flex items-start gap-3"
+                className="bg-white rounded-xl border border-maroon-100 p-4 flex items-start gap-3 min-h-[68px]"
               >
                 <Icon className="w-5 h-5 text-maroon-600 mt-0.5 shrink-0" aria-hidden />
                 <div>

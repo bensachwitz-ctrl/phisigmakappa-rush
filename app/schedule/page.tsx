@@ -26,13 +26,13 @@ export default async function SchedulePage() {
     <div className="min-h-screen bg-cream-50 text-maroon-950">
       <PublicNav />
 
-      <main className="max-w-5xl mx-auto px-4 py-10 sm:py-16">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         <header className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
             <CalendarDays className="w-3.5 h-3.5" aria-hidden />
             Calendar Booking
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
+          <h1 className="text-2xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
             Book an appointment
           </h1>
           <p className="text-base sm:text-lg text-maroon-700 max-w-2xl mx-auto">

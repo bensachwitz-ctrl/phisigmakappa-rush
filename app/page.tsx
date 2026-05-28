@@ -798,7 +798,7 @@ export default async function Home({
               </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="mt-8 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
               <ContactPill icon={MapPin} label={titleCaseAddress(cfg["contact.address"])} sub={titleCaseAddress(cfg["contact.cityState"])} />
               <ContactPill icon={Mail} label={cfg["contact.rushEmail"]} sub="Rush questions" />
               <ContactPill icon={Instagram} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
@@ -964,7 +964,7 @@ export default async function Home({
                 href={cleanUrl(cfg["contact.mapsUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <MapPin className="h-3 w-3" aria-hidden="true" /> Address
@@ -976,7 +976,7 @@ export default async function Home({
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <Instagram className="h-3 w-3" aria-hidden="true" /> Daily updates
@@ -986,7 +986,7 @@ export default async function Home({
               </Link>
               <Link
                 href={cleanMailto(cfg["contact.rushEmail"])}
-                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <Mail className="h-3 w-3" aria-hidden="true" /> Rush questions
@@ -998,7 +998,7 @@ export default async function Home({
                 href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
                 target="_blank"
                 rel="noreferrer noopener"
-                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40"
+                className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
                   <Building2 className="h-3 w-3" aria-hidden="true" /> USC chapter info

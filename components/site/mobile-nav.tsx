@@ -83,11 +83,11 @@ function BottomTab({
     >
       <span
         className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
+          "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
           emphasis ? "bg-phisig-red/10" : "bg-transparent"
         )}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-5 w-5" />
       </span>
       <span className="leading-none">{label}</span>
     </Link>

@@ -59,16 +59,16 @@ export default async function PortalHubPage() {
   const id = chapterIdentityFromCfg(cfg);
 
   return (
-    <div className="min-h-screen bg-cream-50 text-maroon-950">
+    <div className="min-h-screen bg-cream-50 text-maroon-950 overflow-x-hidden">
       <PublicNav />
 
-      <main className="max-w-5xl mx-auto px-4 py-10 sm:py-16">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         <header className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
             <Shield className="w-3.5 h-3.5" aria-hidden />
             Portal
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
+          <h1 className="text-2xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
             Sign in to your portal
           </h1>
           <p className="text-base sm:text-lg text-maroon-700 max-w-2xl mx-auto">
@@ -77,14 +77,14 @@ export default async function PortalHubPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
           {PORTALS.map((p) => {
             const Icon = p.icon;
             return (
               <Link
                 key={p.href}
                 href={p.href}
-                className="group bg-white rounded-2xl border border-maroon-100 p-6 hover:border-maroon-300 hover:shadow-md transition-all relative overflow-hidden"
+                className="group bg-white rounded-2xl border border-maroon-100 p-5 sm:p-6 hover:border-maroon-300 hover:shadow-md transition-all relative overflow-hidden active:scale-[0.98]"
               >
                 <div
                   className={`absolute -top-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-br ${p.accentClass} opacity-10 group-hover:opacity-20 transition-opacity`}
