@@ -1,9 +1,152 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { lookup as dnsLookup } from "dns/promises";
+import net from "net";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Hard cap on bytes we will pull from any remote host before bailing. Real
+// chapter photos are well under this; the cap stops a malicious/garbage URL
+// from streaming gigabytes through our function (memory + bandwidth DoS).
+const MAX_REMOTE_BYTES = 12 * 1024 * 1024; // 12 MB
+
+/**
+ * SSRF allowlist for the arbitrary-URL proxy branch. ONLY these host suffixes
+ * may be fetched: Instagram's CDNs and our own Vercel Blob store. This mirrors
+ * the `img-src` allowlist in next.config.js. Anything else (internal services,
+ * cloud metadata endpoints, file://, etc.) is rejected before any network I/O.
+ */
+function isAllowedProxyHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return (
+    h === "cdninstagram.com" ||
+    h.endsWith(".cdninstagram.com") ||
+    h === "fbcdn.net" ||
+    h.endsWith(".fbcdn.net") ||
+    h.endsWith(".vercel-storage.com")
+  );
+}
+
+/**
+ * Reject IPs that point back at our own infrastructure or private networks.
+ * Covers loopback, RFC-1918 / RFC-4193 private ranges, link-local (including
+ * the 169.254.169.254 cloud-metadata endpoint), CGNAT, and unspecified addrs —
+ * for both IPv4 and IPv6 (including IPv4-mapped IPv6 like ::ffff:169.254.169.254).
+ */
+function isBlockedAddress(ip: string): boolean {
+  const kind = net.isIP(ip);
+  if (kind === 4) return isBlockedIpv4(ip);
+  if (kind === 6) {
+    const lower = ip.toLowerCase();
+    if (lower === "::1" || lower === "::" ) return true;
+    // IPv4-mapped / IPv4-compatible — extract the embedded v4 and re-check.
+    const v4mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (v4mapped) return isBlockedIpv4(v4mapped[1]);
+    // Unique-local fc00::/7 and link-local fe80::/10.
+    if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true;
+    if (/^fe[89ab][0-9a-f]:/.test(lower)) return true;
+    return false;
+  }
+  // Not a parseable IP — treat as blocked (we only fetch resolved literals).
+  return true;
+}
+
+function isBlockedIpv4(ip: string): boolean {
+  const parts = ip.split(".").map((p) => parseInt(p, 10));
+  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n) || n < 0 || n > 255)) {
+    return true;
+  }
+  const [a, b] = parts;
+  if (a === 0) return true; // 0.0.0.0/8 "this network"
+  if (a === 10) return true; // 10.0.0.0/8 private
+  if (a === 127) return true; // loopback
+  if (a === 169 && b === 254) return true; // link-local incl. 169.254.169.254 metadata
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 private
+  if (a === 192 && b === 168) return true; // 192.168.0.0/16 private
+  if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT
+  if (a >= 224) return true; // multicast + reserved (224.0.0.0/4, 240.0.0.0/4)
+  return false;
+}
+
+/**
+ * Safely fetch a remote image with full SSRF protection:
+ *  - host must be on the allowlist
+ *  - every resolved IP must be public (no private/loopback/link-local)
+ *  - redirects are disabled (a 30x to an internal host can't smuggle us in)
+ *  - the response must declare an image/* content-type
+ *  - the body is capped at MAX_REMOTE_BYTES, enforced while streaming
+ * Returns null on any violation; the caller renders a transparent pixel.
+ */
+async function safeFetchImage(
+  rawUrl: string
+): Promise<{ buf: Buffer; contentType: string } | null> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  if (!isAllowedProxyHost(parsed.hostname)) return null;
+
+  // Resolve DNS and confirm EVERY address is public before connecting. This
+  // closes DNS-rebinding to an allowlisted name that points at an internal IP.
+  try {
+    const records = await dnsLookup(parsed.hostname, { all: true });
+    if (!records.length) return null;
+    for (const rec of records) {
+      if (isBlockedAddress(rec.address)) return null;
+    }
+  } catch {
+    return null;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(parsed.toString(), {
+      redirect: "manual", // never follow a 30x into an internal host
+      cache: "no-store",
+      headers: { Accept: "image/*" },
+    });
+  } catch {
+    return null;
+  }
+  if (!res.ok) return null; // redirects (3xx) land here too — rejected
+
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  if (!ct.startsWith("image/")) return null;
+
+  // Reject early if the declared length already blows the cap.
+  const declaredLen = parseInt(res.headers.get("content-length") || "", 10);
+  if (Number.isFinite(declaredLen) && declaredLen > MAX_REMOTE_BYTES) return null;
+
+  // Stream with a hard byte ceiling so a lying/absent Content-Length can't
+  // exhaust memory.
+  const body = res.body;
+  if (!body) return null;
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        total += value.byteLength;
+        if (total > MAX_REMOTE_BYTES) {
+          await reader.cancel().catch(() => {});
+          return null;
+        }
+        chunks.push(value);
+      }
+    }
+  } catch {
+    return null;
+  }
+  return { buf: Buffer.concat(chunks), contentType: ct.split(";")[0].trim() };
+}
 
 // 30 days at the edge, 24h at the browser. URL is keyed by Instagram slug, which
 // is itself stable per post — so the bytes effectively are immutable at this URL.
@@ -136,13 +279,19 @@ export async function GET(
 
   // If the "slug" is actually a full URL (admin uploaded a direct image to
   // Vercel Blob, etc.), proxy it through this route so we apply caching + WebP.
+  // SSRF-hardened: safeFetchImage enforces a host allowlist (IG CDNs + our
+  // Vercel Blob only), blocks private/loopback/link-local IPs after DNS,
+  // disables redirects, and requires an image/* content-type within a size cap.
   if (/^https?:\/\//.test(raw)) {
+    const fetched = await safeFetchImage(raw);
+    if (!fetched) return transparentPixel();
     try {
-      const r = await fetch(raw, { cache: "no-store" });
-      if (!r.ok) return transparentPixel();
-      const original = Buffer.from(await r.arrayBuffer());
-      const originalCt = r.headers.get("Content-Type") || "image/jpeg";
-      const { buf, contentType } = await negotiateFormat(original, originalCt, accept, reqWidth);
+      const { buf, contentType } = await negotiateFormat(
+        fetched.buf,
+        fetched.contentType,
+        accept,
+        reqWidth
+      );
       const etag = buildETag(buf);
       if (ifNoneMatch && ifNoneMatch === etag) {
         return new NextResponse(null, { status: 304, headers: { ETag: etag, ...CACHE_HEADERS } });
