@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
-import { parsePollOptions } from "@/lib/poll-options";
+import { parsePollOptions, canVoteOnAudience } from "@/lib/poll-options";
 import { getPortalSession } from "@/lib/portal-auth";
 
 export const runtime = "nodejs";
@@ -70,12 +70,10 @@ export async function POST(
   // R48 — enforce poll audience at the vote layer, not just in the feed
   // filters. Before this, a signed-in user who knew a poll id outside their
   // audience (e.g. an alum hitting a BROTHERS-only poll, or vice-versa)
-  // could POST a vote even though the UI never surfaces it. Brothers may
-  // vote on BROTHERS/ALL polls; alumni on ALUMNI/ALL. Anything else → 403.
-  const aud = poll.audience || "BROTHERS";
-  const brotherAllowed = aud === "BROTHERS" || aud === "ALL";
-  const alumniAllowed = aud === "ALUMNI" || aud === "ALL";
-  if ((brotherId && !brotherAllowed) || (alumniId && !alumniAllowed)) {
+  // could POST a vote even though the UI never surfaces it. The rule lives in
+  // canVoteOnAudience() so it stays unit-testable and single-sourced.
+  const voterKind: "brother" | "alumni" = brotherId ? "brother" : "alumni";
+  if (!canVoteOnAudience({ kind: voterKind }, poll.audience)) {
     return NextResponse.json(
       { ok: false, error: "This poll isn't open to your group." },
       { status: 403 }

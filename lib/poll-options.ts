@@ -42,3 +42,26 @@ export function parsePollOptions(raw: string): PollOption[] {
 export function newOptionId(): string {
   return "o_" + crypto.randomBytes(8).toString("hex");
 }
+
+export type PollAudience = "BROTHERS" | "ALUMNI" | "ALL";
+
+/**
+ * R48 authorization rule — can a given voter cast a ballot on a poll of this
+ * audience? Brothers may vote on BROTHERS/ALL polls; alumni on ALUMNI/ALL.
+ * Anything else is denied (returns false → the vote route 403s).
+ *
+ * Extracted as a pure function so the security-critical rule is unit-testable
+ * without standing up a request/session. The vote route calls this; do NOT
+ * duplicate the boolean logic inline — change it here and everywhere stays in
+ * sync. A null/unknown audience is treated as the most-restrictive default
+ * ("BROTHERS"), matching the column default and the route's `|| "BROTHERS"`.
+ */
+export function canVoteOnAudience(
+  voter: { kind: "brother" | "alumni" },
+  audience: string | null | undefined,
+): boolean {
+  const aud = audience || "BROTHERS";
+  if (voter.kind === "brother") return aud === "BROTHERS" || aud === "ALL";
+  if (voter.kind === "alumni") return aud === "ALUMNI" || aud === "ALL";
+  return false;
+}
