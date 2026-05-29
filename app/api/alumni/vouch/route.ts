@@ -105,14 +105,19 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "PNM (rushId) is required." }, { status: 400 });
   }
 
-  await prisma.alumniVouch.delete({
-    where: {
-      rushId_alumniId: {
-        rushId,
-        alumniId,
+  // Idempotent un-vouch: deleting a vouch that doesn't exist (double-click,
+  // or revoking one never created) must not 500. Swallow the P2025
+  // "record not found" the same way the poll-vote / RSVP DELETE handlers do.
+  await prisma.alumniVouch
+    .delete({
+      where: {
+        rushId_alumniId: {
+          rushId,
+          alumniId,
+        },
       },
-    },
-  });
+    })
+    .catch(() => {});
 
   return NextResponse.json({ ok: true });
 }
