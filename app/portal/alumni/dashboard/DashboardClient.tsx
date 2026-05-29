@@ -104,6 +104,30 @@ interface Donation {
   notes: string | null;
 }
 
+/**
+ * Browser-safe parse of a poll's JSON-stored options column. Returns [] on any
+ * error so a single bad row can't crash the dashboard. (We can't import the
+ * server lib/poll-options helper here — it pulls in node:crypto — so this is a
+ * trimmed client-side twin of parsePollOptions.)
+ */
+function safeParseOptions(raw: string): { id: string; label: string }[] {
+  try {
+    const v = JSON.parse(raw);
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter(
+        (o): o is { id: string; label: string } =>
+          o &&
+          typeof o === "object" &&
+          typeof o.id === "string" &&
+          typeof o.label === "string",
+      )
+      .map((o) => ({ id: o.id, label: o.label }));
+  } catch {
+    return [];
+  }
+}
+
 interface DashboardClientProps {
   alumni: Alumnus;
   brothers: Brother[];
@@ -610,6 +634,7 @@ export default function DashboardClient({
                     <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                     <input
                       type="text"
+                      aria-label="Search all active PNMs by name, hometown, or major"
                       placeholder="Search by name, hometown, or major..."
                       value={pnmSearch}
                       onChange={(e) => setPnmSearch(e.target.value)}
@@ -672,6 +697,7 @@ export default function DashboardClient({
                   <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                   <input
                     type="text"
+                    aria-label="Search active brothers by name, position, or class"
                     placeholder="Search by name, position, or class..."
                     value={brotherSearch}
                     onChange={(e) => setBrotherSearch(e.target.value)}
@@ -724,6 +750,7 @@ export default function DashboardClient({
                   <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                   <input
                     type="text"
+                    aria-label="Search the alumni directory by name, company, city, or state"
                     placeholder="Search by name, company, city, or state..."
                     value={alumniSearch}
                     onChange={(e) => setAlumniSearch(e.target.value)}
@@ -803,7 +830,11 @@ export default function DashboardClient({
               <div className="space-y-4">
                 {pollList.length > 0 ? (
                   pollList.map(poll => {
-                    const parsedOptions = JSON.parse(poll.options) as { id: string, label: string }[];
+                    // Defensive parse — a single malformed options blob must not
+                    // crash the whole dashboard to the error boundary. Mirrors
+                    // the brother feed's parsePollOptions resilience. Bad rows
+                    // simply render with no options rather than taking the page down.
+                    const parsedOptions = safeParseOptions(poll.options);
                     const totalVotes = poll.votes.length;
 
                     // Find if current alumnus voted
@@ -998,6 +1029,10 @@ export default function DashboardClient({
                     <span className="absolute left-3 top-2.5 text-sm text-maroon-600 font-bold">$</span>
                     <input
                       type="number"
+                      inputMode="decimal"
+                      min={5}
+                      step="0.01"
+                      aria-label="Custom donation amount in dollars"
                       placeholder="Custom Amount"
                       value={isCustomAmount ? donationAmount : ""}
                       onChange={(e) => {

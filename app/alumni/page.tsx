@@ -135,9 +135,22 @@ export default async function AlumniDirectoryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="all">
-            {alumni.map((a) => (
-              <AlumniCard key={a.id} alum={a} />
-            ))}
+            {alumni.map((a, i) => {
+              // Anchor target so the decade filter chips above actually scroll
+              // to the first alum of each decade. Alumni are sorted by year
+              // desc, so each decade's members are contiguous — we drop an
+              // invisible id marker the first time a new decade appears.
+              const decade = decadeOf(a.graduationYear);
+              const isFirstOfDecade =
+                i === 0 || decadeOf(alumni[i - 1].graduationYear) !== decade;
+              return (
+                <AlumniCard
+                  key={a.id}
+                  alum={a}
+                  anchorId={isFirstOfDecade ? decade : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </main>
@@ -147,13 +160,15 @@ export default async function AlumniDirectoryPage() {
   );
 }
 
-function AlumniCard({ alum }: { alum: AlumniRow }) {
+function AlumniCard({ alum, anchorId }: { alum: AlumniRow; anchorId?: string }) {
   const display = alum.preferredName || alum.fullName;
   const loc = [alum.city, alum.state].filter(Boolean).join(", ");
   const work = [alum.jobTitle, alum.employer].filter(Boolean).join(" · ");
   return (
     <Link
+      id={anchorId}
       href={`/alumni/${alum.id}`}
+      style={anchorId ? { scrollMarginTop: "5rem" } : undefined}
       className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-maroon-300 hover:shadow-md transition-all block"
     >
       <div className="flex items-start justify-between gap-3 mb-2">
