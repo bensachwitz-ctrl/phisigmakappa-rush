@@ -54,9 +54,9 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
             <Link href="#register">Register</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/admin/login" className="text-muted-foreground">
+            <Link href="/portal" className="text-muted-foreground">
               <Lock className="h-3.5 w-3.5 mr-1.5" />
-              Brothers
+              Portal
             </Link>
           </Button>
         </nav>
