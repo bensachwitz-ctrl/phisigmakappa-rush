@@ -8,7 +8,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
-import { Users, GraduationCap, UserPlus, Shield, ArrowRight } from "lucide-react";
+import { Users, GraduationCap, Shield, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const id = chapterIdentityFromCfg(cfg);
   return {
     title: `${id.greekLetters} Portal — Sign in`,
-    description: `Sign in to your ${id.greekLetters} ${id.fraternityShort} portal. Brothers, alumni, and PNMs each have their own dashboard.`,
+    description: `Sign in to your ${id.greekLetters} ${id.fraternityShort} portal. Brothers and alumni each have their own dashboard.`,
   };
 }
 
@@ -45,13 +45,9 @@ const PORTALS: PortalCard[] = [
     icon: GraduationCap,
     accentClass: "from-amber-600 to-amber-800",
   },
-  {
-    href: "/portal/pnm",
-    title: "PNMs",
-    description: "Potential new members. See rush events, RSVP, submit your application, track your bid.",
-    icon: UserPlus,
-    accentClass: "from-emerald-700 to-emerald-900",
-  },
+  // PNMs intentionally have NO portal yet — they don't have a login. Only
+  // Brothers + Alumni have portals. (The /portal/pnm route still exists but
+  // is unlinked from this hub so it isn't surfaced.)
 ];
 
 export default async function PortalHubPage() {
@@ -77,7 +73,7 @@ export default async function PortalHubPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-2xl mx-auto">
           {PORTALS.map((p) => {
             const Icon = p.icon;
             return (

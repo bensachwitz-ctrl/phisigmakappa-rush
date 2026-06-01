@@ -11,45 +11,70 @@ export const metadata: Metadata = {
   description: "Stay connected with the chapter and fellow alumni.",
 };
 
+// next/navigation redirect() + notFound() signal via a thrown object whose
+// `digest` starts with "NEXT_". Re-throw those so routing still works; treat
+// everything else as a real failure to bounce on.
+function isNextSignal(err: unknown): boolean {
+  return !!err && typeof err === "object" && "digest" in err &&
+    typeof (err as { digest?: unknown }).digest === "string" &&
+    (err as { digest: string }).digest.startsWith("NEXT_");
+}
+
 export default async function AlumniDashboardPage() {
   const sess = requireRole("alumni");
   if (!sess) {
     redirect("/portal/alumni");
   }
 
-  // Resolve alumni profile ID
-  let alumniId: string | null | undefined = null;
-  if (sess.portal) {
-    const portalUser = await prisma.portalUser.findUnique({
-      where: { id: sess.portal.userId },
-    });
-    alumniId = portalUser?.alumniId;
-  }
-
-  if (sess.isAdmin && !alumniId) {
-    // If admin is overriding, pick the first alumnus profile in the system
-    const firstAlumni = await prisma.alumniProfile.findFirst();
-    alumniId = firstAlumni?.id;
-  }
-
-  if (!alumniId) {
-    // No alumni profile found, redirect to registration
-    redirect("/portal/alumni/register");
-  }
-
-  // Fetch the Alumnus profile
-  const alumniProfile = await prisma.alumniProfile.findUnique({
-    where: { id: alumniId },
-    include: {
-      donations: {
-        orderBy: { recordedAt: "desc" }
-      }
+  // Load the alumnus profile (+ donations). Wrapped so a DB connectivity
+  // failure — most often a missing DATABASE_URL on the host — bounces the
+  // user to the login screen instead of crashing into the global "We hit a
+  // snag" error boundary. redirect() is re-thrown via isNextSignal so the
+  // not-registered / not-found redirects still work.
+  let alumniProfile;
+  try {
+    // Resolve alumni profile ID
+    let alumniId: string | null | undefined = null;
+    if (sess.portal) {
+      const portalUser = await prisma.portalUser.findUnique({
+        where: { id: sess.portal.userId },
+      });
+      alumniId = portalUser?.alumniId;
     }
-  });
+
+    if (sess.isAdmin && !alumniId) {
+      // If admin is overriding, pick the first alumnus profile in the system
+      const firstAlumni = await prisma.alumniProfile.findFirst();
+      alumniId = firstAlumni?.id;
+    }
+
+    if (!alumniId) {
+      // No alumni profile found, redirect to registration
+      redirect("/portal/alumni/register");
+    }
+
+    // Fetch the Alumnus profile
+    alumniProfile = await prisma.alumniProfile.findUnique({
+      where: { id: alumniId },
+      include: {
+        donations: {
+          orderBy: { recordedAt: "desc" }
+        }
+      }
+    });
+  } catch (err) {
+    if (isNextSignal(err)) throw err;
+    console.error("[alumni dashboard] load failed:", err);
+    redirect("/portal/alumni?error=unavailable");
+  }
 
   if (!alumniProfile) {
     redirect("/portal/alumni/register");
   }
+
+  // `alumniId` is needed by the vouches query below; re-derive from the
+  // resolved profile (it's the same id) so it stays in scope after the try.
+  const alumniId = alumniProfile.id;
 
   // Fetch active undergraduate brothers roster
   const brothers = await prisma.brother.findMany({
