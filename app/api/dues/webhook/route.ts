@@ -5,6 +5,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -158,8 +159,84 @@ async function handleCheckoutCompleted(
 
   const brother = await prisma.brother.findUnique({
     where: { id: payment.brotherId },
-    select: { name: true },
+    select: { name: true, email: true },
   }).catch(() => null);
+
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+
+  // Send notifications if paid by co-signer
+  const coSignerEmail = session.metadata?.coSignerEmail;
+  if (coSignerEmail && brother) {
+    let identity;
+    try {
+      identity = await getChapterIdentity();
+    } catch {
+      identity = {
+        chapterFullName: "Phi Sigma Kappa Gamma Triton",
+        chapterAttribution: "Phi Sig USC",
+      };
+    }
+    const replyToEmail = cfg["contact.rushEmail"] || "rush@yourchapter.com";
+    const primaryColorHex = cfg["brand.primaryHex"] || "#C8102E";
+
+    // 1. Email to Brother
+    if (brother.email) {
+      const brotherSubject = `Parent Payment Received — Good Standing Confirmed`;
+      const brotherHtml = `
+<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;">
+  <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f3f4f6;">
+    <h2 style="color: ${primaryColorHex}; margin: 0; font-family: Georgia, serif;">${identity.chapterFullName}</h2>
+    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Payment Status Confirmed</p>
+  </div>
+  <div style="color: #1f2937; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+    <p>Hey ${brother.name.split(" ")[0]},</p>
+    <p>Good news! Your parent/co-signer (<strong>${coSignerEmail}</strong>) has successfully paid your semester dues of <strong>$${(payment.amountCents / 100).toFixed(2)}</strong> for the <strong>${payment.year.toUpperCase()}</strong> academic term.</p>
+    
+    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin: 20px 0; text-align: center; color: #166534; font-weight: 700; font-size: 14px;">
+      &bull; Good Standing Active &bull;
+    </div>
+    
+    <p>Your profile is marked as PAID, and you are cleared for chapter voting, social functions, and active events.</p>
+  </div>
+  <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 16px; font-size: 11px; color: #9ca3af;">
+    <p style="margin: 0;">Powered by Greekstack.</p>
+  </div>
+</div>
+`;
+      await sendEmail({
+        to: brother.email,
+        subject: brotherSubject,
+        html: brotherHtml,
+        replyTo: replyToEmail,
+      }).catch((e) => console.error("Failed to send co-sign email to brother:", e));
+    }
+
+    // 2. Email to Parent
+    const parentSubject = `Dues Payment Receipt — ${identity.chapterAttribution || identity.chapterFullName}`;
+    const parentHtml = `
+<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;">
+  <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f3f4f6;">
+    <h2 style="color: ${primaryColorHex}; margin: 0; font-family: Georgia, serif;">${identity.chapterFullName}</h2>
+    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Payment Success</p>
+  </div>
+  <div style="color: #1f2937; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+    <p>Dear Parent / Co-signer,</p>
+    <p>Thank you for completing the dues payment of <strong>$${(payment.amountCents / 100).toFixed(2)}</strong> for <strong>${brother.name}</strong> for the <strong>${payment.year.toUpperCase()}</strong> semester.</p>
+    <p>The transaction has processed successfully, and their chapter profile is now updated to reflect active status.</p>
+  </div>
+  <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 16px; font-size: 11px; color: #9ca3af;">
+    <p style="margin: 0;">Sent on behalf of the treasury team. Contact <a href="mailto:${replyToEmail}" style="color: ${primaryColorHex}/brand.primaryHex; text-decoration: none;">${replyToEmail}</a> for invoice questions.</p>
+    <p style="margin: 4px 0 0 0;">Powered by Greekstack.</p>
+  </div>
+</div>
+`;
+    await sendEmail({
+      to: coSignerEmail,
+      subject: parentSubject,
+      html: parentHtml,
+      replyTo: replyToEmail,
+    }).catch((e) => console.error("Failed to send co-sign email to parent:", e));
+  }
 
   // Write the audit row with actorName overridden to "stripe-webhook"
   // so the chapter can see at a glance "this is a system-confirmed
@@ -174,7 +251,9 @@ async function handleCheckoutCompleted(
       subjectType: "Brother",
       subjectId: payment.brotherId,
       subjectName: brother?.name || null,
-      details: `$${(payment.amountCents / 100).toFixed(2)} via Stripe — ${payment.year}`,
+      details: coSignerEmail 
+        ? `$${(payment.amountCents / 100).toFixed(2)} via Stripe (Paid by Parent: ${coSignerEmail}) — ${payment.year}`
+        : `$${(payment.amountCents / 100).toFixed(2)} via Stripe — ${payment.year}`,
       ipAddress: null,
     },
   }).catch(() => {});
