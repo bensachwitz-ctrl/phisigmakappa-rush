@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
+import { resolveDuesChargeRouting } from "@/lib/platform-billing";
 import { sendEmail } from "@/lib/email";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { audit } from "@/lib/audit";
@@ -124,11 +125,20 @@ export async function POST(req: Request) {
     );
   }
 
-  // Create Stripe session
+  // Create Stripe session.
+  //
+  // PLATFORM-BILLING ROUTING (inert by default): identical policy to
+  // /api/dues/checkout — route through the platform as a destination charge
+  // with a 1.5% application fee ONLY on the dues_split plan with an onboarded,
+  // charges-enabled Connect account and a configured platform key. Otherwise
+  // `resolveDuesChargeRouting` returns the chapter's own getStripe() and empty
+  // params, leaving this co-signer Checkout exactly as it is today.
+  const routing = resolveDuesChargeRouting(cfg, totalCents);
+  const checkoutStripe = routing.stripe || stripe;
   const siteUrl = getSiteUrl();
   let session;
   try {
-    session = await stripe.checkout.sessions.create({
+    session = await checkoutStripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: parentEmail,
@@ -153,6 +163,7 @@ export async function POST(req: Request) {
         duesYear: year,
         coSignerEmail: parentEmail,
       },
+      ...routing.extraSessionParams,
     });
   } catch (err: any) {
     console.error("[/api/dues/co-sign] Stripe creation failed:", err);

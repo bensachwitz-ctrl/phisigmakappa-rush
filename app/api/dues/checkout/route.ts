@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
+import { resolveDuesChargeRouting } from "@/lib/platform-billing";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -130,10 +131,21 @@ export async function POST(req: Request) {
   }
 
   // Stripe Checkout Session.
+  //
+  // PLATFORM-BILLING ROUTING (inert by default): when the chapter is on the
+  // dues_split plan AND has an onboarded Connect account with charges enabled
+  // AND the platform key is configured, route this charge through the PLATFORM
+  // account as a destination charge with a 1.5% application fee. In EVERY other
+  // case `resolveDuesChargeRouting` returns the chapter's own getStripe() client
+  // and an empty params object, so the Checkout below is byte-for-byte what the
+  // app creates today. We only swap the client + merge extra params — the
+  // line item, metadata, and URLs are unchanged.
+  const routing = resolveDuesChargeRouting(cfg, totalCents);
+  const checkoutStripe = routing.stripe || stripe;
   const siteUrl = getSiteUrl();
   let session;
   try {
-    session = await stripe.checkout.sessions.create({
+    session = await checkoutStripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: brother.email || undefined,
@@ -157,6 +169,7 @@ export async function POST(req: Request) {
         duesPaymentId: payment.id,
         duesYear: year,
       },
+      ...routing.extraSessionParams,
     });
   } catch (err: any) {
     console.error("[/api/dues/checkout] Stripe.create failed:", err);

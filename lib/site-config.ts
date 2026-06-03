@@ -242,6 +242,28 @@ export const DEFAULTS = {
   "dues.stripeWebhookSecret": "",         // whsec_... — DIFFERENT from STRIPE_SECRET_KEY env var
   "dues.passThroughFee": "false",         // if true, add 2.9% + 30¢ to brother's total
   "dues.label": "Chapter dues — Fall 2026",
+
+  // ── PLATFORM BILLING (Greekstack revenue — separate from chapter dues) ──
+  // These mirror the platform-side Stripe state for THIS chapter. They are
+  // written by /api/billing/webhook (verified against STRIPE_PLATFORM_WEBHOOK_SECRET)
+  // and read by the admin Subscription card + the dues destination-charge guard.
+  //
+  // INERT BY DEFAULT: all values below are empty/"none"/"false", so with no
+  // platform key configured the dues flow routes through the chapter's OWN
+  // Stripe account with NO application fee (exactly as it does today). Only the
+  // platform Stripe SECRET key + webhook secret live in env vars — NEVER here.
+  //
+  //   billing.subscriptionStatus    flat_subscription state: none|active|past_due|canceled|...
+  //   billing.stripeCustomerId      platform Customer id for this chapter
+  //   billing.subscriptionId        platform Subscription id
+  //   billing.connectAccountId      dues_split Connect account id (acct_...)
+  //   billing.connectChargesEnabled "true" once the connected acct can accept charges
+  "billing.subscriptionStatus": "none",
+  "billing.stripeCustomerId": "",
+  "billing.subscriptionId": "",
+  "billing.connectAccountId": "",
+  "billing.connectChargesEnabled": "false",
+
   "calendar.calDiyUrl": "",
 
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage

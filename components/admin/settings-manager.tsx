@@ -292,6 +292,18 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             </div>
           </button>
         </div>
+
+        {/* PLATFORM BILLING ACTIONS — live Stripe status + activate buttons.
+            Reads billing.* from `values` (flows in via the settings page's
+            getSiteConfig → initial). Gracefully shows "Platform billing not
+            configured" when the endpoints return 503 (no platform key set). */}
+        <BillingActions
+          plan={(values["chapter.billingPlan"] || "dues_split") as string}
+          subscriptionStatus={values["billing.subscriptionStatus"] || "none"}
+          connectChargesEnabled={values["billing.connectChargesEnabled"] === "true"}
+          hasConnectAccount={!!values["billing.connectAccountId"]}
+          hasCustomer={!!values["billing.stripeCustomerId"]}
+        />
       </Section>
 
       {/* DUES COLLECTION — Stripe Checkout (R43-A).
@@ -837,6 +849,146 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           })}
         </div>
       </Section>
+    </div>
+  );
+}
+
+/**
+ * Greekstack platform-billing actions. Renders the current platform billing
+ * status and the three activation buttons:
+ *   • "Subscribe ($299/sem)"  → POST /api/billing/subscribe  (flat plan)
+ *   • "Connect payouts"        → POST /api/billing/connect    (dues_split only)
+ *   • "Manage billing"         → POST /api/billing/portal     (Stripe portal)
+ *
+ * Each button POSTs, then redirects the browser to the returned Stripe `url`.
+ * If a request returns 503 (platform billing not configured on this Greekstack
+ * instance) we show an inline "Platform billing not configured" note instead of
+ * erroring — keeping the card graceful when the platform key is unset.
+ *
+ * These actions are independent of the unsaved-changes Save flow: they call the
+ * billing API directly. The plan-picker buttons above still go through Save.
+ */
+function BillingActions({
+  plan,
+  subscriptionStatus,
+  connectChargesEnabled,
+  hasConnectAccount,
+  hasCustomer,
+}: {
+  plan: string;
+  subscriptionStatus: string;
+  connectChargesEnabled: boolean;
+  hasConnectAccount: boolean;
+  hasCustomer: boolean;
+}) {
+  const { push } = useToast();
+  const [busy, setBusy] = React.useState<null | "subscribe" | "connect" | "portal">(null);
+  const [notConfigured, setNotConfigured] = React.useState(false);
+
+  async function go(action: "subscribe" | "connect" | "portal") {
+    setBusy(action);
+    try {
+      const res = await fetch(`/api/billing/${action}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      });
+      if (res.status === 503) {
+        setNotConfigured(true);
+        push({ title: "Platform billing not configured", variant: "destructive" });
+        return;
+      }
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.ok || !json?.url) {
+        push({ title: json?.error || "Could not start. Try again.", variant: "destructive" });
+        return;
+      }
+      // Hand off to Stripe (Checkout / Connect onboarding / Billing portal).
+      window.location.href = json.url as string;
+    } catch {
+      push({ title: "Network error. Try again.", variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const isSubscribed = subscriptionStatus === "active" || subscriptionStatus === "trialing";
+  const statusLabel =
+    subscriptionStatus && subscriptionStatus !== "none" ? subscriptionStatus : "not subscribed";
+
+  return (
+    <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Platform billing status
+          </p>
+          {plan === "flat_subscription" ? (
+            <p className="text-sm">
+              Subscription:{" "}
+              <span className={`font-semibold ${isSubscribed ? "text-green-700" : "text-foreground"}`}>
+                {statusLabel}
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm">
+              Payouts:{" "}
+              <span className={`font-semibold ${connectChargesEnabled ? "text-green-700" : "text-foreground"}`}>
+                {connectChargesEnabled
+                  ? "connected — charges enabled"
+                  : hasConnectAccount
+                  ? "onboarding incomplete"
+                  : "not connected"}
+              </span>
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {plan === "flat_subscription" ? (
+            <Button size="sm" onClick={() => go("subscribe")} disabled={busy !== null}>
+              {busy === "subscribe" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {isSubscribed ? "Renew / update ($299/sem)" : "Subscribe ($299/sem)"}
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => go("connect")} disabled={busy !== null}>
+              {busy === "connect" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {hasConnectAccount ? "Finish payout setup" : "Connect payouts"}
+            </Button>
+          )}
+          {hasCustomer && (
+            <Button size="sm" variant="outline" onClick={() => go("portal")} disabled={busy !== null}>
+              {busy === "portal" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              Manage billing
+            </Button>
+          )}
+        </div>
+      </div>
+      {notConfigured && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Platform billing is not configured on this deployment. Set{" "}
+          <span className="font-mono">STRIPE_PLATFORM_SECRET_KEY</span> (and the platform webhook secret)
+          as server env vars to enable Greekstack subscriptions and dues-split payouts.
+        </p>
+      )}
+      {plan === "dues_split" && (
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+          On the dues-split plan Greekstack collects a 1.5% platform fee on each online dues payment, routed
+          automatically once your payout account is connected and charges are enabled. Until then, dues
+          checkout continues to run through your chapter&apos;s own Stripe account with no platform fee.
+        </p>
+      )}
     </div>
   );
 }
