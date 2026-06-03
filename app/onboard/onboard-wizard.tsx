@@ -29,17 +29,19 @@ export default function OnboardWizard() {
   const [step, setStep] = React.useState<StepId>("identity");
   const [busy, setBusy] = React.useState(false);
 
-  // Identity State
-  const [fraternityName, setFraternityName] = React.useState("Phi Sigma Kappa");
-  const [fraternityShort, setFraternityShort] = React.useState("Phi Sig");
-  const [greekLetters, setGreekLetters] = React.useState("Gamma Triton");
-  const [greekLettersGlyphs, setGreekLettersGlyphs] = React.useState("ΓΤ");
-  const [schoolName, setSchoolName] = React.useState("University of South Carolina");
-  const [schoolShort, setSchoolShort] = React.useState("USC");
-  const [charterYear, setCharterYear] = React.useState("1975");
-  const [foundingYear, setFoundingYear] = React.useState("1873");
-  const [fraternityLetters, setFraternityLetters] = React.useState("ΦΣΚ");
-  const [subdomain, setSubdomain] = React.useState("phisig-usc");
+  // Identity State — start EMPTY so a new chapter never publishes Phi Sig's
+  // real identity by skimming the form. Placeholders show the reference values
+  // as hints; required fields are enforced in validateStep("identity").
+  const [fraternityName, setFraternityName] = React.useState("");
+  const [fraternityShort, setFraternityShort] = React.useState("");
+  const [greekLetters, setGreekLetters] = React.useState("");
+  const [greekLettersGlyphs, setGreekLettersGlyphs] = React.useState("");
+  const [schoolName, setSchoolName] = React.useState("");
+  const [schoolShort, setSchoolShort] = React.useState("");
+  const [charterYear, setCharterYear] = React.useState("");
+  const [foundingYear, setFoundingYear] = React.useState("");
+  const [fraternityLetters, setFraternityLetters] = React.useState("");
+  const [subdomain, setSubdomain] = React.useState("");
 
   // Brand State
   const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
@@ -52,7 +54,7 @@ export default function OnboardWizard() {
   const [instagramHandle, setInstagramHandle] = React.useState("");
   const [instagramUrl, setInstagramUrl] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [cityState, setCityState] = React.useState("Columbia, SC 29208");
+  const [cityState, setCityState] = React.useState("");
 
   // Admin State
   const [adminName, setAdminName] = React.useState("");
@@ -83,8 +85,8 @@ export default function OnboardWizard() {
         push({ title: "Validation Error", description: "Admin name, email, and password are required.", variant: "destructive" });
         return false;
       }
-      if (adminPassword.length < 6) {
-        push({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      if (adminPassword.length < 8) {
+        push({ title: "Validation Error", description: "Password must be at least 8 characters.", variant: "destructive" });
         return false;
       }
     }

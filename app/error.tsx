@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand/wordmark";
-import { RefreshCcw, Home, Mail } from "lucide-react";
+import { RefreshCcw, Home } from "lucide-react";
 
 export default function Error({
   error,
@@ -46,11 +46,6 @@ export default function Error({
               <Link href="/">
                 <Home className="h-4 w-4" /> Go home
               </Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg">
-              <a href="mailto:rush@phisig-usc.com">
-                <Mail className="h-4 w-4" /> Email rush chair
-              </a>
             </Button>
           </div>
           {error.digest && (
