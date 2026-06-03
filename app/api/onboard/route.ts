@@ -78,44 +78,51 @@ export async function POST(req: Request) {
       "chapter.billingPlan": (billingPlan || "dues_split").trim(),
     };
 
-    // Upsert each configuration key
-    for (const [key, value] of Object.entries(updates)) {
-      await prisma.siteConfig.upsert({
-        where: { key },
-        update: { value },
-        create: { key, value },
+    // All-or-nothing: wrap every write in a transaction so a failure partway
+    // (e.g. a duplicate admin email hitting PortalUser.email @unique) can't
+    // leave the chapter half-branded with no admin and chapter.onboarded unset.
+    const brother = await prisma.$transaction(async (tx) => {
+      // Upsert each configuration key
+      for (const [key, value] of Object.entries(updates)) {
+        await tx.siteConfig.upsert({
+          where: { key },
+          update: { value },
+          create: { key, value },
+        });
+      }
+
+      // Create the admin brother
+      const b = await tx.brother.create({
+        data: {
+          name: adminName.trim(),
+          email: adminEmail.trim().toLowerCase(),
+          phone: rushPhone ? rushPhone.trim() : null,
+          role: "ADMIN",
+          position: "President", // Default position
+          passwordHash: hashed,
+          status: "ACTIVE",
+        },
       });
-    }
 
-    // Create the admin brother
-    const brother = await prisma.brother.create({
-      data: {
-        name: adminName.trim(),
-        email: adminEmail.trim().toLowerCase(),
-        phone: rushPhone ? rushPhone.trim() : null,
-        role: "ADMIN",
-        position: "President", // Default position
-        passwordHash: hashed,
-        status: "ACTIVE",
-      },
-    });
+      // Create the PortalUser for browser login
+      await tx.portalUser.create({
+        data: {
+          role: "brother",
+          email: adminEmail.trim().toLowerCase(),
+          passwordHash: hashed,
+          brotherId: b.id,
+          lastLoginAt: new Date(),
+        },
+      });
 
-    // Create the PortalUser for browser login
-    await prisma.portalUser.create({
-      data: {
-        role: "brother",
-        email: adminEmail.trim().toLowerCase(),
-        passwordHash: hashed,
-        brotherId: brother.id,
-        lastLoginAt: new Date(),
-      },
-    });
+      // Mark setup complete
+      await tx.siteConfig.upsert({
+        where: { key: "chapter.onboarded" },
+        update: { value: "true" },
+        create: { key: "chapter.onboarded", value: "true" },
+      });
 
-    // Mark setup complete
-    await prisma.siteConfig.upsert({
-      where: { key: "chapter.onboarded" },
-      update: { value: "true" },
-      create: { key: "chapter.onboarded", value: "true" },
+      return b;
     });
 
     // Set admin cookie so they are logged in automatically
@@ -133,6 +140,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("Onboarding failed:", err);
+    // P2002 = unique-constraint violation (admin email already taken).
+    if (err?.code === "P2002") {
+      return NextResponse.json(
+        { ok: false, error: "An account with that admin email already exists." },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ ok: false, error: "Failed to save onboarding configuration" }, { status: 500 });
   }
 }
