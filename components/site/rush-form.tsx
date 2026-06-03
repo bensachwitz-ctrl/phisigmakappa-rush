@@ -14,6 +14,7 @@ import {
   GraduationCap, MapPin, BookOpen, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 type FormData = {
   name: string;
@@ -80,6 +81,7 @@ const SMS_EXPRESS_CONSENT =
 
 export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const { push } = useToast();
+  const identity = useChapterIdentity();
   // If a parent server component already detected ?booth=1 and passed it as a
   // prop, use that as the SSR-correct initial state so the Contact step (with
   // its TCPA pre-disclosure) renders on first paint without waiting for hydration.
@@ -350,7 +352,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
                   aria-describedby="sms-consent-text"
                 />
                 <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
-                  {SMS_EXPRESS_CONSENT}{" "}
+                  I am 18+ — or I am 17 and have a parent or legal guardian&apos;s permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from {identity.chapterFullName} ({identity.schoolShort}) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall &apos;26 rush and is never sold or shared.{" "}
                   See our{" "}
                   <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
                     privacy policy
@@ -727,13 +729,14 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
 function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; booth: boolean; receiptId: string | null; onRestart: () => void }) {
   const first = data.name.split(" ")[0] || "there";
   const { push } = useToast();
+  const identity = useChapterIdentity();
 
   async function shareWithFriends() {
-    const url = "https://phisigmakappa.vercel.app";
-    const text = `Just signed up for Fall Rush 2026 with Phi Sigma Kappa at USC. ${url}`;
+    const url = typeof window !== "undefined" ? window.location.origin : "https://greeklifesystems.vercel.app";
+    const text = `Just signed up for Fall Rush 2026 with ${identity.fraternityName} at ${identity.schoolShort}. ${url}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title: "Phi Sigma Kappa USC", text, url });
+        await navigator.share({ title: `${identity.fraternityName} ${identity.schoolShort}`, text, url });
       } catch { /* user cancelled */ }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
@@ -809,8 +812,8 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
             <Send className="h-4 w-4" /> Tell your buddies
           </Button>
           <Button asChild variant="outline">
-            <a href="https://www.instagram.com/phisig_usc/" target="_blank" rel="noreferrer noopener">
-              Follow @phisig_usc
+            <a href={identity.instagramUrl} target="_blank" rel="noreferrer noopener">
+              Follow {identity.instagramHandle}
             </a>
           </Button>
           <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">

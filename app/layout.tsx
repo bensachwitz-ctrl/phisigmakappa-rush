@@ -4,7 +4,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
-import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { chapterIdentityFromCfg, type ChapterIdentity } from "@/lib/chapter-identity";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -111,21 +111,21 @@ function parseCityState(cityState: string): { city: string; region: string; post
   };
 }
 
-function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const fraternityShort = cfg["chapter.fraternityShort"] || "Phi Sig";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const greekGlyphs = cfg["chapter.greekLettersGlyphs"] || "ΦΣΚ";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
-  const charterYear = cfg["chapter.charterYear"] || "1975";
-  const foundingYear = cfg["chapter.foundingYear"] || "1873";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
-  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
-  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
-  const advisorEmail = cfg["contact.advisorEmail"] || "advisor@phisig-usc.com";
-  const igUrl = cfg["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/";
+function buildStructuredData(cfg: Record<string, string>, siteUrl: string, id: ChapterIdentity) {
+  const fraternityName = id.fraternityName;
+  const fraternityShort = id.fraternityShort;
+  const greekLetters = id.greekLetters;
+  const greekGlyphs = id.greekLettersGlyphs;
+  const schoolName = id.schoolName;
+  const schoolShort = id.schoolShort;
+  const schoolUrl = id.schoolUrl;
+  const charterYear = id.charterYear;
+  const foundingYear = id.foundingYear;
+  const nationalHqUrl = id.nationalHqUrl;
+  const cardinalPrinciples = id.cardinalPrinciples;
+  const rushEmail = cfg["contact.rushEmail"] || "rush@yourchapter.com";
+  const advisorEmail = cfg["contact.advisorEmail"] || "advisor@yourchapter.com";
+  const igUrl = id.instagramUrl;
   const antiHazingUrl = cfg["antiHazing.hotlineUrl"] || "https://hazingprevention.org/help/";
 
   const addr = parseCityState(cfg["contact.cityState"] || "Columbia, SC 29208");
@@ -228,7 +228,8 @@ export default async function RootLayout({
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
-  const structuredData = buildStructuredData(cfg, siteUrl);
+  const id = chapterIdentityFromCfg(cfg);
+  const structuredData = buildStructuredData(cfg, siteUrl, id);
 
   return (
     <html lang="en" className={inter.variable}>

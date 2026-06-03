@@ -165,7 +165,7 @@ export default async function Home({
             <RushForm booth />
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-6">
-            Tablet auto-clears between rushees · {cfg["contact.instagramHandle"] || "@phisig_usc"}
+            Tablet auto-clears between rushees · {identity.instagramHandle}
           </p>
         </section>
       </main>
@@ -474,21 +474,21 @@ export default async function Home({
         </div>
       </section>
 
-      {/* ─── INSTAGRAM FEED — real photos from @phisig_usc ─── */}
+      {/* ─── INSTAGRAM FEED — real photos ─── */}
       {cfg["show.instagramFeed"] !== "false" && (
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Instagram className="h-3 w-3" aria-hidden="true" /> @phisig_usc
+              <Instagram className="h-3 w-3" aria-hidden="true" /> {identity.instagramHandle}
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl">
             Polar Plunge for Special Olympics, paintball before finals, the chapter formal
-            (FIPG-compliant, third-party vendor, sober transportation), and dry tailgates at
-            Williams-Brice. The Gamma Triton chapter shows up — all year.{" "}
-            <span className="text-phisig-red font-medium">#DamnProud</span>
+            (FIPG-compliant, third-party vendor, sober transportation), and dry tailgates on
+            game days. The {identity.greekLetters} chapter shows up — all year.{" "}
+            <span className="text-phisig-red font-medium">{identity.tagline}</span>
           </p>
         </div>
         <InstagramFeed count={9} />
@@ -510,12 +510,12 @@ export default async function Home({
 
         <div className="mt-8 text-center">
           <Link
-            href="https://www.instagram.com/phisig_usc/"
+            href={identity.instagramUrl}
             target="_blank"
             rel="noreferrer noopener"
             className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
           >
-            <Instagram className="h-4 w-4" aria-hidden="true" /> Follow @phisig_usc for the latest
+            <Instagram className="h-4 w-4" aria-hidden="true" /> Follow {identity.instagramHandle} for the latest
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
@@ -880,7 +880,7 @@ export default async function Home({
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
                   Brotherhood you can count on — every weekend, every milestone, every year.
                 </p>
-                <p className="mt-1 text-xs text-white/95">#DamnProud · {cfg["contact.instagramHandle"] || "@phisig_usc"}</p>
+                <p className="mt-1 text-xs text-white/95">{identity.tagline} · {identity.instagramHandle}</p>
               </div>
             </a>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">
