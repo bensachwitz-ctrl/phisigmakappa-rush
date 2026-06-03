@@ -1,6 +1,6 @@
 # Greekstack — Rush + Chapter Management Platform
 
-> Production-grade Next.js platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications. **Originally built for Phi Sigma Kappa Gamma Triton at USC.** Designed to be re-skinned and deployed per-chapter or operated as a national white-label SaaS by an Inter/National HQ.
+> Production-grade Next.js platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications. **Originally built for Phi Sigma Kappa Gamma Triton at USC.** Designed to be re-skinned and deployed per-chapter (one deploy + one database each) and operated as a national white-label program by an Inter/National HQ.
 
 **Live reference deploy:** <https://phisigmakappa.vercel.app>
 **License:** MIT — chapters and HQs free to deploy, modify, and operate.
@@ -32,7 +32,7 @@ Next.js 14 App Router · Prisma · Postgres (Vercel/Neon) · Vercel Blob · Rese
 
 Every public-facing string, every photo, every contact field is admin-editable from the chapter's `/admin/settings` panel — **no code deploy required for content updates**. A new chapter clones the deploy, sets six environment variables (database, Resend, Twilio), and signs in as admin. The "Get rush ready" checklist on `/admin` walks them through populating advisor, e-board, and first event.
 
-National HQ can operate this as a centralized SaaS: one deploy per chapter (Vercel project per chapter) or a future multi-tenant fork. The codebase is intentionally simple — a single Next.js app with a single Prisma schema. Chapter-specific branding (school colors, Greek-letter overrides) is driven by `lib/site-config.ts` defaults that admin can override.
+National HQ can operate this as a centralized white-label model: **one deploy + one database per chapter** (a Vercel project per chapter), each re-branded via config. The codebase is intentionally simple — a single Next.js app with a single Prisma schema, single-tenant today (no `chapterId` scoping). A single-deploy multi-tenant fork is a future option, not a current feature. Chapter-specific branding (school colors, Greek-letter overrides) is driven by `lib/site-config.ts` defaults that admin can override.
 
 See [`SALES.md`](SALES.md) for the pitch one-pager and [`ARCHITECTURE.md`](ARCHITECTURE.md) for the system diagram.
 

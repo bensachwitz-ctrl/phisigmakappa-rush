@@ -30,7 +30,7 @@ National's value-add: standardize the chapter web presence, capture and own the 
 
 A non-technical sophomore can:
 
-- Sign in (Phisig / DamnProud — case-insensitive — change in env)
+- Sign in with the chapter admin username + password (set via the `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars; case-insensitive)
 - See on Day 1 a "Get rush ready" checklist with six pending items + Fix-it links
 - Update the Fall '26 schedule (events CRUD with "Add Fall rush template" button that seeds 6 events)
 - Edit FAQ, timeline, e-board roster, philanthropy stats, testimonial, anti-hazing block — without touching code
@@ -56,8 +56,8 @@ HQ forks the repo, deploys a reference instance for a pilot chapter, walks the r
 **Tier 2 — managed deploy per chapter (modest):**
 HQ provisions one Vercel project + one Neon database per pilot chapter. HQ owns the Twilio brand registration (A2P 10DLC) so individual chapters aren't each filing their own. Chapter rush chair gets `chapter-name.phisig.org` subdomain and admin login. Estimated $20-30/mo per chapter (Vercel Pro tier scales across many projects).
 
-**Tier 3 — full multi-tenant SaaS (further out):**
-Single deploy, many chapters, namespaced by subdomain. Chapter admin only sees their own data. Centralized national dashboard for HQ to see pipeline health across all chapters in real time. Aggregate philanthropy totals, GPA averages, pledge-to-initiation conversion. Bigger engineering lift but the platform is structured for it (Prisma schema would gain `chapterId` columns; auth would gain chapter scoping; nothing else changes architecturally).
+**Tier 3 — full multi-tenant SaaS (future, not built today):**
+Single deploy, many chapters, namespaced by subdomain. Chapter admin only sees their own data. Centralized national dashboard for HQ to see pipeline health across all chapters in real time. Aggregate philanthropy totals, GPA averages, pledge-to-initiation conversion. This does not exist yet — today every chapter is a separate single-tenant deploy with its own database. It's a real engineering lift (the Prisma schema would gain `chapterId` columns and auth would gain chapter scoping — roughly 2–4 weeks of focused work), but the platform is structured to make that fork tractable.
 
 ## What we'd want from HQ in return
 

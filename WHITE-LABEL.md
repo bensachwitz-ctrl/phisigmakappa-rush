@@ -40,12 +40,15 @@ gh repo create $CHAPTER_HANDLE-rush --template phisigmakappa-rush --private
 vercel link
 vercel env add DATABASE_URL              # Neon / Vercel Postgres
 vercel env add DATABASE_URL_UNPOOLED     # for Prisma migrations
-vercel env add ADMIN_USERNAME            # e.g. "Phisig" — chapter shared admin
-vercel env add ADMIN_PASSWORD_HASH       # bcrypt hash; generate via `npx tsx scripts/hash-password.ts`
-vercel env add SESSION_SECRET            # 32+ random bytes; `openssl rand -hex 32`
-vercel env add NEXT_PUBLIC_SITE_URL      # https://yourchapter.vercel.app
-vercel env add RESEND_API_KEY            # optional, for mass email
-vercel env add TWILIO_ACCOUNT_SID        # optional, for SMS
+vercel env add ADMIN_USERNAME            # shared-admin username — set BOTH this and ADMIN_PASSWORD to enable the shared login
+vercel env add ADMIN_PASSWORD            # shared-admin password (constant-time compare). Code reads ADMIN_PASSWORD — NOT ADMIN_PASSWORD_HASH. Omit BOTH user+password to disable the shared login and use only per-chapter DB admin accounts.
+vercel env add ADMIN_SESSION_SECRET      # REQUIRED in prod — 32+ random bytes (`openssl rand -hex 32`). Signs the admin session cookie; admin auth fails closed without it.
+vercel env add PORTAL_SESSION_SECRET     # 32+ random bytes — signs brother/alumni portal cookies (falls back to ADMIN_SESSION_SECRET if unset)
+vercel env add NEXT_PUBLIC_SITE_URL      # https://yourchapter.vercel.app — REQUIRED; also the CSRF same-origin allowlist
+vercel env add CRON_SECRET               # bearer token the /api/cron/dues-reminders job must present
+vercel env add STRIPE_SECRET_KEY         # optional — only if accepting dues/donations online (never store the secret key in the DB)
+vercel env add RESEND_API_KEY            # optional — mass email + transactional receipts
+vercel env add TWILIO_ACCOUNT_SID        # optional — SMS rush updates + double-opt-in
 vercel env add TWILIO_AUTH_TOKEN
 vercel env add TWILIO_PHONE_NUMBER
 
@@ -60,7 +63,8 @@ swap pieces incrementally.
 ### 2. Sign in + run the setup wizard (5 min)
 
 Navigate to `https://YOURCHAPTER.vercel.app/admin/login`. Use the
-`ADMIN_USERNAME` + the password whose bcrypt hash you set above.
+`ADMIN_USERNAME` + `ADMIN_PASSWORD` you set above (plain values, compared in
+constant time — there is no bcrypt hash step for the shared admin login).
 
 The dashboard renders a **"Finish chapter setup"** amber banner with a
 progress bar. Click it. The 5-step wizard at `/admin/setup` covers:

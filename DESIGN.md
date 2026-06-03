@@ -56,7 +56,7 @@ spacing:
 ---
 
 # Greekstack Design Language
-This design system is tailored for the premium multi-tenant Greekstack SaaS platform, enabling fraternities and sororities to manage recruitment, alumni relations, and dues with high-end visuals.
+This design system is tailored for the premium white-label Greekstack platform — a single-tenant deploy re-branded per chapter — enabling fraternities and sororities to manage recruitment, alumni relations, and dues with high-end visuals.
 
 ## Aesthetics & Styling
 We employ a **Glassmorphic Gold & Crimson theme** with smooth typography pairing of **Outfit** (display/headings) and **Inter** (body text). Corners are soft and architectural (0.75rem to 1rem) resembling premium club stationery.

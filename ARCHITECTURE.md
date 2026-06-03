@@ -1,6 +1,6 @@
 # Architecture
 
-> System overview for the Greekstack chapter management platform. Single Next.js 14 App Router app, Postgres backend, Vercel-hosted. Designed to run as one deploy per chapter; multi-tenant fork is straightforward (see "Multi-tenancy path" at the bottom).
+> System overview for the Greekstack chapter management platform. Single Next.js 14 App Router app, Postgres backend, Vercel-hosted. **Today it is single-tenant: one deploy + one database per chapter, re-branded via config.** There is no tenant/`Chapter` model and no `chapterId` scoping yet — going multi-tenant is a future fork, scoped at roughly 2–4 weeks (see "Multi-tenancy path" at the bottom).
 
 ## High-level
 
@@ -46,7 +46,7 @@
                  ┌──────────────────────────────────────────────────────────┐
                  │                     ADMIN SURFACE                        │
                  │                                                          │
-   Brothers ────►│  /admin/login    (Phisig/DamnProud, case-insensitive)    │
+   Brothers ────►│  /admin/login    (shared admin login, env-configured)    │
                  │      └─ POST /api/admin/login → 4-part HMAC token cookie │
                  │                                                          │
    Admin   ─────►│  /admin                                                  │
@@ -141,7 +141,7 @@
 | `/api/sms/inbound` | Twilio HMAC signature verification (no app-level cookie) |
 | `/api/photo/[slug]` | Public read |
 
-The single shared admin credential (Phisig / DamnProud) is the simplest model that works for an officer e-board. Individual brother accounts (with per-brother passwords) flow through the BrotherInvite onboarding link → `Brother.passwordHash`. Both auth paths land in the same cookie format.
+The single shared admin credential (set via `ADMIN_USERNAME` + `ADMIN_PASSWORD`, compared case-insensitively; the cookie HMAC is signed with `ADMIN_SESSION_SECRET`) is the simplest model that works for an officer e-board. Individual brother accounts (with per-brother passwords) flow through the BrotherInvite onboarding link → `Brother.passwordHash`. Both auth paths land in the same cookie format.
 
 ## Compliance posture
 
@@ -162,16 +162,16 @@ The single shared admin credential (Phisig / DamnProud) is the simplest model th
 
 **FIPG / Phi Sigma Kappa risk management** — anti-hazing block on home + parents + privacy. National hotline link tested clean (no broken URL). All "tailgate" mentions qualified with "dry"; all formal mentions FIPG-qualified.
 
-## Multi-tenancy path (for nationals)
+## Multi-tenancy path (for nationals) — not built, future roadmap
 
-Today: one deploy per chapter. To go multi-tenant in a single deploy:
+Today: one deploy per chapter, one database per chapter, no tenant model. Multi-tenancy is **not implemented** — the steps below are the roadmap for it. To go multi-tenant in a single deploy:
 
 1. Add `chapterId` (or `chapterSlug`) FK to every model (Rush, RushConsent, Brother, Event, etc.).
 2. Add a `Chapter` model: `{id, slug, name, schoolName, primaryColor, …}`.
 3. Subdomain routing: `gamma-triton.greekstack.app` → `chapterSlug = "gamma-triton"` resolved in middleware.
 4. Scope every `prisma.x.findMany()` by `where: { chapterId }`.
 5. `getSiteConfig()` becomes `getSiteConfig(chapterId)` — keys namespaced as `{chapterId}:{key}` in `SiteConfig` table.
-6. Admin auth: instead of single global Phisig/DamnProud, each `Chapter` has its own `adminUsername` + `adminPasswordHash`.
+6. Admin auth: instead of the single global `ADMIN_USERNAME` / `ADMIN_PASSWORD` shared login, each `Chapter` would carry its own `adminUsername` + `adminPasswordHash`.
 7. National dashboard route: `app/national/page.tsx` — gated by national-tier admin role, aggregates pipeline counts across all chapters.
 
 This is roughly 2–4 weeks of focused work with minimal architectural disruption — every model, every route, every component is already structured around clean cfg-driven content.
