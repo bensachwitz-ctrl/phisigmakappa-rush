@@ -63,6 +63,7 @@ export default function OnboardWizard() {
   const [adminName, setAdminName] = React.useState("");
   const [adminEmail, setAdminEmail] = React.useState("");
   const [adminPassword, setAdminPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
 
   // Billing State
   const [billingPlan, setBillingPlan] = React.useState<"flat_subscription" | "dues_split">("dues_split");
@@ -91,8 +92,12 @@ export default function OnboardWizard() {
         push({ title: "Validation Error", description: "Admin name, email, and password are required.", variant: "destructive" });
         return false;
       }
-      if (adminPassword.length < 6) {
-        push({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      if (adminPassword.length < 8) {
+        push({ title: "Validation Error", description: "Password must be at least 8 characters.", variant: "destructive" });
+        return false;
+      }
+      if (adminPassword !== confirmPassword) {
+        push({ title: "Validation Error", description: "Passwords don't match.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "billing") {
@@ -308,11 +313,29 @@ export default function OnboardWizard() {
                     type="password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="At least 8 characters"
                     className="pl-9 bg-white/70 border-maroon-200 focus:border-maroon-700"
                     required
                   />
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="admin-pw2" className="mb-1.5 inline-block text-maroon-900 font-semibold text-sm">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-maroon-400" />
+                  <Input
+                    id="admin-pw2"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className="pl-9 bg-white/70 border-maroon-200 focus:border-maroon-700"
+                    required
+                  />
+                </div>
+                {confirmPassword.length > 0 && adminPassword !== confirmPassword && (
+                  <p className="mt-1.5 text-[11px] font-medium text-red-600">Passwords don&apos;t match.</p>
+                )}
               </div>
             </div>
           )}

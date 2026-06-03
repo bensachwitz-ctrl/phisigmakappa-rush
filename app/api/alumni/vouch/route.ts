@@ -24,14 +24,15 @@ export async function POST(req: Request) {
     alumniId = portalUser?.alumniId || null;
   }
 
-  if (isAdmin && !alumniId) {
-    // Admin override uses first alumnus or generic admin marker
-    const firstAlumni = await prisma.alumniProfile.findFirst();
-    alumniId = firstAlumni?.id || null;
-  }
-
+  // Admin override does NOT auto-pick an arbitrary alumnus — a vouch is
+  // attributed to a specific person, so writing one under a random alumni id
+  // (the old findFirst) corrupted the vouch ledger. Vouches require a real
+  // alumni identity.
   if (!alumniId) {
-    return NextResponse.json({ error: "Alumni profile not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Vouches must be made from your alumni account." },
+      { status: 403 },
+    );
   }
 
   let body: any;
@@ -84,13 +85,11 @@ export async function DELETE(req: Request) {
     alumniId = portalUser?.alumniId || null;
   }
 
-  if (isAdmin && !alumniId) {
-    const firstAlumni = await prisma.alumniProfile.findFirst();
-    alumniId = firstAlumni?.id || null;
-  }
-
   if (!alumniId) {
-    return NextResponse.json({ error: "Alumni profile not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Vouches must be managed from your alumni account." },
+      { status: 403 },
+    );
   }
 
   let body: any;
