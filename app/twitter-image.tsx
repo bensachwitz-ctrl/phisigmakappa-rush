@@ -1,0 +1,123 @@
+import { ImageResponse } from "next/og";
+
+export const runtime = "edge";
+export const alt = "Phi Sigma Kappa @ USC — Fall Rush 2026";
+export const size = { width: 1200, height: 630 };
+export const contentType = "image/png";
+
+// Twitter share card. Shares the same layout as opengraph-image.tsx — keep
+// in lockstep so a fix in one updates both. Watermark moved to corner well
+// above the title band (was overlapping subtitle + stat row in the rendered
+// PNG); pill rendered with explicit gap (was missing entirely from output
+// because margin-auto over-claimed space).
+export default async function TwitterImage() {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          background:
+            "linear-gradient(135deg, #C8102E 0%, #A20D26 50%, #6e0918 100%)",
+          color: "#FFFFFF",
+          fontFamily: "Inter, system-ui, sans-serif",
+          padding: 64,
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.18) 1.5px, transparent 1.5px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            right: -60,
+            top: -180,
+            fontSize: 360,
+            fontWeight: 800,
+            opacity: 0.10,
+            color: "#FFFFFF",
+            letterSpacing: -8,
+            fontFamily: "Georgia, serif",
+            lineHeight: 1,
+            display: "flex",
+          }}
+        >
+          ΦΣΚ
+        </div>
+
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 16, position: "relative" }}>
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 16,
+              background: "#FFFFFF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#C8102E",
+              fontSize: 32,
+              fontWeight: 700,
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            ΦΣΚ
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", fontSize: 14, letterSpacing: 6, textTransform: "uppercase", opacity: 0.85 }}>
+              Phi Sigma Kappa
+            </div>
+            <div style={{ display: "flex", fontSize: 24, fontWeight: 600, marginTop: 2 }}>
+              Gamma Triton · University of South Carolina
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexShrink: 0, flexDirection: "column", gap: 24, position: "relative" }}>
+          <div
+            style={{
+              display: "flex",
+              alignSelf: "flex-start",
+              background: "rgba(255,255,255,0.18)",
+              border: "1px solid rgba(255,255,255,0.35)",
+              borderRadius: 999,
+              padding: "8px 18px",
+              fontSize: 18,
+              fontWeight: 500,
+            }}
+          >
+            Fall Rush 2026 — Interest list now open
+          </div>
+          <div style={{ display: "flex", fontSize: 96, fontWeight: 700, lineHeight: 1.04, letterSpacing: -3 }}>
+            The chapter that built the men of Carolina.
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: 22, position: "relative" }}>
+          <div style={{ display: "flex", gap: 28 }}>
+            <span style={{ display: "flex" }}>60+ brothers</span>
+            <span style={{ display: "flex", opacity: 0.5 }}>·</span>
+            <span style={{ display: "flex" }}>3.45 GPA</span>
+            <span style={{ display: "flex", opacity: 0.5 }}>·</span>
+            <span style={{ display: "flex" }}>Founded 1873</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 600 }}>
+            phisigmakappa.vercel.app
+          </div>
+        </div>
+      </div>
+    ),
+    { ...size }
+  );
+}

@@ -1,0 +1,48 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getRecentAudit } from "@/lib/audit";
+import { isAdminRole, isAdminAuthed } from "@/lib/auth";
+import { AuditClient } from "@/components/admin/audit-client";
+import { ScrollText, ArrowLeft } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * /admin/audit — chapter governance trail. Shows the most recent 50 events
+ * (status changes, votes, dues toggles, broadcasts, settings changes,
+ * deletions) with client-side search + subject/actor filters so the e-board
+ * can answer "who did what when" months later.
+ *
+ * Admin-only because the log surfaces actor names + IPs.
+ */
+export default async function AuditPage() {
+  if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Faudit");
+  if (!isAdminRole()) redirect("/admin");
+
+  const rows = await getRecentAudit(50);
+
+  return (
+    <main className="container py-8 max-w-4xl">
+      <Link
+        href="/admin"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Dashboard
+      </Link>
+
+      <div className="mb-6">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+          <ScrollText className="h-3 w-3" aria-hidden="true" /> Governance
+        </span>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Audit log</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground max-w-2xl">
+          Every status change, vote, dues toggle, broadcast, and deletion is recorded here.
+          Use this when a brother asks "who changed that?" or when nationals does a
+          chapter audit. Retained for 1 year, then auto-pruned by a daily cron.
+        </p>
+      </div>
+
+      <AuditClient initialRows={rows} />
+    </main>
+  );
+}

@@ -1,0 +1,269 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
+import { audit } from "@/lib/audit";
+import { getSiteConfig } from "@/lib/site-config";
+import { getCurrentOfficerPermissions, hasPermission } from "@/lib/permissions";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Public-safe brother fields — used in select on every response so passwordHash
+// never ships to the client (audit-flagged HIGH risk on POST + PATCH paths;
+// GET was already safe). Helper centralizes the column list.
+const PUBLIC_BROTHER_SELECT = {
+  id: true, name: true, email: true, phone: true,
+  year: true, major: true, position: true, pledgeClass: true,
+  bio: true, headshotUrl: true,
+  duesPaid: true, serviceHours: true, studyHours: true,
+  role: true,
+  createdAt: true, updatedAt: true, lastSeen: true,
+  status: true,
+  pledgeClassName: true,
+  pledgeLineNumber: true,
+  initiationDate: true,
+  graduationYear: true,
+  academicStanding: true,
+} as const;
+
+const Schema = z.object({
+  name: z.string().min(2).max(120),
+  email: z.string().email().max(160).optional().or(z.literal("")),
+  phone: z.string().max(40).optional().or(z.literal("")),
+  year: z.string().max(40).optional().or(z.literal("")),
+  major: z.string().max(120).optional().or(z.literal("")),
+  position: z.string().max(120).optional().or(z.literal("")),
+  pledgeClass: z.string().max(80).optional().or(z.literal("")),
+  bio: z.string().max(2000).optional().or(z.literal("")),
+  headshotUrl: z.string().url().max(2048).optional().or(z.literal("")),
+  duesPaid: z.boolean().optional(),
+  serviceHours: z.number().int().min(0).optional(),
+  studyHours: z.number().int().min(0).optional(),
+  role: z.enum(["MEMBER", "ADMIN"]).optional(),
+  status: z.string().max(40).optional(),
+  pledgeClassName: z.string().max(80).optional().nullable(),
+  pledgeLineNumber: z.number().int().min(0).optional().nullable(),
+  initiationDate: z.string().optional().nullable(),
+  graduationYear: z.number().int().min(1900).max(2100).optional().nullable(),
+  academicStanding: z.string().max(40).optional().nullable(),
+});
+
+export async function GET() {
+  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Explicit select — never ship passwordHash in the response. Even though
+  // /api/admin/brothers is admin-only, an XSS in the admin panel or a
+  // forwarded log could leak the bcrypt hash. The hash is needed only at
+  // login time (verifyPassword reads it server-side); brothers managers
+  // never need it client-side.
+  const brothers = await prisma.brother.findMany({
+    orderBy: { name: "asc" },
+    select: PUBLIC_BROTHER_SELECT,
+  });
+  return NextResponse.json({ brothers });
+}
+
+export async function POST(req: Request) {
+  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  let body: any;
+  try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
+  const parsed = Schema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
+  const data = Object.fromEntries(
+    Object.entries(parsed.data).map(([k, v]) => {
+      if (k === "initiationDate" && typeof v === "string" && v !== "") {
+        return [k, new Date(v)];
+      }
+      return [k, v === "" ? null : v];
+    })
+  );
+  try {
+    const created = await prisma.brother.create({
+      data: data as any,
+      select: PUBLIC_BROTHER_SELECT,
+    });
+    await audit({
+      action: "BROTHER_CREATED",
+      subjectType: "Brother",
+      subjectId: created.id,
+      subjectName: created.name,
+      details: created.position ? `position: ${created.position}` : null,
+      req,
+    });
+    return NextResponse.json({ ok: true, brother: created });
+  } catch (err: any) {
+    if (err?.code === "P2002") {
+      return NextResponse.json({ ok: false, error: "Name or email already exists" }, { status: 409 });
+    }
+    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const PatchSchema = Schema.partial().extend({ id: z.string().min(1) });
+  const body = await req.json().catch(() => null);
+  const parsed = PatchSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
+  const { id, ...rest } = parsed.data;
+  const perms = await getCurrentOfficerPermissions();
+  const isSuperOrBrothersWriter = isAdminRole() || hasPermission(perms, "brothers", "write");
+
+  // Non-admins and non-authorized officers have restrictions.
+  if (!isSuperOrBrothersWriter) {
+    const me = getCurrentBrotherId();
+    if (!me || me !== id) {
+      // If the user has academic write perm, they can ONLY update studyHours and academicStanding
+      const isAcademicWriter = hasPermission(perms, "academic", "write");
+      if (isAcademicWriter) {
+        const allowedKeys = new Set(["id", "studyHours", "academicStanding"]);
+        for (const key of Object.keys(rest)) {
+          if (!allowedKeys.has(key)) {
+            delete (rest as any)[key];
+          }
+        }
+      } else {
+        return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+      }
+    } else {
+      // Editing own profile - cannot elevate role or edit dues/hours/role flags.
+      delete (rest as any).role;
+      delete (rest as any).duesPaid;
+      delete (rest as any).serviceHours;
+      const isAcademicWriter = hasPermission(perms, "academic", "write");
+      if (!isAcademicWriter) {
+        delete (rest as any).studyHours;
+        delete (rest as any).academicStanding;
+      }
+    }
+  }
+
+  const data = Object.fromEntries(
+    Object.entries(rest).map(([k, v]) => {
+      if (k === "initiationDate" && typeof v === "string" && v !== "") {
+        return [k, new Date(v)];
+      }
+      return [k, v === "" ? null : v];
+    })
+  );
+  // Snapshot prior dues state so dues toggle gets its own audit row (it's
+  // the single most-asked "who changed that?" question per chapter).
+  const before = await prisma.brother.findUnique({
+    where: { id },
+    select: { duesPaid: true, role: true, position: true, name: true },
+  }).catch(() => null);
+
+  const updated = await prisma.brother.update({
+    where: { id },
+    data: data as any,
+    select: PUBLIC_BROTHER_SELECT,
+  });
+
+  if (before) {
+    if (typeof data.duesPaid === "boolean" && before.duesPaid !== data.duesPaid) {
+      await audit({
+        action: "BROTHER_DUES",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `${before.duesPaid ? "paid" : "unpaid"} → ${data.duesPaid ? "paid" : "unpaid"}`,
+        req,
+      });
+      // R43-A: when admin manually toggles dues → PAID, also write a
+      // DuesPayment ledger row with method="MANUAL" so the chapter has
+      // a unified payment history regardless of channel (Stripe vs.
+      // cash/check/Venmo collected at chapter meeting). Audit row is
+      // DUES_PAID_MANUAL so the recent-activity feed reads cleanly.
+      if (data.duesPaid === true) {
+        try {
+          const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+          const year = cfg["dues.year"] || "2026-fall";
+          const amountCents = parseInt(cfg["dues.amountCents"] || "15000", 10) || 15000;
+          const currency = (cfg["dues.currency"] || "usd").toLowerCase();
+          const manualPayment = await prisma.duesPayment.create({
+            data: {
+              brotherId: id,
+              amountCents,
+              currency,
+              year,
+              method: "MANUAL",
+              status: "PAID",
+              notes: "Marked paid manually by admin",
+            },
+          });
+          await prisma.brother.update({
+            where: { id },
+            data: {
+              duesPaidAt: new Date(),
+              duesPaymentMethod: "MANUAL",
+              duesPaymentId: manualPayment.id,
+              duesAmountCents: amountCents,
+              duesYear: year,
+            },
+          });
+          await audit({
+            action: "DUES_PAID_MANUAL",
+            subjectType: "Brother",
+            subjectId: id,
+            subjectName: updated.name,
+            details: `$${(amountCents / 100).toFixed(2)} — ${year} (marked paid by admin)`,
+            req,
+          });
+        } catch {
+          // Ledger write is best-effort — the canonical Brother.duesPaid
+          // flip already happened, so the existing UI keeps working
+          // even if the ledger row fails (e.g. DuesPayment table not
+          // yet migrated).
+        }
+      }
+    }
+    if (typeof (data as any).role === "string" && before.role !== (data as any).role) {
+      await audit({
+        action: "BROTHER_ROLE",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `${before.role} → ${(data as any).role}`,
+        req,
+      });
+    }
+    // Generic catch-all for other profile edits — only logged when nothing
+    // more-specific fired, to avoid double-rows when only dues changed.
+    const dueChanged = typeof data.duesPaid === "boolean" && before.duesPaid !== data.duesPaid;
+    const roleChanged = typeof (data as any).role === "string" && before.role !== (data as any).role;
+    if (!dueChanged && !roleChanged) {
+      await audit({
+        action: "BROTHER_UPDATED",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `fields: ${Object.keys(data).join(", ")}`,
+        req,
+      });
+    }
+  }
+  return NextResponse.json({ ok: true, brother: updated });
+}
+
+export async function DELETE(req: Request) {
+  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const { id } = await req.json().catch(() => ({ id: "" }));
+  if (!id) return NextResponse.json({ ok: false }, { status: 400 });
+  // Snapshot name + position for the audit trail before cascading delete.
+  const victim = await prisma.brother.findUnique({
+    where: { id },
+    select: { name: true, position: true },
+  }).catch(() => null);
+  await prisma.brother.delete({ where: { id } });
+  await audit({
+    action: "BROTHER_DELETED",
+    subjectType: "Brother",
+    subjectId: id,
+    subjectName: victim?.name || null,
+    details: victim?.position ? `was ${victim.position}` : null,
+    req,
+  });
+  return NextResponse.json({ ok: true });
+}

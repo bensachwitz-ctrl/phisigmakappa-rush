@@ -1,0 +1,1013 @@
+// Phi Sigma Kappa @ USC — Rush Management
+// Production target: Vercel Postgres / Neon. Schema is dialect-agnostic and works
+// with sqlite locally if you swap the provider to "sqlite".
+//
+// MERGED SCHEMA — combines R43 (Desktop, live) base with W1/W3/W4/W5 additions
+// from the Brain fork. W2 Stripe-Connect work (DuesAssessment, ChapterPayments,
+// RefundLog, MemberPaymentProfile, PaymentPlan, PaymentPlanInstallment,
+// DuesSubscription, StripeWebhookEvent, StripeReconciliation, AcademicTerm,
+// StudyHourLog) is intentionally NOT pulled — Desktop's R43 Stripe Checkout
+// dues path is the canonical payment surface for now.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// RushStatus values stored as String (SQLite has no native enums):
+// ACTIVE | DROPPED | BID_EXTENDED | ACCEPTED | DECLINED
+
+model Rush {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  phone          String
+  hometown       String?
+  major          String?
+  year           String?
+  highSchoolInfo String?
+  backgroundInfo String?
+  headshotUrl    String?
+  enrichmentData String? // JSON blob with auto-researched info (LinkedIn, IG, etc.)
+  enrichedAt     DateTime?
+  status         String    @default("ACTIVE")
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // ── Bid response workflow (R39+) ───────────────────────────────────────
+  // Generated when admin sets status to BID_EXTENDED. PNM gets the URL
+  // `/bid/{bidToken}` by email + SMS and clicks one button to accept or
+  // decline — status auto-updates, no manual admin follow-up needed.
+  //
+  // Token is single-use: cleared after first response so a forwarded link
+  // can't be replayed. Expiry is 14 days — bid windows shouldn't drag
+  // longer than that, and uncollected tokens auto-expire instead of
+  // hanging around forever as a phishing surface.
+  bidToken          String?   @unique
+  bidTokenExpiresAt DateTime?
+  bidRespondedAt    DateTime?
+  bidResponseChoice String? // "ACCEPTED" | "DECLINED"
+
+  emailLogs      EmailLog[]
+  smsLogs        SmsLog[]
+  attendances    Attendance[]
+  votes          Vote[]
+  consents       RushConsent[]
+  impressions    RushImpression[]
+  alumniVouches  AlumniVouch[]
+}
+
+// ── PNM impression notes (rush-cycle feature 1) ────────────────────────────
+// One-line "vibe" notes any brother can drop on a PNM after a rush event —
+// "great kid, easy to talk to" / "noticed he stayed late and helped clean up"
+// / "concern: showed up smashed". Three tones (positive/neutral/concern)
+// power a single-glance signal on the /admin/rushees list (newest tone =
+// the rushee's "last impression").
+//
+// authorName is denormalized (not an FK to Brother) so the row survives if
+// the brother who left the impression later leaves the chapter. Same
+// reasoning as AuditLog — these are forensic chapter memory and shouldn't
+// disappear when a roster row does.
+//
+// onDelete: Cascade on rushee — when a Rush row is deleted (DROPPED clean-up,
+// etc.) the impressions disappear with it, so the table never accumulates
+// dangling rows.
+model RushImpression {
+  id         String   @id @default(cuid())
+  rushId     String
+  rush       Rush     @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  authorName String
+  // Allowed: "positive" | "neutral" | "concern"
+  tone       String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([rushId, createdAt])
+}
+
+// Rate-limit log for /api/rush. Each row = one submit attempt. Indexed on
+// (ipAddress, createdAt) so the 60-minute window check is fast. Rows are
+// short-lived; a periodic cleanup job (or a TTL) can prune older than 24h.
+model RushSubmitLog {
+  id        String   @id @default(cuid())
+  ipAddress String?
+  email     String?
+  status    String // "ACCEPTED" | "RATE_LIMITED" | "INVALID"
+  createdAt DateTime @default(now())
+
+  @@index([ipAddress, createdAt])
+}
+
+// TCPA-grade consent receipt: snapshots the EXACT disclosure text + timestamp
+// + IP + user-agent at the moment of submission, plus a double-opt-in confirm
+// flag. We retain these for 4 years (TCPA recordkeeping).
+model RushConsent {
+  id                String    @id @default(cuid())
+  rushId            String
+  disclosureVersion String // e.g. "2026-05-04" — bumps when the legal copy changes
+  disclosureText    String // verbatim copy shown to user at consent time
+  ipAddress         String?
+  userAgent         String?
+  ageAttestation    String // "ADULT_18_PLUS" | "MINOR_17_WITH_GUARDIAN_PERMISSION"
+  smsConfirmed      Boolean   @default(false) // true once user replies YES to confirmation SMS
+  smsConfirmedAt    DateTime?
+  optedOut          Boolean   @default(false) // true once STOP / opt-out received
+  optedOutAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  rush Rush @relation(fields: [rushId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  location    String?
+  dressCode   String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  isPrivate   Boolean   @default(false)
+  // Event category — drives color/icon on the brother-facing calendar and
+  // lets the e-board filter at a glance. Stored as a String (no native enum
+  // in SQLite when used for local dev). Allowed values:
+  //   RUSH        — open rush events, philanthropy, public-facing
+  //   DATE        — date events, formals with dates
+  //   BROTHERHOOD — internal brotherhood-only events, retreats
+  //   CHAPTER     — required chapter meetings, ritual, business
+  //   SOCIAL      — non-required social, mixers, parties
+  //   OTHER       — fallback for events that don't fit cleanly above
+  category    String    @default("OTHER")
+  // ── QR check-in code (rush-cycle feature 2) ──────────────────────────────
+  // Per-event short code. PNMs scan a QR at the door of a rush event whose
+  // URL is `/check-in/{checkInCode}`. The code is auto-generated lazily on
+  // first /qr request (admin clicks "Show QR") so existing events without a
+  // code keep working. Nullable + unique.
+  checkInCode String?   @unique
+  audience    String    @default("ALL")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  attendances    Attendance[]
+  rsvps          BrotherRSVP[]
+  checkInRecords EventCheckIn[]
+}
+
+// ── Rush event check-in log (rush-cycle feature 2) ──────────────────────────
+// Public-friendly check-in trail — one row per (eventCode, contact) scan.
+// Distinct from the existing `Attendance` model because that one is tied
+// to a Rush row via rushId; check-ins happen BEFORE we know whether the
+// visitor is going to become a PNM or not. The row carries everything we
+// need to identify a returning visitor by phone (we normalize to E.164):
+//   • eventId — FK to Event (cascade)
+//   • name    — what the visitor typed
+//   • phone   — normalized E.164
+//   • rushId  — populated when we link the row to an existing or newly-
+//               promoted Rush record (matched on phone)
+// `@@unique([eventId, phone])` keeps a single visitor from accidentally
+// double-counting in the same event (a re-scan is idempotent).
+model EventCheckIn {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  rushId    String?
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, phone])
+  @@index([eventId, createdAt])
+  @@index([phone])
+}
+
+// Per-brother RSVP for each Event. Brothers can RSVP "going / not going /
+// maybe" so the e-board has a real headcount and the chapter can see who's
+// committed. Composite unique on (eventId, brotherId) means each brother
+// has at most one RSVP per event — `update` semantics on re-submit.
+model BrotherRSVP {
+  id        String   @id @default(cuid())
+  eventId   String
+  brotherId String
+  // GOING | NOT_GOING | MAYBE — string for SQLite-portability.
+  status    String
+  note      String? // optional one-liner ("driving from class, will be 5min late")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  brother Brother @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, brotherId])
+  @@index([eventId, status])
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  rushId    String
+  eventId   String
+  attended  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  rush  Rush  @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, eventId])
+}
+
+model Brother {
+  id                String    @id @default(cuid())
+  name              String    @unique
+  email             String?   @unique
+  phone             String?
+  year              String? // Freshman | Sophomore | Junior | Senior
+  major             String?
+  position          String? // President, VP, Treasurer, Rush Chair, etc.
+  pledgeClass       String? // e.g. "Alpha Phi" — pledge class name
+  bio               String?
+  headshotUrl       String?
+  duesPaid          Boolean   @default(false)
+  // ── R43-A: dues payment ledger (additive) ────────────────────────────
+  // `duesPaid` stays as the canonical boolean — every existing UI keeps
+  // working unchanged. The fields below are metadata layered on top so
+  // the chapter can record per-brother amounts, the academic period the
+  // payment covers, when it landed, how it was collected (Stripe vs.
+  // cash / Venmo / check), and a pointer to the DuesPayment row that
+  // generated the most-recent settlement.
+  //
+  // All nullable so chapters NOT using online dues see zero behavior
+  // change — the manual badge-toggle path still flips `duesPaid` alone.
+  duesAmountCents   Int?
+  duesYear          String? // e.g. "2026-fall" — academic period
+  duesPaidAt        DateTime?
+  duesPaymentMethod String? // "STRIPE" | "MANUAL"
+  duesPaymentId     String? // pointer to DuesPayment.id when method=STRIPE
+  serviceHours      Int       @default(0)
+  studyHours        Int       @default(0)
+  role              String    @default("MEMBER") // MEMBER | ADMIN
+  passwordHash      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  lastSeen          DateTime  @default(now())
+
+  // ── W1 lifecycle additions (Brain merge) ─────────────────────────────────
+  // Values stored as String. Allowed:
+  //   PROSPECT | PLEDGE | INITIATE | ACTIVE | INACTIVE | ALUMNUS | EXPELLED
+  // Default ACTIVE so every pre-merge row passes through unchanged.
+  status           String    @default("ACTIVE")
+  pledgeClassName  String?
+  pledgeLineNumber Int?
+  initiationDate   DateTime?
+  graduationYear   Int?
+  // Allowed: HONORS | GOOD | PROBATION | SUSPENDED
+  academicStanding String?
+
+  // Self-relation: big/little pairings (nullable, set-null on big delete)
+  bigBrotherId String?
+  bigBrother   Brother?  @relation("BigLittle", fields: [bigBrotherId], references: [id], onDelete: SetNull)
+  littles      Brother[] @relation("BigLittle")
+
+  votes         Vote[]
+  announcements Announcement[]
+  rsvps         BrotherRSVP[]
+  pollsCreated  Poll[]         @relation("createdBy")
+  pollVotes     PollVote[]
+  duesPayments  DuesPayment[]
+
+  // ── W1 officer-role + document + lifecycle relations ─────────────────────
+  officerAssignments OfficerAssignment[]
+  documentUploads    Document[]           @relation("DocumentUploadedBy")
+  statusChanges      MemberStatusChange[] @relation("BrotherStatusChange")
+  statusChangedByMe  MemberStatusChange[] @relation("BrotherStatusChanger")
+
+  // ── W3 operations relations ──────────────────────────────────────────────
+  meetings              ChapterMeetingAttendance[]
+  chores                ChoreWheelAssignment[]
+  incidentsReported     IncidentReport[]           @relation("reported")
+  incidentsAcknowledged IncidentAcknowledgment[]
+  serviceHourLogs       ServiceHourLog[]
+
+  // ── W4 announcement read-receipts ────────────────────────────────────────
+  announcementReads AnnouncementRead[]
+
+  // ── W5 alumni + calendar relations ───────────────────────────────────────
+  alumniProfile      AlumniProfile?
+  googleCalendarLink GoogleCalendarLink?
+}
+
+// DuesPayment — payment-history ledger for chapter dues. R43 SIMPLE shape:
+// one row per payment attempt (Stripe Checkout session OR manual
+// admin-recorded cash/Venmo/check entry). Lets the e-board show a real
+// ledger view, survive multiple years of payments per brother, and reconcile
+// Stripe webhook retries without clobbering prior state.
+//
+// `stripeSessionId @unique` is the idempotency key: every webhook
+// handler keys mutation off this column so a duplicate
+// checkout.session.completed delivery is a no-op rather than a double
+// flip of Brother.duesPaid.
+//
+// NOTE: Brain's W2 fork has a richer DuesPayment (assessmentId, application
+// fees, partial refunds, multi-status). We intentionally keep R43's simple
+// shape to avoid breaking the live Stripe Checkout flow. The richer Stripe
+// Connect destination-charges architecture is a future upgrade.
+model DuesPayment {
+  id                    String   @id @default(cuid())
+  brotherId             String
+  amountCents           Int
+  currency              String   @default("usd")
+  year                  String // semester identifier, e.g. "2026-fall"
+  status                String   @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
+  method                String // STRIPE | MANUAL
+  stripeSessionId       String?  @unique // cs_live_... / cs_test_... — webhook idempotency
+  stripePaymentIntentId String?
+  receiptUrl            String? // Stripe hosted receipt URL
+  notes                 String? // admin free-text (mostly for MANUAL rows)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
+
+  brother Brother @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@index([brotherId, status])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  audience  String   @default("ALL") // ALL | BROTHERS | RUSHES | EBOARD
+  pinned    Boolean  @default(false)
+  authorId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // ── W4 scheduled-send + delivery tracking (Brain merge) ──────────────────
+  // Allowed status values: draft | scheduled | sent | failed
+  // - draft     = author saved but hasn't queued it. Visible only to authors.
+  // - scheduled = scheduledFor is in the future. The cron picks it up and
+  //               transitions to "sent" (or "failed").
+  // - sent      = sentAt populated, fan-out completed.
+  // - failed    = cron tried but the SMS/email gateway returned a hard error.
+  //               failureReason carries the operator-readable message.
+  status          String    @default("sent") // legacy rows treated as already sent
+  scheduledFor    DateTime? // when to fire; null = send now / already sent
+  sentAt          DateTime? // populated when fan-out completes
+  failureReason   String? // populated on status="failed"
+  channels        String    @default("inapp") // comma-list: inapp|sms|email
+  totalRecipients Int? // captured at fan-out time so we can show "Y of X read"
+
+  author       Brother?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  readReceipts AnnouncementRead[]
+
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+// ── W4 announcement read-receipts ───────────────────────────────────────────
+// One row per (announcement, brother) pair the first time a brother opens the
+// announcement in-app. Used for "Y of X read" KPI on the announcements admin
+// surface, and for nudge logic ("3 brothers haven't seen this in 48h").
+//
+// We DON'T track impressions — only opens. The president's read-receipt view
+// shows which brothers have NOT opened, so nudging the right people is one
+// click. Read-receipts are immutable: a re-open does NOT update readAt; the
+// first-seen timestamp is the source of truth.
+model AnnouncementRead {
+  id             String   @id @default(cuid())
+  announcementId String
+  brotherId      String
+  readAt         DateTime @default(now())
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  brother      Brother      @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, brotherId])
+  @@index([brotherId, readAt])
+  @@index([announcementId])
+}
+
+model BrotherInvite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String?
+  phone       String?
+  prefillName String?
+  invitedBy   String? // sender brother name
+  status      String    @default("PENDING") // PENDING | COMPLETED | EXPIRED | REVOKED
+  brotherId   String?   @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
+// R45 — Alumni portal onboarding invite. Mirrors BrotherInvite so the
+// alumni-relations officer can generate a single-use, expiring link and
+// text/email it to an alum, who then sets a password + confirms consent
+// to create their portal account. `alumniId` optionally binds the invite
+// to an existing AlumniProfile row (created from an HQ CSV import or
+// manual add) so the onboarding form pre-fills their known details and
+// the redemption attaches the new PortalUser to that exact profile
+// instead of creating a duplicate. Tokens are random (crypto.randomBytes),
+// 30-day expiry, single-use (status → COMPLETED on redeem), and carry NO
+// PII in the token itself — so a forwarded/leaked link reveals nothing and
+// can't be replayed once redeemed or revoked.
+model AlumniInvite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String?
+  phone       String?
+  prefillName String?
+  invitedBy   String? // sender admin / officer name
+  alumniId    String? // optional bind to an existing AlumniProfile for prefill + attach
+  status      String    @default("PENDING") // PENDING | COMPLETED | EXPIRED | REVOKED
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([alumniId])
+}
+
+// ── W1 document library ─────────────────────────────────────────────────────
+// Shared chapter documents — bylaws, ritual binders, calendars, dues forms.
+// Soft-versioned via versionOfId so the chapter can keep a paper-trail when
+// e.g. the bylaws are revised. Visibility values:
+//   PUBLIC     — visible on the public site
+//   MEMBERS    — visible to brothers w/ a session (ACTIVE+INITIATE+PLEDGE)
+//   INITIATES  — visible to initiated members only (ritual content)
+//   OFFICERS   — visible only to brothers with at least one active officer
+//                assignment (catalog-driven)
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  url         String // Vercel Blob URL (legacy field; mirror of blobUrl, kept for compat)
+  category    String   @default("GENERAL") // BYLAWS | CALENDAR | DUES | RITUAL | GENERAL | POLICIES | FORMS | TRAINING | OTHER
+  size        Int?
+  createdAt   DateTime @default(now())
+
+  visibility   String     @default("MEMBERS")
+  fileName     String?
+  fileSize     Int? // bytes (Document.size kept above for legacy compat)
+  mimeType     String?
+  blobUrl      String? // mirror of `url`; new code uses this name explicitly
+  uploadedById String?
+  uploadedBy   Brother?   @relation("DocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  versionOfId  String?
+  versionOf    Document?  @relation("DocumentVersion", fields: [versionOfId], references: [id], onDelete: SetNull)
+  versions     Document[] @relation("DocumentVersion")
+  updatedAt    DateTime   @default(now()) @updatedAt
+}
+
+// ── W1: Officer roles ──────────────────────────────────────────────────────
+// Officer positions are the *catalog* (President, Treasurer, …). Each chapter
+// has the same baseline catalog; admin can add chapter-specific positions
+// (e.g. "Webmaster"). Permissions are stored as a JSON blob keyed by domain
+// (rushPipeline, brothers, events, dues, …) — see lib/officer-permissions.ts
+// for the canonical shape + defaults.
+model OfficerPosition {
+  id          String   @id @default(cuid())
+  title       String // "President", "Treasurer", …
+  slug        String   @unique // "president", "treasurer", "recruitment-chair"
+  description String? // 1-2 sentence role description
+  permissions String // JSON blob: { rushPipeline: "write", brothers: "read", ... }
+  sortOrder   Int      @default(100)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  assignments OfficerAssignment[]
+}
+
+model OfficerAssignment {
+  id         String          @id @default(cuid())
+  positionId String
+  position   OfficerPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  brotherId  String
+  brother    Brother         @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+  termCode   String // e.g. "2026-FA"
+  startDate  DateTime
+  endDate    DateTime? // null = currently active
+  notes      String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
+
+  @@index([brotherId, termCode])
+  @@index([positionId, termCode])
+}
+
+// ── W1: Member lifecycle audit ─────────────────────────────────────────────
+// Every status transition writes a row here so we can rebuild the lifecycle
+// timeline per brother. Additive audit only — never used for live gating.
+model MemberStatusChange {
+  id             String   @id @default(cuid())
+  brotherId      String
+  brother        Brother  @relation("BrotherStatusChange", fields: [brotherId], references: [id], onDelete: Cascade)
+  fromStatus     String? // null for the initial state
+  toStatus       String
+  reason         String? // free-text — author's words, can be quoted in HQ exports
+  // W4 — structured reason category so the secretary's dropdown stays consistent
+  // across years. Allowed values when toStatus is EXPELLED|INACTIVE|ALUMNUS:
+  //   academic | financial | conduct | voluntary | transferred | medical |
+  //   graduation | inactive_status_only | other
+  reasonCategory String?
+  changedById    String? // brother who made the change (null = system / seed)
+  changedBy      Brother? @relation("BrotherStatusChanger", fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([brotherId, createdAt])
+  @@index([toStatus, reasonCategory])
+}
+
+// Key/value site settings the chapter can tweak without a code deploy.
+model SiteConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  rushId    String
+  brotherId String
+  value     Int // -2 strong no, -1 no, 0 neutral, 1 yes, 2 strong yes
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  rush    Rush    @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  brother Brother @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, brotherId])
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  rushId     String?
+  subject    String
+  body       String
+  recipients String
+  sentAt     DateTime @default(now())
+  status     String   @default("SENT")
+
+  rush Rush? @relation(fields: [rushId], references: [id], onDelete: SetNull)
+}
+
+model SmsLog {
+  id         String   @id @default(cuid())
+  rushId     String?
+  body       String
+  recipients String
+  sentAt     DateTime @default(now())
+  status     String   @default("SENT")
+
+  rush Rush? @relation(fields: [rushId], references: [id], onDelete: SetNull)
+}
+
+// Quick chapter polls. Any logged-in brother (member or admin) can spin one
+// up to take the chapter's pulse. Vote tallies are aggregate-only (we never
+// expose who voted for what), enforced by the API layer; the underlying
+// PollVote table records (pollId, brotherId, optionId) purely so each
+// brother gets exactly one vote and can change it.
+//
+// Options are stored as a JSON-encoded String (R43 simple shape, works on
+// both Postgres and SQLite without a separate row-per-option table). Shape is:
+//   [{ id: "cuid...", label: "Option text" }, ...]
+// Server is the source of truth for option ids — it generates them at create
+// time and never mutates them so vote rows stay valid.
+model Poll {
+  id          String    @id @default(cuid())
+  question    String // <= 280 chars enforced at API layer
+  options     String // JSON: [{id, label}]
+  createdById String
+  closesAt    DateTime? // optional auto-close timestamp
+  closedAt    DateTime? // set when manually closed by creator/admin
+  audience    String    @default("BROTHERS")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  createdBy Brother    @relation("createdBy", fields: [createdById], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@index([createdAt])
+  @@index([closedAt])
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  brotherId String?
+  alumniId  String?
+  optionId  String // matches an entry in Poll.options
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  poll    Poll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  brother Brother?       @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+  alumni  AlumniProfile? @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, brotherId])
+  @@unique([pollId, alumniId])
+  @@index([pollId])
+}
+
+// AuditLog — chapter governance trail (R41 shape). Every PNM status change,
+// vote change, dues toggle, brother deletion, broadcast, and settings change
+// writes one row here so the e-board can answer "who changed what, when"
+// months later.
+//
+// Intentionally NOT linked via FK to actor/subject — we want the row to
+// outlive the actor (a brother who left the chapter) and the subject
+// (a deleted PNM). Names + IDs are denormalized for retrieval forensics.
+//
+// Retained for 1 year (cron-pruned). TCPA / risk-management value > storage.
+model AuditLog {
+  id          String   @id @default(cuid())
+  // Who: brother who triggered the action ("admin" for shared-creds admin)
+  actorId     String? // null for shared-admin session (no per-person brother row)
+  actorName   String // denormalized — survives actor deletion
+  // What: short code (RUSH_STATUS, RUSH_VOTE, BROTHER_DUES, BROADCAST_SENT, etc.)
+  action      String
+  // Subject: the entity being acted on
+  subjectType String // "Rush" | "Brother" | "Event" | "Announcement" | "Settings"
+  subjectId   String? // ID of the row touched (nullable for bulk ops)
+  subjectName String? // denormalized name for retrieval (PNM name, brother name)
+  // Detail: before → after, formatted for human reading at retrieval time
+  details     String? // e.g. "ACTIVE → BID_EXTENDED" or "vote: +1 → +2"
+  // Context
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([subjectType, subjectId])
+  @@index([actorId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// W3 — Operations layer (Brain merge): meetings, chores, incidents, service.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// W3: Chapter meetings — Sunday chapter, exec meetings, ritual nights.
+// Status transitions: scheduled → in_progress → completed (or canceled).
+// `requiredFor` is a JSON array of member statuses that must attend
+// (default = active + initiated + pledges). Excused-absence flow lives on
+// the Attendance row.
+model ChapterMeeting {
+  id          String                     @id @default(cuid())
+  title       String
+  scheduledAt DateTime
+  duration    Int                        @default(60) // minutes
+  location    String?
+  notes       String?
+  // Allowed: scheduled | in_progress | completed | canceled
+  status      String                     @default("scheduled")
+  requiredFor Json                       @default("[\"ACTIVE\",\"INITIATE\",\"PLEDGE\"]")
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  attendance  ChapterMeetingAttendance[]
+
+  @@index([scheduledAt])
+}
+
+// W3: Per-brother per-meeting attendance row. Unique (meetingId, memberId)
+// so we never double-count. Excused absences require an approver (secretary
+// or president).
+model ChapterMeetingAttendance {
+  id                 String         @id @default(cuid())
+  meetingId          String
+  meeting            ChapterMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId           String
+  member             Brother        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  // Allowed: present | absent | excused | tardy
+  status             String         @default("absent")
+  checkedInAt        DateTime?
+  excuseReason       String?
+  excuseApprovedById String?
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([meetingId, memberId])
+  @@index([memberId, status])
+}
+
+// W3: House management — chore wheel task catalog.
+// House manager maintains a stable list of recurring tasks. `rotationOrder`
+// gives the catalog a deterministic sort so the round-robin algorithm in
+// /api/admin/chores/rotate stays stable when the catalog grows or shrinks.
+model ChoreWheelTask {
+  id            String                 @id @default(cuid())
+  label         String
+  description   String?
+  rotationOrder Int // stable assignment ordering
+  active        Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  assignments   ChoreWheelAssignment[]
+}
+
+// W3: Per-brother per-week chore assignment. `weekStarting` is the Sunday
+// 00:00 of the assignment week. `grade` is the house manager's letter grade
+// applied after the work is reviewed.
+model ChoreWheelAssignment {
+  id           String         @id @default(cuid())
+  taskId       String
+  task         ChoreWheelTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       Brother        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  weekStarting DateTime
+  // Allowed: assigned | completed | skipped | graded
+  status       String         @default("assigned")
+  completedAt  DateTime?
+  grade        String? // "A" | "B" | "C" | "D" | "F"
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([memberId, weekStarting, taskId])
+  @@index([weekStarting, status])
+}
+
+// W3: Risk management — incident reports (anonymous-friendly intake).
+// CRITICAL: `reporterId` is intentionally nullable. The /api/incident-report
+// public endpoint MUST NOT read the session cookie at all — see route handler
+// for the explicit anonymity contract. `isAnonymous=true` rows must always
+// have `reporterId=null`.
+model IncidentReport {
+  id              String                   @id @default(cuid())
+  // Allowed: hazing | safety | financial | conduct | other
+  category        String
+  // Allowed: low | medium | high | critical
+  severity        String                   @default("medium")
+  // Allowed: submitted | reviewing | resolved | escalated
+  status          String                   @default("submitted")
+  reporterId      String? // NULLABLE — anonymous submission supported
+  reporter        Brother?                 @relation("reported", fields: [reporterId], references: [id], onDelete: SetNull)
+  isAnonymous     Boolean                  @default(false)
+  subject         String // sanitized — see route
+  body            String // sanitized — see route
+  occurredAt      DateTime?
+  reportedAt      DateTime                 @default(now())
+  receiptCode     String                   @unique
+  assignedToId    String?
+  resolutionNotes String? // private — risk officer only
+  resolvedAt      DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  acknowledgments IncidentAcknowledgment[]
+
+  @@index([status, severity])
+  @@index([reportedAt])
+}
+
+// W3: Brother acknowledgment that they have reviewed a resolved incident.
+model IncidentAcknowledgment {
+  id             String         @id @default(cuid())
+  incidentId     String
+  incident       IncidentReport @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  brotherId      String
+  brother        Brother        @relation(fields: [brotherId], references: [id], onDelete: Cascade)
+  acknowledgedAt DateTime       @default(now())
+  notes          String?
+
+  @@unique([incidentId, brotherId])
+}
+
+// W3: Philanthropy / service event catalog.
+// Status transitions: proposed → approved → completed (or canceled).
+// `hoursPerSlot` is the default credit awarded per attending brother;
+// individual logs can override (e.g. someone stayed longer than the event).
+model ServiceEvent {
+  id           String           @id @default(cuid())
+  title        String
+  description  String?
+  partnerOrg   String?
+  partnerUrl   String?
+  eventDate    DateTime
+  hoursPerSlot Decimal?         @db.Decimal(4, 2)
+  approvedById String?
+  // Allowed: proposed | approved | completed | canceled
+  status       String           @default("proposed")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  hours        ServiceHourLog[]
+
+  @@index([eventDate, status])
+}
+
+// W3: Per-brother service hour log. Hours can be tied to a ServiceEvent OR
+// free-form (e.g. self-reported volunteering at a non-chapter event).
+// Philanthropy chair approves/rejects.
+model ServiceHourLog {
+  id              String        @id @default(cuid())
+  memberId        String
+  member          Brother       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  serviceEventId  String?
+  serviceEvent    ServiceEvent? @relation(fields: [serviceEventId], references: [id], onDelete: SetNull)
+  description     String
+  hoursLogged     Decimal       @db.Decimal(4, 2)
+  performedAt     DateTime
+  // Allowed: submitted | approved | rejected
+  status          String        @default("submitted")
+  approvedById    String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([memberId, status])
+  @@index([performedAt])
+}
+
+// W3: Reference list of partner orgs for philanthropy chair.
+model ServicePartnerOrg {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  website      String?
+  contactEmail String?
+  contactPhone String?
+  description  String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// W5 — Alumni / Calendar / HQ Exports (Brain merge).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// W5: Alumni directory. Alumni opt in to the directory; per-row visibility is
+// governed by `optInDirectory`. The optional `brotherId` lets the same person
+// carry continuity from active → alumnus, but historical alumni who never had
+// a Brother row can still be cataloged (brotherId left null).
+model AlumniProfile {
+  id              String           @id @default(cuid())
+  brotherId       String?          @unique
+  brother         Brother?         @relation(fields: [brotherId], references: [id])
+  fullName        String
+  preferredName   String?
+  graduationYear  Int
+  pledgeClass     String?
+  initiationYear  Int?
+  email           String?
+  phone           String?
+  city            String?
+  state           String?
+  employer        String?
+  jobTitle        String?
+  linkedinUrl     String?
+  bio             String?
+  optInDirectory  Boolean          @default(true)
+  optInNewsletter Boolean          @default(true)
+  age             Int?
+  major           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  donations       AlumniDonation[]
+  pollVotes       PollVote[]
+  vouches         AlumniVouch[]
+
+  @@index([graduationYear])
+}
+
+// W5: Alumni donation log (campaign-tagged).
+model AlumniDonation {
+  id                    String        @id @default(cuid())
+  alumniId              String
+  alumni                AlumniProfile @relation(fields: [alumniId], references: [id])
+  amountCents           Int
+  campaign              String?
+  recordedAt            DateTime      @default(now())
+  notes                 String?
+  recordedById          String?
+  stripeSessionId       String?       @unique
+  stripePaymentIntentId String?
+  status                String        @default("PENDING") // PENDING | PAID | FAILED
+
+  @@index([alumniId, recordedAt])
+  @@index([campaign])
+}
+
+// W5: Google Calendar OAuth link. One row per brother who has opted in.
+// `refreshToken` is stored as plain text in dev; production deploys MUST set
+// GOOGLE_TOKEN_ENCRYPTION_KEY and the lib/google-calendar.ts encryption
+// helpers transparently wrap reads.
+model GoogleCalendarLink {
+  id           String    @id @default(cuid())
+  brotherId    String    @unique
+  brother      Brother   @relation(fields: [brotherId], references: [id])
+  googleEmail  String
+  refreshToken String
+  calendarId   String?
+  syncEnabled  Boolean   @default(true)
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// W5: National HQ export run log. Each "Generate report" click writes a row
+// in `pending`, the async builder flips to `generating` → `complete`
+// (with fileUrl + rowCount) or `failed` (with errorMessage).
+model HqExportRun {
+  id           String    @id @default(cuid())
+  exportType   String // "membership"|"academic"|"financial"|"philanthropy"|"annual_report"
+  termCode     String
+  status       String    @default("pending") // pending|generating|complete|failed
+  fileUrl      String?
+  rowCount     Int?
+  createdById  String
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  errorMessage String?
+
+  @@index([exportType, termCode])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Multi-Portal Architecture (Brothers / Alumni / PNM)
+// Each portal has its own login surface but they all funnel through
+// PortalUser. The `role` column gates which dashboard a session can hit;
+// `brotherId`/`alumniId` are optional pointers back to the canonical
+// roster row for cross-system continuity (a Brother who graduates can
+// keep the same PortalUser row, role flips to 'alumni').
+// ─────────────────────────────────────────────────────────────────────────────
+model PortalUser {
+  id           String    @id @default(cuid())
+  // Allowed: 'brother' | 'alumni' | 'pnm'
+  role         String
+  email        String    @unique
+  // Optional — magic-link-only accounts have null passwordHash. Scrypt format
+  // (see lib/password.ts) so the existing hashing helpers work unchanged.
+  passwordHash String?
+  // Cross-system pointers — nullable so the same PortalUser can outlive a
+  // membership transition (Brother → AlumniProfile).
+  brotherId    String?
+  alumniId     String?
+  // Magic-link one-time token + expiry. Single-use: cleared on successful
+  // verify so a forwarded link can't be replayed.
+  magicToken          String?   @unique
+  magicTokenExpiresAt DateTime?
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+
+  @@index([role])
+  @@index([brotherId])
+  @@index([alumniId])
+}
+
+// W2-style dues ledger for Stripe Connect destination charges. Lives
+// alongside the existing R43 DuesPayment (which is the canonical write
+// path for chapter-side Stripe Checkout). This sibling table captures
+// the *platform-fee* metadata that destination-charge flows need —
+// applicationFeeAmount + destinationAccount — so Ben's platform-fee
+// reconciliation can be re-derived from the row alone.
+//
+// Why a second table instead of widening DuesPayment: the existing
+// shape is tied to siteConfig-driven chapter-as-merchant Stripe Checkout.
+// The Connect flow is fundamentally different (platform charges, then
+// transfers to chapter's connected account), and the R43 path keeps
+// working for any chapter that prefers the simpler direct integration.
+model PortalDuesPayment {
+  id                    String   @id @default(cuid())
+  brotherId             String
+  amount                Int // cents
+  stripeSessionId       String?  @unique
+  stripePaymentIntentId String?
+  applicationFeeAmount  Int? // platform fee taken (cents)
+  destinationAccount    String? // connected account for chapter
+  paidAt                DateTime @default(now())
+  // 'paid' | 'pending' | 'failed' | 'refunded'
+  status                String
+
+  @@index([brotherId, status])
+}
+
+model AlumniVouch {
+  id        String   @id @default(cuid())
+  rushId    String
+  alumniId  String
+  note      String?
+  createdAt DateTime @default(now())
+
+  rush   Rush          @relation(fields: [rushId], references: [id], onDelete: Cascade)
+  alumni AlumniProfile @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+
+  @@unique([rushId, alumniId])
+  @@index([rushId])
+  @@index([alumniId])
+}
+
+model Tenant {
+  id            String   @id @default(cuid())
+  subdomain     String   @unique
+  domain        String?  @unique
+  name          String?
+  school        String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

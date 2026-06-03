@@ -1,0 +1,511 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Lock the page to a light appearance. We don't ship a dark mode, and
+       Chromium-based browsers' "auto-darken" feature drops --muted-foreground
+       below WCAG 4.5:1 against forced-dark card backgrounds. Declaring
+       color-scheme: light makes UA form controls match and opts the document
+       out of forced-dark heuristics. */
+    color-scheme: light;
+
+    --background: 0 0% 100%;
+    --foreground: 240 6% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 8%;
+
+    --primary: 351 76% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 8%;
+
+    --muted: 240 5% 96%;
+    /* Bumped from 46% → 40% for WCAG AAA contrast on white backgrounds.
+       Old #71717a vs white = 4.83:1 (AA pass, AAA fail). New #5e5e66 vs
+       white = 6.46:1 (AA + AAA pass). Used for body sub-text and
+       secondary metadata throughout the chapter site, including FAQ
+       answers, contact info, and stat sublabels. */
+    --muted-foreground: 240 4% 40%;
+
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 351 76% 42%;
+
+    --radius: 0.625rem;
+
+    --font-sans: "Inter", "ui-sans-serif", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* True display serif stack — no longer collapses to Inter. Picks up
+       Iowan/Garamond on Apple, Source Serif on Linux, Cambria/Times elsewhere. */
+    --font-display: ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", Cambria, "Times New Roman", serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  html, body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* H1 ships heavier than H2 so the size+weight pair gives unambiguous
+     hierarchy even at small breakpoints where the size diff alone is
+     barely one stop. Round-3 designer feedback flagged "H1=H2 weight". */
+  h1 {
+    @apply font-bold tracking-tight;
+  }
+  h2, h3, h4 {
+    @apply tracking-tight;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+  /* Cohesive photo grade for Instagram-sourced thumbnails.
+     Slight brightness lift + saturation pull + warmer cardinal tint so
+     mixed-IG-export grids read as one editorial set. */
+  .photo-grade {
+    filter: saturate(1.02) brightness(1.02) contrast(1.04);
+  }
+
+  /* Visible focus rings on every interactive element for keyboard +
+     assistive-tech users. Tailwind's default :focus-visible is invisible
+     against many of our cardinal-red surfaces; this forces a 2px cardinal
+     ring with 2px white offset so it pops on any background. */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Honor users who set prefers-reduced-motion at the OS level — kill
+     long-running animations the chapter site uses for visual polish. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Skip-to-content link — first tab stop on every page. Hidden until focused
+   so it doesn't pollute sighted users' UI but is the first reachable element
+   for keyboard / screen-reader users wanting to jump past the nav. */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.625rem 1rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 0.625rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.18s ease-out;
+}
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  top: 1rem;
+  outline: 2px solid #FFFFFF;
+  outline-offset: 2px;
+}
+
+/* Section vertical padding — only two tokens. .section-y is the standard
+   page-section rhythm; .section-y-tight is for content-dense rows (highlights
+   ribbon, stats strip). Round-3 designer review flagged 7 distinct ad-hoc
+   py-* values across the homepage; this collapses them to 2. */
+.section-y {
+  padding-top: 4rem;       /* 64 */
+  padding-bottom: 4rem;
+}
+@media (min-width: 640px) {
+  .section-y {
+    padding-top: 6rem;     /* 96 */
+    padding-bottom: 6rem;
+  }
+}
+.section-y-tight {
+  padding-top: 2.5rem;     /* 40 */
+  padding-bottom: 2.5rem;
+}
+@media (min-width: 640px) {
+  .section-y-tight {
+    padding-top: 3.5rem;   /* 56 */
+    padding-bottom: 3.5rem;
+  }
+}
+
+/* ─── Patterns ─── */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(11,11,12,0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(11,11,12,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11,11,12,0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.hr-soft {
+  height: 1px;
+  background: linear-gradient(to right, transparent, hsl(var(--border)), transparent);
+}
+
+/* Vignette overlay for hero photos */
+.vignette {
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.95) 100%),
+    linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0) 65%);
+}
+
+/* ─── Animations ─── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 28px -6px rgba(200, 16, 46, 0.30); }
+  50% { box-shadow: 0 0 40px -4px rgba(200, 16, 46, 0.55); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(200, 16, 46, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-glow { animation: glow 3s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.6s ease-out both; }
+.animate-scale-in { animation: scale-in 0.4s ease-out both; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+
+/* Stagger helpers */
+.stagger > * { opacity: 0; animation: slide-up 0.6s ease-out both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.15s; }
+.stagger > *:nth-child(3) { animation-delay: 0.25s; }
+.stagger > *:nth-child(4) { animation-delay: 0.35s; }
+.stagger > *:nth-child(5) { animation-delay: 0.45s; }
+.stagger > *:nth-child(6) { animation-delay: 0.55s; }
+
+/* Shimmer skeleton */
+.shimmer {
+  background:
+    linear-gradient(90deg, hsl(var(--secondary)) 0%, rgba(255,255,255,0.65) 50%, hsl(var(--secondary)) 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2.2s infinite linear;
+}
+
+/* Card lift */
+.lift {
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 280ms;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px -10px rgba(11,11,12,0.18);
+}
+
+/* Tilt-on-hover (3d feel) */
+.tilt {
+  transition: transform 350ms ease;
+  transform-style: preserve-3d;
+}
+.tilt:hover {
+  transform: perspective(900px) rotateX(2deg) rotateY(-2deg) translateY(-2px);
+}
+
+/* Photo zoom */
+.photo-zoom { overflow: hidden; }
+.photo-zoom img,
+.photo-zoom > div[role="img"] {
+  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.photo-zoom:hover img,
+.photo-zoom:hover > div[role="img"] {
+  transform: scale(1.05);
+}
+
+/* Underline reveal */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -2px;
+  height: 1.5px; width: 100%;
+  background: hsl(var(--primary));
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 280ms ease;
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ─── R20 finishing-touch animations ─────────────────────────────────────
+   Purposeful micro-interactions that elevate the site from "shipped" to
+   "polished product." Every animation here:
+     • respects prefers-reduced-motion (the block at end of file disables them)
+     • runs on the GPU (transform / opacity only — no layout thrash)
+     • finishes in <800ms so the page never feels slow
+     • has a clear functional purpose, not decoration for its own sake
+*/
+
+/* Press feedback — buttons sink on click for tactile response. Used by the
+   primary "Drop my number" CTA + every <Button> variant. */
+.press {
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Bounce-on-arrive — small overshoot on entry. Use for sticky CTA that
+   slides in after scroll, success cards, and toast confirmations. */
+@keyframes spring-in {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.animate-spring-in {
+  animation: spring-in 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Subtle gradient sheen on primary CTA — sweeps across the button on hover.
+   Adds a sense of polish without being flashy. Used by .cta-shine. */
+.cta-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.cta-shine::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 40%,
+    rgba(255, 255, 255, 0.32) 50%,
+    rgba(255, 255, 255, 0.18) 60%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+.cta-shine:hover::before {
+  transform: translateX(100%);
+}
+
+/* Shake on submit error — the form gives a quick horizontal nudge to draw
+   attention to the unfilled field without aggressive red-flash UX. */
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(2px); }
+}
+.animate-shake-x { animation: shake-x 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+
+/* Number tick — used by stat tiles when CountUp finishes. Brief upward
+   bump on the final value so the eye lands on the now-static number. */
+@keyframes count-tick {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+.animate-count-tick { animation: count-tick 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Soft enter for cards entering the viewport — paired with IntersectionObserver
+   in components/site/reveal.tsx. Subtler than slide-up; better for grids of
+   8+ items where heavy stagger feels gimmicky. */
+@keyframes soft-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.animate-soft-enter { animation: soft-enter 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Heartbeat — gentle two-beat pulse on living-status indicators (e.g. the
+   "Interest list now open" pill). Slow enough to register as "alive,"
+   fast enough not to demand attention. */
+@keyframes heartbeat {
+  0%, 28%, 100% { transform: scale(1); }
+  10%  { transform: scale(1.03); }
+  18%  { transform: scale(1); }
+}
+.animate-heartbeat {
+  animation: heartbeat 2400ms ease-in-out infinite;
+}
+
+/* Floating orbit ring for hero seal/crest — a slow rotation behind a
+   focal element so the page never feels static, but never distracts. */
+@keyframes orbit-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-orbit-slow {
+  animation: orbit-slow 60s linear infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+
+/* Image entrance — soft fade-in with subtle Ken Burns zoom-out. Used on
+   hero photo so it lands gracefully instead of popping. */
+@keyframes ken-burns-in {
+  from { opacity: 0; transform: scale(1.08); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-ken-burns-in {
+  animation: ken-burns-in 1400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Form-field focus halo — a soft ring that scales out from the field on focus.
+   Less harsh than the default browser outline; respects accessibility (the
+   browser outline is preserved as fallback when CSS is disabled). */
+.field-glow:focus-within {
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.10), 0 0 0 1px hsl(var(--primary) / 0.40);
+  transition: box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ─── Mobile-first touch helpers ─── */
+@media (max-width: 639px) {
+  /* Ensure all interactive elements meet 44px min tap target */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Full-width buttons on mobile */
+  .mobile-full {
+    width: 100%;
+  }
+  /* Horizontal scroll container for chips/pills on mobile */
+  .mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  /* Safe area padding for fixed elements */
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+}
+
+/* Reduce motion — every animation collapses to a near-instant flash so
+   vestibular-sensitive users get the final state without movement. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print stylesheet — parents printing the consent receipt or rush schedule
+   should get a clean black-on-white document, not a wall of red gradient and
+   the floating nav. Hides chrome (nav, footer, decorative gradients), forces
+   readable type, expands abbreviated links so the printed copy stands alone. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+  /* Hide site chrome and decorative-only sections. */
+  nav, header[role="banner"], footer,
+  .skip-to-content,
+  [aria-hidden="true"],
+  video, canvas {
+    display: none !important;
+  }
+  /* Strip every gradient/dark hero section back to white. */
+  *, *::before, *::after {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    color: black !important;
+  }
+  a, a:visited {
+    color: black !important;
+    text-decoration: underline;
+  }
+  /* Reveal the underlying URL of every link in print so a paper handout still
+     points the reader somewhere they can act. */
+  a[href^="http"]::after,
+  a[href^="mailto:"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #444 !important;
+  }
+  img, svg {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  /* Don't split a heading away from its first paragraph. */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  /* Don't break tiles/cards across pages. */
+  section, article, .card, [class*="rounded-"] {
+    page-break-inside: avoid;
+  }
+}
