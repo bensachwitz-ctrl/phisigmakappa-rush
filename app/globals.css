@@ -447,6 +447,21 @@
   }
 }
 
+/* ── Greekstack elevation: premium aurora/grid hero backgrounds + accents ── */
+@keyframes aurora-a { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(6%,10%) scale(1.18);} 66%{transform:translate(-5%,5%) scale(0.92);} }
+@keyframes aurora-b { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-9%,7%) scale(1.22);} }
+@keyframes aurora-c { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(6%,-8%) scale(1.12);} }
+.animate-aurora-a{animation:aurora-a 20s ease-in-out infinite;}
+.animate-aurora-b{animation:aurora-b 24s ease-in-out infinite;}
+.animate-aurora-c{animation:aurora-c 28s ease-in-out infinite;}
+@keyframes grid-pan{from{background-position:0 0;}to{background-position:42px 42px;}}
+.animate-grid-pan{animation:grid-pan 8s linear infinite;}
+@keyframes sheen{to{transform:translateX(200%);}}
+.gs-gradient-text{background:linear-gradient(90deg,#6366f1,#22d3ee,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.gs-sheen{position:relative;overflow:hidden;}
+.gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
+.gs-sheen:hover::after{animation:sheen 1s ease;}
+
 /* Reduce motion — every animation collapses to a near-instant flash so
    vestibular-sensitive users get the final state without movement. */
 @media (prefers-reduced-motion: reduce) {

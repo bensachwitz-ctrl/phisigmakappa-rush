@@ -20,12 +20,19 @@ const buttonVariants = cva(
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        gradient:
+          "bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 hover:shadow-xl hover:shadow-phisig-red/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+        platform:
+          "bg-gradient-to-br from-indigo-500 via-violet-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+        glass:
+          "border border-white/15 bg-white/10 text-foreground backdrop-blur-md shadow-sm hover:bg-white/20 hover:border-white/25 active:scale-[0.98]",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-12 rounded-md px-6 text-base",
         icon: "h-10 w-10",
+        xl: "h-14 rounded-xl px-8 text-base font-semibold",
       },
     },
     defaultVariants: {
