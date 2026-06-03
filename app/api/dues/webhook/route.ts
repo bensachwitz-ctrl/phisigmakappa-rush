@@ -114,6 +114,20 @@ async function handleCheckoutCompleted(
   // Idempotency: already-PAID rows are a no-op on replay.
   if (payment.status === "PAID") return;
 
+  // SECURITY: only mark PAID when Stripe confirms the money actually landed
+  // AND the charged amount matches what we created the session for. Checkout
+  // can emit `completed` with payment_status "unpaid" (async/delayed methods),
+  // and co-sign/reminder links are long-lived — never grant good-standing on
+  // an unconfirmed or mismatched charge. Leave it PENDING for reconciliation.
+  if (session.payment_status && session.payment_status !== "paid") {
+    console.warn(`[/api/dues/webhook] session ${sessionId} completed but payment_status=${session.payment_status}; leaving PENDING`);
+    return;
+  }
+  if (typeof session.amount_total === "number" && session.amount_total !== payment.amountCents) {
+    console.error(`[/api/dues/webhook] amount mismatch for ${sessionId}: stripe=${session.amount_total} expected=${payment.amountCents}; leaving PENDING`);
+    return;
+  }
+
   // Extract Stripe-provided receipt + payment intent. The receipt URL
   // is on the latest_charge — we fetch the PaymentIntent to get it.
   let receiptUrl: string | null = null;
@@ -365,6 +379,21 @@ async function handleDonationCompleted(
   session: Stripe.Checkout.Session,
 ) {
   if (donation.status === "PAID") return;
+
+  // SECURITY: confirm the charge actually succeeded + amount matches before
+  // crediting the donation (same rationale as dues above).
+  if (session.payment_status && session.payment_status !== "paid") {
+    console.warn(`[/api/dues/webhook] donation session ${session.id} completed but payment_status=${session.payment_status}; leaving PENDING`);
+    return;
+  }
+  if (
+    typeof session.amount_total === "number" &&
+    typeof donation.amountCents === "number" &&
+    session.amount_total !== donation.amountCents
+  ) {
+    console.error(`[/api/dues/webhook] donation amount mismatch for session ${session.id}; leaving PENDING`);
+    return;
+  }
 
   let paymentIntentId: string | null = null;
   if (session.payment_intent && typeof session.payment_intent === "string") {

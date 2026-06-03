@@ -88,11 +88,23 @@ export async function POST(req: Request) {
       }
     }
 
-    const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
-    const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
+    // SECURITY: the shared-admin login only exists when BOTH env vars are
+    // explicitly configured. We deliberately ship NO hardcoded fallback
+    // (previously "Phisig"/"DamnProud") — this repo is shareable/templateable,
+    // so a buyer who deploys without setting these must NOT silently run on
+    // publicly-known credentials. When unset, the shared path is disabled and
+    // only per-chapter DB admin accounts (Brother role=ADMIN + passwordHash)
+    // can sign in.
+    const envUser = process.env.ADMIN_USERNAME;
+    const envPass = process.env.ADMIN_PASSWORD;
+    const sharedAdminEnabled = Boolean(envUser && envPass);
 
-    const sharedUserOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
-    const sharedPassOk = constantTimeStringEqual(String(data.password || ""), expectedPass);
+    const sharedUserOk =
+      sharedAdminEnabled &&
+      data.username.trim().toLowerCase() === envUser!.toLowerCase();
+    const sharedPassOk =
+      sharedAdminEnabled &&
+      constantTimeStringEqual(String(data.password || ""), envPass!);
 
     let matchedAdminBrother = null;
     let loginSuccess = sharedUserOk && sharedPassOk;

@@ -9,7 +9,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Admins only. The settings payload includes dues.stripeWebhookSecret and
+  // every chapter config knob. isAdminAuthed() also accepts a plain BROTHER
+  // cookie (adminFlag=0), so reads must require the admin ROLE — matching the
+  // PATCH gate below — or a member could read the webhook signing secret.
+  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   const settings = await getSiteConfig();
   return NextResponse.json({ settings });
 }

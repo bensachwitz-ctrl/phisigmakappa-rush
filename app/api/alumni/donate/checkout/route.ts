@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
+import { getPortalSession } from "@/lib/portal-auth";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -23,7 +24,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid donation details" }, { status: 400 });
     }
     
-    const { alumniId, amountCents, campaign, notes } = parsed.data;
+    const { amountCents, campaign, notes } = parsed.data;
+
+    // SECURITY: never trust an alumniId from the request body. Previously this
+    // route was unauthenticated and used the body's alumniId verbatim, so any
+    // anonymous caller could mint a live Stripe session + PENDING donation
+    // attributed to ANY alumnus (and the webhook would email THEM a receipt).
+    // The donor is now strictly the authenticated alumni portal session —
+    // mirroring app/api/alumni/vouch/route.ts.
+    const sess = getPortalSession();
+    if (!sess || sess.role !== "alumni") {
+      return NextResponse.json(
+        { ok: false, error: "Please sign in to your alumni portal to donate." },
+        { status: 401 },
+      );
+    }
+    const portalUser = await prisma.portalUser.findUnique({ where: { id: sess.userId } });
+    const alumniId = portalUser?.alumniId || null;
+    if (!alumniId) {
+      return NextResponse.json(
+        { ok: false, error: "Your alumni account isn't linked to a profile yet. Contact the chapter." },
+        { status: 403 },
+      );
+    }
     
     // Fetch alumni profile to verify it exists
     const alumni = await prisma.alumniProfile.findUnique({
@@ -73,7 +96,7 @@ export async function POST(req: Request) {
             unit_amount: amountCents,
             product_data: {
               name: `Donation to ${cfg["chapter.fraternityShort"] || "Phi Sigma Kappa"} — ${campaign}`,
-              description: `Thank you for supporting the Gamma Triton chapter at ${cfg["chapter.schoolShort"] || "USC"}.`,
+              description: `Thank you for supporting the ${cfg["chapter.greekLetters"] || "Gamma Triton"} chapter at ${cfg["chapter.schoolShort"] || "USC"}.`,
             },
           },
           quantity: 1,
