@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
+import { loadInvite } from "@/lib/brother-invite";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,18 +20,6 @@ const SubmitSchema = z.object({
   password: z.string().min(6).max(120).optional(),
   confirmPassword: z.string().min(6).max(120).optional(),
 });
-
-async function loadInvite(token: string) {
-  const invite = await prisma.brotherInvite.findUnique({ where: { token } });
-  if (!invite) return { invite: null, reason: "not-found" as const };
-  if (invite.status === "REVOKED") return { invite, reason: "revoked" as const };
-  if (invite.status === "COMPLETED") return { invite, reason: "completed" as const };
-  if (invite.expiresAt < new Date()) {
-    await prisma.brotherInvite.update({ where: { id: invite.id }, data: { status: "EXPIRED" } });
-    return { invite, reason: "expired" as const };
-  }
-  return { invite, reason: "ok" as const };
-}
 
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
   const { invite, reason } = await loadInvite(params.token);

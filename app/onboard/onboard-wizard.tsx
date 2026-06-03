@@ -32,16 +32,19 @@ export default function OnboardWizard() {
   const [step, setStep] = React.useState<StepId>("identity");
   const [busy, setBusy] = React.useState(false);
 
-  // Identity State
-  const [fraternityName, setFraternityName] = React.useState("Phi Sigma Kappa");
-  const [fraternityShort, setFraternityShort] = React.useState("Phi Sig");
-  const [greekLetters, setGreekLetters] = React.useState("Gamma Triton");
-  const [greekLettersGlyphs, setGreekLettersGlyphs] = React.useState("ΓΤ");
-  const [schoolName, setSchoolName] = React.useState("University of South Carolina");
-  const [schoolShort, setSchoolShort] = React.useState("USC");
-  const [charterYear, setCharterYear] = React.useState("1975");
-  const [foundingYear, setFoundingYear] = React.useState("1873");
-  const [fraternityLetters, setFraternityLetters] = React.useState("ΦΣΚ");
+  // Identity State — start EMPTY (placeholders show the Phi Sig reference as a
+  // hint). Pre-filling real values meant a click-through published Phi Sig's
+  // identity as the new chapter's own. Required fields are enforced in
+  // validateStep("identity").
+  const [fraternityName, setFraternityName] = React.useState("");
+  const [fraternityShort, setFraternityShort] = React.useState("");
+  const [greekLetters, setGreekLetters] = React.useState("");
+  const [greekLettersGlyphs, setGreekLettersGlyphs] = React.useState("");
+  const [schoolName, setSchoolName] = React.useState("");
+  const [schoolShort, setSchoolShort] = React.useState("");
+  const [charterYear, setCharterYear] = React.useState("");
+  const [foundingYear, setFoundingYear] = React.useState("");
+  const [fraternityLetters, setFraternityLetters] = React.useState("");
 
   // Brand State
   const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
@@ -54,7 +57,7 @@ export default function OnboardWizard() {
   const [instagramHandle, setInstagramHandle] = React.useState("");
   const [instagramUrl, setInstagramUrl] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [cityState, setCityState] = React.useState("Columbia, SC 29208");
+  const [cityState, setCityState] = React.useState("");
 
   // Admin State
   const [adminName, setAdminName] = React.useState("");

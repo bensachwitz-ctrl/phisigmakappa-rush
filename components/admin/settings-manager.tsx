@@ -145,6 +145,12 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           <Field label="iOS home-screen launcher title (≤12 chars)">
             <Input value={values["chapter.appShortTitle"] || ""} onChange={(e) => set("chapter.appShortTitle", e.target.value)} placeholder="Phi Sig USC" maxLength={12} />
           </Field>
+          <Field label="National letters / glyphs">
+            <Input value={values["chapter.fraternityLetters"] || ""} onChange={(e) => set("chapter.fraternityLetters", e.target.value)} placeholder="ΦΣΚ" />
+          </Field>
+          <Field label="National fraternity name (if different from full name)">
+            <Input value={values["chapter.nationalName"] || ""} onChange={(e) => set("chapter.nationalName", e.target.value)} placeholder="Phi Sigma Kappa" />
+          </Field>
         </div>
       </Section>
 
@@ -467,11 +473,11 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
 
       {/* CONTACT */}
       <Section id="contact" title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
-        {(values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
+        {(values["contact.advisorName"] === "Chapter Advisor" || values["contact.advisorName"] === "Our Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
           <div className="mb-4 rounded-xl border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
             <strong className="font-semibold">Heads up — visible on the public site:</strong>{" "}
-            {values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"]
-              ? "Replace “Chapter Advisor” with the real advisor's full name. "
+            {values["contact.advisorName"] === "Chapter Advisor" || values["contact.advisorName"] === "Our Chapter Advisor" || !values["contact.advisorName"]
+              ? "Replace the placeholder advisor name with the real advisor's full name. "
               : ""}
             {!values["contact.rushPhone"]
               ? "Add a chapter or rush-chair phone number — parents reviewing the site expect a callable contact, not just an email."
@@ -508,6 +514,9 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           </Field>
           <Field label="Instagram URL">
             <Input value={values["contact.instagramUrl"] || ""} onChange={(e) => set("contact.instagramUrl", e.target.value)} placeholder="https://www.instagram.com/phisig_usc/" />
+          </Field>
+          <Field label="Campus FSL office URL (Fraternity &amp; Sorority Life)" className="sm:col-span-2">
+            <Input value={values["contact.schoolFslUrl"] || ""} onChange={(e) => set("contact.schoolFslUrl", e.target.value)} placeholder="https://yourschool.edu/student-life/fraternity-and-sorority-life" />
           </Field>
         </div>
       </Section>

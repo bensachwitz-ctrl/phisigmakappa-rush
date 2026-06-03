@@ -312,7 +312,7 @@ export default async function Home({
                 <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Reply within 24 hours
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Gamma Triton chapter
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> {cfg["chapter.greekLetters"] || "Gamma Triton"} chapter
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
@@ -592,14 +592,14 @@ export default async function Home({
             {nextEvent && (
               <div className="flex flex-wrap gap-2">
                 <a
-                  href="webcal://phisigmakappa.vercel.app/api/events.ics"
+                  href={`webcal://${(process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app").replace(/^https?:\/\//, "")}/api/events.ics`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Subscribe in Apple Calendar
                 </a>
                 <a
                   href="/api/events.ics"
-                  download="phisigmakappa-rush.ics"
+                  download={`${(cfg["chapter.fraternityShort"] || "Phi Sig").toLowerCase().replace(/\s+/g, "")}-rush.ics`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Download .ics
@@ -735,7 +735,7 @@ export default async function Home({
               </h2>
             </div>
             <p className="text-muted-foreground max-w-xl">
-              The Gamma Triton chapter elects its leadership annually. These are the brothers
+              The {identity.greekLetters} chapter elects its leadership annually. These are the brothers
               running the show — happy to talk to any rush who wants to learn more.
             </p>
           </div>
@@ -967,28 +967,30 @@ export default async function Home({
       <section className="container section-y">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <a
-            href="https://www.instagram.com/p/DRxIVRXkYCn/"
+            href={`https://www.instagram.com/p/${cfg["about.slug"] || "DWmioxGCaBG"}/`}
             target="_blank"
             rel="noreferrer noopener"
             className="relative aspect-[5/4] rounded-2xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
           >
             <img
-              src="/api/photo/DRxIVRXkYCn"
-              alt={`${identity.fraternityName} brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's health and mental health awareness`}
+              src={`/api/photo/${cfg["about.slug"] || "DWmioxGCaBG"}`}
+              alt={`${identity.fraternityName} ${identity.greekLetters} chapter at ${identity.schoolName}`}
               loading="lazy"
               width={800}
               height={640}
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition: "center 80%" }}
+              style={{ objectPosition: cfg["about.objectPosition"] || "center 80%" }}
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                <HandHeart className="h-3 w-3" aria-hidden="true" /> Movember · $1,600 raised
+                <MapPin className="h-3 w-3" aria-hidden="true" /> Where we live
               </span>
-              <p className="mt-2 text-lg font-semibold tracking-tight">
-                Grow a beard. Make a difference. — men&apos;s mental health.
-              </p>
+              {cfg["about.caption"] ? (
+                <p className="mt-2 text-lg font-semibold tracking-tight">
+                  {cfg["about.caption"]}
+                </p>
+              ) : null}
             </div>
           </a>
           <div className="order-1 lg:order-2">
@@ -999,8 +1001,8 @@ export default async function Home({
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The {identity.fraternityName} chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, walking
-              distance to Russell House and the Horseshoe. It&apos;s where the cookouts,
+              The {identity.fraternityName} chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, right
+              in the heart of campus. It&apos;s where the cookouts,
               chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
               for the first time.
             </p>
