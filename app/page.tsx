@@ -139,6 +139,7 @@ export default async function Home({
   if (cfg["chapter.onboarded"] !== "true") {
     redirect("/onboard");
   }
+  const identity = chapterIdentityFromCfg(cfg);
   const boothParam = searchParams?.booth;
   const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
 
@@ -151,7 +152,7 @@ export default async function Home({
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Phi Sigma Kappa at USC · Booth
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> {identity.chapterAttribution} · Kiosk
             </span>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the Fall&nbsp;&apos;26 rush list.
@@ -194,12 +195,31 @@ export default async function Home({
     }))
     .filter((m) => m.name && m.role);
 
+  // Dynamic white-label interpolator for default lists
+  const interpolate = (text: string) => {
+    return text
+      .replaceAll("Phi Sigma Kappa", identity.fraternityName)
+      .replaceAll("Phi Sig", identity.fraternityShort)
+      .replaceAll("USC", identity.schoolShort)
+      .replaceAll("#DamnProud", identity.tagline);
+  };
+
   // Admin-editable repeater arrays — parsed JSON with safe fallbacks
   const VALUES = parseJsonArray<ValueRow>(cfg["values.json"], VALUES_DEFAULT);
   const TIMELINE = parseJsonArray<TimelineRow>(cfg["timeline.json"], TIMELINE_DEFAULT);
-  const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT);
-  const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
-  const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT);
+  const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT).map(item => ({
+    q: interpolate(item.q),
+    a: interpolate(item.a)
+  }));
+  const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT).map(item => ({
+    icon: item.icon,
+    label: interpolate(item.label)
+  }));
+  const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT).map(item => ({
+    tag: interpolate(item.tag),
+    title: interpolate(item.title),
+    icon: item.icon
+  }));
 
   // Next public rush event for the live countdown chip in the hero.
   // Best-effort — if the DB read fails or the schedule is empty, the
@@ -307,18 +327,24 @@ export default async function Home({
                   icon={iconFor(cfg["hero.tile1.icon"])}
                   className="col-span-2 aspect-[4/5] sm:aspect-[4/4]"
                   priority
+                  chapterFullName={identity.chapterFullName}
+                  schoolShort={identity.schoolShort}
                 />
                 <PostTile
                   slug={cfg["hero.tile2.slug"]}
                   caption={cfg["hero.tile2.caption"]}
                   icon={iconFor(cfg["hero.tile2.icon"])}
                   className="aspect-square"
+                  chapterFullName={identity.chapterFullName}
+                  schoolShort={identity.schoolShort}
                 />
                 <PostTile
                   slug={cfg["hero.tile3.slug"]}
                   caption={cfg["hero.tile3.caption"]}
                   icon={iconFor(cfg["hero.tile3.icon"])}
                   className="aspect-square"
+                  chapterFullName={identity.chapterFullName}
+                  schoolShort={identity.schoolShort}
                 />
               </div>
               <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10 pointer-events-none">
@@ -788,7 +814,7 @@ export default async function Home({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/brand/coat-of-arms-vintage.jpg"
-                alt="Original Phi Sigma Kappa coat of arms — engraved 1873"
+                alt={`Original ${identity.fraternityName} coat of arms — founded ${identity.foundingYear}`}
                 width={84}
                 height={104}
                 loading="lazy"
@@ -938,7 +964,7 @@ export default async function Home({
           >
             <img
               src="/api/photo/DRxIVRXkYCn"
-              alt="Phi Sigma Kappa brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's health and mental health awareness"
+              alt={`${identity.fraternityName} brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's health and mental health awareness`}
               loading="lazy"
               width={800}
               height={640}
@@ -963,7 +989,7 @@ export default async function Home({
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The Phi Sigma Kappa chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, walking
+              The {identity.fraternityName} chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, walking
               distance to Russell House and the Horseshoe. It&apos;s where the cookouts,
               chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
               for the first time.
@@ -1104,13 +1130,15 @@ function ContactPill({
  * Falls back to a designed cardinal-red Crest tile if the photo can't load.
  */
 function PostTile({
-  slug, caption, icon: Icon, className, priority,
+  slug, caption, icon: Icon, className, priority, chapterFullName, schoolShort,
 }: {
   slug: string;
   caption: string;
   icon: React.ElementType;
   className?: string;
   priority?: boolean;
+  chapterFullName: string;
+  schoolShort: string;
 }) {
   const isUrl = /^https?:\/\//.test(slug);
   const imgSrc = isUrl ? slug : `/api/photo/${slug}`;
@@ -1134,7 +1162,7 @@ function PostTile({
         // Keeping the URL stable means the cache key matches across requests.
         srcSet={isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
         sizes={priority ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"}
-        alt={`Phi Sigma Kappa Gamma Triton chapter at USC — ${caption}`}
+        alt={`${chapterFullName} at ${schoolShort} — ${caption}`}
         width={640}
         height={640}
         loading={priority ? "eager" : "lazy"}

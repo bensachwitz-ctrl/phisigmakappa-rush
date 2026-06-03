@@ -32,6 +32,8 @@ export type ChapterIdentity = {
   appShortTitle: string;        // "Phi Sig USC"
   fraternityLetters: string;    // "ΦΣΚ"
   billingPlan: string;          // "dues_split" or "flat_subscription"
+  instagramHandle: string;      // "@phisig_usc"
+  instagramUrl: string;         // "https://www.instagram.com/phisig_usc/"
 
   // Derived (single source of truth for the four most-templated combos):
   chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
@@ -77,6 +79,8 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const appShortTitle = cfg["chapter.appShortTitle"] || "Phi Sig USC";
   const fraternityLetters = cfg["chapter.fraternityLetters"] || "ΦΣΚ";
   const billingPlan = cfg["chapter.billingPlan"] || "dues_split";
+  const instagramHandle = cfg["contact.instagramHandle"] || "@phisig_usc";
+  const instagramUrl = cfg["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/";
 
   return {
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
@@ -86,6 +90,8 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     cardinalPrinciples, tagline, appShortTitle,
     fraternityLetters,
     billingPlan,
+    instagramHandle,
+    instagramUrl,
     chapterFullName: `${fraternityName} ${greekLetters}`,
     chapterAttribution: `${fraternityShort} ${schoolShort}`,
     pageTitle: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,

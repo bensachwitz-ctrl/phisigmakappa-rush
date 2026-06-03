@@ -68,18 +68,22 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: "#C8102E",
-  width: "device-width",
-  initialScale: 1,
-  // iOS Safari: when the on-screen keyboard slides up over a focused form
-  // input, the visual viewport stays the same size so position:fixed
-  // bottom-nav floats over the focused field. interactive-widget=
-  // "resizes-content" tells iOS to actually shrink the layout viewport
-  // under the keyboard, so the bottom nav scrolls with the content and
-  // doesn't occlude the input the user is typing into.
-  interactiveWidget: "resizes-content",
-};
+export async function generateViewport(): Promise<Viewport> {
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#C8102E");
+  return {
+    themeColor: brandPrimary,
+    width: "device-width",
+    initialScale: 1,
+    // iOS Safari: when the on-screen keyboard slides up over a focused form
+    // input, the visual viewport stays the same size so position:fixed
+    // bottom-nav floats over the focused field. interactive-widget=
+    // "resizes-content" tells iOS to actually shrink the layout viewport
+    // under the keyboard, so the bottom nav scrolls with the content and
+    // doesn't occlude the input the user is typing into.
+    interactiveWidget: "resizes-content",
+  };
+}
 
 /**
  * JSON-LD schema graph. Three nodes:

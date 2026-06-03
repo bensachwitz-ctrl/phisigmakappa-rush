@@ -3,6 +3,7 @@
 import { Instagram, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 // Real post slugs pulled live from instagram.com/phisig_usc.
 // Sorted newest-first; image proxy at /api/photo/[slug] fetches the og:image
@@ -38,6 +39,7 @@ export function InstagramFeed({
   count?: number;
   className?: string;
 }) {
+  const { instagramHandle, chapterFullName } = useChapterIdentity();
   const posts = POSTS.slice(0, count);
   return (
     <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 stagger", className)}>
@@ -63,7 +65,7 @@ export function InstagramFeed({
             src={`/api/photo/${p.slug}?w=640`}
             srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w, /api/photo/${p.slug}?w=960 960w`}
             sizes={i === 0 ? "(min-width: 1024px) 480px, 50vw" : "(min-width: 1024px) 240px, 33vw"}
-            alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
+            alt={`${chapterFullName} — ${p.caption}`}
             width={520}
             height={i === 0 ? 650 : 520}
             // The IG feed is ~3 viewports below the fold, so every tile is
@@ -80,7 +82,7 @@ export function InstagramFeed({
 
           {/* Top-right Instagram badge */}
           <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
-            <Instagram className="h-3 w-3" /> @phisig_usc
+            <Instagram className="h-3 w-3" /> {instagramHandle}
           </span>
 
           {/* Bottom caption */}
@@ -102,6 +104,7 @@ export function InstagramFeed({
 }
 
 export function InstagramStrip() {
+  const { instagramHandle, instagramUrl, chapterFullName } = useChapterIdentity();
   const posts = POSTS.slice(0, 4);
   return (
     <div className="space-y-4">
@@ -119,7 +122,7 @@ export function InstagramStrip() {
               src={`/api/photo/${p.slug}?w=320`}
               srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w`}
               sizes="(min-width: 640px) 25vw, 50vw"
-              alt={`Phi Sigma Kappa Gamma Triton at USC — ${p.caption}`}
+              alt={`${chapterFullName} — ${p.caption}`}
               width={320}
               height={320}
               loading="lazy"
@@ -132,12 +135,12 @@ export function InstagramStrip() {
       </div>
       <div className="text-center">
         <Link
-          href="https://www.instagram.com/phisig_usc/"
+          href={instagramUrl}
           target="_blank"
           rel="noreferrer noopener"
           className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
         >
-          <Instagram className="h-4 w-4" /> See more on @phisig_usc
+          <Instagram className="h-4 w-4" /> See more on {instagramHandle}
           <ExternalLink className="h-3 w-3" />
         </Link>
       </div>

@@ -21,6 +21,8 @@ const defaultIdentity: ChapterIdentity = {
   appShortTitle: "Phi Sig USC",
   fraternityLetters: "ΦΣΚ",
   billingPlan: "dues_split",
+  instagramHandle: "@phisig_usc",
+  instagramUrl: "https://www.instagram.com/phisig_usc/",
   chapterFullName: "Phi Sigma Kappa Gamma Triton",
   chapterAttribution: "Phi Sig USC",
   pageTitle: "Phi Sigma Kappa Gamma Triton — Rush at USC",
