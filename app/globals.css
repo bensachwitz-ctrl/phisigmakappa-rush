@@ -393,6 +393,15 @@
   animation: orbit-slow 60s linear infinite;
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+
 /* Image entrance — soft fade-in with subtle Ken Burns zoom-out. Used on
    hero photo so it lands gracefully instead of popping. */
 @keyframes ken-burns-in {

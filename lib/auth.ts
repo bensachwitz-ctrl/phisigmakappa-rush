@@ -126,13 +126,35 @@ export function getCurrentBrotherId(): string | null {
 }
 
 export async function getCurrentBrother() {
+  // 1. Check admin session first
   const id = getCurrentBrotherId();
-  if (!id) return null;
-  try {
-    return await prisma.brother.findUnique({ where: { id } });
-  } catch {
-    return null;
+  if (id) {
+    try {
+      const b = await prisma.brother.findUnique({ where: { id } });
+      if (b) return b;
+    } catch {
+      // ignore
+    }
   }
+
+  // 2. Check portal session (dynamic import to avoid circular deps)
+  try {
+    const { getPortalSession } = await import("./portal-auth");
+    const portalSess = getPortalSession();
+    if (portalSess && portalSess.role === "brother") {
+      const portalUser = await prisma.portalUser.findUnique({
+        where: { id: portalSess.userId },
+      });
+      if (portalUser?.brotherId) {
+        const b = await prisma.brother.findUnique({ where: { id: portalUser.brotherId } });
+        if (b) return b;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
 }
 
 export async function getCurrentSession(): Promise<{ brother: any; isAdmin: boolean } | null> {

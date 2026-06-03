@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, ArrowLeft, Mail, Lock, LogIn, UserPlus } from "lucide-react";
+import { Users, ArrowLeft, Mail, Lock, LogIn, UserPlus } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 
-export default function AlumniLoginPage() {
+export default function BrothersLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ export default function AlumniLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/portal/alumni/login", {
+      const res = await fetch("/api/portal/brothers/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -32,7 +32,7 @@ export default function AlumniLoginPage() {
       if (!res.ok) {
         setError(data.error || "Login failed. Please check your credentials.");
       } else {
-        router.push("/portal/alumni/dashboard");
+        router.push("/portal/brothers/dashboard");
         router.refresh();
       }
     } catch (err) {
@@ -59,12 +59,12 @@ export default function AlumniLoginPage() {
 
           <div className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-cream-50 mb-3 shadow-sm">
-                <GraduationCap className="w-6 h-6" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-maroon-650 to-maroon-900 text-cream-50 mb-3 shadow-sm">
+                <Users className="w-6 h-6" />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-maroon-900">Alumni Sign In</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-maroon-900">Brothers Sign In</h1>
               <p className="text-xs text-maroon-600 mt-1">
-                Access your personalized alumni dashboard
+                Access your chapter dashboard & tools
               </p>
             </div>
 
@@ -87,7 +87,7 @@ export default function AlumniLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="brother@example.com"
-                    className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
+                    className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
                   />
                 </div>
               </div>
@@ -104,7 +104,7 @@ export default function AlumniLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
+                    className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
                   />
                 </div>
               </div>
@@ -126,13 +126,10 @@ export default function AlumniLoginPage() {
             </form>
 
             <div className="border-t border-maroon-100 pt-4 text-center">
-              <p className="text-xs text-maroon-700 mb-2">Don&apos;t have an alumni account yet?</p>
-              <Link href="/portal/alumni/register">
-                <Button variant="outline" className="w-full border-maroon-200 text-maroon-900 hover:bg-cream-50 rounded-xl flex items-center justify-center gap-1">
-                  <UserPlus className="w-4 h-4" />
-                  Register as Alumnus
-                </Button>
-              </Link>
+              <p className="text-xs text-maroon-700 mb-2">Haven&apos;t activated your account yet?</p>
+              <p className="text-[11px] text-maroon-500 leading-normal px-2">
+                Active brothers must be invited by an e-board officer. Check your email or text message for your personal activation link, or contact the Chapter Secretary.
+              </p>
             </div>
           </div>
         </main>

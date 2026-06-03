@@ -23,6 +23,9 @@ import {
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
+import { redirect } from "next/navigation";
+import { FloatingSymbols } from "@/components/site/floating-symbols";
+import { SaasSimulator } from "@/components/site/saas-simulator";
 
 export const dynamic = "force-dynamic";
 
@@ -133,6 +136,9 @@ export default async function Home({
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
   const cfg = await getSiteConfig();
+  if (cfg["chapter.onboarded"] !== "true") {
+    redirect("/onboard");
+  }
   const boothParam = searchParams?.booth;
   const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
 
@@ -224,14 +230,15 @@ export default async function Home({
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
-        <div className="absolute right-[6%] top-[6%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.08] select-none pointer-events-none">
-          {/* Real Phi Sig shield (cropped — no text) — drifts subtly behind
-              the hero copy as a watermark at 8% opacity. */}
+        <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
+        <div className="absolute right-[8%] top-[10%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.22] select-none pointer-events-none filter drop-shadow-[0_20px_50px_rgba(200,16,46,0.25)]">
+          {/* 3D Glassmorphic Shield floating in the hero section */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/phisigmakappa-shield-only.jpg"
+            src="/brand/3d-shield.png"
             alt=""
-            className="h-[320px] w-auto object-contain"
+            className="h-[360px] w-auto object-contain animate-orbit-slow"
+            style={{ animationDuration: '45s' }}
             aria-hidden="true"
           />
         </div>
@@ -398,6 +405,8 @@ export default async function Home({
         </div>
       </section>
       )}
+
+      <SaasSimulator />
 
       {/* ─── REGISTER ─── */}
       <section id="register" className="bg-phisig-mist border-y border-border scroll-mt-20">

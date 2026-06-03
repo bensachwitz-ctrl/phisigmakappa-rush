@@ -10,6 +10,8 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Users, GraduationCap, Shield, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { FloatingSymbols } from "@/components/site/floating-symbols";
 
 export const dynamic = "force-dynamic";
 
@@ -52,10 +54,14 @@ const PORTALS: PortalCard[] = [
 
 export default async function PortalHubPage() {
   const cfg = await getSiteConfig();
+  if (cfg["chapter.onboarded"] !== "true") {
+    redirect("/onboard");
+  }
   const id = chapterIdentityFromCfg(cfg);
 
   return (
-    <div className="min-h-screen bg-cream-50 text-maroon-950 overflow-x-hidden">
+    <div className="min-h-screen bg-cream-50 text-maroon-950 overflow-x-hidden relative">
+      <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
       <PublicNav />
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">

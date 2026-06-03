@@ -90,14 +90,30 @@ export async function POST(req: Request) {
 
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
     const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
-    // Username is intentionally case-insensitive (it's a shared chapter handle,
-    // not a secret — admins type "Phisig" / "PHISIG" / "phisig" interchangeably).
-    // Password is case-SENSITIVE — lowercasing it as we used to was halving the
-    // effective keyspace and was flagged as a real security defect in audit.
-    const userOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
-    const passOk = constantTimeStringEqual(String(data.password || ""), expectedPass);
-    if (!userOk || !passOk) {
-      // Log the failure so the per-IP throttle can see it.
+
+    const sharedUserOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
+    const sharedPassOk = constantTimeStringEqual(String(data.password || ""), expectedPass);
+
+    let matchedAdminBrother = null;
+    let loginSuccess = sharedUserOk && sharedPassOk;
+
+    if (!loginSuccess) {
+      const dbAdmin = await prisma.brother.findFirst({
+        where: {
+          OR: [
+            { email: { equals: data.username.trim(), mode: "insensitive" } },
+            { name: { equals: data.username.trim(), mode: "insensitive" } }
+          ],
+          role: "ADMIN",
+        },
+      });
+      if (dbAdmin && verifyPassword(data.password, dbAdmin.passwordHash)) {
+        loginSuccess = true;
+        matchedAdminBrother = dbAdmin;
+      }
+    }
+
+    if (!loginSuccess) {
       if (ipAddress) {
         prisma.rushSubmitLog.create({
           data: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
@@ -105,31 +121,32 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ ok: false, error: "Invalid admin credentials" }, { status: 401 });
     }
-    // SUCCESSFUL LOGIN — clear the failure log for this IP. Without this, an
-    // admin who fat-fingered their password 4 times before nailing it on the
-    // 5th would still be locked out for 15 min on their NEXT login attempt.
-    // Standard practice: any successful auth proves the actor is legitimate,
-    // so the failure counter resets. Best-effort — DB hiccup must not block
-    // the login response.
+
     if (ipAddress) {
       prisma.rushSubmitLog.deleteMany({
         where: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
       }).catch(() => {});
     }
 
-    // Single shared admin record — username = the credential. If the legacy "name"
-    // field was supplied (older client), prefer it so existing admin Brothers keep
-    // their attribution. Otherwise use a stable "Chapter Admin" record.
-    const cleanName = (data.name && data.name.trim()) || "Chapter Admin";
-    let brother = await prisma.brother.findUnique({ where: { name: cleanName } });
+    let brother = matchedAdminBrother;
     if (!brother) {
-      brother = await prisma.brother.create({ data: { name: cleanName, role: "ADMIN" } });
+      const cleanName = (data.name && data.name.trim()) || "Chapter Admin";
+      brother = await prisma.brother.findUnique({ where: { name: cleanName } });
+      if (!brother) {
+        brother = await prisma.brother.create({ data: { name: cleanName, role: "ADMIN" } });
+      } else {
+        await prisma.brother.update({
+          where: { id: brother.id },
+          data: { lastSeen: new Date(), role: "ADMIN" },
+        });
+      }
     } else {
       await prisma.brother.update({
         where: { id: brother.id },
-        data: { lastSeen: new Date(), role: "ADMIN" },
+        data: { lastSeen: new Date() },
       });
     }
+
     setBrotherCookie(brother.id, true);
     return NextResponse.json({
       ok: true,
