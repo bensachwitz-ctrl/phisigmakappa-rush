@@ -122,7 +122,8 @@ export async function POST(req: Request) {
   // Email
   if (channel === "EMAIL" || channel === "BOTH") {
     const apiKey = process.env.RESEND_API_KEY;
-    const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
+    const domain = new URL(req.url).hostname.replace("www.", "");
+    const fromAddr = process.env.RESEND_FROM_EMAIL || `rush@${domain}`;
     const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
     if (!apiKey || apiKey.startsWith("re_xxxxx")) {
       mockMode = true;

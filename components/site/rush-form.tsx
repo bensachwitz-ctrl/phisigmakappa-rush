@@ -61,23 +61,8 @@ type StepId =
 // Express-written-consent disclosure shown above the phone field on Step 1
 // (TCPA / CTIA best practice — disclosure must precede phone collection).
 // The form-wide affirmative checkbox is on the final Review step.
-const SMS_PRE_DISCLOSURE =
-  "We'll text you when the Fall '26 schedule drops and as rush events approach — up to 8 messages per rush cycle, sent using automated technology. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
-
-// The line that appears next to the express-consent checkbox on the Review step.
-// Identifies the sender by full legal name, the program, frequency, opt-out keywords,
-// and links to the privacy policy. This is the recorded consent text.
-//
-// Note on age: incoming USC freshmen can be 17 (early-grad / late-Aug birthdays /
-// transfers from accelerated programs), so the consent allows 17 with verified
-// parental permission — matching the under-18 guardian-consent path in /privacy.
-// Hard-blocking 18+ would lock out legitimate rushees.
-//
-// R11: includes the 47 CFR §64.1200(f)(9) "automatic telephone dialing system"
-// disclosure language so this consent qualifies as prior express written
-// consent under TCPA — a plaintiff lawyer can no longer argue otherwise.
-const SMS_EXPRESS_CONSENT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
+// SMS_PRE_DISCLOSURE and SMS_EXPRESS_CONSENT have been refactored to compute dynamically
+// in the components to support automatic white-labeled rollout.
 
 export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   const { push } = useToast();
@@ -352,7 +337,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
                   aria-describedby="sms-consent-text"
                 />
                 <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
-                  I am 18+ — or I am 17 and have a parent or legal guardian&apos;s permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from {identity.chapterFullName} ({identity.schoolShort}) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall &apos;26 rush and is never sold or shared.{" "}
+                  I am 18+ — or I am 17 and have a parent or legal guardian&apos;s permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from {identity.chapterFullName} ({identity.schoolShort}) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall &apos;{new Date().getFullYear() % 100} rush and is never sold or shared.{" "}
                   See our{" "}
                   <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
                     privacy policy
@@ -443,7 +428,8 @@ function ContactStep({
       )}
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
-        <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
+        <span className="font-semibold text-foreground">SMS notice: </span>
+        We&apos;ll text you when the Fall &apos;{new Date().getFullYear() % 100} schedule drops and as rush events approach — up to 8 messages per rush cycle, sent using automated technology. Reply HELP for help, STOP to opt out. Msg &amp; data rates may apply.{" "}
         <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
 
@@ -784,7 +770,7 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
           You're on the list, {first}.
         </h3>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          We just sent a confirmation text. <span className="font-medium text-foreground">Reply YES</span> to lock it in. Then watch for the Fall '26 schedule in August.
+          We just sent a confirmation text. <span className="font-medium text-foreground">Reply YES</span> to lock it in. Then watch for the Fall &apos;{new Date().getFullYear() % 100} schedule in August.
         </p>
         {receiptId && (
           <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono">

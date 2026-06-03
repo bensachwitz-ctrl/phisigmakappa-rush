@@ -121,7 +121,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Retention</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Rush data is retained through the Fall 2026 recruitment cycle. After Bid Night, records of rushees who declined or were not extended a bid are deleted within 90 days unless you explicitly opt in to future communications by emailing{" "}
+            Rush data is retained through the Fall {new Date().getFullYear()} recruitment cycle. After Bid Night, records of rushees who declined or were not extended a bid are deleted within 90 days unless you explicitly opt in to future communications by emailing{" "}
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>

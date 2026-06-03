@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { RefreshCcw, Home, Mail } from "lucide-react";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 export default function Error({
   error,
@@ -13,6 +14,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { rushEmail } = useChapterIdentity();
+
   React.useEffect(() => {
     // Surface to console for debugging; in production this would go to Sentry/Logtail.
     // eslint-disable-next-line no-console
@@ -48,7 +51,7 @@ export default function Error({
               </Link>
             </Button>
             <Button asChild variant="ghost" size="lg">
-              <a href="mailto:rush@phisig-usc.com">
+              <a href={`mailto:${rushEmail}`}>
                 <Mail className="h-4 w-4" /> Email rush chair
               </a>
             </Button>

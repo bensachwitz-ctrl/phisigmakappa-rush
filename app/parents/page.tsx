@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
-import { Crest } from "@/components/brand/wordmark";
+import { Crest, Seal } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import {
@@ -59,6 +59,10 @@ export default async function ParentsPage() {
   const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
   const schoolShort = cfg["chapter.schoolShort"] || "USC";
   const chapterAttribution = `${fraternityName} ${greekLetters}`;
+  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+  const schoolFslUrl = cfg["contact.schoolFslUrl"] || "https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  const nationalName = cfg["chapter.nationalName"] || "Phi Sigma Kappa";
 
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
@@ -72,18 +76,24 @@ export default async function ParentsPage() {
         </Link>
 
         <div className="relative overflow-hidden rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/60 via-white to-white p-8 sm:p-12 mb-10">
-          {/* Formal Phi Sigma Kappa coat of arms — sits in the upper-right
+          {/* Formal coat of arms or dynamic seal — sits in the upper-right
               corner as the brand authority signal for parents reading this
-              page. This is the supplied national heraldic mark. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/coat-of-arms-formal.jpg"
-            alt={`${fraternityName} coat of arms`}
-            width={140}
-            height={164}
-            className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"
-            aria-hidden="true"
-          />
+              page. */}
+          {isPhiSig ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/brand/coat-of-arms-formal.jpg"
+              alt={`${fraternityName} coat of arms`}
+              width={140}
+              height={164}
+              className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"
+              aria-hidden="true"
+            />
+          ) : (
+            <div className="absolute top-6 right-6 hidden sm:block h-32 w-32 opacity-90 text-brand-primary">
+              <Seal className="w-full h-full" />
+            </div>
+          )}
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-phisig-red/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red shadow-sm">
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> For Parents &amp; Guardians
           </span>
@@ -168,7 +178,7 @@ export default async function ParentsPage() {
                 <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
                 <span>
                   <a
-                    href="https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php"
+                    href={schoolFslUrl}
                     target="_blank"
                     rel="noreferrer noopener"
                     className="text-phisig-red hover:underline"
@@ -186,8 +196,8 @@ export default async function ParentsPage() {
               </li>
               <li className="flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
-                <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
-                  phisigmakappa.org · National HQ
+                <a href={nationalHqUrl} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                  {nationalHqUrl.replace(/^https?:\/\//, "")} · {nationalName} National HQ
                 </a>
               </li>
             </ul>
@@ -327,7 +337,13 @@ export default async function ParentsPage() {
 
         {/* CTA */}
         <section className="rounded-2xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-8 sm:p-10 relative overflow-hidden">
-          <Crest className="absolute -bottom-6 -right-6 h-40 w-40 text-white opacity-10" aria-hidden="true" />
+          {isPhiSig ? (
+            <Crest className="absolute -bottom-6 -right-6 h-40 w-40 text-white opacity-10" aria-hidden="true" />
+          ) : (
+            <div className="absolute -bottom-6 -right-6 h-40 w-40 text-white opacity-10">
+              <Seal className="w-full h-full" />
+            </div>
+          )}
           <div className="relative max-w-xl">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
               Have a question we didn&apos;t answer?

@@ -135,7 +135,56 @@ export function Wordmark({
 }
 
 export function Crest({ className }: { className?: string }) {
-  const { foundingYear } = useChapterIdentity();
+  const { foundingYear, fraternityLetters, fraternityName } = useChapterIdentity();
+  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+
+  if (!isPhiSig) {
+    return (
+      <svg viewBox="0 0 64 72" fill="none" className={className} aria-hidden="true">
+        {/* Shield body */}
+        <path
+          d="M 8 6
+             L 56 6
+             L 56 38
+             C 56 50 49 60 32 70
+             C 15 60 8 50 8 38
+             Z"
+          fill="currentColor"
+          stroke="white"
+          strokeWidth="2.6"
+          strokeLinejoin="round"
+        />
+        {/* Letters in the middle */}
+        <text
+          x="32"
+          y="36"
+          textAnchor="middle"
+          fontFamily="system-ui, sans-serif"
+          fontSize="11"
+          fontWeight="900"
+          fill="white"
+          letterSpacing="0.5"
+        >
+          {fraternityLetters ? fraternityLetters.slice(0, 3) : ""}
+        </text>
+        {/* Founding Year */}
+        <text
+          x="32"
+          y="56"
+          textAnchor="middle"
+          fontFamily='ui-serif, Georgia, "Times New Roman", serif'
+          fontSize="6"
+          fontWeight="700"
+          fontStyle="italic"
+          fill="white"
+          letterSpacing="1"
+        >
+          {foundingYear}
+        </text>
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 64 72" fill="none" className={className} aria-hidden="true">
       {/* Shield body — flat-topped, slightly wider shoulders, sharp point

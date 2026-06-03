@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,16 +20,16 @@ function baseUrl(req: Request) {
   return process.env.SITE_URL || `${new URL(req.url).origin}`;
 }
 
-async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity) {
+async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity, domain: string, primaryColor: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { sent: false, reason: "no-resend" };
-  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@phisig-usc.com>`;
+  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@${domain}>`;
   const html = `
     <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
       <h1 style="font-size:22px;margin:0 0 6px">You're being added to ${identity.fraternityShort}.</h1>
       <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the brothers directory at ${identity.greekLetters}, ${identity.schoolShort}.</p>
       <p style="margin:18px 0">
-        <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Complete your brother profile</a>
+        <a href="${link}" style="display:inline-block;background:${primaryColor};color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Complete your brother profile</a>
       </p>
       <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
       <p style="color:#71717a;font-size:12px">Link expires in 30 days. ${identity.tagline}</p>
@@ -101,12 +102,17 @@ export async function POST(req: Request) {
 
   const link = `${baseUrl(req)}/onboard/${token}`;
   const senderName = sender?.name || "";
-  // Pull identity once so both channels share the same chapter signature.
-  const identity = await getChapterIdentity();
+  // Pull identity and config once so both channels share the same chapter signature.
+  const [identity, cfg] = await Promise.all([
+    getChapterIdentity(),
+    getSiteConfig().catch(() => ({} as Record<string, string>)),
+  ]);
+  const primaryColor = cfg["brand.primaryHex"] || "#a3001a";
+  const domain = new URL(baseUrl(req)).hostname.replace("www.", "");
 
   let delivery: { channel: string; sent: boolean; reason: string } = { channel: "link", sent: false, reason: "manual" };
   if (channel === "email" && email) {
-    const r = await sendEmail(email, link, senderName, identity);
+    const r = await sendEmail(email, link, senderName, identity, domain, primaryColor);
     delivery = { channel: "email", ...r };
   } else if (channel === "sms" && phone) {
     const r = await sendSms(phone, link, senderName, identity);

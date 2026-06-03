@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { enrichRushee } from "@/lib/enrich";
 import { getSiteConfig } from "@/lib/site-config";
 import { isAdminAuthed } from "@/lib/auth";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,15 +17,13 @@ export const dynamic = "force-dynamic";
 // disclosure language so the receipt qualifies as prior express written
 // consent under TCPA. The R10 audit caught its absence as a class-action vector.
 const DISCLOSURE_VERSION = "2026-05-05";
-const SMS_DISCLOSURE_TEXT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent to receive these messages is not a condition of any membership consideration. My information will only be used to communicate about Fall '26 rush and is never sold or shared.";
 
 /**
  * Fire a confirmation SMS to the rushee asking them to reply YES to confirm.
  * Best-effort: if Twilio is not configured or fails, we log and move on. The
  * RushConsent record is what determines TCPA compliance, not the send result.
  */
-async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string) {
+async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string, identity: any) {
   try {
     const sid = process.env.TWILIO_ACCOUNT_SID;
     const token = process.env.TWILIO_AUTH_TOKEN;
@@ -33,7 +32,8 @@ async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: s
       console.info("[double-opt-in] Twilio env not set; skipping confirmation SMS for", receiptId);
       return;
     }
-    const body = `Phi Sig USC Gamma Triton: hey ${firstName}! Reply YES to confirm rush updates (about 6-8 msgs/cycle). Reply HELP for help, STOP to opt out. Msg & data rates may apply.`;
+    const currentYear = new Date().getFullYear();
+    const body = `${identity.chapterAttribution || identity.chapterFullName}: hey ${firstName}! Reply YES to confirm Fall '${currentYear % 100}' rush updates (about 6-8 msgs/cycle). Reply HELP for help, STOP to opt out. Msg & data rates may apply.`;
     const auth = Buffer.from(`${sid}:${token}`).toString("base64");
     await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: "POST",
@@ -122,6 +122,10 @@ export async function POST(req: Request) {
       null;
     const userAgent = req.headers.get("user-agent") || null;
 
+    const identity = await getChapterIdentity();
+    const currentYear = new Date().getFullYear();
+    const dynamicDisclosureText = `I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from ${identity.chapterFullName} (${identity.schoolShort}) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent to receive these messages is not a condition of any membership consideration. My information will only be used to communicate about Fall '${currentYear % 100}' rush and is never sold or shared.`;
+
     // ── Rate limit ────────────────────────────────────────────────────────
     // Block > 30 submits from the same IP in 60 minutes. Real rushees submit
     // once; bots and spam loops hit the form repeatedly. 30/hour gives a
@@ -142,8 +146,8 @@ export async function POST(req: Request) {
           }).catch(() => {});
           // Pull rush email from cfg so a chapter that changes their address
           // in admin doesn't dead-letter rate-limited rushees to the default.
-          const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-          const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+          const identity = await getChapterIdentity().catch(() => ({} as any));
+          const rushEmail = identity.rushEmail || "rush@phisig-usc.com";
           return NextResponse.json(
             {
               ok: false,
@@ -267,7 +271,7 @@ export async function POST(req: Request) {
         data: {
           rushId: upserted.id,
           disclosureVersion: DISCLOSURE_VERSION,
-          disclosureText: SMS_DISCLOSURE_TEXT,
+          disclosureText: dynamicDisclosureText,
           ipAddress,
           userAgent,
           ageAttestation,
@@ -288,7 +292,7 @@ export async function POST(req: Request) {
       data: {
         rushId: created.id,
         disclosureVersion: DISCLOSURE_VERSION,
-        disclosureText: SMS_DISCLOSURE_TEXT,
+        disclosureText: dynamicDisclosureText,
         ipAddress,
         userAgent,
         ageAttestation,
@@ -305,7 +309,7 @@ export async function POST(req: Request) {
     });
 
     // Fire double-opt-in confirmation SMS in the background.
-    sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id);
+    sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id, identity);
 
     return NextResponse.json({
       ok: true,

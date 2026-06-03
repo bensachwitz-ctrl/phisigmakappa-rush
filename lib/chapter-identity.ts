@@ -34,6 +34,9 @@ export type ChapterIdentity = {
   billingPlan: string;          // "dues_split" or "flat_subscription"
   instagramHandle: string;      // "@phisig_usc"
   instagramUrl: string;         // "https://www.instagram.com/phisig_usc/"
+  rushEmail: string;            // "rush@phisig-usc.com"
+  advisorEmail: string;         // "advisor@phisig-usc.com"
+  schoolFslUrl: string;         // FSL office URL
 
   // Derived (single source of truth for the four most-templated combos):
   chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
@@ -81,6 +84,9 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const billingPlan = cfg["chapter.billingPlan"] || "dues_split";
   const instagramHandle = cfg["contact.instagramHandle"] || "@phisig_usc";
   const instagramUrl = cfg["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/";
+  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+  const advisorEmail = cfg["contact.advisorEmail"] || "advisor@phisig-usc.com";
+  const schoolFslUrl = cfg["contact.schoolFslUrl"] || "https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php";
 
   return {
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
@@ -92,6 +98,9 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     billingPlan,
     instagramHandle,
     instagramUrl,
+    rushEmail,
+    advisorEmail,
+    schoolFslUrl,
     chapterFullName: `${fraternityName} ${greekLetters}`,
     chapterAttribution: `${fraternityShort} ${schoolShort}`,
     pageTitle: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,

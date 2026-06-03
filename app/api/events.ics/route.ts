@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       `URL:${origin}/#schedule`,
       `STATUS:CONFIRMED`,
       `TRANSP:OPAQUE`,
-      `CATEGORIES:Rush,${escapeIcs(cfg["philanthropy.beneficiaryShort"] || "Phi Sigma Kappa")}`,
+      `CATEGORIES:Rush,${escapeIcs(cfg["philanthropy.beneficiaryShort"] || identity.fraternityName)}`,
       "END:VEVENT",
     );
   }
@@ -97,11 +97,13 @@ export async function GET(req: Request) {
   const body =
     lines.filter(Boolean).map(foldIcsLine).join("\r\n") + "\r\n";
 
+  const filename = `${identity.fraternityShort.toLowerCase().replace(/\s+/g, "")}-rush.ics`;
+
   return new NextResponse(body, {
     status: 200,
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'inline; filename="phisigmakappa-rush.ics"',
+      "Content-Disposition": `inline; filename="${filename}"`,
       // 1 hour browser cache + 6h edge cache; calendar apps re-fetch on their own schedule.
       "Cache-Control": "public, max-age=3600, s-maxage=21600",
       "CDN-Cache-Control": "public, max-age=21600",

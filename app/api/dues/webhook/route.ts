@@ -225,7 +225,7 @@ async function handleCheckoutCompleted(
     <p>The transaction has processed successfully, and their chapter profile is now updated to reflect active status.</p>
   </div>
   <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 16px; font-size: 11px; color: #9ca3af;">
-    <p style="margin: 0;">Sent on behalf of the treasury team. Contact <a href="mailto:${replyToEmail}" style="color: ${primaryColorHex}/brand.primaryHex; text-decoration: none;">${replyToEmail}</a> for invoice questions.</p>
+    <p style="margin: 0;">Sent on behalf of the treasury team. Contact <a href="mailto:${replyToEmail}" style="color: ${primaryColorHex}; text-decoration: none;">${replyToEmail}</a> for invoice questions.</p>
     <p style="margin: 4px 0 0 0;">Powered by Greekstack.</p>
   </div>
 </div>
@@ -386,6 +386,17 @@ async function handleDonationCompleted(
 
   if (!alumni) return;
 
+  // Resolve chapter identity dynamically for the thank you email
+  let identity;
+  try {
+    identity = await getChapterIdentity();
+  } catch {
+    identity = {
+      fraternityName: "Phi Sigma Kappa",
+      schoolShort: "USC",
+    };
+  }
+
   // Send thank you email to alumnus
   const html = `
     <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
@@ -397,13 +408,13 @@ async function handleDonationCompleted(
         <p style="margin:0 0 8px;"><strong>Date:</strong> ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}</p>
       </div>
       <p style="color:#52525b;margin:18px 0;">Your contribution directly supports our active brothers, housing operations, and scholarship programs. Thank you for your continued dedication and character.</p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">Phi Sigma Kappa Fraternity &middot; USC</p>
+      <p style="color:#71717a;font-size:12px;margin-top:24px">${identity.fraternityName} Fraternity &middot; ${identity.schoolShort}</p>
     </div>
   `;
 
   await sendEmail({
     to: alumni.email || "",
-    subject: `Thank you for your donation to Phi Sigma Kappa`,
+    subject: `Thank you for your donation to ${identity.fraternityName}`,
     html,
   }).catch((e) => console.error("Failed to send thank you email:", e));
 

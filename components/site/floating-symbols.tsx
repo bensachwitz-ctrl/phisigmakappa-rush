@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Crest } from "@/components/brand/wordmark";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 interface FloatingSymbol {
   id: number;
@@ -15,18 +16,31 @@ interface FloatingSymbol {
   rotate: number; // degrees
 }
 
-export function FloatingSymbols({ greekLettersGlyphs = "ΓΤ" }: { greekLettersGlyphs?: string }) {
+export function FloatingSymbols({ greekLettersGlyphs: propGlyphs }: { greekLettersGlyphs?: string }) {
+  const { greekLettersGlyphs: ctxGlyphs, fraternityLetters } = useChapterIdentity();
+  const greekLettersGlyphs = propGlyphs ?? ctxGlyphs;
   const [symbols, setSymbols] = useState<FloatingSymbol[]>([]);
 
   useEffect(() => {
     // Compile characters
-    const alphabet = ["Φ", "Σ", "Κ"];
+    const alphabet: string[] = [];
+    if (fraternityLetters) {
+      for (const char of fraternityLetters) {
+        if (char.trim() && !alphabet.includes(char)) {
+          alphabet.push(char);
+        }
+      }
+    }
     if (greekLettersGlyphs) {
       for (const char of greekLettersGlyphs) {
         if (char.trim() && !alphabet.includes(char)) {
           alphabet.push(char);
         }
       }
+    }
+    // Fallback if empty
+    if (alphabet.length === 0) {
+      alphabet.push("Φ", "Σ", "Κ");
     }
 
     const items: FloatingSymbol[] = [];
@@ -45,7 +59,7 @@ export function FloatingSymbols({ greekLettersGlyphs = "ΓΤ" }: { greekLettersG
       });
     }
     setSymbols(items);
-  }, [greekLettersGlyphs]);
+  }, [greekLettersGlyphs, fraternityLetters]);
 
   if (symbols.length === 0) return null;
 

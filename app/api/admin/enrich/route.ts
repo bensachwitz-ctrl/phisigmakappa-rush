@@ -39,7 +39,7 @@ function quickLinks(
   ];
 }
 
-async function tavilySearch(name: string, hints: string, schoolName: string) {
+async function tavilySearch(name: string, hints: string, schoolName: string, schoolHost: string) {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) return null;
   const query = `${name} ${schoolName} ${hints}`.trim();
@@ -54,7 +54,7 @@ async function tavilySearch(name: string, hints: string, schoolName: string) {
       max_results: 8,
       include_domains: [
         "linkedin.com", "instagram.com", "facebook.com",
-        "sc.edu", "maxpreps.com", "athletic.net",
+        schoolHost, "maxpreps.com", "athletic.net",
       ],
     }),
   });
@@ -91,7 +91,8 @@ export async function POST(req: Request) {
 
   let result: Enrichment;
   try {
-    const tav = await tavilySearch(rush.name, hints, identity.schoolName);
+    const schoolHost = identity.schoolUrl.replace(/^https?:\/\//, "").replace(/\/$/, "").replace(/^www\./, "");
+    const tav = await tavilySearch(rush.name, hints, identity.schoolName, schoolHost);
     if (tav) {
       const bullets = (tav.results || [])
         .slice(0, 6)

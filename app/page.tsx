@@ -140,6 +140,7 @@ export default async function Home({
     redirect("/onboard");
   }
   const identity = chapterIdentityFromCfg(cfg);
+  const isPhiSig = identity.fraternityName.toLowerCase().includes("phi sigma kappa");
   const boothParam = searchParams?.booth;
   const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
 
@@ -155,7 +156,7 @@ export default async function Home({
               <Sparkles className="h-3 w-3" aria-hidden="true" /> {identity.chapterAttribution} · Kiosk
             </span>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
-              Add yourself to the Fall&nbsp;&apos;26 rush list.
+              Add yourself to the Fall&nbsp;&apos;{new Date().getFullYear().toString().slice(-2)} rush list.
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Three quick fields. We&apos;ll text you when the schedule drops.
@@ -252,15 +253,21 @@ export default async function Home({
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
         <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
         <div className="absolute right-[8%] top-[10%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.22] select-none pointer-events-none filter drop-shadow-[0_20px_50px_rgba(200,16,46,0.25)]">
-          {/* 3D Glassmorphic Shield floating in the hero section */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/3d-shield.png"
-            alt=""
-            className="h-[360px] w-auto object-contain animate-orbit-slow"
-            style={{ animationDuration: '45s' }}
-            aria-hidden="true"
-          />
+          {/* 3D Glassmorphic Shield or dynamic rotating seal floating in the hero section */}
+          {isPhiSig ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/brand/3d-shield.png"
+              alt=""
+              className="h-[360px] w-auto object-contain animate-orbit-slow"
+              style={{ animationDuration: '45s' }}
+              aria-hidden="true"
+            />
+          ) : (
+            <div className="h-[360px] w-[360px] text-brand-primary animate-orbit-slow animate-fade-in" style={{ animationDuration: '45s' }}>
+              <Seal className="w-full h-full" />
+            </div>
+          )}
         </div>
 
         <div className="container section-y">
@@ -446,7 +453,7 @@ export default async function Home({
             </h2>
             <p className="mt-3 text-muted-foreground text-base sm:text-lg">
               No spam, no ceremony — about 60 seconds. We'll text the second the
-              Fall '26 schedule drops.
+              Fall '{new Date().getFullYear().toString().slice(-2)} schedule drops.
             </p>
             <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
               <li className="inline-flex items-center gap-1.5">
@@ -566,7 +573,7 @@ export default async function Home({
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" aria-hidden="true" /> Fall '26 calendar
+              <Calendar className="h-3 w-3" aria-hidden="true" /> Fall &apos;{new Date().getFullYear().toString().slice(-2)} calendar
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
@@ -574,7 +581,7 @@ export default async function Home({
           </div>
           <div className="space-y-4 max-w-xl">
             <p className="text-muted-foreground">
-              Full Fall &apos;26 rush schedule drops in August. Get on the interest list above —
+              Full Fall &apos;{new Date().getFullYear().toString().slice(-2)} rush schedule drops in August. Get on the interest list above —
               we&apos;ll text everyone the second it&apos;s live. Private events go out by invitation only.
             </p>
             {/* Hide calendar-subscribe CTAs while the rush schedule hasn't
@@ -639,7 +646,7 @@ export default async function Home({
                 </div>
               </div>
             </div>
-            <Scene theme="tradition" size="tall" caption="Founded 1873. Gamma Triton at USC since 1975." />
+            <Scene theme="tradition" size="tall" caption={`Founded ${identity.foundingYear}. ${identity.greekLetters} at ${identity.schoolShort} since ${identity.charterYear}.`} />
           </div>
         </div>
       </section>
@@ -804,31 +811,34 @@ export default async function Home({
               ))}
             </ul>
 
-            {/* Heritage block — the original Phi Sigma Kappa coat of arms in
-                gold-and-red engraving alongside three cardinal-red Greek
-                glyphs. Both pulled from the supplied chapter brand kit. Sits
-                here in the About section so a parent or rushee scrolling for
-                "is this a real chapter" answer gets the visual confirmation
+            {/* Heritage block — the original coat of arms or dynamic seal alongside
+                the heritage text. Sits here in the About section so a parent or rushee
+                scrolling for "is this a real chapter" answer gets the visual confirmation
                 of national heritage in one glance. */}
             <div className="mt-7 rounded-xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/30 via-white to-phisig-red-soft/10 p-4 flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/coat-of-arms-vintage.jpg"
-                alt={`Original ${identity.fraternityName} coat of arms — founded ${identity.foundingYear}`}
-                width={84}
-                height={104}
-                loading="lazy"
-                className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
-              />
+              {isPhiSig ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src="/brand/coat-of-arms-vintage.jpg"
+                  alt={`Original ${identity.fraternityName} coat of arms — founded ${identity.foundingYear}`}
+                  width={84}
+                  height={104}
+                  loading="lazy"
+                  className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
+                />
+              ) : (
+                <div className="h-[84px] w-[84px] text-brand-primary shrink-0 flex items-center justify-center bg-white rounded-md ring-1 ring-phisig-red/10 shadow-sm">
+                  <Seal className="w-16 h-16" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-phisig-red font-semibold">Heritage</p>
                 <p className="mt-1 text-sm font-semibold leading-snug">
                   One of the oldest Greek letter societies in the country.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  Founded at Massachusetts Agricultural College on March 15, 1873.
-                  Gamma Triton has carried the chapter forward at the University
-                  of South Carolina since 1975.
+                  Founded at {identity.foundingLocation} in {identity.foundingYear}.
+                  {identity.greekLetters} has carried the chapter forward at {identity.schoolName} since {identity.charterYear}.
                 </p>
               </div>
             </div>
@@ -1030,15 +1040,15 @@ export default async function Home({
                 <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
               </Link>
               <Link
-                href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
+                href={identity.schoolFslUrl}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Building2 className="h-3 w-3" aria-hidden="true" /> USC chapter info
+                  <Building2 className="h-3 w-3" aria-hidden="true" /> {identity.schoolShort} chapter info
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">UofSC FSL</p>
+                <p className="mt-1.5 text-sm font-semibold">{identity.schoolShort} FSL</p>
                 <p className="text-xs text-muted-foreground">Fraternity & Sorority Life</p>
               </Link>
             </div>
@@ -1059,7 +1069,7 @@ export default async function Home({
           </div>
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/90">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Fall Rush 2026
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> Fall Rush {new Date().getFullYear()}
             </span>
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
               Get on the interest list.

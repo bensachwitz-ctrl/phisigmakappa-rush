@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -34,16 +35,16 @@ function baseUrl(req: Request) {
   return process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || `${new URL(req.url).origin}`;
 }
 
-async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity) {
+async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity, domain: string, primaryColor: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key || key.startsWith("re_xxxxx")) return { sent: false, reason: "no-resend" };
-  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@phisig-usc.com>`;
+  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@${domain}>`;
   const html = `
     <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
       <h1 style="font-size:22px;margin:0 0 6px">Welcome back to ${identity.fraternityShort}.</h1>
       <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to the ${identity.greekLetters} alumni portal at ${identity.schoolShort} — see brothers, vote in alumni polls, RSVP to events, and support the chapter.</p>
       <p style="margin:18px 0">
-        <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Create your alumni account</a>
+        <a href="${link}" style="display:inline-block;background:${primaryColor};color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Create your alumni account</a>
       </p>
       <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
       <p style="color:#71717a;font-size:12px">This link is for you only and expires in 30 days. ${identity.tagline || ""}</p>
@@ -141,13 +142,18 @@ export async function POST(req: Request) {
 
   const link = `${baseUrl(req)}/alumni/onboard/${token}`;
   const senderName = sender?.name || "";
-  const identity = await getChapterIdentity();
+  const [identity, cfg] = await Promise.all([
+    getChapterIdentity(),
+    getSiteConfig().catch(() => ({} as Record<string, string>)),
+  ]);
+  const primaryColor = cfg["brand.primaryHex"] || "#a3001a";
+  const domain = new URL(baseUrl(req)).hostname.replace("www.", "");
 
   let delivery: { channel: string; sent: boolean; reason: string } = { channel: "link", sent: false, reason: "manual" };
   const targetEmail = email || boundAlumni?.email || "";
   const targetPhone = phone || boundAlumni?.phone || "";
   if (channel === "email" && targetEmail) {
-    const r = await sendEmail(targetEmail, link, senderName, identity);
+    const r = await sendEmail(targetEmail, link, senderName, identity, domain, primaryColor);
     delivery = { channel: "email", ...r };
   } else if (channel === "sms" && targetPhone) {
     const r = await sendSms(targetPhone, link, senderName, identity);

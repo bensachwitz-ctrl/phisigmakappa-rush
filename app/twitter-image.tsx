@@ -1,16 +1,49 @@
 import { ImageResponse } from "next/og";
+import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { headers } from "next/headers";
 
-export const runtime = "edge";
-export const alt = "Phi Sigma Kappa @ USC — Fall Rush 2026";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const alt = "Chapter Recruitment — Fall Rush";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Twitter share card. Shares the same layout as opengraph-image.tsx — keep
-// in lockstep so a fix in one updates both. Watermark moved to corner well
-// above the title band (was overlapping subtitle + stat row in the rendered
-// PNG); pill rendered with explicit gap (was missing entirely from output
-// because margin-auto over-claimed space).
 export default async function TwitterImage() {
+  const identity = await getChapterIdentity().catch(() => ({
+    fraternityName: "Phi Sigma Kappa",
+    fraternityShort: "Phi Sig",
+    greekLetters: "Gamma Triton",
+    greekLettersGlyphs: "ΓΤ",
+    schoolName: "University of South Carolina",
+    schoolShort: "USC",
+    charterYear: "1975",
+    foundingYear: "1873",
+    fraternityLetters: "ΦΣΚ",
+    chapterFullName: "Phi Sigma Kappa Gamma Triton",
+    chapterAttribution: "Phi Sig USC",
+    ogAlt: "Phi Sigma Kappa @ USC",
+  }));
+
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const primaryColor = cfg["brand.primaryHex"] || "#C8102E";
+  const primaryDark = cfg["brand.primaryDarkHex"] || "#A20D26";
+  const primarySoft = cfg["brand.primarySoftHex"] || "#FCEFF1";
+
+  const reqHeaders = headers();
+  const host = reqHeaders.get("host") || "phisigmakappa.vercel.app";
+
+  const statsBrothers = cfg["stats.brothers"] || "60+";
+  const statsGpa = cfg["stats.gpa"] || "3.45";
+  const statsYears = cfg["stats.years"] || "50+";
+  const statsYearsLabel = cfg["stats.years.label"] || "Years strong";
+
+  const currentYear = new Date().getFullYear();
+  const rushYearLabel = `Fall Rush ${currentYear}`;
+
+  const ogTitle = cfg["seo.ogTitle"] || `The chapter that built the men of ${identity.schoolShort === "USC" ? "Carolina" : identity.schoolShort}.`;
+  const glyphs = identity.fraternityLetters || "ΦΣΚ";
+
   return new ImageResponse(
     (
       <div
@@ -20,14 +53,14 @@ export default async function TwitterImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background:
-            "linear-gradient(135deg, #C8102E 0%, #A20D26 50%, #6e0918 100%)",
+          background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryDark} 50%, #1e0206 100%)`,
           color: "#FFFFFF",
           fontFamily: "Inter, system-ui, sans-serif",
           padding: 64,
           position: "relative",
         }}
       >
+        {/* Pattern dots layer */}
         <div
           style={{
             position: "absolute",
@@ -38,6 +71,8 @@ export default async function TwitterImage() {
             backgroundSize: "32px 32px",
           }}
         />
+
+        {/* Watermark Greek letters */}
         <div
           style={{
             position: "absolute",
@@ -53,9 +88,10 @@ export default async function TwitterImage() {
             display: "flex",
           }}
         >
-          ΦΣΚ
+          {glyphs}
         </div>
 
+        {/* TOP: brand row */}
         <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 16, position: "relative" }}>
           <div
             style={{
@@ -66,24 +102,25 @@ export default async function TwitterImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#C8102E",
+              color: primaryColor,
               fontSize: 32,
               fontWeight: 700,
               fontFamily: "Georgia, serif",
             }}
           >
-            ΦΣΚ
+            {glyphs}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 14, letterSpacing: 6, textTransform: "uppercase", opacity: 0.85 }}>
-              Phi Sigma Kappa
+              {identity.fraternityName}
             </div>
             <div style={{ display: "flex", fontSize: 24, fontWeight: 600, marginTop: 2 }}>
-              Gamma Triton · University of South Carolina
+              {identity.greekLetters} · {identity.schoolName}
             </div>
           </div>
         </div>
 
+        {/* MIDDLE: headline */}
         <div style={{ display: "flex", flexShrink: 0, flexDirection: "column", gap: 24, position: "relative" }}>
           <div
             style={{
@@ -97,23 +134,24 @@ export default async function TwitterImage() {
               fontWeight: 500,
             }}
           >
-            Fall Rush 2026 — Interest list now open
+            {rushYearLabel} — Interest list now open
           </div>
-          <div style={{ display: "flex", fontSize: 96, fontWeight: 700, lineHeight: 1.04, letterSpacing: -3 }}>
-            The chapter that built the men of Carolina.
+          <div style={{ display: "flex", fontSize: 84, fontWeight: 700, lineHeight: 1.04, letterSpacing: -3 }}>
+            {ogTitle}
           </div>
         </div>
 
+        {/* BOTTOM: stats + url */}
         <div style={{ display: "flex", flexShrink: 0, alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: 22, position: "relative" }}>
           <div style={{ display: "flex", gap: 28 }}>
-            <span style={{ display: "flex" }}>60+ brothers</span>
+            <span style={{ display: "flex" }}>{statsBrothers} brothers</span>
             <span style={{ display: "flex", opacity: 0.5 }}>·</span>
-            <span style={{ display: "flex" }}>3.45 GPA</span>
+            <span style={{ display: "flex" }}>{statsGpa} GPA</span>
             <span style={{ display: "flex", opacity: 0.5 }}>·</span>
-            <span style={{ display: "flex" }}>Founded 1873</span>
+            <span style={{ display: "flex" }}>{statsYears} {statsYearsLabel}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 600 }}>
-            phisigmakappa.vercel.app
+            {host}
           </div>
         </div>
       </div>

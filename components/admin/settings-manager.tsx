@@ -688,8 +688,8 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       <Section title="Hero photo collage" eyebrow="3 tiles in the hero (right side)" icon={ImageIcon}>
         <p className="text-xs text-muted-foreground mb-4">
           Each tile shows a real Instagram post from{" "}
-          <Link href="https://www.instagram.com/phisig_usc/" target="_blank" className="text-phisig-red hover:underline inline-flex items-center gap-1">
-            @phisig_usc <ExternalLink className="h-3 w-3" />
+          <Link href={values["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/"} target="_blank" className="text-phisig-red hover:underline inline-flex items-center gap-1">
+            {values["contact.instagramHandle"] || "@phisig_usc"} <ExternalLink className="h-3 w-3" />
           </Link>
           . Find a post on Instagram, copy the slug from the URL (the part after <code className="text-foreground">/p/</code>), and paste it below.
         </p>
@@ -704,6 +704,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
               onChangeSlug={(v) => set(`hero.tile${n}.slug`, v)}
               onChangeCaption={(v) => set(`hero.tile${n}.caption`, v)}
               onChangeIcon={(v) => set(`hero.tile${n}.icon`, v)}
+              instagramHandle={values["contact.instagramHandle"]}
             />
           ))}
         </div>
@@ -733,7 +734,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             />
           </Field>
         </div>
-        <PhotoPreview slug={values["spotlight.slug"]} className="mt-4" />
+        <PhotoPreview slug={values["spotlight.slug"]} instagramHandle={values["contact.instagramHandle"]} className="mt-4" />
       </Section>
 
       {/* ABOUT */}
@@ -759,7 +760,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             </Select>
           </Field>
         </div>
-        <PhotoPreview slug={values["about.slug"]} objectPosition={values["about.objectPosition"]} className="mt-4" />
+        <PhotoPreview slug={values["about.slug"]} objectPosition={values["about.objectPosition"]} instagramHandle={values["contact.instagramHandle"]} className="mt-4" />
       </Section>
 
       {/* STATS — value + label + subtitle, all admin-editable */}
@@ -876,10 +877,11 @@ function Field({ label, children, className }: { label: string; children: React.
 }
 
 function PhotoCard({
-  title, slug, caption, icon, onChangeSlug, onChangeCaption, onChangeIcon,
+  title, slug, caption, icon, onChangeSlug, onChangeCaption, onChangeIcon, instagramHandle,
 }: {
   title: string; slug: string; caption: string; icon: string;
   onChangeSlug: (v: string) => void; onChangeCaption: (v: string) => void; onChangeIcon: (v: string) => void;
+  instagramHandle?: string;
 }) {
   const { push } = useToast();
   const [uploading, setUploading] = React.useState(false);
@@ -904,7 +906,7 @@ function PhotoCard({
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
-      <PhotoPreview slug={slug} />
+      <PhotoPreview slug={slug} instagramHandle={instagramHandle} />
       <label className="block cursor-pointer">
         <input
           type="file"
@@ -1171,24 +1173,34 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
   );
 }
 
-function PhotoPreview({ slug, className, objectPosition }: { slug?: string; className?: string; objectPosition?: string }) {
+function PhotoPreview({
+  slug, className, objectPosition, instagramHandle,
+}: {
+  slug?: string;
+  className?: string;
+  objectPosition?: string;
+  instagramHandle?: string;
+}) {
   if (!slug) return <div className={`aspect-[4/3] rounded-xl bg-secondary border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground ${className ?? ""}`}>No slug yet</div>;
+  const isUpload = slug.includes("/blob") || slug.startsWith("http");
   return (
     <Link
-      href={`https://www.instagram.com/p/${slug}/`}
+      href={isUpload ? slug : `https://www.instagram.com/p/${slug}/`}
       target="_blank"
       rel="noreferrer noopener"
       className={`block relative aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary ${className ?? ""}`}
     >
       <img
-        src={`/api/photo/${slug}`}
+        src={isUpload ? slug : `/api/photo/${slug}`}
         alt={`Preview ${slug}`}
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: objectPosition || "50% 50%" }}
       />
-      <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-phisig-red font-semibold">
-        @phisig_usc <ExternalLink className="h-2.5 w-2.5" />
-      </span>
+      {!isUpload && (
+        <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-phisig-red font-semibold">
+          {instagramHandle || "@phisig_usc"} <ExternalLink className="h-2.5 w-2.5" />
+        </span>
+      )}
     </Link>
   );
 }

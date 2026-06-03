@@ -1,19 +1,24 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
-  // White-label fallbacks: any unset chapter-identity field falls back to the
-  // Phi Sig Gamma Triton USC reference values, so the footer always reads
-  // correctly even on a fresh deploy before /admin/setup has been run.
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const foundingYear = cfg["chapter.foundingYear"] || "1873";
-  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  const identity = chapterIdentityFromCfg(cfg);
+  const {
+    fraternityName,
+    greekLetters,
+    schoolName,
+    foundingYear,
+    cardinalPrinciples,
+    nationalHqUrl,
+    fraternityLetters,
+  } = identity;
+
+  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+
   return (
     <footer className="border-t border-border/70 mt-12">
       <div className="container py-10 grid sm:grid-cols-[1.4fr_1fr] items-start gap-6">
@@ -25,20 +30,31 @@ export async function PublicFooter() {
               National logo asset is bundled at /brand/phisigmakappa-letters.jpg;
               a chapter affiliated with a different national can swap that asset
               and the alt text via the Brand assets section in /admin/settings. */}
-          <div className="mt-4 inline-flex items-center gap-3 rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/phisigmakappa-letters.jpg"
-              alt={fraternityName}
-              width={86}
-              height={32}
-              className="h-6 w-auto"
-              loading="lazy"
-            />
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              National brotherhood · Founded {foundingYear}
-            </span>
-          </div>
+          {isPhiSig ? (
+            <div className="mt-4 inline-flex items-center gap-3 rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/phisigmakappa-letters.jpg"
+                alt={fraternityName}
+                width={86}
+                height={32}
+                className="h-6 w-auto"
+                loading="lazy"
+              />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                National brotherhood · Founded {foundingYear}
+              </span>
+            </div>
+          ) : (
+            <div className="mt-4 inline-flex items-center gap-3 rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+              <span className="font-display font-bold text-sm tracking-[0.25em] text-foreground">
+                {fraternityLetters}
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground border-l border-border/60 pl-3">
+                National brotherhood · Founded {foundingYear}
+              </span>
+            </div>
+          )}
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
             {fraternityName}, {greekLetters} chapter at {schoolName}.
             Three Cardinal Principles: {cardinalPrinciples}.

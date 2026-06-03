@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import { 
   Users, 
   GraduationCap, 
@@ -152,6 +153,7 @@ export default function DashboardClient({
   isAdmin,
 }: DashboardClientProps) {
   const router = useRouter();
+  const { fraternityName } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Search states
@@ -405,7 +407,7 @@ export default function DashboardClient({
                 <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
                   <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
                   <p className="text-sm text-maroon-700 leading-relaxed mb-4">
-                    As an alumnus of Phi Sigma Kappa, your involvement is crucial to our chapter&apos;s growth. 
+                    As an alumnus of {fraternityName}, your involvement is crucial to our chapter&apos;s growth. 
                     Through this portal, you can connect with undergraduate brothers, review local PNMs, vote on 
                     active alumni polls, and coordinate for homecoming events.
                   </p>

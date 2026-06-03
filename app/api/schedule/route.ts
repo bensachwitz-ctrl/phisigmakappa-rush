@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     });
     
     // Send notification to the chapter administrator/contact
-    const adminEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+    const adminEmail = id.rushEmail;
     const htmlToAdmin = `
       <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
         <h1 style="font-size:22px;margin:0 0 6px">New Event Scheduled!</h1>

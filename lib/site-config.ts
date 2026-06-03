@@ -146,6 +146,8 @@ export const DEFAULTS = {
   "contact.instagramHandle": "@phisig_usc",
   "contact.instagramUrl": "https://www.instagram.com/phisig_usc/",
   "contact.mapsUrl": "https://maps.google.com/?q=1525+College+St+Columbia+SC+29208",
+  "contact.schoolFslUrl": "https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php",
+
 
   // Philanthropy — beneficiary + concrete dollars raised. Used in highlights, testimonial, etc.
   "philanthropy.beneficiary": "Special Olympics South Carolina",

@@ -1,24 +1,43 @@
 import { NextResponse } from "next/server";
+import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * Web app manifest. Lets a parent or rushee "Add to Home Screen" the rush site
  * and gets it a proper icon + theme color. Also satisfies legacy crawlers that
  * 404-noise the console looking for a manifest.
  */
-export function GET() {
+export async function GET() {
+  let identity;
+  let themeColor = "#C8102E";
+  try {
+    identity = await getChapterIdentity();
+    const cfg = await getSiteConfig();
+    themeColor = cfg["brand.primaryHex"] || themeColor;
+  } catch (e) {
+    identity = {
+      chapterFullName: "Phi Sigma Kappa Gamma Triton",
+      appShortTitle: "Phi Sig USC",
+      schoolName: "University of South Carolina",
+      schoolShort: "USC",
+    };
+  }
+
+  const currentYear = new Date().getFullYear();
+
   return NextResponse.json(
     {
-      name: "Phi Sigma Kappa Gamma Triton — Rush at USC",
-      short_name: "Phi Sig USC",
-      description:
-        "Phi Sigma Kappa Gamma Triton chapter at the University of South Carolina. Get on the Fall 2026 rush interest list.",
+      name: `${identity.chapterFullName} — Rush at ${identity.schoolShort}`,
+      short_name: identity.appShortTitle,
+      description: `${identity.chapterFullName} chapter at the ${identity.schoolName}. Get on the Fall '${currentYear % 100}' rush interest list.`,
       start_url: "/",
       scope: "/",
       display: "standalone",
       background_color: "#FFFFFF",
-      theme_color: "#C8102E",
+      theme_color: themeColor,
       orientation: "portrait-primary",
       icons: [
         {

@@ -13,6 +13,7 @@ import {
   type HqExportType,
 } from "@/lib/hq-exports";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -233,8 +234,9 @@ async function buildExport(exportType: HqExportType, termCode: string) {
         .reduce((s, p) => s + p.amountCents, 0);
       const serviceHoursTotal = hourLogs.reduce((s, h) => s + Number(h.hoursLogged), 0);
       const philanthropyRaisedDollars = parseFloat((cfg["philanthropy.raisedAmount"] || "0").replace(/[^0-9.]/g, ""));
+      const identity = chapterIdentityFromCfg(cfg);
       return buildAnnualReportHtml({
-        chapterName: "Phi Sigma Kappa — Gamma Triton",
+        chapterName: identity.chapterFullName,
         termCode,
         memberCount,
         chapterGpa,
