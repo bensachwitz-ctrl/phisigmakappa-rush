@@ -211,6 +211,83 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </div>
       </Section>
 
+      {/* GREEKSTACK SUBSCRIPTION PLAN */}
+      <Section
+        id="subscription"
+        title="Greekstack Subscription Plan"
+        eyebrow="Billing — manage your white-label platform subscription plan"
+        icon={CreditCard}
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Choose the integration model for your chapter. The plan dictates whether dues are paid online through Greekstack with transactional splits, or managed manually/externally.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Dues Split Card */}
+          <button
+            type="button"
+            onClick={() => set("chapter.billingPlan", "dues_split")}
+            className={`relative flex flex-col text-left p-4 rounded-xl border transition-all duration-200 outline-none hover:shadow-sm ${
+              (values["chapter.billingPlan"] || "dues_split") === "dues_split"
+                ? "border-phisig-red bg-phisig-red/5 ring-1 ring-phisig-red"
+                : "border-border bg-card hover:border-muted-foreground/30"
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <span className={`p-1.5 rounded-lg text-white ${
+                (values["chapter.billingPlan"] || "dues_split") === "dues_split" ? "bg-phisig-red" : "bg-muted"
+              }`}>
+                <Crown className="h-4 w-4" />
+              </span>
+              {(values["chapter.billingPlan"] || "dues_split") === "dues_split" && (
+                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider text-phisig-red bg-phisig-red/10 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              )}
+            </div>
+            <h3 className="mt-3 text-sm font-bold">Transactional Dues Split</h3>
+            <p className="mt-1 text-xs text-muted-foreground leading-normal flex-grow">
+              Dues collected via Stripe Checkout. Automates brother checkouts, parent/co-signer invoices, and mobile alerts.
+            </p>
+            <div className="mt-3 pt-2 border-t border-border w-full flex items-baseline gap-1">
+              <span className="text-lg font-black">1.5%</span>
+              <span className="text-[10px] text-muted-foreground font-semibold">per transaction</span>
+            </div>
+          </button>
+
+          {/* Flat Subscription Card */}
+          <button
+            type="button"
+            onClick={() => set("chapter.billingPlan", "flat_subscription")}
+            className={`relative flex flex-col text-left p-4 rounded-xl border transition-all duration-200 outline-none hover:shadow-sm ${
+              values["chapter.billingPlan"] === "flat_subscription"
+                ? "border-phisig-red bg-phisig-red/5 ring-1 ring-phisig-red"
+                : "border-border bg-card hover:border-muted-foreground/30"
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <span className={`p-1.5 rounded-lg text-white ${
+                values["chapter.billingPlan"] === "flat_subscription" ? "bg-phisig-red" : "bg-muted"
+              }`}>
+                <CreditCard className="h-4 w-4" />
+              </span>
+              {values["chapter.billingPlan"] === "flat_subscription" && (
+                <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider text-phisig-red bg-phisig-red/10 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              )}
+            </div>
+            <h3 className="mt-3 text-sm font-bold">Flat Semester Subscription</h3>
+            <p className="mt-1 text-xs text-muted-foreground leading-normal flex-grow">
+              Flat software licensing fee. Dues collection buttons are disabled, and you manage all collections manually/externally.
+            </p>
+            <div className="mt-3 pt-2 border-t border-border w-full flex items-baseline gap-1">
+              <span className="text-lg font-black">$299</span>
+              <span className="text-[10px] text-muted-foreground font-semibold">per semester</span>
+            </div>
+          </button>
+        </div>
+      </Section>
+
       {/* DUES COLLECTION — Stripe Checkout (R43-A).
           Optional white-label payment acceptance. Off by default; flip
           dues.enabled to "true" once all four prereqs are filled and a

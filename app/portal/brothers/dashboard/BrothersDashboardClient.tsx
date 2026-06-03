@@ -36,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";
+import { cn } from "@/lib/utils";
 
 // Interfaces to ensure strict type safety matching the server page props
 interface Brother {
@@ -200,6 +201,7 @@ interface DuesConfig {
   year: string;
   label: string;
   stripePublishableKey: string;
+  billingPlan?: string;
 }
 
 interface BrothersDashboardClientProps {
@@ -286,6 +288,10 @@ export default function BrothersDashboardClient({
   // Dues state
   const [payingDues, setPayingDues] = useState(false);
   const [duesError, setDuesError] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [sendingCoSign, setSendingCoSign] = useState(false);
+  const [coSignSuccess, setCoSignSuccess] = useState("");
+  const [coSignError, setCoSignError] = useState("");
 
   // Profile editing state
   const [profileForm, setProfileForm] = useState({
@@ -506,6 +512,38 @@ export default function BrothersDashboardClient({
       setDuesError("A network connection error occurred while launching Stripe.");
     } finally {
       setPayingDues(false);
+    }
+  };
+
+  // Handle Dues Co-signer / Parent Invoice Email dispatch
+  const handleSendCoSignInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!parentEmail || !parentEmail.includes("@")) {
+      setCoSignError("Please enter a valid email address.");
+      return;
+    }
+    setSendingCoSign(true);
+    setCoSignError("");
+    setCoSignSuccess("");
+
+    try {
+      const res = await fetch("/api/dues/co-sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setCoSignError(data.error || "Failed to dispatch co-signer invoice.");
+      } else {
+        setCoSignSuccess(`Dues invoice link sent successfully to ${parentEmail}!`);
+        setParentEmail("");
+      }
+    } catch {
+      setCoSignError("A network connection error occurred. Please try again.");
+    } finally {
+      setSendingCoSign(false);
     }
   };
 
@@ -1259,7 +1297,10 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Active Semester Dues Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-1 flex flex-col justify-between">
+                <div className={cn(
+                  "bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm flex flex-col justify-between",
+                  (duesConfig.billingPlan === "dues_split" && !currentDuesPaid) ? "md:col-span-1" : "md:col-span-1"
+                )}>
                   <div className="space-y-4">
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-maroon-600" />
@@ -1298,7 +1339,11 @@ export default function BrothersDashboardClient({
                   </div>
 
                   <div className="pt-4 border-t border-maroon-50 mt-4">
-                    {duesConfig.enabled ? (
+                    {duesConfig.billingPlan === "flat_subscription" ? (
+                      <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-semibold text-center leading-normal">
+                        This chapter operates on a flat semester software subscription. Please pay your treasurer manually.
+                      </div>
+                    ) : duesConfig.enabled ? (
                       currentDuesPaid ? (
                         <div className="flex items-center justify-center gap-1.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">
                           <Check className="w-4 h-4" />
@@ -1328,8 +1373,74 @@ export default function BrothersDashboardClient({
                   </div>
                 </div>
 
+                {/* Parent / Co-signer Billing Card (Only if plan is dues_split and unpaid) */}
+                {duesConfig.billingPlan === "dues_split" && !currentDuesPaid && (
+                  <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-maroon-600" />
+                        Parent & Co-signer Billing
+                      </h3>
+                      
+                      <p className="text-xs text-maroon-700 leading-relaxed font-normal">
+                        Need a parent or guarantor to pay your dues? Enter their email address below to send them a secure Stripe billing invoice. They can pay directly online with a credit card.
+                      </p>
+
+                      {coSignError && (
+                        <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs">
+                          {coSignError}
+                        </div>
+                      )}
+
+                      {coSignSuccess && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
+                          {coSignSuccess}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleSendCoSignInvoice} className="space-y-3.5">
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-maroon-900">
+                            Parent Email Address
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            placeholder="parent@example.com"
+                            value={parentEmail}
+                            onChange={(e) => setParentEmail(e.target.value)}
+                            className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
+                          />
+                        </div>
+                        
+                        <Button
+                          type="submit"
+                          disabled={sendingCoSign}
+                          className="w-full bg-maroon-800 hover:bg-maroon-900 text-cream-50 py-2 rounded-xl font-bold shadow flex items-center justify-center gap-2"
+                        >
+                          {sendingCoSign ? (
+                            <span>Sending Invoice...</span>
+                          ) : (
+                            <>
+                              <Mail className="w-4 h-4" />
+                              Send Dues Invoice
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+
+                    <div className="text-[10px] text-maroon-500 mt-4 leading-normal font-medium">
+                      Note: An email containing the Stripe checkout link will be sent to this email address. Your status remains UNPAID until the payment completes.
+                    </div>
+                  </div>
+                )}
+
                 {/* Past Transactions Ledger */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2 space-y-4">
+                <div className={cn(
+                  "bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm space-y-4",
+                  (duesConfig.billingPlan === "dues_split" && !currentDuesPaid) ? "md:col-span-3" : "md:col-span-2"
+                )}>
                   <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                     <Clipboard className="w-5 h-5 text-maroon-600" />
                     Chapter Payment Ledger

@@ -206,7 +206,7 @@ export default async function BrothersDashboardPage() {
   const configs = await prisma.siteConfig.findMany({
     where: {
       key: {
-        in: ["dues.enabled", "dues.amountCents", "dues.year", "dues.label", "dues.stripePublishableKey"]
+        in: ["dues.enabled", "dues.amountCents", "dues.year", "dues.label", "dues.stripePublishableKey", "chapter.billingPlan"]
       }
     }
   });
@@ -217,6 +217,7 @@ export default async function BrothersDashboardPage() {
     year: configs.find(c => c.key === "dues.year")?.value || "",
     label: configs.find(c => c.key === "dues.label")?.value || "Active Dues",
     stripePublishableKey: configs.find(c => c.key === "dues.stripePublishableKey")?.value || "",
+    billingPlan: configs.find(c => c.key === "chapter.billingPlan")?.value || "dues_split",
   };
 
   // Formatting helper

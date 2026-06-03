@@ -57,6 +57,19 @@ export async function POST(req: Request) {
   const enabled = cfg["dues.enabled"] === "true";
   const publishableKey = cfg["dues.stripePublishableKey"] || "";
   const webhookSecret = cfg["dues.stripeWebhookSecret"] || "";
+  const billingPlan = cfg["chapter.billingPlan"] || "dues_split";
+
+  // If chapter is on the flat semester subscription, they manage dues manually.
+  if (billingPlan === "flat_subscription") {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Online dues checkout is disabled. This chapter uses the Flat Semester billing plan and collects dues manually or outside the platform.",
+      },
+      { status: 503 },
+    );
+  }
 
   const stripe = getStripe();
 
