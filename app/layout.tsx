@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
+import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -245,7 +247,11 @@ export default async function RootLayout({
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <ChapterIdentityProvider value={chapterIdentityFromCfg(cfg)}>
+            {children}
+          </ChapterIdentityProvider>
+        </ToastProvider>
       </body>
     </html>
   );

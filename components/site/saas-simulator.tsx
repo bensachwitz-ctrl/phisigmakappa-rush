@@ -11,6 +11,7 @@ import {
   Laptop, Smartphone, RefreshCw, Download, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
 interface FratPreset {
   name: string;
@@ -133,9 +134,10 @@ export function SaasSimulator() {
 
       <div className="container max-w-7xl mx-auto px-4">
         {/* Title block */}
-        <div className="text-center mb-12 max-w-3xl mx-auto">
+        <div className="text-center mb-12 max-w-3xl mx-auto flex flex-col items-center">
+          <GreekstackLogo className="mb-4" size={48} />
           <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-maroon-700 bg-maroon-100 px-3 py-1 rounded-full">
-            <Sparkles className="h-3 w-3" /> White-Label SaaS Engine
+            <Sparkles className="w-3 h-3" /> White-Label SaaS Engine
           </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-bold tracking-tight text-maroon-900 leading-tight">
             Tailor This Site to Any Chapter Instantly
@@ -429,7 +431,9 @@ export function SaasSimulator() {
                     {/* Mock Footer */}
                     <div className="border-t border-black/5 pt-2 flex justify-between items-center text-[7px] text-maroon-600">
                       <span>© 2026 {fratName} {greekLetters}</span>
-                      <span>Powered by Greekstack</span>
+                      <span className="flex items-center gap-0.5">
+                        Powered by <GreekstackLogo iconOnly size={8} /> <strong>Greekstack</strong>
+                      </span>
                     </div>
                   </div>
                 </>

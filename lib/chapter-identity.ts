@@ -30,6 +30,8 @@ export type ChapterIdentity = {
   cardinalPrinciples: string;   // "Brotherhood, Scholarship, Character"
   tagline: string;              // "#DamnProud"
   appShortTitle: string;        // "Phi Sig USC"
+  fraternityLetters: string;    // "ΦΣΚ"
+  billingPlan: string;          // "dues_split" or "flat_subscription"
 
   // Derived (single source of truth for the four most-templated combos):
   chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
@@ -73,6 +75,8 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
   const tagline = cfg["chapter.tagline"] || "#DamnProud";
   const appShortTitle = cfg["chapter.appShortTitle"] || "Phi Sig USC";
+  const fraternityLetters = cfg["chapter.fraternityLetters"] || "ΦΣΚ";
+  const billingPlan = cfg["chapter.billingPlan"] || "dues_split";
 
   return {
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
@@ -80,6 +84,8 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     charterYear, foundingYear, foundingLocation,
     nationalName, nationalHqUrl,
     cardinalPrinciples, tagline, appShortTitle,
+    fraternityLetters,
+    billingPlan,
     chapterFullName: `${fraternityName} ${greekLetters}`,
     chapterAttribution: `${fraternityShort} ${schoolShort}`,
     pageTitle: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,

@@ -1,5 +1,8 @@
+"use client";
+
 import { useId } from "react";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "./chapter-identity-context";
 
 export function Wordmark({
   className,
@@ -8,6 +11,47 @@ export function Wordmark({
   className?: string;
   variant?: "default" | "compact" | "white";
 }) {
+  const {
+    fraternityName,
+    fraternityShort,
+    greekLetters,
+    greekLettersGlyphs,
+    schoolName,
+    schoolShort,
+    fraternityLetters,
+  } = useChapterIdentity();
+
+  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+
+  const renderGenericShield = (size = 36) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 36 36"
+      fill="none"
+      className="text-primary flex-shrink-0"
+      aria-hidden="true"
+    >
+      <path
+        d="M18 2 L32 6 L32 20 C32 28 25 32 18 34 C11 32 4 28 4 20 L4 6 Z"
+        fill="currentColor"
+        stroke="white"
+        strokeWidth="1.5"
+      />
+      <text
+        x="18"
+        y="23"
+        textAnchor="middle"
+        fill="white"
+        fontSize="12"
+        fontWeight="bold"
+        fontFamily="var(--font-sans), sans-serif"
+      >
+        {fraternityLetters ? fraternityLetters.charAt(0) : "G"}
+      </text>
+    </svg>
+  );
+
   if (variant === "compact") {
     return (
       <span
@@ -16,24 +60,24 @@ export function Wordmark({
           className
         )}
       >
-        {/* Real Phi Sigma Kappa shield — pre-cropped to show only the shield
-            silhouette (the source modern brand JPG had "PHI SIGMA KAPPA" text
-            stacked below the shield; that text was visible in earlier crops
-            because object-contain couldn't push it out of the small nav box).
-            phisigmakappa-shield-only.jpg is 150×132, tight bounds. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/phisigmakappa-shield-only.jpg"
-          alt="Phi Sigma Kappa"
-          width={28}
-          height={28}
-          className="h-7 w-auto object-contain"
-        />
-        <span className="font-display">ΦΣΚ</span>
-        <span className="text-muted-foreground font-normal text-sm">USC</span>
+        {isPhiSig ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src="/brand/phisigmakappa-shield-only.jpg"
+            alt={fraternityName}
+            width={28}
+            height={28}
+            className="h-7 w-auto object-contain"
+          />
+        ) : (
+          renderGenericShield(28)
+        )}
+        <span className="font-display">{fraternityLetters}</span>
+        <span className="text-muted-foreground font-normal text-sm">{schoolShort}</span>
       </span>
     );
   }
+
   return (
     <span
       className={cn(
@@ -42,46 +86,30 @@ export function Wordmark({
         className
       )}
     >
-      {/* Real Phi Sig shield — pre-cropped (150×132, shield only, no text). */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/phisigmakappa-shield-only.jpg"
-        alt="Phi Sigma Kappa"
-        width={36}
-        height={36}
-        className="h-9 w-auto object-contain"
-      />
+      {isPhiSig ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src="/brand/phisigmakappa-shield-only.jpg"
+          alt={fraternityName}
+          width={36}
+          height={36}
+          className="h-9 w-auto object-contain"
+        />
+      ) : (
+        renderGenericShield(36)
+      )}
       <span className="flex flex-col leading-none">
         <span className="text-[11px] uppercase tracking-[0.22em] opacity-70 font-medium">
-          Phi Sigma Kappa
+          {fraternityName}
         </span>
-        <span className="text-base font-semibold font-display">University of South Carolina</span>
+        <span className="text-base font-semibold font-display">{schoolName}</span>
       </span>
     </span>
   );
 }
 
-/**
- * Phi Sigma Kappa Gamma Triton crest — drawn to match the chapter's
- * supplied artwork exactly:
- *
- *   • Pointed-base cardinal shield, white outline.
- *   • Three small white five-pointed stars sitting high in the chief —
- *     the founding triad / three cardinal principles (Brotherhood,
- *     Scholarship, Character).
- *   • Single white sphinx silhouette occupying the lower body. Phi Sig's
- *     classical totem since 1873. Couchant pose, head facing right,
- *     nemes headdress — drawn as one continuous shape so it stays
- *     legible at 16-px favicon size.
- *   • "1873" in serif red script at the very bottom of the shield —
- *     no separate banner, the text floats directly on the cardinal
- *     ground beneath the sphinx.
- *
- * Pure-path SVG, no inline fonts beyond the year stamp. Inherits
- * `currentColor` for the shield fill so the same component works red on
- * white pages and white on red sections without a re-export.
- */
 export function Crest({ className }: { className?: string }) {
+  const { foundingYear } = useChapterIdentity();
   return (
     <svg viewBox="0 0 64 72" fill="none" className={className} aria-hidden="true">
       {/* Shield body — flat-topped, slightly wider shoulders, sharp point
@@ -100,8 +128,7 @@ export function Crest({ className }: { className?: string }) {
       />
 
       {/* Three small five-pointed stars high in the chief, evenly spaced.
-          Smaller and tighter than my prior version to match the supplied
-          artwork's proportions. */}
+          Smaller and tighter than prior version to match proportions. */}
       {[20, 32, 44].map((cx) => (
         <path
           key={`star-${cx}`}
@@ -158,31 +185,39 @@ export function Crest({ className }: { className?: string }) {
         fill="white"
         letterSpacing="1"
       >
-        1873
+        {foundingYear}
       </text>
     </svg>
   );
 }
 
 export function Seal({ className }: { className?: string }) {
-  // Per-instance unique ID suffix. Seal is rendered in multiple places on the
-  // homepage (hero + footer collage); without unique IDs the gradient/textPath
-  // refs collide as duplicate-ID violations and Safari/Firefox can render the
-  // wrong fill on the second instance. useId() works in server components.
+  const {
+    fraternityName,
+    schoolName,
+    greekLetters,
+    foundingYear,
+    fraternityLetters,
+  } = useChapterIdentity();
+
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const glowId = `seal-glow-${uid}`;
   const fillId = `seal-fill-${uid}`;
   const ringId = `ring-path-${uid}`;
+
+  // Make sure the ring text reads dynamically
+  const ringText = `${fraternityName.toUpperCase()} · ${schoolName.toUpperCase()} · ${greekLetters.toUpperCase()} · `;
+
   return (
     <svg viewBox="0 0 220 220" className={className} aria-hidden="true">
       <defs>
         <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#C8102E" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#C8102E" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--brand-primary)" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="var(--brand-primary)" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#FCEFF1" />
+          <stop offset="100%" stopColor="var(--brand-primary-soft)" />
         </linearGradient>
         <path
           id={ringId}
@@ -190,8 +225,8 @@ export function Seal({ className }: { className?: string }) {
         />
       </defs>
       <circle cx="110" cy="110" r="108" fill={`url(#${glowId})`} />
-      <circle cx="110" cy="110" r="86" fill={`url(#${fillId})`} stroke="#C8102E" strokeWidth="1.6" />
-      <circle cx="110" cy="110" r="74" fill="none" stroke="#C8102E" strokeWidth="0.6" opacity="0.55" />
+      <circle cx="110" cy="110" r="86" fill={`url(#${fillId})`} stroke="var(--brand-primary)" strokeWidth="1.6" />
+      <circle cx="110" cy="110" r="74" fill="none" stroke="var(--brand-primary)" strokeWidth="0.6" opacity="0.55" />
 
       {/* Stars */}
       {[
@@ -221,7 +256,7 @@ export function Seal({ className }: { className?: string }) {
         fill="currentColor"
         letterSpacing="2"
       >
-        ΦΣΚ
+        {fraternityLetters}
       </text>
       <text
         x="110"
@@ -233,12 +268,12 @@ export function Seal({ className }: { className?: string }) {
         fill="#0B0B0C"
         opacity="0.55"
       >
-        FOUNDED 1873
+        FOUNDED {foundingYear}
       </text>
 
       <text fontFamily="Inter, sans-serif" fontSize="9" letterSpacing="6" fill="#0B0B0C" opacity="0.55">
         <textPath href={`#${ringId}`} startOffset="2%">
-          PHI SIGMA KAPPA · UNIVERSITY OF SOUTH CAROLINA · GAMMA TRITON ·
+          {ringText}
         </textPath>
       </text>
     </svg>

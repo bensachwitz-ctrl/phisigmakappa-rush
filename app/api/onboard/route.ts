@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     schoolShort,
     charterYear,
     foundingYear,
+    fraternityLetters,
     primaryColor,
     darkColor,
     softColor,
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
     adminName,
     adminEmail,
     adminPassword,
+    billingPlan,
   } = body;
 
   // Simple validation
@@ -63,6 +65,7 @@ export async function POST(req: Request) {
       "chapter.schoolShort": (schoolShort || "").trim(),
       "chapter.charterYear": (charterYear || "").trim(),
       "chapter.foundingYear": (foundingYear || "").trim(),
+      "chapter.fraternityLetters": (fraternityLetters || "ΦΣΚ").trim(),
       "brand.primaryHex": (primaryColor || "#C8102E").trim(),
       "brand.primaryDarkHex": (darkColor || "#A20D26").trim(),
       "brand.primarySoftHex": (softColor || "#FCEFF1").trim(),
@@ -72,6 +75,7 @@ export async function POST(req: Request) {
       "contact.instagramUrl": (instagramUrl || "").trim(),
       "contact.address": (address || "").trim(),
       "contact.cityState": (cityState || "").trim(),
+      "chapter.billingPlan": (billingPlan || "dues_split").trim(),
     };
 
     // Upsert each configuration key

@@ -30,6 +30,8 @@ export const DEFAULTS = {
   "chapter.tagline": "#DamnProud",
   // Max 12 chars — iOS home-screen launcher caption.
   "chapter.appShortTitle": "Phi Sig USC",
+  "chapter.fraternityLetters": "ΦΣΚ",
+  "chapter.billingPlan": "dues_split",
 
   // Hero photo collage tiles. Slugs must point at IG posts whose og:image
   // resolves to the actual chapter photo, not Instagram's branding asset.

@@ -10,14 +10,17 @@ import { useToast } from "@/components/ui/toast";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
   Building2, Palette, Mail, ShieldCheck, Rocket, User, Lock,
+  CreditCard, Percent, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
 const STEPS = [
   { id: "identity", label: "Chapter Details", icon: Building2, blurb: "Configure fraternity identity, school details, and charter details." },
   { id: "brand", label: "Brand Styling", icon: Palette, blurb: "Configure local chapter primary, dark, and soft-tint colors." },
   { id: "contact", label: "Contact Details", icon: Mail, blurb: "Set up recruitment contacts, social handles, and house location." },
   { id: "admin", label: "Admin Credentials", icon: User, blurb: "Create your chapter's primary administrator account." },
+  { id: "billing", label: "Billing Plan", icon: CreditCard, blurb: "Choose the integration and payment model for your chapter." },
   { id: "launch", label: "Launch Site", icon: Rocket, blurb: "Confirm details and activate the chapter management system." },
 ] as const;
 
@@ -38,6 +41,7 @@ export default function OnboardWizard() {
   const [schoolShort, setSchoolShort] = React.useState("USC");
   const [charterYear, setCharterYear] = React.useState("1975");
   const [foundingYear, setFoundingYear] = React.useState("1873");
+  const [fraternityLetters, setFraternityLetters] = React.useState("ΦΣΚ");
 
   // Brand State
   const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
@@ -56,6 +60,9 @@ export default function OnboardWizard() {
   const [adminName, setAdminName] = React.useState("");
   const [adminEmail, setAdminEmail] = React.useState("");
   const [adminPassword, setAdminPassword] = React.useState("");
+
+  // Billing State
+  const [billingPlan, setBillingPlan] = React.useState<"flat_subscription" | "dues_split">("dues_split");
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -83,6 +90,11 @@ export default function OnboardWizard() {
       }
       if (adminPassword.length < 6) {
         push({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+        return false;
+      }
+    } else if (currentStep === "billing") {
+      if (!billingPlan) {
+        push({ title: "Validation Error", description: "Please select a billing plan.", variant: "destructive" });
         return false;
       }
     }
@@ -117,6 +129,7 @@ export default function OnboardWizard() {
           schoolShort,
           charterYear,
           foundingYear,
+          fraternityLetters,
           primaryColor,
           darkColor,
           softColor,
@@ -129,6 +142,7 @@ export default function OnboardWizard() {
           adminName,
           adminEmail,
           adminPassword,
+          billingPlan,
         }),
       });
 
@@ -150,7 +164,8 @@ export default function OnboardWizard() {
   return (
     <div className="space-y-6">
       {/* Header Info */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 flex flex-col items-center animate-fade-in">
+        <GreekstackLogo className="mb-4" size={48} />
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-maroon-700 bg-maroon-100/50 px-3 py-1 rounded-full">
           <Sparkles className="h-3.5 w-3.5" /> Platform Initialization
         </span>
@@ -225,6 +240,7 @@ export default function OnboardWizard() {
             <div className="grid sm:grid-cols-2 gap-4">
               <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" />
               <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+              <WField label="Fraternity Letters (Glyphs/Abbr)" value={fraternityLetters} onChange={setFraternityLetters} placeholder="ΦΣΚ" />
               <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" />
               <WField label="Greek Letters (Glyphs)" value={greekLettersGlyphs} onChange={setGreekLettersGlyphs} placeholder="ΓΤ" />
               <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" />
@@ -298,6 +314,118 @@ export default function OnboardWizard() {
             </div>
           )}
 
+          {step === "billing" && (
+            <div className="space-y-4 animate-slide-up">
+              <p className="text-xs text-maroon-700 leading-relaxed">
+                Choose the payment integration model that fits your chapter. You can switch plans or update payment settings later in the Admin panel.
+              </p>
+              
+              <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                {/* Option 1: Dues Split */}
+                <button
+                  type="button"
+                  onClick={() => setBillingPlan("dues_split")}
+                  className={cn(
+                    "relative flex flex-col text-left p-5 rounded-2xl border transition-all duration-200 outline-none hover:shadow-md hover:scale-[1.01] active:scale-[0.99] min-h-[220px]",
+                    billingPlan === "dues_split"
+                      ? "border-maroon-700 bg-maroon-50/40 ring-1 ring-maroon-700 shadow-sm"
+                      : "border-maroon-100 bg-white/40 hover:border-maroon-300"
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className={cn(
+                      "p-2 rounded-xl text-white shadow-sm",
+                      billingPlan === "dues_split" ? "bg-maroon-700" : "bg-maroon-300"
+                    )}>
+                      <Percent className="h-5 w-5" />
+                    </span>
+                    {billingPlan === "dues_split" && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-maroon-800 bg-maroon-100 px-2 py-0.5 rounded-full">
+                        Popular
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-maroon-900">Transactional Dues Split</h3>
+                  <p className="mt-1 text-xs text-maroon-700 leading-normal flex-grow">
+                    Let Greekstack handle dues collection, budgeting, and parent billings. Automated text alerts keep collections high.
+                  </p>
+                  <div className="mt-4 pt-3 border-t border-maroon-100 w-full flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-maroon-900">1.5%</span>
+                    <span className="text-xs text-maroon-600 font-semibold">per transaction</span>
+                  </div>
+                  <div className="mt-2 text-[10px] text-maroon-500 font-medium">
+                    No set-up fees · Unlimited members · Free support
+                  </div>
+                </button>
+
+                {/* Option 2: Flat Semester */}
+                <button
+                  type="button"
+                  onClick={() => setBillingPlan("flat_subscription")}
+                  className={cn(
+                    "relative flex flex-col text-left p-5 rounded-2xl border transition-all duration-200 outline-none hover:shadow-md hover:scale-[1.01] active:scale-[0.99] min-h-[220px]",
+                    billingPlan === "flat_subscription"
+                      ? "border-maroon-700 bg-maroon-50/40 ring-1 ring-maroon-700 shadow-sm"
+                      : "border-maroon-100 bg-white/40 hover:border-maroon-300"
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className={cn(
+                      "p-2 rounded-xl text-white shadow-sm",
+                      billingPlan === "flat_subscription" ? "bg-maroon-700" : "bg-maroon-300"
+                    )}>
+                      <CreditCard className="h-5 w-5" />
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-maroon-900">Flat Semester Subscription</h3>
+                  <p className="mt-1 text-xs text-maroon-700 leading-normal flex-grow">
+                    Simple flat pricing per active semester. Collect dues manually or using your own system. Full portal access.
+                  </p>
+                  <div className="mt-4 pt-3 border-t border-maroon-100 w-full flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-maroon-900">$299</span>
+                    <span className="text-xs text-maroon-600 font-semibold">per semester</span>
+                  </div>
+                  <div className="mt-2 text-[10px] text-maroon-500 font-medium">
+                    Billed twice a year · Cancel anytime · Full software access
+                  </div>
+                </button>
+              </div>
+
+              {/* Table of features comparison to make it feel premium and finished */}
+              <div className="mt-6 rounded-xl border border-maroon-100 bg-white/40 overflow-hidden text-xs">
+                <div className="bg-maroon-50/50 p-2.5 font-semibold text-maroon-900 border-b border-maroon-100">
+                  Plan Feature Breakdown
+                </div>
+                <div className="divide-y divide-maroon-100">
+                  <div className="p-2.5 flex justify-between">
+                    <span className="text-maroon-700 font-medium">Chapter Recruitment Portal</span>
+                    <span className="text-emerald-700 font-bold flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Included on both plans</span>
+                  </div>
+                  <div className="p-2.5 flex justify-between">
+                    <span className="text-maroon-700 font-medium">Alumni & Parents Login</span>
+                    <span className="text-emerald-700 font-bold flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Included on both plans</span>
+                  </div>
+                  <div className="p-2.5 flex justify-between">
+                    <span className="text-maroon-700 font-medium">Automated Dues Invoices & Reminders</span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Split Plan</span>
+                      <span className="text-maroon-400">·</span>
+                      <span className="text-maroon-600">Manual on Flat Plan</span>
+                    </span>
+                  </div>
+                  <div className="p-2.5 flex justify-between">
+                    <span className="text-maroon-700 font-medium">Parent Co-Signer Invoicing</span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5"><Check className="h-3 w-3" /> Split Plan</span>
+                      <span className="text-maroon-400">·</span>
+                      <span className="text-maroon-600">Manual on Flat Plan</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {step === "launch" && (
             <div className="space-y-4">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
@@ -317,6 +445,7 @@ export default function OnboardWizard() {
                   <div><span className="text-maroon-600">School:</span> <span className="font-semibold text-maroon-900">{schoolName} ({schoolShort})</span></div>
                   <div><span className="text-maroon-600">Admin Email:</span> <span className="font-semibold text-maroon-900">{adminEmail}</span></div>
                   <div><span className="text-maroon-600">Primary Color:</span> <span className="font-mono font-semibold" style={{ color: primaryColor }}>{primaryColor}</span></div>
+                  <div><span className="text-maroon-600">Billing Plan:</span> <span className="font-semibold text-maroon-950">{billingPlan === "dues_split" ? "Transactional Dues Split (1.5%)" : "Flat Semester Subscription ($299/sem)"}</span></div>
                 </div>
               </div>
             </div>
