@@ -23,34 +23,60 @@ export function Wordmark({
 
   const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
 
-  const renderGenericShield = (size = 36) => (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 36 36"
-      fill="none"
-      className="text-primary flex-shrink-0"
-      aria-hidden="true"
-    >
-      <path
-        d="M18 2 L32 6 L32 20 C32 28 25 32 18 34 C11 32 4 28 4 20 L4 6 Z"
-        fill="currentColor"
-        stroke="white"
-        strokeWidth="1.5"
-      />
-      <text
-        x="18"
-        y="23"
-        textAnchor="middle"
-        fill="white"
-        fontSize="12"
-        fontWeight="bold"
-        fontFamily="var(--font-sans), sans-serif"
+  const renderGenericShield = (size = 36) => {
+    const shieldUid = `shield-grad-${fraternityLetters || "G"}`;
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 40 40"
+        fill="none"
+        className="flex-shrink-0 drop-shadow-md transition-transform duration-300 hover:scale-105"
+        aria-hidden="true"
       >
-        {fraternityLetters ? fraternityLetters.charAt(0) : "G"}
-      </text>
-    </svg>
-  );
+        <defs>
+          <linearGradient id="shield-gold-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F59E0B" />
+            <stop offset="30%" stopColor="#FBBF24" />
+            <stop offset="70%" stopColor="#D97706" />
+            <stop offset="100%" stopColor="#B45309" />
+          </linearGradient>
+          <linearGradient id={shieldUid} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--brand-primary)" />
+            <stop offset="100%" stopColor="var(--brand-primary-dark, var(--brand-primary))" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 20 2 L 36 6 L 36 22 C 36 30.5 28 35.5 20 38 C 12 35.5 4 30.5 4 22 L 4 6 Z"
+          fill="url(#shield-gold-accent)"
+        />
+        <path
+          d="M 20 4.2 L 33.6 7.6 L 33.6 22 C 33.6 29.2 26.8 33.6 20 35.8 C 13.2 33.6 6.4 29.2 6.4 22 L 6.4 7.6 Z"
+          fill={`url(#${shieldUid})`}
+        />
+        <path
+          d="M 20 18 L 30 11 L 20 14 L 10 11 Z"
+          fill="url(#shield-gold-accent)"
+          opacity="0.3"
+        />
+        <text
+          x="20"
+          y="26"
+          textAnchor="middle"
+          fill="#FFFFFF"
+          fontSize="13"
+          fontWeight="900"
+          fontFamily="Georgia, serif"
+          style={{ textShadow: "0px 1px 2px rgba(0, 0, 0, 0.4)" }}
+        >
+          {fraternityLetters ? fraternityLetters.charAt(0) : "G"}
+        </text>
+        <circle cx="20" cy="9.5" r="1" fill="url(#shield-gold-accent)" />
+        <circle cx="16" cy="10.2" r="0.8" fill="url(#shield-gold-accent)" />
+        <circle cx="24" cy="10.2" r="0.8" fill="url(#shield-gold-accent)" />
+      </svg>
+    );
+  };
 
   if (variant === "compact") {
     return (
