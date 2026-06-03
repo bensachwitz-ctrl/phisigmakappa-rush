@@ -208,6 +208,71 @@ function safeHex(input: string | undefined, fallback: string): string {
   return fallback;
 }
 
+/**
+ * Hex -> HSL channels ("H S% L%"). Used to bind the shadcn primary/ring tokens
+ * and the portal maroon/cream ramps to the chapter's brand color. Returns null
+ * on a malformed hex so callers fall back to reference channels.
+ */
+function hexToHslChannels(hex: string): { h: number; s: number; l: number } | null {
+  const m6 = /^#?([0-9a-fA-F]{6})$/.exec((hex || "").trim());
+  let r: number, g: number, b: number;
+  if (m6) {
+    const int = parseInt(m6[1], 16);
+    r = (int >> 16) & 255; g = (int >> 8) & 255; b = int & 255;
+  } else {
+    const m3 = /^#?([0-9a-fA-F]{3})$/.exec((hex || "").trim());
+    if (!m3) return null;
+    r = parseInt(m3[1][0] + m3[1][0], 16);
+    g = parseInt(m3[1][1] + m3[1][1], 16);
+    b = parseInt(m3[1][2] + m3[1][2], 16);
+  }
+  const rf = r / 255, gf = g / 255, bf = b / 255;
+  const max = Math.max(rf, gf, bf), min = Math.min(rf, gf, bf);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0, s = 0;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === rf) h = (((gf - bf) / d) % 6 + 6) % 6;
+    else if (max === gf) h = (bf - rf) / d + 2;
+    else h = (rf - gf) / d + 4;
+    h *= 60;
+  }
+  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+// Perceptual lightness targets for the portal's maroon/cream ramps. We keep the
+// original tonal structure (so text contrast holds) and only swap in the
+// chapter's hue + saturation — re-tinting the ENTIRE portal/alumni/onboarding
+// surface (hundreds of maroon-*/cream-* utilities) with one CSS var set.
+const MAROON_L: Record<string, number> = { "50": 97, "100": 95, "200": 88, "400": 55, "500": 45, "600": 36, "700": 28, "800": 23, "900": 18, "950": 11 };
+const CREAM_L: Record<string, number> = { "50": 99, "100": 97, "200": 91, "300": 84 };
+
+/**
+ * Build the per-request :root override. Binds brand hex vars (kept for
+ * bg-phisig-red), the shadcn --primary/--ring tokens, a contrast-aware
+ * --primary-foreground, and the full maroon/cream ramps — all derived from the
+ * chapter's brand.primaryHex so every surface re-brands without a rebuild.
+ */
+function buildThemeStyle(brandPrimary: string, brandPrimaryDark: string, brandPrimarySoft: string): string {
+  const hsl = hexToHslChannels(brandPrimary) || { h: 350, s: 80, l: 42 };
+  const ch = (hh: number, ss: number, ll: number) => `${hh} ${Math.round(ss)}% ${Math.round(ll)}%`;
+  let maroon = "";
+  for (const [shade, L] of Object.entries(MAROON_L)) {
+    const sat = L >= 90 ? Math.min(hsl.s, 45) : L >= 80 ? Math.min(hsl.s, 62) : hsl.s;
+    maroon += `--maroon-${shade}:${ch(hsl.h, sat, L)};`;
+  }
+  let cream = "";
+  for (const [shade, L] of Object.entries(CREAM_L)) {
+    const sat = Math.min(hsl.s, L >= 95 ? 25 : 42);
+    cream += `--cream-${shade}:${ch(hsl.h, sat, L)};`;
+  }
+  const primaryChannels = ch(hsl.h, hsl.s, hsl.l);
+  // Dark ink on a light brand color (gold/yellow), white otherwise.
+  const primaryFg = hsl.l >= 65 ? "240 6% 8%" : "0 0% 100%";
+  return `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};--primary:${primaryChannels};--ring:${primaryChannels};--primary-foreground:${primaryFg};${maroon}${cream}}`;
+}
+
 export default async function RootLayout({
   children,
 }: {
@@ -223,7 +288,7 @@ export default async function RootLayout({
   // Inline CSS override binds the cfg-supplied colors to the same Tailwind
   // tokens (--phisig-red et al) used throughout the build. No client JS,
   // no FOUC, no rebuild needed when admin saves.
-  const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};}`;
+  const themeStyle = buildThemeStyle(brandPrimary, brandPrimaryDark, brandPrimarySoft);
 
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy.
