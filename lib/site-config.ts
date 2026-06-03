@@ -176,13 +176,16 @@ export const DEFAULTS = {
   ]),
 
   // FAQ accordion items: [{ q, a }]
+  // Chapter-agnostic defaults — the rush chair replaces these with their own
+  // school/chapter specifics via /admin/settings. A fresh tenant must never see
+  // another chapter's school name or national org here.
   "faq.json": JSON.stringify([
-    { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you." },
-    { q: "Is there a GPA requirement?", a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles." },
+    { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a brotherhood, we want to meet you." },
+    { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
     { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
-    { q: "Is there hazing?", a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ." },
+    { q: "Is there hazing?", a: "Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ." },
     { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
-    { q: "Can I rush if I'm already in another organization?", a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it." },
+    { q: "Can I rush if I'm already in another organization?", a: "Yes — our brothers are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it." },
   ]),
 
   // Three Cardinal Principles cards: [{ icon, title, body }]
@@ -193,21 +196,23 @@ export const DEFAULTS = {
   ]),
 
   // Highlights ribbon: [{ icon, label }]
+  // Chapter-agnostic defaults — replaced per chapter via /admin/settings.
   "highlights.json": JSON.stringify([
-    { icon: "HandHeart", label: "Special Olympics SC partners" },
-    { icon: "Trophy", label: "Polar Plunge fundraisers" },
+    { icon: "HandHeart", label: "Year-round philanthropy" },
+    { icon: "Trophy", label: "Signature fundraisers" },
     { icon: "Building2", label: "On-campus chapter house" },
     { icon: "GraduationCap", label: "Above-average chapter GPA" },
     { icon: "Flame", label: "Brotherhood events year-round" },
-    { icon: "Star", label: "#DamnProud" },
+    { icon: "Star", label: "Active alumni network" },
   ]),
 
   // Recent activity strip: [{ tag, title, icon }]
+  // Chapter-agnostic defaults — replaced per chapter via /admin/settings.
   "recent.json": JSON.stringify([
-    { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: "HandHeart" },
-    { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: "Trophy" },
+    { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
+    { tag: "Brotherhood", title: "Brotherhood events before finals", icon: "Trophy" },
     { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
-    { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: "Heart" },
+    { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
   ]),
 
   // Testimonial

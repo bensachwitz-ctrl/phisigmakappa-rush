@@ -1,10 +1,58 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { getSubdomain } from "@/lib/prisma";
+
+// Greekstack marketing-apex branding. Used by every metadata/viewport surface
+// when the request has no subdomain (greeklifesystems.vercel.app, localhost,
+// www) so NO chapter identity (Phi Sig / Gamma Triton / USC) ever leaks onto
+// the apex marketing site.
+const GREEKSTACK = {
+  title: "Greekstack — chapter rush, roster & TCPA-compliant comms",
+  short: "Greekstack",
+  description:
+    "Greekstack is the white-label platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications.",
+  themeColor: "#0F172A",
+};
+
+/** Current request host (server-only). Null outside a request context. */
+function requestHost(): string | null {
+  try {
+    const h = headers();
+    return h.get("host") || h.get("x-forwarded-host") || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve metadataBase from the live request host so each tenant's OG/Twitter
+ * URLs are absolute against THEIR domain, falling back to the configured site
+ * URL and finally the apex. Never hardcodes the Phi Sig reference host.
+ */
+function resolveMetadataBase(host: string | null): URL {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    try {
+      return new URL(process.env.NEXT_PUBLIC_SITE_URL);
+    } catch {
+      /* fall through */
+    }
+  }
+  if (host) {
+    const proto = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
+    try {
+      return new URL(`${proto}://${host}`);
+    } catch {
+      /* fall through */
+    }
+  }
+  return new URL("https://greeklifesystems.vercel.app");
+}
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +72,25 @@ const inter = Inter({
 // Net-new chapter spinning up the platform fills out /admin/setup once and
 // every <title> in the build re-brands to match.
 export async function generateMetadata(): Promise<Metadata> {
+  const host = requestHost();
+  const metadataBase = resolveMetadataBase(host);
+
+  // Apex (no subdomain) → generic Greekstack metadata, zero chapter identity.
+  if (getSubdomain(host) === null) {
+    return {
+      title: {
+        default: GREEKSTACK.title,
+        template: `%s · ${GREEKSTACK.short}`,
+      },
+      description: GREEKSTACK.description,
+      metadataBase,
+      openGraph: { title: GREEKSTACK.title, description: GREEKSTACK.description, type: "website", url: "/" },
+      twitter: { card: "summary_large_image", title: GREEKSTACK.title, description: GREEKSTACK.description },
+      robots: { index: true, follow: true },
+      appleWebApp: { capable: true, title: GREEKSTACK.short, statusBarStyle: "black-translucent" },
+    };
+  }
+
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
   const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
@@ -40,7 +107,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description:
       `${chapterFullName} chapter at ${schoolName}. Get on the rush interest list — we'll text you when the schedule drops.`,
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app"),
+    metadataBase,
     openGraph: {
       title: titleDefault,
       description: `Get on the rush interest list at ${chapterFullName} — we'll text you when the schedule drops.`,
@@ -68,18 +135,29 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: "#C8102E",
-  width: "device-width",
-  initialScale: 1,
-  // iOS Safari: when the on-screen keyboard slides up over a focused form
-  // input, the visual viewport stays the same size so position:fixed
-  // bottom-nav floats over the focused field. interactive-widget=
-  // "resizes-content" tells iOS to actually shrink the layout viewport
-  // under the keyboard, so the bottom nav scrolls with the content and
-  // doesn't occlude the input the user is typing into.
-  interactiveWidget: "resizes-content",
-};
+// generateViewport (was a static export) so themeColor follows the tenant's
+// brand color — and on the apex falls back to Greekstack navy, never Phi Sig
+// cardinal red. iOS paints the status-bar/PWA chrome from this value.
+export async function generateViewport(): Promise<Viewport> {
+  const host = requestHost();
+  let themeColor = GREEKSTACK.themeColor;
+  if (getSubdomain(host) !== null) {
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    themeColor = safeHex(cfg["brand.primaryHex"], "#C8102E");
+  }
+  return {
+    themeColor,
+    width: "device-width",
+    initialScale: 1,
+    // iOS Safari: when the on-screen keyboard slides up over a focused form
+    // input, the visual viewport stays the same size so position:fixed
+    // bottom-nav floats over the focused field. interactive-widget=
+    // "resizes-content" tells iOS to actually shrink the layout viewport
+    // under the keyboard, so the bottom nav scrolls with the content and
+    // doesn't occlude the input the user is typing into.
+    interactiveWidget: "resizes-content",
+  };
+}
 
 /**
  * JSON-LD schema graph. Three nodes:
@@ -222,9 +300,35 @@ export default async function RootLayout({
   const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};}`;
 
   // JSON-LD built per-request from current cfg so a chapter rename / school
-  // change propagates to the Knowledge Panel record without a redeploy.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
-  const structuredData = buildStructuredData(cfg, siteUrl);
+  // change propagates to the Knowledge Panel record without a redeploy. siteUrl
+  // resolves from the live request host (never the hardcoded Phi Sig reference
+  // host). On the apex we emit a generic Greekstack Organization node instead
+  // of the chapter CollegeOrUniversity graph so no chapter identity leaks.
+  const host = requestHost();
+  const siteUrl = resolveMetadataBase(host).origin;
+  const structuredData =
+    getSubdomain(host) === null
+      ? {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": `${siteUrl}/#organization`,
+              name: GREEKSTACK.short,
+              url: siteUrl,
+              description: GREEKSTACK.description,
+            },
+            {
+              "@type": "WebSite",
+              "@id": `${siteUrl}/#website`,
+              url: siteUrl,
+              name: GREEKSTACK.title,
+              publisher: { "@id": `${siteUrl}/#organization` },
+              inLanguage: "en-US",
+            },
+          ],
+        }
+      : buildStructuredData(cfg, siteUrl);
 
   return (
     <html lang="en" className={inter.variable}>

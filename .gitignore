@@ -45,3 +45,5 @@ prisma/migrations/dev*
 .claude/
 
 .vercel
+
+scratch/

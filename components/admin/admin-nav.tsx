@@ -7,7 +7,8 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
-  HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert
+  HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert,
+  ShieldCheck, CalendarCheck, HandHeart, BookMarked, FileDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,11 @@ const ITEMS = [
   { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true },
   { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true },
+  { href: "/admin/meetings", label: "Meetings", icon: CalendarCheck, adminOnly: false },
+  { href: "/admin/service", label: "Service", icon: HandHeart, adminOnly: false },
+  { href: "/admin/officers", label: "Officers", icon: ShieldCheck, adminOnly: true },
+  { href: "/admin/library", label: "Library", icon: BookMarked, adminOnly: false },
+  { href: "/admin/exports", label: "Exports", icon: FileDown, adminOnly: true },
   { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true },
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false },
 ];
@@ -48,7 +54,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
         </Link>
 
         {/* Desktop nav */}
-        <nav aria-label="Admin sections" className="hidden lg:flex items-center gap-1">
+        <nav aria-label="Admin sections" className="hidden lg:flex items-center gap-1 overflow-x-auto min-w-0">
           {items.map((it) => {
             const active = pathname === it.href || (it.href !== "/admin" && pathname.startsWith(it.href));
             return (

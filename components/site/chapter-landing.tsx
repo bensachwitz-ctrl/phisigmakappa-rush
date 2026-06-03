@@ -24,6 +24,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { SaasSimulator } from "@/components/site/saas-simulator";
 
@@ -94,29 +95,33 @@ const TIMELINE_DEFAULT: TimelineRow[] = [
   { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
 ];
 
+// Generic, chapter-agnostic fallbacks. These render ONLY if a chapter hasn't
+// supplied its own faq.json / highlights.json / recent.json — so a fresh tenant
+// (e.g. Clemson) never sees another chapter's school, philanthropy, or tagline.
+// The rush chair fills in the real, chapter-specific copy via /admin/settings.
 const FAQ_DEFAULT: FaqRow[] = [
-  { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're at USC and looking for a brotherhood, we want to meet you." },
-  { q: "Is there a GPA requirement?", a: "We expect a minimum 2.5 to receive a bid. Our chapter average is well above that — scholarship is one of our three cardinal principles." },
+  { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a brotherhood, we want to meet you." },
+  { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
   { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
-  { q: "Is there hazing?", a: "Zero. Phi Sigma Kappa nationally and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to Phi Sigma Kappa national HQ." },
+  { q: "Is there hazing?", a: "Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ." },
   { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
-  { q: "Can I rush if I'm already in another organization?", a: "Yes — we have brothers on the rugby team, in the business school, in honors college, in ROTC. Phi Sig adds to your USC experience, it doesn't replace it." },
+  { q: "Can I rush if I'm already in another organization?", a: "Yes — our brothers are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it." },
 ];
 
 const HIGHLIGHTS_DEFAULT: HighlightRow[] = [
-  { icon: "HandHeart", label: "Special Olympics SC partners" },
-  { icon: "Trophy", label: "Polar Plunge fundraisers" },
+  { icon: "HandHeart", label: "Year-round philanthropy" },
+  { icon: "Trophy", label: "Signature fundraisers" },
   { icon: "Building2", label: "On-campus chapter house" },
   { icon: "GraduationCap", label: "Above-average chapter GPA" },
   { icon: "Flame", label: "Brotherhood events year-round" },
-  { icon: "Star", label: "#DamnProud" },
+  { icon: "Star", label: "Active alumni network" },
 ];
 
 const RECENT_DEFAULT: RecentRow[] = [
-  { tag: "Philanthropy", title: "Polar Plunge raised $700 for Special Olympics SC", icon: "HandHeart" },
-  { tag: "Brotherhood", title: "Annual paintball at Trigger Tyme before finals", icon: "Trophy" },
+  { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
+  { tag: "Brotherhood", title: "Brotherhood events before finals", icon: "Trophy" },
   { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
-  { tag: "Service", title: "Dry fundraiser dinner for Leukemia & Lymphoma Society", icon: "Heart" },
+  { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
 ];
 
 // Parse a stat value string like "3.45", "60+", "$25k+" into the bits CountUp needs.
@@ -139,6 +144,19 @@ export default async function ChapterLandingPage({
   if (cfg["chapter.onboarded"] !== "true") {
     redirect("/onboard");
   }
+  // Chapter identity from cfg — single source of truth for every body-copy
+  // mention of the fraternity / chapter / school so a re-skinned tenant (e.g.
+  // Clemson) never shows literal "Phi Sigma Kappa / Gamma Triton / USC" strings.
+  const identity = chapterIdentityFromCfg(cfg);
+  // webcal:// subscribe URL must point at THIS tenant's host, not a hardcoded
+  // Phi Sig reference domain. Derive from the request host (same source the
+  // Prisma proxy uses to resolve the tenant); fall back to a relative-less
+  // origin only when headers are unavailable (build-time static eval).
+  const hostHeader =
+    headers().get("host") || headers().get("x-forwarded-host") || "";
+  const webcalUrl = hostHeader
+    ? `webcal://${hostHeader}/api/events.ics`
+    : "/api/events.ics";
   const boothParam = searchParams?.booth;
   const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
 
@@ -151,7 +169,7 @@ export default async function ChapterLandingPage({
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Phi Sigma Kappa at USC · Booth
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> {identity.fraternityName} at {identity.schoolShort} · Booth
             </span>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the Fall&nbsp;&apos;26 rush list.
@@ -285,7 +303,7 @@ export default async function ChapterLandingPage({
                 <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Reply within 24 hours
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Gamma Triton chapter
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> {identity.greekLetters} chapter
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
@@ -459,10 +477,10 @@ export default async function ChapterLandingPage({
             <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl">
-            Polar Plunge for Special Olympics, paintball before finals, the chapter formal
-            (FIPG-compliant, third-party vendor, sober transportation), and dry tailgates at
-            Williams-Brice. The Gamma Triton chapter shows up — all year.{" "}
-            <span className="text-phisig-red font-medium">#DamnProud</span>
+            Philanthropy events, brotherhood before finals, the chapter formal
+            (FIPG-compliant, third-party vendor, sober transportation), and dry
+            tailgates on game day. The {identity.greekLetters} chapter shows up — all year.{" "}
+            <span className="text-phisig-red font-medium">{identity.tagline}</span>
           </p>
         </div>
         <InstagramFeed count={9} />
@@ -559,14 +577,14 @@ export default async function ChapterLandingPage({
             {nextEvent && (
               <div className="flex flex-wrap gap-2">
                 <a
-                  href="webcal://phisigmakappa.vercel.app/api/events.ics"
+                  href={webcalUrl}
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Subscribe in Apple Calendar
                 </a>
                 <a
                   href="/api/events.ics"
-                  download="phisigmakappa-rush.ics"
+                  download="chapter-rush.ics"
                   className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Download .ics
@@ -613,7 +631,7 @@ export default async function ChapterLandingPage({
                 </div>
               </div>
             </div>
-            <Scene theme="tradition" size="tall" caption="Founded 1873. Gamma Triton at USC since 1975." />
+            <Scene theme="tradition" size="tall" caption={`Founded ${identity.foundingYear}. ${identity.greekLetters} at ${identity.schoolShort} since ${identity.charterYear}.`} />
           </div>
         </div>
       </section>
@@ -702,7 +720,7 @@ export default async function ChapterLandingPage({
               </h2>
             </div>
             <p className="text-muted-foreground max-w-xl">
-              The Gamma Triton chapter elects its leadership annually. These are the brothers
+              The {identity.greekLetters} chapter elects its leadership annually. These are the brothers
               running the show — happy to talk to any rush who wants to learn more.
             </p>
           </div>
@@ -800,9 +818,8 @@ export default async function ChapterLandingPage({
                   One of the oldest Greek letter societies in the country.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  Founded at Massachusetts Agricultural College on March 15, 1873.
-                  Gamma Triton has carried the chapter forward at the University
-                  of South Carolina since 1975.
+                  {identity.fraternityName} was founded at {identity.foundingLocation} in {identity.foundingYear}.
+                  {" "}{identity.greekLetters} has carried the chapter forward at {identity.schoolName} since {identity.charterYear}.
                 </p>
               </div>
             </div>
@@ -963,8 +980,8 @@ export default async function ChapterLandingPage({
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The Phi Sigma Kappa chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, walking
-              distance to Russell House and the Horseshoe. It&apos;s where the cookouts,
+              The {identity.fraternityName} chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, close
+              to campus. It&apos;s where the cookouts,
               chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
               for the first time.
             </p>
@@ -1134,7 +1151,7 @@ function PostTile({
         // Keeping the URL stable means the cache key matches across requests.
         srcSet={isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
         sizes={priority ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"}
-        alt={`Phi Sigma Kappa Gamma Triton chapter at USC — ${caption}`}
+        alt={`Chapter life — ${caption}`}
         width={640}
         height={640}
         loading={priority ? "eager" : "lazy"}
