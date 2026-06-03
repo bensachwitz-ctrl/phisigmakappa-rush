@@ -17,7 +17,11 @@ function isNextSignal(err: unknown): boolean {
     (err as { digest: string }).digest.startsWith("NEXT_");
 }
 
-export default async function BrothersDashboardPage() {
+export default async function BrothersDashboardPage({
+  searchParams,
+}: {
+  searchParams: { as?: string };
+}) {
   const sess = requireRole("brother");
   if (!sess) {
     redirect("/portal/brothers");
@@ -34,11 +38,14 @@ export default async function BrothersDashboardPage() {
     }
 
     if (sess.isAdmin && !brotherId) {
-      // If admin is overriding, pick the first brother profile in the system
-      const firstBrother = await prisma.brother.findFirst({
-        where: { passwordHash: { not: null } },
-      });
-      brotherId = firstBrother?.id;
+      // Admin override: NEVER auto-pick an arbitrary member — that rendered a
+      // random brother's full dues/PII ledger. Require an explicit ?as=<id>
+      // (admin chose who to view); otherwise send them to the roster to pick.
+      if (searchParams?.as) {
+        brotherId = searchParams.as;
+      } else {
+        redirect("/admin/brothers?portalView=1");
+      }
     }
 
     if (!brotherId) {

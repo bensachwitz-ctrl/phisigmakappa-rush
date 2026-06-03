@@ -20,7 +20,11 @@ function isNextSignal(err: unknown): boolean {
     (err as { digest: string }).digest.startsWith("NEXT_");
 }
 
-export default async function AlumniDashboardPage() {
+export default async function AlumniDashboardPage({
+  searchParams,
+}: {
+  searchParams: { as?: string };
+}) {
   const sess = requireRole("alumni");
   if (!sess) {
     redirect("/portal/alumni");
@@ -43,9 +47,14 @@ export default async function AlumniDashboardPage() {
     }
 
     if (sess.isAdmin && !alumniId) {
-      // If admin is overriding, pick the first alumnus profile in the system
-      const firstAlumni = await prisma.alumniProfile.findFirst();
-      alumniId = firstAlumni?.id;
+      // Admin override: NEVER auto-pick an arbitrary alumnus — that rendered a
+      // random alumnus's full donation/PII ledger. Require an explicit ?as=<id>;
+      // otherwise send the admin to the alumni roster to pick.
+      if (searchParams?.as) {
+        alumniId = searchParams.as;
+      } else {
+        redirect("/admin/alumni?portalView=1");
+      }
     }
 
     if (!alumniId) {
