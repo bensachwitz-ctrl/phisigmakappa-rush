@@ -1443,6 +1443,25 @@ export default function BrothersDashboardClient({
                 </div>
 
               </div>
+
+              {/* Reimbursement CTA — spent your own money for the chapter? */}
+              <a
+                href="/portal/brothers/reimbursements"
+                className="group flex items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-maroon-100 shadow-sm hover:border-maroon-300 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-maroon-800 text-cream-50 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-maroon-900 text-base leading-tight">Submit a reimbursement</h3>
+                    <p className="text-xs text-maroon-600 mt-0.5">
+                      Paid out of pocket for the chapter? Request it back and track approval status.
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-maroon-400 group-hover:text-maroon-700 transition flex-shrink-0" />
+              </a>
             </div>
           )}
 
