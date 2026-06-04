@@ -9,6 +9,10 @@ import { useToast } from "@/components/ui/toast";
 import { IconChip } from "@/components/ui/icon-chip";
 import { LivePreview } from "@/components/onboard/live-preview";
 import { SuccessState } from "@/components/onboard/success-state";
+import { OrgPresetPicker } from "@/components/onboard/org-preset-picker";
+import { GreekLetterInserter } from "@/components/onboard/greek-letter-inserter";
+import { ColorPresets } from "@/components/onboard/color-presets";
+import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
   Building2, Palette, Mail, Rocket, User, Lock, AlertCircle, Wand2,
@@ -70,6 +74,50 @@ export default function OnboardWizard() {
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const isLastStep = stepIndex === STEPS.length - 1;
+
+  // ── Preset library wiring ─────────────────────────────────────────────────
+  // Picking an org auto-fills the identity + brand fields from the preset, then
+  // leaves everything fully editable (custom typing always wins afterward).
+  function clearErrors(...keys: string[]) {
+    setErrors((prev) => {
+      if (!keys.some((k) => k in prev)) return prev;
+      const next = { ...prev };
+      for (const k of keys) delete next[k];
+      return next;
+    });
+  }
+
+  function applyOrgPreset(org: GreekOrg) {
+    setFraternityName(org.name);
+    setFraternityShort(org.short);
+    setFraternityLetters(org.glyph);
+    setPrimaryColor(org.primary);
+    setDarkColor(org.dark);
+    setSoftColor(org.soft);
+    // Clear any identity/brand errors the preset just satisfied.
+    clearErrors("fraternityName", "primaryColor", "darkColor", "softColor");
+  }
+
+  // "Custom / not listed" — clear the org-derived identity fields so the chapter
+  // can type its own (brand colors are left intact as a sensible starting point).
+  function applyCustomOrg() {
+    setFraternityName("");
+    setFraternityShort("");
+    setFraternityLetters("");
+  }
+
+  // Append a Greek glyph to a target field via its setter (click-to-build).
+  function appendGlyph(setter: (v: string) => void, current: string, glyph: string) {
+    setter(current + glyph);
+  }
+
+  // Pick a preset color → set primary and auto-suggest matching dark + soft.
+  function applyColorPreset(hex: string) {
+    setPrimaryColor(hex);
+    setDarkColor(shade(hex, "dark"));
+    setSoftColor(shade(hex, "soft"));
+    clearErrors("primaryColor", "darkColor", "softColor");
+  }
 
   function validateStep(currentStep: StepId): boolean {
     const e: Record<string, string> = {};
@@ -294,34 +342,63 @@ export default function OnboardWizard() {
             {/* Step body — keyed so each step re-mounts and replays the entrance */}
             <div key={step} className="animate-soft-enter">
               {step === "identity" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <WField
-                      label="Desired Subdomain"
-                      value={subdomain}
-                      onChange={setSubdomain}
-                      placeholder="phisig-usc"
-                      error={errors.subdomain}
-                      required
-                      hint={
-                        <>
-                          Your site will live at{" "}
-                          <strong className="font-semibold text-indigo-200">
-                            {(subdomain.trim() || "your-subdomain")}.greeklifesystems.vercel.app
-                          </strong>
-                        </>
-                      }
-                    />
+                <div className="space-y-5">
+                  {/* Preset library — pick any organization to auto-fill below */}
+                  <OrgPresetPicker
+                    selectedName={fraternityName}
+                    onPick={applyOrgPreset}
+                    onCustom={applyCustomOrg}
+                  />
+
+                  <div className="flex items-center gap-3" aria-hidden="true">
+                    <span className="h-px flex-1 bg-white/10" />
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Or edit details
+                    </span>
+                    <span className="h-px flex-1 bg-white/10" />
                   </div>
-                  <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
-                  <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
-                  <WField label="Fraternity Letters (Glyphs/Abbr)" value={fraternityLetters} onChange={setFraternityLetters} placeholder="ΦΣΚ" />
-                  <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
-                  <WField label="Greek Letters (Glyphs)" value={greekLettersGlyphs} onChange={setGreekLettersGlyphs} placeholder="ΓΤ" />
-                  <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
-                  <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
-                  <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
-                  <WField label="Fraternity Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <WField
+                        label="Desired Subdomain"
+                        value={subdomain}
+                        onChange={setSubdomain}
+                        placeholder="phisig-usc"
+                        error={errors.subdomain}
+                        required
+                        hint={
+                          <>
+                            Your site will live at{" "}
+                            <strong className="font-semibold text-indigo-200">
+                              {(subdomain.trim() || "your-subdomain")}.greeklifesystems.vercel.app
+                            </strong>
+                          </>
+                        }
+                      />
+                    </div>
+                    <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
+                    <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+                    <WField
+                      label="Fraternity Letters (Glyphs/Abbr)"
+                      value={fraternityLetters}
+                      onChange={setFraternityLetters}
+                      placeholder="ΦΣΚ"
+                      glyphInsert={(g) => appendGlyph(setFraternityLetters, fraternityLetters, g)}
+                    />
+                    <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
+                    <WField
+                      label="Greek Letters (Glyphs)"
+                      value={greekLettersGlyphs}
+                      onChange={setGreekLettersGlyphs}
+                      placeholder="ΓΤ"
+                      glyphInsert={(g) => appendGlyph(setGreekLettersGlyphs, greekLettersGlyphs, g)}
+                    />
+                    <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
+                    <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
+                    <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
+                    <WField label="Fraternity Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
+                  </div>
                 </div>
               )}
 
@@ -336,6 +413,10 @@ export default function OnboardWizard() {
                     <WColor label="Dark Gradient/Text Color" value={darkColor} onChange={setDarkColor} fallback="#A20D26" error={errors.darkColor} />
                     <WColor label="Soft Background Tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" error={errors.softColor} />
                   </div>
+
+                  {/* Quick-pick brand color presets — sets primary + auto-suggests dark/soft */}
+                  <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
+
                   <p className="flex items-center gap-1.5 text-xs text-slate-400">
                     <Wand2 className="h-3.5 w-3.5 text-indigo-300" /> See it all come together in the
                     live preview{" "}
@@ -520,7 +601,7 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 }
 
 function WField({
-  label, value, onChange, placeholder, error, required, hint,
+  label, value, onChange, placeholder, error, required, hint, glyphInsert,
 }: {
   label: string;
   value: string;
@@ -529,6 +610,9 @@ function WField({
   error?: string;
   required?: boolean;
   hint?: React.ReactNode;
+  // When provided, renders a click-to-build Greek-letter inserter under the
+  // field that appends glyphs (for the glyph/abbreviation fields).
+  glyphInsert?: (glyph: string) => void;
 }) {
   const id = React.useId();
   return (
@@ -546,6 +630,7 @@ function WField({
         )}
       />
       {error ? <FieldError>{error}</FieldError> : hint ? <p className="mt-1.5 text-xs text-slate-400">{hint}</p> : null}
+      {glyphInsert ? <GreekLetterInserter onInsert={glyphInsert} /> : null}
     </div>
   );
 }
