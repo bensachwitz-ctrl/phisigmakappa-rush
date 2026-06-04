@@ -13,7 +13,7 @@ import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
   HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert,
   ShieldCheck, CalendarCheck, HandHeart, BookMarked, FileDown, LayoutGrid, ChevronDown, Command,
-  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser,
+  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser, CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -52,6 +52,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/dues", label: "Dues", icon: Wallet, adminOnly: true, group: "more" },
   { href: "/admin/dues/connect", label: "Payouts", icon: Banknote, adminOnly: true, group: "more" },
   { href: "/admin/treasury", label: "Treasury", icon: Landmark, adminOnly: true, group: "more" },
+  { href: "/admin/billing", label: "Billing", icon: CreditCard, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: Rocket, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true, group: "more" },

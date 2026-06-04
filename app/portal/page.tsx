@@ -4,13 +4,15 @@
 // versions of every portal with full CRUD.
 
 import Link from "next/link";
+import { headers } from "next/headers";
+import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Users, GraduationCap, Shield, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +55,15 @@ const PORTALS: PortalCard[] = [
 ];
 
 export default async function PortalHubPage() {
+  // Chapter-only route: the portal hub signs members/alumni into a specific
+  // chapter. There is no chapter on the apex, so 404 there. (On a tenant that
+  // hasn't finished onboarding we still bounce to /onboard below.)
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const cfg = await getSiteConfig();
   if (cfg["chapter.onboarded"] !== "true") {
     redirect("/onboard");

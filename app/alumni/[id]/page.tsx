@@ -3,8 +3,9 @@
 // only appear inside /admin/alumni for authenticated brothers + officers.
 
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma, getSubdomain } from "@/lib/prisma";
 import { publicAlumniView } from "@/lib/alumni";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
@@ -44,6 +45,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function AlumniProfilePage({ params, searchParams }: PageProps) {
+  // Chapter-only route: an alum profile belongs to a specific chapter's
+  // directory. No chapter on the apex → 404.
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
 

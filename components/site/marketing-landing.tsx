@@ -33,6 +33,7 @@ import {
   IconSafety,
   IconWhiteLabel,
   IconAlumni,
+  IconCheck,
   IconCheckCircle,
   IconArrowRight,
   IconLaunch,
@@ -40,6 +41,7 @@ import {
   IconDashboard,
   IconGrowth,
   IconSecurity,
+  IconComms,
   IconChevronDown,
   type IconProps,
 } from "@/components/brand/icons";
@@ -83,6 +85,8 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
   { href: "#how", label: "How it works" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
   { href: "#proof", label: "Why Greekstack" },
 ];
 
@@ -168,6 +172,69 @@ const HERO_SETTLE = "Run your whole chapter.";
    we render the alphabet as a premium gradient strip. */
 const GREEK_GLYPHS = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split("");
 
+/* ── Pricing ──────────────────────────────────────────────────────────────
+   One honest plan. SALES.md carries no per-seat apex pricing, so we ship the
+   simple, transparent "Chapter" plan: $29/mo, 14-day free trial, no card to
+   start, every feature, unlimited members/officers, cancel anytime. No fake
+   "Enterprise" tier — the platform is one product for every chapter. */
+const PLAN = {
+  name: "Chapter",
+  price: 29,
+  cadence: "/month",
+  tagline: "Everything your chapter runs on, one flat price.",
+  trial: "14-day free trial · no card required",
+};
+
+/* What's included — the load-bearing capabilities a buyer is checking for. */
+const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
+  { icon: IconRecruitment, label: "Recruitment pipeline — QR check-in, Kanban funnel & anonymous voting" },
+  { icon: IconDues, label: "Automated dues with Stripe Connect treasurer payouts" },
+  { icon: IconGrowth, label: "Treasury — budgets, ledgers & expense tracking" },
+  { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
+  { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
+  { icon: IconSafety, label: "Anti-hazing reporting & TCPA-compliant SMS comms" },
+  { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
+  { icon: IconAlumni, label: "Alumni directory & Stripe donation flows" },
+];
+
+/* ── FAQ ──────────────────────────────────────────────────────────────────
+   The real buyer objections, answered honestly. Plain strings (no markup) so
+   the accordion stays accessible and the copy is easy to audit. */
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: "Is our chapter's data isolated from other chapters?",
+    a: "Yes. Every chapter gets its own isolated database schema — your roster, dues records, and recruitment data are walled off from every other chapter on the platform. Officer access is further scoped by role-based permissions, so a Treasurer and a Recruitment chair only ever see what their job requires.",
+  },
+  {
+    q: "How do you handle TCPA and A2P 10DLC SMS compliance?",
+    a: "Compliance is built in, not bolted on. Every PNM opt-in is double opt-in with a timestamped consent receipt (verbatim ATDS language, IP, and user-agent stamped) for the legally-required 4-year recordkeeping. We enforce CTIA STOP/HELP/START keyword handling and an 8am–9pm recipient-local quiet-hours gate so no one gets paged at 3am. A2P 10DLC brand registration is handled at the platform level so individual chapters don't each file with the carriers.",
+  },
+  {
+    q: "What does it cost to process dues and donations?",
+    a: "Greekstack is $29/month flat. Card processing runs on Stripe, which charges its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+  },
+  {
+    q: "How does the white-label branding actually work?",
+    a: "You drop in your letters, colors, and crest from the admin panel and the entire platform re-skins to your chapter in seconds — every page, email, member portal, and your own custom subdomain. There's no rebuild and no developer required; it's your brand front-to-back, never ours.",
+  },
+  {
+    q: "How long does onboarding and migration take?",
+    a: "You're live in minutes, not months. Create your account, claim a subdomain, brand it, and start collecting PNMs and dues the same day — no install, no design agency, no setup fee. Your first sign-in walks you through a short checklist so a non-technical officer can get the chapter fully set up on day one.",
+  },
+  {
+    q: "Can we cancel anytime, and do we keep our data?",
+    a: "Yes to both. There are no contracts and no cancellation fees — cancel anytime from the admin panel. Your data is always yours: export your roster, PNMs (with vote sums and attendance), and dues records to CSV whenever you want, including on the way out.",
+  },
+  {
+    q: "Is Greekstack for fraternities or sororities?",
+    a: "Both. The platform is built for any Greek-letter organization — fraternities and sororities alike. Recruitment, dues, events, member management, and anti-hazing compliance work identically regardless of council, and the white-label branding makes it unmistakably your chapter.",
+  },
+  {
+    q: "What's included in the 14-day free trial?",
+    a: "Everything. The trial is the full product — every feature, unlimited members and officers, with no credit card required to start. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay.",
+  },
+];
+
 export default function MarketingLandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20">
@@ -179,6 +246,8 @@ export default function MarketingLandingPage() {
         <TrustBar />
         <Features />
         <HowItWorks />
+        <Pricing />
+        <Faq />
         <Proof />
         <FinalCta />
       </main>
@@ -887,6 +956,232 @@ function BrandItDemo() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ───────────────────────────── Pricing ───────────────────────────── */
+
+function Pricing() {
+  return (
+    <section id="pricing" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+      {/* Faint masked grid band for quiet depth behind the plan card — matches
+          the Features/Proof treatment so the page reads as one system. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
+      {/* Soft top gradient divider */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+      {/* Cursor-tracking glow, subtle, fine-pointer-only. */}
+      <Spotlight size={420} color="rgba(37,99,235,0.10)" edgeColor="rgba(56,189,248,0.06)" />
+
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+            Simple, honest pricing
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            One plan. <span className="gs-gradient-text">Every feature.</span> No surprises.
+          </h2>
+          <p className="mt-4 text-pretty text-muted-foreground">
+            No per-seat math, no tiers to decode, no fake &ldquo;enterprise&rdquo; upsell. One flat
+            price runs your whole chapter — start free, add the whole roster, cancel anytime.
+          </p>
+        </Reveal>
+
+        {/* The plan card: a shimmer-bordered frosted-glass panel, revealed on
+            scroll. The ring's hover-bloom glows outside the panel, so we don't
+            clip it here. */}
+        <Reveal delay={80} className="mx-auto mt-14 max-w-lg [perspective:1200px]">
+          <Tilt3DCard max={5} glareColor="rgba(37,99,235,0.18)" className="rounded-3xl">
+            <ShimmerBorder inline={false} rounded="rounded-3xl" className="p-[1.5px]">
+              <div className="gs-glass gs-float-shadow relative overflow-hidden rounded-[calc(1.5rem-1.5px)] p-7 sm:p-9">
+                {/* Thin gradient top-edge (blue→sky→gold) for the premium glint. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
+                />
+                {/* Soft corner bloom — same language as the feature cards. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-70"
+                />
+
+                <div className="relative flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">
+                      {PLAN.name}
+                    </span>
+                    <p className="mt-1 text-sm text-muted-foreground">{PLAN.tagline}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-600">
+                    <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
+                    All features
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="relative mt-6 flex items-end gap-1.5">
+                  <span className="text-6xl font-bold leading-none tracking-tight gs-gradient-text">
+                    ${PLAN.price}
+                  </span>
+                  <span className="mb-1.5 text-lg font-medium text-muted-foreground">
+                    {PLAN.cadence}
+                  </span>
+                </div>
+
+                {/* Trial callout */}
+                <div className="relative mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/5 px-3.5 py-2 text-sm font-medium text-blue-700">
+                  <IconCheckCircle className="h-4 w-4 text-blue-500" />
+                  {PLAN.trial}
+                </div>
+
+                {/* What's included */}
+                <ul className="relative mt-7 space-y-3" aria-label="What's included">
+                  {PLAN_INCLUDES.map((item) => (
+                    <li key={item.label} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20">
+                        <IconCheck className="h-3 w-3 text-blue-600" />
+                      </span>
+                      <span className="text-sm leading-relaxed text-foreground/90">{item.label}</span>
+                    </li>
+                  ))}
+                  <li className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20">
+                      <IconCheck className="h-3 w-3 text-blue-600" />
+                    </span>
+                    <span className="text-sm leading-relaxed text-foreground/90">
+                      <span className="font-semibold text-foreground">Unlimited members &amp; officers</span> — never priced per seat
+                    </span>
+                  </li>
+                </ul>
+
+                {/* CTA */}
+                <div className="relative mt-8">
+                  <Magnetic className="w-full">
+                    <ShimmerBorder rounded="rounded-xl" className="w-full">
+                      <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
+                        <Link href="/onboard" className="group/btn">
+                          Start your free trial
+                          <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                        </Link>
+                      </Button>
+                    </ShimmerBorder>
+                  </Magnetic>
+                  <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No setup fee
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No credit card to start
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Cancel anytime
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </ShimmerBorder>
+          </Tilt3DCard>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────────── FAQ ───────────────────────────── */
+
+function Faq() {
+  // Single-open accordion. Tracks the open index; -1 = all collapsed. Each row
+  // is a real <button> (keyboard + focus-visible for free) controlling an
+  // aria-expanded region. The panel animates via grid-template-rows (height
+  // 0→auto) which is GPU-cheap and collapses instantly under reduced motion via
+  // the motion-reduce:* utilities — no JS measurement, no layout-shift risk.
+  const [open, setOpen] = React.useState<number>(-1);
+
+  return (
+    <section id="faq" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+            Questions, answered
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Everything you need to know before you <span className="gs-gradient-text">go live</span>
+          </h2>
+          <p className="mt-4 text-pretty text-muted-foreground">
+            The real questions chapter officers ask us — security, compliance, fees, and getting
+            started. Still curious? Start a free trial and see it yourself.
+          </p>
+        </Reveal>
+
+        <Reveal delay={80} className="mx-auto mt-12 max-w-3xl">
+          <ul className="space-y-3">
+            {FAQS.map((item, i) => {
+              const isOpen = open === i;
+              const panelId = `faq-panel-${i}`;
+              const btnId = `faq-trigger-${i}`;
+              return (
+                <li
+                  key={item.q}
+                  className={
+                    "group overflow-hidden rounded-2xl gs-glass transition-colors duration-300 " +
+                    (isOpen ? "border-blue-500/40" : "hover:border-blue-500/30")
+                  }
+                >
+                  <h3 className="m-0">
+                    <button
+                      type="button"
+                      id={btnId}
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      onClick={() => setOpen((cur) => (cur === i ? -1 : i))}
+                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold tracking-tight text-foreground transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:px-6 sm:text-base"
+                    >
+                      <span>{item.q}</span>
+                      <span
+                        aria-hidden="true"
+                        className={
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none " +
+                          (isOpen ? "rotate-180" : "")
+                        }
+                      >
+                        <IconChevronDown className="h-4 w-4 text-blue-600" />
+                      </span>
+                    </button>
+                  </h3>
+                  {/* Collapsed rows are fully removed from layout via `hidden`,
+                      so there is zero reserved space and zero layout shift, and
+                      the closed answer text stays out of the a11y tree + tab
+                      order until expanded. The chevron rotation is the only
+                      motion, and it is disabled under reduced motion. */}
+                  <div
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={btnId}
+                    hidden={!isOpen}
+                    className="px-5 pb-5 sm:px-6"
+                  >
+                    <p className="text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Soft conversion nudge under the list. */}
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 text-center sm:flex-row">
+            <p className="text-sm text-muted-foreground">Still have a question?</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/onboard" className="group/btn">
+                Start free &amp; explore
+                <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+              </Link>
+            </Button>
+          </div>
+        </Reveal>
+      </div>
+    </section>
   );
 }
 

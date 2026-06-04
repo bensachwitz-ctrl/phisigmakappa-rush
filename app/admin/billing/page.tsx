@@ -1,0 +1,100 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { centralDb, getSubdomain } from "@/lib/prisma";
+import { getEntitlement } from "@/lib/entitlement";
+import { getStripe } from "@/lib/stripe";
+import { BillingManager } from "@/components/admin/billing-manager";
+import {
+  PLATFORM_PLAN_NAME,
+  PLATFORM_PLAN_PRICE_CENTS,
+} from "@/lib/platform-billing";
+import { CreditCard, ArrowLeft } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * /admin/billing — the chapter's PLATFORM subscription page (paying Greekstack).
+ *
+ * Admin-only (mirrors the dues hub gate: member cookie → login; non-admin role →
+ * dashboard). Reads the central registry row + the fail-open entitlement and
+ * hands a serialized snapshot to the client manager, which renders the plan +
+ * status + trial countdown and the Start-subscription / Manage-billing buttons.
+ *
+ * This page NEVER hard-blocks anything — the operator `isActive` flag (enforced
+ * in app/page.tsx) is the only hard switch. Here we only present billing state.
+ */
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams?: { ok?: string };
+}) {
+  if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fbilling");
+  if (!isAdminRole()) redirect("/admin");
+
+  const host = headers().get("host");
+  const subdomain = getSubdomain(host) || "";
+
+  const entitlement = await getEntitlement(subdomain);
+
+  // Has the chapter ever started checkout? (drives portal-vs-checkout default)
+  const tenant = subdomain
+    ? await centralDb.tenant
+        .findUnique({
+          where: { subdomain },
+          select: { stripeCustomerId: true },
+        })
+        .catch(() => null)
+    : null;
+
+  // Stripe configured? (drives the graceful "contact support" state)
+  const stripeConfigured = !!getStripe();
+
+  const priceLabel = `$${(PLATFORM_PLAN_PRICE_CENTS / 100).toFixed(
+    PLATFORM_PLAN_PRICE_CENTS % 100 === 0 ? 0 : 2,
+  )}/mo`;
+
+  return (
+    <main className="container py-8 max-w-3xl">
+      <Link
+        href="/admin"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Dashboard
+      </Link>
+
+      <div className="mb-8 flex items-start gap-4">
+        <span
+          className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/15"
+          aria-hidden="true"
+        >
+          <CreditCard className="h-6 w-6" />
+        </span>
+        <div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+            <CreditCard className="h-3 w-3" /> Plan &amp; billing
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Billing</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground max-w-prose">
+            Manage your chapter&apos;s Greekstack subscription — the platform that
+            runs your rush site, roster, dues, events, and compliance trail. This
+            is separate from the dues you collect from your own members.
+          </p>
+        </div>
+      </div>
+
+      <BillingManager
+        planName={PLATFORM_PLAN_NAME}
+        priceLabel={priceLabel}
+        status={entitlement.status}
+        reason={entitlement.reason}
+        trialEndsAt={entitlement.trialEndsAt ? entitlement.trialEndsAt.toISOString() : null}
+        daysLeft={entitlement.daysLeft}
+        hasCustomer={!!tenant?.stripeCustomerId}
+        stripeConfigured={stripeConfigured}
+        justSubscribed={searchParams?.ok === "1"}
+      />
+    </main>
+  );
+}

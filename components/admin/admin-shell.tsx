@@ -4,7 +4,17 @@ import { usePathname } from "next/navigation";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { CommandPalette, CommandPaletteLauncher } from "@/components/admin/command-palette";
 
-export function AdminShell({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
+export function AdminShell({
+  children,
+  isAdmin = false,
+  banner = null,
+}: {
+  children: React.ReactNode;
+  isAdmin?: boolean;
+  /** Optional soft-gate billing banner rendered above the nav. Self-hides on the
+   *  login screen and when entitled/dismissed (the banner decides internally). */
+  banner?: React.ReactNode;
+}) {
   const pathname = usePathname();
   const isLogin = pathname?.startsWith("/admin/login");
 
@@ -20,6 +30,10 @@ export function AdminShell({ children, isAdmin = false }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-phisig-mist">
+      {/* Soft-gate billing banner — rendered above the nav. The banner self-hides
+          on the login screen, when the subscription is healthy, and when the
+          admin dismissed it this session. It never blocks the app. */}
+      {!isLogin && banner}
       {!isLogin && <AdminNav isAdmin={isAdmin} />}
       {/* CommandPalette mounts itself globally and listens for ⌘K / Ctrl+K
           at the window level. Renders nothing visible until opened. Skipped

@@ -1,0 +1,181 @@
+import { centralDb } from "@/lib/prisma";
+
+/**
+ * PLATFORM-BILLING ENTITLEMENT — "is this chapter allowed to use Greekstack?"
+ *
+ * This is the soft-gate's source of truth for whether a chapter's PLATFORM
+ * subscription (the chapter PAYING Greekstack) is in good standing. It is
+ * DISTINCT from `isTenantActive` (lib/prisma.ts), which is the operator's hard
+ * on/off switch, and from the per-chapter Stripe CONNECT account a chapter uses
+ * to collect dues from its own members.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ FAIL OPEN — by design. This guard exists to show a billing BANNER, never │
+ * │ to dark-screen a live chapter. EVERY uncertain path resolves to          │
+ * │ `entitled: true`:                                                         │
+ * │   • no registry row (unprovisioned / legacy)         → entitled          │
+ * │   • operator `isActive` override is true             → entitled          │
+ * │   • status ∈ {trialing, active}                      → entitled          │
+ * │   • trialEndsAt is still in the future               → entitled          │
+ * │   • ANY lookup error / unknown / unset status        → entitled          │
+ * │ The function NEVER throws. The only thing that takes a chapter offline    │
+ * │ is the operator flipping `isActive=false` (enforced separately in        │
+ * │ app/page.tsx via isTenantActive). Billing state only drives the banner.  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+
+/** A subscription is "good standing" for entitlement when trialing or active. */
+const ENTITLED_STATUSES = new Set(["trialing", "active"]);
+
+export type EntitlementReason =
+  | "operator_active" // isActive override (manual)
+  | "subscribed" // status is active
+  | "trialing" // status is trialing
+  | "trial_active" // trialEndsAt in the future (regardless of status string)
+  | "no_tenant_row" // unprovisioned / legacy → never block
+  | "lookup_error" // registry hiccup → fail open
+  | "past_due" // entitled stays true, but surface the dunning state
+  | "canceled" // entitled stays true here (soft-gate); banner nudges to re-subscribe
+  | "trial_expired" // trial lapsed and no active sub — banner nudges, app still serves
+  | "unknown"; // unrecognized/absent status → fail open
+
+export interface Entitlement {
+  /** TRUE = serve normally. FALSE is advisory ONLY — drives the banner; the app
+   *  is NEVER hard-blocked on this (operator `isActive` is the only hard switch). */
+  entitled: boolean;
+  /** Narrowed subscription status (trialing|active|past_due|canceled|null). */
+  status: string | null;
+  /** When the free trial ends (ISO from DB), or null. */
+  trialEndsAt: Date | null;
+  /** Whole days left in the trial (ceil). 0 once elapsed; null when no trial. */
+  daysLeft: number | null;
+  /** Machine-readable reason for the resolved state — drives banner copy. */
+  reason: EntitlementReason;
+  /** The plan slug (e.g. "chapter"), or null. */
+  plan: string | null;
+}
+
+/** Ceil whole days from now until `when`; null when `when` is null. */
+function daysUntil(when: Date | null): number | null {
+  if (!when) return null;
+  const ms = when.getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  if (ms <= 0) return 0;
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Resolve the platform-billing entitlement for a chapter subdomain.
+ *
+ * NEVER throws and NEVER returns `entitled: false` on uncertainty — see the
+ * fail-open contract above. Pass the bare subdomain (e.g. "phisig"); an empty
+ * subdomain (the apex) is treated as entitled (the apex has no chapter to gate).
+ */
+export async function getEntitlement(subdomain: string): Promise<Entitlement> {
+  // The apex / no-subdomain context has no chapter to gate — always entitled.
+  if (!subdomain) {
+    return {
+      entitled: true,
+      status: null,
+      trialEndsAt: null,
+      daysLeft: null,
+      reason: "no_tenant_row",
+      plan: null,
+    };
+  }
+
+  let row:
+    | {
+        isActive: boolean;
+        subscriptionStatus: string | null;
+        trialEndsAt: Date | null;
+        plan: string | null;
+      }
+    | null = null;
+
+  try {
+    row = await centralDb.tenant.findUnique({
+      where: { subdomain },
+      select: {
+        isActive: true,
+        subscriptionStatus: true,
+        trialEndsAt: true,
+        plan: true,
+      },
+    });
+  } catch {
+    // Registry hiccup → fail open. Never blackhole a live/paying chapter on a
+    // transient DB error.
+    return {
+      entitled: true,
+      status: null,
+      trialEndsAt: null,
+      daysLeft: null,
+      reason: "lookup_error",
+      plan: null,
+    };
+  }
+
+  // Unprovisioned / legacy chapter (no registry row) → never block.
+  if (!row) {
+    return {
+      entitled: true,
+      status: null,
+      trialEndsAt: null,
+      daysLeft: null,
+      reason: "no_tenant_row",
+      plan: null,
+    };
+  }
+
+  const status = (row.subscriptionStatus || "").trim().toLowerCase() || null;
+  const trialEndsAt = row.trialEndsAt ?? null;
+  const daysLeft = daysUntil(trialEndsAt);
+  const plan = row.plan ?? null;
+  const base = { status, trialEndsAt, daysLeft, plan };
+
+  // 1. Operator manual override — isActive===true is an explicit "let them run".
+  //    (isActive===false is the operator's HARD suspend and is enforced in
+  //    app/page.tsx, not here — this guard is soft and only ever fails open.)
+  if (row.isActive === true) {
+    // Still report the most informative billing reason so the banner can nudge
+    // even an operator-comped chapter that is past_due/expired. Entitlement is
+    // unconditionally true here, but the reason reflects real billing state.
+    return { entitled: true, ...base, reason: reasonFor(status, daysLeft) };
+  }
+
+  // 2. Subscription in good standing (trialing/active).
+  if (status && ENTITLED_STATUSES.has(status)) {
+    return {
+      entitled: true,
+      ...base,
+      reason: status === "active" ? "subscribed" : "trialing",
+    };
+  }
+
+  // 3. Trial window still open (defensive: future trialEndsAt entitles even if
+  //    the status string is missing/stale).
+  if (daysLeft !== null && daysLeft > 0) {
+    return { entitled: true, ...base, reason: "trial_active" };
+  }
+
+  // 4. Everything else (past_due, canceled, trial_expired, unknown/absent) —
+  //    STILL fail open (entitled:true). The reason drives the banner copy; the
+  //    app is never hard-blocked here.
+  return { entitled: true, ...base, reason: reasonFor(status, daysLeft) };
+}
+
+/**
+ * Pick the most informative banner `reason` for a billing state that is NOT a
+ * clean trialing/active. Always advisory — entitlement itself stays true.
+ */
+function reasonFor(
+  status: string | null,
+  daysLeft: number | null,
+): EntitlementReason {
+  if (status === "past_due") return "past_due";
+  if (status === "canceled") return "canceled";
+  if (daysLeft !== null && daysLeft <= 0) return "trial_expired";
+  if (!status) return "unknown";
+  return "unknown";
+}

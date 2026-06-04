@@ -11,7 +11,7 @@ import {
   ArrowRight, Command,
   UserPlus, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
   HandHeart, ShieldCheck, BookMarked, FileDown, Banknote,
-  Landmark, Network, BookUser,
+  Landmark, Network, BookUser, CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -82,6 +82,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "act-setup", group: "Actions", icon: Rocket, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
       { id: "act-dues-connect", group: "Actions", icon: Banknote, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
       { id: "act-treasury", group: "Actions", icon: Landmark, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
+      { id: "act-billing", group: "Actions", icon: CreditCard, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
       { id: "act-exports", group: "Actions", icon: FileDown, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
       { id: "act-export-rushes", group: "Actions", icon: ScrollText, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
       { id: "act-export-brothers", group: "Actions", icon: ScrollText, label: "Download Brothers CSV", href: "/api/admin/export/brothers", adminOnly: true },

@@ -1059,4 +1059,26 @@ model Tenant {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // ── Platform billing (additive — the chapter PAYING Greekstack) ──────────────
+  // Distinct from the per-chapter Stripe CONNECT account a chapter uses to
+  // collect dues from ITS OWN members (that lives in the tenant schema's
+  // SiteConfig as dues.stripeConnectAccountId). THESE columns track the
+  // chapter's OWN subscription TO the platform, billed on the platform's single
+  // Stripe account. All nullable so every existing tenant row is unaffected and
+  // the columns can be back-filled idempotently (scratch/_migrate_billing.mjs).
+  //
+  // subscriptionStatus mirrors Stripe's subscription.status, narrowed to the
+  // values the entitlement guard cares about:
+  //   trialing | active | past_due | canceled  (also incomplete/unpaid pass-through)
+  // The soft-gate (lib/entitlement.ts) FAILS OPEN — an unknown/absent status,
+  // or any lookup error, still serves the chapter. The operator `isActive` flag
+  // remains the ONLY hard switch.
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String? // trialing | active | past_due | canceled
+  trialEndsAt          DateTime?
+  plan                 String? // "chapter"
+
+  @@index([stripeCustomerId])
 }

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
+import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
@@ -52,6 +55,15 @@ export async function generateMetadata(): Promise<Metadata> {
  * what data do you collect, and what does it cost.
  */
 export default async function ParentsPage() {
+  // Chapter-only route: on the apex (no subdomain) there is no chapter, so the
+  // parent page would render half-empty neutral copy to a prospect. 404 instead.
+  // Same host read + getSubdomain split the apex/tenant boundary uses elsewhere.
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const cfg = await getSiteConfig();
   const advisorPlaceholder =
     !cfg["contact.advisorName"] || cfg["contact.advisorName"] === "Chapter Advisor";

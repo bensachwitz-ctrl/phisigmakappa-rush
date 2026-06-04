@@ -1,15 +1,54 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { cleanUrl, cleanMailto } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-// Generated dynamically so a chapter rename (e.g. Beta Sigma @ Maryland)
-// updates the privacy page title + social-share copy without code edits.
+function requestHost(): string {
+  try {
+    const h = headers();
+    return h.get("host") || h.get("x-forwarded-host") || "";
+  } catch {
+    return "";
+  }
+}
+
+// Generated dynamically. Two audiences share this route:
+//   • APEX (getSubdomain === null) → the Greekstack PLATFORM privacy policy
+//     (what Greekstack collects from the chapters/admins who subscribe).
+//   • TENANT → the chapter's privacy policy toward its rushees (unchanged).
 export async function generateMetadata() {
+  if (getSubdomain(requestHost()) === null) {
+    const title = "Privacy Policy — Greekstack";
+    const description =
+      "How Greekstack collects, uses, and protects data from the chapters and administrators who use the platform, our sub-processors, retention, and your GDPR/CCPA rights.";
+    return {
+      title,
+      description,
+      alternates: { canonical: "/privacy" },
+      robots: { index: true, follow: true },
+      openGraph: {
+        title,
+        description,
+        url: "/privacy",
+        type: "website" as const,
+        images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Greekstack" }],
+      },
+      twitter: {
+        card: "summary_large_image" as const,
+        title,
+        description,
+        images: ["/twitter-image"],
+      },
+    };
+  }
+
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
   const greekLetters = cfg["chapter.greekLetters"] || "";
@@ -39,7 +78,16 @@ export async function generateMetadata() {
   };
 }
 
+// Route entry: dispatch on apex-vs-tenant. The chapter→rushee policy below is
+// kept byte-for-byte identical for tenants; the apex gets the platform policy.
 export default async function PrivacyPage() {
+  if (getSubdomain(requestHost()) === null) {
+    return <PlatformPrivacyPage />;
+  }
+  return <ChapterPrivacyPage />;
+}
+
+async function ChapterPrivacyPage() {
   const cfg = await getSiteConfig();
   const rushEmail = cfg["contact.rushEmail"];
   const rushMailto = cleanMailto(rushEmail);
@@ -187,5 +235,293 @@ export default async function PrivacyPage() {
       </div>
       <PublicFooter />
     </main>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PLATFORM privacy policy — rendered ONLY on the apex (greekstack.vercel.app).
+// Audience = the chapters and administrators who subscribe to Greekstack, NOT
+// rushees. Greekstack is the PROCESSOR of a chapter's data; each chapter is the
+// controller. Uses Greekstack-branded apex chrome (not the chapter PublicNav/
+// PublicFooter, which link to chapter-only routes that 404 on the apex).
+// ════════════════════════════════════════════════════════════════════════
+
+const PLATFORM_PRIVACY_UPDATED = "June 2026";
+
+function PlatformPrivacyPage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <ApexHeader />
+
+      <main id="main-content" className="container section-y max-w-3xl">
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to home
+        </Link>
+
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-blue-600">
+          <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Privacy
+        </span>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">
+          What Greekstack collects, why, and how we protect it.
+        </h1>
+        <p className="mt-4 leading-relaxed text-muted-foreground">
+          This Privacy Policy describes how Greekstack (&ldquo;Greekstack,&rdquo; &ldquo;we,&rdquo;
+          &ldquo;us&rdquo;) — the white-label platform that powers fraternity and sorority chapter sites
+          — handles data when a chapter, council, or organization (&ldquo;you&rdquo;) signs up for and uses
+          the platform. It covers the data <span className="font-medium text-foreground">Greekstack itself</span>{" "}
+          collects from chapters and their administrators. It does <span className="font-medium text-foreground">not</span>{" "}
+          describe how an individual chapter handles its own rushees&apos; data — each chapter publishes its
+          own privacy notice for that on its own chapter site.
+        </p>
+
+        <PSection title="Controller vs. processor">
+          <p>
+            For the data a chapter puts into the platform about its members, rushees, and alumni, the{" "}
+            <span className="font-medium text-foreground">chapter is the data controller</span> and{" "}
+            <span className="font-medium text-foreground">Greekstack is the data processor</span> — we
+            process that data only on the chapter&apos;s instructions, to provide and support the service.
+            For the data described on this page — the account and usage data Greekstack collects to run its
+            business — <span className="font-medium text-foreground">Greekstack is the controller</span>.
+          </p>
+        </PSection>
+
+        <PSection title="What we collect from chapters & admins">
+          <ul className="list-disc space-y-1.5 pl-5">
+            <li>
+              <span className="font-medium text-foreground">Account &amp; identity:</span> the name, email
+              address, and (optionally) phone number of the administrators and officers who create or are
+              granted access to a chapter console, plus their hashed login credentials.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Chapter &amp; organization details:</span> the
+              chapter name, Greek letters, institution, and the branding/configuration you enter during
+              setup.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Billing data:</span> your plan, subscription
+              status, and billing contact. Card details are collected and stored by Stripe — we never see or
+              store full card numbers.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Usage &amp; logs:</span> sign-in events, audit
+              records of admin actions, IP address, browser/user-agent, and error/diagnostic logs used to
+              keep the platform secure and reliable.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Support communications:</span> messages you send
+              us and our replies.
+            </li>
+          </ul>
+          <p className="mt-3">
+            We use only first-party functional cookies needed to keep administrators signed in and the
+            service working. We do not run third-party advertising or cross-site tracking cookies.
+          </p>
+        </PSection>
+
+        <PSection title="How we use it">
+          <p>We use the data above to:</p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5">
+            <li>provide, maintain, and secure the platform and each chapter&apos;s isolated tenant;</li>
+            <li>authenticate administrators and prevent unauthorized or cross-tenant access;</li>
+            <li>bill subscriptions, process trials, and handle renewals and receipts;</li>
+            <li>provide support and send essential service notices (billing, security, and material changes);</li>
+            <li>diagnose problems, monitor performance, and improve the product.</li>
+          </ul>
+          <p className="mt-3">
+            We do <span className="font-medium text-foreground">not</span> sell your data, and we do not use a
+            chapter&apos;s member/rushee data for our own marketing or to train advertising models.
+          </p>
+        </PSection>
+
+        <PSection title="Sub-processors">
+          <p>
+            We share data only with the service providers we rely on to operate the platform, each acting
+            under its own security and privacy commitments and processing data only as needed to provide its
+            service to us:
+          </p>
+          <ul className="mt-3 space-y-2">
+            <PSubProcessor name="Neon" role="Managed Postgres database hosting (system of record)." />
+            <PSubProcessor name="Vercel" role="Application hosting, edge delivery, and image (Blob) storage." />
+            <PSubProcessor name="Stripe" role="Subscription billing and, where a chapter enables it, dues payments." />
+            <PSubProcessor name="Resend" role="Transactional and platform email delivery." />
+            <PSubProcessor name="Twilio" role="SMS delivery for chapter recruitment and notifications." />
+          </ul>
+          <p className="mt-3">
+            We may also disclose data if required by law, to protect our rights or the safety of users, or in
+            connection with a merger or acquisition (with notice as required). This list is kept current as
+            our sub-processors change.
+          </p>
+        </PSection>
+
+        <PSection title="Where data lives & security">
+          <p>
+            Data is stored in a Postgres database hosted on Neon and an application layer hosted on Vercel,
+            primarily in the United States. We maintain tenant isolation so one chapter cannot access
+            another&apos;s data, and we rely on industry-standard encryption in transit and at rest through
+            our providers, scoped access controls, and audit logging. No method of transmission or storage is
+            perfectly secure, but we work to protect your data using reasonable safeguards.
+          </p>
+        </PSection>
+
+        <PSection title="Retention">
+          <p>
+            We retain account, chapter, and billing data for as long as your subscription is active and as
+            needed to provide the service. After an account is closed or a subscription ends, Customer Data is
+            made available for export for <span className="font-medium text-foreground">30 days</span>, after
+            which it is deleted from active systems; residual copies in routine backups age out on our normal
+            backup cycle. We retain billing records and certain logs longer where required for legal,
+            accounting, tax, or security purposes.
+          </p>
+        </PSection>
+
+        <PSection title="Your rights — GDPR & CCPA/CPRA">
+          <p>
+            Depending on where you are located, you may have the right to access, correct, delete, or receive
+            a portable copy of the personal data we hold about you, to object to or restrict certain
+            processing, and to withdraw consent. California residents (CCPA/CPRA) have the right to know,
+            access, correct, delete, and to opt out of the sale or sharing of personal information —{" "}
+            <span className="font-medium text-foreground">Greekstack does not sell or share personal
+            information.</span> EU/UK residents (GDPR) have the rights described above and may lodge a
+            complaint with a supervisory authority.
+          </p>
+          <p className="mt-3">
+            To exercise any of these rights, contact us at the address below. We will respond within the time
+            required by applicable law (generally within 30–45 days). Where Greekstack processes a chapter&apos;s
+            member/rushee data as a processor, requests from those individuals should go to the chapter (the
+            controller); we will assist the chapter in responding.
+          </p>
+        </PSection>
+
+        <PSection title="International transfers">
+          <p>
+            If you access the platform from outside the United States, your data will be transferred to and
+            processed in the United States and other countries where we or our sub-processors operate. Where
+            required, we rely on appropriate safeguards (such as the European Commission&apos;s Standard
+            Contractual Clauses) for such transfers.
+          </p>
+        </PSection>
+
+        <PSection title="Children">
+          <p>
+            The platform is intended for use by chapter administrators, who are adults. It is not directed to
+            children, and we do not knowingly collect personal information from children through the
+            administrator-facing platform. Any age-related handling of a chapter&apos;s rushees is governed by
+            that chapter&apos;s own privacy notice.
+          </p>
+        </PSection>
+
+        <PSection title="Data Processing Agreement (DPA)">
+          <p>
+            Because Greekstack processes member and rushee data on a chapter&apos;s behalf, we make a Data
+            Processing Agreement available to subscribing chapters. To request a DPA, or to ask any
+            data-protection question, email{" "}
+            <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>.
+          </p>
+        </PSection>
+
+        <PSection title="Changes to this policy">
+          <p>
+            We may update this Privacy Policy from time to time. If we make material changes we will give
+            reasonable notice (by email or in-app) before they take effect, and we will update the
+            &ldquo;last updated&rdquo; date below.
+          </p>
+        </PSection>
+
+        <PSection title="Contact">
+          <p>
+            Privacy questions or requests:{" "}
+            <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>.
+            See also our{" "}
+            <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
+          </p>
+        </PSection>
+
+        <p className="mt-12 text-xs text-muted-foreground">
+          Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Questions:{" "}
+          <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>
+        </p>
+      </main>
+
+      <ApexFooter />
+    </div>
+  );
+}
+
+function PSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8 space-y-2">
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      <div className="text-sm leading-relaxed text-muted-foreground">{children}</div>
+    </section>
+  );
+}
+
+function PSubProcessor({ name, role }: { name: string; role: string }) {
+  return (
+    <li className="flex gap-2.5">
+      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" aria-hidden="true" />
+      <span>
+        <span className="font-medium text-foreground">{name}</span> — {role}
+      </span>
+    </li>
+  );
+}
+
+// ── Apex-only Greekstack chrome (shared shape with app/terms/page.tsx) ────
+function ApexHeader() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
+          <span className="transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105">
+            <GreekstackLogo className="h-8 w-8" />
+          </span>
+          <span className="text-lg font-bold tracking-tight">
+            <span className="text-foreground">Greek</span>
+            <span className="gs-gradient-text">stack</span>
+          </span>
+        </Link>
+        <Link
+          href="/onboard"
+          className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+        >
+          Get started
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function ApexFooter() {
+  return (
+    <footer className="mt-12 border-t border-border bg-secondary/30">
+      <div className="container py-10">
+        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
+            <span className="transition-transform duration-300 group-hover:rotate-[-6deg]">
+              <GreekstackLogo className="h-7 w-7" />
+            </span>
+            <span className="text-base font-bold tracking-tight gs-gradient-text">Greekstack</span>
+          </Link>
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
+            <Link href="/privacy" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/onboard" className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
+              Get started
+            </Link>
+          </nav>
+        </div>
+        <div className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
+        </div>
+      </div>
+    </footer>
   );
 }

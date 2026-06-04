@@ -100,6 +100,13 @@ export default function OnboardWizard() {
   const [foundingYear, setFoundingYear] = React.useState("");
   const [fraternityLetters, setFraternityLetters] = React.useState("");
   const [subdomain, setSubdomain] = React.useState("");
+  // Live, debounced subdomain availability — so the user learns a name is taken
+  // while typing on Step 1, never as a destructive failure at the final Launch.
+  // `idle` (nothing typed yet) · `checking` (request in flight) · `available` ·
+  // `taken`/`reserved`/`invalid` (blocking). The final-submit check in
+  // /api/onboard stays the source of truth; this is a belt-and-suspenders hint.
+  type SubStatus = "idle" | "checking" | "available" | "taken" | "reserved" | "invalid";
+  const [subStatus, setSubStatus] = React.useState<SubStatus>("idle");
 
   // Brand State
   const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
@@ -219,6 +226,26 @@ export default function OnboardWizard() {
 
   function goNext() {
     if (!validateStep(step)) return;
+    // On the identity step, refuse to advance past a known-bad subdomain so the
+    // user fixes it here instead of at the final Launch. (Mirrors the disabled
+    // Continue button; this guards the keyboard/Enter path too.)
+    if (step === "identity" && subdomainBlocks) {
+      setErrors((prev) => ({
+        ...prev,
+        subdomain:
+          subStatus === "taken"
+            ? "That subdomain is already taken — try another."
+            : subStatus === "reserved"
+            ? "That subdomain is reserved — try another."
+            : "That subdomain is invalid — try another.",
+      }));
+      push({
+        title: "Subdomain unavailable",
+        description: "Please choose a different subdomain before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (stepIndex < STEPS.length - 1) {
       setDir(1);
       setStep(STEPS[stepIndex + 1].id);
@@ -243,6 +270,64 @@ export default function OnboardWizard() {
     }
     headingRef.current?.focus({ preventScroll: true });
   }, [step]);
+
+  // ── Live subdomain availability (debounced ~400ms) ────────────────────────
+  // Mirror the server's sanitizer (trim → lower → strip non-[a-z0-9-]) so the
+  // value we check is exactly the key the registry is keyed on. We short-circuit
+  // the obvious local rejects (empty / <3 / malformed / "--") to "invalid"
+  // without a network round-trip; everything else hits /api/onboard/check, which
+  // applies the SAME reserved denylist + format guard and the registry lookup.
+  // Each run cancels the previous (AbortController + a `cancelled` flag) so a
+  // slow earlier response can never overwrite the status for a newer value.
+  const normalizedSubdomain = subdomain.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  React.useEffect(() => {
+    const value = normalizedSubdomain;
+    if (!value) {
+      setSubStatus("idle");
+      return;
+    }
+    if (value.length < 3 || value.includes("--") || !/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(value)) {
+      setSubStatus("invalid");
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+    setSubStatus("checking");
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/onboard/check?subdomain=${encodeURIComponent(value)}`, {
+          signal: controller.signal,
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { available: boolean; reason?: "taken" | "reserved" | "invalid" }
+          | null;
+        if (cancelled) return;
+        if (!data) {
+          // Couldn't read a verdict — don't block the user on a transient error;
+          // the final submit remains the source of truth.
+          setSubStatus("idle");
+          return;
+        }
+        if (data.available) setSubStatus("available");
+        else setSubStatus(data.reason ?? "taken");
+      } catch {
+        if (!cancelled) setSubStatus("idle"); // aborted or network error → no block
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [normalizedSubdomain]);
+
+  // Block forward navigation while a subdomain is known-bad. `idle`/`checking`
+  // never block (don't trap the user mid-type or mid-request); only a resolved
+  // taken/reserved/invalid does. The final POST re-validates regardless.
+  const subdomainBlocks =
+    subStatus === "taken" || subStatus === "reserved" || subStatus === "invalid";
 
   async function handleLaunch() {
     setBusy(true);
@@ -500,14 +585,16 @@ export default function OnboardWizard() {
                         onChange={setSubdomain}
                         placeholder="phisig-usc"
                         error={errors.subdomain}
+                        // Tint the input border to match a resolved blocking
+                        // status (taken/reserved/invalid) without hiding the live
+                        // status hint below it. A hard `error` still takes over.
+                        invalid={subdomainBlocks}
                         required
                         hint={
-                          <>
-                            Your site will live at{" "}
-                            <strong className="font-semibold text-sky-200">
-                              {(subdomain.trim() || "your-subdomain")}.greekstack.vercel.app
-                            </strong>
-                          </>
+                          <SubdomainStatus
+                            host={`${normalizedSubdomain || "your-subdomain"}.greekstack.vercel.app`}
+                            status={subStatus}
+                          />
                         }
                       />
                     </div>
@@ -649,7 +736,14 @@ export default function OnboardWizard() {
 
               {!isLastStep ? (
                 <Magnetic strength={14} radius={80}>
-                  <Button type="button" variant="platform" size="lg" onClick={goNext} className="gs-sheen">
+                  <Button
+                    type="button"
+                    variant="platform"
+                    size="lg"
+                    onClick={goNext}
+                    disabled={busy || (step === "identity" && subdomainBlocks)}
+                    className="gs-sheen"
+                  >
                     Continue <IconArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Magnetic>
@@ -785,6 +879,86 @@ function FieldError({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* SubdomainStatus — the live availability hint under the Desired Subdomain
+   field. Always renders the resolved host line; the verdict line below lives in
+   an aria-live="polite" region so screen readers announce "available / taken /
+   reserved / invalid / checking" as the debounced check resolves (the region is
+   always mounted, so changes are announced rather than missed on mount). Color +
+   icon carry the same meaning visually; reduced-motion-safe (the only motion is
+   the spinner, which respects the user's prefers-reduced-motion via the caller's
+   `reduce` flag passed down). */
+function SubdomainStatus({
+  host,
+  status,
+}: {
+  host: string;
+  status: "idle" | "checking" | "available" | "taken" | "reserved" | "invalid";
+}) {
+  const reduce = useReducedMotion();
+  const verdict = (() => {
+    switch (status) {
+      case "checking":
+        return {
+          tone: "text-slate-300",
+          icon: (
+            <IconSpark
+              className={cn("h-3.5 w-3.5 text-sky-300", !reduce && "animate-spin")}
+              aria-hidden="true"
+            />
+          ),
+          text: "Checking availability…",
+        };
+      case "available":
+        return {
+          tone: "text-emerald-300",
+          icon: <IconCheckCircle className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />,
+          text: (
+            <>
+              <span className="font-semibold text-emerald-200">{host}</span> is available
+            </>
+          ),
+        };
+      case "taken":
+        return {
+          tone: "text-rose-300",
+          icon: <IconClose className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />,
+          text: "That subdomain is taken — try another.",
+        };
+      case "reserved":
+        return {
+          tone: "text-rose-300",
+          icon: <IconClose className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />,
+          text: "That subdomain is reserved — try another.",
+        };
+      case "invalid":
+        return {
+          tone: "text-amber-300",
+          icon: <IconClose className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />,
+          text: "Use 3+ characters: letters, numbers, and single hyphens only.",
+        };
+      default:
+        return null; // idle — show only the host preview line
+    }
+  })();
+
+  return (
+    <>
+      <span className="block text-slate-400">
+        Your site will live at{" "}
+        <strong className="font-semibold text-sky-200">{host}</strong>
+      </span>
+      {/* Live region is ALWAYS present so changes announce; empty when idle. */}
+      <span role="status" aria-live="polite" className="mt-1 block min-h-[1rem]">
+        {verdict ? (
+          <span className={cn("inline-flex items-center gap-1 font-medium", verdict.tone)}>
+            {verdict.icon} {verdict.text}
+          </span>
+        ) : null}
+      </span>
+    </>
+  );
+}
+
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
@@ -795,13 +969,17 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 }
 
 function WField({
-  label, value, onChange, placeholder, error, required, hint, glyphInsert,
+  label, value, onChange, placeholder, error, invalid, required, hint, glyphInsert,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   error?: string;
+  // Tint the border + mark aria-invalid for a soft/external validity signal
+  // (e.g. a live availability check) WITHOUT replacing the `hint` the way a
+  // hard `error` string does. `error` still wins when both are set.
+  invalid?: boolean;
   required?: boolean;
   hint?: React.ReactNode;
   // When provided, renders a click-to-build Greek-letter inserter under the
@@ -809,6 +987,7 @@ function WField({
   glyphInsert?: (glyph: string) => void;
 }) {
   const id = React.useId();
+  const showInvalid = Boolean(error) || Boolean(invalid);
   return (
     <div>
       <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>
@@ -817,13 +996,13 @@ function WField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={showInvalid ? true : undefined}
         className={cn(
           "border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
-          error && "border-rose-400/60 focus-visible:ring-rose-400/50"
+          showInvalid && "border-rose-400/60 focus-visible:ring-rose-400/50"
         )}
       />
-      {error ? <FieldError>{error}</FieldError> : hint ? <p className="mt-1.5 text-xs text-slate-400">{hint}</p> : null}
+      {error ? <FieldError>{error}</FieldError> : hint ? <div className="mt-1.5 text-xs text-slate-400">{hint}</div> : null}
       {glyphInsert ? <GreekLetterInserter onInsert={glyphInsert} /> : null}
     </div>
   );

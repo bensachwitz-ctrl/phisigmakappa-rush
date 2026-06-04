@@ -1,9 +1,12 @@
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Scheduler } from "@/components/site/scheduler";
-import { Sparkles, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +21,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SchedulePage() {
+  // Chapter-only route: booking targets a specific chapter's calendar, which
+  // doesn't exist on the apex. 404 on the apex (no subdomain).
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
   const calDiyUrl = cfg["calendar.calDiyUrl"] || "";

@@ -7,8 +7,9 @@
 // alive before they fill out /alumni/join.
 
 import Link from "next/link";
-import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { prisma, getSubdomain } from "@/lib/prisma";
 import { publicAlumniView } from "@/lib/alumni";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
@@ -60,6 +61,15 @@ function decadeOf(year: number): string {
 }
 
 export default async function AlumniDirectoryPage() {
+  // Chapter-only route: the public alumni directory belongs to a specific
+  // chapter. On the apex (no subdomain) there is no chapter network to show, so
+  // 404 rather than render an empty "0 brothers" directory to a prospect.
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const [cfg, alumni] = await Promise.all([getSiteConfig(), loadAlumni()]);
   const id = chapterIdentityFromCfg(cfg);
 

@@ -2,6 +2,9 @@
 // RSC shell, form is a client child.
 
 import Link from "next/link";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -22,6 +25,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AlumniJoinPage() {
+  // Chapter-only route: signup adds the alum to a specific chapter's directory.
+  // No chapter on the apex → 404.
+  let host = "";
+  try {
+    host = headers().get("host") || headers().get("x-forwarded-host") || "";
+  } catch {}
+  if (getSubdomain(host) === null) notFound();
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
 

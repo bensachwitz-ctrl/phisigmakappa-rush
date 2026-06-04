@@ -4,6 +4,8 @@ import { centralDb } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { setBrotherCookie } from "@/lib/auth";
 import { logger, errorSink } from "@/lib/logger";
+import { sendEmail } from "@/lib/email";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 import fs from "fs";
 import path from "path";
 
@@ -26,6 +28,16 @@ function isRateLimited(ip: string): boolean {
   recent.push(now);
   onboardAttempts.set(ip, recent);
   return false;
+}
+
+/** Escape caller-supplied plain strings before interpolating into welcome-email HTML. */
+function escHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export async function POST(req: Request) {
@@ -245,12 +257,25 @@ export async function POST(req: Request) {
 
     // 5. Only now — with the tenant fully built — write the central registry
     //    row, so a registry entry always implies a complete, usable tenant.
+    //    ADDITIVE platform-billing: start a 14-day free trial of the "chapter"
+    //    plan. These columns track the chapter's subscription TO Greekstack
+    //    (distinct from the Stripe CONNECT account it later uses to collect dues
+    //    from its own members). The soft-gate (lib/entitlement.ts) fails open, so
+    //    even if these are absent the chapter still serves — they exist so the
+    //    admin sees an accurate trial countdown + billing banner from day one.
+    //    `isActive: true` is preserved exactly: the operator flag stays the only
+    //    hard on/off switch.
+    const TRIAL_DAYS = 14;
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
     await centralDb.tenant.create({
       data: {
         subdomain,
         name: fraternityName.trim(),
         school: (schoolName || "").trim(),
         isActive: true,
+        subscriptionStatus: "trialing",
+        trialEndsAt,
+        plan: "chapter",
       },
     });
 
@@ -283,6 +308,66 @@ export async function POST(req: Request) {
       orgType: normalizedOrgType,
       outcome: "success",
     });
+
+    // Branded WELCOME email to the new chapter admin — BEST-EFFORT. A send
+    // failure must NEVER fail provisioning (the tenant already fully exists and
+    // the admin is being redirected into /admin). We build the email from the
+    // request body's chapter identity + brand color rather than the tenant DB
+    // (already disconnected above), and let sendEmail's neutral platform From
+    // apply (this is a platform-sent welcome, not a chapter-branded blast). The
+    // admin URL points at the new chapter's subdomain /admin.
+    try {
+      const adminEmailAddr = adminEmail.trim().toLowerCase();
+      const adminUrl = `https://${subdomain}.greekstack.vercel.app/admin`;
+      const chapterDisplay = [
+        fraternityName.trim(),
+        (greekLetters || "").trim(),
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const brandHex = (primaryColor || "").trim();
+      const adminFirst = (adminName || "").trim().split(" ")[0] || "there";
+      const welcomeBody = `
+        <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
+        <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
+          <tr><td style="padding:6px 0;color:#71717a;">Chapter</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escHtml(chapterDisplay)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.greekstack.vercel.app</a></td></tr>
+        </table>
+        <p style="margin:16px 0 0;">Your <strong>14-day free trial</strong> has started — full access to every feature, no card required. We'll remind you before it ends so there's no interruption to your chapter.</p>`;
+      const html = renderEmail({
+        brandHex,
+        chapterName: chapterDisplay || fraternityName.trim(),
+        chapterSubline: (schoolName || "").trim() || undefined,
+        heading: "Welcome to Greekstack",
+        bodyHtml: welcomeBody,
+        cta: { label: "Open your admin dashboard", url: adminUrl },
+        footerNote:
+          "You're receiving this because a Greekstack chapter was created with this email. Your 14-day free trial has begun.",
+      });
+      await sendEmail({
+        to: adminEmailAddr,
+        subject: `Your chapter is live on Greekstack — ${chapterDisplay || fraternityName.trim()}`,
+        html,
+        text: renderEmailText({
+          heading: "Welcome to Greekstack",
+          lines: [
+            `Hi ${adminFirst}, your chapter ${chapterDisplay} is live.`,
+            `Admin login: ${adminEmailAddr}`,
+            `Your site: ${adminUrl}`,
+            "Your 14-day free trial has started — full access, no card required.",
+          ],
+          cta: { label: "Open your admin dashboard", url: adminUrl },
+          chapterName: chapterDisplay || fraternityName.trim(),
+        }),
+      }).catch((e) =>
+        errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "welcome_email_failed" }),
+      );
+    } catch (e) {
+      // Swallow — provisioning already succeeded; the welcome email is a nicety.
+      errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "welcome_email_failed" });
+    }
 
     return NextResponse.json({ ok: true, url: redirectUrl });
   } catch (err: any) {

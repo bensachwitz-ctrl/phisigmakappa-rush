@@ -105,6 +105,8 @@ export async function PublicFooter() {
             <span aria-hidden>·</span>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <span aria-hidden>·</span>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <span aria-hidden>·</span>
             <a href={cleanMailto(cfg["contact.rushEmail"])} className="hover:text-foreground transition-colors">Contact</a>
           </p>
         </div>
