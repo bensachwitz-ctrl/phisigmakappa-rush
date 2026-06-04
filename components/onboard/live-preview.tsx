@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Globe, Lock, Sparkles } from "lucide-react";
+import { IconSubdomain, IconSecurity, IconSpark } from "@/components/brand/icons";
 import { Tilt3DCard } from "@/components/site/anim";
 import { cn } from "@/lib/utils";
 
@@ -66,8 +66,8 @@ export function LivePreview({
     <div className="lg:sticky lg:top-8">
       {/* Eyebrow */}
       <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-300">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Live Preview
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+          <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Live Preview
         </span>
         <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
           {/* Tiny "live" pulse dot to reinforce that this is reacting in real time. */}
@@ -88,9 +88,9 @@ export function LivePreview({
         className="will-change-transform"
       >
         {/* Tilt toward the cursor for tangibility (touch/reduced-motion safe). */}
-        <Tilt3DCard max={7} glareColor="rgba(99,102,241,0.22)" className="rounded-2xl">
+        <Tilt3DCard max={7} glareColor="rgba(56,189,248,0.22)" className="rounded-2xl">
           {/* Mock browser window */}
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 shadow-2xl shadow-indigo-950/40 ring-1 ring-white/5 backdrop-blur-md">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 shadow-2xl shadow-blue-950/40 ring-1 ring-white/5 backdrop-blur-md">
             {/* Browser chrome */}
             <div
               aria-hidden="true"
@@ -100,7 +100,7 @@ export function LivePreview({
               <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
               <div className="ml-2 flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-slate-950/70 px-2.5 py-1 text-[11px] text-slate-400">
-                <Lock className="h-3 w-3 shrink-0 text-emerald-400/80" />
+                <IconSecurity className="h-3 w-3 shrink-0 text-emerald-400/80" />
                 <span className="truncate font-mono">{host}</span>
               </div>
             </div>
@@ -162,7 +162,7 @@ export function LivePreview({
                   className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white shadow-md ring-1 ring-white/20"
                   style={{ background: primaryColor, transition: colorTween }}
                 >
-                  <Globe className="h-3.5 w-3.5" /> Start Recruitment
+                  <IconSubdomain className="h-3.5 w-3.5" /> Start Recruitment
                 </span>
               </div>
             </div>

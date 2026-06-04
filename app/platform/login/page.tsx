@@ -2,15 +2,49 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Lock, Loader2, AlertTriangle } from "lucide-react";
+import { IconShieldCheck, IconSecurity } from "@/components/brand/icons";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+/* Local dependency-free glyphs so this page drops lucide-react entirely while
+   staying on the Greekstack royal-blue/sky/gold brand: an indeterminate busy
+   spinner and a warning triangle (neither has a bespoke icon-set equivalent). */
+function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-block animate-spin rounded-full border-2 border-current border-r-transparent align-[-0.125em]",
+        className ?? "h-4 w-4",
+      )}
+    />
+  );
+}
+
+function AlertGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("shrink-0", className ?? "h-4 w-4")}
+    >
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4M12 17h.01" />
+    </svg>
+  );
+}
 
 /**
  * Platform-operator sign-in. Posts the single SUPERADMIN_PASSWORD to
@@ -74,10 +108,10 @@ export default function PlatformLoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 flex justify-center">
-            <IconChip icon={ShieldCheck} tone="platform" size="lg" />
+            <IconChip icon={IconShieldCheck} tone="platform" size="lg" />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#2563eb] via-[#0ea5e9] to-[#38bdf8] bg-clip-text text-transparent">
               Greekstack
             </span>
           </div>
@@ -93,7 +127,7 @@ export default function PlatformLoginPage() {
           <CardContent className="p-6 sm:p-8">
             {error && (
               <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <AlertGlyph className="mt-0.5 h-4 w-4" />
                 <span>{error}</span>
               </div>
             )}
@@ -103,7 +137,7 @@ export default function PlatformLoginPage() {
                   Platform password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <IconSecurity className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="ppw"
                     type="password"
@@ -121,11 +155,12 @@ export default function PlatformLoginPage() {
                 type="submit"
                 disabled={busy}
                 size="lg"
-                className="w-full bg-gradient-to-br from-indigo-500 via-violet-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                variant="platform"
+                className="gs-sheen w-full"
               >
                 {busy ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
+                    <Spinner /> Signing in…
                   </>
                 ) : (
                   "Enter console"

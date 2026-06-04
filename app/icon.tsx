@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-// Greekstack platform favicon — the brand mark on the indigo→violet→cyan
+// Greekstack platform favicon — the brand mark on the royal-blue→sky→gold
 // gradient, shown consistently across the apex + every tenant tab (replaces the
 // old hardcoded Phi Sig "ΦΣΚ" cardinal icon that leaked onto every chapter).
 // Edge runtime so @vercel/og loads its bundled font reliably (node runtime
@@ -19,7 +19,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #22D3EE 100%)",
+          background: "linear-gradient(135deg, #2563EB 0%, #38BDF8 55%, #F59E0B 100%)",
           color: "white",
           fontFamily: "Georgia, serif",
           fontWeight: 800,

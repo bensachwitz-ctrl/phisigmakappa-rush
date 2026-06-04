@@ -448,7 +448,7 @@ export function ChoresClient({
               </div>
               <div className="rounded-xl border p-3 bg-card">
                 <div className="text-[10px] uppercase text-muted-foreground font-semibold">Graded Chores</div>
-                <div className="text-xl font-bold mt-0.5 text-indigo-600">{assignmentStats.graded}</div>
+                <div className="text-xl font-bold mt-0.5 text-blue-600">{assignmentStats.graded}</div>
               </div>
             </div>
           )}
@@ -494,7 +494,7 @@ export function ChoresClient({
                               <Badge className="bg-blue-50 text-blue-700 ring-1 ring-blue-200">Assigned</Badge>
                             )}
                             {a.status === "graded" && (
-                              <Badge className="bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">Graded: {a.grade}</Badge>
+                              <Badge className="bg-blue-50 text-blue-700 ring-1 ring-blue-200">Graded: {a.grade}</Badge>
                             )}
                           </div>
                         </div>
@@ -517,7 +517,7 @@ export function ChoresClient({
                       {(a.notes || a.grade) && (
                         <div className="bg-muted/40 p-2.5 rounded-lg text-xs space-y-1">
                           {a.grade && (
-                            <p className="font-semibold text-indigo-700">Chore Grade: {a.grade}</p>
+                            <p className="font-semibold text-blue-700">Chore Grade: {a.grade}</p>
                           )}
                           {a.notes && (
                             <p className="text-muted-foreground italic">"{a.notes}"</p>
@@ -553,7 +553,7 @@ export function ChoresClient({
                           {a.status === "completed" && (
                             <Button
                               size="sm"
-                              className="h-8 px-2 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
+                              className="h-8 px-2 text-xs bg-blue-600 text-white hover:bg-blue-700"
                               disabled={isBusy}
                               onClick={() => openGrading(a)}
                             >

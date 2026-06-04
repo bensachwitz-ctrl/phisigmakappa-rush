@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Check, Sparkles, X, PencilLine } from "lucide-react";
+import { IconSubdomain, IconCheck, IconSpark, IconClose, IconBranding } from "@/components/brand/icons";
 import { GREEK_ORGS, type GreekOrg, type OrgType } from "@/lib/greek-orgs";
 import { cn } from "@/lib/utils";
 
@@ -56,12 +56,12 @@ export function OrgPresetPicker({
   );
 
   return (
-    <div className="rounded-2xl border border-indigo-400/20 bg-gradient-to-b from-indigo-500/[0.07] to-white/[0.02] p-4 shadow-inner sm:p-5">
+    <div className="rounded-2xl border border-blue-400/20 bg-gradient-to-b from-blue-500/[0.07] to-white/[0.02] p-4 shadow-inner sm:p-5">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-cyan-400/10 text-indigo-300 ring-1 ring-indigo-500/20">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
+            <IconSpark className="h-4 w-4 text-amber-400" aria-hidden="true" />
           </span>
           <div>
             <h3 className="text-sm font-bold text-white">Start from a preset</h3>
@@ -72,21 +72,21 @@ export function OrgPresetPicker({
         </div>
         {matchedPreset && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/[0.12] px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
-            <Check className="h-3.5 w-3.5" /> {matchedPreset.short}
+            <IconCheck className="h-3.5 w-3.5" /> {matchedPreset.short}
           </span>
         )}
       </div>
 
       {/* Search */}
       <div className="relative mt-3.5">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <IconSubdomain className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search organizations, letters, or nicknames…"
           aria-label="Search Greek organizations"
-          className="h-10 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-9 text-sm text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60"
+          className="h-10 w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-9 text-sm text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
         />
         {query && (
           <button
@@ -95,7 +95,7 @@ export function OrgPresetPicker({
             aria-label="Clear search"
             className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <X className="h-3.5 w-3.5" />
+            <IconClose className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -116,9 +116,9 @@ export function OrgPresetPicker({
               aria-selected={active}
               onClick={() => setTab(t.id)}
               className={cn(
-                "rounded-full border px-3 py-1 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+                "rounded-full border px-3 py-1 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
                 active
-                  ? "border-indigo-400/50 bg-indigo-500/20 text-indigo-100"
+                  ? "border-sky-400/50 bg-sky-500/20 text-sky-100"
                   : "border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/20 hover:bg-white/[0.06] hover:text-slate-200"
               )}
             >
@@ -147,15 +147,15 @@ export function OrgPresetPicker({
                   aria-pressed={active}
                   title={`${org.name} (${org.glyph})`}
                   className={cn(
-                    "group relative flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+                    "group relative flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
                     active
-                      ? "border-indigo-400/60 bg-indigo-500/[0.12] shadow-lg shadow-indigo-950/40"
+                      ? "border-sky-400/60 bg-sky-500/[0.12] shadow-lg shadow-blue-950/40"
                       : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07]"
                   )}
                 >
                   {active && (
-                    <span className="absolute right-1.5 top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-400 text-slate-950">
-                      <Check className="h-3 w-3" strokeWidth={3} />
+                    <span className="absolute right-1.5 top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-sky-400 text-slate-950">
+                      <IconCheck className="h-3 w-3" strokeWidth={3} />
                     </span>
                   )}
                   {/* Glyph badge driven by the org's own palette */}
@@ -190,7 +190,7 @@ export function OrgPresetPicker({
       <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-slate-300 ring-1 ring-white/10">
-            <PencilLine className="h-4 w-4" />
+            <IconBranding className="h-4 w-4" />
           </span>
           <p className="min-w-0 text-xs text-slate-300">
             Not listed? <span className="text-slate-400">Enter your details manually below.</span>
@@ -200,9 +200,9 @@ export function OrgPresetPicker({
           type="button"
           onClick={onCustom}
           className={cn(
-            "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+            "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
             !matchedPreset
-              ? "border-indigo-400/50 bg-indigo-500/15 text-indigo-100"
+              ? "border-sky-400/50 bg-sky-500/15 text-sky-100"
               : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10"
           )}
         >

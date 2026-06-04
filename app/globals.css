@@ -44,6 +44,20 @@
     --input: 240 6% 90%;
     --ring: 351 76% 42%;
 
+    /* ── Greekstack PLATFORM brand — "Royal Blue & Sky + Gold" ───────────────
+       Used by the apex marketing site, signup wizard, and platform console —
+       NOT the per-chapter rush sites (those use --brand-primary from their own
+       config). De-purpled from the old indigo/violet system. */
+    --gs-blue: #2563eb;
+    --gs-blue-dark: #1d4ed8;
+    --gs-sky: #38bdf8;
+    --gs-sky-deep: #0ea5e9;
+    --gs-cyan: #22d3ee;
+    --gs-gold: #f59e0b;
+    --gs-gold-soft: #fbbf24;
+    --gs-ink: #0b1120;
+    --gs-accent: #38bdf8; /* duotone accent for the custom icon set */
+
     --radius: 0.625rem;
 
     --font-sans: "Inter", "ui-sans-serif", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -457,7 +471,8 @@
 @keyframes grid-pan{from{background-position:0 0;}to{background-position:42px 42px;}}
 .animate-grid-pan{animation:grid-pan 8s linear infinite;}
 @keyframes sheen{to{transform:translateX(200%);}}
-.gs-gradient-text{background:linear-gradient(90deg,#6366f1,#22d3ee,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.gs-gradient-text{background:linear-gradient(90deg,#2563eb,#0ea5e9,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-sheen{position:relative;overflow:hidden;}
 .gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
 .gs-sheen:hover::after{animation:sheen 1s ease;}

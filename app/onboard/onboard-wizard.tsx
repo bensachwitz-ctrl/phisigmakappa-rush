@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-import { IconChip } from "@/components/ui/icon-chip";
 import { LivePreview } from "@/components/onboard/live-preview";
 import { SuccessState } from "@/components/onboard/success-state";
 import { OrgPresetPicker } from "@/components/onboard/org-preset-picker";
@@ -16,17 +15,50 @@ import { ColorPresets } from "@/components/onboard/color-presets";
 import { Magnetic, Reveal3D, FloatingOrbs } from "@/components/site/anim";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
-  CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
-  Building2, Palette, Mail, Rocket, User, Lock, AlertCircle, Wand2,
-} from "lucide-react";
+  IconChapter, IconBranding, IconComms, IconAdmin, IconLaunch, IconSpark,
+  IconCheckCircle, IconArrowRight, IconSecurity, IconClose, type IconProps,
+} from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
+// Local platform "chip" — a soft blue→sky gradient rounded square holding a
+// custom Greekstack icon. Mirrors the shared icon-chip look (which is typed to
+// lucide), but renders our bespoke duotone SVGs and recolors to the de-purpled
+// platform palette (royal blue + sky, gold-tinted accent layer).
+function GsChip({
+  icon: Icon,
+  tone = "platform",
+  size = "md",
+  className,
+}: {
+  icon: React.ComponentType<IconProps>;
+  tone?: "platform" | "muted";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const box = {
+    sm: "h-8 w-8 rounded-lg",
+    md: "h-11 w-11 rounded-xl",
+    lg: "h-14 w-14 rounded-2xl",
+  }[size];
+  const ic = { sm: "h-4 w-4", md: "h-5 w-5", lg: "h-7 w-7" }[size];
+  const toneCls = {
+    platform:
+      "bg-gradient-to-br from-blue-500/15 to-sky-400/10 text-blue-500 ring-1 ring-blue-500/20",
+    muted: "bg-secondary text-muted-foreground ring-1 ring-border",
+  }[tone];
+  return (
+    <span className={cn("inline-flex items-center justify-center shadow-sm", box, toneCls, className)}>
+      <Icon className={ic} aria-hidden="true" />
+    </span>
+  );
+}
+
 const STEPS = [
-  { id: "identity", label: "Chapter Details", icon: Building2, blurb: "Configure organization identity, school details, and charter details." },
-  { id: "brand", label: "Brand Styling", icon: Palette, blurb: "Configure local chapter primary, dark, and soft-tint colors." },
-  { id: "contact", label: "Contact Details", icon: Mail, blurb: "Set up recruitment contacts, social handles, and house location." },
-  { id: "admin", label: "Admin Credentials", icon: User, blurb: "Create your chapter's primary administrator account." },
-  { id: "launch", label: "Launch Site", icon: Rocket, blurb: "Confirm details and activate the chapter management system." },
+  { id: "identity", label: "Chapter Details", icon: IconChapter, blurb: "Configure organization identity, school details, and charter details." },
+  { id: "brand", label: "Brand Styling", icon: IconBranding, blurb: "Configure local chapter primary, dark, and soft-tint colors." },
+  { id: "contact", label: "Contact Details", icon: IconComms, blurb: "Set up recruitment contacts, social handles, and house location." },
+  { id: "admin", label: "Admin Credentials", icon: IconAdmin, blurb: "Create your chapter's primary administrator account." },
+  { id: "launch", label: "Launch Site", icon: IconLaunch, blurb: "Confirm details and activate the chapter management system." },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -297,8 +329,8 @@ export default function OnboardWizard() {
 
       {/* Header */}
       <Reveal3D className="text-center" y={18}>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 backdrop-blur-md">
-          <Sparkles className="h-3.5 w-3.5" /> Greekstack
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300 backdrop-blur-md">
+          <IconSpark className="h-3.5 w-3.5 text-amber-400" /> Greekstack
         </span>
         <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
           Your chapter site, <span className="gs-gradient-text">live in seconds</span>
@@ -321,7 +353,7 @@ export default function OnboardWizard() {
           aria-valuenow={stepIndex}
         >
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400"
+            className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
             initial={false}
             animate={{ width: `${(stepIndex / (STEPS.length - 1)) * 100}%` }}
             transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
@@ -348,8 +380,8 @@ export default function OnboardWizard() {
                 disabled={i > stepIndex || busy}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "group flex w-full flex-col items-center gap-2 rounded-2xl border p-2.5 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 sm:p-3",
-                  current && "border-indigo-400/50 bg-white/[0.07] shadow-lg shadow-indigo-950/40",
+                  "group flex w-full flex-col items-center gap-2 rounded-2xl border p-2.5 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 sm:p-3",
+                  current && "border-amber-400/50 bg-white/[0.07] shadow-lg shadow-blue-950/40",
                   done && "border-emerald-400/30 bg-emerald-500/[0.08]",
                   !current && !done && "border-white/10 bg-white/[0.02]",
                   !reachable && "cursor-not-allowed opacity-50",
@@ -363,24 +395,25 @@ export default function OnboardWizard() {
                     transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 18 }}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm"
                   >
-                    <CheckCircle2 className="h-5 w-5" />
+                    <IconCheckCircle className="h-5 w-5" />
                   </motion.span>
                 ) : current ? (
                   // Current step "breathes" subtly so the eye knows where it is.
+                  // Active step carries a gold-tinted accent layer for energy.
                   <motion.span
                     animate={reduce ? undefined : { scale: [1, 1.07, 1] }}
                     transition={reduce ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                    className="will-change-transform"
+                    className="will-change-transform [--gs-accent:#fbbf24]"
                   >
-                    <IconChip icon={Icon} tone="platform" size="md" />
+                    <GsChip icon={Icon} tone="platform" size="md" />
                   </motion.span>
                 ) : (
-                  <IconChip icon={Icon} tone="muted" size="md" />
+                  <GsChip icon={Icon} tone="muted" size="md" />
                 )}
                 <span
                   className={cn(
                     "hidden text-[10px] font-bold uppercase tracking-wide sm:block",
-                    current ? "text-indigo-200" : done ? "text-emerald-300" : "text-slate-400"
+                    current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-400"
                   )}
                 >
                   {s.label}
@@ -388,7 +421,7 @@ export default function OnboardWizard() {
                 <span
                   className={cn(
                     "text-[10px] font-semibold uppercase tracking-wide sm:hidden",
-                    current ? "text-indigo-200" : done ? "text-emerald-300" : "text-slate-500"
+                    current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-500"
                   )}
                 >
                   {i + 1}
@@ -406,15 +439,15 @@ export default function OnboardWizard() {
         <GlassPanel>
           <div className="space-y-6 p-6 sm:p-8">
             <div className="flex items-start gap-3">
-              <IconChip icon={StepIcon} tone="platform" size="lg" className="shrink-0" />
+              <GsChip icon={StepIcon} tone="platform" size="lg" className="shrink-0" />
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
                   Step {stepIndex + 1} of {STEPS.length}
                 </p>
                 <h2
                   ref={headingRef}
                   tabIndex={-1}
-                  className="text-xl font-bold tracking-tight text-white outline-none focus-visible:underline focus-visible:decoration-indigo-400/60 focus-visible:underline-offset-4"
+                  className="text-xl font-bold tracking-tight text-white outline-none focus-visible:underline focus-visible:decoration-sky-400/60 focus-visible:underline-offset-4"
                 >
                   {STEPS[stepIndex].label}
                 </h2>
@@ -471,7 +504,7 @@ export default function OnboardWizard() {
                         hint={
                           <>
                             Your site will live at{" "}
-                            <strong className="font-semibold text-indigo-200">
+                            <strong className="font-semibold text-sky-200">
                               {(subdomain.trim() || "your-subdomain")}.greeklifesystems.vercel.app
                             </strong>
                           </>
@@ -519,7 +552,7 @@ export default function OnboardWizard() {
                   <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
 
                   <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <Wand2 className="h-3.5 w-3.5 text-indigo-300" /> See it all come together in the
+                    <IconSpark className="h-3.5 w-3.5 text-amber-400" /> See it all come together in the
                     live preview{" "}
                     <span className="lg:hidden">below</span>
                     <span className="hidden lg:inline">on the right</span>.
@@ -547,7 +580,7 @@ export default function OnboardWizard() {
                   <div>
                     <FieldLabel htmlFor="admin-pw" required>Admin Password</FieldLabel>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <IconSecurity className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <Input
                         id="admin-pw"
                         type="password"
@@ -555,7 +588,7 @@ export default function OnboardWizard() {
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="••••••••"
                         className={cn(
-                          "border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+                          "border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
                           errors.adminPassword && "border-rose-400/60 focus-visible:ring-rose-400/50"
                         )}
                         aria-invalid={errors.adminPassword ? true : undefined}
@@ -575,7 +608,7 @@ export default function OnboardWizard() {
                 <div className="space-y-4">
                   <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] p-4">
                     <p className="flex items-center gap-2 text-sm font-bold text-emerald-200">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Everything is ready to launch.
+                      <IconCheckCircle className="h-4 w-4 text-emerald-400" /> Everything is ready to launch.
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-emerald-100/80">
                       Hit the button below and Greekstack provisions your branded site, admin
@@ -589,7 +622,7 @@ export default function OnboardWizard() {
                       <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "—"}</SummaryRow>
                       <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "—"}</SummaryRow>
                       <SummaryRow label="Site URL">
-                        <span className="font-mono text-indigo-200">{(subdomain.trim() || "your-chapter")}.greeklifesystems.vercel.app</span>
+                        <span className="font-mono text-sky-200">{(subdomain.trim() || "your-chapter")}.greeklifesystems.vercel.app</span>
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
                     </div>
@@ -611,13 +644,13 @@ export default function OnboardWizard() {
                 disabled={stepIndex === 0 || busy}
                 className="text-slate-200"
               >
-                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                <IconArrowRight className="mr-1 h-4 w-4 rotate-180" /> Back
               </Button>
 
               {!isLastStep ? (
                 <Magnetic strength={14} radius={80}>
                   <Button type="button" variant="platform" size="lg" onClick={goNext} className="gs-sheen">
-                    Continue <ChevronRight className="ml-1 h-4 w-4" />
+                    Continue <IconArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Magnetic>
               ) : (
@@ -632,11 +665,11 @@ export default function OnboardWizard() {
                   >
                     {busy ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
+                        <IconSpark className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
                       </>
                     ) : (
                       <>
-                        <Rocket className="mr-2 h-5 w-5" /> Launch My Site
+                        <IconLaunch className="mr-2 h-5 w-5" /> Launch My Site
                       </>
                     )}
                   </Button>
@@ -680,7 +713,7 @@ const stepVariants = {
 
 function GlassPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-indigo-950/30 ring-1 ring-white/5 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-blue-950/30 ring-1 ring-white/5 backdrop-blur-xl">
       {children}
     </div>
   );
@@ -693,7 +726,8 @@ function GlassPanel({ children }: { children: React.ReactNode }) {
 const CONFETTI = Array.from({ length: 14 }, (_, i) => {
   const angle = (i / 14) * Math.PI * 2;
   const dist = 110 + (i % 3) * 26;
-  const colors = ["#6366f1", "#22d3ee", "#a855f7", "#34d399"];
+  // De-purpled success burst: royal blue · sky · gold · emerald (success keep).
+  const colors = ["#2563eb", "#38bdf8", "#fbbf24", "#34d399"];
   return {
     x: Math.cos(angle) * dist,
     y: Math.sin(angle) * dist,
@@ -746,7 +780,7 @@ function FieldLabel({
 function FieldError({ children }: { children: React.ReactNode }) {
   return (
     <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-300">
-      <AlertCircle className="h-3.5 w-3.5" /> {children}
+      <IconClose className="h-3.5 w-3.5" /> {children}
     </p>
   );
 }
@@ -785,7 +819,7 @@ function WField({
         placeholder={placeholder}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+          "border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
           error && "border-rose-400/60 focus-visible:ring-rose-400/50"
         )}
       />
@@ -823,7 +857,7 @@ function WColor({
           placeholder={fallback}
           aria-invalid={error ? true : undefined}
           className={cn(
-            "border-white/10 bg-white/5 font-mono text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+            "border-white/10 bg-white/5 font-mono text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
             error && "border-rose-400/60 focus-visible:ring-rose-400/50"
           )}
         />

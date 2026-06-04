@@ -3,19 +3,17 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  Building2,
-  ShieldCheck,
-  LogOut,
-  Loader2,
-  RefreshCw,
-  Trash2,
-  Power,
-  PowerOff,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-} from "lucide-react";
+  IconTenants,
+  IconActive,
+  IconSuspend,
+  IconTrash,
+  IconShieldCheck,
+  IconSecurity,
+  IconCheck,
+  IconCheckCircle,
+  IconClose,
+  IconExternal,
+} from "@/components/brand/icons";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
@@ -43,6 +41,62 @@ import { cn } from "@/lib/utils";
 // fetches over the GET API, which independently re-verifies the operator cookie
 // (defense in depth). Kept client-side so the suspend/activate/delete actions
 // live in one owned file alongside the table.
+
+/* Three tiny local glyphs for the purely-functional cases the bespoke
+   Greekstack icon set intentionally doesn't cover (a busy spinner, a refresh
+   arrow, a warning). Kept inline + dependency-free so this console drops the
+   lucide-react import entirely while staying on the royal-blue/sky/gold brand. */
+
+/** Indeterminate busy spinner — inherits text color, spins via Tailwind. */
+function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-block animate-spin rounded-full border-2 border-current border-r-transparent align-[-0.125em]",
+        className ?? "h-4 w-4",
+      )}
+    />
+  );
+}
+
+/** Refresh — a circular arrow (reload the chapter list). */
+function RefreshGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("shrink-0", className ?? "h-4 w-4")}
+    >
+      <path d="M20 11a8 8 0 1 0-1.5 5.4" />
+      <path d="M20 5v6h-6" />
+    </svg>
+  );
+}
+
+/** Alert — a warning triangle with a bang (error / destructive notice). */
+function AlertGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("shrink-0", className ?? "h-4 w-4")}
+    >
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4M12 17h.01" />
+    </svg>
+  );
+}
 
 type Tenant = {
   id: string;
@@ -158,18 +212,18 @@ export default function PlatformConsolePage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Header — platform indigo, deliberately NOT a chapter's brand color. */}
+      {/* Header — platform royal blue, deliberately NOT a chapter's brand color. */}
       <AnimatedBackground variant="aurora-grid" tone="platform" className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <IconChip icon={ShieldCheck} tone="platform" size="lg" />
+              <IconChip icon={IconShieldCheck} tone="platform" size="lg" />
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 bg-clip-text text-transparent">
+                  <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[#2563eb] via-[#0ea5e9] to-[#38bdf8] bg-clip-text text-transparent">
                     Greekstack
                   </span>
-                  <Badge className="bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200">
+                  <Badge className="bg-blue-100 text-blue-700 ring-1 ring-blue-200">
                     Platform Console
                   </Badge>
                 </div>
@@ -183,11 +237,11 @@ export default function PlatformConsolePage() {
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                {loading ? <Spinner /> : <RefreshGlyph />}
                 Refresh
               </Button>
               <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4" />
+                <IconSecurity className="h-4 w-4" />
                 Sign out
               </Button>
             </div>
@@ -195,9 +249,9 @@ export default function PlatformConsolePage() {
 
           {/* Stat tiles */}
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatTile icon={Building2} label="Total chapters" value={tenants.length} tone="indigo" />
-            <StatTile icon={CheckCircle2} label="Active" value={activeCount} tone="emerald" />
-            <StatTile icon={PowerOff} label="Suspended" value={suspendedCount} tone="amber" />
+            <StatTile icon={IconTenants} label="Total chapters" value={tenants.length} tone="blue" />
+            <StatTile icon={IconCheckCircle} label="Active" value={activeCount} tone="emerald" />
+            <StatTile icon={IconSuspend} label="Suspended" value={suspendedCount} tone="amber" />
           </div>
         </div>
       </AnimatedBackground>
@@ -205,7 +259,7 @@ export default function PlatformConsolePage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {error && (
           <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertGlyph className="mt-0.5 h-4 w-4" />
             <span>{error}</span>
           </div>
         )}
@@ -222,11 +276,11 @@ export default function PlatformConsolePage() {
 
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading chapters…
+              <Spinner /> Loading chapters…
             </div>
           ) : tenants.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <IconChip icon={Building2} tone="muted" size="lg" />
+              <IconChip icon={IconTenants} tone="muted" size="lg" />
               <div>
                 <p className="text-sm font-medium text-slate-700">No chapters yet</p>
                 <p className="mt-0.5 text-sm text-slate-500">
@@ -256,10 +310,10 @@ export default function PlatformConsolePage() {
                           href={`https://${t.subdomain}.greeklifesystems.vercel.app`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 font-mono text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+                          className="inline-flex items-center gap-1.5 font-mono text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
                         >
                           {t.subdomain}
-                          <ExternalLink className="h-3 w-3 opacity-60" />
+                          <IconExternal className="h-3 w-3 opacity-60" />
                         </a>
                       </TableCell>
                       <TableCell className="font-medium text-slate-800">
@@ -271,11 +325,11 @@ export default function PlatformConsolePage() {
                       <TableCell>
                         {t.isActive ? (
                           <Badge className="gap-1 bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
-                            <CheckCircle2 className="h-3 w-3" /> Active
+                            <IconCheck className="h-3 w-3" /> Active
                           </Badge>
                         ) : (
                           <Badge className="gap-1 bg-amber-100 text-amber-800 ring-1 ring-amber-200">
-                            <XCircle className="h-3 w-3" /> Suspended
+                            <IconClose className="h-3 w-3" /> Suspended
                           </Badge>
                         )}
                       </TableCell>
@@ -294,11 +348,11 @@ export default function PlatformConsolePage() {
                             )}
                           >
                             {rowBusy ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Spinner />
                             ) : t.isActive ? (
-                              <PowerOff className="h-4 w-4" />
+                              <IconSuspend className="h-4 w-4" />
                             ) : (
-                              <Power className="h-4 w-4" />
+                              <IconActive className="h-4 w-4" />
                             )}
                             {t.isActive ? "Suspend" : "Activate"}
                           </Button>
@@ -309,7 +363,7 @@ export default function PlatformConsolePage() {
                             onClick={() => setToDelete(t)}
                             className="border-red-200 text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <IconTrash className="h-4 w-4" />
                             Delete
                           </Button>
                         </div>
@@ -333,7 +387,7 @@ export default function PlatformConsolePage() {
         <DialogContent>
           <DialogHeader>
             <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-600 ring-1 ring-red-200">
-              <AlertTriangle className="h-5 w-5" />
+              <AlertGlyph className="h-5 w-5" />
             </div>
             <DialogTitle>Delete this chapter?</DialogTitle>
             <DialogDescription>
@@ -353,11 +407,11 @@ export default function PlatformConsolePage() {
             <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
               {deleting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Deleting…
+                  <Spinner /> Deleting…
                 </>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4" /> Delete permanently
+                  <IconTrash className="h-4 w-4" /> Delete permanently
                 </>
               )}
             </Button>
@@ -374,13 +428,13 @@ function StatTile({
   value,
   tone,
 }: {
-  icon: typeof Building2;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
-  tone: "indigo" | "emerald" | "amber";
+  tone: "blue" | "emerald" | "amber";
 }) {
   const toneCls = {
-    indigo: "from-indigo-500/15 to-violet-500/10 text-indigo-600 ring-indigo-500/20",
+    blue: "from-[#2563eb]/15 to-[#38bdf8]/10 text-[#2563eb] ring-[#2563eb]/20",
     emerald: "from-emerald-500/15 to-emerald-400/10 text-emerald-600 ring-emerald-500/20",
     amber: "from-amber-500/15 to-amber-400/10 text-amber-600 ring-amber-500/20",
   }[tone];

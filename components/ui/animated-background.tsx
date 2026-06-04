@@ -10,7 +10,7 @@ type Tone = "platform" | "brand";
  * is auto-disabled under prefers-reduced-motion (see globals.css). Decorative,
  * so the layer is aria-hidden + pointer-events-none.
  *
- * tone="platform" → Greekstack indigo/violet/cyan (apex marketing + signup).
+ * tone="platform" → Greekstack royal blue / sky / gold (apex marketing + signup).
  * tone="brand"    → the current chapter's primary color (per-tenant heroes).
  */
 export function AnimatedBackground({
@@ -31,7 +31,7 @@ export function AnimatedBackground({
           "bg-[hsl(var(--primary)/0.28)]",
           "bg-[hsl(var(--primary)/0.20)]",
         ]
-      : ["bg-indigo-500/40", "bg-cyan-400/30", "bg-violet-500/30"];
+      : ["bg-[#2563eb]/40", "bg-[#38bdf8]/30", "bg-[#f59e0b]/25"];
 
   const showAurora = variant === "aurora" || variant === "aurora-grid";
   const showGrid = variant === "grid" || variant === "aurora-grid";
@@ -50,7 +50,7 @@ export function AnimatedBackground({
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(120,120,140,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,120,140,0.10)_1px,transparent_1px)] bg-[size:42px_42px] [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]" />
         )}
         {variant === "spotlight" && (
-          <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(99,102,241,0.18),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(37,99,235,0.18),transparent_70%)]" />
         )}
       </div>
       {children}

@@ -20,29 +20,34 @@ import {
   AnimatedCounter,
 } from "@/components/site/anim";
 import {
-  Sparkles,
-  Users,
-  Wallet,
-  CalendarCheck,
-  ShieldCheck,
-  Flag,
-  Palette,
-  HeartHandshake,
-  CheckCircle2,
-  ArrowRight,
-  Rocket,
-  Globe,
-  LayoutDashboard,
-  TrendingUp,
-  Lock,
-  ChevronDown,
-  type LucideIcon,
-} from "lucide-react";
+  IconSpark,
+  IconRecruitment,
+  IconMembers,
+  IconDues,
+  IconEvents,
+  IconShieldCheck,
+  IconRoles,
+  IconSafety,
+  IconWhiteLabel,
+  IconAlumni,
+  IconCheckCircle,
+  IconArrowRight,
+  IconLaunch,
+  IconSubdomain,
+  IconDashboard,
+  IconGrowth,
+  IconSecurity,
+  IconChevronDown,
+  type IconProps,
+} from "@/components/brand/icons";
+
+/** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
+type GsIcon = (props: IconProps) => React.JSX.Element;
 
 /* ────────────────────────────────────────────────────────────────────────
    GREEKSTACK — apex marketing landing (no-subdomain).
-   Platform brand: deep ink + indigo→violet→cyan gradient accents. This sells
-   the SaaS itself; it never renders a specific chapter's data.
+   Platform brand: deep ink + royal-blue→sky gradient accents with tasteful gold
+   highlights. This sells the SaaS itself; it never renders a specific chapter's data.
 
    Elevated into a cinematic, "alive" scroll experience built on the shared
    foundation (<AnimatedBackground>, <IconChip>, <Button>, GreekstackLogo,
@@ -64,61 +69,61 @@ const NAV_LINKS = [
   { href: "#proof", label: "Why Greekstack" },
 ];
 
-const FEATURES: { icon: LucideIcon; title: string; desc: string; span?: boolean }[] = [
+const FEATURES: { icon: GsIcon; title: string; desc: string; span?: boolean }[] = [
   {
-    icon: Users,
+    icon: IconRecruitment,
     title: "Recruitment pipeline",
     desc: "QR check-in for PNMs, a Kanban rush funnel, anonymous brother voting, and double-opt-in SMS that texts rushees the schedule the moment events go live.",
     span: true,
   },
   {
-    icon: Wallet,
+    icon: IconDues,
     title: "Automated dues",
     desc: "Stripe-powered dues with treasurer payouts, auto-reconciled ledgers, reminders, and payment plans — collected without the group-chat nagging.",
   },
   {
-    icon: CalendarCheck,
+    icon: IconEvents,
     title: "Events & calendar",
     desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
   },
   {
-    icon: ShieldCheck,
+    icon: IconRoles,
     title: "Officer RBAC",
     desc: "Granular role-based access for President, Treasurer, Recruitment, and Risk — everyone sees exactly what they should, nothing more.",
   },
   {
-    icon: Flag,
+    icon: IconSafety,
     title: "Anti-hazing & incident reporting",
     desc: "A zero-tolerance, anonymous incident intake with an audit log and mandatory officer acknowledgments — compliance you can actually prove.",
   },
   {
-    icon: Palette,
+    icon: IconWhiteLabel,
     title: "White-label branding",
     desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
   },
   {
-    icon: HeartHandshake,
+    icon: IconAlumni,
     title: "Alumni & donations",
     desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
     span: true,
   },
 ];
 
-const STEPS: { icon: LucideIcon; step: string; title: string; desc: string }[] = [
+const STEPS: { icon: GsIcon; step: string; title: string; desc: string }[] = [
   {
-    icon: Rocket,
+    icon: IconLaunch,
     step: "01",
     title: "Sign up",
     desc: "Create your account and claim a chapter subdomain. No credit card, no install — you're in within a minute.",
   },
   {
-    icon: Palette,
+    icon: IconWhiteLabel,
     step: "02",
     title: "Brand it",
     desc: "Drop in your letters, colors, and crest. Every page, email, and portal instantly re-skins to your chapter.",
   },
   {
-    icon: Globe,
+    icon: IconSubdomain,
     step: "03",
     title: "Go live",
     desc: "Publish your fully-branded recruitment + management site and start collecting PNMs and dues the same day.",
@@ -148,7 +153,7 @@ const GREEK_GLYPHS = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split(""
 
 export default function MarketingLandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-indigo-500/20">
+    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20">
       <ScrollProgressBar />
       <SiteNav />
       <main id="main">
@@ -183,7 +188,7 @@ function SiteNav() {
       className={
         "sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-all duration-300 " +
         (scrolled
-          ? "border-border/70 bg-background/85 shadow-[0_1px_20px_-12px_rgba(99,102,241,0.5)]"
+          ? "border-border/70 bg-background/85 shadow-[0_1px_20px_-12px_rgba(37,99,235,0.5)]"
           : "border-transparent bg-background/60")
       }
     >
@@ -210,7 +215,7 @@ function SiteNav() {
               {/* Animated underline that wipes in from the left on hover/focus. */}
               <span
                 aria-hidden="true"
-                className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400 transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
+                className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
               />
             </Link>
           ))}
@@ -223,7 +228,7 @@ function SiteNav() {
             <Button asChild variant="platform" size="sm" className="gs-sheen">
               <Link href="/onboard">
                 Create your chapter site
-                <ArrowRight className="h-4 w-4" />
+                <IconArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </Magnetic>
@@ -243,7 +248,7 @@ function Hero() {
       <Parallax
         aria-hidden="true"
         translateY={70}
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(99,102,241,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.05)_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:radial-gradient(ellipse_at_50%_30%,black_20%,transparent_70%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:radial-gradient(ellipse_at_50%_30%,black_20%,transparent_70%)]"
       >
         <span />
       </Parallax>
@@ -251,8 +256,8 @@ function Hero() {
       <section className="container relative z-10 pb-16 pt-20 sm:pb-24 sm:pt-28">
         <div className="mx-auto max-w-3xl text-center">
           <div className="animate-slide-up [animation-delay:40ms]">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600 shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 animate-heartbeat" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-amber-600 shadow-sm">
+              <IconSpark className="h-3.5 w-3.5 animate-heartbeat" accent="#fbbf24" />
               The white-label Greek-life platform
             </span>
           </div>
@@ -267,7 +272,7 @@ function Hero() {
                 phrases={HERO_PHRASES}
                 settleText={HERO_SETTLE}
                 ssrText={HERO_SETTLE}
-                caretClassName="bg-violet-500"
+                caretClassName="bg-sky-500"
               />
             </span>
             <span className="mt-2 block text-foreground">
@@ -286,7 +291,7 @@ function Hero() {
               <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
                 <Link href="/onboard">
                   Launch your chapter — free
-                  <ArrowRight className="h-5 w-5" />
+                  <IconArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
             </Magnetic>
@@ -297,13 +302,13 @@ function Hero() {
 
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
             <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> No credit card to start
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No credit card to start
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> Live in 60 seconds
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Live in 60 seconds
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> Cancel anytime
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Cancel anytime
             </span>
           </p>
         </div>
@@ -311,7 +316,7 @@ function Hero() {
         {/* Product mockup floats up, then tracks the cursor in 3D. */}
         <Reveal delay={120} className="mx-auto mt-14 max-w-5xl sm:mt-16">
           <Parallax translateY={36} className="[perspective:1200px]">
-            <Tilt3DCard max={7} glareColor="rgba(99,102,241,0.30)" className="rounded-2xl">
+            <Tilt3DCard max={7} glareColor="rgba(37,99,235,0.30)" className="rounded-2xl">
               <ProductPreview />
             </Tilt3DCard>
           </Parallax>
@@ -322,10 +327,10 @@ function Hero() {
           <Link
             href="#features"
             aria-label="Scroll to features"
-            className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-indigo-600"
+            className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-blue-600"
           >
             <span className="uppercase tracking-[0.18em]">Scroll</span>
-            <ChevronDown className="h-5 w-5 animate-bounce" />
+            <IconChevronDown className="h-5 w-5 animate-bounce" />
           </Link>
         </div>
       </section>
@@ -337,11 +342,11 @@ function Hero() {
    names and the Greekstack palette — it never shows a real chapter. */
 function ProductPreview() {
   const nav = [
-    { icon: LayoutDashboard, label: "Overview", active: true },
-    { icon: Users, label: "Recruitment" },
-    { icon: Wallet, label: "Dues & billing" },
-    { icon: CalendarCheck, label: "Events" },
-    { icon: ShieldCheck, label: "Risk & safety" },
+    { icon: IconDashboard, label: "Overview", active: true },
+    { icon: IconMembers, label: "Recruitment" },
+    { icon: IconDues, label: "Dues & billing" },
+    { icon: IconEvents, label: "Events" },
+    { icon: IconShieldCheck, label: "Risk & safety" },
   ];
   const tiles = [
     { label: "Active rushees", value: "62", tone: "text-foreground" },
@@ -351,7 +356,7 @@ function ProductPreview() {
   ];
 
   return (
-    <div className="rounded-2xl border border-border bg-card/70 p-2 shadow-2xl shadow-indigo-500/10 backdrop-blur-sm sm:p-3">
+    <div className="rounded-2xl border border-border bg-card/70 p-2 shadow-2xl shadow-blue-500/10 backdrop-blur-sm sm:p-3">
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         {/* Browser chrome */}
         <div className="flex h-10 items-center justify-between border-b border-border bg-secondary/60 px-4">
@@ -361,7 +366,7 @@ function ProductPreview() {
             <span className="h-3 w-3 rounded-full bg-border" />
           </div>
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
-            <Lock className="h-3 w-3" />
+            <IconSecurity className="h-3 w-3" />
             yourchapter.greeklifesystems.vercel.app
           </span>
           <span className="w-12" aria-hidden="true" />
@@ -380,7 +385,7 @@ function ProductPreview() {
                 className={
                   "flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium " +
                   (n.active
-                    ? "bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-indigo-700 ring-1 ring-indigo-500/20"
+                    ? "bg-gradient-to-r from-blue-500/15 to-sky-500/10 text-blue-700 ring-1 ring-blue-500/20"
                     : "text-muted-foreground")
                 }
               >
@@ -422,7 +427,7 @@ function ProductPreview() {
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500"
                   style={{ width: "62%" }}
                 />
               </div>
@@ -455,7 +460,7 @@ function GlyphMarquee() {
             style={{
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
-              backgroundImage: "linear-gradient(90deg,#6366f1,#a855f7,#22d3ee)",
+              backgroundImage: "linear-gradient(90deg,#2563eb,#0ea5e9,#22d3ee)",
               opacity: 0.55,
             }}
           >
@@ -471,10 +476,10 @@ function GlyphMarquee() {
 
 function TrustBar() {
   const items = [
-    { icon: Globe, label: "Custom subdomain per chapter" },
-    { icon: Lock, label: "Isolated, secure tenant data" },
-    { icon: Wallet, label: "Stripe dues & payouts built in" },
-    { icon: ShieldCheck, label: "Anti-hazing audit trail" },
+    { icon: IconSubdomain, label: "Custom subdomain per chapter" },
+    { icon: IconSecurity, label: "Isolated, secure tenant data" },
+    { icon: IconDues, label: "Stripe dues & payouts built in" },
+    { icon: IconShieldCheck, label: "Anti-hazing audit trail" },
   ];
   return (
     <section className="border-b border-border bg-secondary/30" aria-label="Highlights">
@@ -506,13 +511,13 @@ function Features() {
           only, fades at the edges so it never competes with the content. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(99,102,241,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
       />
       {/* Soft top gradient divider */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
             Everything a chapter runs on
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -546,13 +551,13 @@ function Features() {
   );
 }
 
-function FeatureCard({ icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
+function FeatureCard({ icon, title, desc }: { icon: GsIcon; title: string; desc: string }) {
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
-      {/* Decorative corner accent — soft indigo→cyan glow that brightens on hover */}
+    <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
+      {/* Decorative corner accent — soft blue→cyan glow that brightens on hover */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-indigo-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
       />
       <IconChip icon={icon} tone="platform" size="md" className="relative transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
       <h3 className="relative mt-4 text-base font-semibold tracking-tight">{title}</h3>
@@ -568,7 +573,7 @@ function HowItWorks() {
     <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
             Live in three steps
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -593,10 +598,10 @@ function HowItWorks() {
               we don't depend on / touch global CSS. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-px overflow-hidden bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent md:block"
+            className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-px overflow-hidden bg-gradient-to-r from-transparent via-blue-500/30 to-transparent md:block"
           >
             <span
-              className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-violet-500/80 to-transparent motion-reduce:hidden"
+              className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-sky-500/80 to-transparent motion-reduce:hidden"
               style={{
                 animation: "gs-rail 3.6s ease-in-out infinite",
               }}
@@ -605,11 +610,11 @@ function HowItWorks() {
           </div>
           {STEPS.map((s, i) => (
             <Reveal key={s.step} delay={i * 110}>
-              <div className="group relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
+              <div className="group relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
                 <div className="mx-auto flex justify-center">
                   <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
-                <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-indigo-500">
+                <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-500">
                   STEP {s.step}
                 </span>
                 <h3 className="mt-1 text-lg font-semibold tracking-tight">{s.title}</h3>
@@ -624,7 +629,7 @@ function HowItWorks() {
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
                 Create your chapter site
-                <ArrowRight className="h-5 w-5" />
+                <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>
           </Magnetic>
@@ -640,8 +645,8 @@ function HowItWorks() {
    static, fully-branded example (the first identity). Decorative dashboard
    below the typewriter is a faux preview, never real data. */
 const DEMO_CHAPTERS = [
-  { letters: "Beta Theta Pi", short: "ΒΘΠ", color: "#7c3aed", colorName: "Royal violet" },
-  { letters: "Sigma Chi", short: "ΣΧ", color: "#2563eb", colorName: "Azure blue" },
+  { letters: "Beta Theta Pi", short: "ΒΘΠ", color: "#1e40af", colorName: "Royal blue" },
+  { letters: "Sigma Chi", short: "ΣΧ", color: "#0ea5e9", colorName: "Azure sky" },
   { letters: "Kappa Alpha", short: "ΚΑ", color: "#dc2626", colorName: "Crimson" },
   { letters: "Chi Omega", short: "ΧΩ", color: "#db2777", colorName: "Cardinal rose" },
 ];
@@ -694,8 +699,8 @@ function BrandItDemo() {
     >
       {/* Left: the "fill in your chapter" inputs typing themselves. */}
       <div className="space-y-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-600">
-          <Palette className="h-3.5 w-3.5" />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
+          <IconWhiteLabel className="h-3.5 w-3.5" />
           Watch it brand itself
         </span>
 
@@ -830,11 +835,11 @@ function Proof() {
       {/* Faint masked grid band behind the stat tiles for quiet depth. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(99,102,241,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
             Why chapters choose Greekstack
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -848,7 +853,7 @@ function Proof() {
         >
           {STATS.map((s) => (
             <Reveal3DItem key={s.label}>
-              <div className="group h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
+              <div className="group h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
                 <span className="block text-4xl font-bold tracking-tight gs-gradient-text sm:text-5xl">
                   <AnimatedCounter
                     value={s.value}
@@ -866,7 +871,7 @@ function Proof() {
         <Reveal delay={120} className="mx-auto mt-12 max-w-3xl">
           <figure className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-card p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 flex justify-center">
-              <IconChip icon={TrendingUp} tone="platform" size="md" />
+              <IconChip icon={IconGrowth} tone="platform" size="md" />
             </div>
             <blockquote className="text-pretty text-lg font-medium leading-relaxed sm:text-xl">
               &ldquo;Recruitment, dues, and events used to live in five different apps. Greekstack put
@@ -892,19 +897,19 @@ function FinalCta() {
             alive. Sits behind the inner card; aria-hidden + GPU transform. */}
         <div
           aria-hidden="true"
-          className="absolute inset-[-100%] animate-spin-slow bg-[conic-gradient(from_0deg,transparent_0deg,#6366f1_60deg,#a855f7_140deg,#22d3ee_220deg,transparent_300deg)] opacity-70 motion-reduce:animate-none"
+          className="absolute inset-[-100%] animate-spin-slow bg-[conic-gradient(from_0deg,transparent_0deg,#2563eb_60deg,#0ea5e9_140deg,#22d3ee_220deg,transparent_300deg)] opacity-70 motion-reduce:animate-none"
         />
         <AnimatedBackground
           variant="spotlight"
           tone="platform"
-          className="relative overflow-hidden rounded-[calc(1.5rem-1.5px)] border border-indigo-500/10 bg-gradient-to-br from-indigo-500/[0.07] via-violet-500/[0.05] to-cyan-500/[0.07]"
+          className="relative overflow-hidden rounded-[calc(1.5rem-1.5px)] border border-blue-500/10 bg-gradient-to-br from-blue-500/[0.07] via-sky-500/[0.05] to-cyan-500/[0.07]"
         >
           {/* Drifting orbs inside the panel for extra life. */}
           <FloatingOrbs blur={80} />
           <Reveal className="relative z-10 px-6 py-16 text-center sm:px-12 sm:py-20">
             <div className="mx-auto mb-5 flex justify-center">
               <span className="animate-float">
-                <IconChip icon={Rocket} tone="platform" size="lg" />
+                <IconChip icon={IconLaunch} tone="platform" size="lg" />
               </span>
             </div>
             <h2 className="mx-auto max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">
@@ -919,7 +924,7 @@ function FinalCta() {
                 <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
                   <Link href="/onboard">
                     Launch your chapter
-                    <ArrowRight className="h-5 w-5" />
+                    <IconArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
               </Magnetic>
@@ -965,7 +970,7 @@ function SiteFooter() {
             </Link>
             <Link
               href="/onboard"
-              className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+              className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
             >
               Get started
             </Link>

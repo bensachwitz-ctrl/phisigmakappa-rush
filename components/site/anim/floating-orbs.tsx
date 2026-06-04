@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 type Orb = {
   /** CSS position, any of top/left/right/bottom + size, as Tailwind classes. */
   className: string;
-  /** Gradient background (indigo / violet / cyan family). */
+  /** Gradient background (royal blue / sky / gold family). */
   bg: string;
   /** Drift amplitude (px) and duration (s) for the idle float. */
   amp?: number;
@@ -24,12 +24,12 @@ const DEFAULT_ORB_LAYOUT: Omit<Orb, "bg">[] = [
   { className: "left-[28%] bottom-[-12rem] h-[30rem] w-[30rem]", amp: 30, dur: 19, delay: 0.6 },
 ];
 
-/* The original platform palette (indigo → cyan → violet). Used when no
-   `colors` prop is supplied, so marketing-landing renders exactly as before. */
+/* The Greekstack platform palette (royal blue → sky → gold). Used when no
+   `colors` prop is supplied, so marketing-landing renders in brand colors. */
 const DEFAULT_ORB_COLORS = [
-  "rgba(99,102,241,0.55)",
-  "rgba(34,211,238,0.42)",
-  "rgba(168,85,247,0.42)",
+  "rgba(37,99,235,0.55)",
+  "rgba(56,189,248,0.42)",
+  "rgba(245,158,11,0.38)",
 ];
 
 /* The soft-edged radial used for each orb: focal point + transparent fade stop.
@@ -54,8 +54,8 @@ function orbFromColor(color: string, i: number): Orb {
 const DEFAULT_ORBS: Orb[] = DEFAULT_ORB_COLORS.map(orbFromColor);
 
 /**
- * FloatingOrbs — absolutely-positioned, blurred gradient orbs (indigo → violet
- * → cyan) that drift continuously for an "alive" depth layer behind hero / CTA
+ * FloatingOrbs — absolutely-positioned, blurred gradient orbs (royal blue → sky
+ * → gold) that drift continuously for an "alive" depth layer behind hero / CTA
  * content. Purely decorative: aria-hidden, pointer-events-none, and it never
  * affects layout.
  *
@@ -65,8 +65,8 @@ const DEFAULT_ORBS: Orb[] = DEFAULT_ORB_COLORS.map(orbFromColor);
  * Recoloring: pass `colors` (any CSS colors — hex, rgba, or
  * `var(--brand-primary)` etc.) to tint the three default orbs to a chapter's
  * brand while keeping the original placement + drift. Omit it and the orbs
- * render in the platform indigo → cyan → violet palette exactly as before, so
- * existing call sites (marketing-landing) are unaffected. An explicit `orbs`
+ * render in the platform royal blue → sky → gold palette, so existing call
+ * sites (marketing-landing) pick up the brand automatically. An explicit `orbs`
  * array still wins over `colors` for full control.
  */
 export function FloatingOrbs({

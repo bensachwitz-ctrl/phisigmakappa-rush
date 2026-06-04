@@ -1,11 +1,18 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 
 /**
- * A premium icon "chip" — a soft gradient rounded square holding a lucide icon.
+ * Any icon component that accepts a `className` — covers both `lucide-react`
+ * icons and the bespoke Greekstack icon set (`@/components/brand/icons`), so the
+ * chip is a drop-in host for either family.
+ */
+type ChipIcon = React.ComponentType<{ className?: string }>;
+
+/**
+ * A premium icon "chip" — a soft gradient rounded square holding an icon.
  * Used in feature lists, stat tiles, nav, and empty states for a consistent,
- * elevated look. tone="brand" tints to the current chapter's primary color.
+ * elevated look. tone="brand" tints to the current chapter's primary color;
+ * tone="platform" uses the Greekstack royal blue → sky palette with a gold ring.
  */
 export function IconChip({
   icon: Icon,
@@ -13,7 +20,7 @@ export function IconChip({
   size = "md",
   className,
 }: {
-  icon: LucideIcon;
+  icon: ChipIcon;
   tone?: "brand" | "platform" | "muted";
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -28,7 +35,7 @@ export function IconChip({
     brand:
       "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] to-[hsl(var(--primary)/0.05)] text-[hsl(var(--primary))] ring-1 ring-[hsl(var(--primary)/0.20)]",
     platform:
-      "bg-gradient-to-br from-indigo-500/15 to-cyan-400/10 text-indigo-500 ring-1 ring-indigo-500/20",
+      "bg-gradient-to-br from-[#2563eb]/15 to-[#38bdf8]/10 text-[#2563eb] ring-1 ring-[#f59e0b]/25",
     muted: "bg-secondary text-muted-foreground ring-1 ring-border",
   }[tone];
 

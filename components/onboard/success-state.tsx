@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, ExternalLink, Loader2, PartyPopper } from "lucide-react";
+import { IconCheckCircle, IconExternal, IconSpark } from "@/components/brand/icons";
 import { IconChip } from "@/components/ui/icon-chip";
 
 /**
@@ -37,16 +37,16 @@ export function SuccessState({
       <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
         <span
           aria-hidden="true"
-          className="absolute inset-0 animate-glow rounded-full bg-gradient-to-br from-emerald-400/40 via-cyan-400/30 to-indigo-500/30 blur-xl"
+          className="absolute inset-0 animate-glow rounded-full bg-gradient-to-br from-emerald-400/40 via-sky-400/30 to-blue-500/30 blur-xl"
         />
         <span className="relative inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-xl shadow-emerald-500/40 ring-4 ring-emerald-300/30">
-          <CheckCircle2 className="h-10 w-10" />
+          <IconCheckCircle className="h-10 w-10" />
         </span>
       </div>
 
       <div className="mb-2 flex items-center justify-center gap-2">
-        <PartyPopper className="h-5 w-5 text-indigo-300" aria-hidden="true" />
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">
+        <IconSpark className="h-5 w-5 text-amber-300" aria-hidden="true" />
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
           Live in seconds
         </span>
       </div>
@@ -61,12 +61,16 @@ export function SuccessState({
 
       {/* The new live URL */}
       <div className="mx-auto mt-6 inline-flex max-w-full items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-4 py-2.5 backdrop-blur-md">
-        <IconChip icon={ExternalLink} tone="platform" size="sm" />
+        <IconChip icon={IconExternal} tone="platform" size="sm" />
         <span className="truncate font-mono text-sm text-slate-200">{host}</span>
       </div>
 
       <p className="mt-6 inline-flex items-center gap-2 text-xs font-medium text-slate-400">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Redirecting to your dashboard…
+        <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+        Redirecting to your dashboard…
       </p>
     </div>
   );

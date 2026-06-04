@@ -132,7 +132,7 @@ export function ScrollProgressBar({
     <motion.div
       aria-hidden="true"
       className={cn(
-        "fixed inset-x-0 top-0 z-[60] origin-left bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400",
+        "fixed inset-x-0 top-0 z-[60] origin-left bg-gradient-to-r from-[#2563eb] via-[#0ea5e9] to-[#38bdf8]",
         className
       )}
       style={{ height, scaleX: reduce ? scrollYProgress : scaleX }}

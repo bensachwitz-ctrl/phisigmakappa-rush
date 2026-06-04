@@ -315,7 +315,7 @@ export function ServiceClient({
       case "approved":
         return <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">Approved</Badge>;
       case "completed":
-        return <Badge className="bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">Completed</Badge>;
+        return <Badge className="bg-blue-50 text-blue-700 ring-1 ring-blue-200">Completed</Badge>;
       case "canceled":
         return <Badge className="bg-zinc-100 text-zinc-600 ring-1 ring-zinc-200">Canceled</Badge>;
       default:

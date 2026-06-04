@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Type, X } from "lucide-react";
+import { IconSpark, IconClose } from "@/components/brand/icons";
 import { GREEK_ALPHABET } from "@/lib/greek-orgs";
 import { cn } from "@/lib/utils";
 
@@ -31,13 +31,13 @@ export function GreekLetterInserter({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+          "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
           open
-            ? "border-indigo-400/50 bg-indigo-500/15 text-indigo-100"
+            ? "border-sky-400/50 bg-sky-500/15 text-sky-100"
             : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10"
         )}
       >
-        {open ? <X className="h-3.5 w-3.5" /> : <Type className="h-3.5 w-3.5" />}
+        {open ? <IconClose className="h-3.5 w-3.5" /> : <IconSpark className="h-3.5 w-3.5" />}
         {open ? "Close letter picker" : label}
       </button>
 
@@ -54,7 +54,7 @@ export function GreekLetterInserter({
                 onClick={() => onInsert(g.upper)}
                 title={`${g.name} (${g.upper})`}
                 aria-label={`Insert ${g.name} ${g.upper}`}
-                className="flex aspect-square items-center justify-center rounded-md border border-white/10 bg-white/5 text-base font-bold text-slate-100 transition-all hover:border-indigo-400/50 hover:bg-indigo-500/15 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 active:scale-95"
+                className="flex aspect-square items-center justify-center rounded-md border border-white/10 bg-white/5 text-base font-bold text-slate-100 transition-all hover:border-sky-400/50 hover:bg-sky-500/15 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:scale-95"
               >
                 {g.upper}
               </button>

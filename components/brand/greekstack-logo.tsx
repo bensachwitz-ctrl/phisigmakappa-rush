@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Greekstack brand symbol — a Greek temple/column on the platform gradient
- * (indigo → violet → cyan). The pediment + capital + three fluted columns
- * (descending opacity = a "stack") fuse "Greek" + "stack". Works as a logo,
- * app icon, or favicon on any background.
+ * (royal blue → sky) with a gold pediment accent. The pediment + capital +
+ * three fluted columns (descending opacity = a "stack") fuse "Greek" + "stack".
+ * Works as a logo, app icon, or favicon on any background.
  */
 export function GreekstackLogo({ className, title = "Greekstack" }: { className?: string; title?: string }) {
   return (
@@ -19,16 +19,16 @@ export function GreekstackLogo({ className, title = "Greekstack" }: { className?
     >
       <defs>
         <linearGradient id="gs-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#6366F1" />
-          <stop offset="0.5" stopColor="#8B5CF6" />
-          <stop offset="1" stopColor="#22D3EE" />
+          <stop offset="0" stopColor="#2563EB" />
+          <stop offset="0.55" stopColor="#1D4ED8" />
+          <stop offset="1" stopColor="#0EA5E9" />
         </linearGradient>
       </defs>
       <rect width="40" height="40" rx="11" fill="url(#gs-grad)" />
       <rect x="0.6" y="0.6" width="38.8" height="38.8" rx="10.4" fill="none" stroke="rgba(255,255,255,0.18)" />
       <g fill="#ffffff">
-        {/* pediment (temple roof) */}
-        <path d="M20 8 L29.5 14.2 L10.5 14.2 Z" opacity="0.96" />
+        {/* pediment (temple roof) — gold accent */}
+        <path d="M20 8 L29.5 14.2 L10.5 14.2 Z" fill="#FBBF24" opacity="0.98" />
         {/* capital / entablature */}
         <rect x="10.5" y="15.4" width="19" height="2.7" rx="1.2" opacity="0.96" />
         {/* three fluted columns — the "stack" */}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Palette } from "lucide-react";
+import { IconCheck, IconBranding } from "@/components/brand/icons";
 import { COMMON_BRAND_COLORS } from "@/lib/greek-orgs";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ export function ColorPresets({
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
       <p className="mb-2.5 flex items-center gap-1.5 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
-        <Palette className="h-3.5 w-3.5 text-indigo-300" /> Quick color presets
+        <IconBranding className="h-3.5 w-3.5 text-sky-300" /> Quick color presets
       </p>
       <div className="flex flex-wrap gap-2">
         {COMMON_BRAND_COLORS.map((c) => {
@@ -37,9 +37,9 @@ export function ColorPresets({
               aria-pressed={active}
               title={`${c.name} ${c.hex}`}
               className={cn(
-                "group inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+                "group inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
                 active
-                  ? "border-indigo-400/60 bg-indigo-500/15 text-indigo-100 shadow-sm"
+                  ? "border-sky-400/60 bg-sky-500/15 text-sky-100 shadow-sm"
                   : "border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
               )}
             >
@@ -48,7 +48,7 @@ export function ColorPresets({
                 style={{ backgroundColor: c.hex }}
                 aria-hidden="true"
               >
-                {active && <Check className="h-3 w-3 text-white drop-shadow" strokeWidth={3} />}
+                {active && <IconCheck className="h-3 w-3 text-white drop-shadow" strokeWidth={3} />}
               </span>
               {c.name}
             </button>

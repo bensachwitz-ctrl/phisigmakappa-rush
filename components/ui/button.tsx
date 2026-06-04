@@ -22,8 +22,21 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         gradient:
           "bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 hover:shadow-xl hover:shadow-phisig-red/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+        // CUSTOM premium platform button — royal-blue → sky vertical gradient
+        // with a bright white top-edge highlight (::before glaze on the top
+        // half), a hairline gold bottom edge + inset white ring carried in the
+        // box-shadow stack, a soft blue glow that deepens on hover, and a
+        // confident active press. The glaze + inset ring + gold edge are what
+        // make it read bespoke, not stock. The decorative top glaze uses
+        // ::before only, leaving ::after free for the `gs-sheen` moving-highlight
+        // class that call-sites add (so the two never collide). Zero purple.
         platform:
-          "bg-gradient-to-br from-indigo-500 via-violet-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+          "relative isolate overflow-hidden bg-gradient-to-b from-[#3b82f6] via-[#2563eb] to-[#0ea5e9] text-white " +
+          "shadow-[0_8px_24px_-6px_rgba(37,99,235,0.55),inset_0_1px_0_0_rgba(255,255,255,0.45),inset_0_-1px_0_0_rgba(251,191,36,0.55)] " +
+          "before:pointer-events-none before:absolute before:inset-x-px before:top-0 before:h-1/2 before:rounded-[inherit] before:bg-gradient-to-b before:from-white/30 before:to-transparent before:content-['']" +
+          " transition-all hover:from-[#2563eb] hover:via-[#1d4ed8] hover:to-[#0284c7] hover:-translate-y-0.5 hover:shadow-[0_14px_32px_-6px_rgba(37,99,235,0.7),inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_-1px_0_0_rgba(251,191,36,0.7)] " +
+          "active:translate-y-0 active:scale-[0.97] active:shadow-[0_6px_16px_-6px_rgba(37,99,235,0.6),inset_0_1px_0_0_rgba(255,255,255,0.4)] " +
+          "focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2",
         glass:
           "border border-white/15 bg-white/10 text-foreground backdrop-blur-md shadow-sm hover:bg-white/20 hover:border-white/25 active:scale-[0.98]",
       },
