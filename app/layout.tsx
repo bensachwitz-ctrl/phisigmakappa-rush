@@ -9,7 +9,7 @@ import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
-// when the request has no subdomain (greeklifesystems.vercel.app, localhost,
+// when the request has no subdomain (greekstack.vercel.app, localhost,
 // www) so NO chapter identity (Phi Sig / Gamma Triton / USC) ever leaks onto
 // the apex marketing site.
 const GREEKSTACK = {
@@ -51,7 +51,7 @@ function resolveMetadataBase(host: string | null): URL {
       /* fall through */
     }
   }
-  return new URL("https://greeklifesystems.vercel.app");
+  return new URL("https://greekstack.vercel.app");
 }
 
 const inter = Inter({

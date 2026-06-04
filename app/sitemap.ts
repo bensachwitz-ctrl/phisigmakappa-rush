@@ -20,7 +20,7 @@ function resolveBase(): string {
     const proto = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
     return `${proto}://${host}`;
   }
-  return "https://greeklifesystems.vercel.app";
+  return "https://greekstack.vercel.app";
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {

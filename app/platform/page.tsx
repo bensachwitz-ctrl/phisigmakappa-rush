@@ -307,7 +307,7 @@ export default function PlatformConsolePage() {
                     <TableRow key={t.id} className={cn(rowBusy && "opacity-60")}>
                       <TableCell>
                         <a
-                          href={`https://${t.subdomain}.greeklifesystems.vercel.app`}
+                          href={`https://${t.subdomain}.greekstack.vercel.app`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1.5 font-mono text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"

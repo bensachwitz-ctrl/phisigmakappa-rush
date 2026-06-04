@@ -367,7 +367,7 @@ function ProductPreview() {
           </div>
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
             <IconSecurity className="h-3 w-3" />
-            yourchapter.greeklifesystems.vercel.app
+            yourchapter.greekstack.vercel.app
           </span>
           <span className="w-12" aria-hidden="true" />
         </div>
@@ -978,7 +978,7 @@ function SiteFooter() {
         </div>
         <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
-          <p>greeklifesystems.vercel.app</p>
+          <p>greekstack.vercel.app</p>
         </div>
       </div>
     </footer>

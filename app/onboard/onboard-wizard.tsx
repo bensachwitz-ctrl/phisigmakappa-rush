@@ -505,7 +505,7 @@ export default function OnboardWizard() {
                           <>
                             Your site will live at{" "}
                             <strong className="font-semibold text-sky-200">
-                              {(subdomain.trim() || "your-subdomain")}.greeklifesystems.vercel.app
+                              {(subdomain.trim() || "your-subdomain")}.greekstack.vercel.app
                             </strong>
                           </>
                         }
@@ -622,7 +622,7 @@ export default function OnboardWizard() {
                       <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "—"}</SummaryRow>
                       <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "—"}</SummaryRow>
                       <SummaryRow label="Site URL">
-                        <span className="font-mono text-sky-200">{(subdomain.trim() || "your-chapter")}.greeklifesystems.vercel.app</span>
+                        <span className="font-mono text-sky-200">{(subdomain.trim() || "your-chapter")}.greekstack.vercel.app</span>
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
                     </div>

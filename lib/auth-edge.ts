@@ -44,6 +44,8 @@ function getSubdomainEdge(host: string | null): string | null {
   const hostWithoutPort = host.split(":")[0].toLowerCase();
   if (
     hostWithoutPort === "localhost" ||
+    hostWithoutPort === "greekstack" ||
+    hostWithoutPort === "greekstack.vercel.app" ||
     hostWithoutPort === "greeklifesystems" ||
     hostWithoutPort === "greeklifesystems.vercel.app" ||
     hostWithoutPort === "greek-life-systems.vercel.app" ||
@@ -54,10 +56,11 @@ function getSubdomainEdge(host: string | null): string | null {
   const cleanHost = host
     .replace(".localhost:3000", "")
     .replace(".localhost:3001", "")
+    .replace(".greekstack.vercel.app", "")
     .replace(".greeklifesystems.vercel.app", "")
     .replace(".greek-life-systems.vercel.app", "")
     .trim();
-  if (!cleanHost || cleanHost === "www" || cleanHost === "greeklifesystems") {
+  if (!cleanHost || cleanHost === "www" || cleanHost === "greekstack" || cleanHost === "greeklifesystems") {
     return null;
   }
   return cleanHost.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();

@@ -57,12 +57,12 @@ export async function POST(req: Request) {
   const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
 
   // Reserved-subdomain denylist + format guard. A provisioned subdomain becomes
-  // a live host (sub.greeklifesystems.vercel.app) AND a Postgres schema, so
+  // a live host (sub.greekstack.vercel.app) AND a Postgres schema, so
   // platform/route names and common service hostnames must never be claimable —
   // otherwise a self-serve signup could squat "admin", "api", "webhook", a name
   // that shadows platform routing, or (via punycode "xn--") a homograph host.
   const RESERVED = new Set([
-    "www", "greeklifesystems", "greek-life-systems", "apex", "_apex",
+    "www", "greekstack", "greeklifesystems", "greek-life-systems", "apex", "_apex",
     "admin", "api", "app", "apps", "dashboard", "portal", "auth", "login",
     "mail", "email", "smtp", "imap", "ftp", "ns", "ns1", "ns2", "dns",
     "static", "assets", "cdn", "img", "images", "media", "files", "uploads",
@@ -262,10 +262,10 @@ export async function POST(req: Request) {
     tenantPrisma = null;
 
     // Build the subdomain redirect (http on localhost, https in prod).
-    const host = req.headers.get("host") || "greeklifesystems.vercel.app";
+    const host = req.headers.get("host") || "greekstack.vercel.app";
     const isLocal = host.includes("localhost");
     const port = isLocal && host.includes("localhost:") ? `:${host.split("localhost:")[1]}` : "";
-    const domain = isLocal ? "localhost" : "greeklifesystems.vercel.app";
+    const domain = isLocal ? "localhost" : "greekstack.vercel.app";
     const proto = isLocal ? "http" : "https";
     const redirectUrl = `${proto}://${subdomain}.${domain}${port}/admin`;
 

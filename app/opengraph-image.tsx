@@ -47,7 +47,7 @@ export default async function Image() {
     founded,
   ].filter(Boolean) as string[];
   const url = (
-    process.env.NEXT_PUBLIC_SITE_URL || `https://${host || "greeklifesystems.vercel.app"}`
+    process.env.NEXT_PUBLIC_SITE_URL || `https://${host || "greekstack.vercel.app"}`
   ).replace(/^https?:\/\//, "");
   const headline = `Rush ${id.fraternityShort} at ${id.schoolShort}.`;
 
@@ -274,7 +274,7 @@ function GreekstackCard() {
           <span style={{ display: "flex" }}>TCPA-compliant SMS</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 600 }}>
-          greeklifesystems.vercel.app
+          greekstack.vercel.app
         </div>
       </div>
     </div>

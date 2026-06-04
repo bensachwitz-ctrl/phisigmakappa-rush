@@ -56,7 +56,7 @@ export function LivePreview({
   const displayChapter = greekLetters.trim() || "Your Chapter";
   const displaySchool = schoolName.trim() || "Your University";
   const glyphs = (fraternityLetters.trim() || greekLettersGlyphs.trim() || "ΦΣ").slice(0, 4);
-  const host = (subdomain.trim() || "your-chapter") + ".greeklifesystems.vercel.app";
+  const host = (subdomain.trim() || "your-chapter") + ".greekstack.vercel.app";
 
   // Smooth color morph: shared inline transition so every brand-driven surface
   // eases between palettes instead of snapping. Honors reduced-motion.
