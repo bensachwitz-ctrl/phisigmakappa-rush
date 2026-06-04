@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+// Greekstack Apple touch icon — the brand mark on the platform gradient
+// (matches app/icon.tsx; replaces the old hardcoded Phi Sig "ΦΣΚ").
 export const runtime = "edge";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -14,15 +16,15 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #C8102E 0%, #A20D26 100%)",
+          background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #22D3EE 100%)",
           color: "white",
           fontFamily: "Georgia, serif",
-          fontWeight: 700,
-          fontSize: 78,
+          fontWeight: 800,
+          fontSize: 104,
           letterSpacing: -2,
         }}
       >
-        ΦΣΚ
+        G
       </div>
     ),
     { ...size }
