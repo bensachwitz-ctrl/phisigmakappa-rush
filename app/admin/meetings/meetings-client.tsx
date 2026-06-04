@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { useToast } from "@/components/ui/toast";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, Plus, Loader2, CalendarDays, Users, ClipboardCheck, MapPin,
+  Search, Plus, Loader2, CalendarDays, CalendarCheck, Users, ClipboardCheck, MapPin,
   AlertTriangle, CheckCircle2, UserCheck, Clock, XCircle, Trash2, RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -538,11 +539,14 @@ export function MeetingsClient({
     <main className="container py-8 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Chapter Meetings & Attendance</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Schedule chapter meetings, take roll, run check-ins, and approve excused absences.
-          </p>
+        <div className="flex items-start gap-4">
+          <IconChip icon={CalendarCheck} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Chapter Meetings &amp; Attendance</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Schedule chapter meetings, take roll, run check-ins, and approve excused absences.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {!canWrite && (
@@ -607,7 +611,7 @@ export function MeetingsClient({
       {filtered.length === 0 ? (
         <Card className="text-center py-12 bg-muted/20 border-dashed">
           <CardContent className="space-y-3">
-            <CalendarDays className="h-10 w-10 text-muted-foreground mx-auto" />
+            <IconChip icon={CalendarDays} tone="muted" size="lg" className="mx-auto" />
             <h3 className="text-lg font-semibold">No meetings found</h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {list.length === 0

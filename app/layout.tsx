@@ -282,6 +282,48 @@ function safeHex(input: string | undefined, fallback: string): string {
   return fallback;
 }
 
+/**
+ * Convert a validated hex color (#RGB or #RRGGBB) to a space-separated HSL
+ * triple ("351 76% 42%") for the shadcn-style `--primary` / `--ring` tokens.
+ *
+ * Tailwind's hsl(var(--primary)/<alpha>) tokens — and every shared-foundation
+ * component that themes via `tone="brand"` (AnimatedBackground, IconChip) —
+ * read --primary as a bare HSL triple, NOT a hex. The brand tokens
+ * (--brand-primary*) are hex. Without this, --primary stayed the static
+ * cardinal default while the chapter recolored only the hex tokens, so a
+ * navy/gold chapter would have shown a cardinal-red aurora behind navy copy.
+ * Deriving --primary from the SAME cfg hex keeps tone="brand" perfectly in
+ * step with the chapter color, for any color. Input is always safeHex-validated.
+ */
+function hexToHslTriple(hex: string): string {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let hue = 0;
+  let sat = 0;
+  const d = max - min;
+  if (d !== 0) {
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        hue = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        hue = (b - r) / d + 2;
+        break;
+      default:
+        hue = (r - g) / d + 4;
+    }
+    hue /= 6;
+  }
+  return `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+}
+
 export default async function RootLayout({
   children,
 }: {
@@ -297,7 +339,13 @@ export default async function RootLayout({
   // Inline CSS override binds the cfg-supplied colors to the same Tailwind
   // tokens (--phisig-red et al) used throughout the build. No client JS,
   // no FOUC, no rebuild needed when admin saves.
-  const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};}`;
+  // Also re-derive the shadcn HSL tokens (--primary / --ring) from the SAME
+  // chapter hex so the shared-foundation components themed via tone="brand"
+  // (AnimatedBackground aurora, IconChip) track the chapter color instead of
+  // the static cardinal default. --primary-foreground stays white (all brand
+  // ramps are dark enough for white text on the gradient CTA / stats strip).
+  const brandPrimaryHsl = hexToHslTriple(brandPrimary);
+  const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};--primary:${brandPrimaryHsl};--ring:${brandPrimaryHsl};}`;
 
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy. siteUrl

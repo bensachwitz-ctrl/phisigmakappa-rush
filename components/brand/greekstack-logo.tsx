@@ -1,44 +1,67 @@
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
-export function GreekstackLogo({ className }: { className?: string }) {
+/**
+ * Greekstack brand symbol — a Greek temple/column on the platform gradient
+ * (indigo → violet → cyan). The pediment + capital + three fluted columns
+ * (descending opacity = a "stack") fuse "Greek" + "stack". Works as a logo,
+ * app icon, or favicon on any background.
+ */
+export function GreekstackLogo({ className, title = "Greekstack" }: { className?: string; title?: string }) {
   return (
     <svg
       className={className || "h-8 w-8"}
-      viewBox="0 0 32 32"
+      viewBox="0 0 40 40"
       fill="none"
+      role="img"
+      aria-label={title}
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#EF4444" />
-          <stop offset="50%" stopColor="#DC2626" />
-          <stop offset="100%" stopColor="#7F1D1D" />
+        <linearGradient id="gs-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#6366F1" />
+          <stop offset="0.5" stopColor="#8B5CF6" />
+          <stop offset="1" stopColor="#22D3EE" />
         </linearGradient>
       </defs>
-      {/* Top Pillar Ring */}
-      <path
-        d="M6 10 C6 7.8 10.5 6 16 6 C21.5 6 26 7.8 26 10 C26 12.2 21.5 14 16 14 C10.5 14 6 12.2 6 10 Z"
-        fill="url(#logo-grad)"
-      />
-      {/* Middle Pillar Ring */}
-      <path
-        d="M6 17 C6 15.3 10.5 14 16 14 C21.5 14 26 15.3 26 17 L26 19 C26 20.7 21.5 22 16 22 C10.5 22 6 20.7 6 19 Z"
-        fill="url(#logo-grad)"
-        opacity="0.85"
-      />
-      {/* Base Pillar Ring */}
-      <path
-        d="M6 24 C6 22.3 10.5 21 16 21 C21.5 21 26 22.3 26 24 L26 25 C26 26.7 21.5 28 16 28 C10.5 28 6 26.7 6 25 Z"
-        fill="url(#logo-grad)"
-        opacity="0.7"
-      />
-      {/* Vertical flutes on columns */}
-      <path
-        d="M10 10 L10 24 M16 14 L16 28 M22 10 L22 24"
-        stroke="rgba(255,255,255,0.25)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <rect width="40" height="40" rx="11" fill="url(#gs-grad)" />
+      <rect x="0.6" y="0.6" width="38.8" height="38.8" rx="10.4" fill="none" stroke="rgba(255,255,255,0.18)" />
+      <g fill="#ffffff">
+        {/* pediment (temple roof) */}
+        <path d="M20 8 L29.5 14.2 L10.5 14.2 Z" opacity="0.96" />
+        {/* capital / entablature */}
+        <rect x="10.5" y="15.4" width="19" height="2.7" rx="1.2" opacity="0.96" />
+        {/* three fluted columns — the "stack" */}
+        <rect x="12.6" y="19" width="2.6" height="9.8" rx="1.3" opacity="0.95" />
+        <rect x="18.7" y="19" width="2.6" height="9.8" rx="1.3" opacity="0.8" />
+        <rect x="24.8" y="19" width="2.6" height="9.8" rx="1.3" opacity="0.65" />
+        {/* stylobate / base */}
+        <rect x="9.4" y="29.8" width="21.2" height="2.8" rx="1.2" opacity="0.96" />
+      </g>
     </svg>
+  );
+}
+
+/**
+ * Greekstack wordmark lockup — the symbol + "Greekstack" with the "stack"
+ * rendered in the platform gradient. For the apex marketing site + signup.
+ */
+export function GreekstackWordmark({
+  className,
+  symbolClassName,
+  textClassName,
+}: {
+  className?: string;
+  symbolClassName?: string;
+  textClassName?: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <GreekstackLogo className={symbolClassName || "h-8 w-8"} />
+      <span className={cn("font-bold tracking-tight leading-none", textClassName || "text-xl")}>
+        <span className="text-foreground">Greek</span>
+        <span className="gs-gradient-text">stack</span>
+      </span>
+    </span>
   );
 }

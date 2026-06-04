@@ -7,7 +7,8 @@ import { RecentActivity, type RecentEntry } from "@/components/admin/recent-acti
 import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, GraduationCap, Gift, Building, Calendar, Vote, User } from "lucide-react";
+import { IconChip } from "@/components/ui/icon-chip";
+import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, GraduationCap, Gift, Building, Calendar, Vote, User, LayoutDashboard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -252,11 +253,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       {currentView === "alumni" ? (
         <div className="space-y-8">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Alumni Network Dashboard</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Monitor alumni network metrics, recent registrations, campaign donations, and active polls.
-            </p>
+          <div className="flex items-start gap-4">
+            <IconChip icon={GraduationCap} tone="brand" size="lg" className="hidden sm:inline-flex" />
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Alumni Network Dashboard</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Monitor alumni network metrics, recent registrations, campaign donations, and active polls.
+              </p>
+            </div>
           </div>
 
           {/* Alumni KPI Cards */}
@@ -301,8 +305,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Registrations Card */}
             <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
-                <User className="h-4 w-4 text-amber-500" />
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
+                <IconChip icon={User} tone="brand" size="sm" />
                 Recent Alumni Registrations
               </h3>
               <div className="overflow-x-auto">
@@ -337,8 +341,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
             {/* Recent Donations Card */}
             <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
-                <Gift className="h-4 w-4 text-amber-500" />
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
+                <IconChip icon={Gift} tone="brand" size="sm" />
                 Recent Alumni Donations
               </h3>
               <div className="overflow-x-auto">
@@ -375,12 +379,15 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       ) : (
         <>
           <div className="mb-6 flex items-end justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Rush Roster</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {me ? <>Signed in as <span className="text-foreground font-medium">{me.name}</span> · </> : null}
-                Manage potential new members. Update status, vote, take notes, send mass email or text.
-              </p>
+            <div className="flex items-start gap-4">
+              <IconChip icon={LayoutDashboard} tone="brand" size="lg" className="hidden sm:inline-flex" />
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">Rush Roster</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {me ? <>Signed in as <span className="text-foreground font-medium">{me.name}</span> · </> : null}
+                  Manage potential new members. Update status, vote, take notes, send mass email or text.
+                </p>
+              </div>
             </div>
           </div>
 

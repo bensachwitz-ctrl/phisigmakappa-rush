@@ -10,6 +10,8 @@ import { StickyCTA } from "@/components/site/sticky-cta";
 import { Reveal, CountUp } from "@/components/site/reveal";
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
+import { AnimatedBackground } from "@/components/ui/animated-background";
+import { IconChip } from "@/components/ui/icon-chip";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +22,7 @@ import {
   Instagram, Mail, Phone, Building2, Flame, Crown,
   CheckCircle2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
@@ -168,9 +171,9 @@ export default async function ChapterLandingPage({
       <main id="main-content" className="min-h-screen bg-phisig-mist">        <PublicNav booth />
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> {identity.fraternityName} at {identity.schoolShort} · Booth
-            </span>
+            <div className="mb-4 flex justify-center">
+              <SectionEyebrow icon={Sparkles}>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
+            </div>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the Fall&nbsp;&apos;26 rush list.
             </h2>
@@ -245,11 +248,17 @@ export default async function ChapterLandingPage({
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
 
       {/* ─── HERO ─── */}
-      <section className="relative overflow-hidden">
+      {/* AnimatedBackground (tone="brand") paints drifting aurora blobs in the
+          chapter color behind the hero; it renders a relative, isolated,
+          overflow-hidden box, so it stands in for the old hero <section>. The
+          gradient + dot-grid + floating glyphs layer underneath via negative z. */}
+      <AnimatedBackground variant="aurora" tone="brand" className="overflow-hidden">
         <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
+        {/* Soft top vignette so the nav reads cleanly over the aurora wash */}
+        <div className="absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/70 to-transparent" aria-hidden />
         <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
-        <div className="absolute right-[8%] top-[10%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.22] select-none pointer-events-none filter drop-shadow-[0_20px_50px_rgba(200,16,46,0.25)]">
+        <div className="absolute right-[8%] top-[10%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.22] select-none pointer-events-none filter drop-shadow-[0_20px_50px_hsl(var(--primary)/0.25)]">
           {/* 3D Glassmorphic Shield floating in the hero section */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -276,40 +285,48 @@ export default async function ChapterLandingPage({
                 eventLocation={nextEvent ? nextEvent.location : null}
               />
             </div>
-            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none [text-wrap:balance]">
+            <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] [text-wrap:balance]">
               {cfg["hero.h1.lead"]}{" "}<br className="hidden sm:block" />
-              {cfg["hero.h1.tail"]}{" "}<span className="text-phisig-red">{cfg["hero.h1.highlight"]}</span>.
+              {cfg["hero.h1.tail"]}{" "}
+              <span className="relative inline-block text-phisig-red">
+                {cfg["hero.h1.highlight"]}
+                {/* Hand-drawn brand underline that scales with the word */}
+                <span
+                  className="absolute -bottom-1 left-0 h-[0.18em] w-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark opacity-70"
+                  aria-hidden="true"
+                />
+              </span>.
             </h1>
-            <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl">
+            <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
               {cfg["hero.subline"]}
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="group shadow-lg shadow-phisig-red/25 animate-glow cta-shine press">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Button asChild variant="gradient" size="xl" className="group cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   {cfg["hero.cta.label"] || "Get on the interest list"}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="press">
+              <Button asChild variant="outline" size="xl" className="press bg-white/70 backdrop-blur">
                 <Link href="#about">About the chapter</Link>
               </Button>
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
+            <div className="mt-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
+                <MapPin className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Reply within 24 hours
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
+                <Zap className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> Reply within 24 hours
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> {identity.greekLetters} chapter
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> {identity.greekLetters} chapter
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 text-phisig-red hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/25 bg-phisig-red-soft/60 px-3 py-1.5 font-medium text-phisig-red backdrop-blur transition-colors hover:bg-phisig-red-soft"
               >
                 <Instagram className="h-3.5 w-3.5" aria-hidden="true" /> {cfg["contact.instagramHandle"]}
               </Link>
@@ -339,7 +356,7 @@ export default async function ChapterLandingPage({
                   className="aspect-square"
                 />
               </div>
-              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 z-10 pointer-events-none">
+              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
                 <span className="text-center leading-tight">
                   <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
                   <span className="block text-base font-semibold">1873</span>
@@ -348,19 +365,21 @@ export default async function ChapterLandingPage({
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedBackground>
 
       {/* ─── STATS STRIP ─── */}
       {cfg["show.statsStrip"] !== "false" && (
-      <section className="relative bg-phisig-red text-white overflow-hidden">
+      <section className="relative bg-gradient-to-br from-phisig-red via-phisig-red to-phisig-red-dark text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
+        {/* Soft top sheen for depth against the hero above */}
+        <div className="absolute inset-x-0 top-0 h-px bg-white/20" aria-hidden />
         <div className="absolute -right-20 -top-20 opacity-10">
           <Seal className="w-[300px] h-[300px] text-white" aria-hidden="true" />
         </div>
-        <div className="relative container section-y-tight grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+        <div className="relative container section-y-tight grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-8 sm:gap-8">
           {stats.map((s, i) => (
-            <Reveal key={s.label} delay={i * 80} className="flex items-center gap-4">
-              <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 shrink-0">
+            <Reveal key={s.label} delay={i * 80} className="group flex items-center gap-4">
+              <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 shrink-0 shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-105 group-hover:bg-white/20">
                 <s.icon className="h-5 w-5" />
               </span>
               <div>
@@ -378,15 +397,17 @@ export default async function ChapterLandingPage({
 
       {/* ─── HIGHLIGHTS BANNER ─── */}
       {cfg["show.highlightsBanner"] !== "false" && (
-      <section className="border-b border-border bg-secondary/30 overflow-hidden">
-        <div className="container py-4 flex flex-wrap items-center gap-x-8 gap-y-2 justify-center text-xs sm:text-sm text-muted-foreground">
-          {HIGHLIGHTS.map((h, i) => {
+      <section className="border-b border-border bg-gradient-to-b from-secondary/40 to-secondary/10 overflow-hidden">
+        <div className="container py-5 flex flex-wrap items-center gap-2 sm:gap-2.5 justify-center">
+          {HIGHLIGHTS.map((h) => {
             const Icon = iconFor(h.icon);
             return (
-              <span key={h.label} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                key={h.label}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm transition-colors hover:border-phisig-red/30 hover:text-foreground"
+              >
                 <Icon className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <span>{h.label}</span>
-                {i < HIGHLIGHTS.length - 1 && <span className="hidden sm:inline opacity-30 ml-2">·</span>}
               </span>
             );
           })}
@@ -397,29 +418,26 @@ export default async function ChapterLandingPage({
       {/* ─── VALUES ─── */}
       {cfg["show.values"] !== "false" && (
       <section className="container section-y">
-        <div className="max-w-2xl mb-8">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+        <Reveal className="max-w-2xl mb-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Three principles
           </span>
-          <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+          <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
             Brotherhood. Scholarship. Character.
           </h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4 stagger">
-          {VALUES.map((v) => {
-            const Icon = iconFor(v.icon);
-            return (
-              <div key={v.title} className="lift rounded-2xl border border-border bg-card p-6 relative overflow-hidden group">
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+          {VALUES.map((v, i) => (
+            <Reveal key={v.title} delay={i * 90}>
+              <div className="lift h-full rounded-2xl border border-border bg-card p-6 sm:p-7 relative overflow-hidden group transition-colors hover:border-phisig-red/30">
                 <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
-                <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
+                <IconChip icon={chipIconFor(v.icon)} tone="brand" size="lg" className="relative transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
                 <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
                 <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
                 <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" aria-hidden="true" />
               </div>
-            );
-          })}
+            </Reveal>
+          ))}
         </div>
       </section>
       )}
@@ -427,9 +445,18 @@ export default async function ChapterLandingPage({
       <SaasSimulator />
 
       {/* ─── REGISTER ─── */}
-      <section id="register" className="bg-phisig-mist border-y border-border scroll-mt-20">
-        <div className="container section-y">
+      <section id="register" className="relative bg-phisig-mist border-y border-border scroll-mt-20 overflow-hidden">
+        {/* Themed aurora + grid wash behind the form — brand-toned, reduced-motion
+            safe via the foundation component. Sits at the section's base layer;
+            the form card renders above it untouched. */}
+        <AnimatedBackground
+          variant="aurora-grid"
+          tone="brand"
+          className="absolute inset-0 -z-0 opacity-60"
+        />
+        <div className="relative container section-y">
           <div className="max-w-xl mx-auto text-center mb-8 animate-slide-up">
+            <IconChip icon={Sparkles} tone="brand" size="md" className="mx-auto mb-4" />
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
               <Sparkles className="h-3 w-3" aria-hidden="true" /> Get on the list
             </span>
@@ -469,35 +496,33 @@ export default async function ChapterLandingPage({
       {/* ─── INSTAGRAM FEED — real photos from @phisig_usc ─── */}
       {cfg["show.instagramFeed"] !== "false" && (
       <section className="container section-y">
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
+        <Reveal className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Instagram className="h-3 w-3" aria-hidden="true" /> @phisig_usc
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
+            <SectionEyebrow icon={Instagram}>{cfg["contact.instagramHandle"] || "@phisig_usc"}</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
-          <p className="text-muted-foreground max-w-xl">
+          <p className="text-muted-foreground max-w-xl leading-relaxed">
             Philanthropy events, brotherhood before finals, the chapter formal
             (FIPG-compliant, third-party vendor, sober transportation), and dry
             tailgates on game day. The {identity.greekLetters} chapter shows up — all year.{" "}
             <span className="text-phisig-red font-medium">{identity.tagline}</span>
           </p>
-        </div>
+        </Reveal>
         <InstagramFeed count={9} />
 
         {/* Recent activity strip */}
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {RECENT.map((r) => {
-            const Icon = iconFor(r.icon);
-            return (
-              <div key={r.title} className="rounded-xl border border-border bg-card p-4 lift">
-                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Icon className="h-3 w-3" aria-hidden="true" /> {r.tag}
+        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {RECENT.map((r, i) => (
+            <Reveal key={r.title} delay={i * 70}>
+              <div className="h-full rounded-2xl border border-border bg-card p-5 lift transition-colors hover:border-phisig-red/30">
+                <div className="flex items-center gap-2.5">
+                  <IconChip icon={chipIconFor(r.icon)} tone="brand" size="sm" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">{r.tag}</span>
                 </div>
-                <p className="mt-2 text-sm font-medium leading-snug">{r.title}</p>
+                <p className="mt-3 text-sm font-medium leading-snug">{r.title}</p>
               </div>
-            );
-          })}
+            </Reveal>
+          ))}
         </div>
 
         <div className="mt-8 text-center">
@@ -518,35 +543,35 @@ export default async function ChapterLandingPage({
       {cfg["show.timeline"] !== "false" && (
       <section className="border-y border-border bg-secondary/40">
         <div className="container section-y">
-          <div className="max-w-2xl mb-10">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" aria-hidden="true" /> How rush works
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+          <Reveal className="max-w-2xl mb-10">
+            <SectionEyebrow icon={Calendar}>How rush works</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Three weeks. Zero pressure.
             </h2>
-            <p className="mt-2 text-muted-foreground max-w-xl">
+            <p className="mt-3 text-muted-foreground max-w-xl leading-relaxed">
               We're not interested in hazing or hoops. We're interested in finding the right men.
             </p>
-          </div>
-          <ol className="grid md:grid-cols-3 gap-3 sm:gap-4 stagger">
+          </Reveal>
+          <ol className="grid md:grid-cols-3 gap-3 sm:gap-4">
             {TIMELINE.map((t, i) => (
-              <li
-                key={t.week}
-                className="relative rounded-xl border border-border bg-card p-5 lift"
-              >
-                <span className="inline-block text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  {t.week}
+              <Reveal key={t.week} as="li" delay={i * 90} className="relative rounded-2xl border border-border bg-card p-6 lift transition-colors hover:border-phisig-red/30">
+                <span className="inline-flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-[11px] font-bold text-white shadow-sm shadow-phisig-red/30">
+                    {i + 1}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                    {t.week}
+                  </span>
                 </span>
-                <h3 className="mt-1.5 text-base font-semibold">{t.title}</h3>
+                <h3 className="mt-3 text-base font-semibold">{t.title}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{t.body}</p>
-                <span className="absolute top-4 right-5 text-2xl font-semibold text-phisig-red opacity-15">
+                <span className="absolute top-5 right-5 text-2xl font-semibold text-phisig-red opacity-15">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 {i < TIMELINE.length - 1 && (
                   <span className="hidden md:block absolute top-1/2 -right-2.5 h-0.5 w-5 bg-phisig-red/30" aria-hidden />
                 )}
-              </li>
+              </Reveal>
             ))}
           </ol>
         </div>
@@ -557,10 +582,8 @@ export default async function ChapterLandingPage({
       <section id="schedule" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Calendar className="h-3 w-3" aria-hidden="true" /> Fall '26 calendar
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+            <SectionEyebrow icon={Calendar}>Fall &apos;26 calendar</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
             </h2>
           </div>
@@ -642,10 +665,8 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <Star className="h-3 w-3" aria-hidden="true" /> Brother of the Month
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+            <SectionEyebrow icon={Star}>Brother of the Month</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Real men. Real recognition.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
@@ -712,14 +733,12 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                <Crown className="h-3 w-3" aria-hidden="true" /> Chapter leadership
-              </span>
-              <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+              <SectionEyebrow icon={Crown}>Chapter leadership</SectionEyebrow>
+              <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Meet the e-board.
               </h2>
             </div>
-            <p className="text-muted-foreground max-w-xl">
+            <p className="text-muted-foreground max-w-xl leading-relaxed">
               The {identity.greekLetters} chapter elects its leadership annually. These are the brothers
               running the show — happy to talk to any rush who wants to learn more.
             </p>
@@ -728,7 +747,7 @@ export default async function ChapterLandingPage({
             {eboard.map((m) => (
               <div
                 key={m.name}
-                className="relative rounded-2xl border border-border bg-card p-5 lift overflow-hidden"
+                className="group relative rounded-2xl border border-border bg-card p-5 lift overflow-hidden transition-colors hover:border-phisig-red/30"
               >
                 {m.headshotUrl ? (
                   <img
@@ -762,10 +781,8 @@ export default async function ChapterLandingPage({
       <section id="about" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <ShieldCheck className="h-3 w-3" aria-hidden="true" /> About the chapter
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+            <SectionEyebrow icon={ShieldCheck}>About the chapter</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Founded in 1873.<br/> Built for what's next.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
@@ -898,10 +915,8 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                <Sparkles className="h-3 w-3" aria-hidden="true" /> FAQ
-              </span>
-              <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+              <SectionEyebrow icon={Sparkles}>FAQ</SectionEyebrow>
+              <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Common questions.
               </h2>
               <p className="mt-3 text-muted-foreground max-w-md">
@@ -973,10 +988,8 @@ export default async function ChapterLandingPage({
             </div>
           </a>
           <div className="order-1 lg:order-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-              <MapPin className="h-3 w-3" aria-hidden="true" /> Where we live
-            </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+            <SectionEyebrow icon={MapPin}>Where we live</SectionEyebrow>
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
@@ -1040,39 +1053,41 @@ export default async function ChapterLandingPage({
 
       {/* ─── FINAL CTA ─── */}
       <section className="container pb-16 sm:pb-20">
-        <div className="rounded-2xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/20">
+        <Reveal className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/30 ring-1 ring-white/10">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
+          {/* Soft top-light radial for depth */}
+          <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(255,255,255,0.18),transparent_70%)]" aria-hidden />
           <div className="absolute -right-12 -bottom-12 opacity-15">
             <Seal className="w-[420px] h-[420px] text-white" aria-hidden="true" />
           </div>
-          <div className="absolute right-[8%] top-[12%] opacity-10 hidden sm:block">
+          <div className="absolute right-[8%] top-[12%] opacity-10 hidden sm:block animate-float">
             <Crest className="h-32 w-32 text-white" aria-hidden="true" />
           </div>
           <div className="relative max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/90">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
               <Sparkles className="h-3 w-3" aria-hidden="true" /> Fall Rush 2026
             </span>
-            <h2 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
+            <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Get on the interest list.
             </h2>
-            <p className="mt-3 text-white/95 max-w-md text-base sm:text-lg">
+            <p className="mt-3 text-white/95 max-w-md text-base sm:text-lg leading-relaxed">
               Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="secondary" className="group cta-shine press">
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild size="xl" variant="secondary" className="group cta-shine press">
                 <Link href={cfg["hero.cta.href"] || "#register"}>
                   Sign me up
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
+              <Button asChild size="xl" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
                 <Link href={cleanUrl(cfg["contact.instagramUrl"])} target="_blank">
                   <Instagram className="h-4 w-4" aria-hidden="true" /> Follow us
                 </Link>
               </Button>
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       <PublicFooter />
@@ -1098,6 +1113,29 @@ function iconFor(name: string): React.ElementType {
     BookOpen, Music, Building2, Flame, ShieldCheck, Calendar, MapPin,
   };
   return map[name] || Crown;
+}
+
+// Same lookup, but typed as LucideIcon for the shared <IconChip> foundation
+// component (its `icon` prop is LucideIcon, not the looser React.ElementType).
+// All entries above are lucide-react icons, so the cast is safe.
+function chipIconFor(name: string): LucideIcon {
+  return iconFor(name) as LucideIcon;
+}
+
+/**
+ * Standardized section eyebrow — a small brand-tinted pill with a lucide icon.
+ * Replaces the repeated bare `<span class="...text-phisig-red">` headers for a
+ * more premium, consistent look. Brand-toned via phisig-red (the chapter color),
+ * so it reads correctly for any tenant palette.
+ */
+function SectionEyebrow({
+  icon: Icon, children,
+}: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+      <Icon className="h-3 w-3" aria-hidden="true" /> {children}
+    </span>
+  );
 }
 
 function ContactPill({

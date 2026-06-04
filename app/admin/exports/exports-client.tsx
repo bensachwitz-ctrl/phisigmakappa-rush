@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { useToast } from "@/components/ui/toast";
 import { Label } from "@/components/ui/label";
 import {
@@ -149,11 +150,14 @@ export function ExportsClient({
   return (
     <main className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">HQ Exports</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Generate national headquarters reports — membership, academic, financial, philanthropy, and the annual chapter report.
-          </p>
+        <div className="flex items-start gap-4">
+          <IconChip icon={FileSpreadsheet} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">HQ Exports</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Generate national headquarters reports — membership, academic, financial, philanthropy, and the annual chapter report.
+            </p>
+          </div>
         </div>
         {!canWrite && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -166,10 +170,8 @@ export function ExportsClient({
       {canWrite && (
         <Card className="border-border/80">
           <CardContent className="p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-phisig-red/10 text-phisig-red flex items-center justify-center">
-                <FileSpreadsheet className="h-5 w-5" />
-              </div>
+            <div className="flex items-center gap-3">
+              <IconChip icon={FileSpreadsheet} tone="brand" size="md" />
               <div>
                 <h2 className="text-base font-semibold leading-none">Run a New Export</h2>
                 <p className="text-xs text-muted-foreground mt-1">Reports generate immediately and are saved to the run history below.</p>
@@ -230,7 +232,7 @@ export function ExportsClient({
       {runs.length === 0 ? (
         <Card className="text-center py-12 border-dashed bg-muted/20">
           <CardContent className="space-y-3">
-            <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto" />
+            <IconChip icon={FileSpreadsheet} tone="muted" size="lg" className="mx-auto" />
             <h3 className="text-lg font-semibold">No Exports Yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {canWrite

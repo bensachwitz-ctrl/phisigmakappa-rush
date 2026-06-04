@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { useToast } from "@/components/ui/toast";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -336,11 +337,14 @@ export function ServiceClient({
   return (
     <main className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Philanthropy &amp; Service</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review member service-hour submissions, manage service events, and maintain partner organizations.
-          </p>
+        <div className="flex items-start gap-4">
+          <IconChip icon={HeartHandshake} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Philanthropy &amp; Service</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review member service-hour submissions, manage service events, and maintain partner organizations.
+            </p>
+          </div>
         </div>
         {!canWrite && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -438,7 +442,7 @@ export function ServiceClient({
           ) : filteredHours.length === 0 ? (
             <Card className="text-center py-12 border-dashed bg-muted/20">
               <CardContent className="space-y-3">
-                <HeartHandshake className="h-10 w-10 text-muted-foreground mx-auto" />
+                <IconChip icon={HeartHandshake} tone="muted" size="lg" className="mx-auto" />
                 <h3 className="text-lg font-semibold">
                   {statusFilter === "submitted" ? "Queue is clear" : "No records"}
                 </h3>
@@ -541,7 +545,7 @@ export function ServiceClient({
           {events.length === 0 ? (
             <Card className="text-center py-12 border-dashed bg-muted/20">
               <CardContent className="space-y-3">
-                <Calendar className="h-10 w-10 text-muted-foreground mx-auto" />
+                <IconChip icon={Calendar} tone="muted" size="lg" className="mx-auto" />
                 <h3 className="text-lg font-semibold">No Service Events</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                   Create your first service event so members can log hours against it.
@@ -616,7 +620,7 @@ export function ServiceClient({
           {partners.length === 0 ? (
             <Card className="text-center py-12 border-dashed bg-muted/20">
               <CardContent className="space-y-3">
-                <Building2 className="h-10 w-10 text-muted-foreground mx-auto" />
+                <IconChip icon={Building2} tone="muted" size="lg" className="mx-auto" />
                 <h3 className="text-lg font-semibold">No Partner Organizations</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                   Add the nonprofits and community partners your chapter volunteers with.

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { useToast } from "@/components/ui/toast";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, Upload, Trash2, Loader2, FileText, Download, FolderOpen,
-  UploadCloud, File as FileIcon,
+  UploadCloud, File as FileIcon, BookMarked,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -243,11 +244,14 @@ export function LibraryClient({
   return (
     <main className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Document Library</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Upload and organize chapter documents — bylaws, policies, forms, and training materials.
-          </p>
+        <div className="flex items-start gap-4">
+          <IconChip icon={BookMarked} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Document Library</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload and organize chapter documents — bylaws, policies, forms, and training materials.
+            </p>
+          </div>
         </div>
         {canWrite ? (
           <Button onClick={openUpload}>
@@ -304,7 +308,7 @@ export function LibraryClient({
       {filtered.length === 0 ? (
         <Card className="text-center py-12 border-dashed bg-muted/20">
           <CardContent className="space-y-3">
-            <FolderOpen className="h-10 w-10 text-muted-foreground mx-auto" />
+            <IconChip icon={FolderOpen} tone="muted" size="lg" className="mx-auto" />
             <h3 className="text-lg font-semibold">
               {docs.length === 0 ? "No Documents Yet" : "No Matching Documents"}
             </h3>

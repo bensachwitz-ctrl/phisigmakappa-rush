@@ -2,14 +2,16 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
+import { IconChip } from "@/components/ui/icon-chip";
+import { LivePreview } from "@/components/onboard/live-preview";
+import { SuccessState } from "@/components/onboard/success-state";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
-  Building2, Palette, Mail, ShieldCheck, Rocket, User, Lock,
+  Building2, Palette, Mail, Rocket, User, Lock, AlertCircle, Wand2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,11 @@ export default function OnboardWizard() {
   const { push } = useToast();
   const [step, setStep] = React.useState<StepId>("identity");
   const [busy, setBusy] = React.useState(false);
+  const [launched, setLaunched] = React.useState(false);
+  const [liveUrl, setLiveUrl] = React.useState("");
+  // Inline, per-field validation hints layered on top of the toast errors so
+  // the user sees exactly which input needs attention without losing the toast.
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   // Identity State — start EMPTY so a new chapter never publishes Phi Sig's
   // real identity by skimming the form. Placeholders show the reference values
@@ -65,31 +72,48 @@ export default function OnboardWizard() {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   function validateStep(currentStep: StepId): boolean {
+    const e: Record<string, string> = {};
     if (currentStep === "identity") {
-      if (!fraternityName.trim() || !greekLetters.trim() || !schoolName.trim() || !subdomain.trim()) {
+      if (!fraternityName.trim()) e.fraternityName = "Required";
+      if (!greekLetters.trim()) e.greekLetters = "Required";
+      if (!schoolName.trim()) e.schoolName = "Required";
+      if (!subdomain.trim()) e.subdomain = "Required";
+      if (Object.keys(e).length) {
+        setErrors(e);
         push({ title: "Validation Error", description: "Fraternity name, Greek letters, school name, and desired subdomain are required.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "brand") {
-      if (!primaryColor.trim() || !darkColor.trim() || !softColor.trim()) {
+      if (!primaryColor.trim()) e.primaryColor = "Required";
+      if (!darkColor.trim()) e.darkColor = "Required";
+      if (!softColor.trim()) e.softColor = "Required";
+      if (Object.keys(e).length) {
+        setErrors(e);
         push({ title: "Validation Error", description: "All three brand colors are required.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "contact") {
       if (!rushEmail.trim()) {
+        setErrors({ rushEmail: "Required" });
         push({ title: "Validation Error", description: "Rush contact email is required.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "admin") {
-      if (!adminName.trim() || !adminEmail.trim() || !adminPassword.trim()) {
+      if (!adminName.trim()) e.adminName = "Required";
+      if (!adminEmail.trim()) e.adminEmail = "Required";
+      if (!adminPassword.trim()) e.adminPassword = "Required";
+      if (Object.keys(e).length) {
+        setErrors(e);
         push({ title: "Validation Error", description: "Admin name, email, and password are required.", variant: "destructive" });
         return false;
       }
       if (adminPassword.length < 8) {
+        setErrors({ adminPassword: "Must be at least 8 characters" });
         push({ title: "Validation Error", description: "Password must be at least 8 characters.", variant: "destructive" });
         return false;
       }
     }
+    setErrors({});
     return true;
   }
 
@@ -102,6 +126,7 @@ export default function OnboardWizard() {
 
   function goPrev() {
     if (stepIndex > 0) {
+      setErrors({});
       setStep(STEPS[stepIndex - 1].id);
     }
   }
@@ -145,72 +170,102 @@ export default function OnboardWizard() {
 
       push({ title: "Setup Complete", description: "Your site has been successfully initialized!", variant: "success" });
       if (data.url) {
-        window.location.href = data.url;
+        // Show the celebratory "your site is live" beat, then hand off to the
+        // freshly provisioned subdomain (preserves the original redirect).
+        setLiveUrl(data.url);
+        setLaunched(true);
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 2200);
       } else {
         router.push("/admin");
         router.refresh();
       }
     } catch (err: any) {
       push({ title: "Launch Failed", description: err.message || "Something went wrong.", variant: "destructive" });
-    } finally {
       setBusy(false);
     }
   }
 
+  // ── Celebratory success takeover ──────────────────────────────────────────
+  if (launched) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <GlassPanel>
+          <SuccessState fraternityName={fraternityName} greekLetters={greekLetters} url={liveUrl} />
+        </GlassPanel>
+      </div>
+    );
+  }
+
+  const StepIcon = STEPS[stepIndex].icon;
+
   return (
-    <div className="space-y-6">
-      {/* Header Info */}
-      <div className="text-center mb-8">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-maroon-700 bg-maroon-100/50 px-3 py-1 rounded-full">
-          <Sparkles className="h-3.5 w-3.5" /> Platform Initialization
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 backdrop-blur-md">
+          <Sparkles className="h-3.5 w-3.5" /> Greekstack
         </span>
-        <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-maroon-900">
-          Setup Your White-Label Portal
+        <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          Your chapter site, <span className="gs-gradient-text">live in seconds</span>
         </h1>
-        <p className="mt-2 text-sm text-maroon-700 max-w-lg mx-auto">
-          Welcome to Greekstack. Complete these details to initialize your chapter's production database and brand styles instantly.
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
+          Answer a few quick questions and watch your fully branded website take shape in
+          real time. Hit launch and it goes live instantly — no code, no waiting.
         </p>
       </div>
 
-      {/* Step Rail */}
-      <ol className="grid grid-cols-5 gap-2" role="list" aria-label="Setup progress">
+      {/* Progress rail */}
+      <ol className="mx-auto grid max-w-4xl grid-cols-5 gap-2 sm:gap-3" role="list" aria-label="Setup progress">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const current = s.id === step;
           const done = stepIndex > i;
+          const reachable = i <= stepIndex;
           return (
             <li key={s.id}>
               <button
                 type="button"
                 onClick={() => {
-                  // Only allow jumping back to steps already verified
-                  if (i < stepIndex) setStep(s.id);
+                  if (i < stepIndex) {
+                    setErrors({});
+                    setStep(s.id);
+                  }
                 }}
-                disabled={i > stepIndex}
+                disabled={i > stepIndex || busy}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "w-full flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center transition-all focus:outline-none focus:ring-2 focus:ring-maroon-700/40",
-                  current && "border-maroon-700 bg-white/90 shadow-md",
-                  done && "border-emerald-300 bg-emerald-50/50",
-                  !current && !done && "border-maroon-100 bg-white/40 opacity-60 cursor-not-allowed"
+                  "group flex w-full flex-col items-center gap-2 rounded-2xl border p-2.5 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 sm:p-3",
+                  current && "border-indigo-400/50 bg-white/[0.07] shadow-lg shadow-indigo-950/40",
+                  done && "border-emerald-400/30 bg-emerald-500/[0.08]",
+                  !current && !done && "border-white/10 bg-white/[0.02]",
+                  !reachable && "cursor-not-allowed opacity-50",
+                  reachable && !current && "hover:border-white/20 hover:bg-white/[0.05]"
                 )}
               >
-                <span className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                  current && "bg-maroon-700 text-white shadow-sm",
-                  done && "bg-emerald-500 text-white",
-                  !current && !done && "bg-maroon-100 text-maroon-800"
-                )}>
-                  {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-                </span>
-                <span className={cn(
-                  "text-[10px] font-semibold tracking-wide uppercase hidden md:block",
-                  current ? "text-maroon-900" : done ? "text-emerald-800" : "text-maroon-600"
-                )}>
-                  Step {i + 1}
-                </span>
-                <span className="text-[10px] text-maroon-500 line-clamp-1 hidden sm:block">
+                {done ? (
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </span>
+                ) : (
+                  <IconChip icon={Icon} tone={current ? "platform" : "muted"} size="md" />
+                )}
+                <span
+                  className={cn(
+                    "hidden text-[10px] font-bold uppercase tracking-wide sm:block",
+                    current ? "text-indigo-200" : done ? "text-emerald-300" : "text-slate-400"
+                  )}
+                >
                   {s.label}
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] font-semibold uppercase tracking-wide sm:hidden",
+                    current ? "text-indigo-200" : done ? "text-emerald-300" : "text-slate-500"
+                  )}
+                >
+                  {i + 1}
                 </span>
               </button>
             </li>
@@ -218,206 +273,302 @@ export default function OnboardWizard() {
         })}
       </ol>
 
-      {/* Step content */}
-      <Card className="backdrop-blur-md bg-white/75 border border-white/40 shadow-xl rounded-2xl overflow-hidden">
-        <CardContent className="p-6 sm:p-8 space-y-6">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-maroon-900 flex items-center gap-2">
-              {React.createElement(STEPS[stepIndex].icon, { className: "h-5 w-5 text-maroon-700" })}
-              {STEPS[stepIndex].label}
-            </h2>
-            <p className="mt-1.5 text-sm text-maroon-700">{STEPS[stepIndex].blurb}</p>
-          </div>
-
-          <div className="h-px bg-maroon-100" />
-
-           {step === "identity" && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <WField label="Desired Subdomain" value={subdomain} onChange={setSubdomain} placeholder="phisig-usc" />
-                <p className="text-[10px] text-maroon-600 mt-1">
-                  Your white-label website will be accessible at: <strong>{subdomain || "your-subdomain"}.greeklifesystems.vercel.app</strong>
-                </p>
-              </div>
-              <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" />
-              <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
-              <WField label="Fraternity Letters (Glyphs/Abbr)" value={fraternityLetters} onChange={setFraternityLetters} placeholder="ΦΣΚ" />
-              <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" />
-              <WField label="Greek Letters (Glyphs)" value={greekLettersGlyphs} onChange={setGreekLettersGlyphs} placeholder="ΓΤ" />
-              <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" />
-              <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
-              <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
-              <WField label="Fraternity Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
-            </div>
-          )}
-
-          {step === "brand" && (
-            <div className="space-y-4">
-              <p className="text-xs text-maroon-700 leading-relaxed">
-                Configure color hex keys below. These colors will instantly propagate across the site root layout styles.
-              </p>
-              <div className="grid sm:grid-cols-3 gap-4">
-                <WColor label="Primary Theme Color" value={primaryColor} onChange={setPrimaryColor} fallback="#C8102E" />
-                <WColor label="Dark Gradient/Text Color" value={darkColor} onChange={setDarkColor} fallback="#A20D26" />
-                <WColor label="Soft Background Tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" />
-              </div>
-
-              {/* Real-time brand preview */}
-              <div className="mt-6 rounded-xl border border-maroon-100 p-4 bg-white/40 space-y-3">
-                <p className="text-xs font-semibold text-maroon-800 uppercase tracking-wider">Live Visual Palette Preview</p>
-                <div className="flex gap-2">
-                  <div className="flex-1 h-14 rounded-lg flex items-center justify-center text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: primaryColor }}>
-                    Primary
-                  </div>
-                  <div className="flex-1 h-14 rounded-lg flex items-center justify-center text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: darkColor }}>
-                    Dark Gradient
-                  </div>
-                  <div className="flex-1 h-14 rounded-lg flex items-center justify-center text-xs font-semibold border border-maroon-200 shadow-sm" style={{ backgroundColor: softColor, color: darkColor }}>
-                    Soft / Tint
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === "contact" && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <WField label="Recruitment Email Address" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" />
-              <WField label="Recruitment Phone Number" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" />
-              <WField label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" />
-              <WField label="Instagram Profile URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" />
-              <WField label="Chapter House Address" value={address} onChange={setAddress} placeholder="1525 College Street" />
-              <WField label="City, State & Zip Code" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
-            </div>
-          )}
-
-          {step === "admin" && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <WField label="Administrator Full Name" value={adminName} onChange={setAdminName} placeholder="Mark Laughery" />
-              </div>
-              <WField label="Admin Login Email" value={adminEmail} onChange={setAdminEmail} placeholder="admin@yourchapter.com" />
+      {/* Two-column: wizard + live preview */}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
+        {/* Wizard card */}
+        <GlassPanel>
+          <div className="space-y-6 p-6 sm:p-8">
+            <div className="flex items-start gap-3">
+              <IconChip icon={StepIcon} tone="platform" size="lg" className="shrink-0" />
               <div>
-                <Label htmlFor="admin-pw" className="mb-1.5 inline-block text-maroon-900 font-semibold text-sm">Admin Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-maroon-400" />
-                  <Input
-                    id="admin-pw"
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-9 bg-white/70 border-maroon-200 focus:border-maroon-700"
-                    required
-                  />
-                </div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  Step {stepIndex + 1} of {STEPS.length}
+                </p>
+                <h2 className="text-xl font-bold tracking-tight text-white">{STEPS[stepIndex].label}</h2>
+                <p className="mt-1 text-sm text-slate-300">{STEPS[stepIndex].blurb}</p>
               </div>
             </div>
-          )}
 
-          {step === "launch" && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
-                <p className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" /> System is Configured Properly.
-                </p>
-                <p className="mt-1 text-sm text-emerald-800 leading-relaxed">
-                  Your custom brand variables, contact endpoints, and initial administrator credentials are ready.
-                  Upon activation, this page will lock and redirect you to the management dashboard.
-                </p>
-              </div>
+            <div className="h-px bg-white/10" />
 
-              <div className="rounded-xl border border-maroon-100 p-4 bg-white/30 space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-maroon-900">Summary Verification</h3>
-                <div className="grid grid-cols-2 gap-y-2 text-xs">
-                  <div><span className="text-maroon-600">Chapter Name:</span> <span className="font-semibold text-maroon-900">{fraternityName} {greekLetters}</span></div>
-                  <div><span className="text-maroon-600">School:</span> <span className="font-semibold text-maroon-900">{schoolName} ({schoolShort})</span></div>
-                  <div><span className="text-maroon-600">Admin Email:</span> <span className="font-semibold text-maroon-900">{adminEmail}</span></div>
-                  <div><span className="text-maroon-600">Primary Color:</span> <span className="font-mono font-semibold" style={{ color: primaryColor }}>{primaryColor}</span></div>
+            {/* Step body — keyed so each step re-mounts and replays the entrance */}
+            <div key={step} className="animate-soft-enter">
+              {step === "identity" && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <WField
+                      label="Desired Subdomain"
+                      value={subdomain}
+                      onChange={setSubdomain}
+                      placeholder="phisig-usc"
+                      error={errors.subdomain}
+                      required
+                      hint={
+                        <>
+                          Your site will live at{" "}
+                          <strong className="font-semibold text-indigo-200">
+                            {(subdomain.trim() || "your-subdomain")}.greeklifesystems.vercel.app
+                          </strong>
+                        </>
+                      }
+                    />
+                  </div>
+                  <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
+                  <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+                  <WField label="Fraternity Letters (Glyphs/Abbr)" value={fraternityLetters} onChange={setFraternityLetters} placeholder="ΦΣΚ" />
+                  <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
+                  <WField label="Greek Letters (Glyphs)" value={greekLettersGlyphs} onChange={setGreekLettersGlyphs} placeholder="ΓΤ" />
+                  <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
+                  <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
+                  <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
+                  <WField label="Fraternity Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
                 </div>
-              </div>
+              )}
+
+              {step === "brand" && (
+                <div className="space-y-5">
+                  <p className="text-sm leading-relaxed text-slate-300">
+                    Pick your colors and watch the preview update live. These propagate across
+                    your entire site the moment you launch.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <WColor label="Primary Theme Color" value={primaryColor} onChange={setPrimaryColor} fallback="#C8102E" error={errors.primaryColor} />
+                    <WColor label="Dark Gradient/Text Color" value={darkColor} onChange={setDarkColor} fallback="#A20D26" error={errors.darkColor} />
+                    <WColor label="Soft Background Tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" error={errors.softColor} />
+                  </div>
+                  <p className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Wand2 className="h-3.5 w-3.5 text-indigo-300" /> See it all come together in the
+                    live preview{" "}
+                    <span className="lg:hidden">below</span>
+                    <span className="hidden lg:inline">on the right</span>.
+                  </p>
+                </div>
+              )}
+
+              {step === "contact" && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <WField label="Recruitment Email Address" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" error={errors.rushEmail} required />
+                  <WField label="Recruitment Phone Number" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" />
+                  <WField label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" />
+                  <WField label="Instagram Profile URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" />
+                  <WField label="Chapter House Address" value={address} onChange={setAddress} placeholder="1525 College Street" />
+                  <WField label="City, State & Zip Code" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
+                </div>
+              )}
+
+              {step === "admin" && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <WField label="Administrator Full Name" value={adminName} onChange={setAdminName} placeholder="Mark Laughery" error={errors.adminName} required />
+                  </div>
+                  <WField label="Admin Login Email" value={adminEmail} onChange={setAdminEmail} placeholder="admin@yourchapter.com" error={errors.adminEmail} required />
+                  <div>
+                    <FieldLabel htmlFor="admin-pw" required>Admin Password</FieldLabel>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        id="admin-pw"
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className={cn(
+                          "border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+                          errors.adminPassword && "border-rose-400/60 focus-visible:ring-rose-400/50"
+                        )}
+                        aria-invalid={errors.adminPassword ? true : undefined}
+                        required
+                      />
+                    </div>
+                    {errors.adminPassword ? (
+                      <FieldError>{errors.adminPassword}</FieldError>
+                    ) : (
+                      <p className="mt-1.5 text-xs text-slate-400">Minimum 8 characters.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {step === "launch" && (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] p-4">
+                    <p className="flex items-center gap-2 text-sm font-bold text-emerald-200">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Everything is ready to launch.
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-100/80">
+                      Hit the button below and Greekstack provisions your branded site, admin
+                      dashboard, and database instantly — then takes you straight to it.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Summary</h3>
+                    <div className="mt-3 grid grid-cols-1 gap-y-2.5 text-sm sm:grid-cols-2">
+                      <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "—"}</SummaryRow>
+                      <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "—"}</SummaryRow>
+                      <SummaryRow label="Site URL">
+                        <span className="font-mono text-indigo-200">{(subdomain.trim() || "your-chapter")}.greeklifesystems.vercel.app</span>
+                      </SummaryRow>
+                      <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="h-px bg-maroon-100" />
+            <div className="h-px bg-white/10" />
 
-          {/* Footer Controls */}
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={goPrev}
-              disabled={stepIndex === 0 || busy}
-              className="text-maroon-700 hover:text-maroon-900 hover:bg-maroon-50"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            
-            {!isLastStep ? (
+            {/* Footer controls */}
+            <div className="flex items-center justify-between gap-3">
               <Button
-                onClick={goNext}
-                className="bg-maroon-700 hover:bg-maroon-800 text-white shadow-sm flex items-center"
+                type="button"
+                variant="glass"
+                onClick={goPrev}
+                disabled={stepIndex === 0 || busy}
+                className="text-slate-200"
               >
-                Continue <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronLeft className="mr-1 h-4 w-4" /> Back
               </Button>
-            ) : (
-              <Button
-                onClick={handleLaunch}
-                disabled={busy}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center"
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Rocket className="h-4 w-4 mr-1.5" />}
-                Activate Portal
-              </Button>
-            )}
+
+              {!isLastStep ? (
+                <Button type="button" variant="platform" size="lg" onClick={goNext} className="gs-sheen">
+                  Continue <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="platform"
+                  size="xl"
+                  onClick={handleLaunch}
+                  disabled={busy}
+                  className="gs-sheen"
+                >
+                  {busy ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" /> Launch My Site
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </GlassPanel>
+
+        {/* Live preview */}
+        <LivePreview
+          fraternityName={fraternityName}
+          fraternityShort={fraternityShort}
+          greekLetters={greekLetters}
+          greekLettersGlyphs={greekLettersGlyphs}
+          fraternityLetters={fraternityLetters}
+          schoolName={schoolName}
+          schoolShort={schoolShort}
+          primaryColor={primaryColor}
+          darkColor={darkColor}
+          softColor={softColor}
+          subdomain={subdomain}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── Local presentational helpers ──────────────────────────────────────────── */
+
+function GlassPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-indigo-950/30 ring-1 ring-white/5 backdrop-blur-xl">
+      {children}
+    </div>
+  );
+}
+
+function FieldLabel({
+  htmlFor, children, required,
+}: {
+  htmlFor: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <Label htmlFor={htmlFor} className="mb-1.5 inline-flex items-center gap-1 text-sm font-semibold text-slate-200">
+      {children}
+      {required && <span className="text-rose-400" aria-hidden="true">*</span>}
+    </Label>
+  );
+}
+
+function FieldError({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-300">
+      <AlertCircle className="h-3.5 w-3.5" /> {children}
+    </p>
+  );
+}
+
+function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <span className="text-slate-400">{label}: </span>
+      <span className="font-semibold text-white">{children}</span>
     </div>
   );
 }
 
 function WField({
-  label, value, onChange, placeholder,
+  label, value, onChange, placeholder, error, required, hint,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  error?: string;
+  required?: boolean;
+  hint?: React.ReactNode;
 }) {
   const id = React.useId();
   return (
     <div>
-      <Label htmlFor={id} className="mb-1.5 inline-block text-maroon-900 font-semibold text-sm">{label}</Label>
+      <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>
       <Input
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-white/70 border-maroon-200 focus:border-maroon-700 text-maroon-900"
+        aria-invalid={error ? true : undefined}
+        className={cn(
+          "border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+          error && "border-rose-400/60 focus-visible:ring-rose-400/50"
+        )}
       />
+      {error ? <FieldError>{error}</FieldError> : hint ? <p className="mt-1.5 text-xs text-slate-400">{hint}</p> : null}
     </div>
   );
 }
 
 function WColor({
-  label, value, onChange, fallback,
+  label, value, onChange, fallback, error,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   fallback: string;
+  error?: string;
 }) {
   const id = React.useId();
   return (
     <div>
-      <Label htmlFor={id} className="mb-1.5 inline-block text-maroon-900 font-semibold text-sm">{label}</Label>
+      <FieldLabel htmlFor={id} required>{label}</FieldLabel>
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={value || fallback}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-12 rounded-lg border border-maroon-200 cursor-pointer p-0.5 bg-white shadow-sm"
+          className="h-11 w-12 cursor-pointer rounded-lg border border-white/10 bg-white/5 p-0.5 shadow-sm"
           aria-label={`${label} Color Picker`}
         />
         <Input
@@ -425,9 +576,14 @@ function WColor({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={fallback}
-          className="font-mono bg-white/70 border-maroon-200 focus:border-maroon-700 text-maroon-900"
+          aria-invalid={error ? true : undefined}
+          className={cn(
+            "border-white/10 bg-white/5 font-mono text-white placeholder:text-slate-500 focus-visible:ring-indigo-400/60",
+            error && "border-rose-400/60 focus-visible:ring-rose-400/50"
+          )}
         />
       </div>
+      {error ? <FieldError>{error}</FieldError> : null}
     </div>
   );
 }

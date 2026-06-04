@@ -1,241 +1,576 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AnimatedBackground } from "@/components/ui/animated-background";
+import { IconChip } from "@/components/ui/icon-chip";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { Reveal, CountUp } from "@/components/site/reveal";
 import {
-  Sparkles, Shield, Users, CreditCard, Calendar, BarChart3,
-  Flame, CheckCircle2, ArrowRight, Zap, GraduationCap, Building2,
+  Sparkles,
+  Users,
+  Wallet,
+  CalendarCheck,
+  ShieldCheck,
+  Flag,
+  Palette,
+  HeartHandshake,
+  CheckCircle2,
+  ArrowRight,
+  Rocket,
+  Globe,
+  LayoutDashboard,
+  TrendingUp,
+  Lock,
+  type LucideIcon,
 } from "lucide-react";
+
+/* ────────────────────────────────────────────────────────────────────────
+   GREEKSTACK — apex marketing landing (no-subdomain).
+   Platform brand: deep ink + indigo→violet→cyan gradient accents. This sells
+   the SaaS itself; it never renders a specific chapter's data.
+   Built on the shared foundation: <AnimatedBackground>, <IconChip>, <Button>,
+   plus the gs-gradient-text / gs-sheen utilities and the Reveal/CountUp
+   scroll primitives. Light-surfaced for WCAG (the app is color-scheme: light).
+──────────────────────────────────────────────────────────────────────── */
+
+const NAV_LINKS = [
+  { href: "#features", label: "Features" },
+  { href: "#how", label: "How it works" },
+  { href: "#proof", label: "Why Greekstack" },
+];
+
+const FEATURES: { icon: LucideIcon; title: string; desc: string; span?: boolean }[] = [
+  {
+    icon: Users,
+    title: "Recruitment pipeline",
+    desc: "QR check-in for PNMs, a Kanban rush funnel, anonymous brother voting, and double-opt-in SMS that texts rushees the schedule the moment events go live.",
+    span: true,
+  },
+  {
+    icon: Wallet,
+    title: "Automated dues",
+    desc: "Stripe-powered dues with treasurer payouts, auto-reconciled ledgers, reminders, and payment plans — collected without the group-chat nagging.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Events & calendar",
+    desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Officer RBAC",
+    desc: "Granular role-based access for President, Treasurer, Recruitment, and Risk — everyone sees exactly what they should, nothing more.",
+  },
+  {
+    icon: Flag,
+    title: "Anti-hazing & incident reporting",
+    desc: "A zero-tolerance, anonymous incident intake with an audit log and mandatory officer acknowledgments — compliance you can actually prove.",
+  },
+  {
+    icon: Palette,
+    title: "White-label branding",
+    desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Alumni & donations",
+    desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
+    span: true,
+  },
+];
+
+const STEPS: { icon: LucideIcon; step: string; title: string; desc: string }[] = [
+  {
+    icon: Rocket,
+    step: "01",
+    title: "Sign up",
+    desc: "Create your account and claim a chapter subdomain. No credit card, no install — you're in within a minute.",
+  },
+  {
+    icon: Palette,
+    step: "02",
+    title: "Brand it",
+    desc: "Drop in your letters, colors, and crest. Every page, email, and portal instantly re-skins to your chapter.",
+  },
+  {
+    icon: Globe,
+    step: "03",
+    title: "Go live",
+    desc: "Publish your fully-branded recruitment + management site and start collecting PNMs and dues the same day.",
+  },
+];
+
+const STATS: { value: number; suffix?: string; prefix?: string; decimals?: number; label: string }[] = [
+  { value: 60, suffix: "s", label: "From sign-up to a live, branded site" },
+  { value: 100, suffix: "%", label: "White-label — your brand, not ours" },
+  { value: 12, suffix: "+", label: "Operations modules in every plan" },
+  { value: 0, prefix: "$", label: "To get started — no setup fee" },
+];
 
 export default function MarketingLandingPage() {
   return (
-    <div className="min-h-screen bg-[#0B0B0C] text-white overflow-hidden relative selection:bg-maroon-700 selection:text-white">
-      {/* Dynamic Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-maroon-900/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-red-900/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-10 left-1/3 w-[600px] h-[600px] bg-maroon-950/15 rounded-full blur-[130px] pointer-events-none" />
-
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0B0B0C]/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <GreekstackLogo className="h-8 w-8 text-red-500" />
-            <span className="font-display font-bold text-lg tracking-tight bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent">
-              Greekstack
-            </span>
-          </div>
-          <nav className="flex items-center gap-4">
-            <Link href="#features" className="text-sm text-white/70 hover:text-white transition-colors">
-              Features
-            </Link>
-            <Link href="#pricing" className="text-sm text-white/70 hover:text-white transition-colors">
-              Pricing
-            </Link>
-            <Button asChild variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/5 border border-white/10">
-              <Link href="/onboard">Get Started</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="container pt-20 pb-16 text-center relative z-10">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-400 mb-6 shadow-lg backdrop-blur-sm animate-pulse-slow">
-          <Sparkles className="h-3.5 w-3.5" /> Next-Gen Greek Life Operations
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.05] bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
-          The flawless white-label SaaS built for Greek chapters.
-        </h1>
-        <p className="mt-6 text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
-          Greekstack coordinates recruitment pipelines, automated dues collection, anti-hazing reporting, and officer management on a single multitenant operating footprint. Set up in 60 seconds.
-        </p>
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white border border-red-500 shadow-lg shadow-red-900/20 font-semibold px-8">
-            <Link href="/onboard" className="flex items-center gap-2">
-              Launch Your Chapter <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold px-8">
-            <Link href="#features">Explore Modules</Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Dashboard Preview Widget */}
-      <section className="container pb-20 relative z-10">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md shadow-2xl max-w-5xl mx-auto">
-          <div className="rounded-xl border border-white/10 bg-[#0B0B0C] overflow-hidden aspect-[16/9] relative flex flex-col">
-            <div className="h-10 border-b border-white/10 bg-white/[0.02] flex items-center px-4 justify-between shrink-0">
-              <div className="flex gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-white/10" />
-                <span className="w-3 h-3 rounded-full bg-white/10" />
-                <span className="w-3 h-3 rounded-full bg-white/10" />
-              </div>
-              <span className="text-[10px] text-white/40 font-mono tracking-wider">demo.greekstack.com/admin</span>
-              <span className="w-12" />
-            </div>
-            <div className="flex-1 p-6 grid grid-cols-[200px_1fr] gap-6 text-left">
-              <div className="space-y-2 border-r border-white/5 pr-4">
-                <span className="block text-[10px] font-bold tracking-widest text-white/30 uppercase mb-4">GREEKSTACK APPS</span>
-                <span className="flex items-center gap-2 text-xs font-semibold bg-white/5 text-white px-3 py-2 rounded-lg"><Users className="h-3.5 w-3.5 text-red-500" /> Rush Pipeline</span>
-                <span className="flex items-center gap-2 text-xs text-white/50 px-3 py-2 rounded-lg"><CreditCard className="h-3.5 w-3.5" /> Dues &amp; Billing</span>
-                <span className="flex items-center gap-2 text-xs text-white/50 px-3 py-2 rounded-lg"><Calendar className="h-3.5 w-3.5" /> Events &amp; Attendance</span>
-                <span className="flex items-center gap-2 text-xs text-white/50 px-3 py-2 rounded-lg"><Shield className="h-3.5 w-3.5" /> Risk Management</span>
-              </div>
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold">Fall Recruitment Funnel</h3>
-                    <p className="text-xs text-white/40">Real-time rushee pipeline status and activity logs.</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-400 border border-green-500/20">
-                    Active Cycle
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                    <span className="text-[10px] text-white/40 block">TOTAL PNMS</span>
-                    <span className="text-2xl font-bold mt-1 block">184</span>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                    <span className="text-[10px] text-white/40 block">ACTIVE RUSHEES</span>
-                    <span className="text-2xl font-bold mt-1 block">62</span>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                    <span className="text-[10px] text-white/40 block">BIDS EXTENDED</span>
-                    <span className="text-2xl font-bold mt-1 block">28</span>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                    <span className="text-[10px] text-white/40 block">Dues Collections</span>
-                    <span className="text-2xl font-bold mt-1 block text-green-400">$18.4k</span>
-                  </div>
-                </div>
-                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-red-600/10 border border-red-500/20 flex items-center justify-center font-bold text-red-500 text-sm">JC</div>
-                    <div>
-                      <p className="text-xs font-semibold">James Carter</p>
-                      <p className="text-[10px] text-white/40">Status: Bid Accepted · SOPHOMORE · FINANCE</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-white/30">Just Now</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="container py-24 border-t border-white/10 relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Four Powerful Modules. One Shared Footprint.</h2>
-          <p className="mt-4 text-white/60">Every feature is dynamically optimized to support your local chapter branding and school regulations.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          <FeatureCard
-            icon={Users}
-            title="Recruitment Pipeline"
-            desc="PNM check-in via QR, double opt-in TCPA-compliant SMS notifications, and anonymous voting dashboard for brothers."
-          />
-          <FeatureCard
-            icon={CreditCard}
-            title="Stripe Connect Splits"
-            desc="Connected accounts for treasurers. Platform takes a tiny split (1.5% cut) on top of merchant processing to keep bank settlements simple and automatic."
-          />
-          <FeatureCard
-            icon={Shield}
-            title="Risk Management &amp; Hazing Portal"
-            desc="Zero-tolerance anti-hazing reporting form, anonymous incident intake log, and mandatory officer review acknowledgments."
-          />
-          <FeatureCard
-            icon={Calendar}
-            title="Chapter Management"
-            desc="Sunday meeting roster check-in, chore rotation wheels, scholarship hour logging, and local Google Calendar event syncing."
-          />
-        </div>
-      </section>
-
-      {/* Monetization / Pricing */}
-      <section id="pricing" className="container py-24 border-t border-white/10 relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Clear, Flexible Billing Tiers</h2>
-          <p className="mt-4 text-white/60">Choose the integration model that aligns with your chapter budget.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Flat SaaS Tier */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-8 flex flex-col justify-between backdrop-blur-sm">
-            <div>
-              <span className="inline-block px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-semibold tracking-wider uppercase text-white/80">Flat Subscription</span>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-4xl font-bold">$79</span>
-                <span className="text-white/40 text-sm">/ month</span>
-              </div>
-              <p className="mt-4 text-sm text-white/50 leading-relaxed">
-                Paid annually or monthly. Perfect for established chapters who handle high-volume member dues and prefer static pricing.
-              </p>
-              <ul className="mt-6 space-y-3 text-xs text-white/70">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-500" /> Fully white-labeled chapter site</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-500" /> Full admin suite &amp; dashboards</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-500" /> Resend email &amp; Twilio integration</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-500" /> Unlimited PNM signups &amp; voting</li>
-              </ul>
-            </div>
-            <Button asChild className="mt-8 bg-white text-black hover:bg-white/90">
-              <Link href="/onboard">Launch SaaS Instance</Link>
-            </Button>
-          </div>
-
-          {/* Dues split Tier */}
-          <div className="rounded-2xl border border-red-500/30 bg-red-950/5 p-8 flex flex-col justify-between backdrop-blur-sm relative">
-            <div className="absolute -top-3 right-6 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 border border-red-500">
-              Most Popular
-            </div>
-            <div>
-              <span className="inline-block px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-xs font-semibold tracking-wider uppercase text-red-400">Transactional Split</span>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-4xl font-bold">1.5%</span>
-                <span className="text-white/40 text-sm">/ dues transaction</span>
-              </div>
-              <p className="mt-4 text-sm text-white/50 leading-relaxed">
-                Zero setup cost or monthly operational fees. Platform takes a minor percentage split on card dues processed via Stripe Connect Express.
-              </p>
-              <ul className="mt-6 space-y-3 text-xs text-white/70">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-400" /> Zero upfront cost for the chapter</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-400" /> Direct Stripe Connect treasurer routing</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-400" /> Automatic dues ledger reconciliation</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-red-400" /> All premium operations modules included</li>
-              </ul>
-            </div>
-            <Button asChild className="mt-8 bg-red-600 text-white hover:bg-red-700 border border-red-500">
-              <Link href="/onboard">Launch Connected Instance</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-10 bg-[#0B0B0C]">
-        <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
-          <p>© {new Date().getFullYear()} Greekstack. All rights reserved.</p>
-          <p>Instantly generated fraternity subdomains are secure and isolated.</p>
-        </div>
-      </footer>
+    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-indigo-500/20">
+      <SiteNav />
+      <main id="main">
+        <Hero />
+        <TrustBar />
+        <Features />
+        <HowItWorks />
+        <Proof />
+        <FinalCta />
+      </main>
+      <SiteFooter />
     </div>
   );
 }
 
-function FeatureCard({
-  icon: Icon, title, desc,
-}: { icon: React.ElementType; title: string; desc: string }) {
+/* ───────────────────────────── Nav ───────────────────────────── */
+
+function SiteNav() {
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 hover:bg-white/[0.02] hover:border-white/10 transition-all text-left">
-      <div className="h-10 w-10 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center mb-4">
-        <Icon className="h-5 w-5 text-red-500" />
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Greekstack home">
+          <GreekstackLogo className="h-8 w-8" />
+          <span className="text-lg font-bold tracking-tight gs-gradient-text">Greekstack</span>
+        </Link>
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link href="/admin/login">Sign in</Link>
+          </Button>
+          <Button asChild variant="platform" size="sm" className="gs-sheen">
+            <Link href="/onboard">
+              Create your chapter site
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
-      <h3 className="text-base font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-xs text-white/50 leading-relaxed">{desc}</p>
+    </header>
+  );
+}
+
+/* ───────────────────────────── Hero ───────────────────────────── */
+
+function Hero() {
+  return (
+    <AnimatedBackground variant="aurora-grid" tone="platform">
+      <section className="container relative z-10 pb-16 pt-20 sm:pb-24 sm:pt-28">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="animate-slide-up [animation-delay:40ms]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600 shadow-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              The white-label Greek-life platform
+            </span>
+          </div>
+
+          <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.06] tracking-tight animate-slide-up [animation-delay:120ms] sm:text-6xl">
+            Launch a fully-branded{" "}
+            <span className="gs-gradient-text">recruitment + chapter-management</span> site in
+            seconds.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground animate-slide-up [animation-delay:200ms] sm:text-lg">
+            Greekstack runs recruitment pipelines, automated dues, events, officer access, and
+            anti-hazing reporting on one multi-tenant platform — re-skinned to your letters and
+            colors, live the same day.
+          </p>
+
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
+            <Button asChild variant="platform" size="xl" className="gs-sheen w-full sm:w-auto">
+              <Link href="/onboard">
+                Create your chapter site
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto">
+              <Link href="#features">See what's inside</Link>
+            </Button>
+          </div>
+
+          <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> No credit card to start
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> Live in 60 seconds
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500" /> Cancel anytime
+            </span>
+          </p>
+        </div>
+
+        <Reveal delay={120} className="mx-auto mt-14 max-w-5xl sm:mt-16">
+          <ProductPreview />
+        </Reveal>
+      </section>
+    </AnimatedBackground>
+  );
+}
+
+/* A generic, platform-branded product preview. Deliberately uses placeholder
+   names and the Greekstack palette — it never shows a real chapter. */
+function ProductPreview() {
+  const nav = [
+    { icon: LayoutDashboard, label: "Overview", active: true },
+    { icon: Users, label: "Recruitment" },
+    { icon: Wallet, label: "Dues & billing" },
+    { icon: CalendarCheck, label: "Events" },
+    { icon: ShieldCheck, label: "Risk & safety" },
+  ];
+  const tiles = [
+    { label: "Active rushees", value: "62", tone: "text-foreground" },
+    { label: "Bids extended", value: "28", tone: "text-foreground" },
+    { label: "Dues collected", value: "$18.4k", tone: "text-emerald-600" },
+    { label: "Members", value: "147", tone: "text-foreground" },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-border bg-card/70 p-2 shadow-2xl shadow-indigo-500/10 backdrop-blur-sm sm:p-3">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        {/* Browser chrome */}
+        <div className="flex h-10 items-center justify-between border-b border-border bg-secondary/60 px-4">
+          <div className="flex gap-1.5" aria-hidden="true">
+            <span className="h-3 w-3 rounded-full bg-border" />
+            <span className="h-3 w-3 rounded-full bg-border" />
+            <span className="h-3 w-3 rounded-full bg-border" />
+          </div>
+          <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+            <Lock className="h-3 w-3" />
+            yourchapter.greekstack.app
+          </span>
+          <span className="w-12" aria-hidden="true" />
+        </div>
+
+        {/* App body */}
+        <div className="grid grid-cols-1 gap-0 sm:grid-cols-[210px_1fr]">
+          {/* Sidebar */}
+          <div className="hidden flex-col gap-1 border-r border-border bg-secondary/30 p-4 sm:flex">
+            <span className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Chapter HQ
+            </span>
+            {nav.map((n) => (
+              <span
+                key={n.label}
+                className={
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium " +
+                  (n.active
+                    ? "bg-gradient-to-r from-indigo-500/15 to-violet-500/10 text-indigo-700 ring-1 ring-indigo-500/20"
+                    : "text-muted-foreground")
+                }
+              >
+                <n.icon className="h-3.5 w-3.5" />
+                {n.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Main panel */}
+          <div className="space-y-5 p-5 text-left sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Fall recruitment</h3>
+                <p className="text-xs text-muted-foreground">Live pipeline &amp; chapter health</p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Active cycle
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {tiles.map((t) => (
+                <div key={t.label} className="rounded-xl border border-border bg-secondary/30 p-3.5">
+                  <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {t.label}
+                  </span>
+                  <span className={"mt-1 block text-2xl font-bold " + t.tone}>{t.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Funnel bar */}
+            <div className="rounded-xl border border-border bg-secondary/20 p-4">
+              <div className="mb-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="font-medium text-foreground">Pipeline conversion</span>
+                <span>62 of 184 PNMs</span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500"
+                  style={{ width: "62%" }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/* ─────────────────────────── Trust bar ─────────────────────────── */
+
+function TrustBar() {
+  return (
+    <section className="border-y border-border bg-secondary/30" aria-label="Highlights">
+      <div className="container">
+        <Reveal className="grid grid-cols-2 gap-x-6 gap-y-5 py-8 text-center md:grid-cols-4">
+          {[
+            { icon: Globe, label: "Custom subdomain per chapter" },
+            { icon: Lock, label: "Isolated, secure tenant data" },
+            { icon: Wallet, label: "Stripe dues & payouts built in" },
+            { icon: ShieldCheck, label: "Anti-hazing audit trail" },
+          ].map((b) => (
+            <div key={b.label} className="flex flex-col items-center gap-2">
+              <IconChip icon={b.icon} tone="platform" size="sm" />
+              <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
+            </div>
+          ))}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────── Features ──────────────────────────── */
+
+function Features() {
+  return (
+    <section id="features" className="container scroll-mt-20 py-20 sm:py-28">
+      <Reveal className="mx-auto max-w-2xl text-center">
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+          Everything a chapter runs on
+        </span>
+        <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          One platform. Every part of <span className="gs-gradient-text">chapter operations</span>.
+        </h2>
+        <p className="mt-4 text-pretty text-muted-foreground">
+          Recruitment to alumni giving — the tools your officers actually need, in a single
+          branded system instead of a dozen spreadsheets and group chats.
+        </p>
+      </Reveal>
+
+      <div className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURES.map((f, i) => (
+          <Reveal
+            key={f.title}
+            delay={i * 70}
+            className={f.span ? "sm:col-span-2 lg:col-span-1" : ""}
+          >
+            <FeatureCard {...f} />
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeatureCard({ icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
+  return (
+    <div className="group h-full rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
+      <IconChip icon={icon} tone="platform" size="md" />
+      <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+    </div>
+  );
+}
+
+/* ────────────────────────── How it works ────────────────────────── */
+
+function HowItWorks() {
+  return (
+    <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+            Live in three steps
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            From zero to a branded chapter site
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            No developers, no design agency, no months-long build. Just three steps.
+          </p>
+        </Reveal>
+
+        <div className="relative mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+          {/* connector line on desktop */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent md:block"
+          />
+          {STEPS.map((s, i) => (
+            <Reveal key={s.step} delay={i * 110}>
+              <div className="relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+                <div className="mx-auto flex justify-center">
+                  <IconChip icon={s.icon} tone="platform" size="lg" />
+                </div>
+                <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-indigo-500">
+                  STEP {s.step}
+                </span>
+                <h3 className="mt-1 text-lg font-semibold tracking-tight">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={120} className="mt-12 flex justify-center">
+          <Button asChild variant="platform" size="lg" className="gs-sheen">
+            <Link href="/onboard">
+              Create your chapter site
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────────── Proof ───────────────────────────── */
+
+function Proof() {
+  return (
+    <section id="proof" className="container scroll-mt-20 py-20 sm:py-28">
+      <Reveal className="mx-auto max-w-2xl text-center">
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
+          Why chapters choose Greekstack
+        </span>
+        <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          Built to make officers&apos; lives easier
+        </h2>
+      </Reveal>
+
+      <div className="mx-auto mt-14 grid max-w-5xl grid-cols-2 gap-6 lg:grid-cols-4">
+        {STATS.map((s, i) => (
+          <Reveal key={s.label} delay={i * 80}>
+            <div className="h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+              <span className="block text-4xl font-bold tracking-tight gs-gradient-text sm:text-5xl">
+                <CountUp
+                  value={s.value}
+                  prefix={s.prefix}
+                  suffix={s.suffix}
+                  decimals={s.decimals}
+                />
+              </span>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{s.label}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+
+      <Reveal delay={120} className="mx-auto mt-12 max-w-3xl">
+        <figure className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex justify-center">
+            <IconChip icon={TrendingUp} tone="platform" size="md" />
+          </div>
+          <blockquote className="text-pretty text-lg font-medium leading-relaxed sm:text-xl">
+            &ldquo;Recruitment, dues, and events used to live in five different apps. Greekstack put
+            the whole chapter on one branded site we set up in an afternoon.&rdquo;
+          </blockquote>
+          <figcaption className="mt-4 text-sm text-muted-foreground">
+            What chapter officers tell us after switching
+          </figcaption>
+        </figure>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ──────────────────────────── Final CTA ─────────────────────────── */
+
+function FinalCta() {
+  return (
+    <section className="container pb-24 pt-4">
+      <AnimatedBackground
+        variant="spotlight"
+        tone="platform"
+        className="overflow-hidden rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.07] via-violet-500/[0.05] to-cyan-500/[0.07]"
+      >
+        <Reveal className="relative z-10 px-6 py-16 text-center sm:px-12 sm:py-20">
+          <div className="mx-auto mb-5 flex justify-center">
+            <IconChip icon={Rocket} tone="platform" size="lg" />
+          </div>
+          <h2 className="mx-auto max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+            Launch your chapter on <span className="gs-gradient-text">Greekstack</span> today
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
+            Spin up a fully-branded recruitment and management site in seconds. No setup fee, no
+            developer, cancel anytime.
+          </p>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild variant="platform" size="xl" className="gs-sheen w-full sm:w-auto">
+              <Link href="/onboard">
+                Create your chapter site
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="glass" size="xl" className="w-full sm:w-auto">
+              <Link href="#features">Explore features</Link>
+            </Button>
+          </div>
+        </Reveal>
+      </AnimatedBackground>
+    </section>
+  );
+}
+
+/* ──────────────────────────── Footer ─────────────────────────── */
+
+function SiteFooter() {
+  return (
+    <footer className="border-t border-border bg-secondary/30">
+      <div className="container py-12">
+        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Greekstack home">
+            <GreekstackLogo className="h-7 w-7" />
+            <span className="text-base font-bold tracking-tight gs-gradient-text">Greekstack</span>
+          </Link>
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <Link
+              href="/privacy"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/onboard"
+              className="text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+            >
+              Get started
+            </Link>
+          </nav>
+        </div>
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
+          <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
+          <p>greeklifesystems.vercel.app</p>
+        </div>
+      </div>
+    </footer>
   );
 }

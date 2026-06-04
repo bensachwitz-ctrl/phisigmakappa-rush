@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
@@ -330,16 +331,19 @@ export function OfficersClient({
     <main className="container py-8 space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-            <ShieldCheck className="h-3 w-3" /> Roles & permissions
-          </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Officer permissions</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground max-w-2xl">
-            Define what each officer position can see and change, then assign brothers to those
-            positions for a term. Permissions take effect immediately the next time the brother
-            loads an admin page.
-          </p>
+        <div className="flex items-start gap-4">
+          <IconChip icon={ShieldCheck} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+              <ShieldCheck className="h-3 w-3" /> Roles &amp; permissions
+            </span>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Officer permissions</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-2xl">
+              Define what each officer position can see and change, then assign brothers to those
+              positions for a term. Permissions take effect immediately the next time the brother
+              loads an admin page.
+            </p>
+          </div>
         </div>
         <Button onClick={openAssign} disabled={activePositions.length === 0}>
           <UserPlus className="h-4 w-4" /> Assign a brother
@@ -389,9 +393,7 @@ export function OfficersClient({
         {positions.length === 0 ? (
           <Card className="border-dashed bg-muted/20">
             <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                <Sparkles className="h-6 w-6" />
-              </span>
+              <IconChip icon={Sparkles} tone="brand" size="lg" />
               <div className="space-y-1.5">
                 <p className="text-base font-semibold">No officer positions yet</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
@@ -474,9 +476,7 @@ export function OfficersClient({
         {assignments.length === 0 ? (
           <Card className="border-dashed bg-muted/20">
             <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                <Users className="h-5 w-5" />
-              </span>
+              <IconChip icon={Users} tone="muted" size="lg" />
               <p className="text-sm text-muted-foreground max-w-sm">
                 No officers assigned yet.{" "}
                 {activePositions.length === 0
