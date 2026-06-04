@@ -229,6 +229,14 @@ model Brother {
   major             String?
   position          String? // President, VP, Treasurer, Rush Chair, etc.
   pledgeClass       String? // e.g. "Alpha Phi" — pledge class name
+  // ── Member Directory tool (additive) ─────────────────────────────────
+  // Display-only profile fields surfaced in the new Member Directory. All
+  // nullable so existing rows are unaffected. `hometown` complements the
+  // Rush model's hometown; `gradYear` is a free-text year label kept
+  // distinct from the existing structured `graduationYear Int?` below
+  // (different shape — String vs Int — so both coexist without conflict).
+  hometown          String?
+  gradYear          String? // e.g. "2026" — free-text grad-year label for the directory
   bio               String?
   headshotUrl       String?
   duesPaid          Boolean   @default(false)
@@ -333,6 +341,47 @@ model DuesPayment {
   brother Brother @relation(fields: [brotherId], references: [id], onDelete: Cascade)
 
   @@index([brotherId, status])
+}
+
+// ── Treasury tool: budget lines ─────────────────────────────────────────────
+// Per-period budget line items the treasurer maintains — one row per
+// (category, label) for a given `period` (e.g. "2026-fall"). Amounts are
+// stored in integer cents to avoid float drift. `budgetedCents` is the plan,
+// `actualCents` is the running real spend, so the Treasury dashboard can show
+// budget vs. actual variance per line and rolled up by category.
+model BudgetLine {
+  id            String   @id @default(cuid())
+  category      String
+  label         String
+  budgetedCents Int      @default(0)
+  actualCents   Int      @default(0)
+  period        String // e.g. "2026-fall"
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ── Treasury tool: expense / reimbursement requests ─────────────────────────
+// A brother submits an expense (with an optional receipt) for reimbursement;
+// the treasurer moves it through PENDING → APPROVED → REIMBURSED (or DENIED).
+// `submittedById`/`submittedByName` and `decidedByName` are denormalized (not
+// FKs) so the row survives a roster change — consistent with the AuditLog /
+// RushImpression forensic-memory pattern elsewhere in this schema. Amounts in
+// integer cents.
+model Expense {
+  id              String    @id @default(cuid())
+  submittedById   String?
+  submittedByName String?
+  amountCents     Int
+  category        String
+  description     String
+  // PENDING | APPROVED | REIMBURSED | DENIED
+  status          String    @default("PENDING")
+  receiptUrl      String?
+  decidedByName   String?
+  decidedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Announcement {

@@ -130,6 +130,8 @@ CREATE TABLE "Brother" (
     "major" TEXT,
     "position" TEXT,
     "pledgeClass" TEXT,
+    "hometown" TEXT,
+    "gradYear" TEXT,
     "bio" TEXT,
     "headshotUrl" TEXT,
     "duesPaid" BOOLEAN NOT NULL DEFAULT false,
@@ -173,6 +175,39 @@ CREATE TABLE "DuesPayment" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "DuesPayment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable (Treasury tool — budget lines)
+CREATE TABLE IF NOT EXISTS "BudgetLine" (
+    "id" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "budgetedCents" INTEGER NOT NULL DEFAULT 0,
+    "actualCents" INTEGER NOT NULL DEFAULT 0,
+    "period" TEXT NOT NULL,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BudgetLine_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable (Treasury tool — expense / reimbursement requests)
+CREATE TABLE IF NOT EXISTS "Expense" (
+    "id" TEXT NOT NULL,
+    "submittedById" TEXT,
+    "submittedByName" TEXT,
+    "amountCents" INTEGER NOT NULL,
+    "category" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "receiptUrl" TEXT,
+    "decidedByName" TEXT,
+    "decidedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Expense_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1001,4 +1036,10 @@ ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_rushId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_alumniId_fkey" FOREIGN KEY ("alumniId") REFERENCES "AlumniProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AlterTable (Member Directory tool — additive Brother columns; idempotent so a
+-- re-run against a tenant schema created by an older copy of this DDL adds the
+-- new columns without error and never duplicates them).
+ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "hometown" TEXT;
+ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "gradYear" TEXT;
 
