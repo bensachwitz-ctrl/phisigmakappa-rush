@@ -113,8 +113,20 @@ export async function POST(req: Request) {
   // set, an unsigned/forged POST is rejected with 403 — this stops an attacker
   // from using this webhook to opt out arbitrary phone numbers.
   const signature = req.headers.get("x-twilio-signature");
-  // Twilio signs against the exact URL it called (incl. query string).
-  const url = new URL(req.url).toString();
+  // Twilio signs against the exact PUBLIC URL it called (incl. query string).
+  // Behind Vercel's proxy `req.url` reflects the internal host/proto, which
+  // would not match what Twilio signed → every real request 403s. Rebuild the
+  // public URL from the forwarded headers (proto + host the edge received),
+  // preserving the original path + query, and fall back to req.url's own host
+  // only when the forwarded headers are absent (e.g. direct/local calls).
+  const reqUrl = new URL(req.url);
+  const fwdProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const fwdHost =
+    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    req.headers.get("host")?.split(",")[0]?.trim();
+  const url = `${fwdProto || reqUrl.protocol.replace(/:$/, "")}://${
+    fwdHost || reqUrl.host
+  }${reqUrl.pathname}${reqUrl.search}`;
   if (!verifyTwilioSignature(url, allParams, signature)) {
     return new NextResponse("Forbidden", { status: 403 });
   }

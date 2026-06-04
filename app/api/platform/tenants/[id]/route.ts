@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { centralDb } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/superadmin";
+import { errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/platform/tenants/[id]";
 
 /**
  * Build the Postgres schema name for a tenant from its subdomain, sanitized
@@ -65,8 +68,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (err?.code === "P2025") {
       return NextResponse.json({ ok: false, error: "Chapter not found" }, { status: 404 });
     }
+    // Log the real error server-side; return a generic message to the client.
+    errorSink(err, { route: ROUTE, op: "PATCH", tenantId: id, outcome: "update_failed" });
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to update chapter" },
+      { ok: false, error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }
@@ -112,8 +117,10 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     if (err?.code === "P2025") {
       return NextResponse.json({ ok: false, error: "Chapter not found" }, { status: 404 });
     }
+    // Log the real error server-side; return a generic message to the client.
+    errorSink(err, { route: ROUTE, op: "DELETE", tenantId: id, outcome: "delete_failed" });
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to delete chapter" },
+      { ok: false, error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }

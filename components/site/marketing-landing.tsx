@@ -336,9 +336,10 @@ const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
    that fits how their chapter thinks about money, not a stripped-down tier:
      1. BASE PLATFORM — flat $50/mo, FIRST MONTH FREE (or $250/semester).
      2. DUES-SHARE   — $0 upfront; the standard rate is 3% of dues, and your
-        FIRST SEMESTER is half-price at 1.5% (a real intro discount, framed as a
-        discount OFF the baseline — never a hidden step-up). "Pay as your chapter
-        pays."
+        FIRST SEMESTER is 50% off at 1.5% (a real intro discount, framed as a
+        discount OFF the baseline — never a hidden step-up). Stated everywhere as
+        the canonical line "1.5% of dues your first semester (50% off), then 3% —
+        cancel anytime." "Pay as your chapter pays."
      3. CUSTOM BUILD — a tailored system on a custom base fee → /contact#custom.
    Every method unlocks the entire product (same features, same support); the
    "Dues-share" card is the recommended/most-popular one and wears the shimmer
@@ -387,11 +388,11 @@ const PLANS: Plan[] = [
     icon: IconPlanDuesShare,
     price: "3%",
     unit: "of dues",
-    introBadge: "Half-price intro",
-    priceNote: "$0 upfront · just 1.5% your first semester",
+    introBadge: "50% off intro",
+    priceNote: "1.5% of dues your first semester (50% off), then 3% — cancel anytime.",
     tagline: "Pay as your chapter pays. Nothing out of pocket to launch.",
     highlights: [
-      "First semester is half-price — 1.5% of dues, then the standard 3%",
+      "1.5% of dues your first semester (50% off), then 3% — cancel anytime.",
       "Zero upfront cost — perfect for a new or lean treasury",
       "We only earn when dues actually come in",
     ],
@@ -444,7 +445,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share — a standard 3% of dues, with your first semester half-price at 1.5%. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share — 1.5% of dues your first semester (50% off), then 3% — cancel anytime. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -478,6 +479,7 @@ export default function MarketingLandingPage() {
         <GlyphMarquee />
         <TrustBar />
         <Features />
+        <BeforeAfter />
         <HowItWorks />
         <Pricing />
         <Faq />
@@ -867,6 +869,53 @@ function Hero() {
             </Link>
             .
           </p>
+
+          {/* "What happens when you launch" — a compact reassurance strip that
+              lowers the activation-energy of the primary CTA above it: a skeptic
+              sees the commitment is tiny (three small steps, ~30s) BEFORE
+              clicking. Glassy, on-brand, and revealed on scroll; the three steps
+              read as one connected flow via gradient arrows. Decorative arrows
+              are aria-hidden; the steps themselves are an ordered list so the
+              "1 → 2 → 3" sequence is conveyed semantically, not just visually. */}
+          <Reveal delay={140} className="mx-auto mt-8 w-full max-w-2xl">
+            <div className="relative overflow-hidden rounded-2xl gs-glass px-4 py-4 sm:px-6">
+              {/* lit top seam — matches the card language elsewhere on the page */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
+              />
+              <p className="mb-3.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+                <IconLaunch className="h-3.5 w-3.5" />
+                What happens when you launch
+              </p>
+              <ol className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-1.5">
+                {[
+                  { n: "1", label: "Pick your letters & colors" },
+                  { n: "2", label: "Create your login" },
+                  { n: "3", label: "Your branded site is live in ~30 seconds" },
+                ].map((s, i, arr) => (
+                  <React.Fragment key={s.n}>
+                    <li className="flex flex-1 items-center gap-2.5 text-left">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-[11px] font-bold text-white shadow-sm">
+                        {s.n}
+                      </span>
+                      <span className="text-[13px] font-medium leading-snug text-foreground/90">
+                        {s.label}
+                      </span>
+                    </li>
+                    {i < arr.length - 1 && (
+                      <span
+                        aria-hidden="true"
+                        className="hidden shrink-0 text-sky-500/70 sm:inline-flex"
+                      >
+                        <IconArrowRight className="h-4 w-4" />
+                      </span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </ol>
+            </div>
+          </Reveal>
         </div>
 
         {/* Product mockup floats up, then tracks the cursor in 3D. A faint
@@ -1254,6 +1303,162 @@ function FeatureCard({
         </div>
       )}
     </button>
+  );
+}
+
+/* ─────────────────────── Before → After comparison ─────────────────────── */
+
+/* The status-quo tools a chapter juggles today — deliberately muted + visually
+   "scattered" (each chip carries a small random tilt) so the left side reads as
+   chaos. These are generic third-party tools (no logos, just names) collapsing
+   into the single Greekstack card on the right. */
+const BEFORE_TOOLS: { label: string; tilt: string }[] = [
+  { label: "Spreadsheets", tilt: "sm:-rotate-2" },
+  { label: "GroupMe", tilt: "sm:rotate-1" },
+  { label: "Venmo", tilt: "sm:rotate-2" },
+  { label: "Google Forms", tilt: "sm:-rotate-1" },
+  { label: "Linktree", tilt: "sm:rotate-1" },
+  { label: "A shared Google Drive", tilt: "sm:-rotate-2" },
+];
+
+/* A tasteful "before vs after" beat: the tangle of tools chapters juggle today
+   (muted, scattered chips) collapses — across a gradient arrow — into ONE
+   cohesive, glowing Greekstack card that replaces them all. Sits between
+   Features and How-it-works so the value ("all of this, in one place") lands
+   right after the feature grid. Fully on-brand, animated on scroll, and
+   reduced-motion-safe (everything degrades through <Reveal>/<Reveal3D>, which
+   render static under prefers-reduced-motion; the arrow's idle drift is gated
+   behind motion-reduce:animate-none). */
+function BeforeAfter() {
+  return (
+    <section
+      aria-label="Before and after Greekstack"
+      className="relative scroll-mt-20 overflow-hidden border-t border-border py-20 sm:py-28"
+    >
+      {/* Faint masked grid band — matches the Features/Pricing/Proof depth so the
+          page reads as one system. Decorative, fades at the edges. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            Replace the whole stack
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Six scattered tools become <span className="gs-gradient-text">one</span>
+          </h2>
+          <p className="mt-4 text-pretty text-foreground/80">
+            Stop stitching together a spreadsheet, a group chat, and a payment app every semester.
+            Greekstack does the job of all of them — on one branded site your whole chapter logs into.
+          </p>
+        </Reveal>
+
+        <div className="mx-auto mt-14 grid max-w-5xl grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
+          {/* BEFORE — the muted, scattered pile of tools. */}
+          <Reveal>
+            <div className="relative rounded-3xl border border-dashed border-border bg-secondary/30 p-6 sm:p-7">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Today
+              </span>
+              <p className="mt-3 text-sm font-medium text-muted-foreground">
+                A different login for every job — nothing talks to anything else.
+              </p>
+              {/* Scattered, desaturated chips. Each is slightly tilted + grayscale
+                  so the cluster reads as "messy", and lifts level on hover. */}
+              <ul className="mt-5 flex flex-wrap gap-2.5">
+                {BEFORE_TOOLS.map((t) => (
+                  <li
+                    key={t.label}
+                    className={
+                      "inline-flex items-center gap-1.5 rounded-xl border border-border bg-card/80 px-3 py-2 text-sm font-medium text-muted-foreground opacity-80 shadow-sm transition-all duration-300 hover:opacity-100 hover:grayscale-0 grayscale " +
+                      t.tilt
+                    }
+                  >
+                    <IconClose className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    {t.label}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+                Re-built from scratch every year. Data scattered across six apps. Nobody owns it.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Arrow — the collapse. Rotates to point down on mobile (where the
+              cards stack) and right on desktop. Soft idle drift, disabled under
+              reduced motion. */}
+          <div className="flex items-center justify-center" aria-hidden="true">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-[0_10px_30px_-8px_rgba(37,99,235,0.6)]">
+              <IconArrowRight className="h-5 w-5 rotate-90 motion-safe:animate-bounce lg:rotate-0" />
+            </span>
+          </div>
+
+          {/* AFTER — one cohesive, glowing Greekstack card that replaces them all.
+              Wrapped in the shimmer ring so it visibly "wins" the comparison. */}
+          <Reveal delay={120}>
+            <ShimmerBorder inline={false} rounded="rounded-3xl" className="p-[1.5px]">
+              <div className="group relative overflow-hidden rounded-[calc(1.5rem-1.5px)] gs-glass p-6 sm:p-7">
+                {/* always-lit top seam */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
+                />
+                {/* soft corner bloom — shared card language */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10"
+                />
+                <div className="relative flex items-center gap-3">
+                  <img
+                    src="/brand/greekstack-mark.png"
+                    alt=""
+                    width={512}
+                    height={512}
+                    decoding="async"
+                    loading="lazy"
+                    className="h-10 w-10 shrink-0 rounded-xl object-contain shadow-sm ring-1 ring-black/5"
+                  />
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
+                      <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
+                      With Greekstack
+                    </span>
+                  </div>
+                </div>
+                <p className="relative mt-4 text-lg font-semibold leading-snug text-foreground">
+                  One branded site. One login. Every part of your chapter.
+                </p>
+                {/* The capabilities the six tools above were doing — now unified. */}
+                <ul className="relative mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {[
+                    "Recruitment & rush",
+                    "Dues & payments",
+                    "Roster & members",
+                    "Forms & voting",
+                    "Events & calendar",
+                    "Files, chat & alumni",
+                  ].map((c) => (
+                    <li key={c} className="flex items-center gap-2.5">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-sky-500/10 ring-1 ring-blue-500/25">
+                        <IconCheck className="h-3 w-3 text-blue-700" />
+                      </span>
+                      <span className="text-sm font-medium text-foreground/90">{c}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="relative mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-blue-800">
+                  <IconUnlimited className="h-4 w-4 text-blue-700" />
+                  Your letters, your colors, your subdomain — never priced per seat.
+                </p>
+              </div>
+            </ShimmerBorder>
+          </Reveal>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1845,15 +2050,27 @@ function Faq() {
             })}
           </ul>
 
-          {/* Soft conversion nudge under the list. */}
+          {/* Soft conversion nudge under the list. Where buyer doubt peaks we
+              offer BOTH paths: explore the product free, or talk to a human via
+              the existing book-a-call route (/contact#book — same href the other
+              "Book a call" CTAs use). Unobtrusive, on-brand, AA-contrast. */}
           <div className="mt-10 flex flex-col items-center justify-center gap-3 text-center sm:flex-row">
-            <p className="text-sm text-muted-foreground">Still have a question?</p>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/onboard" className="group/btn">
-                Start free &amp; explore
-                <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
-              </Link>
-            </Button>
+            <p className="text-sm text-muted-foreground">Still have questions?</p>
+            <div className="flex flex-col items-center gap-2.5 sm:flex-row">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/contact#book" className="group/btn">
+                  <IconBookCall className="h-4 w-4 text-blue-700" />
+                  Book a 15-min call
+                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/onboard" className="group/btn">
+                  Or start free &amp; explore
+                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </Reveal>
       </div>

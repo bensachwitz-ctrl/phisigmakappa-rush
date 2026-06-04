@@ -3,6 +3,7 @@ import { put } from "@vercel/blob";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSubdomain } from "@/lib/prisma";
 import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
+import { errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,7 +68,8 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ ok: true, url });
   } catch (err: any) {
-    console.error("[/api/upload-photo]", err);
-    return NextResponse.json({ ok: false, error: err?.message || "Upload failed" }, { status: 500 });
+    // Log the real error server-side; return a generic message to the client.
+    errorSink(err, { route: "/api/upload-photo", outcome: "upload_failed" });
+    return NextResponse.json({ ok: false, error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

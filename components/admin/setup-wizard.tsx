@@ -19,11 +19,11 @@ const STEPS = [
   { id: "identity", label: "Chapter identity", icon: Building2,
     blurb: "Who and where — drives page titles, footer attribution, JSON-LD." },
   { id: "brand", label: "Brand colors", icon: Palette,
-    blurb: "Your school's primary color — overrides cardinal red across the site." },
+    blurb: "Your organization's primary color — overrides the default brand color across your site." },
   { id: "contact", label: "Contact", icon: Mail,
     blurb: "Rush inbox, advisor of record, chapter house address." },
   { id: "policy", label: "Anti-hazing", icon: ShieldCheck,
-    blurb: "National anti-hazing hotline — visible on Privacy, Parents, and the about page." },
+    blurb: "Your organization's anti-hazing / risk-management hotline — visible on Privacy, Parents, and the about page." },
   { id: "launch", label: "Launch", icon: Rocket,
     blurb: "Review and go live." },
 ] as const;

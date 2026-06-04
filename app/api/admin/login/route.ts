@@ -45,6 +45,31 @@ const LegacySchema = z.object({
   password: z.string().min(1).max(120),
 });
 
+/**
+ * Per-IP brute-force throttle: 5 failed login attempts within 15 minutes →
+ * hard-block for the remainder of the window. Returns true when the caller is
+ * currently over the limit. Fails OPEN on DB errors so a transient DB issue
+ * never locks legitimate users out. Shared by both the admin and brother
+ * branches — login passwords are the most attractive target on this site, so
+ * neither path can allow unlimited attempts.
+ */
+async function isIpThrottled(ipAddress: string): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - 15 * 60 * 1000);
+    const failedRecent = await prisma.rushSubmitLog.count({
+      where: {
+        ipAddress,
+        status: "ADMIN_LOGIN_FAILED",
+        createdAt: { gte: since },
+      },
+    });
+    return failedRecent >= 5;
+  } catch {
+    // Lookup failure — fail open to avoid locking out users during DB issues.
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
   let body: any;
   try {
@@ -53,39 +78,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
   }
 
+  const ipAddress =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    null;
+
   // ─── Admin login ─────────────────────────────────────────────────────────
   const adminParsed = AdminSchema.safeParse(body);
   const legacyParsed = !adminParsed.success ? LegacySchema.safeParse(body) : null;
   if (adminParsed.success || legacyParsed?.success) {
     const data: any = adminParsed.success ? adminParsed.data : legacyParsed!.data;
 
-    // Per-IP brute-force throttle: 5 failed attempts within 15 minutes →
-    // hard-block for the remainder of the 15-min window. The shared admin
-    // password is the single most attractive target on this site, so we
-    // CANNOT allow unlimited attempts.
-    const ipAddress =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      null;
-    if (ipAddress) {
-      try {
-        const since = new Date(Date.now() - 15 * 60 * 1000);
-        const failedRecent = await prisma.rushSubmitLog.count({
-          where: {
-            ipAddress,
-            status: "ADMIN_LOGIN_FAILED",
-            createdAt: { gte: since },
-          },
-        });
-        if (failedRecent >= 5) {
-          return NextResponse.json(
-            { ok: false, error: "Too many failed attempts. Wait 15 minutes and try again." },
-            { status: 429, headers: { "Retry-After": "900" } },
-          );
-        }
-      } catch {
-        // Lookup failure — fail open to avoid locking out admins during DB issues.
-      }
+    if (ipAddress && (await isIpThrottled(ipAddress))) {
+      return NextResponse.json(
+        { ok: false, error: "Too many failed attempts. Wait 15 minutes and try again." },
+        { status: 429, headers: { "Retry-After": "900" } },
+      );
     }
 
     // Shared-credential login requires ADMIN_PASSWORD to be EXPLICITLY set — no
@@ -172,6 +180,17 @@ export async function POST(req: Request) {
     if (!fn) {
       return NextResponse.json({ ok: false, error: "First name is required" }, { status: 400 });
     }
+
+    // Same per-IP throttle as the admin branch — the brother branch loads
+    // candidates by first-name startsWith and bcrypt-checks each, so it is just
+    // as brute-forceable and MUST be rate-limited too.
+    if (ipAddress && (await isIpThrottled(ipAddress))) {
+      return NextResponse.json(
+        { ok: false, error: "Too many failed attempts. Wait 15 minutes and try again." },
+        { status: 429, headers: { "Retry-After": "900" } },
+      );
+    }
+
     // Match Brothers whose name starts with "<firstName> " (case-insensitive)
     // OR whose full name is exactly <firstName>.
     const candidates = await prisma.brother.findMany({
@@ -184,15 +203,24 @@ export async function POST(req: Request) {
       },
       take: 10,
     });
-    if (candidates.length === 0) {
-      return NextResponse.json(
-        { ok: false, error: "No brother found with that first name. Check with the rush chair if you haven't completed onboarding yet." },
-        { status: 401 }
-      );
-    }
-    const match = candidates.find((b) => verifyPassword(password, b.passwordHash));
+    const match =
+      candidates.length > 0
+        ? candidates.find((b) => verifyPassword(password, b.passwordHash))
+        : null;
+    // Collapse "no such brother" and "wrong password" into ONE generic message
+    // so an attacker can't enumerate which first names exist.
     if (!match) {
-      return NextResponse.json({ ok: false, error: "Wrong password" }, { status: 401 });
+      if (ipAddress) {
+        prisma.rushSubmitLog.create({
+          data: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
+        }).catch(() => {});
+      }
+      return NextResponse.json({ ok: false, error: "Invalid credentials." }, { status: 401 });
+    }
+    if (ipAddress) {
+      prisma.rushSubmitLog.deleteMany({
+        where: { ipAddress, status: "ADMIN_LOGIN_FAILED" },
+      }).catch(() => {});
     }
     await prisma.brother.update({ where: { id: match.id }, data: { lastSeen: new Date() } });
     setBrotherCookie(match.id, false);

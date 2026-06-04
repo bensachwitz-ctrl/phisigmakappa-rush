@@ -468,8 +468,10 @@ export async function POST(req: Request) {
         .$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`)
         .catch(() => {});
     }
+    // Real error already captured server-side via errorSink above; never echo
+    // the internal message (DDL/SQL/schema detail) back to the client.
     return NextResponse.json(
-      { ok: false, error: err?.message || "Failed to initialize chapter SaaS instance" },
+      { ok: false, error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }

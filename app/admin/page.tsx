@@ -6,7 +6,7 @@ import { RushFunnel } from "@/components/admin/rush-funnel";
 import { RecentActivity, type RecentEntry } from "@/components/admin/recent-activity";
 import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
-import { getSiteConfig } from "@/lib/site-config";
+import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
@@ -101,32 +101,37 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
   // ── Brand readiness ──────────────────────────────────────────────────────
   // Detect whether the chapter has run the /admin/setup wizard. We compare
-  // each tracked field against the reference Phi Sig USC default — any field
-  // the chapter has overridden (even to a different string) counts as
-  // "customized". Setup is "complete" when ≥80% of fields are non-default
+  // each tracked field against the NEUTRAL white-label default exported from
+  // lib/site-config (DEFAULTS) — most are blank, a few carry a generic
+  // placeholder. A field counts as "customized" only when the chapter has
+  // filled it with a real value that differs from that neutral default/
+  // placeholder. Setup is "complete" when ≥80% of fields are customized
   // (gives a chapter latitude to keep e.g. the cardinal principles wording).
-  const BRAND_FIELDS: Array<[string, string]> = [
-    ["chapter.fraternityName", "Phi Sigma Kappa"],
-    ["chapter.fraternityShort", "Phi Sig"],
-    ["chapter.greekLetters", "Gamma Triton"],
-    ["chapter.schoolName", "University of South Carolina"],
-    ["chapter.schoolShort", "USC"],
-    ["chapter.charterYear", "1975"],
-    ["chapter.appShortTitle", "Phi Sig USC"],
-    ["contact.rushEmail", "rush@phisig-usc.com"],
-    ["contact.advisorEmail", "advisor@phisig-usc.com"],
-    ["contact.address", "1525 College Street"],
-    ["contact.cityState", "Columbia, SC 29208"],
-    ["contact.instagramHandle", "@phisig_usc"],
+  const BRAND_FIELD_KEYS: Array<keyof typeof DEFAULTS> = [
+    "chapter.fraternityName",
+    "chapter.fraternityShort",
+    "chapter.greekLetters",
+    "chapter.schoolName",
+    "chapter.schoolShort",
+    "chapter.charterYear",
+    "chapter.appShortTitle",
+    "contact.rushEmail",
+    "contact.advisorEmail",
+    "contact.address",
+    "contact.cityState",
+    "contact.instagramHandle",
   ];
-  const customizedFields = BRAND_FIELDS.filter(([key, def]) => {
+  const customizedFields = BRAND_FIELD_KEYS.filter((key) => {
     const v = cfg[key];
-    return v && v.trim() !== "" && v !== def;
+    // The neutral default/placeholder from site-config. Blank or a value
+    // still equal to it counts as "not done".
+    const def = String(DEFAULTS[key] ?? "");
+    return !!v && v.trim() !== "" && v.trim() !== def.trim();
   }).length;
   const brandReadiness = {
     customizedFields,
-    totalFields: BRAND_FIELDS.length,
-    isSetupComplete: customizedFields >= Math.ceil(BRAND_FIELDS.length * 0.8),
+    totalFields: BRAND_FIELD_KEYS.length,
+    isSetupComplete: customizedFields >= Math.ceil(BRAND_FIELD_KEYS.length * 0.8),
   };
 
   // Recent chapter activity — last 8 audit entries. Best-effort: if the

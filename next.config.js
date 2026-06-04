@@ -65,6 +65,15 @@ const nextConfig = {
   // Security + privacy headers applied to every route. Vercel adds HSTS in
   // front of this in production, but we set the others ourselves.
   async headers() {
+    // 'unsafe-eval' is ONLY needed for Next's dev-mode React Refresh / HMR. In
+    // production the compiled bundle never eval()s, so we drop it there — a
+    // production CSP with 'unsafe-eval' would needlessly widen the XSS surface.
+    // 'unsafe-inline' stays for now: Tailwind injects <style> and Next inlines
+    // small RSC bootstrap scripts, so removing it would break the app.
+    const isProd = process.env.NODE_ENV === "production";
+    const scriptSrc = isProd
+      ? "script-src 'self' 'unsafe-inline'"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
     return [
       {
         // Brand image assets (chapter logos, coats of arms) are content-hashed
@@ -81,18 +90,22 @@ const nextConfig = {
         headers: [
           // Tightened from R8: locks script-src/style-src/img-src to known
           // origins. 'unsafe-inline' is required because Tailwind injects style
-          // tags + Next inlines small RSC scripts; 'unsafe-eval' is needed for
-          // Next's dev refresh in development (no-op in production).
+          // tags + Next inlines small RSC scripts. 'unsafe-eval' is added to
+          // script-src ONLY in development (see `scriptSrc` above) — production
+          // drops it.
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "img-src 'self' data: blob: https://*.cdninstagram.com https://*.fbcdn.net https://*.vercel-storage.com https://res.cloudinary.com",
               "style-src 'self' 'unsafe-inline'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              scriptSrc,
               "font-src 'self' data:",
-              "connect-src 'self' https://api.resend.com https://api.twilio.com",
-              "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com",
+              // Stream (chat) + Clerk (auth) origins are allowed so those
+              // integrations work when their env keys are set. Inert otherwise —
+              // no request hits these hosts unless the feature is configured.
+              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://*.clerk.accounts.dev https://*.clerk.com",
+              "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://*.clerk.accounts.dev https://*.clerk.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

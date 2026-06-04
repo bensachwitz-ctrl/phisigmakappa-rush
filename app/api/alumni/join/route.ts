@@ -2,7 +2,8 @@
 //
 // Anyone with the link can submit; admin moderation happens after the fact
 // (admin can delete rows from /admin/alumni). The handler is rate-limited
-// by phone+email so a single spammer can't bulk-create.
+// per IP (5 submissions / 10 min) so a single spammer can't bulk-create. The
+// limiter is in-memory (see lib/rate-limit), sufficient for a single instance.
 //
 // We auto-set optInDirectory=true so the new row immediately appears in the
 // public directory. If the alumnus later wants to opt out, admin can flip
@@ -12,9 +13,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
+import { rateLimit, recordRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Per-IP submission cap on this public, unauthenticated endpoint.
+const JOIN_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
 
 interface JoinPayload {
   fullName?: string;
@@ -43,6 +48,16 @@ function clean(value: unknown, maxLen = 200): string | null {
 }
 
 export async function POST(req: Request) {
+  const rlKey = `alumni-join:${clientIpFromRequest(req)}`;
+  const rl = rateLimit(rlKey, JOIN_LIMIT);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please wait a few minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+  recordRateLimit(rlKey, JOIN_LIMIT);
+
   let body: JoinPayload;
   try {
     body = await req.json();

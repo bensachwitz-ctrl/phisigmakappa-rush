@@ -7,11 +7,11 @@
     },
     {
       "path": "/api/cron/send-scheduled-announcements",
-      "schedule": "0 4 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/reconcile-stripe",
-      "schedule": "0 5 * * *"
+      "schedule": "0 */6 * * *"
     }
   ]
 }
