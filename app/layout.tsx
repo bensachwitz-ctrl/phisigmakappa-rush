@@ -5,7 +5,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
-import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
@@ -409,7 +409,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <ToastProvider>
-          <ChapterIdentityProvider value={chapterIdentityFromCfg(cfg)}>
+          <ChapterIdentityProvider value={getSubdomain(host) === null ? APEX_IDENTITY : chapterIdentityFromCfg(cfg)}>
             {children}
           </ChapterIdentityProvider>
         </ToastProvider>

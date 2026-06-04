@@ -40,9 +40,39 @@ export type ChapterIdentity = {
 };
 
 /**
+ * Neutral, brand-less identity for the APEX / marketing site (no chapter). The
+ * apex must never carry a specific chapter's identity (it leaked into the
+ * hydration payload before). Passed to ChapterIdentityProvider when there is no
+ * subdomain.
+ */
+export const APEX_IDENTITY: ChapterIdentity = {
+  fraternityName: "Greekstack",
+  fraternityShort: "Greekstack",
+  greekLetters: "",
+  greekLettersGlyphs: "",
+  schoolName: "",
+  schoolShort: "",
+  schoolUrl: "",
+  charterYear: "",
+  foundingYear: "",
+  foundingLocation: "",
+  nationalName: "Greekstack",
+  nationalHqUrl: "",
+  cardinalPrinciples: "",
+  tagline: "",
+  appShortTitle: "Greekstack",
+  fraternityLetters: "GS",
+  chapterFullName: "Greekstack",
+  chapterAttribution: "Greekstack",
+  pageTitle: "Greekstack",
+  ogAlt: "Greekstack",
+};
+
+/**
  * Pull chapter identity from cfg. Always returns a complete ChapterIdentity —
- * any unset field falls back to the Phi Sig USC reference value, so this never
- * throws and never returns partial data. Safe to call from anywhere.
+ * any unset field falls back to a NEUTRAL, brand-less placeholder (never a
+ * specific chapter), so this never throws and never leaks one chapter's brand
+ * onto another. Safe to call from anywhere.
  */
 export async function getChapterIdentity(): Promise<ChapterIdentity> {
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
@@ -59,23 +89,27 @@ export function chapterIdentityFromCfg(cfg: Record<string, string>): ChapterIden
 }
 
 function fromCfg(cfg: Record<string, string>): ChapterIdentity {
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const fraternityShort = cfg["chapter.fraternityShort"] || "Phi Sig";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const greekLettersGlyphs = cfg["chapter.greekLettersGlyphs"] || "ΓΤ";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
-  const charterYear = cfg["chapter.charterYear"] || "1975";
-  const foundingYear = cfg["chapter.foundingYear"] || "1873";
-  const foundingLocation = cfg["chapter.foundingLocation"] || "Massachusetts Agricultural College";
-  const nationalName = cfg["chapter.nationalName"] || "Phi Sigma Kappa";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  // NEUTRAL fallbacks only — never a specific chapter. Provisioning seeds the
+  // chapter's real identity; any field left blank shows a generic placeholder
+  // instead of leaking the reference chapter onto another tenant or the apex.
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const fraternityShort = cfg["chapter.fraternityShort"] || fraternityName;
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const greekLettersGlyphs = cfg["chapter.greekLettersGlyphs"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const schoolUrl = cfg["chapter.schoolUrl"] || "";
+  const charterYear = cfg["chapter.charterYear"] || "";
+  const foundingYear = cfg["chapter.foundingYear"] || "";
+  const foundingLocation = cfg["chapter.foundingLocation"] || "";
+  const nationalName = cfg["chapter.nationalName"] || fraternityName;
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
   const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
-  const tagline = cfg["chapter.tagline"] || "#DamnProud";
-  const appShortTitle = cfg["chapter.appShortTitle"] || "Phi Sig USC";
-  const fraternityLetters = cfg["chapter.fraternityLetters"] || "ΦΣΚ";
+  const tagline = cfg["chapter.tagline"] || "";
+  const appShortTitle = cfg["chapter.appShortTitle"] || fraternityShort;
+  const fraternityLetters = cfg["chapter.fraternityLetters"] || "";
 
+  const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
   return {
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
     schoolName, schoolShort, schoolUrl,
@@ -83,9 +117,9 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     nationalName, nationalHqUrl,
     cardinalPrinciples, tagline, appShortTitle,
     fraternityLetters,
-    chapterFullName: `${fraternityName} ${greekLetters}`,
-    chapterAttribution: `${fraternityShort} ${schoolShort}`,
-    pageTitle: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,
-    ogAlt: `${fraternityName} @ ${schoolShort}`,
+    chapterFullName,
+    chapterAttribution: [fraternityShort, schoolShort].filter(Boolean).join(" "),
+    pageTitle: [chapterFullName, schoolShort ? `Rush at ${schoolShort}` : ""].filter(Boolean).join(" — "),
+    ogAlt: schoolShort ? `${fraternityName} @ ${schoolShort}` : fraternityName,
   };
 }
