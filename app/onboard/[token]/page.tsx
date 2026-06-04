@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 import { OnboardingForm } from "@/components/site/onboarding-form";
 import { Wordmark } from "@/components/brand/wordmark";
+import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 // One-time invite pages must never be indexed — each token URL is unique
-// to one brother and shouldn't be in any search engine's database.
-export const metadata: Metadata = {
-  title: "Welcome to Gamma Triton",
-  robots: { index: false, follow: false, nocache: true },
-};
+// to one member and shouldn't be in any search engine's database. Title is
+// generated from the chapter's own identity (greek letters) so a white-label
+// deploy never shows another chapter's name. Reads cfg (force-dynamic).
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const { greekLetters } = chapterIdentityFromCfg(cfg);
+  return {
+    title: `Welcome to ${greekLetters}`,
+    robots: { index: false, follow: false, nocache: true },
+  };
+}
 
 async function fetchInvite(token: string, base: string) {
   try {
@@ -24,6 +32,10 @@ async function fetchInvite(token: string, base: string) {
 export default async function OnboardPage({ params }: { params: { token: string } }) {
   const base = process.env.SITE_URL || "";
   const data = base ? await fetchInvite(params.token, base) : null;
+  // Chapter identity for the white-label heading/copy — falls back to the
+  // reference values, so a fresh deploy renders correctly before /admin/setup.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const { greekLetters } = chapterIdentityFromCfg(cfg);
 
   return (
     <main className="min-h-screen bg-phisig-mist">
@@ -49,15 +61,15 @@ export default async function OnboardPage({ params }: { params: { token: string 
           <>
             <div className="mb-6">
               <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-                Brother onboarding
+                Member onboarding
               </span>
               <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
-                Welcome to Gamma Triton.
+                Welcome to {greekLetters}.
               </h1>
               <p className="mt-2 text-muted-foreground">
                 {data?.invite?.invitedBy
                   ? `${data.invite.invitedBy} added you to the chapter directory.`
-                  : "Finish your brother profile so the chapter has your info on file."}{" "}
+                  : "Finish your member profile so the chapter has your info on file."}{" "}
                 Takes 60 seconds.
               </p>
             </div>

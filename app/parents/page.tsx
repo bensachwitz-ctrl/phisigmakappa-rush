@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
   const schoolShort = cfg["chapter.schoolShort"] || "USC";
   const title = `For Parents — ${fraternityName} ${greekLetters}`;
-  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your son's data when he joins the rush list.`;
+  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your student's data when they join the rush list.`;
   const ogAlt = `${fraternityName} @ ${schoolShort}`;
   return {
     title,
@@ -58,7 +58,13 @@ export default async function ParentsPage() {
   const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
   const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
   const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
   const chapterAttribution = `${fraternityName} ${greekLetters}`;
+  // The formal coat-of-arms asset is Phi Sig's heraldic mark — render it only
+  // for a Phi Sig chapter (same check as components/brand/wordmark.tsx); any
+  // other chapter omits it rather than show the wrong fraternity's crest.
+  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
 
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
@@ -74,28 +80,33 @@ export default async function ParentsPage() {
         <div className="relative overflow-hidden rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/60 via-white to-white p-8 sm:p-12 mb-10">
           {/* Formal Phi Sigma Kappa coat of arms — sits in the upper-right
               corner as the brand authority signal for parents reading this
-              page. This is the supplied national heraldic mark. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/coat-of-arms-formal.jpg"
-            alt={`${fraternityName} coat of arms`}
-            width={140}
-            height={164}
-            loading="lazy"
-            decoding="async"
-            className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"
-            aria-hidden="true"
-          />
+              page. This is the supplied national heraldic mark, so it renders
+              only for a Phi Sig chapter; other chapters omit it. */}
+          {isPhiSig && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/coat-of-arms-formal.jpg"
+                alt={`${fraternityName} coat of arms`}
+                width={140}
+                height={164}
+                loading="lazy"
+                decoding="async"
+                className="absolute top-6 right-6 hidden sm:block h-32 w-auto opacity-90 select-none pointer-events-none rounded-md shadow-sm ring-1 ring-phisig-red/10"
+                aria-hidden="true"
+              />
+            </>
+          )}
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-phisig-red/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red shadow-sm">
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> For Parents &amp; Guardians
           </span>
           <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
-            Your son&apos;s safety, academics, and contact info — straight talk.
+            Your student&apos;s safety, academics, and contact info — straight talk.
           </h1>
           <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
             {chapterAttribution} is the chapter at {schoolName}. We
             run a dry, FIPG-compliant rush with a hard zero-tolerance hazing policy. This page
-            answers the questions you&apos;ll want answered before your son fills out our interest
+            answers the questions you&apos;ll want answered before your student fills out our interest
             form — and tells you exactly how to reach a real adult if you have a concern.
           </p>
         </div>
@@ -170,7 +181,7 @@ export default async function ParentsPage() {
                 <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
                 <span>
                   <a
-                    href="https://sc.edu/about/offices_and_divisions/student_life/our_initiatives/fraternity_and_sorority_life/index.php"
+                    href={cleanUrl(schoolUrl)}
                     target="_blank"
                     rel="noreferrer noopener"
                     className="text-phisig-red hover:underline"
@@ -188,8 +199,8 @@ export default async function ParentsPage() {
               </li>
               <li className="flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
-                <a href="https://phisigmakappa.org" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
-                  phisigmakappa.org · National HQ
+                <a href={cleanUrl(nationalHqUrl)} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                  {nationalHqUrl.replace(/^https?:\/\//, "")} · National HQ
                 </a>
               </li>
             </ul>
@@ -230,7 +241,7 @@ export default async function ParentsPage() {
                 <div>
                   <p className="font-semibold">Closed events (week 2) — invite only.</p>
                   <p className="text-muted-foreground mt-0.5">
-                    Smaller invite-only events so we and your son can both feel out fit.
+                    Smaller invite-only events so we and your student can both feel out fit.
                   </p>
                 </div>
               </li>
@@ -239,8 +250,8 @@ export default async function ParentsPage() {
                 <div>
                   <p className="font-semibold">Interviews &amp; Bid Day (week 3).</p>
                   <p className="text-muted-foreground mt-0.5">
-                    One-on-ones with the e-board, then bids extended. Your son will receive a complete
-                    cost breakdown — dues, house fees, philanthropy, formals — BEFORE he accepts a bid.
+                    One-on-ones with the e-board, then bids extended. Your student will receive a complete
+                    cost breakdown — dues, house fees, philanthropy, formals — BEFORE they accept a bid.
                   </p>
                 </div>
               </li>
@@ -284,14 +295,14 @@ export default async function ParentsPage() {
                   <span className="font-semibold">Express written consent</span> recorded
                   under 47 CFR §64.1200(f)(9) at signup — disclosure text, timestamp,
                   IP, and user-agent retained for the 4-year TCPA recordkeeping
-                  window. Your son can audit his own receipt at any time.
+                  window. Your student can audit their own receipt at any time.
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
                 <span>
                   <span className="font-semibold">Msg & data rates may apply.</span>{" "}
-                  Standard carrier rates from your son's plan. We don't charge
+                  Standard carrier rates from your student's plan. We don't charge
                   anything.
                 </span>
               </li>
@@ -321,9 +332,9 @@ export default async function ParentsPage() {
           <p className="mt-4 text-xs text-muted-foreground">
             Full <Link href="/privacy" className="text-phisig-red hover:underline">privacy policy</Link>{" "}
             covers TCPA SMS consent, CCPA/Virginia rights, cookies, and the 4-year recordkeeping window.
-            If your son is 17, a parent or guardian can email{" "}
+            If your student is 17, a parent or guardian can email{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>{" "}
-            to confirm consent on his behalf.
+            to confirm consent on their behalf.
           </p>
         </section>
 

@@ -9,6 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
@@ -903,6 +906,8 @@ function JsonArrayEditor({
   }, [value]);
 
   const [openIdx, setOpenIdx] = React.useState<number | null>(0);
+  // Confirm dialog (replaces window.confirm) for removing a row.
+  const [removeIdx, setRemoveIdx] = React.useState<number | null>(null);
 
   function commit(next: Record<string, string>[]) {
     onChange(JSON.stringify(next));
@@ -917,10 +922,14 @@ function JsonArrayEditor({
     setOpenIdx(next.length - 1);
   }
   function remove(i: number) {
-    if (!confirm("Remove this row?")) return;
-    const next = rows.filter((_, j) => j !== i);
+    setRemoveIdx(i);
+  }
+  function doRemove() {
+    if (removeIdx === null) return;
+    const next = rows.filter((_, j) => j !== removeIdx);
     commit(next);
     setOpenIdx(null);
+    setRemoveIdx(null);
   }
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
@@ -1023,6 +1032,30 @@ function JsonArrayEditor({
       <Button type="button" size="sm" variant="outline" onClick={add}>
         <Plus className="h-3.5 w-3.5" /> Add row
       </Button>
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={removeIdx !== null} onOpenChange={(o) => !o && setRemoveIdx(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove this row?</DialogTitle>
+            <DialogDescription>
+              This row will be removed. Remember to Save to make the change permanent.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRemoveIdx(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={doRemove}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

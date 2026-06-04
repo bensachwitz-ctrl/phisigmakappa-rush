@@ -27,6 +27,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft, Send, UserCheck, UserX, MessageSquarePlus, Loader2,
@@ -105,6 +108,8 @@ export function RusheeDetail({
   const router = useRouter();
   const [rush, setRush] = React.useState<RusheeDetailData>(initial);
   const [busy, setBusy] = React.useState<string | null>(null);
+  // Confirm dialog (replaces window.confirm) for the "mark dropped" action.
+  const [confirmDropOpen, setConfirmDropOpen] = React.useState(false);
 
   // ── Mutations ────────────────────────────────────────────────────────────
   async function patch(body: Record<string, unknown>, label: string) {
@@ -288,10 +293,7 @@ export function RusheeDetail({
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => {
-                  if (!confirm("Mark this PNM as dropped?")) return;
-                  void patch({ status: "DROPPED" }, "drop");
-                }}
+                onClick={() => setConfirmDropOpen(true)}
                 disabled={busy !== null || rush.status === "DROPPED"}
                 className="w-full text-muted-foreground hover:text-destructive"
               >
@@ -352,6 +354,34 @@ export function RusheeDetail({
           )}
         </div>
       </div>
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={confirmDropOpen} onOpenChange={(o) => busy === null && setConfirmDropOpen(o)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Mark PNM as dropped?</DialogTitle>
+            <DialogDescription>
+              This will set {rush.name}&apos;s status to Dropped. You can change it again later.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDropOpen(false)} disabled={busy !== null}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={busy !== null}
+              onClick={() => {
+                setConfirmDropOpen(false);
+                void patch({ status: "DROPPED" }, "drop");
+              }}
+            >
+              {busy === "drop" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}
+              Mark dropped
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

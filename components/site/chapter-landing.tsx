@@ -150,6 +150,11 @@ export default async function ChapterLandingPage({
   // mention of the fraternity / chapter / school so a re-skinned tenant (e.g.
   // Clemson) never shows literal "Phi Sigma Kappa / Gamma Triton / USC" strings.
   const identity = chapterIdentityFromCfg(cfg);
+  // Mirror the brand wordmark's org check (components/brand/wordmark.tsx) so the
+  // Phi-Sig-specific heritage artwork (engraved coat of arms, shield JPG) only
+  // renders for an actual Phi Sigma Kappa chapter; every other tenant gets the
+  // generic auto-tinted Crest instead of another fraternity's coat of arms.
+  const isPhiSig = identity.fraternityName.toLowerCase().includes("phi sigma kappa");
   // webcal:// subscribe URL must point at THIS tenant's host, not a hardcoded
   // Phi Sig reference domain. Derive from the request host (same source the
   // Prisma proxy uses to resolve the tenant); fall back to a relative-less
@@ -184,7 +189,7 @@ export default async function ChapterLandingPage({
             <RushForm booth />
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-6">
-            Tablet auto-clears between rushees · {cfg["contact.instagramHandle"] || "@phisig_usc"}
+            Tablet auto-clears between rushees · {cfg["contact.instagramHandle"]}
           </p>
         </section>
       </main>
@@ -203,7 +208,7 @@ export default async function ChapterLandingPage({
   const stats: StatRow[] = [
     { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || "Active brothers", icon: Users, sub: cfg["stats.brothers.sub"] || undefined },
     { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: GraduationCap, sub: cfg["stats.gpa.sub"] || "Above the all-fraternity average" },
-    { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: ShieldCheck, sub: cfg["stats.years.sub"] || "Founded 1873" },
+    { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: ShieldCheck, sub: cfg["stats.years.sub"] || `Founded ${identity.foundingYear}` },
     { ...parseStat(cfg["stats.charity"]), label: cfg["stats.charity.label"] || "Raised for charity", icon: HandHeart, sub: cfg["stats.charity.sub"] || cfg["philanthropy.beneficiaryShort"] },
   ];
   const eboard = [1, 2, 3, 4, 5]
@@ -362,7 +367,7 @@ export default async function ChapterLandingPage({
               <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
                 <span className="text-center leading-tight">
                   <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
-                  <span className="block text-base font-semibold">1873</span>
+                  <span className="block text-base font-semibold">{identity.foundingYear}</span>
                 </span>
               </div>
             </div>
@@ -426,7 +431,7 @@ export default async function ChapterLandingPage({
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Three principles
           </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
-            Brotherhood. Scholarship. Character.
+            {cfg["chapter.cardinalPrinciples"].split(/,\s*/).join(". ")}.
           </h2>
         </Reveal>
         <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
@@ -494,12 +499,12 @@ export default async function ChapterLandingPage({
         </div>
       </section>
 
-      {/* ─── INSTAGRAM FEED — real photos from @phisig_usc ─── */}
+      {/* ─── INSTAGRAM FEED — real chapter photos ─── */}
       {cfg["show.instagramFeed"] !== "false" && (
       <section className="container section-y">
         <Reveal className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={Instagram}>{cfg["contact.instagramHandle"] || "@phisig_usc"}</SectionEyebrow>
+            <SectionEyebrow icon={Instagram}>{cfg["contact.instagramHandle"]}</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl leading-relaxed">
@@ -528,12 +533,12 @@ export default async function ChapterLandingPage({
 
         <div className="mt-8 text-center">
           <Link
-            href="https://www.instagram.com/phisig_usc/"
+            href={cleanUrl(cfg["contact.instagramUrl"])}
             target="_blank"
             rel="noreferrer noopener"
             className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
           >
-            <Instagram className="h-4 w-4" aria-hidden="true" /> Follow @phisig_usc for the latest
+            <Instagram className="h-4 w-4" aria-hidden="true" /> Follow {cfg["contact.instagramHandle"]} for the latest
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
@@ -684,7 +689,7 @@ export default async function ChapterLandingPage({
               {[
                 "Philanthropy Chair (freshman)",
                 `Led Polar Plunge — ${cfg["philanthropy.raisedAmount"]} raised for ${cfg["philanthropy.beneficiaryShort"]}`,
-                "Dry fundraiser dinner for Leukemia & Lymphoma Society",
+                `Dry fundraiser dinner for ${cfg["philanthropy.beneficiary"]}`,
                 "Embodies the cardinal principle of Character",
               ].map((p) => (
                 <li key={p} className="flex items-start gap-3">
@@ -694,7 +699,7 @@ export default async function ChapterLandingPage({
               ))}
             </ul>
             <p className="mt-6 text-sm text-phisig-red font-medium">
-              #DamnProud
+              {identity.tagline}
             </p>
           </div>
           <div className="order-1 lg:order-2 relative">
@@ -789,7 +794,7 @@ export default async function ChapterLandingPage({
           <div>
             <SectionEyebrow icon={ShieldCheck}>About the chapter</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
-              Founded in 1873.<br/> Built for what's next.
+              Founded in {identity.foundingYear}.<br/> Built for what's next.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
               {cfg["about.history"]}
@@ -826,16 +831,20 @@ export default async function ChapterLandingPage({
                 "is this a real chapter" answer gets the visual confirmation
                 of national heritage in one glance. */}
             <div className="mt-7 rounded-xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/30 via-white to-phisig-red-soft/10 p-4 flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/coat-of-arms-vintage.jpg"
-                alt="Original Phi Sigma Kappa coat of arms — engraved 1873"
-                width={84}
-                height={104}
-                loading="lazy"
-                decoding="async"
-                className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
-              />
+              {isPhiSig ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src="/brand/coat-of-arms-vintage.jpg"
+                  alt={`Original ${identity.fraternityName} coat of arms — engraved ${identity.foundingYear}`}
+                  width={84}
+                  height={104}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
+                />
+              ) : (
+                <Crest className="h-[104px] w-auto text-phisig-red shrink-0" aria-hidden="true" />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-phisig-red font-semibold">Heritage</p>
                 <p className="mt-1 text-sm font-semibold leading-snug">
@@ -895,7 +904,7 @@ export default async function ChapterLandingPage({
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
                   Brotherhood you can count on — every weekend, every milestone, every year.
                 </p>
-                <p className="mt-1 text-xs text-white/95">#DamnProud · {cfg["contact.instagramHandle"] || "@phisig_usc"}</p>
+                <p className="mt-1 text-xs text-white/95">{identity.tagline}{cfg["contact.instagramHandle"] ? <> · {cfg["contact.instagramHandle"]}</> : null}</p>
               </div>
             </a>
             <div className="absolute -bottom-5 -left-5 hidden sm:block w-48 rounded-2xl border border-border bg-white shadow-xl p-4 animate-float z-30">
@@ -909,7 +918,7 @@ export default async function ChapterLandingPage({
             <div className="absolute -top-5 -right-5 hidden sm:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring z-30">
               <span className="text-center leading-tight">
                 <span className="block text-[10px] uppercase tracking-[0.16em] opacity-80">Since</span>
-                <span className="block text-lg font-semibold">1873</span>
+                <span className="block text-lg font-semibold">{identity.foundingYear}</span>
               </span>
             </div>
           </div>
@@ -968,33 +977,13 @@ export default async function ChapterLandingPage({
       {/* ─── WHERE TO FIND US ─── */}
       {cfg["show.whereWeLive"] !== "false" && (
       <section className="container section-y">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          <a
-            href="https://www.instagram.com/p/DRxIVRXkYCn/"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="relative aspect-[5/4] rounded-2xl overflow-hidden border border-border bg-secondary lift order-2 lg:order-1 block"
-          >
-            <img
-              src="/api/photo/DRxIVRXkYCn"
-              alt="Phi Sigma Kappa brothers — No Shave November fundraiser raised $1,600 for the Movember Foundation, supporting men's health and mental health awareness"
-              loading="lazy"
-              width={800}
-              height={640}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition: "center 80%" }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/20 to-transparent" />
-            <div className="absolute bottom-5 left-5 right-5 text-white">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                <HandHeart className="h-3 w-3" aria-hidden="true" /> Movember · $1,600 raised
-              </span>
-              <p className="mt-2 text-lg font-semibold tracking-tight">
-                Grow a beard. Make a difference. — men&apos;s mental health.
-              </p>
-            </div>
-          </a>
-          <div className="order-1 lg:order-2">
+        {/* Single-column: the prior left tile hardcoded one chapter's Movember
+            Instagram post, which would leak onto every tenant. There is no
+            chapter-agnostic "house photo" cfg key, so per white-label policy the
+            photo tile is omitted (better than showing another chapter's post)
+            and the address + contact cards carry this section. */}
+        <div className="max-w-3xl mx-auto">
+          <div>
             <SectionEyebrow icon={MapPin}>Where we live</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               The house at {titleCaseAddress(cfg["contact.address"])}.
@@ -1041,16 +1030,16 @@ export default async function ChapterLandingPage({
                 <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
               </Link>
               <Link
-                href="https://sc.edu/about/offices_and_divisions/fraternity_and_sorority_life/chapters/index.php"
+                href={cleanUrl(cfg["chapter.schoolUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="lift rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
               >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                  <Building2 className="h-3 w-3" aria-hidden="true" /> USC chapter info
+                  <Building2 className="h-3 w-3" aria-hidden="true" /> {identity.schoolShort} chapter info
                 </div>
-                <p className="mt-1.5 text-sm font-semibold">UofSC FSL</p>
-                <p className="text-xs text-muted-foreground">Fraternity & Sorority Life</p>
+                <p className="mt-1.5 text-sm font-semibold">{identity.schoolShort} FSL</p>
+                <p className="text-xs text-muted-foreground">Fraternity &amp; Sorority Life</p>
               </Link>
             </div>
           </div>

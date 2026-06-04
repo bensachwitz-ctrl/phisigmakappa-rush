@@ -37,6 +37,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";
+import { useToast } from "@/components/ui/toast";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 // Interfaces to ensure strict type safety matching the server page props
 interface Brother {
@@ -280,6 +282,8 @@ export default function BrothersDashboardClient({
   isAdmin,
 }: BrothersDashboardClientProps) {
   const router = useRouter();
+  const { push } = useToast();
+  const { greekLetters } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Local state management to enable instant interactive client feedback
@@ -480,10 +484,10 @@ export default function BrothersDashboardClient({
         setActiveRsvpEvent(null);
         setRsvpNote("");
       } else {
-        alert(data.error || "Failed to update RSVP.");
+        push({ title: "Failed to update RSVP.", description: data.error || undefined, variant: "destructive" });
       }
     } catch {
-      alert("A connection error occurred.");
+      push({ title: "A connection error occurred.", description: "Please check your network and try again.", variant: "destructive" });
     } finally {
       setRsvpLoading(null);
     }
@@ -570,10 +574,10 @@ export default function BrothersDashboardClient({
         );
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to submit vote.");
+        push({ title: "Failed to submit vote.", description: err.error || undefined, variant: "destructive" });
       }
     } catch {
-      alert("A network error occurred.");
+      push({ title: "A network error occurred.", description: "Please try voting again.", variant: "destructive" });
     } finally {
       setVotingOnPollId(null);
     }
@@ -665,7 +669,7 @@ export default function BrothersDashboardClient({
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-maroon-900 leading-tight">Gamma Triton Portal</h1>
+                <h1 className="text-lg font-bold text-maroon-900 leading-tight">{greekLetters} Portal</h1>
                 <p className="text-xs text-maroon-600">Active Brother Workspace • {brother.name}</p>
               </div>
             </div>

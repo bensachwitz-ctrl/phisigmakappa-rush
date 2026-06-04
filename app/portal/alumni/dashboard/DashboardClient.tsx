@@ -25,6 +25,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicFooter } from "@/components/site/footer";
+import { useToast } from "@/components/ui/toast";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Alumnus {
   id: string;
@@ -185,7 +190,36 @@ export default function DashboardClient({
   isAdmin,
 }: DashboardClientProps) {
   const router = useRouter();
+  const { push } = useToast();
+  const { fraternityName } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Confirm dialog state (replaces window.confirm) — mirrors the admin
+  // meetings-client pattern: a designed Radix dialog instead of a raw browser
+  // prompt. The action to run on confirm is captured in `onConfirm`.
+  const [confirmState, setConfirmState] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
 
   // Search states
   const [brotherSearch, setBrotherSearch] = useState("");
@@ -279,25 +313,31 @@ export default function DashboardClient({
     }
   };
 
-  const handleRevokeVouch = async (rushId: string) => {
-    if (!confirm("Are you sure you want to revoke this vouch?")) return;
+  const handleRevokeVouch = (rushId: string) => {
+    askConfirm({
+      title: "Revoke this vouch?",
+      description: "Your character note for this candidate will be removed. You can vouch again later.",
+      confirmLabel: "Revoke Vouch",
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/alumni/vouch", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rushId }),
+          });
 
-    try {
-      const res = await fetch("/api/alumni/vouch", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rushId }),
-      });
-
-      if (res.ok) {
-        setVouchList(prev => prev.filter(v => v.rushId !== rushId));
-        if (vouchingPnm?.id === rushId) {
-          setVouchingPnm(null);
+          if (res.ok) {
+            setVouchList(prev => prev.filter(v => v.rushId !== rushId));
+            if (vouchingPnm?.id === rushId) {
+              setVouchingPnm(null);
+            }
+          }
+        } catch (err) {
+          console.error(err);
         }
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      },
+    });
   };
 
   // Poll Vote Handler
@@ -332,7 +372,7 @@ export default function DashboardClient({
   const handleDonationCheckout = async () => {
     const amount = parseFloat(donationAmount);
     if (isNaN(amount) || amount < 5) {
-      alert("Please enter a valid amount of at least $5.00");
+      push({ title: "Please enter a valid amount of at least $5.00", variant: "destructive" });
       return;
     }
 
@@ -353,11 +393,11 @@ export default function DashboardClient({
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || "Failed to create donation session.");
+        push({ title: "Failed to create donation session.", description: data.error || undefined, variant: "destructive" });
       }
     } catch (err) {
       console.error(err);
-      alert("An unexpected error occurred. Please try again.");
+      push({ title: "An unexpected error occurred.", description: "Please try again.", variant: "destructive" });
     } finally {
       setSubmittingDonation(false);
     }
@@ -438,7 +478,7 @@ export default function DashboardClient({
                 <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
                   <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
                   <p className="text-sm text-maroon-700 leading-relaxed mb-4">
-                    As an alumnus of Phi Sigma Kappa, your involvement is crucial to our chapter&apos;s growth. 
+                    As an alum of {fraternityName}, your involvement is crucial to our chapter&apos;s growth.
                     Through this portal, you can connect with undergraduate brothers, review local PNMs, vote on 
                     active alumni polls, and coordinate for homecoming events.
                   </p>
@@ -1197,6 +1237,38 @@ export default function DashboardClient({
           </div>
         </div>
       )}
+
+      {/* CONFIRM DIALOG (replaces window.confirm) */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmState(null)}
+              disabled={confirmBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-maroon-800 text-cream-50 hover:bg-maroon-900"
+              }
+            >
+              {confirmBusy ? "Working..." : confirmState?.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <PublicFooter />
     </div>

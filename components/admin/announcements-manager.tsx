@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -49,6 +49,31 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
   const [form, setForm] = React.useState(initial);
   const [busy, setBusy] = React.useState(false);
   const [broadcastOpen, setBroadcastOpen] = React.useState(false);
+
+  // ---- Confirm dialog (replaces window.confirm) ----
+  const [confirmState, setConfirmState] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = React.useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -100,21 +125,28 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
     }
   }
 
-  async function remove(id: string) {
-    if (!confirm("Delete this announcement?")) return;
-    const prev = list;
-    setList(list.filter((a) => a.id !== id));
-    try {
-      const res = await fetch("/api/admin/announcements", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setList(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function remove(id: string) {
+    askConfirm({
+      title: "Delete announcement?",
+      description: "This announcement will be permanently removed. This cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = list;
+        setList(list.filter((a) => a.id !== id));
+        try {
+          const res = await fetch("/api/admin/announcements", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          setList(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
   async function togglePin(a: Announcement) {
@@ -260,6 +292,33 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
       </Dialog>
 
       <BroadcastDialog open={broadcastOpen} onOpenChange={setBroadcastOpen} />
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmState(null)} disabled={confirmBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={cn(
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : undefined
+              )}
+            >
+              {confirmBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {confirmState?.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -273,13 +332,19 @@ function BroadcastDialog({
   const [subject, setSubject] = React.useState("");
   const [body, setBody] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  // Confirm dialog (replaces window.confirm) for the broadcast send.
+  const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
 
-  async function send() {
+  function send() {
     if (!body.trim()) {
       push({ title: "Message body required", variant: "destructive" });
       return;
     }
-    if (!confirm(`Broadcast to ${audience.toLowerCase()} via ${channel.toLowerCase()}?`)) return;
+    setConfirmSendOpen(true);
+  }
+
+  async function doSend() {
+    setConfirmSendOpen(false);
     setBusy(true);
     try {
       const res = await fetch("/api/admin/broadcast", {
@@ -361,6 +426,27 @@ function BroadcastDialog({
             Broadcast
           </Button>
         </DialogFooter>
+
+        {/* Confirm send (replaces window.confirm) */}
+        <Dialog open={confirmSendOpen} onOpenChange={(o) => !busy && setConfirmSendOpen(o)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Send broadcast?</DialogTitle>
+              <DialogDescription>
+                Broadcast to {audience.toLowerCase()} via {channel.toLowerCase()}? This will message every recipient in the selected audience.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmSendOpen(false)} disabled={busy}>
+                Cancel
+              </Button>
+              <Button onClick={doSend} disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Send Broadcast
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,30 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
+
+/**
+ * Per-tenant base URL derived from the live request Host header, so each
+ * chapter's robots.txt points its sitemap at THAT chapter's domain. Falls back
+ * to the NEUTRAL Greekstack apex (never a chapter reference host like
+ * phisigmakappa.vercel.app, which would leak one chapter's host into every
+ * other deploy's robots.txt). Mirrors app/layout.tsx requestHost/resolveMetadataBase.
+ */
+function resolveBase(): string {
+  let host: string | null = null;
+  try {
+    const h = headers();
+    host = h.get("host") || h.get("x-forwarded-host");
+  } catch {
+    /* no request context */
+  }
+  if (host) {
+    const proto = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
+    return `${proto}://${host}`;
+  }
+  return "https://greeklifesystems.vercel.app";
+}
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  const base = resolveBase();
   return {
     rules: [
       {

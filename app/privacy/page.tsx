@@ -107,7 +107,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Who sees it</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Only the chapter's executive board and active brothers, signed in to the chapter's gated admin area, can view rushee information. Active brothers are the only people who can vote, leave notes, or extend bids. We do not sell, rent, or share your data with any third party for marketing.
+            Only the chapter's executive board and active members, signed in to the chapter's gated admin area, can view rushee information. Active members are the only people who can vote, leave notes, or extend bids. We do not sell, rent, or share your data with any third party for marketing.
           </p>
         </section>
 
@@ -125,7 +125,7 @@ export default async function PrivacyPage() {
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>
-            . Records of accepted brothers move to the active member directory and are retained while you remain in the chapter. We retain proof of SMS consent (timestamp + IP) for four years as required by TCPA recordkeeping rules.
+            . Records of accepted members move to the active member directory and are retained while you remain in the chapter. We retain proof of SMS consent (timestamp + IP) for four years as required by TCPA recordkeeping rules.
           </p>
         </section>
 
@@ -143,7 +143,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Cookies</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            This site uses only first-party functional cookies necessary to keep brothers signed in to the admin area and to remember booth-mode settings. We do not use advertising or analytics cookies. No third-party trackers are loaded.
+            This site uses only first-party functional cookies necessary to keep members signed in to the admin area and to remember booth-mode settings. We do not use advertising or analytics cookies. No third-party trackers are loaded.
           </p>
         </section>
 

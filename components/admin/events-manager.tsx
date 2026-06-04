@@ -75,6 +75,31 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [attendingFor, setAttendingFor] = React.useState<Event | null>(null);
 
+  // ---- Confirm dialog (replaces window.confirm) ----
+  const [confirmState, setConfirmState] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = React.useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
+
   function update<K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
@@ -148,44 +173,58 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     }
   }
 
-  async function remove(id: string) {
-    if (!confirm("Delete this event?")) return;
-    const prev = events;
-    setEvents((es) => es.filter((e) => e.id !== id));
-    try {
-      const res = await fetch("/api/admin/events", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setEvents(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function remove(id: string) {
+    askConfirm({
+      title: "Delete event?",
+      description: "This event will be permanently removed. This cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = events;
+        setEvents((es) => es.filter((e) => e.id !== id));
+        try {
+          const res = await fetch("/api/admin/events", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          setEvents(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
-  async function deleteAll() {
+  function deleteAll() {
     if (events.length === 0) return;
-    if (!confirm(`Delete all ${events.length} events? This cannot be undone.`)) return;
-    setBusy(true);
-    const prev = events;
-    setEvents([]);
-    try {
-      for (const e of prev) {
-        await fetch("/api/admin/events", {
-          method: "DELETE",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ id: e.id }),
-        });
-      }
-      push({ title: `Cleared ${prev.length} events`, variant: "success" });
-    } catch {
-      setEvents(prev);
-      push({ title: "Bulk delete failed", variant: "destructive" });
-    } finally {
-      setBusy(false);
-    }
+    askConfirm({
+      title: "Delete all events?",
+      description: `Delete all ${events.length} events? This cannot be undone.`,
+      confirmLabel: `Delete ${events.length} events`,
+      destructive: true,
+      onConfirm: async () => {
+        setBusy(true);
+        const prev = events;
+        setEvents([]);
+        try {
+          for (const e of prev) {
+            await fetch("/api/admin/events", {
+              method: "DELETE",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ id: e.id }),
+            });
+          }
+          push({ title: `Cleared ${prev.length} events`, variant: "success" });
+        } catch {
+          setEvents(prev);
+          push({ title: "Bulk delete failed", variant: "destructive" });
+        } finally {
+          setBusy(false);
+        }
+      },
+    });
   }
 
   return (
@@ -401,6 +440,33 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
         event={attendingFor}
         onClose={() => setAttendingFor(null)}
       />
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmState(null)} disabled={confirmBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={cn(
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : undefined
+              )}
+            >
+              {confirmBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {confirmState?.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

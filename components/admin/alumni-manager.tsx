@@ -21,6 +21,10 @@ import {
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/toast";
 
 interface Alumnus {
   id: string;
@@ -43,12 +47,16 @@ interface AlumniManagerProps {
 }
 
 export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
+  const { push } = useToast();
   const [alumniList, setAlumniList] = useState<Alumnus[]>(initialAlumni);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Confirm dialog (replaces window.confirm) for deleting an alumnus.
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   // Add form state
   const [formData, setFormData] = useState({
@@ -172,9 +180,14 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove ${name} from the alumni database?`)) return;
+  const handleDelete = (id: string, name: string) => {
+    setDeleteTarget({ id, name });
+  };
 
+  const doDelete = async () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    setDeleteBusy(true);
     try {
       const res = await fetch(`/api/admin/alumni/${id}`, {
         method: "DELETE",
@@ -182,11 +195,16 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
 
       if (res.ok) {
         setAlumniList((prev) => prev.filter((a) => a.id !== id));
+        push({ title: "Alumnus removed", variant: "success" });
+        setDeleteTarget(null);
       } else {
-        alert("Failed to delete alumnus.");
+        push({ title: "Failed to delete alumnus.", variant: "destructive" });
       }
     } catch (err) {
       console.error(err);
+      push({ title: "Failed to delete alumnus.", variant: "destructive" });
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -219,7 +237,11 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
       if (!res.ok) {
         setError(data.error || "Failed to import CSV.");
       } else {
-        alert(`Successfully imported ${data.imported} alumni! (${data.failed} failed)`);
+        push({
+          title: `Imported ${data.imported} alumni`,
+          description: data.failed ? `${data.failed} failed` : undefined,
+          variant: "success",
+        });
         // Refresh the page data
         window.location.reload();
       }
@@ -683,6 +705,34 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
           </form>
         </div>
       )}
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !deleteBusy && !o && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove alumnus?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `Are you sure you want to remove ${deleteTarget.name} from the alumni database? This cannot be undone.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleteBusy}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={doDelete}
+              disabled={deleteBusy}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

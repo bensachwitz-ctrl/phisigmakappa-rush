@@ -178,6 +178,31 @@ export function Roster({
   const [compareOpen, setCompareOpen] = React.useState(false);
   const [detail, setDetail] = React.useState<Rush | null>(null);
 
+  // ---- Confirm dialog (replaces window.confirm) ----
+  const [confirmState, setConfirmState] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = React.useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
+
   function toggle(id: string) {
     setSelected((s) => {
       const next = new Set(s);
@@ -265,54 +290,67 @@ export function Roster({
   // patch local state first, then fire N PATCH requests in parallel. On
   // any failure we revert the whole set (rare; partial-success would
   // require finer-grained rollback that's not worth the code complexity).
-  async function bulkSetStatus(status: RushStatus) {
+  function bulkSetStatus(status: RushStatus) {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    if (!confirm(`Set ${ids.length} PNM${ids.length === 1 ? "" : "s"} to ${STATUS_LABELS[status]}?`)) return;
-    const prev = rushes;
-    setRushes((rs) => rs.map((r) => (selected.has(r.id) ? { ...r, status } : r)));
-    try {
-      const results = await Promise.all(ids.map((id) =>
-        fetch("/api/admin/rush", {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ id, status }),
-        })
-      ));
-      const failed = results.filter((r) => !r.ok).length;
-      if (failed > 0) {
-        setRushes(prev);
-        push({ title: `${failed} of ${ids.length} updates failed`, variant: "destructive" });
-        return;
-      }
-      push({
-        title: `${ids.length} PNM${ids.length === 1 ? "" : "s"} → ${STATUS_LABELS[status]}`,
-        variant: "success",
-      });
-      setSelected(new Set());
-    } catch {
-      setRushes(prev);
-      push({ title: "Bulk update failed", variant: "destructive" });
-    }
+    askConfirm({
+      title: "Update PNM status?",
+      description: `Set ${ids.length} PNM${ids.length === 1 ? "" : "s"} to ${STATUS_LABELS[status]}?`,
+      confirmLabel: `Set ${STATUS_LABELS[status]}`,
+      onConfirm: async () => {
+        const prev = rushes;
+        setRushes((rs) => rs.map((r) => (selected.has(r.id) ? { ...r, status } : r)));
+        try {
+          const results = await Promise.all(ids.map((id) =>
+            fetch("/api/admin/rush", {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ id, status }),
+            })
+          ));
+          const failed = results.filter((r) => !r.ok).length;
+          if (failed > 0) {
+            setRushes(prev);
+            push({ title: `${failed} of ${ids.length} updates failed`, variant: "destructive" });
+            return;
+          }
+          push({
+            title: `${ids.length} PNM${ids.length === 1 ? "" : "s"} → ${STATUS_LABELS[status]}`,
+            variant: "success",
+          });
+          setSelected(new Set());
+        } catch {
+          setRushes(prev);
+          push({ title: "Bulk update failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
-  async function remove(id: string) {
-    if (!confirm("Remove this rush from the database? This cannot be undone.")) return;
-    const prev = rushes;
-    setRushes((rs) => rs.filter((r) => r.id !== id));
-    setSelected((s) => { const n = new Set(s); n.delete(id); return n; });
-    setDetail(null);
-    try {
-      const res = await fetch("/api/admin/rush", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setRushes(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function remove(id: string) {
+    askConfirm({
+      title: "Remove this rush?",
+      description: "Remove this rush from the database? This cannot be undone.",
+      confirmLabel: "Remove",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = rushes;
+        setRushes((rs) => rs.filter((r) => r.id !== id));
+        setSelected((s) => { const n = new Set(s); n.delete(id); return n; });
+        setDetail(null);
+        try {
+          const res = await fetch("/api/admin/rush", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          setRushes(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
   // value=0 means "clear my vote" — translates to a DELETE request instead
@@ -700,6 +738,33 @@ export function Roster({
           setDetail({ ...detail, notes });
         }}
       />
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmState(null)} disabled={confirmBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={cn(
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : undefined
+              )}
+            >
+              {confirmBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {confirmState?.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1214,6 +1279,8 @@ function EmailComposer({
   const [subject, setSubject] = React.useState("");
   const [body, setBody] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  // Confirm dialog (replaces window.confirm) for the send action.
+  const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -1223,12 +1290,16 @@ function EmailComposer({
     }
   }, [open, template, templates]);
 
-  async function send() {
+  function send() {
     if (!subject.trim() || !body.trim()) {
       push({ title: "Subject and body are required", variant: "destructive" });
       return;
     }
-    if (!confirm(`Send email to ${rushIds.length} recipient${rushIds.length === 1 ? "" : "s"}?`)) return;
+    setConfirmSendOpen(true);
+  }
+
+  async function doSend() {
+    setConfirmSendOpen(false);
     setBusy(true);
     try {
       const res = await fetch("/api/send-email", {
@@ -1297,6 +1368,27 @@ function EmailComposer({
             Send to {rushIds.length}
           </Button>
         </DialogFooter>
+
+        {/* Confirm send (replaces window.confirm) */}
+        <Dialog open={confirmSendOpen} onOpenChange={(o) => !busy && setConfirmSendOpen(o)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Send email?</DialogTitle>
+              <DialogDescription>
+                Send this email to {rushIds.length} recipient{rushIds.length === 1 ? "" : "s"}?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmSendOpen(false)} disabled={busy}>
+                Cancel
+              </Button>
+              <Button onClick={doSend} disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Send to {rushIds.length}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
@@ -1318,6 +1410,8 @@ function SmsComposer({
   const [template, setTemplate] = React.useState("blank");
   const [body, setBody] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  // Confirm dialog (replaces window.confirm) for the send action.
+  const [confirmSendOpen, setConfirmSendOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (open) setBody(templates[template] || "");
@@ -1325,12 +1419,16 @@ function SmsComposer({
 
   const remaining = 320 - body.length;
 
-  async function send() {
+  function send() {
     if (!body.trim()) {
       push({ title: "Message is empty", variant: "destructive" });
       return;
     }
-    if (!confirm(`Send text to ${rushIds.length} recipient${rushIds.length === 1 ? "" : "s"}?`)) return;
+    setConfirmSendOpen(true);
+  }
+
+  async function doSend() {
+    setConfirmSendOpen(false);
     setBusy(true);
     try {
       const res = await fetch("/api/send-sms", {
@@ -1405,6 +1503,27 @@ function SmsComposer({
             Send to {rushIds.length}
           </Button>
         </DialogFooter>
+
+        {/* Confirm send (replaces window.confirm) */}
+        <Dialog open={confirmSendOpen} onOpenChange={(o) => !busy && setConfirmSendOpen(o)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Send text?</DialogTitle>
+              <DialogDescription>
+                Send this text to {rushIds.length} recipient{rushIds.length === 1 ? "" : "s"}?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmSendOpen(false)} disabled={busy}>
+                Cancel
+              </Button>
+              <Button onClick={doSend} disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Send to {rushIds.length}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

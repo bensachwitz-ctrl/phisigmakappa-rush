@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -69,6 +69,31 @@ export function BrothersManager({
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const [form, setForm] = React.useState(empty);
   const [busy, setBusy] = React.useState(false);
+
+  // ---- Confirm dialog (replaces window.confirm) ----
+  const [confirmState, setConfirmState] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = React.useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
   // Pagination cap — chapters with 60+ brothers ship 60+ Cards on first paint
   // which jank LCP on mid-tier Android. Cap at PAGE_SIZE, expand on demand.
   // Reset when the search query changes so the user sees fresh results from
@@ -139,21 +164,28 @@ export function BrothersManager({
     }
   }
 
-  async function remove(id: string) {
-    if (!confirm("Remove this brother from the directory?")) return;
-    const prev = list;
-    setList(list.filter((b) => b.id !== id));
-    try {
-      const res = await fetch("/api/admin/brothers", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setList(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function remove(id: string) {
+    askConfirm({
+      title: "Remove brother?",
+      description: "Remove this brother from the directory? This cannot be undone.",
+      confirmLabel: "Remove",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = list;
+        setList(list.filter((b) => b.id !== id));
+        try {
+          const res = await fetch("/api/admin/brothers", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          setList(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
   // Pay-dues flow — POST /api/dues/checkout returns a Stripe-hosted URL
@@ -496,6 +528,33 @@ export function BrothersManager({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmState(null)} disabled={confirmBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={cn(
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : undefined
+              )}
+            >
+              {confirmBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {confirmState?.confirmLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -681,6 +740,9 @@ function PendingInvites() {
   const { push } = useToast();
   const [invites, setInvites] = React.useState<Invite[] | null>(null);
   const [loading, setLoading] = React.useState(true);
+  // Confirm dialog (replaces window.confirm) for revoking an invite.
+  const [revokeId, setRevokeId] = React.useState<string | null>(null);
+  const [revokeBusy, setRevokeBusy] = React.useState(false);
 
   async function load() {
     setLoading(true);
@@ -698,8 +760,14 @@ function PendingInvites() {
 
   React.useEffect(() => { load(); }, []);
 
-  async function revoke(id: string) {
-    if (!confirm("Revoke this invite? The link will stop working immediately.")) return;
+  function revoke(id: string) {
+    setRevokeId(id);
+  }
+
+  async function doRevoke() {
+    const id = revokeId;
+    if (!id) return;
+    setRevokeBusy(true);
     const prev = invites || [];
     setInvites((xs) => (xs || []).map((i) => (i.id === id ? { ...i, status: "REVOKED" } : i)));
     try {
@@ -713,6 +781,9 @@ function PendingInvites() {
     } catch {
       setInvites(prev);
       push({ title: "Revoke failed", variant: "destructive" });
+    } finally {
+      setRevokeBusy(false);
+      setRevokeId(null);
     }
   }
 
@@ -744,6 +815,7 @@ function PendingInvites() {
   if (pending.length === 0 && recent.length === 0) return null;
 
   return (
+    <>
     <Card className="border-border/60">
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
@@ -818,6 +890,32 @@ function PendingInvites() {
         </ul>
       </CardContent>
     </Card>
+
+    {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+    <Dialog open={!!revokeId} onOpenChange={(o) => !revokeBusy && !o && setRevokeId(null)}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Revoke invite?</DialogTitle>
+          <DialogDescription>
+            Revoke this invite? The link will stop working immediately.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setRevokeId(null)} disabled={revokeBusy}>
+            Cancel
+          </Button>
+          <Button
+            onClick={doRevoke}
+            disabled={revokeBusy}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {revokeBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+            Revoke
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

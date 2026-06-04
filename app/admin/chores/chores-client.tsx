@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -97,6 +97,31 @@ export function ChoresClient({
   });
   const [gradingBusy, setGradingBusy] = React.useState(false);
 
+  // ---- Confirm dialog (replaces window.confirm) ----
+  const [confirmState, setConfirmState] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = React.useState(false);
+
+  function askConfirm(opts: NonNullable<typeof confirmState>) {
+    setConfirmState(opts);
+  }
+
+  async function runConfirm() {
+    if (!confirmState) return;
+    setConfirmBusy(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmBusy(false);
+    }
+  }
+
   // Load assignments when weekCode changes
   const fetchAssignments = React.useCallback(async (code: string) => {
     setLoadingAssignments(true);
@@ -179,28 +204,44 @@ export function ChoresClient({
     }
   }
 
-  async function deleteTask(id: string) {
-    if (!confirm("Are you sure you want to delete this chore task? This will remove it from the catalog.")) return;
-    const prev = tasks;
-    setTasks(xs => xs.filter(x => x.id !== id));
-    try {
-      const res = await fetch(`/api/admin/chores/tasks/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      push({ title: "Chore task deleted", variant: "success" });
-    } catch {
-      setTasks(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function deleteTask(id: string) {
+    askConfirm({
+      title: "Delete chore task?",
+      description: "Are you sure you want to delete this chore task? This will remove it from the catalog.",
+      confirmLabel: "Delete Task",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = tasks;
+        setTasks(xs => xs.filter(x => x.id !== id));
+        try {
+          const res = await fetch(`/api/admin/chores/tasks/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error();
+          push({ title: "Chore task deleted", variant: "success" });
+        } catch {
+          setTasks(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
   // Rotation Trigger
-  async function runRotation() {
+  function runRotation() {
     if (!canWrite) return;
     if (assignments.length > 0) {
-      if (!confirm(`This week (${weekCode}) already has assignments. Running rotation will overwrite all assignments for this week. Continue?`)) {
-        return;
-      }
+      askConfirm({
+        title: "Overwrite this week's assignments?",
+        description: `This week (${weekCode}) already has assignments. Running rotation will overwrite all assignments for this week. Continue?`,
+        confirmLabel: "Run Rotation",
+        destructive: true,
+        onConfirm: doRotation,
+      });
+      return;
     }
+    void doRotation();
+  }
+
+  async function doRotation() {
     setLoadingAssignments(true);
     try {
       const res = await fetch(`/api/admin/chores/rotate`, {
@@ -272,18 +313,25 @@ export function ChoresClient({
   }
 
   // Delete Assignment
-  async function deleteAssignment(id: string) {
-    if (!confirm("Are you sure you want to delete this chore assignment?")) return;
-    const prev = assignments;
-    setAssignments(xs => xs.filter(x => x.id !== id));
-    try {
-      const res = await fetch(`/api/admin/chores/assignments/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      push({ title: "Chore assignment deleted", variant: "success" });
-    } catch {
-      setAssignments(prev);
-      push({ title: "Delete failed", variant: "destructive" });
-    }
+  function deleteAssignment(id: string) {
+    askConfirm({
+      title: "Delete chore assignment?",
+      description: "Are you sure you want to delete this chore assignment?",
+      confirmLabel: "Delete Assignment",
+      destructive: true,
+      onConfirm: async () => {
+        const prev = assignments;
+        setAssignments(xs => xs.filter(x => x.id !== id));
+        try {
+          const res = await fetch(`/api/admin/chores/assignments/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error();
+          push({ title: "Chore assignment deleted", variant: "success" });
+        } catch {
+          setAssignments(prev);
+          push({ title: "Delete failed", variant: "destructive" });
+        }
+      },
+    });
   }
 
   // Relative Week Control
@@ -707,6 +755,33 @@ export function ChoresClient({
             <Button onClick={saveGrade} disabled={gradingBusy}>
               {gradingBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
               Submit Grade
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmState?.title}</DialogTitle>
+            <DialogDescription>{confirmState?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmState(null)} disabled={confirmBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runConfirm}
+              disabled={confirmBusy}
+              className={cn(
+                confirmState?.destructive
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-phisig-red text-white hover:bg-phisig-red-dark"
+              )}
+            >
+              {confirmBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+              {confirmState?.confirmLabel}
             </Button>
           </DialogFooter>
         </DialogContent>

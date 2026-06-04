@@ -59,6 +59,9 @@ export function PollsFeed({ isAdmin = false }: Props) {
   const [loading, setLoading] = React.useState(true);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [now, setNow] = React.useState(() => Date.now());
+  // Confirm dialog (replaces window.confirm) for deleting a poll.
+  const [deletePollId, setDeletePollId] = React.useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = React.useState(false);
 
   // Re-tick once a minute so "Closes in 3h" / "2h ago" stay fresh while the
   // page is open. Cheap setInterval — no network.
@@ -192,27 +195,29 @@ export function PollsFeed({ isAdmin = false }: Props) {
     [polls, push],
   );
 
-  const handleDelete = React.useCallback(
-    async (pollId: string) => {
-      // Browser confirm — no native alert UI in shadcn yet, and a destructive
-      // flow without confirmation is bad UX.
-      if (typeof window !== "undefined") {
-        const ok = window.confirm("Delete this poll? This cannot be undone.");
-        if (!ok) return;
-      }
-      const prev = polls;
-      setPolls((curr) => curr.filter((p) => p.id !== pollId));
-      try {
-        const res = await fetch(`/api/polls/${pollId}`, { method: "DELETE" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        push({ title: "Poll deleted", variant: "success" });
-      } catch {
-        setPolls(prev);
-        push({ title: "Could not delete poll", variant: "destructive" });
-      }
-    },
-    [polls, push],
-  );
+  // Open the confirm dialog; the actual delete runs in doDeletePoll on confirm.
+  const handleDelete = React.useCallback((pollId: string) => {
+    setDeletePollId(pollId);
+  }, []);
+
+  const doDeletePoll = React.useCallback(async () => {
+    const pollId = deletePollId;
+    if (!pollId) return;
+    setDeleteBusy(true);
+    const prev = polls;
+    setPolls((curr) => curr.filter((p) => p.id !== pollId));
+    try {
+      const res = await fetch(`/api/polls/${pollId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      push({ title: "Poll deleted", variant: "success" });
+      setDeletePollId(null);
+    } catch {
+      setPolls(prev);
+      push({ title: "Could not delete poll", variant: "destructive" });
+    } finally {
+      setDeleteBusy(false);
+    }
+  }, [deletePollId, polls, push]);
 
   return (
     <section className="space-y-4">
@@ -264,6 +269,31 @@ export function PollsFeed({ isAdmin = false }: Props) {
         onOpenChange={setCreateOpen}
         onCreated={handleCreated}
       />
+
+      {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
+      <Dialog open={!!deletePollId} onOpenChange={(o) => !deleteBusy && !o && setDeletePollId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete poll?</DialogTitle>
+            <DialogDescription>
+              Delete this poll? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePollId(null)} disabled={deleteBusy}>
+              Cancel
+            </Button>
+            <Button
+              onClick={doDeletePoll}
+              disabled={deleteBusy}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
