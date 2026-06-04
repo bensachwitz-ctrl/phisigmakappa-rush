@@ -191,7 +191,9 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const { push } = useToast();
-  const { fraternityName } = useChapterIdentity();
+  // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
+  // stay /portal/* — only visible labels re-genders for sororities / pro orgs.
+  const { fraternityName, terms } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Confirm dialog state (replaces window.confirm) — mirrors the admin
@@ -415,7 +417,7 @@ export default function DashboardClient({
               </div>
               <div>
                 <h1 className="text-lg font-bold text-maroon-900 leading-tight">Alumni Network Portal</h1>
-                <p className="text-xs text-maroon-600">Welcome, Brother {alumni.fullName}</p>
+                <p className="text-xs text-maroon-600">Welcome, {terms.member} {alumni.fullName}</p>
               </div>
             </div>
 
@@ -444,7 +446,7 @@ export default function DashboardClient({
             {[
               { id: "overview", label: "Overview", icon: Users },
               { id: "pnms", label: "Hometown PNMs", icon: MapPin },
-              { id: "brothers", label: "Active Brothers", icon: Users },
+              { id: "brothers", label: `Active ${terms.members}`, icon: Users },
               { id: "alumni", label: "Alumni Directory", icon: GraduationCap },
               { id: "polls", label: "Surveys & Polls", icon: Vote },
               { id: "events", label: "Events Calendar", icon: Calendar },
@@ -479,7 +481,7 @@ export default function DashboardClient({
                   <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
                   <p className="text-sm text-maroon-700 leading-relaxed mb-4">
                     As an alum of {fraternityName}, your involvement is crucial to our chapter&apos;s growth.
-                    Through this portal, you can connect with undergraduate brothers, review local PNMs, vote on 
+                    Through this portal, you can connect with undergraduate {terms.membersLower}, review local PNMs, vote on
                     active alumni polls, and coordinate for homecoming events.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -801,7 +803,7 @@ export default function DashboardClient({
                           <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">{b.position}</p>
                         )}
                         <p className="text-[11px] text-maroon-700">
-                          {b.year || "Undergrad"} • {b.pledgeClass || "Brother"}
+                          {b.year || "Undergrad"} • {b.pledgeClass || terms.member}
                         </p>
                         {b.major && (
                           <p className="text-[11px] text-maroon-600 italic">Major: {b.major}</p>

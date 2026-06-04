@@ -14,9 +14,63 @@ import { getSiteConfig } from "@/lib/site-config";
  * Use the typed `ChapterIdentity` shape so consumers can destructure exactly
  * the fields they need rather than passing the whole cfg around.
  */
+/**
+ * Org-type-aware member terminology. The apex marketing site claims Greekstack
+ * works for "any fraternity OR sorority", but the product copy was hardcoded
+ * male/frat ("Brothers", "Brotherhood", "son", "Rush"). This term set is derived
+ * from `chapter.orgType` so a sorority renders "Sisters / Sisterhood / daughter /
+ * Recruitment" and a professional/co-ed org renders neutral "Members / Membership
+ * / student / Recruitment", all without per-string cfg keys. A FRATERNITY (the
+ * default) keeps the exact original words, so a frat renders identically.
+ */
+export type ChapterTerms = {
+  member: string;        // "Brother" | "Sister" | "Member"
+  members: string;       // "Brothers" | "Sisters" | "Members"
+  collective: string;    // "Brotherhood" | "Sisterhood" | "Membership"
+  memberLower: string;   // "brother" | "sister" | "member"
+  membersLower: string;  // "brothers" | "sisters" | "members"
+  relative: string;      // "son" | "daughter" | "student"
+  recruit: string;       // "Rush" | "Recruitment"
+};
+
+/** Recognized organization types for the terminology layer. */
+export type ChapterOrgType = "fraternity" | "sorority" | "professional" | "other";
+
+/**
+ * Build the member-noun term set for an org type. Anything that isn't a known
+ * fraternity/sorority (professional, co-ed, or unset/"other") gets the neutral
+ * "Member / Membership / student / Recruitment" set. Pure + side-effect-free so
+ * it's safe to call from server and (via the identity object) client surfaces.
+ */
+export function termsForOrgType(orgType: string): ChapterTerms {
+  switch (orgType) {
+    case "sorority":
+      return {
+        member: "Sister", members: "Sisters", collective: "Sisterhood",
+        memberLower: "sister", membersLower: "sisters",
+        relative: "daughter", recruit: "Recruitment",
+      };
+    case "fraternity":
+      return {
+        member: "Brother", members: "Brothers", collective: "Brotherhood",
+        memberLower: "brother", membersLower: "brothers",
+        relative: "son", recruit: "Rush",
+      };
+    // "professional" | "other" | anything unrecognized → neutral, inclusive set.
+    default:
+      return {
+        member: "Member", members: "Members", collective: "Membership",
+        memberLower: "member", membersLower: "members",
+        relative: "student", recruit: "Recruitment",
+      };
+  }
+}
+
 export type ChapterIdentity = {
   fraternityName: string;       // "Phi Sigma Kappa"
   fraternityShort: string;      // "Phi Sig"
+  orgType: string;              // "fraternity" | "sorority" | "professional" | "other"
+  terms: ChapterTerms;          // member-noun vocabulary derived from orgType
   greekLetters: string;         // "Gamma Triton"
   greekLettersGlyphs: string;   // "ΓΤ"
   schoolName: string;           // "University of South Carolina"
@@ -48,6 +102,11 @@ export type ChapterIdentity = {
 export const APEX_IDENTITY: ChapterIdentity = {
   fraternityName: "Greekstack",
   fraternityShort: "Greekstack",
+  // Apex is org-type-agnostic — use the neutral "other" term set so any stray
+  // member-noun on the marketing site reads inclusively ("Members" not
+  // "Brothers"), never a single chapter's gendered vocabulary.
+  orgType: "other",
+  terms: termsForOrgType("other"),
   greekLetters: "",
   greekLettersGlyphs: "",
   schoolName: "",
@@ -94,6 +153,12 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   // instead of leaking the reference chapter onto another tenant or the apex.
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
   const fraternityShort = cfg["chapter.fraternityShort"] || fraternityName;
+  // Org type drives the member-noun vocabulary (terms). Defaults to "fraternity"
+  // so an existing/unconfigured tenant renders IDENTICALLY to the original
+  // hardcoded copy (Brother/Brotherhood/son/Rush). A sorority or pro/co-ed org
+  // sets chapter.orgType once at signup and every terms.* mention re-genders.
+  const orgType = cfg["chapter.orgType"] || "fraternity";
+  const terms = termsForOrgType(orgType);
   const greekLetters = cfg["chapter.greekLetters"] || "";
   const greekLettersGlyphs = cfg["chapter.greekLettersGlyphs"] || "";
   const schoolName = cfg["chapter.schoolName"] || "";
@@ -111,7 +176,8 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
 
   const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
   return {
-    fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
+    fraternityName, fraternityShort, orgType, terms,
+    greekLetters, greekLettersGlyphs,
     schoolName, schoolShort, schoolUrl,
     charterYear, foundingYear, foundingLocation,
     nationalName, nationalHqUrl,

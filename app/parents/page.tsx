@@ -4,6 +4,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import {
   ShieldCheck, ArrowLeft, Mail, Phone, MapPin, GraduationCap,
@@ -18,8 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
   const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
   const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const { terms } = chapterIdentityFromCfg(cfg);
   const title = `For Parents — ${fraternityName} ${greekLetters}`;
-  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your student's data when they join the rush list.`;
+  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your ${terms.relative}'s data when they join the rush list.`;
   const ogAlt = `${fraternityName} @ ${schoolShort}`;
   return {
     title,
@@ -65,6 +67,10 @@ export default async function ParentsPage() {
   // for a Phi Sig chapter (same check as components/brand/wordmark.tsx); any
   // other chapter omits it rather than show the wrong fraternity's crest.
   const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+  // Org-type relative noun for parent-facing copy: a fraternity addresses the
+  // parent's "son", a sorority their "daughter", a pro/co-ed org their "student".
+  // Drives every "your <relative>" mention below so the page re-genders per org.
+  const { terms } = chapterIdentityFromCfg(cfg);
 
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
@@ -101,12 +107,12 @@ export default async function ParentsPage() {
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> For Parents &amp; Guardians
           </span>
           <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
-            Your student&apos;s safety, academics, and contact info — straight talk.
+            Your {terms.relative}&apos;s safety, academics, and contact info — straight talk.
           </h1>
           <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
             {chapterAttribution} is the chapter at {schoolName}. We
             run a dry, FIPG-compliant rush with a hard zero-tolerance hazing policy. This page
-            answers the questions you&apos;ll want answered before your student fills out our interest
+            answers the questions you&apos;ll want answered before your {terms.relative} fills out our interest
             form — and tells you exactly how to reach a real adult if you have a concern.
           </p>
         </div>
@@ -241,7 +247,7 @@ export default async function ParentsPage() {
                 <div>
                   <p className="font-semibold">Closed events (week 2) — invite only.</p>
                   <p className="text-muted-foreground mt-0.5">
-                    Smaller invite-only events so we and your student can both feel out fit.
+                    Smaller invite-only events so we and your {terms.relative} can both feel out fit.
                   </p>
                 </div>
               </li>
@@ -250,7 +256,7 @@ export default async function ParentsPage() {
                 <div>
                   <p className="font-semibold">Interviews &amp; Bid Day (week 3).</p>
                   <p className="text-muted-foreground mt-0.5">
-                    One-on-ones with the e-board, then bids extended. Your student will receive a complete
+                    One-on-ones with the e-board, then bids extended. Your {terms.relative} will receive a complete
                     cost breakdown — dues, house fees, philanthropy, formals — BEFORE they accept a bid.
                   </p>
                 </div>
@@ -295,14 +301,14 @@ export default async function ParentsPage() {
                   <span className="font-semibold">Express written consent</span> recorded
                   under 47 CFR §64.1200(f)(9) at signup — disclosure text, timestamp,
                   IP, and user-agent retained for the 4-year TCPA recordkeeping
-                  window. Your student can audit their own receipt at any time.
+                  window. Your {terms.relative} can audit their own receipt at any time.
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
                 <span>
                   <span className="font-semibold">Msg & data rates may apply.</span>{" "}
-                  Standard carrier rates from your student's plan. We don't charge
+                  Standard carrier rates from your {terms.relative}&apos;s plan. We don't charge
                   anything.
                 </span>
               </li>
@@ -332,7 +338,7 @@ export default async function ParentsPage() {
           <p className="mt-4 text-xs text-muted-foreground">
             Full <Link href="/privacy" className="text-phisig-red hover:underline">privacy policy</Link>{" "}
             covers TCPA SMS consent, CCPA/Virginia rights, cookies, and the 4-year recordkeeping window.
-            If your student is 17, a parent or guardian can email{" "}
+            If your {terms.relative} is 17, a parent or guardian can email{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>{" "}
             to confirm consent on their behalf.
           </p>

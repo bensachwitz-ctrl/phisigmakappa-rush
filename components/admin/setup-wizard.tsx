@@ -132,8 +132,8 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
 
           {step === "identity" && (
             <div className="grid sm:grid-cols-2 gap-4">
-              <WField label="Fraternity name (full)" id="chapter.fraternityName" values={values} set={set} placeholder="Phi Sigma Kappa" />
-              <WField label="Fraternity short" id="chapter.fraternityShort" values={values} set={set} placeholder="Phi Sig" />
+              <WField label="Organization name (full)" id="chapter.fraternityName" values={values} set={set} placeholder="Phi Sigma Kappa" />
+              <WField label="Organization short" id="chapter.fraternityShort" values={values} set={set} placeholder="Phi Sig" />
               <WField label="Greek letters (chapter)" id="chapter.greekLetters" values={values} set={set} placeholder="Gamma Triton" />
               <WField label="Greek glyphs" id="chapter.greekLettersGlyphs" values={values} set={set} placeholder="ΓΤ" />
               <WField label="School / university" id="chapter.schoolName" values={values} set={set} placeholder="University of South Carolina" />
@@ -233,7 +233,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <div className="rounded-xl border border-border bg-card p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Next steps</p>
                 <ul className="mt-2 space-y-1.5 text-sm">
-                  <li>• Invite e-board brothers via <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers → Invite</Link>.</li>
+                  <li>• Invite e-board members via <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers → Invite</Link>.</li>
                   <li>• Add the first rush event in <Link href="/admin/events" className="text-phisig-red hover:underline">Events</Link>.</li>
                   <li>• Swap the 3 hero photos in <Link href="/admin/settings" className="text-phisig-red hover:underline">Site content → Hero</Link>.</li>
                   <li>• Read the full handbook at <Link href="/admin/help" className="text-phisig-red hover:underline">Help</Link>.</li>

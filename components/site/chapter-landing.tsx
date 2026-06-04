@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { getSiteConfig } from "@/lib/site-config";
-import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { chapterIdentityFromCfg, type ChapterTerms } from "@/lib/chapter-identity";
 import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
@@ -85,11 +85,16 @@ type FaqRow = { q: string; a: string };
 type HighlightRow = { icon: string; label: string };
 type RecentRow = { tag: string; title: string; icon: string };
 
-const VALUES_DEFAULT: ValueRow[] = [
-  { icon: "Users", title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
-  { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
-  { icon: "Heart", title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
-];
+// Built from the chapter's term set so a sorority shows "Sisterhood … we measure
+// sisters by what they do" and a pro/co-ed org "Membership … we measure members
+// by what they do". A fraternity (default terms) renders the exact original copy.
+function valuesDefault(terms: ChapterTerms): ValueRow[] {
+  return [
+    { icon: "Users", title: terms.collective, body: "Lifelong friendships built on mutual respect and showing up for each other." },
+    { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
+    { icon: "Heart", title: "Character", body: `We measure ${terms.membersLower} by what they do — service, integrity, and courage in conviction.` },
+  ];
+}
 
 const TIMELINE_DEFAULT: TimelineRow[] = [
   { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
@@ -150,6 +155,10 @@ export default async function ChapterLandingPage({
   // mention of the fraternity / chapter / school so a re-skinned tenant (e.g.
   // Clemson) never shows literal "Phi Sigma Kappa / Gamma Triton / USC" strings.
   const identity = chapterIdentityFromCfg(cfg);
+  // Member-noun vocabulary (Brother/Sister/Member, Brotherhood/Sisterhood/…)
+  // derived from chapter.orgType. A fraternity (default) yields the original
+  // words verbatim; a sorority/pro org re-genders the highest-visibility copy.
+  const { terms } = identity;
   // Mirror the brand wordmark's org check (components/brand/wordmark.tsx) so the
   // Phi-Sig-specific heritage artwork (engraved coat of arms, shield JPG) only
   // renders for an actual Phi Sigma Kappa chapter; every other tenant gets the
@@ -220,7 +229,7 @@ export default async function ChapterLandingPage({
     .filter((m) => m.name && m.role);
 
   // Admin-editable repeater arrays — parsed JSON with safe fallbacks
-  const VALUES = parseJsonArray<ValueRow>(cfg["values.json"], VALUES_DEFAULT);
+  const VALUES = parseJsonArray<ValueRow>(cfg["values.json"], valuesDefault(identity.terms));
   const TIMELINE = parseJsonArray<TimelineRow>(cfg["timeline.json"], TIMELINE_DEFAULT);
   const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT);
   const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
@@ -508,7 +517,7 @@ export default async function ChapterLandingPage({
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl leading-relaxed">
-            Philanthropy events, brotherhood before finals, the chapter formal
+            Philanthropy events, {terms.collective.toLowerCase()} before finals, the chapter formal
             (FIPG-compliant, third-party vendor, sober transportation), and dry
             tailgates on game day. The {identity.greekLetters} chapter shows up — all year.{" "}
             <span className="text-phisig-red font-medium">{identity.tagline}</span>
@@ -555,7 +564,7 @@ export default async function ChapterLandingPage({
               Three weeks. Zero pressure.
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl leading-relaxed">
-              We're not interested in hazing or hoops. We're interested in finding the right men.
+              We're not interested in hazing or hoops. We're interested in finding the right {terms.membersLower}.
             </p>
           </Reveal>
           <ol className="grid md:grid-cols-3 gap-3 sm:gap-4">
@@ -677,12 +686,12 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
-            <SectionEyebrow icon={Star}>Brother of the Month</SectionEyebrow>
+            <SectionEyebrow icon={Star}>{terms.member} of the Month</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
-              Real men. Real recognition.
+              Real {terms.membersLower}. Real recognition.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
-              Every month the chapter recognizes a brother who's gone above and beyond — in
+              Every month the chapter recognizes a {terms.memberLower} who's gone above and beyond — in
               the classroom, in service, on the field, in leadership.{" "}
               {cfg["spotlight.bio"]}
             </p>
@@ -718,7 +727,7 @@ export default async function ChapterLandingPage({
             >
               <img
                 src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}`}
-                alt={`Brother of the Month — ${cfg["spotlight.name"]}`}
+                alt={`${terms.member} of the Month — ${cfg["spotlight.name"]}`}
                 width={640}
                 height={800}
                 loading="lazy"
@@ -727,7 +736,7 @@ export default async function ChapterLandingPage({
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
-                  <Star className="h-3 w-3" aria-hidden="true" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}Brother of the Month
+                  <Star className="h-3 w-3" aria-hidden="true" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}{terms.member} of the Month
                 </span>
                 <p className="mt-2 text-white text-xl font-semibold tracking-tight">
                   {cfg["spotlight.name"]}
@@ -757,8 +766,8 @@ export default async function ChapterLandingPage({
               </h2>
             </div>
             <p className="text-muted-foreground max-w-xl leading-relaxed">
-              The {identity.greekLetters} chapter elects its leadership annually. These are the brothers
-              running the show — happy to talk to any rush who wants to learn more.
+              The {identity.greekLetters} chapter elects its leadership annually. These are the {terms.membersLower}
+              running the show — happy to talk to anyone who wants to learn more.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 stagger">
@@ -822,7 +831,7 @@ export default async function ChapterLandingPage({
                 "Top-tier academic support and mentorship",
                 `Year-round philanthropy with ${cfg["philanthropy.beneficiary"]}`,
                 "Strong alumni network across the Southeast",
-                "Brotherhood that lasts well beyond graduation",
+                `${terms.collective} that lasts well beyond graduation`,
               ].map((p) => (
                 <li key={p} className="flex items-start gap-3 text-sm">
                   <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
@@ -909,7 +918,7 @@ export default async function ChapterLandingPage({
                   <Award className="h-3 w-3" aria-hidden="true" /> {cfg["about.caption"] || "Chapter formal"}
                 </span>
                 <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
-                  Brotherhood you can count on — every weekend, every milestone, every year.
+                  {terms.collective} you can count on — every weekend, every milestone, every year.
                 </p>
                 <p className="mt-1 text-xs text-white/95">{identity.tagline}{cfg["contact.instagramHandle"] ? <> · {cfg["contact.instagramHandle"]}</> : null}</p>
               </div>
@@ -919,7 +928,7 @@ export default async function ChapterLandingPage({
                 Cardinal Principles
               </p>
               <p className="mt-1.5 text-sm font-semibold tracking-tight leading-snug">
-                Brotherhood<br/>Scholarship<br/>Character
+                {terms.collective}<br/>Scholarship<br/>Character
               </p>
             </div>
             <div className="absolute -top-5 -right-5 hidden sm:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring z-30">

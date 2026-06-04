@@ -283,7 +283,9 @@ export default function BrothersDashboardClient({
 }: BrothersDashboardClientProps) {
   const router = useRouter();
   const { push } = useToast();
-  const { greekLetters } = useChapterIdentity();
+  // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
+  // under /portal/brothers stay as-is — only visible labels re-genders per org.
+  const { greekLetters, terms } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Local state management to enable instant interactive client feedback
@@ -670,7 +672,7 @@ export default function BrothersDashboardClient({
               </div>
               <div>
                 <h1 className="text-lg font-bold text-maroon-900 leading-tight">{greekLetters} Portal</h1>
-                <p className="text-xs text-maroon-600">Active Brother Workspace • {brother.name}</p>
+                <p className="text-xs text-maroon-600">Active {terms.member} Workspace • {brother.name}</p>
               </div>
             </div>
 
@@ -762,11 +764,11 @@ export default function BrothersDashboardClient({
                   </div>
                   <div className="border-t border-maroon-50 pt-4 mt-4 space-y-2">
                     <div className="text-xs flex justify-between">
-                      <span className="text-maroon-600 font-medium">Big Brother:</span>
+                      <span className="text-maroon-600 font-medium">Big {terms.member}:</span>
                       <span className="text-maroon-900 font-semibold">{brother.bigBrother?.name || "None"}</span>
                     </div>
                     <div className="text-xs flex justify-between">
-                      <span className="text-maroon-600 font-medium">Little Brothers:</span>
+                      <span className="text-maroon-600 font-medium">Little {terms.members}:</span>
                       <span className="text-maroon-900 font-semibold">
                         {brother.littles.length > 0
                           ? brother.littles.map((l) => l.name).join(", ")
@@ -1449,7 +1451,7 @@ export default function BrothersDashboardClient({
             <div className="space-y-6 animate-fade-in text-left">
               <div>
                 <h2 className="text-xl font-bold text-maroon-900">Alumni Directory</h2>
-                <p className="text-xs text-maroon-600">Connect with graduated brothers for career advice, mentorship, and networking.</p>
+                <p className="text-xs text-maroon-600">Connect with graduated {terms.membersLower} for career advice, mentorship, and networking.</p>
               </div>
 
               {/* Filters Panel */}
@@ -1676,7 +1678,7 @@ export default function BrothersDashboardClient({
           {activeTab === "profile" && (
             <div className="space-y-6 animate-fade-in text-left">
               <div>
-                <h2 className="text-xl font-bold text-maroon-900">Manage Brother Profile</h2>
+                <h2 className="text-xl font-bold text-maroon-900">Manage {terms.member} Profile</h2>
                 <p className="text-xs text-maroon-600">Keep your major, contact info, bio, and headshot updated for chapter registry.</p>
               </div>
 
@@ -1706,7 +1708,7 @@ export default function BrothersDashboardClient({
                     <div className="space-y-1">
                       <h4 className="font-bold text-maroon-900 text-lg leading-tight">{brother.name}</h4>
                       <Badge className="bg-amber-600 text-white border-none py-0.5 px-2 text-[10px] tracking-wider uppercase">
-                        {brother.position || "ACTIVE BROTHER"}
+                        {brother.position || `ACTIVE ${terms.member.toUpperCase()}`}
                       </Badge>
                     </div>
 

@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { id: "identity", label: "Chapter Details", icon: Building2, blurb: "Configure fraternity identity, school details, and charter details." },
+  { id: "identity", label: "Chapter Details", icon: Building2, blurb: "Configure organization identity, school details, and charter details." },
   { id: "brand", label: "Brand Styling", icon: Palette, blurb: "Configure local chapter primary, dark, and soft-tint colors." },
   { id: "contact", label: "Contact Details", icon: Mail, blurb: "Set up recruitment contacts, social handles, and house location." },
   { id: "admin", label: "Admin Credentials", icon: User, blurb: "Create your chapter's primary administrator account." },
@@ -45,6 +45,11 @@ export default function OnboardWizard() {
   // as hints; required fields are enforced in validateStep("identity").
   const [fraternityName, setFraternityName] = React.useState("");
   const [fraternityShort, setFraternityShort] = React.useState("");
+  // Organization type drives the member-noun terminology layer once the chapter
+  // launches (Brother/Sister/Member). Defaults to "fraternity" so the wizard +
+  // launched site read identically to the original frat copy until a sorority
+  // (or pro/co-ed org) is picked. Set from the preset picker; editable below.
+  const [orgType, setOrgType] = React.useState<"fraternity" | "sorority" | "professional" | "other">("fraternity");
   const [greekLetters, setGreekLetters] = React.useState("");
   const [greekLettersGlyphs, setGreekLettersGlyphs] = React.useState("");
   const [schoolName, setSchoolName] = React.useState("");
@@ -94,6 +99,11 @@ export default function OnboardWizard() {
     setPrimaryColor(org.primary);
     setDarkColor(org.dark);
     setSoftColor(org.soft);
+    // Capture org type for the terminology layer. The preset library tags NPHC
+    // ("Divine Nine") orgs generically — that bucket spans both fraternities and
+    // sororities — so map it to the neutral "other" term set rather than guess a
+    // gender. Fraternity/sorority map straight through.
+    setOrgType(org.type === "sorority" ? "sorority" : org.type === "nphc" ? "other" : "fraternity");
     // Clear any identity/brand errors the preset just satisfied.
     clearErrors("fraternityName", "primaryColor", "darkColor", "softColor");
   }
@@ -128,7 +138,7 @@ export default function OnboardWizard() {
       if (!subdomain.trim()) e.subdomain = "Required";
       if (Object.keys(e).length) {
         setErrors(e);
-        push({ title: "Validation Error", description: "Fraternity name, Greek letters, school name, and desired subdomain are required.", variant: "destructive" });
+        push({ title: "Validation Error", description: "Organization name, Greek letters, school name, and desired subdomain are required.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "brand") {
@@ -187,6 +197,7 @@ export default function OnboardWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subdomain,
+          orgType,
           fraternityName,
           fraternityShort,
           greekLetters,
@@ -377,10 +388,10 @@ export default function OnboardWizard() {
                         }
                       />
                     </div>
-                    <WField label="Fraternity Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
-                    <WField label="Fraternity Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+                    <WField label="Organization Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
+                    <WField label="Organization Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
                     <WField
-                      label="Fraternity Letters (Glyphs/Abbr)"
+                      label="Organization Letters (Glyphs/Abbr)"
                       value={fraternityLetters}
                       onChange={setFraternityLetters}
                       placeholder="ΦΣΚ"
@@ -397,7 +408,7 @@ export default function OnboardWizard() {
                     <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
                     <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
                     <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
-                    <WField label="Fraternity Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
+                    <WField label="Organization Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
                   </div>
                 </div>
               )}

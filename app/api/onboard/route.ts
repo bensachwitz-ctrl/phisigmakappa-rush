@@ -46,6 +46,7 @@ export async function POST(req: Request) {
 
   const {
     subdomain: rawSubdomain,
+    orgType,
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
     schoolName, schoolShort, charterYear, foundingYear, fraternityLetters,
     primaryColor, darkColor, softColor,
@@ -149,7 +150,18 @@ export async function POST(req: Request) {
 
     // 4. Seed tenant config + the admin account into the tenant schema.
     const hashed = hashPassword(adminPassword);
+    // Org type drives the member-noun terminology layer (Brother/Sister/Member).
+    // Validate against the known set so an unexpected/forged body value can't
+    // poison cfg; default to "fraternity" (renders identically to the original
+    // hardcoded copy) when absent or unrecognized.
+    const ALLOWED_ORG_TYPES = new Set(["fraternity", "sorority", "professional", "other"]);
+    const normalizedOrgType =
+      typeof orgType === "string" && ALLOWED_ORG_TYPES.has(orgType.trim())
+        ? orgType.trim()
+        : "fraternity";
+
     const updates: Record<string, string> = {
+      "chapter.orgType": normalizedOrgType,
       "chapter.fraternityName": fraternityName.trim(),
       "chapter.fraternityShort": (fraternityShort || fraternityName).trim(),
       "chapter.greekLetters": greekLetters.trim(),

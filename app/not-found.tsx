@@ -4,12 +4,17 @@ import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Home, Calendar, Compass } from "lucide-react";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const metadata = {
   title: "Not found",
 };
 
-export default function NotFound() {
+export default async function NotFound() {
+  // Recruit noun is org-type-aware ("Rush" for a fraternity, "Recruitment" for a
+  // sorority / pro / co-ed org). getChapterIdentity reads cfg and never throws,
+  // so the 404 stays resilient even if the config lookup fails.
+  const { terms } = await getChapterIdentity();
   return (
     <AnimatedBackground variant="aurora-grid" tone="brand" className="min-h-screen bg-background">
       <main className="relative z-10 flex min-h-screen flex-col">
@@ -35,7 +40,7 @@ export default function NotFound() {
               That page doesn&apos;t exist.
             </h1>
             <p className="mx-auto mt-3 max-w-sm text-muted-foreground leading-relaxed">
-              Maybe a stale link. Try the rush page or jump to the schedule.
+              Maybe a stale link. Try the {terms.recruit.toLowerCase()} page or jump to the schedule.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="group cta-shine press">
@@ -45,7 +50,7 @@ export default function NotFound() {
               </Button>
               <Button asChild variant="outline" size="lg" className="press bg-white/70 backdrop-blur">
                 <Link href="/#schedule">
-                  <Calendar className="h-4 w-4" /> Rush schedule
+                  <Calendar className="h-4 w-4" /> {terms.recruit} schedule
                 </Link>
               </Button>
             </div>
