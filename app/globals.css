@@ -477,6 +477,174 @@
 .gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
 .gs-sheen:hover::after{animation:sheen 1s ease;}
 
+/* ════════════════════════════════════════════════════════════════════════
+   GREEKSTACK DEPTH SYSTEM — glassmorphism + animated borders + tactile grain.
+   Layered on top of the existing animation system to take the apex site from
+   "animated" to "genuinely stunning, premium B2B SaaS". Every class here:
+     • animates transform/opacity/filter only (GPU-friendly, no layout thrash);
+     • uses backdrop-blur SPARINGLY (it is GPU-costly) — reserved for the
+       handful of key panels the landing applies .gs-glass to;
+     • degrades gracefully under prefers-reduced-motion (static gradient, no
+       movement) via the block near the end of this file;
+     • keeps WCAG-AA text contrast on the frosted surfaces (translucency stays
+       high-alpha over the light page so foreground text never drops below AA).
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ── Glassmorphism ────────────────────────────────────────────────────────
+   Frosted, translucent surface with a 1px hairline border, a bright inner
+   top-highlight (the ::before glaze — reads like light catching a glass edge),
+   and a layered soft shadow for real depth. Designed for LIGHT backgrounds:
+   the high-alpha white base keeps body text at full AA contrast while the blur
+   lets background color/orbs bleed through for depth. Apply to a SMALL number
+   of hero/key panels only (sticky header, bento cards, mockup chrome, final
+   CTA) — not every element — so the GPU cost stays bounded. */
+.gs-glass {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.78),
+    rgba(255, 255, 255, 0.62)
+  );
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.7) inset,            /* top inner highlight */
+    0 1px 1px 0 rgba(37, 99, 235, 0.04),                  /* tight contact shadow */
+    0 12px 32px -12px rgba(15, 23, 42, 0.18),             /* mid lift */
+    0 32px 64px -32px rgba(37, 99, 235, 0.22);            /* deep ambient glow */
+}
+/* A faint blue→sky→gold gradient hairline riding just inside the top edge —
+   the "light line" that sells a real glass panel. Decorative only. */
+.gs-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    100deg,
+    rgba(37, 99, 235, 0.45),
+    rgba(56, 189, 248, 0.25) 40%,
+    transparent 60%,
+    rgba(245, 158, 11, 0.3)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.6;
+  pointer-events: none;
+}
+/* Slightly heavier frost for the sticky header so text stays legible over
+   whatever scrolls beneath it. */
+.gs-glass-nav {
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 255, 255, 0.66)
+  );
+}
+/* Graceful fallback where backdrop-filter is unsupported: go more opaque so
+   the frosted panels never turn into unreadable washes of color. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .gs-glass { background: rgba(255, 255, 255, 0.94); }
+  .gs-glass-nav { background: rgba(255, 255, 255, 0.95); }
+}
+
+/* ── Animated shimmer border ──────────────────────────────────────────────
+   A slow premium sheen that travels around a 1px gradient ring (blue → sky →
+   gold). Built as a padding-box mask so the ring sits OUTSIDE the content with
+   no clipping. Put on a wrapper with rounded corners; the inner element keeps
+   its own background. Pairs with the <ShimmerBorder> primitive but is usable
+   standalone (e.g. on the final-CTA panel). Reduced-motion → static gradient. */
+@keyframes gs-border-spin { to { transform: rotate(1turn); } }
+.gs-shimmer-border {
+  position: relative;
+  isolation: isolate;
+}
+.gs-shimmer-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(37, 99, 235, 0) 0deg,
+    #2563eb 70deg,
+    #38bdf8 150deg,
+    #22d3ee 200deg,
+    #f59e0b 270deg,
+    rgba(37, 99, 235, 0) 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: gs-border-spin 6s linear infinite;
+}
+/* Subtle bloom of the same gradient, blurred behind the element, that lifts on
+   hover so primary CTAs feel like they're glowing. */
+.gs-shimmer-border::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -2;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, #2563eb, #38bdf8, #22d3ee, #f59e0b, #2563eb);
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: gs-border-spin 6s linear infinite;
+}
+.gs-shimmer-border:hover::after { opacity: 0.45; }
+
+/* ── Tactile grain ────────────────────────────────────────────────────────
+   A faint SVG fractal-noise texture for hero depth (~4% opacity). Self-
+   contained data-URI so there's no extra request and nothing to ship. Purely
+   decorative — always pair with aria-hidden + pointer-events-none at the call
+   site. The <Grain> primitive renders a div with this class. */
+.gs-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.04;
+}
+
+/* ── Depth helpers for the bento + mockup ─────────────────────────────────
+   .gs-card-glow paints a soft inner top-edge gradient + a layered shadow that
+   intensifies on hover; .gs-float-shadow grounds the hero mockup so it reads as
+   floating above the page (deep ambient shadow + a faint blue cast). Both are
+   transform/opacity/shadow only. */
+.gs-card-glow {
+  transition:
+    box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gs-card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* thin gradient top-edge that lights up on hover */
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.4), transparent 8%);
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.gs-card-glow:hover::before,
+.group:hover .gs-card-glow::before { opacity: 1; }
+.gs-float-shadow {
+  box-shadow:
+    0 2px 6px -2px rgba(15, 23, 42, 0.12),
+    0 24px 50px -18px rgba(15, 23, 42, 0.28),
+    0 48px 90px -50px rgba(37, 99, 235, 0.45);
+}
+
 /* Reduce motion — every animation collapses to a near-instant flash so
    vestibular-sensitive users get the final state without movement. */
 @media (prefers-reduced-motion: reduce) {
@@ -485,6 +653,14 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Depth system: present a deterministic STATIC gradient ring (no spin) and
+     drop the animated hover bloom entirely for reduced-motion users. */
+  .gs-shimmer-border::before {
+    animation: none !important;
+    transform: none !important;
+    background: linear-gradient(110deg, #2563eb, #38bdf8 45%, #22d3ee 70%, #f59e0b) !important;
+  }
+  .gs-shimmer-border::after { display: none !important; }
 }
 
 /* Print stylesheet — parents printing the consent receipt or rush schedule

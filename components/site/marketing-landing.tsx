@@ -18,6 +18,9 @@ import {
   FloatingOrbs,
   Marquee,
   AnimatedCounter,
+  Spotlight,
+  ShimmerBorder,
+  Grain,
 } from "@/components/site/anim";
 import {
   IconSpark,
@@ -57,10 +60,24 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
    reveals, drifting gradient orbs, a Greek-glyph marquee, a scroll-progress
    bar, and in-view counters.
 
+   DEPTH PASS (2nd elevation): a glassmorphism + layered-depth + interactive-
+   lighting system layered on top of the animation work, for genuinely premium
+   B2B-SaaS polish. The frosted .gs-glass surface is applied to the sticky
+   header, the bento feature cards, the product-mockup chrome, and the final
+   CTA panel; a cursor-tracking <Spotlight> lights the hero + features; a
+   <ShimmerBorder> rings the primary CTAs + final-CTA panel in a slow
+   blue→sky→gold sheen; the hero mockup floats on a layered ambient shadow over
+   a faint <Grain> texture; and the cards gain inner top-edge glow, deeper hover
+   shadow, and gold-accent micro-interactions. backdrop-blur is used SPARINGLY
+   (a handful of key panels only) to keep it GPU-cheap.
+
    EVERY motion layer degrades to a static/instant render under
-   prefers-reduced-motion, and all decorative layers are aria-hidden +
-   pointer-events-none. Animation is transform/opacity only and in-view-gated.
-   Light-surfaced for WCAG (the app is color-scheme: light).
+   prefers-reduced-motion (spotlight + shimmer-spin + parallax all gate or fall
+   back to static), and all decorative layers are aria-hidden +
+   pointer-events-none. Animation is transform/opacity/filter only and
+   in-view-gated; the hero LCP text ships in SSR markup, not behind motion, so
+   LCP/CLS stay intact. Light-surfaced for WCAG (the app is color-scheme:
+   light); the glass surfaces keep AA text contrast.
 ──────────────────────────────────────────────────────────────────────── */
 
 const NAV_LINKS = [
@@ -186,10 +203,14 @@ function SiteNav() {
   return (
     <header
       className={
-        "sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-all duration-300 " +
+        // Frosted-glass header: .gs-glass-nav supplies the translucent base +
+        // heavier backdrop-blur + saturation. We keep a scroll-reactive border +
+        // shadow on top so the bar gains definition once the page scrolls under
+        // it, and stays nearly borderless over the hero.
+        "gs-glass-nav sticky top-0 z-50 w-full border-b transition-all duration-300 " +
         (scrolled
-          ? "border-border/70 bg-background/85 shadow-[0_1px_20px_-12px_rgba(37,99,235,0.5)]"
-          : "border-transparent bg-background/60")
+          ? "border-border/60 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)]"
+          : "border-transparent shadow-none")
       }
     >
       <div
@@ -225,12 +246,14 @@ function SiteNav() {
             <Link href="/admin/login">Sign in</Link>
           </Button>
           <Magnetic strength={12} innerStrength={4} radius={70}>
-            <Button asChild variant="platform" size="sm" className="gs-sheen">
-              <Link href="/onboard">
-                Create your chapter site
-                <IconArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+            <ShimmerBorder rounded="rounded-md">
+              <Button asChild variant="platform" size="sm" className="gs-sheen">
+                <Link href="/onboard" className="group/btn">
+                  Create your chapter site
+                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                </Link>
+              </Button>
+            </ShimmerBorder>
           </Magnetic>
         </div>
       </div>
@@ -243,8 +266,14 @@ function SiteNav() {
 function Hero() {
   return (
     <AnimatedBackground variant="aurora-grid" tone="platform">
+      {/* Faint film-grain texture for tactile depth — sits furthest back at
+          ~4% opacity so it never competes with content (decorative, static). */}
+      <Grain />
       {/* Extra drifting orb layer + a parallaxing faint grid for real depth. */}
       <FloatingOrbs />
+      {/* Cursor-tracking radial glow — interactive depth on fine-pointer
+          devices only; renders nothing on touch / under reduced motion. */}
+      <Spotlight size={520} />
       <Parallax
         aria-hidden="true"
         translateY={70}
@@ -288,12 +317,14 @@ function Hero() {
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
             <Magnetic className="w-full sm:w-auto">
-              <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
-                <Link href="/onboard">
-                  Launch your chapter — free
-                  <IconArrowRight className="h-5 w-5" />
-                </Link>
-              </Button>
+              <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
+                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
+                  <Link href="/onboard" className="group/btn">
+                    Launch your chapter — free
+                    <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                  </Link>
+                </Button>
+              </ShimmerBorder>
             </Magnetic>
             <Button asChild variant="outline" size="xl" className="w-full sm:w-auto">
               <Link href="#how">See how it works</Link>
@@ -313,8 +344,14 @@ function Hero() {
           </p>
         </div>
 
-        {/* Product mockup floats up, then tracks the cursor in 3D. */}
-        <Reveal delay={120} className="mx-auto mt-14 max-w-5xl sm:mt-16">
+        {/* Product mockup floats up, then tracks the cursor in 3D. A faint
+            radial "ground glow" sits beneath it so the floating panel feels
+            like it casts soft blue light onto the page (decorative). */}
+        <Reveal delay={120} className="relative mx-auto mt-14 max-w-5xl sm:mt-16">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-[8%] bottom-[-6%] -z-10 h-1/3 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.22),rgba(56,189,248,0.10)_45%,transparent_70%)] blur-2xl"
+          />
           <Parallax translateY={36} className="[perspective:1200px]">
             <Tilt3DCard max={7} glareColor="rgba(37,99,235,0.30)" className="rounded-2xl">
               <ProductPreview />
@@ -356,7 +393,11 @@ function ProductPreview() {
   ];
 
   return (
-    <div className="rounded-2xl border border-border bg-card/70 p-2 shadow-2xl shadow-blue-500/10 backdrop-blur-sm sm:p-3">
+    // Frosted-glass outer frame on a deep layered ambient shadow so the mockup
+    // reads as floating well above the page. .gs-glass supplies the translucent
+    // base + blur + hairline + top highlight; .gs-float-shadow (declared later
+    // in globals.css) overrides the shadow with the deep grounding stack.
+    <div className="gs-glass gs-float-shadow rounded-2xl p-2 sm:p-3">
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         {/* Browser chrome */}
         <div className="flex h-10 items-center justify-between border-b border-border bg-secondary/60 px-4">
@@ -515,6 +556,9 @@ function Features() {
       />
       {/* Soft top gradient divider */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+      {/* Cursor-tracking glow over the bento grid — subtler than the hero so it
+          supports the cards without stealing focus. Fine-pointer-only. */}
+      <Spotlight size={420} color="rgba(37,99,235,0.10)" edgeColor="rgba(56,189,248,0.06)" />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
@@ -540,7 +584,7 @@ function Features() {
               key={f.title}
               className={f.span ? "sm:col-span-2 lg:col-span-1" : ""}
             >
-              <Tilt3DCard max={8} className="h-full rounded-2xl">
+              <Tilt3DCard max={8} glareColor="rgba(37,99,235,0.22)" className="h-full rounded-2xl">
                 <FeatureCard {...f} />
               </Tilt3DCard>
             </Reveal3DItem>
@@ -553,13 +597,30 @@ function Features() {
 
 function FeatureCard({ icon, title, desc }: { icon: GsIcon; title: string; desc: string }) {
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
+    // Frosted-glass bento card with layered depth. .gs-glass supplies the
+    // translucent surface + hairline + top inner-highlight + layered shadow;
+    // on hover the card lifts, the border warms to blue, and the shadow deepens
+    // into a blue-tinted ambient glow. Decorative accents (corner bloom, top-
+    // edge gradient line, gold under-glow) are real children so they never
+    // collide with the .gs-glass ::before hairline.
+    <div className="group relative h-full overflow-hidden rounded-2xl gs-glass p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)]">
+      {/* Thin gradient top-edge that lights up on hover (blue→sky→gold). */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
       {/* Decorative corner accent — soft blue→cyan glow that brightens on hover */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
       />
-      <IconChip icon={icon} tone="platform" size="md" className="relative transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+      {/* Gold under-glow that "lights up" from the bottom-left on hover — the
+          warm accent the brief asks for, kept very soft so it reads as a glint. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-16 -left-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
+      />
+      <IconChip icon={icon} tone="platform" size="md" className="relative transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6" />
       <h3 className="relative mt-4 text-base font-semibold tracking-tight">{title}</h3>
       <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
     </div>
@@ -610,9 +671,11 @@ function HowItWorks() {
           </div>
           {STEPS.map((s, i) => (
             <Reveal key={s.step} delay={i * 110}>
-              <div className="group relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
+              {/* Frosted step card — glass over the tinted band, lifting into a
+                  blue-tinted ambient shadow on hover. */}
+              <div className="group relative h-full rounded-2xl gs-glass p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)]">
                 <div className="mx-auto flex justify-center">
-                  <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
+                  <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
                 <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-500">
                   STEP {s.step}
@@ -853,7 +916,12 @@ function Proof() {
         >
           {STATS.map((s) => (
             <Reveal3DItem key={s.label}>
-              <div className="group h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/10">
+              <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_18px_40px_-16px_rgba(15,23,42,0.2),0_40px_70px_-40px_rgba(37,99,235,0.45)]">
+                {/* Thin gradient top-edge that lights up on hover. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
                 <span className="block text-4xl font-bold tracking-tight gs-gradient-text sm:text-5xl">
                   <AnimatedCounter
                     value={s.value}
@@ -892,19 +960,22 @@ function Proof() {
 function FinalCta() {
   return (
     <section className="container pb-24 pt-4">
-      <div className="relative overflow-hidden rounded-3xl p-[1.5px]">
-        {/* Slowly-rotating conic-gradient border ring — the panel edge feels
-            alive. Sits behind the inner card; aria-hidden + GPU transform. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-[-100%] animate-spin-slow bg-[conic-gradient(from_0deg,transparent_0deg,#2563eb_60deg,#0ea5e9_140deg,#22d3ee_220deg,transparent_300deg)] opacity-70 motion-reduce:animate-none"
-        />
+      {/* Showcase panel: a slow blue→sky→gold animated ring (the .gs-shimmer-
+          border utility — spins + blooms on hover, collapses to a STATIC
+          gradient ring under reduced motion) wraps a frosted-glass panel. The
+          ring's hover-bloom glows OUTSIDE the panel, so no overflow-clip here. */}
+      <ShimmerBorder inline={false} rounded="rounded-3xl" className="p-[1.5px]">
         <AnimatedBackground
           variant="spotlight"
           tone="platform"
-          className="relative overflow-hidden rounded-[calc(1.5rem-1.5px)] border border-blue-500/10 bg-gradient-to-br from-blue-500/[0.07] via-sky-500/[0.05] to-cyan-500/[0.07]"
+          // Frosted-glass treatment that PRESERVES the colored tint + orbs: a
+          // light backdrop-blur + hairline border + bright top inner-highlight
+          // and a layered ambient shadow (carried in the shadow stack), rather
+          // than the opaque-white .gs-glass fill which would hide the orbs.
+          className="relative overflow-hidden rounded-[calc(1.5rem-1.5px)] border border-white/40 bg-gradient-to-br from-blue-500/[0.07] via-sky-500/[0.05] to-cyan-500/[0.07] backdrop-blur-md shadow-[0_1px_0_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-24px_rgba(37,99,235,0.4),0_60px_100px_-60px_rgba(15,23,42,0.35)]"
         >
-          {/* Drifting orbs inside the panel for extra life. */}
+          {/* Faint grain + drifting orbs inside the panel for tactile depth. */}
+          <Grain opacity={0.05} />
           <FloatingOrbs blur={80} />
           <Reveal className="relative z-10 px-6 py-16 text-center sm:px-12 sm:py-20">
             <div className="mx-auto mb-5 flex justify-center">
@@ -921,12 +992,14 @@ function FinalCta() {
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Magnetic strength={22} className="w-full sm:w-auto">
-                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
-                  <Link href="/onboard">
-                    Launch your chapter
-                    <IconArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
+                <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
+                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
+                    <Link href="/onboard" className="group/btn">
+                      Launch your chapter
+                      <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                    </Link>
+                  </Button>
+                </ShimmerBorder>
               </Magnetic>
               <Button asChild variant="glass" size="xl" className="w-full sm:w-auto">
                 <Link href="#features">Explore features</Link>
@@ -934,7 +1007,7 @@ function FinalCta() {
             </div>
           </Reveal>
         </AnimatedBackground>
-      </div>
+      </ShimmerBorder>
     </section>
   );
 }
