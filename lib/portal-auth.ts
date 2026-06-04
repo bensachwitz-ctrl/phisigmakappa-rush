@@ -23,9 +23,9 @@
 //    admin-style views inside portal routes (the brief calls this out for
 //    /portal/brothers showing the admin "all brothers" banner).
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, getSubdomain } from "@/lib/prisma";
 import { parseSessionToken } from "@/lib/auth";
 
 export const PORTAL_COOKIE = "phisig_portal";
@@ -71,6 +71,32 @@ function sign(value: string, secret: string): string {
   return crypto.createHmac("sha256", secret).update(value).digest("hex");
 }
 
+/**
+ * Tenant tag for the CURRENT request — the subdomain, or "_apex" off the apex.
+ * Portal sessions are bound to this so a member/alumni/PNM cookie minted on
+ * chapter A is cryptographically unusable on chapter B. Without this, the tenant
+ * schema is chosen from the Host header while the cookie is signed with one
+ * global secret — so a portal cookie from any chapter would authenticate on
+ * every other chapter (same P0 cross-tenant takeover the admin cookie had).
+ */
+function currentTenant(): string {
+  try {
+    const h = headers();
+    const host = h.get("host") || h.get("x-forwarded-host");
+    return getSubdomain(host) || "_apex";
+  } catch {
+    return "_apex";
+  }
+}
+
+/** Per-tenant portal signing key = HMAC(rootSecret, "gs-portal-tenant:<tenant>"). */
+function tenantSecret(): string {
+  return crypto
+    .createHmac("sha256", getSecret())
+    .update(`gs-portal-tenant:${currentTenant()}`)
+    .digest("hex");
+}
+
 function timingSafeEqualHex(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   try {
@@ -89,7 +115,7 @@ function timingSafeEqualHex(a: string, b: string): boolean {
  * of additional dependency surface.
  */
 export function signPortalToken(userId: string, role: PortalRole): string {
-  const secret = getSecret();
+  const secret = tenantSecret();
   const ts = Date.now().toString();
   const payload = `${userId}.${role}.${ts}`;
   return `${payload}.${sign(payload, secret)}`;
@@ -112,7 +138,7 @@ export function verifyPortalToken(
   if (role !== "brother" && role !== "alumni" && role !== "pnm") return null;
   let expected: string;
   try {
-    expected = sign(`${userId}.${role}.${ts}`, getSecret());
+    expected = sign(`${userId}.${role}.${ts}`, tenantSecret());
   } catch {
     return null;
   }
