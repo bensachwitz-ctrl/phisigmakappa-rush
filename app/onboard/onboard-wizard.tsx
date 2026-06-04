@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { SuccessState } from "@/components/onboard/success-state";
 import { OrgPresetPicker } from "@/components/onboard/org-preset-picker";
 import { GreekLetterInserter } from "@/components/onboard/greek-letter-inserter";
 import { ColorPresets } from "@/components/onboard/color-presets";
+import { Magnetic, Reveal3D, FloatingOrbs } from "@/components/site/anim";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
@@ -32,10 +34,18 @@ type StepId = (typeof STEPS)[number]["id"];
 export default function OnboardWizard() {
   const router = useRouter();
   const { push } = useToast();
+  const reduce = useReducedMotion();
   const [step, setStep] = React.useState<StepId>("identity");
+  // Animation direction for the step transition: 1 = advancing, -1 = going back.
+  // Drives the directional slide in the AnimatePresence wrapper below.
+  const [dir, setDir] = React.useState<1 | -1>(1);
   const [busy, setBusy] = React.useState(false);
   const [launched, setLaunched] = React.useState(false);
   const [liveUrl, setLiveUrl] = React.useState("");
+  // Heading of the active step — focused on each transition so keyboard/screen-
+  // reader users land on the new step's title instead of being stranded.
+  const headingRef = React.useRef<HTMLHeadingElement>(null);
+  const firstRender = React.useRef(true);
   // Inline, per-field validation hints layered on top of the toast errors so
   // the user sees exactly which input needs attention without losing the toast.
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -178,6 +188,7 @@ export default function OnboardWizard() {
   function goNext() {
     if (!validateStep(step)) return;
     if (stepIndex < STEPS.length - 1) {
+      setDir(1);
       setStep(STEPS[stepIndex + 1].id);
     }
   }
@@ -185,9 +196,21 @@ export default function OnboardWizard() {
   function goPrev() {
     if (stepIndex > 0) {
       setErrors({});
+      setDir(-1);
       setStep(STEPS[stepIndex - 1].id);
     }
   }
+
+  // Move focus to the new step's heading after each transition (skip the very
+  // first mount so we don't yank focus on page load). `preventScroll` keeps the
+  // sticky layout from jumping.
+  React.useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    headingRef.current?.focus({ preventScroll: true });
+  }, [step]);
 
   async function handleLaunch() {
     setBusy(true);
@@ -249,20 +272,31 @@ export default function OnboardWizard() {
   // ── Celebratory success takeover ──────────────────────────────────────────
   if (launched) {
     return (
-      <div className="mx-auto max-w-xl">
+      <motion.div
+        className="relative mx-auto max-w-xl"
+        initial={reduce ? false : { opacity: 0, scale: 0.94, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={reduce ? { duration: 0.2 } : { type: "spring", stiffness: 220, damping: 22 }}
+      >
+        {/* Confetti-lite burst — a ring of brand-gradient shards that fly out
+            once, behind the success card. Purely decorative + reduced-motion-safe. */}
+        {!reduce && <ConfettiBurst />}
         <GlassPanel>
           <SuccessState fraternityName={fraternityName} greekLetters={greekLetters} url={liveUrl} />
         </GlassPanel>
-      </div>
+      </motion.div>
     );
   }
 
   const StepIcon = STEPS[stepIndex].icon;
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8">
+      {/* Brand-neutral ambient depth behind the whole wizard (decorative). */}
+      <FloatingOrbs className="-z-10 opacity-40" blur={100} />
+
       {/* Header */}
-      <div className="text-center">
+      <Reveal3D className="text-center" y={18}>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 backdrop-blur-md">
           <Sparkles className="h-3.5 w-3.5" /> Greekstack
         </span>
@@ -273,10 +307,28 @@ export default function OnboardWizard() {
           Answer a few quick questions and watch your fully branded website take shape in
           real time. Hit launch and it goes live instantly — no code, no waiting.
         </p>
-      </div>
+      </Reveal3D>
 
       {/* Progress rail */}
-      <ol className="mx-auto grid max-w-4xl grid-cols-5 gap-2 sm:gap-3" role="list" aria-label="Setup progress">
+      <div className="mx-auto max-w-4xl space-y-3">
+        {/* Animated fill track — eases to the % complete as steps advance. */}
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
+          role="progressbar"
+          aria-label="Setup progress"
+          aria-valuemin={0}
+          aria-valuemax={STEPS.length - 1}
+          aria-valuenow={stepIndex}
+        >
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400"
+            initial={false}
+            animate={{ width: `${(stepIndex / (STEPS.length - 1)) * 100}%` }}
+            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
+          />
+        </div>
+
+        <ol className="grid grid-cols-5 gap-2 sm:gap-3" role="list" aria-label="Setup steps">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const current = s.id === step;
@@ -289,6 +341,7 @@ export default function OnboardWizard() {
                 onClick={() => {
                   if (i < stepIndex) {
                     setErrors({});
+                    setDir(-1);
                     setStep(s.id);
                   }
                 }}
@@ -304,11 +357,25 @@ export default function OnboardWizard() {
                 )}
               >
                 {done ? (
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm">
+                  <motion.span
+                    initial={reduce ? false : { scale: 0.5, rotate: -12 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 18 }}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm"
+                  >
                     <CheckCircle2 className="h-5 w-5" />
-                  </span>
+                  </motion.span>
+                ) : current ? (
+                  // Current step "breathes" subtly so the eye knows where it is.
+                  <motion.span
+                    animate={reduce ? undefined : { scale: [1, 1.07, 1] }}
+                    transition={reduce ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    className="will-change-transform"
+                  >
+                    <IconChip icon={Icon} tone="platform" size="md" />
+                  </motion.span>
                 ) : (
-                  <IconChip icon={Icon} tone={current ? "platform" : "muted"} size="md" />
+                  <IconChip icon={Icon} tone="muted" size="md" />
                 )}
                 <span
                   className={cn(
@@ -330,7 +397,8 @@ export default function OnboardWizard() {
             </li>
           );
         })}
-      </ol>
+        </ol>
+      </div>
 
       {/* Two-column: wizard + live preview */}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
@@ -343,15 +411,37 @@ export default function OnboardWizard() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-300">
                   Step {stepIndex + 1} of {STEPS.length}
                 </p>
-                <h2 className="text-xl font-bold tracking-tight text-white">{STEPS[stepIndex].label}</h2>
+                <h2
+                  ref={headingRef}
+                  tabIndex={-1}
+                  className="text-xl font-bold tracking-tight text-white outline-none focus-visible:underline focus-visible:decoration-indigo-400/60 focus-visible:underline-offset-4"
+                >
+                  {STEPS[stepIndex].label}
+                </h2>
                 <p className="mt-1 text-sm text-slate-300">{STEPS[stepIndex].blurb}</p>
               </div>
             </div>
 
             <div className="h-px bg-white/10" />
 
-            {/* Step body — keyed so each step re-mounts and replays the entrance */}
-            <div key={step} className="animate-soft-enter">
+            {/* Step body — directional slide/fade between steps via AnimatePresence.
+                mode="wait" so the outgoing step finishes before the next enters;
+                custom `dir` flips the slide direction (forward vs. back). Snappy
+                (~0.25s) to keep the form feeling fast. No overflow-hidden here so
+                input focus rings never clip; the parent GlassPanel already clips
+                any transient horizontal travel. */}
+            <div className="relative">
+              <AnimatePresence mode="wait" custom={dir} initial={false}>
+                <motion.div
+                  key={step}
+                  custom={dir}
+                  variants={stepVariants}
+                  initial={reduce ? "reduced" : "enter"}
+                  animate="center"
+                  exit={reduce ? "reduced" : "exit"}
+                  transition={reduce ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="will-change-transform"
+                >
               {step === "identity" && (
                 <div className="space-y-5">
                   {/* Preset library — pick any organization to auto-fill below */}
@@ -506,6 +596,8 @@ export default function OnboardWizard() {
                   </div>
                 </div>
               )}
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             <div className="h-px bg-white/10" />
@@ -523,28 +615,32 @@ export default function OnboardWizard() {
               </Button>
 
               {!isLastStep ? (
-                <Button type="button" variant="platform" size="lg" onClick={goNext} className="gs-sheen">
-                  Continue <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
+                <Magnetic strength={14} radius={80}>
+                  <Button type="button" variant="platform" size="lg" onClick={goNext} className="gs-sheen">
+                    Continue <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Magnetic>
               ) : (
-                <Button
-                  type="button"
-                  variant="platform"
-                  size="xl"
-                  onClick={handleLaunch}
-                  disabled={busy}
-                  className="gs-sheen"
-                >
-                  {busy ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="mr-2 h-5 w-5" /> Launch My Site
-                    </>
-                  )}
-                </Button>
+                <Magnetic strength={16} radius={90}>
+                  <Button
+                    type="button"
+                    variant="platform"
+                    size="xl"
+                    onClick={handleLaunch}
+                    disabled={busy}
+                    className="gs-sheen"
+                  >
+                    {busy ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="mr-2 h-5 w-5" /> Launch My Site
+                      </>
+                    )}
+                  </Button>
+                </Magnetic>
               )}
             </div>
           </div>
@@ -571,10 +667,63 @@ export default function OnboardWizard() {
 
 /* ── Local presentational helpers ──────────────────────────────────────────── */
 
+/* Directional step transition. `custom` carries the nav direction (1 forward,
+   -1 back); the new step slides in from the side it's heading toward and the
+   old one slides out the opposite way. `reduced` is a pure crossfade for
+   prefers-reduced-motion (no horizontal travel). */
+const stepVariants = {
+  enter: (d: 1 | -1) => ({ opacity: 0, x: d > 0 ? 28 : -28 }),
+  center: { opacity: 1, x: 0 },
+  exit: (d: 1 | -1) => ({ opacity: 0, x: d > 0 ? -28 : 28 }),
+  reduced: { opacity: 0, x: 0 },
+};
+
 function GlassPanel({ children }: { children: React.ReactNode }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-indigo-950/30 ring-1 ring-white/5 backdrop-blur-xl">
       {children}
+    </div>
+  );
+}
+
+/* ConfettiBurst — a one-shot ring of brand-gradient shards that fly outward and
+   fade when the chapter site goes live. Decorative + aria-hidden; only mounted
+   under non-reduced motion (the caller gates it). Deterministic geometry (no
+   per-render randomness) so SSR and the client agree. */
+const CONFETTI = Array.from({ length: 14 }, (_, i) => {
+  const angle = (i / 14) * Math.PI * 2;
+  const dist = 110 + (i % 3) * 26;
+  const colors = ["#6366f1", "#22d3ee", "#a855f7", "#34d399"];
+  return {
+    x: Math.cos(angle) * dist,
+    y: Math.sin(angle) * dist,
+    rotate: (i % 2 ? 1 : -1) * (120 + i * 18),
+    color: colors[i % colors.length],
+    delay: (i % 5) * 0.03,
+  };
+});
+
+function ConfettiBurst() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+      <div className="absolute left-1/2 top-1/2">
+        {CONFETTI.map((c, i) => (
+          <motion.span
+            key={i}
+            className="absolute h-2.5 w-1.5 rounded-[2px] will-change-transform"
+            style={{ background: c.color }}
+            initial={{ opacity: 0, x: 0, y: 0, scale: 0.6, rotate: 0 }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              x: c.x,
+              y: c.y,
+              scale: [0.6, 1, 0.9],
+              rotate: c.rotate,
+            }}
+            transition={{ duration: 1.1, delay: c.delay, ease: [0.16, 1, 0.3, 1] }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
