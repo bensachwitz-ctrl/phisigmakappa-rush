@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * ORGANIZATION PRESET PICKER — the premium "preset library" on the identity
- * step. Lets a chapter pick ANY of the 56 preloaded Greek organizations and
- * instantly auto-fill the wizard (name, short, glyph, and the brand palette),
+ * step. Lets a chapter pick ANY of the preloaded Greek organizations
+ * (see GREEK_ORGS.length) and instantly auto-fill the wizard (name, short,
+ * glyph, and the brand palette),
  * while leaving every field fully editable afterward. A "Custom / not listed"
  * choice clears the selection for fully manual entry.
  *

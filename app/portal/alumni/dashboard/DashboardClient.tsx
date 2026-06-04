@@ -20,6 +20,9 @@ import {
   ChevronRight,
   BookOpen,
   Heart,
+  User,
+  Briefcase,
+  Linkedin,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +48,8 @@ interface Alumnus {
   jobTitle: string | null;
   linkedinUrl: string | null;
   bio: string | null;
+  optInDirectory?: boolean;
+  optInNewsletter?: boolean;
 }
 
 interface Brother {
@@ -294,6 +299,100 @@ export default function DashboardClient({
   const [donationNote, setDonationNote] = useState("");
   const [submittingDonation, setSubmittingDonation] = useState(false);
 
+  // Profile self-edit states. Seeded from the server-provided alumnus so the
+  // form renders the alum's current values; identity fields (fullName,
+  // graduationYear, pledgeClass, email) are display-only and NOT in this form —
+  // the API likewise refuses to write them.
+  const [alumProfile, setAlumProfile] = useState({
+    fullName: alumni.fullName,
+    graduationYear: alumni.graduationYear,
+    pledgeClass: alumni.pledgeClass,
+    email: alumni.email,
+  });
+  const [profileForm, setProfileForm] = useState({
+    preferredName: alumni.preferredName || "",
+    phone: alumni.phone || "",
+    city: alumni.city || "",
+    state: alumni.state || "",
+    employer: alumni.employer || "",
+    jobTitle: alumni.jobTitle || "",
+    bio: alumni.bio || "",
+    linkedinUrl: alumni.linkedinUrl || "",
+    optInDirectory: alumni.optInDirectory ?? true,
+    optInNewsletter: alumni.optInNewsletter ?? true,
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
+  // Save profile changes — PATCH the alumni profile API. The API resolves WHO
+  // is being edited from the session cookie, so we send only field values.
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileError("");
+    setProfileSuccess("");
+    setSavingProfile(true);
+
+    try {
+      const res = await fetch("/api/portal/alumni/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferredName: profileForm.preferredName.trim(),
+          phone: profileForm.phone.trim(),
+          city: profileForm.city.trim(),
+          state: profileForm.state.trim(),
+          employer: profileForm.employer.trim(),
+          jobTitle: profileForm.jobTitle.trim(),
+          bio: profileForm.bio.trim(),
+          linkedinUrl: profileForm.linkedinUrl.trim(),
+          optInDirectory: profileForm.optInDirectory,
+          optInNewsletter: profileForm.optInNewsletter,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const msg = data?.error || "Failed to save profile.";
+        setProfileError(msg);
+        push({ title: msg, variant: "destructive" });
+      } else {
+        // Reconcile local state from the fresh, persisted values the API returns.
+        if (data.alumni) {
+          setProfileForm((prev) => ({
+            ...prev,
+            preferredName: data.alumni.preferredName || "",
+            phone: data.alumni.phone || "",
+            city: data.alumni.city || "",
+            state: data.alumni.state || "",
+            employer: data.alumni.employer || "",
+            jobTitle: data.alumni.jobTitle || "",
+            bio: data.alumni.bio || "",
+            linkedinUrl: data.alumni.linkedinUrl || "",
+            optInDirectory: data.alumni.optInDirectory ?? prev.optInDirectory,
+            optInNewsletter: data.alumni.optInNewsletter ?? prev.optInNewsletter,
+          }));
+          setAlumProfile((prev) => ({
+            ...prev,
+            fullName: data.alumni.fullName ?? prev.fullName,
+            graduationYear: data.alumni.graduationYear ?? prev.graduationYear,
+            pledgeClass: data.alumni.pledgeClass ?? prev.pledgeClass,
+            email: data.alumni.email ?? prev.email,
+          }));
+        }
+        setProfileSuccess("Profile updated successfully!");
+        push({ title: "Profile updated", description: "Your changes are saved.", variant: "success" });
+      }
+    } catch {
+      const msg = "A connection error occurred.";
+      setProfileError(msg);
+      push({ title: msg, variant: "destructive" });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   // Logout handler
   const handleLogout = async () => {
     await fetch("/api/portal/logout", { method: "POST" });
@@ -497,6 +596,8 @@ export default function DashboardClient({
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { id: "overview", label: "Overview", icon: Users },
+              { id: "profile", label: "My Profile", icon: User },
+              { id: "chat", label: "Chat", icon: MessageSquare },
               { id: "pnms", label: "Hometown PNMs", icon: MapPin },
               { id: "brothers", label: `Active ${terms.members}`, icon: Users },
               { id: "alumni", label: "Alumni Directory", icon: GraduationCap },
@@ -674,6 +775,256 @@ export default function DashboardClient({
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* MY PROFILE TAB */}
+          {activeTab === "profile" && (
+            <div className="space-y-6 max-w-2xl mx-auto">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
+                <div className="flex items-start gap-4">
+                  <InitialsAvatar name={alumProfile.fullName} size={56} rounded="rounded-2xl" className="shrink-0" />
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-bold text-maroon-900 leading-tight">{alumProfile.fullName}</h2>
+                    <p className="text-xs text-amber-800 font-bold uppercase tracking-wide mt-0.5">
+                      Class of {alumProfile.graduationYear}
+                      {alumProfile.pledgeClass ? ` · ${alumProfile.pledgeClass}` : ""}
+                    </p>
+                    <p className="text-xs text-maroon-600 mt-1">
+                      Keep your details current so fellow {terms.membersLower} and undergraduates can reach you.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
+                {/* Locked identity fields — display-only, edited by chapter admins. */}
+                <div className="mb-5 p-4 bg-cream-50/60 rounded-xl border border-maroon-50 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-maroon-500 mb-0.5">Full Name</span>
+                    <p className="text-sm font-semibold text-maroon-900">{alumProfile.fullName}</p>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-maroon-500 mb-0.5">Email on File</span>
+                    <p className="text-sm font-semibold text-maroon-900">{alumProfile.email || "—"}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-[11px] text-maroon-500 italic">
+                      Name &amp; email are managed by your chapter admin. Contact them to change these.
+                    </p>
+                  </div>
+                </div>
+
+                {profileError && (
+                  <div role="alert" className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs font-semibold">
+                    {profileError}
+                  </div>
+                )}
+
+                {profileSuccess && (
+                  <div role="status" className="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
+                    {profileSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleProfileSave} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="alum-preferredName" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        Preferred Name
+                      </label>
+                      <input
+                        id="alum-preferredName"
+                        type="text"
+                        value={profileForm.preferredName}
+                        onChange={(e) => setProfileForm({ ...profileForm, preferredName: e.target.value })}
+                        placeholder="e.g. Drew"
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="alum-phone" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        id="alum-phone"
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="e.g. (555) 555-5555"
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="alum-city" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        City
+                      </label>
+                      <input
+                        id="alum-city"
+                        type="text"
+                        value={profileForm.city}
+                        onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                        placeholder="e.g. Charlotte"
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="alum-state" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        State
+                      </label>
+                      <input
+                        id="alum-state"
+                        type="text"
+                        value={profileForm.state}
+                        onChange={(e) => setProfileForm({ ...profileForm, state: e.target.value })}
+                        placeholder="e.g. NC"
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="alum-employer" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        Employer
+                      </label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3 top-2.5 w-3.5 h-3.5 text-maroon-400" />
+                        <input
+                          id="alum-employer"
+                          type="text"
+                          value={profileForm.employer}
+                          onChange={(e) => setProfileForm({ ...profileForm, employer: e.target.value })}
+                          placeholder="e.g. Acme Corp"
+                          className="w-full pl-9 pr-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="alum-jobTitle" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                        Job Title
+                      </label>
+                      <input
+                        id="alum-jobTitle"
+                        type="text"
+                        value={profileForm.jobTitle}
+                        onChange={(e) => setProfileForm({ ...profileForm, jobTitle: e.target.value })}
+                        placeholder="e.g. Product Manager"
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="alum-linkedinUrl" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                      LinkedIn URL
+                    </label>
+                    <div className="relative">
+                      <Linkedin className="absolute left-3 top-2.5 w-3.5 h-3.5 text-maroon-400" />
+                      <input
+                        id="alum-linkedinUrl"
+                        type="url"
+                        value={profileForm.linkedinUrl}
+                        onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
+                        placeholder="https://www.linkedin.com/in/yourname"
+                        className="w-full pl-9 pr-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="alum-bio" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                      Biography
+                    </label>
+                    <textarea
+                      id="alum-bio"
+                      rows={5}
+                      maxLength={2000}
+                      placeholder="Share a brief bio — your career, how you stay involved, and how fellow alumni can connect with you."
+                      value={profileForm.bio}
+                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                      className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900 resize-none leading-relaxed"
+                    />
+                    <p className="text-[10px] text-right text-maroon-500 mt-1">{2000 - profileForm.bio.length} characters remaining</p>
+                  </div>
+
+                  {/* Privacy / communication preferences */}
+                  <fieldset className="space-y-3 pt-1">
+                    <legend className="text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">Preferences</legend>
+
+                    <label htmlFor="alum-optInDirectory" className="flex items-start gap-3 p-3 bg-cream-50/50 rounded-xl border border-maroon-50 cursor-pointer">
+                      <input
+                        id="alum-optInDirectory"
+                        type="checkbox"
+                        checked={profileForm.optInDirectory}
+                        onChange={(e) => setProfileForm({ ...profileForm, optInDirectory: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 rounded border-maroon-300 text-maroon-700 focus:ring-amber-500 accent-maroon-700"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold text-maroon-900">Show me in the Alumni Directory</span>
+                        <span className="block text-[11px] text-maroon-600">Let other alumni and undergraduates find your profile and contact info.</span>
+                      </span>
+                    </label>
+
+                    <label htmlFor="alum-optInNewsletter" className="flex items-start gap-3 p-3 bg-cream-50/50 rounded-xl border border-maroon-50 cursor-pointer">
+                      <input
+                        id="alum-optInNewsletter"
+                        type="checkbox"
+                        checked={profileForm.optInNewsletter}
+                        onChange={(e) => setProfileForm({ ...profileForm, optInNewsletter: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 rounded border-maroon-300 text-maroon-700 focus:ring-amber-500 accent-maroon-700"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold text-maroon-900">Subscribe to the chapter newsletter</span>
+                        <span className="block text-[11px] text-maroon-600">Receive chapter updates, event invites, and alumni news by email.</span>
+                      </span>
+                    </label>
+                  </fieldset>
+
+                  <div className="pt-2">
+                    <Button
+                      type="submit"
+                      disabled={savingProfile}
+                      className="bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 font-bold px-6 py-2.5 rounded-xl shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] transition-all duration-200 active:scale-[0.98] disabled:active:scale-100"
+                    >
+                      {savingProfile ? "Saving Profile..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* CHAT TAB */}
+          {activeTab === "chat" && (
+            <div className="space-y-6 max-w-2xl mx-auto">
+              <div className="relative overflow-hidden rounded-2xl border border-maroon-100/80 bg-gradient-to-br from-maroon-800 to-maroon-950 text-cream-50 p-8 ring-1 ring-maroon-900/30 shadow-[0_18px_44px_-20px_rgba(74,17,29,0.7)]">
+                <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-amber-400/15 blur-3xl" />
+                <div className="relative">
+                  <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/15 ring-1 ring-amber-300/30 mb-4">
+                    <MessageSquare className="h-7 w-7 text-amber-300" />
+                  </span>
+                  <h2 className="text-2xl font-bold mb-2">Chapter Chat</h2>
+                  <p className="text-sm text-cream-200/85 leading-relaxed max-w-md">
+                    Jump into real-time conversation with the {fraternityName} community — coordinate
+                    homecoming, reconnect with your pledge class, and stay in the loop on chapter news.
+                  </p>
+                  <a
+                    href="/portal/alumni/chat"
+                    className="inline-flex items-center gap-2 mt-6 bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-maroon-950 font-bold text-sm px-5 py-2.5 rounded-xl shadow-[0_6px_16px_-6px_rgba(217,119,6,0.7)] transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Open Chapter Chat
+                    <ChevronRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+              <p className="text-center text-xs text-maroon-500">
+                Real-time chat is powered by Stream. If your chapter hasn&apos;t enabled it yet,
+                you&apos;ll see a friendly note instead.
+              </p>
             </div>
           )}
 

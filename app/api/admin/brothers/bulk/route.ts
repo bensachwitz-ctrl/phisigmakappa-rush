@@ -1,11 +1,74 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { isAdminAuthed, isAdminRole, isSameOrigin, getCurrentBrother } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { sendEmail } from "@/lib/email";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function baseUrl(req: Request) {
+  return process.env.SITE_URL || `${new URL(req.url).origin}`;
+}
+
+/** Escape caller-supplied plain strings before HTML interpolation. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Branded onboarding-invite email — identical chrome to the single-invite
+ *  sender in app/api/admin/brother-invites/route.ts (per-tenant Resend creds +
+ *  the chapter's brand-tinted masthead/CTA, never a hardcoded red). Kept here so
+ *  the bulk/single-add path actually DELIVERS the invite it creates. */
+async function sendInviteEmail(
+  to: string,
+  link: string,
+  sender: string,
+  identity: ChapterIdentity,
+  brandHex: string,
+) {
+  const memberLower = identity.terms.memberLower; // "brother" | "sister" | "member"
+  const where = [identity.greekLetters, identity.schoolShort].filter(Boolean).join(", ");
+  const html = renderEmail({
+    brandHex,
+    chapterName: identity.chapterAttribution,
+    chapterSubline: identity.schoolName || undefined,
+    heading: `You're being added to ${identity.fraternityShort}.`,
+    bodyHtml: `<p style="margin:0;">${
+      sender ? `${esc(sender)} from the chapter` : "The chapter"
+    } invited you to join the ${identity.terms.membersLower} directory${where ? ` at ${esc(where)}` : ""}.</p>`,
+    cta: { label: `Complete your ${memberLower} profile`, url: link },
+    footerNote: `Or open this URL: ${esc(link)} · Link expires in 30 days.${
+      identity.tagline ? ` ${esc(identity.tagline)}` : ""
+    }`,
+  });
+  const text = renderEmailText({
+    heading: `You're being added to ${identity.fraternityShort}.`,
+    lines: [
+      `${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the ${identity.terms.membersLower} directory${where ? ` at ${where}` : ""}.`,
+      "Link expires in 30 days.",
+    ],
+    cta: { label: `Complete your ${memberLower} profile`, url: link },
+    chapterName: identity.chapterAttribution,
+  });
+  const res = await sendEmail({
+    to,
+    subject: `Welcome to ${identity.fraternityName} — finish your profile`,
+    html,
+    text,
+  });
+  return { sent: !!res.ok, reason: res.ok ? "ok" : (res as any).error || "send-failed" };
+}
 
 // Public-safe brother fields — mirrors the single-create route so passwordHash
 // never ships back to the client on any path.
@@ -170,45 +233,76 @@ export async function POST(req: Request) {
   }
 
   // Optional: fire onboarding invites for the freshly-created brothers that
-  // have an email. Best-effort and decoupled — we hand back which rows got an
-  // invite so the UI can surface it, but a delivery failure never flips the
-  // row's "added" status.
+  // have a REAL email. Best-effort and decoupled — we hand back which rows got
+  // an invite so the UI can surface it, but a delivery failure never flips the
+  // row's "added" status (nor fails the batch).
+  //
+  // `invited`         = BrotherInvite rows created (a token now exists).
+  // `inviteEmailsSent`= invites whose onboarding email actually delivered.
+  // We report BOTH so the wizard toast can't over-claim "sent" when delivery
+  // silently no-ops (the exact bug this route used to ship: it created the
+  // token but never emailed it, stranding new members with no link).
   let invited = 0;
+  let inviteEmailsSent = 0;
   if (sendInvites && added.length > 0) {
-    const byId = new Map(results.map((x) => [x.id, x]));
-    void byId; // (results already carry id/name; invites resolved below)
-    try {
-      const crypto = await import("crypto");
-      const { getCurrentBrother } = await import("@/lib/auth");
-      const sender = await getCurrentBrother().catch(() => null);
-      for (const a of added) {
-        // Re-read the email for this created brother (PUBLIC_BROTHER_SELECT
-        // included it, but `added` only kept id+name — look it up cheaply).
-        const b = await prisma.brother
-          .findUnique({ where: { id: a.id! }, select: { email: true, name: true } })
-          .catch(() => null);
-        if (!b?.email) continue;
+    // Pull identity + brand color + sender ONCE before the loop so every invite
+    // shares the same chapter signature and the email masthead/CTA render in
+    // THIS chapter's brand color (mirrors brother-invites/route.ts).
+    const sender = await getCurrentBrother().catch(() => null);
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    const identity = await getChapterIdentity().catch(() => null);
+    const brandHex = cfg["brand.primaryHex"] || "";
+    const senderName = sender?.name || "";
+
+    for (const a of added) {
+      // Re-read the email for this created brother (PUBLIC_BROTHER_SELECT
+      // included it, but `added` only kept id+name — look it up cheaply).
+      const b = await prisma.brother
+        .findUnique({ where: { id: a.id! }, select: { email: true, name: true } })
+        .catch(() => null);
+      const email = b?.email?.trim();
+      // Skip blank + synthetic placeholder addresses (the rush flow mints
+      // "<name>-<ts>@noemail.local" rows that must never be emailed).
+      if (!email || email.endsWith("@noemail.local")) continue;
+
+      // Each invite is fully isolated: a single bad row (create OR send) must
+      // not abort the rest of the batch.
+      try {
         const token = crypto.randomBytes(24).toString("base64url");
         const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         await prisma.brotherInvite.create({
           data: {
             token,
-            email: b.email,
+            email,
             phone: null,
-            prefillName: b.name || a.name || null,
+            prefillName: b?.name || a.name || null,
             invitedBy: sender?.name || null,
             expiresAt,
           },
-        }).then(() => { invited += 1; }).catch(() => {});
+        });
+        invited += 1;
+
+        // ACTUALLY deliver the onboarding link. Best-effort: a send failure
+        // leaves the invite row intact (admin can re-send) but does NOT count
+        // toward inviteEmailsSent, so the toast stays honest.
+        if (identity) {
+          try {
+            const link = `${baseUrl(req)}/onboard/${token}`;
+            const r = await sendInviteEmail(email, link, senderName, identity, brandHex);
+            if (r.sent) inviteEmailsSent += 1;
+          } catch {
+            // swallow — invite created, email failed; reported via the count gap
+          }
+        }
+      } catch {
+        // create failed for this row — skip and keep going
       }
-    } catch {
-      // Invites are entirely optional — swallow and report what landed.
     }
   }
 
   return NextResponse.json({
     ok: true,
     results,
-    summary: { added: added.length, duplicates, errors, invited },
+    summary: { added: added.length, duplicates, errors, invited, inviteEmailsSent },
   });
 }

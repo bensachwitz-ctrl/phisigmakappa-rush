@@ -10,7 +10,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -459,6 +459,41 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               )}
             </div>
           )}
+
+          {/* Quick-access tiles for the newer officer tools. They already live
+              in the nav + ⌘K palette; surfacing them on the home screen means an
+              officer signing in sees the latest sections without hunting. Matches
+              the GLASS_CARD + IconChip tile style used across the dashboard. */}
+          <Reveal as="div" className="mb-6">
+            <div className="mb-3 flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4 text-phisig-red" />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Chapter tools</h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {[
+                { href: "/admin/treasury", label: "Treasury", sub: "Budgets, ledgers & expenses", icon: Landmark },
+                { href: "/admin/family", label: "Big/Little", sub: "Family tree & pairings", icon: Network },
+                { href: "/admin/directory", label: "Member Directory", sub: "Searchable roster", icon: BookUser },
+                { href: "/admin/billing", label: "Billing", sub: "Plan & subscription", icon: CreditCard },
+                { href: "/admin/chat", label: "Chapter Chat", sub: "Real-time messaging", icon: MessagesSquare },
+              ].map((t, i) => {
+                const Icon = t.icon;
+                return (
+                  <Reveal key={t.href} delay={i * 60}>
+                    <Link href={t.href} className={`group ${GLASS_CARD} flex h-full items-center gap-3.5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30`}>
+                      <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent opacity-80" />
+                      <IconChip icon={Icon} tone="brand" size="md" className="shrink-0 transition-transform duration-300 group-hover:scale-105" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold tracking-tight">{t.label}</p>
+                        <p className="truncate text-xs text-muted-foreground">{t.sub}</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" />
+                    </Link>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </Reveal>
 
           {remaining > 0 && (
             <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]">

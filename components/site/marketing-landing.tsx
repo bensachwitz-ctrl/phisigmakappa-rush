@@ -101,6 +101,9 @@ const NAV_LINKS = [
   { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
   { href: "#proof", label: "Why Greekstack" },
+  // Real route (not an in-page anchor) — SiteNav/SiteFooter render every entry
+  // through next/link, which handles "/"-prefixed hrefs and "#" anchors alike.
+  { href: "/contact", label: "Contact" },
 ];
 
 const FEATURES: { icon: GsIcon; title: string; desc: string; span?: boolean }[] = [
@@ -1544,6 +1547,8 @@ function SiteFooter() {
             />
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
+            {/* NAV_LINKS now includes Contact, so it's rendered in this map —
+                no separate hardcoded Contact link (would duplicate it). */}
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -1554,16 +1559,16 @@ function SiteFooter() {
               </Link>
             ))}
             <Link
-              href="/contact"
-              className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Contact
-            </Link>
-            <Link
               href="/privacy"
               className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Terms
             </Link>
             <Link
               href="/onboard"

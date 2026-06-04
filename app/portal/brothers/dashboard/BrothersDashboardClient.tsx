@@ -782,13 +782,16 @@ export default function BrothersDashboardClient({
               { id: "alumni", label: "Alumni Directory", icon: Users },
               { id: "polls", label: "Chapter Polls", icon: FileText },
               { id: "profile", label: "My Profile", icon: User },
+              // Chat is a standalone page (not a tab-panel), so this item routes
+              // there with router.push instead of flipping the active tab.
+              { id: "chat", label: "Chapter Chat", icon: MessageSquare, href: "/portal/brothers/chat" },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => (tab.href ? router.push(tab.href) : setActiveTab(tab.id))}
                   aria-current={active ? "page" : undefined}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
                     active
