@@ -1339,6 +1339,21 @@ function PostTile({
   className?: string;
   priority?: boolean;
 }) {
+  // No photo configured (white-labeled / unset slug) → render the designed
+  // fallback tile only; never request /api/photo/ with an empty slug (404) nor
+  // link to a broken instagram.com/p// URL. New chapters with no IG posts hit this.
+  if (!slug || !slug.trim()) {
+    return (
+      <div className={`group relative rounded-2xl overflow-hidden border border-border lift block aspect-square ${className ?? ""}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
+          <Crest className="h-20 w-20 text-white/25" aria-hidden="true" />
+        </div>
+        <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+          <Icon className="h-3 w-3" aria-hidden="true" /> {caption}
+        </span>
+      </div>
+    );
+  }
   const isUrl = /^https?:\/\//.test(slug);
   const imgSrc = isUrl ? slug : `/api/photo/${slug}`;
   const linkHref = isUrl ? slug : `https://www.instagram.com/p/${slug}/`;
