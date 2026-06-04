@@ -10,8 +10,12 @@ export const dynamic = "force-dynamic";
 
 // Secret-shaped config keys are masked in the GET payload (write-only). The
 // dues.stripeWebhookSecret leaking to a member let them forge Stripe events;
-// publishable keys (no "secret" in the name) are still returned.
-const SECRET_KEY_RE = /secret/i;
+// publishable keys (no "secret" in the name) are still returned. The per-chapter
+// messaging credentials (resend.apiKey, twilio.authToken) are also masked here —
+// they grant send-on-your-behalf access — while their non-secret companions
+// (resend.fromEmail, twilio.accountSid, twilio.phoneNumber, stripePublishableKey)
+// stay readable so the admin UI can show what's configured.
+const SECRET_KEY_RE = /secret|resend\.apikey|twilio\.authtoken/i;
 
 export async function GET() {
   // Admins only — isAdminAuthed() accepts a plain MEMBER cookie (adminFlag=0),

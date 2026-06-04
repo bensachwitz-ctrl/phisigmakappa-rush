@@ -17,7 +17,7 @@ import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
   RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
   FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
-  CalendarDays, ListChecks, Activity, CreditCard,
+  CalendarDays, ListChecks, Activity, CreditCard, MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -147,6 +147,37 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
           </Field>
           <Field label="iOS home-screen launcher title (≤12 chars)">
             <Input value={values["chapter.appShortTitle"] || ""} onChange={(e) => set("chapter.appShortTitle", e.target.value)} placeholder="Phi Sig USC" maxLength={12} />
+          </Field>
+          <Field label="Organization type">
+            <Select value={values["chapter.orgType"] || "fraternity"} onValueChange={(v) => set("chapter.orgType", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fraternity">Fraternity</SelectItem>
+                <SelectItem value="sorority">Sorority</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="other">Co-ed / Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Sets terminology: Brother / Sister / Member.
+            </p>
+          </Field>
+          <Field label="Chapter timezone">
+            <Select value={values["chapter.timezone"] || "America/New_York"} onValueChange={(v) => set("chapter.timezone", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="America/New_York">Eastern (America/New_York)</SelectItem>
+                <SelectItem value="America/Chicago">Central (America/Chicago)</SelectItem>
+                <SelectItem value="America/Denver">Mountain (America/Denver)</SelectItem>
+                <SelectItem value="America/Phoenix">Arizona (America/Phoenix)</SelectItem>
+                <SelectItem value="America/Los_Angeles">Pacific (America/Los_Angeles)</SelectItem>
+                <SelectItem value="America/Anchorage">Alaska (America/Anchorage)</SelectItem>
+                <SelectItem value="Pacific/Honolulu">Hawaii (Pacific/Honolulu)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Used for SMS quiet-hours (TCPA).
+            </p>
           </Field>
         </div>
       </Section>
@@ -285,6 +316,21 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
               className="font-mono"
             />
           </Field>
+          <Field label="Platform application fee %">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              value={values["dues.platformFeePct"] || ""}
+              onChange={(e) => set("dues.platformFeePct", e.target.value)}
+              placeholder="0"
+              className="font-mono"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Platform application fee % on dues/donations when payouts are connected. Default 0.
+            </p>
+          </Field>
           <Field label="Stripe publishable key (pk_live_… or pk_test_…)" className="sm:col-span-2">
             <Input
               value={values["dues.stripePublishableKey"] || ""}
@@ -306,6 +352,90 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
               server env var — never paste a secret key here). Get this from the Stripe
               dashboard after creating a webhook pointing at <span className="font-mono">/api/dues/webhook</span>.
             </p>
+          </Field>
+        </div>
+        <Link
+          href="/admin/dues/connect"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-phisig-red hover:underline"
+        >
+          Connect payout account <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+        </Link>
+      </Section>
+
+      {/* EMAIL SENDER (Resend) — optional per-chapter override.
+          lib/messaging-config.ts reads resend.apiKey / resend.fromEmail and
+          prefers them over the platform RESEND_API_KEY env var when present.
+          The apiKey is masked write-only in the GET payload (SECRET_KEY_RE). */}
+      <Section
+        id="resend"
+        title="Email sender (Resend)"
+        eyebrow="Optional — send transactional email from your own Resend account"
+        icon={Mail}
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Optional — use your chapter&apos;s own Resend account + verified domain. Leave blank to use
+          the platform default.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Resend API key">
+            <Input
+              type="password"
+              value={values["resend.apiKey"] || ""}
+              onChange={(e) => set("resend.apiKey", e.target.value)}
+              placeholder="re_…"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="From email (verified domain)">
+            <Input
+              value={values["resend.fromEmail"] || ""}
+              onChange={(e) => set("resend.fromEmail", e.target.value)}
+              placeholder="rush@yourchapter.com"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* SMS (Twilio) — optional per-chapter override.
+          lib/messaging-config.ts reads twilio.accountSid / twilio.authToken /
+          twilio.phoneNumber and prefers them over the platform env vars when
+          present. authToken is masked write-only in the GET payload. Quiet-hours
+          enforcement (TCPA) keys off chapter.timezone above. */}
+      <Section
+        id="twilio"
+        title="SMS (Twilio)"
+        eyebrow="Optional — text from your own Twilio number"
+        icon={MessageSquare}
+      >
+        <p className="text-xs text-muted-foreground mb-4">
+          Optional — your chapter&apos;s own Twilio number. Blank = platform default. Texting outside
+          8am–9pm recipient-local is blocked (TCPA).
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Account SID">
+            <Input
+              value={values["twilio.accountSid"] || ""}
+              onChange={(e) => set("twilio.accountSid", e.target.value)}
+              placeholder="AC…"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Auth token">
+            <Input
+              type="password"
+              value={values["twilio.authToken"] || ""}
+              onChange={(e) => set("twilio.authToken", e.target.value)}
+              placeholder="••••••••"
+              className="font-mono"
+            />
+          </Field>
+          <Field label="Phone number (E.164)">
+            <Input
+              value={values["twilio.phoneNumber"] || ""}
+              onChange={(e) => set("twilio.phoneNumber", e.target.value)}
+              placeholder="+1…"
+              className="font-mono"
+            />
           </Field>
         </div>
       </Section>
@@ -657,6 +787,17 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
               rows={3}
               placeholder="What this brother did to earn the recognition."
             />
+          </Field>
+          <Field label="Achievements / bullets" className="sm:col-span-2">
+            <Textarea
+              value={values["spotlight.bullets"] || ""}
+              onChange={(e) => set("spotlight.bullets", e.target.value)}
+              rows={4}
+              placeholder={"Dean's List, Spring 2026\nLed the Polar Plunge fundraiser\nIntramural soccer captain"}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              One achievement per line — shown as the spotlight bullet list.
+            </p>
           </Field>
         </div>
         <PhotoPreview slug={values["spotlight.slug"]} className="mt-4" />

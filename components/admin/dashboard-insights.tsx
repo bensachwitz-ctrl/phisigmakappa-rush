@@ -281,7 +281,7 @@ export function DashboardInsights({
                   {recommendBid.map(({ rush, avg: avgScore }) => (
                     <li key={rush.id}>
                       <Link
-                        href={`/admin?focus=${rush.id}`}
+                        href={`/admin/rushees/${rush.id}`}
                         className="flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-white px-3 py-2 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
@@ -321,7 +321,7 @@ export function DashboardInsights({
                   {recommendDrop.map(({ rush, avg: avgScore }) => (
                     <li key={rush.id}>
                       <Link
-                        href={`/admin?focus=${rush.id}`}
+                        href={`/admin/rushees/${rush.id}`}
                         className="flex items-center justify-between gap-2 rounded-lg border border-rose-100 bg-white px-3 py-2 hover:border-rose-300 hover:bg-rose-50/40 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
@@ -361,7 +361,7 @@ export function DashboardInsights({
                   {needsMyVote.map((rush) => (
                     <li key={rush.id}>
                       <Link
-                        href={`/admin?focus=${rush.id}`}
+                        href={`/admin/rushees/${rush.id}`}
                         className="flex items-center justify-between gap-2 rounded-lg border border-phisig-red/10 bg-white px-3 py-2 hover:border-phisig-red/40 hover:bg-phisig-red-soft/30 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>

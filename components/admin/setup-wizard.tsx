@@ -142,6 +142,37 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <WField label="National HQ URL" id="chapter.nationalHqUrl" values={values} set={set} placeholder="https://phisigmakappa.org" />
               <WField label="Charter year" id="chapter.charterYear" values={values} set={set} placeholder="1975" />
               <WField label="Founding year (national)" id="chapter.foundingYear" values={values} set={set} placeholder="1873" />
+              <WSelect
+                label="Organization type"
+                id="chapter.orgType"
+                values={values}
+                set={set}
+                fallback="fraternity"
+                hint="Sets terminology: Brother / Sister / Member."
+                options={[
+                  { value: "fraternity", label: "Fraternity" },
+                  { value: "sorority", label: "Sorority" },
+                  { value: "professional", label: "Professional" },
+                  { value: "other", label: "Co-ed / Other" },
+                ]}
+              />
+              <WSelect
+                label="Chapter timezone"
+                id="chapter.timezone"
+                values={values}
+                set={set}
+                fallback="America/New_York"
+                hint="Used for SMS quiet-hours (TCPA)."
+                options={[
+                  { value: "America/New_York", label: "Eastern (America/New_York)" },
+                  { value: "America/Chicago", label: "Central (America/Chicago)" },
+                  { value: "America/Denver", label: "Mountain (America/Denver)" },
+                  { value: "America/Phoenix", label: "Arizona (America/Phoenix)" },
+                  { value: "America/Los_Angeles", label: "Pacific (America/Los_Angeles)" },
+                  { value: "America/Anchorage", label: "Alaska (America/Anchorage)" },
+                  { value: "Pacific/Honolulu", label: "Hawaii (Pacific/Honolulu)" },
+                ]}
+              />
               <WField label="Cardinal principles / motto" id="chapter.cardinalPrinciples" values={values} set={set} placeholder="Brotherhood, Scholarship, Character" full />
               <WField label="Tagline / hashtag" id="chapter.tagline" values={values} set={set} placeholder="#DamnProud" />
               <WField label="iOS launcher caption (≤12 chars)" id="chapter.appShortTitle" values={values} set={set} placeholder="Phi Sig USC" maxLength={12} />
@@ -278,6 +309,7 @@ const STEP_KEYS: Record<StepId, string[]> = {
     "chapter.schoolName", "chapter.schoolShort", "chapter.schoolUrl",
     "chapter.nationalHqUrl",
     "chapter.charterYear", "chapter.foundingYear",
+    "chapter.orgType", "chapter.timezone",
     "chapter.cardinalPrinciples", "chapter.tagline",
     "chapter.appShortTitle",
   ],
@@ -347,6 +379,35 @@ function WColor({
           className="font-mono"
         />
       </div>
+    </div>
+  );
+}
+
+function WSelect({
+  label, id, values, set, fallback, options, hint,
+}: {
+  label: string;
+  id: string;
+  values: Cfg;
+  set: (k: string, v: string) => void;
+  fallback: string;
+  options: { value: string; label: string }[];
+  hint?: string;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="mb-1.5 inline-block">{label}</Label>
+      <select
+        id={id}
+        value={values[id] || fallback}
+        onChange={(e) => set(id, e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

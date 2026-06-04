@@ -50,6 +50,12 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
           >
             About
           </Link>
+          <Link
+            href="/alumni"
+            className="hidden sm:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
+          >
+            Alumni
+          </Link>
           <Button asChild size="sm" className="hidden sm:inline-flex">
             <Link href="#register">Register</Link>
           </Button>

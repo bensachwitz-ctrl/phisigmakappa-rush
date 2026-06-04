@@ -162,6 +162,9 @@ export async function POST(req: Request) {
 
     const updates: Record<string, string> = {
       "chapter.orgType": normalizedOrgType,
+      // Seed a default timezone so a fresh tenant has TCPA SMS quiet-hours
+      // anchored from day one; the admin can change it in /admin/settings.
+      "chapter.timezone": "America/New_York",
       "chapter.fraternityName": fraternityName.trim(),
       "chapter.fraternityShort": (fraternityShort || fraternityName).trim(),
       "chapter.greekLetters": greekLetters.trim(),

@@ -978,7 +978,20 @@ function SiteFooter() {
         </div>
         <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
-          <p>greekstack.vercel.app</p>
+          <div className="flex items-center gap-3">
+            {/* Discreet entry point to the super-admin operator console. The page
+                behind it is just a password form, so linking it is safe — it keeps
+                operators from having to memorize the /platform URL. Apex-only:
+                this footer renders solely on the marketing landing. */}
+            <Link
+              href="/platform/login"
+              className="text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+            >
+              Operator console
+            </Link>
+            <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+            <p>greekstack.vercel.app</p>
+          </div>
         </div>
       </div>
     </footer>
