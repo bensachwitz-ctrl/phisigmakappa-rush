@@ -12,9 +12,15 @@ export async function sendEmail(opts: {
   // Per-tenant Resend creds (SiteConfig) with env fallback. apiKey is null
   // when the chapter hasn't configured Resend (or env is the re_xxxxx
   // placeholder), which keeps the mock path below.
-  const { apiKey, fromEmail: fromAddr } = await getResendConfig();
+  const { apiKey, fromEmail } = await getResendConfig();
+  // NEUTRAL platform default for the from-ADDRESS so an unconfigured chapter
+  // never sends from another chapter's domain (cross-brand leak). The
+  // per-tenant resend.fromEmail / env override flows through getResendConfig.
+  const fromAddr = fromEmail?.trim() || "no-reply@greekstack.vercel.app";
 
-  let fromName = "Phi Sigma Kappa";
+  // Chapter-aware from-NAME (kept): a configured chapter signs as itself; only
+  // the address default is neutralized above.
+  let fromName = "Greekstack";
   try {
     const identity = await getChapterIdentity();
     fromName = identity.chapterAttribution || identity.fraternityName || fromName;

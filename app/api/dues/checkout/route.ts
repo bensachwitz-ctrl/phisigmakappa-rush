@@ -6,10 +6,13 @@ import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
 import { audit } from "@/lib/audit";
+import { errorSink } from "@/lib/logger";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/dues/checkout";
 
 /**
  * POST /api/dues/checkout
@@ -59,12 +62,17 @@ export async function POST(req: Request) {
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const enabled = cfg["dues.enabled"] === "true";
   const publishableKey = cfg["dues.stripePublishableKey"] || "";
-  const webhookSecret = cfg["dues.stripeWebhookSecret"] || "";
+  // The webhook secret can be the SINGLE platform-global STRIPE_WEBHOOK_SECRET
+  // (the current model — one endpoint, routed by metadata.subdomain) OR a legacy
+  // per-chapter dues.stripeWebhookSecret. Either one satisfies the prereq; the
+  // webhook resolves them in the same order. (Without this, a chapter relying on
+  // the global secret could never enable online dues — it 503'd forever.)
+  const webhookConfigured = !!(process.env.STRIPE_WEBHOOK_SECRET || cfg["dues.stripeWebhookSecret"]);
 
   const stripe = getStripe();
 
-  // All four prereqs required. Missing any → graceful 503.
-  if (!enabled || !publishableKey || !webhookSecret || !stripe) {
+  // All prereqs required. Missing any → graceful 503.
+  if (!enabled || !publishableKey || !webhookConfigured || !stripe) {
     return NextResponse.json(
       {
         ok: false,
@@ -112,7 +120,12 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
-    console.error("[/api/dues/checkout] create DuesPayment failed:", err);
+    errorSink(err, {
+      route: ROUTE,
+      tenant: getSubdomain(headers().get("host")) || null,
+      brotherId: brother.id,
+      outcome: "create_dues_payment_failed",
+    });
     return NextResponse.json(
       { ok: false, error: "Could not start checkout. Try again or contact your treasurer." },
       { status: 500 },
@@ -180,7 +193,12 @@ export async function POST(req: Request) {
   try {
     session = await stripe.checkout.sessions.create(sessionParams);
   } catch (err: any) {
-    console.error("[/api/dues/checkout] Stripe.create failed:", err);
+    errorSink(err, {
+      route: ROUTE,
+      tenant: sub || null,
+      brotherId: brother.id,
+      outcome: "stripe_session_create_failed",
+    });
     // Mark the row FAILED so it's not stuck PENDING forever.
     await prisma.duesPayment.update({
       where: { id: payment.id },

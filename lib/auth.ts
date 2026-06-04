@@ -207,18 +207,15 @@ export const ADMIN_COOKIE = COOKIE_NAME;
  * cross-origin signal — i.e. Origin or Referer pointing to a foreign host.
  */
 export function isSameOrigin(req: Request): boolean {
-  const expected = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
-  let expectedHost: string;
-  try {
-    expectedHost = new URL(expected).host;
-  } catch {
-    return true; // Misconfigured env — fail open to keep prod working.
-  }
+  // Compare Origin/Referer against the request's OWN Host header. A single env
+  // URL cannot match every tenant subdomain, so the old static-host approach
+  // 403'd legitimate admin mutations on chapter subdomains (and broke after the
+  // host rename). Mirrors middleware.isSameOriginEdge.
+  const host = req.headers.get("host") || "";
   const origin = req.headers.get("origin");
   if (origin) {
     try {
-      const o = new URL(origin).host;
-      return o === expectedHost;
+      return new URL(origin).host === host;
     } catch {
       return false;
     }
@@ -226,8 +223,7 @@ export function isSameOrigin(req: Request): boolean {
   const referer = req.headers.get("referer");
   if (referer) {
     try {
-      const r = new URL(referer).host;
-      return r === expectedHost;
+      return new URL(referer).host === host;
     } catch {
       return false;
     }

@@ -3,11 +3,14 @@ import { PrismaClient } from "@prisma/client";
 import { centralDb } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { setBrotherCookie } from "@/lib/auth";
+import { logger, errorSink } from "@/lib/logger";
 import fs from "fs";
 import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/onboard";
 
 // Per-IP rate limit on tenant creation. Each provisioning spins up a Postgres
 // schema + ~42 tables, so an open/unauth endpoint is a cheap way to exhaust the
@@ -272,9 +275,24 @@ export async function POST(req: Request) {
     const proto = isLocal ? "http" : "https";
     const redirectUrl = `${proto}://${subdomain}.${domain}${port}/admin`;
 
+    // Provisioning succeeded — a full tenant (schema + admin + registry row)
+    // now exists. Log subdomain + outcome; no password/PII/secret.
+    logger.info("onboard.provisioned", {
+      route: ROUTE,
+      tenant: subdomain,
+      orgType: normalizedOrgType,
+      outcome: "success",
+    });
+
     return NextResponse.json({ ok: true, url: redirectUrl });
   } catch (err: any) {
-    console.error("Multi-tenant onboarding failed:", err);
+    // Provisioning failed — record which subdomain + that we rolled back.
+    errorSink(err, {
+      route: ROUTE,
+      tenant: subdomain,
+      schemaCreated,
+      outcome: "provisioning_failed",
+    });
     // Roll back the half-created schema so the subdomain can be retried cleanly.
     // The registry row is written last, so on failure it never exists yet.
     try {

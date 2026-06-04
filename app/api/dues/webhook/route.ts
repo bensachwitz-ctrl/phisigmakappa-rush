@@ -7,9 +7,12 @@ import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { logger, errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/dues/webhook";
 
 /**
  * POST /api/dues/webhook
@@ -74,7 +77,8 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err: any) {
-    console.error("[/api/dues/webhook] signature verification failed:", err?.message);
+    // Log the outcome only — never the raw body or the signing secret.
+    errorSink(err, { route: ROUTE, outcome: "signature_verification_failed" });
     return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 400 });
   }
 
@@ -118,11 +122,14 @@ export async function POST(req: Request) {
         break;
     }
   } catch (err) {
-    console.error("[/api/dues/webhook] handler error:", err);
+    // Structured error: event type + tenant + that it failed. No payload/PII.
+    errorSink(err, { route: ROUTE, eventType: event.type, tenant: sub, outcome: "handler_error" });
     // Return 500 so Stripe retries — better to re-process than drop a payment.
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
+  // One concise success line per processed event — event type + tenant only.
+  logger.info("dues.webhook.processed", { route: ROUTE, eventType: event.type, tenant: sub });
   return NextResponse.json({ ok: true });
 }
 
@@ -147,8 +154,9 @@ async function handleCheckoutCompleted(
     }
 
     // Session ID we don't know — could be a test event, or session was
-    // created outside our flow. Log and ignore.
-    console.warn("[/api/dues/webhook] unknown session:", sessionId);
+    // created outside our flow. Log and ignore. (Session id is an opaque
+    // Stripe identifier, not a secret — safe to record for forensics.)
+    logger.warn("dues.webhook.unknown_session", { route: ROUTE, sessionId });
     return;
   }
 
@@ -220,6 +228,16 @@ async function handleCheckoutCompleted(
       ipAddress: null,
     },
   }).catch(() => {});
+
+  // Meaningful business event — money confirmed. Amount + year + outcome only;
+  // no card/PII/secret. `tenant` resolved from the session metadata subdomain.
+  logger.info("dues.paid", {
+    route: ROUTE,
+    tenant: (session.metadata as any)?.subdomain || null,
+    amountCents: payment.amountCents,
+    year: payment.year,
+    outcome: "paid",
+  });
 }
 
 async function handleCheckoutFailed(
@@ -384,7 +402,16 @@ async function handleDonationCompleted(
     to: alumni.email || "",
     subject: `Thank you for your donation to ${id.fraternityName}`,
     html,
-  }).catch((e) => console.error("Failed to send thank you email:", e));
+  }).catch((e) => errorSink(e, { route: ROUTE, outcome: "donation_thankyou_email_failed" }));
+
+  // Donation money confirmed — amount + campaign + outcome only.
+  logger.info("alumni.donation.paid", {
+    route: ROUTE,
+    tenant: (session.metadata as any)?.subdomain || null,
+    amountCents: donation.amountCents,
+    campaign: donation.campaign || "General",
+    outcome: "paid",
+  });
 
   // Write audit log
   await db.auditLog.create({

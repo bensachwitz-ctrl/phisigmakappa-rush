@@ -4,11 +4,14 @@ import { prisma, getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
+import { errorSink } from "@/lib/logger";
 import { z } from "zod";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/alumni/donate/checkout";
 
 const DonationSchema = z.object({
   alumniId: z.string().min(1),
@@ -47,17 +50,26 @@ export async function POST(req: Request) {
       );
     }
     
-    // We take a 5% platform fee on all donations
-    const platformFeePercent = 0.05;
-    const platformFeeCents = Math.round(amountCents * platformFeePercent);
-    
-    // Create PENDING donation row
+    // Record the SAME platform fee that the charge will actually take (see the
+    // Connect block below). The fee is only charged via application_fee_amount
+    // when this chapter has a connected, charges-ready account AND set a
+    // positive dues.platformFeePct — otherwise it is $0. Deriving the recorded
+    // fee from cfg (not a hardcoded 5%) keeps the donation note honest: it never
+    // claims a fee that wasn't charged.
+    const feePct = isConnectChargesReady(cfg) ? parseFloat(cfg["dues.platformFeePct"] || "0") : 0;
+    const platformFeeCents =
+      Number.isFinite(feePct) && feePct > 0 ? Math.round(amountCents * (feePct / 100)) : 0;
+
+    // Create PENDING donation row. Only prefix the fee line when a fee is
+    // actually charged; otherwise the note is just the donor's own notes.
     const donation = await prisma.alumniDonation.create({
       data: {
         alumniId,
         amountCents, // This is the total donation amount
         campaign,
-        notes: `Platform fee: $${(platformFeeCents / 100).toFixed(2)}. ${notes}`,
+        notes: platformFeeCents > 0
+          ? `Platform fee: $${(platformFeeCents / 100).toFixed(2)}. ${notes}`
+          : notes,
         status: "PENDING",
       },
     });
@@ -136,7 +148,11 @@ export async function POST(req: Request) {
     
     return NextResponse.json({ ok: true, url: session.url });
   } catch (err: any) {
-    console.error("Donation checkout session creation failed:", err);
+    errorSink(err, {
+      route: ROUTE,
+      tenant: getSubdomain(headers().get("host")) || null,
+      outcome: "donation_checkout_create_failed",
+    });
     return NextResponse.json({ ok: false, error: err?.message || "Payment service error" }, { status: 500 });
   }
 }

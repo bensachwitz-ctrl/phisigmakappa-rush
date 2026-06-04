@@ -107,6 +107,16 @@ type Tenant = {
   createdAt: string;
 };
 
+/** Shape returned by GET /api/health (public-safe; booleans + counts only). */
+type Health = {
+  ok: boolean;
+  version: string;
+  db: "up" | "down";
+  tenants: number;
+  integrations: Record<string, boolean>;
+  ts: string;
+};
+
 function fmtDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -129,6 +139,24 @@ export default function PlatformConsolePage() {
   // Tenant queued for deletion (drives the confirm dialog).
   const [toDelete, setToDelete] = React.useState<Tenant | null>(null);
   const [deleting, setDeleting] = React.useState(false);
+  // System-health glance (DB up/down + integration toggles). Isolated state +
+  // its own fetch so it never interferes with the tenant table load. Best-
+  // effort: a failed probe just hides the widget — it never blocks the console.
+  const [health, setHealth] = React.useState<Health | null>(null);
+
+  const loadHealth = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/health", { cache: "no-store" });
+      const j = (await res.json().catch(() => null)) as Health | null;
+      if (j && typeof j.ok === "boolean") setHealth(j);
+    } catch {
+      // Non-fatal — leave whatever we last had (or nothing).
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadHealth();
+  }, [loadHealth]);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -236,7 +264,15 @@ export default function PlatformConsolePage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  load();
+                  loadHealth();
+                }}
+                disabled={loading}
+              >
                 {loading ? <Spinner /> : <RefreshGlyph />}
                 Refresh
               </Button>
@@ -263,6 +299,8 @@ export default function PlatformConsolePage() {
             <span>{error}</span>
           </div>
         )}
+
+        {health && <HealthGlance health={health} />}
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
@@ -419,6 +457,86 @@ export default function PlatformConsolePage() {
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+/** Operator-facing system-health glance. Renders the public-safe /api/health
+ *  result: DB up/down + a row of integration toggles (configured / not). Pure
+ *  presentation — all values come pre-sanitized from the API (booleans only). */
+function HealthGlance({ health }: { health: Health }) {
+  // Friendly labels for the integration keys the health route returns.
+  const LABELS: Record<string, string> = {
+    stripe: "Stripe",
+    stripeWebhook: "Stripe Webhook",
+    resend: "Email (Resend)",
+    twilio: "SMS (Twilio)",
+    blob: "Blob Storage",
+    googleCal: "Google Calendar",
+    cronSecret: "Cron Secret",
+    adminSecret: "Admin Secret",
+  };
+  const entries = Object.entries(health.integrations || {});
+
+  return (
+    <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            System health
+          </h2>
+          {/* DB status — the load-bearing signal. */}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1",
+              health.db === "up"
+                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                : "bg-red-50 text-red-700 ring-red-200",
+            )}
+          >
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                health.db === "up" ? "bg-emerald-500" : "bg-red-500",
+              )}
+            />
+            Database {health.db === "up" ? "up" : "down"}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-slate-400">
+          <span>
+            {health.tenants} chapter{health.tenants === 1 ? "" : "s"}
+          </span>
+          <span className="font-mono">{health.version}</span>
+        </div>
+      </div>
+
+      {/* Integration toggles — presence only (configured vs not). */}
+      <div className="flex flex-wrap gap-2 px-5 py-4">
+        {entries.length === 0 ? (
+          <span className="text-sm text-slate-400">No integration data.</span>
+        ) : (
+          entries.map(([key, on]) => (
+            <span
+              key={key}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ring-1",
+                on
+                  ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                  : "bg-slate-50 text-slate-400 ring-slate-200",
+              )}
+              title={on ? "Configured" : "Not configured"}
+            >
+              {on ? (
+                <IconCheck className="h-3 w-3" />
+              ) : (
+                <IconClose className="h-3 w-3" />
+              )}
+              {LABELS[key] || key}
+            </span>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
 

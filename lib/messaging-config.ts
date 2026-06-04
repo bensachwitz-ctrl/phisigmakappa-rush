@@ -35,9 +35,11 @@ function isUsableResendKey(key: string | undefined | null): key is string {
 export type ResendConfig = {
   /** null when no usable key is configured (tenant cfg OR env). */
   apiKey: string | null;
-  /** From-ADDRESS (local part + domain). Always a string — defaults to the
-   *  reference rush@ address so existing behavior is preserved. The chapter-
-   *  aware From-NAME is layered on by the caller (lib/email via getChapterIdentity). */
+  /** From-ADDRESS (local part + domain). Always a string — defaults to a
+   *  NEUTRAL platform address (no-reply@greekstack.vercel.app) so an
+   *  unconfigured chapter never leaks another chapter's sender domain. The
+   *  chapter-aware From-NAME is layered on by the caller (lib/email via
+   *  getChapterIdentity). */
   fromEmail: string;
 };
 
@@ -56,7 +58,10 @@ export async function getResendConfig(): Promise<ResendConfig> {
   const fromEmail =
     cfg["resend.fromEmail"]?.trim() ||
     process.env.RESEND_FROM_EMAIL ||
-    "rush@phisig-usc.com";
+    // NEUTRAL platform default. A fresh non-Phi-Sig chapter that sets a Resend
+    // key but no fromEmail must NOT send From: <their name> <rush@phisig-usc.com>
+    // (cross-brand leak). The per-tenant resend.fromEmail / env still override.
+    "no-reply@greekstack.vercel.app";
 
   return { apiKey, fromEmail };
 }

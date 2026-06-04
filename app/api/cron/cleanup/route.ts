@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { forEachTenant } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/cron/cleanup";
 
 /**
  * Daily cleanup cron. Two pruning passes in one endpoint to keep vercel.json
@@ -116,6 +119,18 @@ export async function GET(req: Request) {
     }
     errors.push(`${t.tenant}: ${t.error || "tenant failure"}`);
     return { tenant: t.tenant, ok: false, error: t.error };
+  });
+
+  // One structured run-summary line for the ops log. Counts + tenant count +
+  // error count only — no PII. errors[] carries tenant/table identifiers, not
+  // secrets, so it's safe to include for triage.
+  logger.info("cron.cleanup.run", {
+    route: ROUTE,
+    rushLogPruned,
+    auditPruned,
+    tenantCount: tenants.length,
+    errorCount: errors.length,
+    ...(errors.length > 0 ? { errors } : {}),
   });
 
   // Partial success is still a success — we don't want one bad table or one

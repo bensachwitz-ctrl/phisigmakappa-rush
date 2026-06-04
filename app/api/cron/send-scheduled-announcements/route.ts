@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { fireDueScheduledAnnouncements } from "@/lib/scheduled-announcements";
 import { forEachTenant } from "@/lib/prisma";
 import { auditAndNotify } from "@/lib/notify";
+import { logger, errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/cron/send-scheduled-announcements";
 
 // W4 — Vercel Cron entry that fires scheduled announcements whose
 // scheduledFor deadline has passed.
@@ -72,8 +75,7 @@ export async function GET(req: Request) {
     // (Per-tenant failures are already swallowed by forEachTenant, so this
     // only fires for a wholesale outage.) Return a useful 500 + log it loud
     // so the next ops review sees the gap.
-    // eslint-disable-next-line no-console
-    console.error("[cron/send-scheduled-announcements] catastrophic failure:", err);
+    errorSink(err, { route: ROUTE, outcome: "catastrophic_failure" });
     return NextResponse.json(
       {
         ok: false,
@@ -148,6 +150,20 @@ export async function GET(req: Request) {
   // ok reflects whether every chapter's fan-out succeeded; a single bad
   // schema flips ok=false but never blocks the other chapters' results.
   const ok = result.tenants.every((t) => t.ok);
+
+  // Structured run summary — aggregate counts only, info when clean / warn on
+  // partial failure so the run-log is filterable by level.
+  const summaryCtx = {
+    route: ROUTE,
+    candidates: result.candidates,
+    fired: result.fired,
+    failed: result.failed,
+    skipped: result.skipped,
+    tenantCount: result.tenants.length,
+  };
+  if (ok) logger.info("cron.scheduled_announcements.run", summaryCtx);
+  else logger.warn("cron.scheduled_announcements.run", { ...summaryCtx, outcome: "partial_failure" });
+
   return NextResponse.json({ ok, ...result });
 }
 

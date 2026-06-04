@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import type { PrismaClient } from "@prisma/client";
 import { forEachTenant } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { logger, errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const ROUTE = "/api/cron/reconcile-stripe";
 
 /**
  * GET|POST /api/cron/reconcile-stripe
@@ -88,7 +91,7 @@ export async function GET(req: Request) {
   try {
     perTenant = await forEachTenant(async (db) => reconcileTenant(db, stripe, cutoff));
   } catch (err) {
-    console.error("[cron/reconcile-stripe] catastrophic failure:", err);
+    errorSink(err, { route: ROUTE, outcome: "catastrophic_failure" });
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "unknown failure" },
       { status: 500 },
@@ -113,6 +116,20 @@ export async function GET(req: Request) {
   });
 
   const ok = tenants.every((t) => t.ok);
+
+  // Structured run summary for the ops log — aggregate counts only. We emit at
+  // info when everything's clean, warn when a tenant errored, so the run-log is
+  // filterable by level.
+  const summaryCtx = {
+    route: ROUTE,
+    reconciled: totals.reconciled,
+    failed: totals.failed,
+    checked: totals.checked,
+    tenantCount: tenants.length,
+  };
+  if (ok) logger.info("cron.reconcile_stripe.run", summaryCtx);
+  else logger.warn("cron.reconcile_stripe.run", { ...summaryCtx, outcome: "partial_failure" });
+
   return NextResponse.json({ ok, ...totals, perTenant: tenants });
 }
 
@@ -241,10 +258,14 @@ async function reconcileTenant(
       }
       // else: still open / unpaid — leave it for a later run.
     } catch (err) {
-      console.error(
-        `[cron/reconcile-stripe] dues ${payment.id} (${payment.stripeSessionId}) failed:`,
-        err,
-      );
+      // Per-row failure is isolated — record id + session (opaque, non-secret).
+      errorSink(err, {
+        route: ROUTE,
+        kind: "dues",
+        paymentId: payment.id,
+        sessionId: payment.stripeSessionId,
+        outcome: "row_reconcile_failed",
+      });
     }
   }
 
@@ -306,10 +327,13 @@ async function reconcileTenant(
       }
       // else: still open / unpaid — leave it for a later run.
     } catch (err) {
-      console.error(
-        `[cron/reconcile-stripe] donation ${donation.id} (${donation.stripeSessionId}) failed:`,
-        err,
-      );
+      errorSink(err, {
+        route: ROUTE,
+        kind: "donation",
+        donationId: donation.id,
+        sessionId: donation.stripeSessionId,
+        outcome: "row_reconcile_failed",
+      });
     }
   }
 

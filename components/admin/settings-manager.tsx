@@ -23,6 +23,19 @@ import Link from "next/link";
 
 const ICONS = ["Crown", "Trophy", "HandHeart", "Users", "Award", "Star", "Heart", "GraduationCap", "BookOpen", "Music", "Building2", "Flame", "ShieldCheck"];
 
+// The GET payload masks write-only secrets (Resend API key, Twilio auth token)
+// as this exact bullet string. We must NEVER let it be saved back — editing a
+// secret has to start from an empty input so an admin can't accidentally store
+// "••••••••newkey", and a field left blank must keep the existing secret.
+const SECRET_MASK = "••••••••";
+const SECRET_KEYS = new Set(["resend.apiKey", "twilio.authToken"]);
+/** A secret-field value that must NOT be PATCHed (the mask, or a blank). */
+function isUnsavableSecret(key: string, value: string): boolean {
+  if (!SECRET_KEYS.has(key)) return false;
+  const v = (value ?? "").trim();
+  return v === "" || v === SECRET_MASK;
+}
+
 export function SettingsManager({ initial }: { initial: Record<string, string> }) {
   const { push } = useToast();
   const [values, setValues] = React.useState(initial);
@@ -51,17 +64,30 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
 
   async function save() {
     if (dirty.size === 0) return;
+    // Build the PATCH from dirty fields, but DROP any secret field still holding
+    // the mask or left blank — only a real, newly-typed secret value is saved,
+    // so a blank input keeps the existing secret instead of wiping it.
+    const updates: Record<string, string> = {};
+    for (const k of dirty) {
+      if (isUnsavableSecret(k, values[k])) continue;
+      updates[k] = values[k];
+    }
+    const count = Object.keys(updates).length;
+    if (count === 0) {
+      // Nothing real to persist (e.g. the admin focused a secret field then
+      // left it blank). Clear the dirty state quietly — no empty PATCH.
+      setDirty(new Set());
+      return;
+    }
     setBusy(true);
     try {
-      const updates: Record<string, string> = {};
-      for (const k of dirty) updates[k] = values[k];
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ updates }),
       });
       if (!res.ok) throw new Error();
-      push({ title: `Saved ${dirty.size} change${dirty.size === 1 ? "" : "s"}`, variant: "success" });
+      push({ title: `Saved ${count} change${count === 1 ? "" : "s"}`, variant: "success" });
       setDirty(new Set());
     } catch {
       push({ title: "Save failed", variant: "destructive" });
@@ -378,12 +404,10 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Resend API key">
-            <Input
-              type="password"
+            <SecretInput
               value={values["resend.apiKey"] || ""}
-              onChange={(e) => set("resend.apiKey", e.target.value)}
+              onChange={(v) => set("resend.apiKey", v)}
               placeholder="re_…"
-              className="font-mono"
             />
           </Field>
           <Field label="From email (verified domain)">
@@ -421,12 +445,10 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
             />
           </Field>
           <Field label="Auth token">
-            <Input
-              type="password"
+            <SecretInput
               value={values["twilio.authToken"] || ""}
-              onChange={(e) => set("twilio.authToken", e.target.value)}
-              placeholder="••••••••"
-              className="font-mono"
+              onChange={(v) => set("twilio.authToken", v)}
+              placeholder="AC… auth token"
             />
           </Field>
           <Field label="Phone number (E.164)">
@@ -939,6 +961,45 @@ function Field({ label, children, className }: { label: string; children: React.
       <Label className="mb-1.5 inline-block text-xs font-medium">{label}</Label>
       {children}
     </div>
+  );
+}
+
+/**
+ * Write-only secret input (Resend API key, Twilio auth token). The GET payload
+ * returns these masked as SECRET_MASK ("••••••••"). We render the input EMPTY
+ * whenever the stored value is the mask (i.e. a secret is configured but the
+ * admin hasn't started editing), so editing always begins from blank — an admin
+ * can never accidentally save "••••••••newkey". A "configured — leave blank to
+ * keep" badge tells them the existing secret is intact. Only a real, non-empty
+ * value the admin types becomes dirty + saved (see save()/isUnsavableSecret).
+ */
+function SecretInput({
+  value, onChange, placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const isConfigured = value === SECRET_MASK;
+  return (
+    <>
+      <Input
+        type="password"
+        // Render empty while the masked secret is untouched so typing starts
+        // from a clean field (never appends to the bullets).
+        value={isConfigured ? "" : value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={isConfigured ? "configured — leave blank to keep" : placeholder}
+        className="font-mono"
+        autoComplete="off"
+        spellCheck={false}
+      />
+      {isConfigured && (
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          A key is saved. Leave blank to keep it, or type a new key to replace it.
+        </p>
+      )}
+    </>
   );
 }
 

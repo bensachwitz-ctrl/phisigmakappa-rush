@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import type { PrismaClient } from "@prisma/client";
+import { forEachTenant } from "@/lib/prisma";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 
@@ -58,6 +59,17 @@ function isValidPhone(raw: string): boolean {
   const digits = raw.replace(/[^\d+]/g, "");
   // E.164: + followed by 7-15 digits. Domestic: 10-11 digits.
   return /^\+?\d{7,15}$/.test(digits);
+}
+
+/**
+ * Normalize a phone the SAME way app/api/send-sms/route.ts does, so an inbound
+ * From matches what outbound stored. Mirror — do not diverge from send-sms.
+ */
+function normalizePhone(p: string): string {
+  const d = p.replace(/\D/g, "");
+  if (d.length === 10) return `+1${d}`;
+  if (d.length === 11 && d.startsWith("1")) return `+${d}`;
+  return p.startsWith("+") ? p : `+${d}`;
 }
 
 /**
@@ -126,16 +138,48 @@ export async function POST(req: Request) {
   const isHelp = ["HELP", "INFO"].includes(keyword);
   const isStart = ["START", "RESUBSCRIBE", "UNSTOP", "YES", "Y", "CONFIRM"].includes(keyword);
 
-  // Lookup the rushee + latest consent (best-effort — null if not on file).
+  // ── TENANT RESOLUTION (TCPA-critical) ──────────────────────────────────
+  // Twilio calls this webhook server-to-server with NO chapter subdomain, so
+  // the Host-proxy `prisma` would resolve to the EMPTY `public` schema and the
+  // STOP/opt-out + YES write would land nowhere — a rushee who texts STOP would
+  // keep getting blasted. Instead we fan out across EVERY active chapter's
+  // schema (exactly like the crons) and find the chapter(s) whose Rush has this
+  // From number. Suppression must apply EVERYWHERE the number exists, so we
+  // collect ALL matching tenants and write the consent change to each.
   const digits = phone.replace(/^\+1/, "").replace(/\D/g, "");
-  const rushee = digits.length >= 7 ? await prisma.rush.findFirst({
-    where: { phone: { contains: digits } },
-    orderBy: { createdAt: "desc" },
-  }) : null;
-  const latestConsent = rushee ? await prisma.rushConsent.findFirst({
-    where: { rushId: rushee.id },
-    orderBy: { createdAt: "desc" },
-  }) : null;
+  const normalized = normalizePhone(phone);
+  type Match = {
+    db: PrismaClient;
+    rusheeName: string;
+    consentId: string | null;
+  };
+  let matches: Match[] = [];
+  if (digits.length >= 7) {
+    const perTenant = await forEachTenant<Match | null>(async (db) => {
+      // Match on the normalized E.164 OR the bare digit string, since stored
+      // phone formats vary (some rows pre-date normalization).
+      const rush = await db.rush.findFirst({
+        where: { OR: [{ phone: normalized }, { phone: { contains: digits } }] },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, name: true },
+      });
+      if (!rush) return null;
+      const consent = await db.rushConsent.findFirst({
+        where: { rushId: rush.id },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      });
+      return { db, rusheeName: rush.name, consentId: consent?.id ?? null };
+    });
+    matches = perTenant
+      .filter((t) => t.ok && t.result)
+      .map((t) => t.result as Match);
+  }
+
+  // Representative rushee + consent for the REPLY copy (first-name personalization
+  // + the rushee/consent gating below). Writes still target ALL matching tenants.
+  const rushee = matches.length ? { name: matches[0].rusheeName } : null;
+  const latestConsent = matches.some((m) => m.consentId) ? {} : null;
 
   // Pull chapter identity once for all CTIA-mandated replies. Falls back to
   // the Phi Sig USC reference values if cfg is empty — so an existing deploy
@@ -156,15 +200,21 @@ export async function POST(req: Request) {
 
   // ── STOP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
   if (isStop) {
-    if (latestConsent) {
-      // EVIDENCE PRESERVATION: do NOT flip smsConfirmed back to false. The user
-      // may have confirmed earlier, then opted out — both facts matter for the
-      // TCPA audit trail. Only flip optedOut + timestamp; keep prior smsConfirmed
-      // state intact so the receipt accurately reflects the historical record.
-      await prisma.rushConsent.update({
-        where: { id: latestConsent.id },
-        data: { optedOut: true, optedOutAt: new Date() },
-      });
+    // EVIDENCE PRESERVATION: do NOT flip smsConfirmed back to false. The user
+    // may have confirmed earlier, then opted out — both facts matter for the
+    // TCPA audit trail. Only flip optedOut + timestamp; keep prior smsConfirmed
+    // state intact so the receipt accurately reflects the historical record.
+    // Apply to EVERY tenant that has this number (suppression is global).
+    for (const m of matches) {
+      if (!m.consentId) continue;
+      try {
+        await m.db.rushConsent.update({
+          where: { id: m.consentId },
+          data: { optedOut: true, optedOutAt: new Date() },
+        });
+      } catch {
+        // One tenant's write must never block the reply or the others.
+      }
     }
     return twiml(
       `${chapterSig}: you're opted out. No further messages. Reply START to resubscribe. Msg & data rates may apply.`
@@ -175,12 +225,20 @@ export async function POST(req: Request) {
   if (isStart) {
     if (rushee && latestConsent) {
       const isYes = ["YES", "Y", "CONFIRM"].includes(keyword);
-      await prisma.rushConsent.update({
-        where: { id: latestConsent.id },
-        data: isYes
-          ? { smsConfirmed: true, smsConfirmedAt: new Date(), optedOut: false, optedOutAt: null }
-          : { optedOut: false, optedOutAt: null },
-      });
+      // Apply the confirm / re-subscribe to EVERY tenant that has this number.
+      for (const m of matches) {
+        if (!m.consentId) continue;
+        try {
+          await m.db.rushConsent.update({
+            where: { id: m.consentId },
+            data: isYes
+              ? { smsConfirmed: true, smsConfirmedAt: new Date(), optedOut: false, optedOutAt: null }
+              : { optedOut: false, optedOutAt: null },
+          });
+        } catch {
+          // Isolate per-tenant failures so the reply + other tenants proceed.
+        }
+      }
       const first = rushee.name.split(/\s+/)[0] || "there";
       return twiml(
         isYes

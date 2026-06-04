@@ -47,7 +47,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/officers", label: "Officers", icon: ShieldCheck, adminOnly: true, group: "more" },
   { href: "/admin/library", label: "Library", icon: BookMarked, adminOnly: false, group: "more" },
   { href: "/admin/exports", label: "Exports", icon: FileDown, adminOnly: true, group: "more" },
-  { href: "/admin/dues", label: "Dues", icon: Wallet, adminOnly: false, group: "more" },
+  { href: "/admin/dues", label: "Dues", icon: Wallet, adminOnly: true, group: "more" },
   { href: "/admin/dues/connect", label: "Payouts", icon: Banknote, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: Rocket, adminOnly: true, group: "more" },
@@ -55,8 +55,25 @@ const ITEMS: NavItem[] = [
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
 ];
 
-function isActive(pathname: string, href: string): boolean {
-  return pathname === href || (href !== "/admin" && pathname.startsWith(href));
+/** Does `href` match `pathname` as an exact hit or a path-segment prefix? */
+function hrefMatches(pathname: string, href: string): boolean {
+  return pathname === href || (href !== "/admin" && pathname.startsWith(href + "/"));
+}
+
+/**
+ * Pick the SINGLE best-matching href among `items` for the current pathname —
+ * the longest matching href wins. This guarantees exactly one active nav item:
+ * on /admin/dues/connect only "Payouts" (/admin/dues/connect) highlights, not
+ * also "Dues" (/admin/dues), since the longer prefix is preferred.
+ */
+function bestActiveHref(pathname: string, items: NavItem[]): string | null {
+  let best: string | null = null;
+  for (const it of items) {
+    if (hrefMatches(pathname, it.href) && (best === null || it.href.length > best.length)) {
+      best = it.href;
+    }
+  }
+  return best;
 }
 
 export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
@@ -70,9 +87,14 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
   // overflow dropdown to avoid duplication; it still lives in the mobile grid.
   const moreItems = items.filter((it) => it.group === "more" && it.href !== "/admin/help");
 
+  // Compute the single active href across ALL visible items (longest match
+  // wins) so exactly one nav item highlights — on /admin/dues/connect that's
+  // "Payouts", never also "Dues".
+  const activeHref = bestActiveHref(pathname, items);
+
   // Surface the active overflow section on the "More" trigger so the user keeps
   // their bearings when they're on, say, /admin/officers.
-  const activeMore = moreItems.find((it) => isActive(pathname, it.href));
+  const activeMore = moreItems.find((it) => it.href === activeHref);
 
   // Close mobile menu on route change
   React.useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -94,7 +116,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
             bar stays slim and never wraps. */}
         <nav aria-label="Admin sections" className="hidden lg:flex items-center gap-0.5 min-w-0">
           {primaryItems.map((it) => {
-            const active = isActive(pathname, it.href);
+            const active = it.href === activeHref;
             return (
               <Link
                 key={it.href}
@@ -139,7 +161,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
                 <DropdownMenuLabel>Chapter sections</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {moreItems.map((it) => {
-                  const active = isActive(pathname, it.href);
+                  const active = it.href === activeHref;
                   return (
                     <DropdownMenuItem key={it.href} asChild>
                       <Link
@@ -226,7 +248,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
         <div id="admin-mobile-menu" className="lg:hidden border-t border-border bg-background animate-fade-in">
           <nav aria-label="Admin sections (mobile)" className="container py-2 grid grid-cols-2 gap-1">
             {items.map((it) => {
-              const active = isActive(pathname, it.href);
+              const active = it.href === activeHref;
               return (
                 <Link
                   key={it.href}
