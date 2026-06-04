@@ -35,7 +35,7 @@ export async function middleware(req: NextRequest) {
   // Page-level admin gate — redirect unauthenticated requests to /admin/login.
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const token = req.cookies.get("phisig_admin")?.value;
-    const ok = await verifyEdgeSession(token);
+    const ok = await verifyEdgeSession(token, hostname);
     if (!ok) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";

@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, getSubdomain } from "@/lib/prisma";
 
 const COOKIE_NAME = "phisig_admin";
 const MAX_AGE = 60 * 60 * 12; // 12h
@@ -29,6 +29,30 @@ function sign(value: string, secret: string) {
 }
 
 /**
+ * The tenant tag for the CURRENT request — the subdomain, or "_apex" off the
+ * apex. Sessions are bound to this so an admin/member cookie minted on chapter A
+ * is cryptographically unusable on chapter B (fixes the P0 cross-tenant session
+ * takeover: same global secret + Host-selected schema = admin everywhere).
+ */
+function currentTenant(): string {
+  try {
+    const h = headers();
+    const host = h.get("host") || h.get("x-forwarded-host");
+    return getSubdomain(host) || "_apex";
+  } catch {
+    return "_apex";
+  }
+}
+
+/** Per-tenant signing key = HMAC(rootSecret, "gs-tenant:<tenant>"). */
+function tenantSecret(): string {
+  return crypto
+    .createHmac("sha256", getSecret())
+    .update(`gs-tenant:${currentTenant()}`)
+    .digest("hex");
+}
+
+/**
  * Constant-time string equality on equal-length hex strings. Falls back to
  * length check first because timingSafeEqual throws on mismatched lengths.
  * Used for HMAC signature compare so an attacker can't byte-by-byte probe
@@ -39,9 +63,9 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
 }
 
-// Token format: <brotherId>.<isAdmin01>.<ts>.<sig>
+// Token format: <brotherId>.<isAdmin01>.<ts>.<sig>, signed with the per-tenant key.
 export function createSessionToken(brotherId: string, isAdmin: boolean) {
-  const secret = getSecret();
+  const secret = tenantSecret();
   const ts = Date.now().toString();
   const adminFlag = isAdmin ? "1" : "0";
   const payload = `${brotherId}.${adminFlag}.${ts}`;
@@ -54,37 +78,23 @@ export function parseSessionToken(token: string | undefined):
   | null {
   if (!token) return null;
   const parts = token.split(".");
-  // Backwards-compatible: also accept legacy 3-part token <brotherId>.<ts>.<sig>
-  // and treat those as non-admin until they re-login.
-  if (parts.length === 4) {
-    const [brotherId, adminFlag, ts, sig] = parts;
-    if (!brotherId || !ts || !sig) return null;
-    let expected: string;
-    try {
-      expected = sign(`${brotherId}.${adminFlag}.${ts}`, getSecret());
-    } catch {
-      return null;
-    }
-    const sigOk = timingSafeEqualHex(sig, expected);
-    const age = Date.now() - parseInt(ts, 10);
-    const ageOk = !Number.isNaN(age) && age <= MAX_AGE * 1000;
-    return { brotherId, isAdmin: adminFlag === "1", valid: sigOk && ageOk };
+  // Tenant-bound 4-part tokens only. The signing key is derived from the
+  // CURRENT request's tenant, so a token minted on another chapter fails the
+  // signature check here. (Legacy 3-part / globally-signed tokens are now
+  // invalid and force a re-login — intentional for the security fix.)
+  if (parts.length !== 4) return null;
+  const [brotherId, adminFlag, ts, sig] = parts;
+  if (!brotherId || !ts || !sig) return null;
+  let expected: string;
+  try {
+    expected = sign(`${brotherId}.${adminFlag}.${ts}`, tenantSecret());
+  } catch {
+    return null;
   }
-  if (parts.length === 3) {
-    const [brotherId, ts, sig] = parts;
-    if (!brotherId || !ts || !sig) return null;
-    let expected: string;
-    try {
-      expected = sign(`${brotherId}.${ts}`, getSecret());
-    } catch {
-      return null;
-    }
-    const sigOk = timingSafeEqualHex(sig, expected);
-    const age = Date.now() - parseInt(ts, 10);
-    const ageOk = !Number.isNaN(age) && age <= MAX_AGE * 1000;
-    return { brotherId, isAdmin: false, valid: sigOk && ageOk };
-  }
-  return null;
+  const sigOk = timingSafeEqualHex(sig, expected);
+  const age = Date.now() - parseInt(ts, 10);
+  const ageOk = !Number.isNaN(age) && age <= MAX_AGE * 1000;
+  return { brotherId, isAdmin: adminFlag === "1", valid: sigOk && ageOk };
 }
 
 export function verifySessionToken(token: string | undefined) {
