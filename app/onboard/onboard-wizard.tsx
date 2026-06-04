@@ -924,7 +924,7 @@ export default function OnboardWizard() {
               {step === "admin" && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <WField label="Administrator Full Name" value={adminName} onChange={setAdminName} placeholder="Mark Laughery" error={errors.adminName} required />
+                    <WField label="Administrator Full Name" value={adminName} onChange={setAdminName} placeholder="Your full name" error={errors.adminName} required />
                   </div>
                   <WField label="Admin Login Email" value={adminEmail} onChange={setAdminEmail} placeholder="admin@yourchapter.com" error={errors.adminEmail} required />
                   <div>

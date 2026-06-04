@@ -16,8 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (!subdomain) {
     return {
-      title: "Greekstack — The White-Label Greek Life SaaS Engine",
-      description: "Coordinate recruitment pipelines, automated dues collection splits, anti-hazing reporting, and chapter operations on a single multi-tenant platform.",
+      title: "Greekstack — The White-Label Chapter Management Platform",
+      description: "Run recruitment, dues, events, treasury, and alumni for your fraternity or sorority on one branded site — live the same day. First month free, no credit card.",
     };
   }
 

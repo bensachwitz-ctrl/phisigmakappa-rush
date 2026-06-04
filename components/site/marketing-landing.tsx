@@ -39,7 +39,6 @@ import {
   IconLaunch,
   IconSubdomain,
   IconDashboard,
-  IconGrowth,
   IconSecurity,
   IconChevronDown,
   IconMenu,
@@ -131,15 +130,19 @@ const NAV_LINKS = [
    icon + title + short `desc`, and clicking a card opens <FeatureDetailModal>
    with the richer `long` copy, capability `bullets`, and an in-app `preview`
    mockup. `wide` cards span two columns on large screens so the grid breathes
-   and the hero features read bigger. The "Anti-hazing & incident reporting" card
-   was REMOVED per the brief and replaced with the real "Chapter chat" feature so
-   the grid stays full + balanced. */
-const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
+   and the hero features read bigger. Each card also carries a concrete one-line
+   `outcome` surfaced ON the card face, so the value is legible WITHOUT opening
+   the modal. The grid LEADS with the three painkillers — Recruitment, Dues,
+   Treasury — so the most load-bearing value reads first. The "Anti-hazing &
+   incident reporting" card was REMOVED per the brief and replaced with the real
+   "Chapter chat" feature so the grid stays full + balanced. */
+const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
   {
     icon: IconRecruitment,
     img: "feat-recruitment",
     eyebrow: "Recruitment",
     title: "Recruitment pipeline",
+    outcome: "Run your whole rush from one board — not five group chats and a spreadsheet.",
     desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS — your whole recruitment cycle in one board.",
     long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and the moment you publish an event the platform texts rushees the schedule — with double opt-in consent captured for you.",
     bullets: [
@@ -156,6 +159,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     img: "feat-dues",
     eyebrow: "Finance",
     title: "Automated dues",
+    outcome: "Get paid on time without nagging anyone in the group chat.",
     desc: "Stripe-powered dues with treasurer payouts, auto-reconciled ledgers, reminders, and payment plans — collected without the group-chat nagging.",
     long: "Stop chasing dues in the group chat. Members pay by card, money lands straight in your chapter's connected Stripe account, and the ledger reconciles itself. Set up payment plans, automatic reminders, and late tracking once — then let it run.",
     bullets: [
@@ -167,25 +171,11 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     preview: <PreviewDues />,
   },
   {
-    icon: IconEvents,
-    img: "feat-events",
-    eyebrow: "Calendar",
-    title: "Events & calendar",
-    desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
-    long: "Every meeting, social, mixer, and service event in one shared calendar. Members RSVP, you take attendance with a tap, and required-event tracking rolls up automatically. One click syncs the whole calendar to Google, iCloud, or Outlook.",
-    bullets: [
-      "RSVP + live attendance with roster check-in",
-      "Required-event tracking that rolls up per member",
-      "Service-hour logging for standards",
-      "One-click sync to Google / iCloud / Outlook",
-    ],
-    preview: <PreviewEvents />,
-  },
-  {
     icon: IconTreasury,
     img: "feat-treasury",
     eyebrow: "Treasury",
     title: "Treasury & budgets",
+    outcome: "Hand the next treasurer clean books instead of a shoebox of receipts.",
     desc: "Chapter budgets, ledgers, and expense tracking in one place — every dollar in and out, reconciled against dues automatically.",
     long: "Give your treasurer a real back office. Build a semester budget by line item, log and categorize expenses, and watch spend track against budget in real time — all reconciled against the dues coming in so the books are always current.",
     bullets: [
@@ -197,10 +187,27 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     preview: <PreviewDues />,
   },
   {
+    icon: IconEvents,
+    img: "feat-events",
+    eyebrow: "Calendar",
+    title: "Events & calendar",
+    outcome: "Know who's actually coming — and who hit their required hours.",
+    desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
+    long: "Every meeting, social, mixer, and service event in one shared calendar. Members RSVP, you take attendance with a tap, and required-event tracking rolls up automatically. One click syncs the whole calendar to Google, iCloud, or Outlook.",
+    bullets: [
+      "RSVP + live attendance with roster check-in",
+      "Required-event tracking that rolls up per member",
+      "Service-hour logging for standards",
+      "One-click sync to Google / iCloud / Outlook",
+    ],
+    preview: <PreviewEvents />,
+  },
+  {
     icon: IconRoles,
     img: "feat-officers",
     eyebrow: "Permissions",
     title: "Officer roles & access",
+    outcome: "Every officer sees exactly their job — nothing more, handed off cleanly each year.",
     desc: "Granular role-based access for President, Treasurer, Recruitment, and Risk — everyone sees exactly what they should, nothing more.",
     long: "Officers get exactly the tools their job needs and nothing else. Role-based access control scopes every screen and action, so a Recruitment chair never sees the treasury and a new e-board hands off cleanly each year.",
     bullets: [
@@ -216,6 +223,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     img: "feat-chat",
     eyebrow: "Community",
     title: "Chapter chat",
+    outcome: "Retire the tangle of GroupMes for one channel tied to your roster.",
     desc: "Real-time announcements and group chat built right in — replace the scattered GroupMe with one channel tied to your roster.",
     long: "Keep the whole chapter in one place. Built-in real-time chat and announcement channels are tied to your actual roster and officer roles, so the right people see the right messages — no more managing a tangle of side group chats.",
     bullets: [
@@ -231,6 +239,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     img: "feat-branding",
     eyebrow: "Branding",
     title: "White-label branding",
+    outcome: "It looks like your chapter's own site — your letters, colors, and subdomain.",
     desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
     long: "It's your chapter's platform, not ours. Drop in your letters, colors, and crest and the entire site — every page, email, member portal, and your own subdomain — re-skins instantly. No rebuild, no agency, no developer required.",
     bullets: [
@@ -246,6 +255,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
     img: "feat-alumni",
     eyebrow: "Alumni",
     title: "Alumni & donations",
+    outcome: "Turn graduated brothers into a recurring giving base, not a dead email list.",
     desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
     long: "Turn graduated brothers into a living network and a recurring giving base. A searchable alumni directory, secure gated onboarding, and Stripe-powered donation flows make it easy to stay connected and easy for alumni to give back.",
     bullets: [
@@ -280,11 +290,21 @@ const STEPS: { icon: GsIcon; step: string; title: string; desc: string }[] = [
   },
 ];
 
-const STATS: { value: number; suffix?: string; prefix?: string; decimals?: number; label: string }[] = [
-  { value: 60, suffix: "s", label: "From sign-up to a live, branded site" },
-  { value: 100, suffix: "%", label: "White-label — your brand, not ours" },
-  { value: 12, suffix: "+", label: "Operations modules in every plan" },
-  { value: 0, prefix: "$", label: "To get started — no setup fee" },
+/* "What you get" — concrete value stats, NOT implied adoption. Numeric stats
+   animate via <AnimatedCounter>; `display` carries a non-countable value (e.g.
+   "Same-day") rendered as static text so we never fake a precise number. */
+const STATS: {
+  value?: number;
+  display?: string;
+  suffix?: string;
+  prefix?: string;
+  decimals?: number;
+  label: string;
+}[] = [
+  { value: 0, prefix: "$", label: "To get started — no setup fee, no card" },
+  { value: 8, suffix: " tools", label: "Recruitment to alumni, in one login" },
+  { display: "Same-day", label: "From sign-up to a live, branded site" },
+  { value: 0, prefix: "$", label: "Per-seat fees — unlimited members & officers" },
 ];
 
 /* The value props the hero headline types through before settling on the
@@ -297,16 +317,28 @@ const HERO_PHRASES = [
 ];
 const HERO_SETTLE = "Run your whole chapter.";
 
-/* Greek glyphs for the "trusted by chapters" marquee — no real logos exist, so
-   we render the alphabet as a premium gradient strip. */
-const GREEK_GLYPHS = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split("");
+/* Real capability/trust claims for the marquee band. We have no customer logos
+   yet, so instead of faking a "trusted by" row we run a tasteful animated strip
+   of TRUE platform claims a buyer actually cares about. Each is a real, defensible
+   statement (Stripe payouts, tenant isolation, compliance, no per-seat pricing,
+   the councils served). */
+const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
+  { icon: IconPayout, label: "Stripe-powered payouts" },
+  { icon: IconSecurity, label: "Tenant-isolated data" },
+  { icon: IconShieldCheck, label: "TCPA / A2P 10DLC compliant" },
+  { icon: IconUnlimited, label: "Unlimited members — never per-seat" },
+  { icon: IconMembers, label: "Fraternities & sororities" },
+  { icon: IconRoles, label: "IFC · Panhellenic · NPHC" },
+];
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
    THREE honest ways to pay for the SAME full platform — buyers pick the model
    that fits how their chapter thinks about money, not a stripped-down tier:
      1. BASE PLATFORM — flat $50/mo, FIRST MONTH FREE (or $250/semester).
-     2. DUES-SHARE   — $0 upfront; Greekstack takes a small % of dues (1.5% the
-        first semester, then 3%). "Pay as your chapter pays."
+     2. DUES-SHARE   — $0 upfront; the standard rate is 3% of dues, and your
+        FIRST SEMESTER is half-price at 1.5% (a real intro discount, framed as a
+        discount OFF the baseline — never a hidden step-up). "Pay as your chapter
+        pays."
      3. CUSTOM BUILD — a tailored system on a custom base fee → /contact#custom.
    Every method unlocks the entire product (same features, same support); the
    "Dues-share" card is the recommended/most-popular one and wears the shimmer
@@ -315,10 +347,12 @@ type Plan = {
   id: string;
   name: string;
   icon: GsIcon;
-  /** Big headline price, e.g. "$50" / "1.5%" / "Custom". */
+  /** Big headline price, e.g. "$50" / "3%" / "Custom" — the BASELINE rate. */
   price: string;
-  /** Small unit beside the price, e.g. "/month". */
+  /** Small unit beside the price, e.g. "/month" / "of dues". */
   unit?: string;
+  /** Optional intro-discount badge shown beside the price, e.g. "Half-price intro". */
+  introBadge?: string;
   /** One-line "how this model works" under the price. */
   priceNote: string;
   tagline: string;
@@ -351,11 +385,13 @@ const PLANS: Plan[] = [
     id: "dues-share",
     name: "Dues-share",
     icon: IconPlanDuesShare,
-    price: "1.5%",
+    price: "3%",
     unit: "of dues",
-    priceNote: "$0 upfront · 1.5% first semester, then 3%",
+    introBadge: "Half-price intro",
+    priceNote: "$0 upfront · just 1.5% your first semester",
     tagline: "Pay as your chapter pays. Nothing out of pocket to launch.",
     highlights: [
+      "First semester is half-price — 1.5% of dues, then the standard 3%",
       "Zero upfront cost — perfect for a new or lean treasury",
       "We only earn when dues actually come in",
     ],
@@ -408,7 +444,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share (1.5% of dues your first semester, then 3%). Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share — a standard 3% of dues, with your first semester half-price at 1.5%. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -424,11 +460,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Is Greekstack for fraternities or sororities?",
-    a: "Both. The platform is built for any Greek-letter organization — fraternities and sororities alike. Recruitment, dues, events, member management, and anti-hazing compliance work identically regardless of council, and the white-label branding makes it unmistakably your chapter.",
+    a: "Both. The platform is built for any Greek-letter organization — fraternities and sororities alike, across IFC, Panhellenic, and NPHC councils. Recruitment, dues, events, and member management work identically regardless of council, and the white-label branding makes it unmistakably your chapter.",
   },
   {
-    q: "What's included in the 14-day free trial?",
-    a: "Everything. The trial is the full product — every feature, unlimited members and officers, with no credit card required to start. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay.",
+    q: "Do I have to pay anything to start?",
+    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. (Prefer to pay as you go? The dues-share model is $0 upfront too.)",
   },
 ];
 
@@ -544,13 +580,14 @@ function SiteNav() {
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/admin/login">Sign in</Link>
           </Button>
-          {/* Primary CTA — full label on sm+, compact "Get started" on the
-              tightest phones so it never wraps next to the hamburger. */}
+          {/* Primary CTA — standardized verb "Launch your chapter — free" on sm+,
+              compact "Launch — free" on the tightest phones so it never wraps next
+              to the hamburger. */}
           <Magnetic strength={12} innerStrength={4} radius={70} className="hidden sm:inline-flex">
             <ShimmerBorder rounded="rounded-md">
               <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
                 <Link href="/onboard" className="group/btn">
-                  Create your chapter site
+                  Launch your chapter — free
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                 </Link>
               </Button>
@@ -558,7 +595,7 @@ function SiteNav() {
           </Magnetic>
           <ShimmerBorder rounded="rounded-md" className="sm:hidden">
             <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
-              <Link href="/onboard">Get started</Link>
+              <Link href="/onboard">Launch — free</Link>
             </Button>
           </ShimmerBorder>
 
@@ -690,7 +727,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
             <div className="space-y-2.5 border-t border-border px-5 py-5">
               <Button asChild variant="platform" size="lg" className="gs-sheen w-full">
                 <Link href="/onboard" onClick={onClose} className="group/btn">
-                  Create your chapter site
+                  Launch your chapter — free
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                 </Link>
               </Button>
@@ -786,10 +823,10 @@ function Hero() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground animate-slide-up [animation-delay:200ms] sm:text-lg">
-            Greekstack runs recruitment pipelines, automated dues, events, officer access, and
-            alumni relations on one multi-tenant platform — re-skinned to your letters and
-            colors, live the same day.
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-foreground/80 animate-slide-up [animation-delay:200ms] sm:text-lg">
+            Stop chasing dues in the group chat. Greekstack runs recruitment, automated dues,
+            events, officer access, and alumni giving on one branded site — re-skinned to your
+            letters and colors, live the same day.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
@@ -813,23 +850,18 @@ function Hero() {
               <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> No credit card to start
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Live in 60 seconds
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Live the same day
             </span>
             <span className="inline-flex items-center gap-1.5">
               <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Cancel anytime
             </span>
           </p>
 
-          {/* Pricing hint — surfaces the three honest models right in the hero and
-              jumps to the pricing section. Anchored, crawlable, AA-contrast. */}
-          <p className="mt-3 text-sm text-muted-foreground animate-slide-up [animation-delay:400ms]">
-            From{" "}
-            <span className="font-semibold text-foreground">$50/mo with the first month free</span>,
-            a{" "}
-            <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
-              $0-upfront dues-share
-            </Link>
-            , or a custom build —{" "}
+          {/* Pricing hint — one honest line, ONE link to the pricing section
+              (the old duplicate links were folded into this single CTA).
+              Anchored, crawlable, AA-contrast. */}
+          <p className="mt-3 text-sm text-foreground/80 animate-slide-up [animation-delay:400ms]">
+            Start free, then $50/mo (first month free) or $0-upfront dues-share —{" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               see pricing
             </Link>
@@ -901,7 +933,7 @@ function ProductPreview() {
           </div>
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
             <IconSecurity className="h-3 w-3" />
-            yourchapter.greekstack.vercel.app
+            yourchapter.greekstack.com
           </span>
           <span className="w-12" aria-hidden="true" />
         </div>
@@ -973,32 +1005,33 @@ function ProductPreview() {
   );
 }
 
-/* ───────────────────── Greek-glyph marquee strip ───────────────────── */
+/* ───────────────────── Capability / trust marquee strip ───────────────────── */
 
+/* A tasteful animated band of REAL platform claims (not fake customer logos and
+   not a meaningless alphabet). Each claim is a custom duotone glyph + a short,
+   defensible statement, scrolling in a continuous loop that pauses on hover and
+   freezes to a static wrapped row under reduced motion (handled inside <Marquee>). */
 function GlyphMarquee() {
   return (
     <section
-      aria-label="Built for fraternity and sorority chapters everywhere"
+      aria-label="What Greekstack gives every chapter"
       className="border-y border-border bg-card/40 py-7"
     >
       <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        Built for chapters everywhere
+        Built for every council — fraternities &amp; sororities
       </p>
       <Marquee
-        duration={38}
-        gapClassName="gap-10 sm:gap-14"
-        items={GREEK_GLYPHS.map((g) => (
+        duration={42}
+        gapClassName="gap-5 sm:gap-7"
+        items={TRUST_CLAIMS.map((c) => (
           <span
-            key={g}
-            className="select-none text-3xl font-bold text-transparent sm:text-4xl"
-            style={{
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              backgroundImage: "linear-gradient(90deg,#2563eb,#0ea5e9,#22d3ee)",
-              opacity: 0.55,
-            }}
+            key={c.label}
+            className="inline-flex select-none items-center gap-2.5 whitespace-nowrap rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-semibold text-foreground/90 shadow-sm"
           >
-            {g}
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20">
+              <c.icon className="h-4 w-4 text-blue-700" />
+            </span>
+            {c.label}
           </span>
         ))}
       />
@@ -1066,7 +1099,7 @@ function Features() {
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             One platform. Every part of <span className="gs-gradient-text">chapter operations</span>.
           </h2>
-          <p className="mt-4 text-pretty text-muted-foreground">
+          <p className="mt-4 text-pretty text-foreground/80">
             Recruitment to alumni giving — the tools your officers actually need, in a single
             branded system instead of a dozen spreadsheets and group chats.
           </p>
@@ -1114,11 +1147,26 @@ function FeatureCard({
   wide,
   onOpen,
 }: {
-  feature: FeatureDetail & { wide?: boolean };
+  feature: FeatureDetail & { wide?: boolean; outcome?: string };
   wide?: boolean;
   onOpen: () => void;
 }) {
-  const { icon, img, title, desc } = feature;
+  const { icon, img, title, desc, outcome } = feature;
+
+  // The concrete, one-line outcome shown ON the card face (so the value is
+  // legible without opening the modal). A small gradient check leads it so it
+  // reads as a promise, not body copy. Shared by both card layouts.
+  const outcomeLine = outcome ? (
+    <p className="flex items-start gap-2 text-[15px] font-semibold leading-snug text-foreground">
+      <span
+        aria-hidden="true"
+        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-sky-500/10 ring-1 ring-blue-500/25"
+      >
+        <IconCheck className="h-3 w-3 text-blue-700" />
+      </span>
+      {outcome}
+    </p>
+  ) : null;
 
   // Feature icon — the bespoke pre-rendered tile (a self-contained frosted-glass
   // app-icon) stands ALONE: no IconChip background wrapper, so it never double-
@@ -1187,7 +1235,8 @@ function FeatureCard({
           {featureIcon}
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+            {outcomeLine && <div className="mt-2.5 max-w-2xl">{outcomeLine}</div>}
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/80 sm:text-[15px]">
               {desc}
             </p>
             <span className="mt-4 inline-flex">{seeInside}</span>
@@ -1199,7 +1248,8 @@ function FeatureCard({
         <div className="relative flex h-full w-full flex-col">
           {featureIcon}
           <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-          <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+          {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
+          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
           <span className="mt-auto inline-flex pt-6">{seeInside}</span>
         </div>
       )}
@@ -1220,7 +1270,7 @@ function HowItWorks() {
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             From zero to a branded chapter site
           </h2>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-foreground/80">
             No developers, no design agency, no months-long build. Just three steps.
           </p>
         </Reveal>
@@ -1281,7 +1331,7 @@ function HowItWorks() {
                   STEP {s.step}
                 </span>
                 <h3 className="mt-1 text-lg font-semibold tracking-tight">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">{s.desc}</p>
               </div>
             </Reveal>
           ))}
@@ -1291,7 +1341,7 @@ function HowItWorks() {
           <Magnetic>
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
-                Create your chapter site
+                Launch your chapter — free
                 <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -1514,7 +1564,7 @@ function Pricing() {
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             <span className="gs-gradient-text">Three ways to pay.</span> One full platform.
           </h2>
-          <p className="mt-4 text-pretty text-base text-muted-foreground">
+          <p className="mt-4 text-pretty text-base text-foreground/80">
             Same product, same support, every feature — pick the model that fits how your chapter
             thinks about money. No per-seat math, no stripped-down tiers, no fake
             &ldquo;enterprise&rdquo; upsell.
@@ -1569,7 +1619,7 @@ function Pricing() {
 
         {/* Honest framing + a "talk to a human" path for anyone still deciding. */}
         <Reveal delay={120} className="mx-auto mt-10 max-w-3xl text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/80">
             On any plan, card processing runs on Stripe at its standard rate
             {" "}(2.9% + 30&cent;) with <span className="font-semibold text-foreground">zero Greekstack markup</span>{" "}
             on dues or donations. Not sure which model fits? Talk it through with the owner.
@@ -1641,13 +1691,21 @@ function PlanCard({ plan }: { plan: Plan }) {
         {plan.tagline}
       </p>
 
-      {/* Price */}
-      <div className="relative mt-5 flex items-end gap-1.5">
+      {/* Price — the BASELINE rate. An optional intro-discount badge sits beside
+          it so the first-semester discount reads as a discount OFF this rate,
+          never as a hidden later step-up. */}
+      <div className="relative mt-5 flex flex-wrap items-end gap-x-1.5 gap-y-2">
         <span className="text-5xl font-bold leading-none tracking-tight gs-gradient-text">
           {plan.price}
         </span>
         {plan.unit && (
           <span className="mb-1 text-base font-medium text-muted-foreground">{plan.unit}</span>
+        )}
+        {plan.introBadge && (
+          <span className="mb-1 ml-1 inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-amber-700">
+            <IconFreeTag className="h-3.5 w-3.5" accent="#f59e0b" />
+            {plan.introBadge}
+          </span>
         )}
       </div>
       <div className="relative mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.07] px-3 py-1.5 text-[13px] font-medium text-blue-800">
@@ -1727,9 +1785,9 @@ function Faq() {
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Everything you need to know before you <span className="gs-gradient-text">go live</span>
           </h2>
-          <p className="mt-4 text-pretty text-muted-foreground">
-            The real questions chapter officers ask us — security, compliance, fees, and getting
-            started. Still curious? Start a free trial and see it yourself.
+          <p className="mt-4 text-pretty text-foreground/80">
+            The real questions chapter officers ask — security, compliance, fees, and getting
+            started. Still curious? Start free (first month, no card) and see it yourself.
           </p>
         </Reveal>
 
@@ -1780,7 +1838,7 @@ function Faq() {
                     hidden={!isOpen}
                     className="px-5 pb-5 sm:px-6"
                   >
-                    <p className="text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+                    <p className="text-sm leading-relaxed text-foreground/80">{item.a}</p>
                   </div>
                 </li>
               );
@@ -1816,11 +1874,14 @@ function Proof() {
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            Why chapters choose Greekstack
+            What you get
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Built to make officers&apos; lives easier
           </h2>
+          <p className="mt-4 text-pretty text-foreground/80">
+            No setup fee, no per-seat math, no contracts — here&apos;s what every chapter starts with.
+          </p>
         </Reveal>
 
         <Reveal3D
@@ -1836,12 +1897,16 @@ function Proof() {
                   className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 />
                 <span className="block text-4xl font-bold tracking-tight gs-gradient-text sm:text-5xl">
-                  <AnimatedCounter
-                    value={s.value}
-                    prefix={s.prefix}
-                    suffix={s.suffix}
-                    decimals={s.decimals}
-                  />
+                  {typeof s.value === "number" ? (
+                    <AnimatedCounter
+                      value={s.value}
+                      prefix={s.prefix}
+                      suffix={s.suffix}
+                      decimals={s.decimals}
+                    />
+                  ) : (
+                    s.display
+                  )}
                 </span>
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{s.label}</p>
               </div>
@@ -1849,18 +1914,40 @@ function Proof() {
           ))}
         </Reveal3D>
 
-        <Reveal delay={120} className="mx-auto mt-12 max-w-3xl">
-          <figure className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-card p-8 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex justify-center">
-              <IconChip icon={IconGrowth} tone="platform" size="md" />
+        {/* HONEST founder-led trust block (replaces the fabricated "what officers
+            tell us" testimonial — there are no real customer quotes yet, so we
+            lead with the founder directly instead of inventing social proof). */}
+        <Reveal delay={120} className="mx-auto mt-14 max-w-3xl">
+          <figure className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-card p-8 text-center shadow-sm sm:p-10">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
+            />
+            <div className="mx-auto mb-5 flex justify-center">
+              <IconChip icon={IconTalkToSales} tone="platform" size="lg" />
             </div>
-            <blockquote className="text-pretty text-lg font-medium leading-relaxed sm:text-xl">
-              &ldquo;Recruitment, dues, and events used to live in five different apps. Greekstack put
-              the whole chapter on one branded site we set up in an afternoon.&rdquo;
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+              A note from the founder
+            </span>
+            <blockquote className="mt-3 text-pretty text-lg font-medium leading-relaxed text-foreground sm:text-xl">
+              &ldquo;I built Greekstack because I got tired of running rush out of a spreadsheet and a
+              group chat. It&apos;s new, and I&apos;d rather earn your chapter than fake a wall of logos.
+              Talk to me directly before you commit — I&apos;ll show you exactly how it&apos;d work for you.&rdquo;
             </blockquote>
-            <figcaption className="mt-4 text-sm text-muted-foreground">
-              What chapter officers tell us after switching
+            <figcaption className="mt-5 text-sm text-foreground/80">
+              <span className="font-semibold text-foreground">Greekstack</span> · Founder &amp; chapter alum
             </figcaption>
+            <div className="mt-7 flex justify-center">
+              <Magnetic>
+                <Button asChild variant="platform" size="lg" className="gs-sheen">
+                  <Link href="/contact" className="group/btn">
+                    <IconTalkToSales className="h-5 w-5" />
+                    Talk to the founder
+                    <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                  </Link>
+                </Button>
+              </Magnetic>
+            </div>
           </figure>
         </Reveal>
       </div>
@@ -1899,8 +1986,8 @@ function FinalCta() {
             <h2 className="mx-auto max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">
               Launch your chapter on <span className="gs-gradient-text">Greekstack</span> today
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
-              Spin up a fully-branded recruitment and management site in seconds. No setup fee, no
+            <p className="mx-auto mt-4 max-w-xl text-pretty text-foreground/80">
+              Spin up a fully-branded recruitment and management site the same day. No setup fee, no
               developer, cancel anytime.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -1908,7 +1995,7 @@ function FinalCta() {
                 <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
                   <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
                     <Link href="/onboard" className="group/btn">
-                      Launch your chapter
+                      Launch your chapter — free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                     </Link>
                   </Button>
@@ -1940,65 +2027,125 @@ function FinalCta() {
 
 /* ──────────────────────────── Footer ─────────────────────────── */
 
+/* A real, multi-column footer (Product / Company / Legal / Contact) replacing
+   the old thin single-row strip. Each column is a labelled <nav> for a11y. The
+   Contact column carries a real mailto + the compliance/security story, and the
+   bottom bar carries the legal line. The "Operator console" /platform/login link
+   was REMOVED from this public footer per the brief — operators reach it directly,
+   it shouldn't sit on the marketing storefront. */
+const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[] }[] = [
+  {
+    heading: "Product",
+    links: [
+      { href: "#features", label: "Features" },
+      { href: "#how", label: "How it works" },
+      { href: "#pricing", label: "Pricing" },
+      { href: "#faq", label: "FAQ" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { href: "#proof", label: "Why Greekstack" },
+      { href: "/contact", label: "Contact" },
+      { href: "/contact#book", label: "Book a call" },
+      { href: "/admin/login", label: "Sign in" },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { href: "/privacy", label: "Privacy" },
+      { href: "/terms", label: "Terms" },
+    ],
+  },
+];
+
 function SiteFooter() {
   return (
     <footer className="border-t border-border bg-secondary/30">
-      <div className="container py-12">
-        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <Link href="/" className="group flex items-center" aria-label="Greekstack home">
-            <GreekstackWordmark
-              size="sm"
-              markClassName="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg]"
-            />
-          </Link>
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
-            {/* NAV_LINKS now includes Contact, so it's rendered in this map —
-                no separate hardcoded Contact link (would duplicate it). */}
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {l.label}
+      <div className="container py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+          {/* Brand + one-line pitch + primary CTA. */}
+          <div className="space-y-4">
+            <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
+              <GreekstackWordmark
+                size="sm"
+                markClassName="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg]"
+              />
+            </Link>
+            <p className="max-w-xs text-sm leading-relaxed text-foreground/80">
+              The white-label platform that runs your chapter&apos;s recruitment, dues, events, and
+              alumni giving on one branded site.
+            </p>
+            <Button asChild variant="platform" size="sm" className="gs-sheen">
+              <Link href="/onboard" className="group/btn">
+                Launch your chapter — free
+                <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
               </Link>
-            ))}
-            <Link
-              href="/privacy"
-              className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/onboard"
-              className="text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
-            >
-              Get started
-            </Link>
-          </nav>
-        </div>
-        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
-          <div className="flex items-center gap-3">
-            {/* Discreet entry point to the super-admin operator console. The page
-                behind it is just a password form, so linking it is safe — it keeps
-                operators from having to memorize the /platform URL. Apex-only:
-                this footer renders solely on the marketing landing. */}
-            <Link
-              href="/platform/login"
-              className="text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-            >
-              Operator console
-            </Link>
-            <span aria-hidden="true" className="text-muted-foreground/40">·</span>
-            <p>greekstack.vercel.app</p>
+            </Button>
           </div>
+
+          {/* Link columns. */}
+          {FOOTER_COLUMNS.map((col) => (
+            <nav key={col.heading} aria-label={col.heading} className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                {col.heading}
+              </h3>
+              <ul className="space-y-2.5">
+                {col.links.map((l) => (
+                  <li key={l.href + l.label}>
+                    <Link
+                      href={l.href}
+                      className="link-underline text-sm text-foreground/80 transition-colors hover:text-foreground"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+
+          {/* Contact + compliance/security story. */}
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Contact
+            </h3>
+            <ul className="space-y-2.5">
+              <li>
+                <a
+                  href="mailto:hello@greekstack.com"
+                  className="link-underline text-sm font-medium text-foreground/90 transition-colors hover:text-foreground"
+                >
+                  hello@greekstack.com
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="link-underline text-sm text-foreground/80 transition-colors hover:text-foreground"
+                >
+                  Talk to the founder
+                </Link>
+              </li>
+            </ul>
+            <p className="flex items-start gap-2 pt-1 text-xs leading-relaxed text-foreground/80">
+              <IconShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+              <span>
+                Tenant-isolated data, Stripe-powered payouts, and TCPA / A2P 10DLC-compliant SMS.{" "}
+                <Link href="/contact" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+                  Ask about security
+                </Link>
+                .
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
+          <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
+          <p>Built for fraternities &amp; sororities — IFC · Panhellenic · NPHC.</p>
         </div>
       </div>
     </footer>

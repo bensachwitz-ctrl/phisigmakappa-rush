@@ -87,7 +87,7 @@ export default async function TermsPage() {
         <p className="mt-4 leading-relaxed text-muted-foreground">
           These Terms of Service (the &ldquo;Terms&rdquo;) govern your chapter&apos;s access to and use
           of the Greekstack platform (&ldquo;Greekstack,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) — the
-          multi-tenant, white-label software that powers your chapter&apos;s recruitment pipeline, dues
+          white-label software platform that powers your chapter&apos;s recruitment pipeline, dues
           collection, member directory, alumni network, and chapter operations. By creating an account,
           starting a trial, or otherwise using the platform, the individual accepting these Terms on
           behalf of a chapter, council, or organization (the &ldquo;Customer&rdquo; or &ldquo;you&rdquo;)
@@ -131,13 +131,15 @@ export default async function TermsPage() {
           </p>
         </Section>
 
-        <Section title="3. Free trial">
+        <Section title="3. Free first month">
           <p>
-            New chapters may start with a <span className="font-medium text-foreground">14-day free trial</span>{" "}
-            of a paid plan. No charge is made during the trial. Unless you cancel before the trial ends, the
-            subscription converts to a paid plan and the payment method on file is charged the then-current
-            fee for your selected plan. You may cancel at any time during the trial from your billing settings
-            with no charge. We may modify or discontinue the trial offer at any time.
+            New chapters start with their <span className="font-medium text-foreground">first month free</span>{" "}
+            on the Base plan (or with <span className="font-medium text-foreground">$0 upfront</span> on the
+            dues-share plan), with no card required to launch. No charge is made during the first month. Unless
+            you cancel before the first month ends, billing begins in month two and the payment method on file
+            is charged the then-current fee for your selected plan. You may cancel at any time from your billing
+            settings; if you cancel during the first month you are not charged. We may modify or discontinue
+            this offer at any time.
           </p>
         </Section>
 
@@ -293,12 +295,10 @@ export default async function TermsPage() {
         <Section title="14. Governing law">
           <p>
             These Terms are governed by the laws of the State of{" "}
-            <span className="font-medium text-foreground">[Governing-Law State]</span>, without regard to its
+            <span className="font-medium text-foreground">Delaware</span>, without regard to its
             conflict-of-laws rules, and any dispute will be subject to the exclusive jurisdiction of the state
-            and federal courts located in <span className="font-medium text-foreground">[County, State]</span>.
-            <span className="block mt-1 text-xs italic">
-              (Placeholder — Greekstack will set its jurisdiction of incorporation here.)
-            </span>
+            and federal courts located in{" "}
+            <span className="font-medium text-foreground">New Castle County, Delaware</span>.
           </p>
         </Section>
 
