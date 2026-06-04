@@ -22,35 +22,32 @@ export function Wordmark({
   } = useChapterIdentity();
 
   const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
+  const wmUid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const wmGradId = `wm-shield-${wmUid}`;
+  const wmGlyph = (fraternityLetters || greekLettersGlyphs || "G").slice(0, 4);
 
-  const renderGenericShield = (size = 36) => (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 36 36"
-      fill="none"
-      className="text-primary flex-shrink-0"
-      aria-hidden="true"
-    >
-      <path
-        d="M18 2 L32 6 L32 20 C32 28 25 32 18 34 C11 32 4 28 4 20 L4 6 Z"
-        fill="currentColor"
-        stroke="white"
-        strokeWidth="1.5"
-      />
-      <text
-        x="18"
-        y="23"
-        textAnchor="middle"
-        fill="white"
-        fontSize="12"
-        fontWeight="bold"
-        fontFamily="var(--font-sans), sans-serif"
-      >
-        {fraternityLetters ? fraternityLetters.charAt(0) : "G"}
-      </text>
-    </svg>
-  );
+  // Auto-branded crest: the chapter's FULL glyph on a gradient of its OWN brand
+  // colors (via the --brand-primary* CSS vars). Every chapter gets a polished
+  // logo automatically — no upload required, correct for any organization.
+  const renderGenericShield = (size = 36) => {
+    const fs = wmGlyph.length >= 4 ? 8 : wmGlyph.length === 3 ? 9.5 : wmGlyph.length === 2 ? 12 : 15;
+    return (
+      <svg width={size} height={size} viewBox="0 0 40 44" fill="none" className="flex-shrink-0" aria-hidden="true">
+        <defs>
+          <linearGradient id={wmGradId} x1="0" y1="0" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="var(--brand-primary)" />
+            <stop offset="1" stopColor="var(--brand-primary-dark)" />
+          </linearGradient>
+        </defs>
+        <path d="M20 2 L37 7 L37 24 C37 33 29 39 20 42 C11 39 3 33 3 24 L3 7 Z" fill={`url(#${wmGradId})`} stroke="white" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M20 5.4 L34 9.6 L34 24 C34 31.4 27.5 36.4 20 39.1 C12.5 36.4 6 31.4 6 24 L6 9.6 Z" fill="none" stroke="white" strokeWidth="0.7" opacity="0.5" />
+        {[12.5, 20, 27.5].map((cx) => (
+          <path key={cx} d={`M ${cx} 9 l 0.55 1.7 1.8 0 -1.45 1.05 0.55 1.7 -1.45 -1.0 -1.45 1.0 0.55 -1.7 -1.45 -1.05 1.8 0 z`} fill="white" opacity="0.9" />
+        ))}
+        <text x="20" y="27" textAnchor="middle" fill="white" fontSize={fs} fontWeight="700" fontFamily='ui-serif, Georgia, serif' letterSpacing="0.3">{wmGlyph}</text>
+      </svg>
+    );
+  };
 
   if (variant === "compact") {
     return (
@@ -109,84 +106,79 @@ export function Wordmark({
 }
 
 export function Crest({ className }: { className?: string }) {
-  const { foundingYear } = useChapterIdentity();
+  const { foundingYear, fraternityLetters, greekLettersGlyphs } = useChapterIdentity();
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const gradId = `crest-grad-${uid}`;
+  const glyph = (fraternityLetters || greekLettersGlyphs || "G").slice(0, 4);
+  const fs = glyph.length >= 4 ? 13 : glyph.length === 3 ? 16 : glyph.length === 2 ? 21 : 27;
+
+  // Generic, auto-tinted chapter crest — the chapter's OWN glyph on a gradient
+  // of its brand colors. No org-specific iconography (the previous version drew
+  // Phi Sig's sphinx, which would be wrong on every other chapter), so this
+  // renders a correct, premium mark for ANY organization automatically.
   return (
     <svg viewBox="0 0 64 72" fill="none" className={className} aria-hidden="true">
-      {/* Shield body — flat-topped, slightly wider shoulders, sharp point
-          at the base. Matches the silhouette in the supplied artwork. */}
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="var(--brand-primary)" />
+          <stop offset="1" stopColor="var(--brand-primary-dark)" />
+        </linearGradient>
+      </defs>
+      {/* Shield body */}
       <path
-        d="M 8 6
-           L 56 6
-           L 56 38
-           C 56 50 49 60 32 70
-           C 15 60 8 50 8 38
-           Z"
-        fill="currentColor"
+        d="M 8 6 L 56 6 L 56 38 C 56 50 49 60 32 70 C 15 60 8 50 8 38 Z"
+        fill={`url(#${gradId})`}
         stroke="white"
         strokeWidth="2.6"
         strokeLinejoin="round"
       />
-
-      {/* Three small five-pointed stars high in the chief, evenly spaced.
-          Smaller and tighter than prior version to match proportions. */}
+      {/* Inner hairline — premium double-rule */}
+      <path
+        d="M 12 10 L 52 10 L 52 37.5 C 52 47 46 55.5 32 64.5 C 18 55.5 12 47 12 37.5 Z"
+        fill="none"
+        stroke="white"
+        strokeWidth="0.8"
+        opacity="0.45"
+      />
+      {/* Three stars in the chief */}
       {[20, 32, 44].map((cx) => (
         <path
           key={`star-${cx}`}
-          d={`M ${cx} 13
-              l 0.78 2.40
-              l 2.52 0
-              l -2.04 1.49
-              l 0.78 2.40
-              l -2.04 -1.48
-              l -2.04 1.48
-              l 0.78 -2.40
-              l -2.04 -1.49
-              l 2.52 0
-              z`}
+          d={`M ${cx} 15 l 0.78 2.40 2.52 0 -2.04 1.49 0.78 2.40 -2.04 -1.48 -2.04 1.48 0.78 -2.40 -2.04 -1.49 2.52 0 z`}
           fill="white"
+          opacity="0.95"
         />
       ))}
-
-      {/* Sphinx — single continuous silhouette, couchant (lying), facing
-          right, with the angular nemes headdress reading as a stepped
-          profile. One path keeps it crisp at every render size. */}
-      <path
-        d="M 14 48
-           L 14 44
-           C 14 38 19 35 26 35
-           L 32 35
-           C 34 35 35 33 35 31
-           L 35 26
-           L 41 26
-           L 41 31
-           L 44 28
-           L 47 28
-           L 47 36
-           L 44 36
-           L 42 38
-           L 42 41
-           C 42 43 41 44 39 44
-           L 33 44
-           L 33 48
-           Z"
-        fill="white"
-      />
-
-      {/* Founding year — red serif, sits below the sphinx on the cardinal
-          ground (no separate ribbon, matching the supplied artwork). */}
+      {/* Chapter glyph — the auto-generated mark */}
       <text
         x="32"
-        y="56"
+        y="45"
         textAnchor="middle"
         fontFamily='ui-serif, Georgia, "Times New Roman", serif'
-        fontSize="6"
+        fontSize={fs}
         fontWeight="700"
-        fontStyle="italic"
         fill="white"
-        letterSpacing="1"
+        letterSpacing="0.5"
       >
-        {foundingYear}
+        {glyph}
       </text>
+      {/* Founding year */}
+      {foundingYear ? (
+        <text
+          x="32"
+          y="58"
+          textAnchor="middle"
+          fontFamily='ui-serif, Georgia, serif'
+          fontSize="6"
+          fontWeight="700"
+          fontStyle="italic"
+          fill="white"
+          opacity="0.85"
+          letterSpacing="1"
+        >
+          {foundingYear}
+        </text>
+      ) : null}
     </svg>
   );
 }
