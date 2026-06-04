@@ -378,12 +378,21 @@ export default async function RootLayout({
         }
       : buildStructuredData(cfg, siteUrl);
 
+  // Serialize + escape <, >, & so a cfg value containing "</script>" cannot break
+  // out of the ld+json <script> tag (stored XSS — e.g. an admin saving a chapter
+  // name of "Foo</script><script>…"). The \u00xx escapes are valid JSON and parse
+  // back to the identical string for search crawlers.
+  const structuredDataJson = JSON.stringify(structuredData)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+
   return (
     <html lang="en" className={inter.variable}>
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          dangerouslySetInnerHTML={{ __html: structuredDataJson }}
         />
         <link rel="manifest" href="/manifest.webmanifest" />
         {/* Preconnect to Instagram CDN — every IG photo on the homepage proxies

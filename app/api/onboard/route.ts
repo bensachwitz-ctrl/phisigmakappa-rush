@@ -55,8 +55,34 @@ export async function POST(req: Request) {
 
   const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
 
-  if (!subdomain || subdomain === "www" || subdomain === "greeklifesystems") {
-    return NextResponse.json({ ok: false, error: "Invalid or reserved subdomain" }, { status: 400 });
+  // Reserved-subdomain denylist + format guard. A provisioned subdomain becomes
+  // a live host (sub.greeklifesystems.vercel.app) AND a Postgres schema, so
+  // platform/route names and common service hostnames must never be claimable —
+  // otherwise a self-serve signup could squat "admin", "api", "webhook", a name
+  // that shadows platform routing, or (via punycode "xn--") a homograph host.
+  const RESERVED = new Set([
+    "www", "greeklifesystems", "greek-life-systems", "apex", "_apex",
+    "admin", "api", "app", "apps", "dashboard", "portal", "auth", "login",
+    "mail", "email", "smtp", "imap", "ftp", "ns", "ns1", "ns2", "dns",
+    "static", "assets", "cdn", "img", "images", "media", "files", "uploads",
+    "vercel", "next", "_next", "status", "health", "test", "staging", "dev",
+    "billing", "stripe", "webhook", "webhooks", "internal", "system", "root",
+    "support", "help", "docs", "blog", "about", "pricing", "demo", "onboard",
+    "signup", "register", "account", "accounts", "settings", "config", "null",
+  ]);
+  // 3–63 chars, start/end alphanumeric, hyphens allowed only in the middle.
+  const validFormat = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(subdomain);
+  if (
+    !subdomain ||
+    subdomain.length < 3 ||
+    !validFormat ||
+    subdomain.includes("--") || // blocks "xn--" punycode + double-hyphen abuse
+    RESERVED.has(subdomain)
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "That subdomain is invalid or reserved — please choose another." },
+      { status: 400 },
+    );
   }
   if (!fraternityName || !greekLetters || !adminName || !adminEmail || !adminPassword) {
     return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
