@@ -11,12 +11,14 @@ export const dynamic = "force-dynamic";
 // updates the privacy page title + social-share copy without code edits.
 export async function generateMetadata() {
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const title = `Privacy — ${fraternityName} @ ${schoolShort}`;
-  const description = `How the ${greekLetters} chapter collects, uses, and protects information from rushees.`;
-  const ogAlt = `${fraternityName} @ ${schoolShort}`;
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const title = schoolShort ? `Privacy — ${fraternityName} @ ${schoolShort}` : `Privacy — ${fraternityName}`;
+  const description = greekLetters
+    ? `How the ${greekLetters} chapter collects, uses, and protects information from rushees.`
+    : `How ${fraternityName} collects, uses, and protects information from rushees.`;
+  const ogAlt = schoolShort ? `${fraternityName} @ ${schoolShort}` : fraternityName;
   return {
     title,
     description,
@@ -41,14 +43,20 @@ export default async function PrivacyPage() {
   const cfg = await getSiteConfig();
   const rushEmail = cfg["contact.rushEmail"];
   const rushMailto = cleanMailto(rushEmail);
-  // Chapter identity — fall back to USC reference values so the page never
-  // 500s on a fresh deploy before /admin/setup has been run.
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const chapterAttribution = `${fraternityName} ${greekLetters} at the ${schoolName}`;
-  const chapterShortAttribution = `${fraternityName} ${greekLetters} (${schoolShort})`;
+  // Chapter identity — neutral fallbacks so the page never 500s on a fresh
+  // deploy or the apex before /admin/setup has been run, and never leaks a
+  // specific reference chapter. Empties are filtered out of joined sentences.
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const chapterAttribution = [
+    [fraternityName, greekLetters].filter(Boolean).join(" "),
+    schoolName ? `at the ${schoolName}` : "",
+  ].filter(Boolean).join(" ");
+  const chapterShortAttribution =
+    [fraternityName, greekLetters].filter(Boolean).join(" ") +
+    (schoolShort ? ` (${schoolShort})` : "");
   return (
     <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
       <div className="container section-y max-w-3xl">
@@ -79,7 +87,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (<abbr title="Telephone Consumer Protection Act — the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted">TCPA</abbr>)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your information is used solely to communicate with you about rush at the {greekLetters} chapter — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">{chapterShortAttribution}</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
+            Your information is used solely to communicate with you about rush at {greekLetters ? `the ${greekLetters} chapter` : "the chapter"} — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">{chapterShortAttribution}</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
             <a href={rushMailto} className="text-phisig-red hover:underline">
               {rushEmail}
             </a>{" "}
@@ -96,7 +104,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Age &amp; minor protections</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming {schoolShort} freshmen are 17 at orientation — a parent or guardian may also email{" "}
+            By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming{schoolShort ? ` ${schoolShort}` : ""} freshmen are 17 at orientation — a parent or guardian may also email{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>{" "}
@@ -150,7 +158,7 @@ export default async function PrivacyPage() {
         <section className="mt-8 space-y-2">
           <h2 className="text-xl font-semibold tracking-tight">Hazing reports</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {fraternityName} national and the {greekLetters} chapter have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
+            {fraternityName} national and {greekLetters ? `the ${greekLetters} chapter` : "the chapter"} have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>
@@ -158,10 +166,14 @@ export default async function PrivacyPage() {
             <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
               {cfg["antiHazing.hotline"]}
             </a>
-            , or through{" "}
-            <a href={cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org"} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
-              {(cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org").replace(/^https?:\/\//, "")}
-            </a>
+            {cfg["chapter.nationalHqUrl"] ? (
+              <>
+                , or through{" "}
+                <a href={cfg["chapter.nationalHqUrl"]} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                  {cfg["chapter.nationalHqUrl"].replace(/^https?:\/\//, "")}
+                </a>
+              </>
+            ) : null}
             .
           </p>
         </section>

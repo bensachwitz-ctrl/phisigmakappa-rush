@@ -39,7 +39,10 @@ export default async function BrothersPage({
 
   const session = await getCurrentSession();
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
+  // Neutral fallback — used only to label the directory; when blank we read
+  // "the chapter" rather than leaking a specific reference chapter.
+  const greekLettersRaw = cfg["chapter.greekLetters"] || "";
+  const chapterLabel = greekLettersRaw ? `the ${greekLettersRaw} chapter` : "the chapter";
 
   const duesConfig = {
     enabled: cfg["dues.enabled"] === "true",
@@ -98,10 +101,10 @@ export default async function BrothersPage({
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {currentView === "alumni" ? (
-              `Graduated alumni of the ${greekLetters} chapter. Search profiles, add new ones manually, or import from CSV.`
+              `Graduated alumni of ${chapterLabel}. Search profiles, add new ones manually, or import from CSV.`
             ) : (
               session?.isAdmin
-                ? `Active brothers of the ${greekLetters} chapter. Track contact, position, dues, service hours, and study hours.`
+                ? `Active brothers of ${chapterLabel}. Track contact, position, dues, service hours, and study hours.`
                 : "Browse the chapter directory. You can edit your own profile from the card with the pencil icon."
             )}
           </p>

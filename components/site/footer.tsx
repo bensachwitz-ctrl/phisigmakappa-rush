@@ -5,15 +5,16 @@ import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
-  // White-label fallbacks: any unset chapter-identity field falls back to the
-  // Phi Sig Gamma Triton USC reference values, so the footer always reads
-  // correctly even on a fresh deploy before /admin/setup has been run.
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const foundingYear = cfg["chapter.foundingYear"] || "1873";
+  // White-label fallbacks: any unset chapter-identity field falls back to a
+  // NEUTRAL placeholder (never a specific reference chapter), so the footer
+  // reads correctly on a fresh deploy / the apex before /admin/setup has run.
+  // Empties are filtered out of joined lines so nothing renders as ", at ".
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const foundingYear = cfg["chapter.foundingYear"] || "";
   const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
   // The bundled /brand/phisigmakappa-letters.jpg is the ΦΣΚ national wordmark —
   // correct ONLY for a Phi Sig chapter. On any other chapter it would brand the
   // footer with the wrong fraternity, so we gate the national-logo strip on
@@ -51,7 +52,10 @@ export async function PublicFooter() {
             </div>
           )}
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
-            {fraternityName}, {greekLetters} chapter at {schoolName}.
+            {[
+              [fraternityName, greekLetters ? `${greekLetters} chapter` : ""].filter(Boolean).join(", "),
+              schoolName ? `at ${schoolName}` : "",
+            ].filter(Boolean).join(" ")}.
             Three Cardinal Principles: {cardinalPrinciples}.
           </p>
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
@@ -62,7 +66,10 @@ export async function PublicFooter() {
           </p>
         </div>
         <div className="text-xs text-muted-foreground space-y-1 text-left sm:text-right">
-          <p>© {new Date().getFullYear()} {fraternityName}, {greekLetters} at {cfg["chapter.schoolShort"] || "USC"}</p>
+          <p>© {new Date().getFullYear()} {[
+            [fraternityName, greekLetters].filter(Boolean).join(", "),
+            cfg["chapter.schoolShort"] ? `at ${cfg["chapter.schoolShort"]}` : "",
+          ].filter(Boolean).join(" ")}</p>
           <p>{titleCaseAddress(cfg["contact.address"])} · {titleCaseAddress(cfg["contact.cityState"])}</p>
           {cfg["contact.rushPhone"] && (
             <p>
@@ -85,8 +92,12 @@ export async function PublicFooter() {
             >
               Anti-hazing hotline
             </a>
-            <span aria-hidden>·</span>
-            <a href={nationalHqUrl} target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">National HQ</a>
+            {nationalHqUrl && (
+              <>
+                <span aria-hidden>·</span>
+                <a href={cleanUrl(nationalHqUrl)} target="_blank" rel="noreferrer noopener" className="hover:text-foreground transition-colors">National HQ</a>
+              </>
+            )}
             <span aria-hidden>·</span>
             <Link href="/parents" className="hover:text-foreground transition-colors">For Parents</Link>
             <span aria-hidden>·</span>

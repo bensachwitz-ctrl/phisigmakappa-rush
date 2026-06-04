@@ -1,12 +1,20 @@
 /**
  * PNM auto-enrichment — searches the web for additional info about a rushee
- * (LinkedIn, Instagram, USC directory, MaxPreps athletics, etc.) and returns
- * a structured summary. Fires automatically when a new PNM submits the form,
- * so the admin sees enriched info the moment they open the rushee's profile.
+ * (LinkedIn, Instagram, the chapter's school directory, MaxPreps athletics,
+ * etc.) and returns a structured summary. Fires automatically when a new PNM
+ * submits the form, so the admin sees enriched info the moment they open the
+ * rushee's profile.
  *
  * Falls back gracefully to "search-links" mode when TAVILY_API_KEY isn't set —
  * the admin still gets one-click research links to Google / LinkedIn / IG.
+ *
+ * School scoping is chapter-driven: callers pass cfg-derived school values, or
+ * leave them blank — NEVER a hardcoded reference school. Blank simply omits the
+ * school from the query / the school-directory link, so no specific chapter's
+ * school ever leaks into another tenant's enrichment.
  */
+
+import { getSiteConfig } from "@/lib/site-config";
 
 export type Enrichment = {
   summary?: string;
@@ -17,26 +25,37 @@ export type Enrichment = {
   searchedAt: string;
 };
 
-export function quickLinks(name: string, schoolName = "University of South Carolina", schoolShort = "USC", schoolUrl = "https://www.sc.edu") {
-  const q = encodeURIComponent(`${name} ${schoolName}`);
+export function quickLinks(name: string, schoolName = "", schoolShort = "", schoolUrl = "") {
+  const q = encodeURIComponent([name, schoolName].filter(Boolean).join(" "));
   const qSimple = encodeURIComponent(name);
   // Strip protocol + trailing slash from schoolUrl for the directory URL pattern;
   // most universities expose a /about/directory search at the canonical host.
   const directoryHost = schoolUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  return [
+  const links = [
     { label: "Google", url: `https://www.google.com/search?q=${q}` },
     { label: "LinkedIn", url: `https://www.linkedin.com/search/results/people/?keywords=${q}` },
     { label: "Instagram", url: `https://www.instagram.com/explore/search/keyword/?q=${qSimple}` },
     { label: "Facebook", url: `https://www.facebook.com/search/people/?q=${q}` },
-    { label: `${schoolShort} directory`, url: `https://${directoryHost}/about/directory/?q=${qSimple}` },
-    { label: "MaxPreps (HS sports)", url: `https://www.maxpreps.com/search/default.aspx?search=${qSimple}` },
   ];
+  // Only surface the school-directory shortcut when the chapter has a school URL.
+  if (directoryHost) {
+    links.push({
+      label: `${[schoolShort, "directory"].filter(Boolean).join(" ")}`,
+      url: `https://${directoryHost}/about/directory/?q=${qSimple}`,
+    });
+  }
+  links.push({ label: "MaxPreps (HS sports)", url: `https://www.maxpreps.com/search/default.aspx?search=${qSimple}` });
+  return links;
 }
 
-async function tavilySearch(name: string, hints: string, schoolName = "University of South Carolina") {
+async function tavilySearch(name: string, hints: string, schoolName = "", schoolUrl = "") {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) return null;
-  const query = `${name} ${schoolName} ${hints}`.trim();
+  const query = [name, schoolName, hints].filter(Boolean).join(" ").trim();
+  // Derive the chapter's school host from cfg-supplied schoolUrl instead of a
+  // hardcoded reference domain, so the domain filter scopes to THIS chapter's
+  // school. Blank schoolUrl simply omits the school domain from the filter.
+  const schoolHost = schoolUrl.replace(/^https?:\/\//, "").replace(/\/$/, "").split("/")[0];
   try {
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
@@ -49,7 +68,8 @@ async function tavilySearch(name: string, hints: string, schoolName = "Universit
         max_results: 8,
         include_domains: [
           "linkedin.com", "instagram.com", "facebook.com",
-          "sc.edu", "maxpreps.com", "athletic.net",
+          ...(schoolHost ? [schoolHost] : []),
+          "maxpreps.com", "athletic.net",
         ],
       }),
     });
@@ -66,17 +86,32 @@ export async function enrichRushee(opts: {
   major?: string | null;
   year?: string | null;
   // Optional chapter context — pass cfg-derived values to scope the search to
-  // the right school. Defaults to USC for backward compat (callers that haven't
-  // migrated still work; their PNM auto-research just queries the USC corpus).
+  // the right school. When omitted, falls back to THIS chapter's SiteConfig
+  // (never a hardcoded reference school), so a tenant that hasn't set a school
+  // simply runs an unscoped name search instead of leaking another chapter's.
   schoolName?: string;
   schoolShort?: string;
   schoolUrl?: string;
 }): Promise<Enrichment> {
-  const schoolName = opts.schoolName || "University of South Carolina";
-  const schoolShort = opts.schoolShort || "USC";
-  const schoolUrl = opts.schoolUrl || "https://www.sc.edu";
+  // Resolve school scoping from explicit opts first, then SiteConfig, then "".
+  let cfgSchoolName = "";
+  let cfgSchoolShort = "";
+  let cfgSchoolUrl = "";
+  if (opts.schoolName === undefined || opts.schoolShort === undefined || opts.schoolUrl === undefined) {
+    try {
+      const cfg = await getSiteConfig();
+      cfgSchoolName = cfg["chapter.schoolName"] || "";
+      cfgSchoolShort = cfg["chapter.schoolShort"] || "";
+      cfgSchoolUrl = cfg["chapter.schoolUrl"] || "";
+    } catch {
+      /* unscoped search if cfg is unavailable */
+    }
+  }
+  const schoolName = opts.schoolName ?? cfgSchoolName;
+  const schoolShort = opts.schoolShort ?? cfgSchoolShort;
+  const schoolUrl = opts.schoolUrl ?? cfgSchoolUrl;
   const hints = [opts.hometown, opts.major, opts.year].filter(Boolean).join(" ");
-  const tav = await tavilySearch(opts.name, hints, schoolName);
+  const tav = await tavilySearch(opts.name, hints, schoolName, schoolUrl);
   if (tav) {
     const bullets = (tav.results || [])
       .slice(0, 6)

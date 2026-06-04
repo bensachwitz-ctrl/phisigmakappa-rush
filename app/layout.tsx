@@ -92,13 +92,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const appShortTitle = cfg["chapter.appShortTitle"] || "Phi Sig USC";
-  const chapterFullName = `${fraternityName} ${greekLetters}`;
-  const titleDefault = `${chapterFullName} — Rush at ${schoolShort}`;
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const appShortTitle = cfg["chapter.appShortTitle"] || "Greekstack";
+  const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
+  const titleDefault = schoolShort ? `${chapterFullName} — Rush at ${schoolShort}` : chapterFullName;
 
   return {
     title: {
@@ -106,7 +106,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${chapterFullName}`,
     },
     description:
-      `${chapterFullName} chapter at ${schoolName}. Get on the rush interest list — we'll text you when the schedule drops.`,
+      `${chapterFullName}${schoolName ? ` chapter at ${schoolName}` : ""}. Get on the rush interest list — we'll text you when the schedule drops.`,
     metadataBase,
     openGraph: {
       title: titleDefault,
@@ -117,7 +117,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: titleDefault,
-      description: `Rush ${chapterFullName} at ${schoolShort}.`,
+      description: schoolShort ? `Rush ${chapterFullName} at ${schoolShort}.` : `Rush ${chapterFullName}.`,
     },
     robots: { index: true, follow: true },
     // iOS Safari "Add to Home Screen" — without these, a bookmarked icon
@@ -186,83 +186,108 @@ function parseCityState(cityState: string): { city: string; region: string; post
 }
 
 function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const fraternityShort = cfg["chapter.fraternityShort"] || "Phi Sig";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const greekGlyphs = cfg["chapter.greekLettersGlyphs"] || "ΦΣΚ";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
-  const charterYear = cfg["chapter.charterYear"] || "1975";
-  const foundingYear = cfg["chapter.foundingYear"] || "1873";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
+  // Neutral fallbacks only — a chapter that hasn't run /admin/setup yet must
+  // never emit the reference Phi Sig identity into its JSON-LD. Optional fields
+  // are omitted entirely when their cfg value is blank rather than guessed.
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const fraternityShort = cfg["chapter.fraternityShort"] || fraternityName;
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const greekGlyphs = cfg["chapter.greekLettersGlyphs"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const schoolUrl = cfg["chapter.schoolUrl"] || "";
+  const charterYear = cfg["chapter.charterYear"] || "";
+  const foundingYear = cfg["chapter.foundingYear"] || "";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
   const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
-  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
-  const advisorEmail = cfg["contact.advisorEmail"] || "advisor@phisig-usc.com";
-  const igUrl = cfg["contact.instagramUrl"] || "https://www.instagram.com/phisig_usc/";
+  const rushEmail = cfg["contact.rushEmail"] || "";
+  const advisorEmail = cfg["contact.advisorEmail"] || "";
+  const igUrl = cfg["contact.instagramUrl"] || "";
   const antiHazingUrl = cfg["antiHazing.hotlineUrl"] || "https://hazingprevention.org/help/";
 
-  const addr = parseCityState(cfg["contact.cityState"] || "Columbia, SC 29208");
+  const addr = parseCityState(cfg["contact.cityState"] || "");
+
+  const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
+  const descSince = charterYear ? ` since ${charterYear}` : "";
+  const descSchool = schoolName ? ` at ${schoolName}` : "";
+
+  const parentOrganization: Record<string, unknown> = {
+    "@type": "Organization",
+    name: fraternityName,
+  };
+  if (nationalHqUrl) parentOrganization.url = nationalHqUrl;
+  if (foundingYear) parentOrganization.foundingDate = foundingYear;
+
+  const contactPoint: Record<string, unknown>[] = [];
+  if (rushEmail) {
+    contactPoint.push({
+      "@type": "ContactPoint",
+      contactType: "Recruitment",
+      email: rushEmail,
+      areaServed: "US",
+      availableLanguage: "English",
+    });
+  }
+  if (advisorEmail) {
+    contactPoint.push({
+      "@type": "ContactPoint",
+      contactType: "Anti-hazing report",
+      email: advisorEmail,
+      url: antiHazingUrl,
+      areaServed: "US",
+    });
+  }
+
+  const organization: Record<string, unknown> = {
+    "@type": "CollegeOrUniversity",
+    "@id": `${siteUrl}/#organization`,
+    name: greekLetters ? `${fraternityName}, ${greekLetters} chapter` : fraternityName,
+    alternateName: [
+      [fraternityShort, schoolShort].filter(Boolean).join(" "),
+      [greekGlyphs, greekLetters].filter(Boolean).join(" "),
+    ].filter(Boolean),
+    url: siteUrl,
+    logo: `${siteUrl}/icon`,
+    image: `${siteUrl}/opengraph-image`,
+    description: `${chapterFullName} chapter${descSchool} — fraternity rush, philanthropy, brotherhood, and ${cardinalPrinciples}${descSince}.`,
+    parentOrganization,
+    sameAs: [igUrl, nationalHqUrl].filter(Boolean),
+    contactPoint,
+  };
+  if (charterYear) organization.foundingDate = charterYear;
+  if (schoolName || addr.city) {
+    organization.foundingLocation = {
+      "@type": "Place",
+      name: [schoolName, [addr.city, addr.region].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+    };
+  }
+  if (schoolName) {
+    organization.memberOf = {
+      "@type": "CollegeOrUniversity",
+      name: schoolName,
+      ...(schoolUrl ? { url: schoolUrl } : {}),
+    };
+  }
+  if (cfg["contact.address"] || addr.city) {
+    organization.address = {
+      "@type": "PostalAddress",
+      ...(cfg["contact.address"] ? { streetAddress: cfg["contact.address"] } : {}),
+      addressLocality: addr.city,
+      addressRegion: addr.region,
+      postalCode: addr.postal,
+      addressCountry: "US",
+    };
+  }
 
   return {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "CollegeOrUniversity",
-        "@id": `${siteUrl}/#organization`,
-        name: `${fraternityName}, ${greekLetters} chapter`,
-        alternateName: [`${fraternityShort} ${schoolShort}`, `${greekGlyphs} ${greekLetters}`],
-        url: siteUrl,
-        logo: `${siteUrl}/icon`,
-        image: `${siteUrl}/opengraph-image`,
-        description: `${fraternityName} ${greekLetters} chapter at ${schoolName} — fraternity rush, philanthropy, brotherhood, and ${cardinalPrinciples} since ${charterYear}.`,
-        foundingDate: charterYear,
-        foundingLocation: {
-          "@type": "Place",
-          name: `${schoolName}, ${addr.city} ${addr.region}`,
-        },
-        parentOrganization: {
-          "@type": "Organization",
-          name: fraternityName,
-          url: nationalHqUrl,
-          foundingDate: foundingYear,
-        },
-        memberOf: {
-          "@type": "CollegeOrUniversity",
-          name: schoolName,
-          url: schoolUrl,
-        },
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: cfg["contact.address"] || "1525 College Street",
-          addressLocality: addr.city,
-          addressRegion: addr.region,
-          postalCode: addr.postal,
-          addressCountry: "US",
-        },
-        sameAs: [igUrl, nationalHqUrl].filter(Boolean),
-        contactPoint: [
-          {
-            "@type": "ContactPoint",
-            contactType: "Recruitment",
-            email: rushEmail,
-            areaServed: "US",
-            availableLanguage: "English",
-          },
-          {
-            "@type": "ContactPoint",
-            contactType: "Anti-hazing report",
-            email: advisorEmail,
-            url: antiHazingUrl,
-            areaServed: "US",
-          },
-        ],
-      },
+      organization,
       {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
         url: siteUrl,
-        name: `${fraternityName} ${greekLetters} — Rush at ${schoolShort}`,
+        name: schoolShort ? `${chapterFullName} — Rush at ${schoolShort}` : chapterFullName,
         publisher: { "@id": `${siteUrl}/#organization` },
         inLanguage: "en-US",
       },

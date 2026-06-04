@@ -493,11 +493,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             initial={serializable as any}
             brotherName={me?.name || null}
             chapterBrand={{
-              fraternityName: cfg["chapter.fraternityName"] || "Phi Sigma Kappa",
-              fraternityShort: cfg["chapter.fraternityShort"] || "Phi Sig",
-              schoolShort: cfg["chapter.schoolShort"] || "USC",
-              chapterAttribution: `${cfg["chapter.fraternityShort"] || "Phi Sig"} ${cfg["chapter.schoolShort"] || "USC"}`,
-              houseAddress: (cfg["contact.address"] || "1525 College Street").split(",")[0].trim(),
+              fraternityName: cfg["chapter.fraternityName"] || "Your Chapter",
+              fraternityShort: cfg["chapter.fraternityShort"] || cfg["chapter.fraternityName"] || "Your Chapter",
+              schoolShort: cfg["chapter.schoolShort"] || "",
+              chapterAttribution: [
+                cfg["chapter.fraternityShort"] || cfg["chapter.fraternityName"] || "Your Chapter",
+                cfg["chapter.schoolShort"] || "",
+              ].filter(Boolean).join(" "),
+              houseAddress: (cfg["contact.address"] || "").split(",")[0].trim(),
             }}
           />
         </>

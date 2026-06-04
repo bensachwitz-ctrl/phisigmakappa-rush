@@ -16,13 +16,14 @@ export const dynamic = "force-dynamic";
 // Dynamic so a chapter rename updates the SERP card without a code edit.
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
   const { terms } = chapterIdentityFromCfg(cfg);
-  const title = `For Parents — ${fraternityName} ${greekLetters}`;
-  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${fraternityName} @ ${schoolShort} handles your ${terms.relative}'s data when they join the rush list.`;
-  const ogAlt = `${fraternityName} @ ${schoolShort}`;
+  const title = `For Parents — ${[fraternityName, greekLetters].filter(Boolean).join(" ")}`;
+  const orgRef = schoolShort ? `${fraternityName} @ ${schoolShort}` : fraternityName;
+  const description = `Anti-hazing policy, advisor contact, GPA standards, and how ${orgRef} handles your ${terms.relative}'s data when they join the rush list.`;
+  const ogAlt = schoolShort ? `${fraternityName} @ ${schoolShort}` : fraternityName;
   return {
     title,
     description,
@@ -55,14 +56,15 @@ export default async function ParentsPage() {
   const advisorPlaceholder =
     !cfg["contact.advisorName"] || cfg["contact.advisorName"] === "Chapter Advisor";
   const phonePresent = !!cfg["contact.rushPhone"];
-  // White-label fallbacks
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolName = cfg["chapter.schoolName"] || "University of South Carolina";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const schoolUrl = cfg["chapter.schoolUrl"] || "https://sc.edu";
-  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "https://phisigmakappa.org";
-  const chapterAttribution = `${fraternityName} ${greekLetters}`;
+  // White-label fallbacks — neutral, so the apex / a fresh deploy never leaks a
+  // specific reference chapter. Empties are filtered out of joined copy below.
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolName = cfg["chapter.schoolName"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const schoolUrl = cfg["chapter.schoolUrl"] || "";
+  const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
+  const chapterAttribution = [fraternityName, greekLetters].filter(Boolean).join(" ");
   // The formal coat-of-arms asset is Phi Sig's heraldic mark — render it only
   // for a Phi Sig chapter (same check as components/brand/wordmark.tsx); any
   // other chapter omits it rather than show the wrong fraternity's crest.
@@ -110,7 +112,7 @@ export default async function ParentsPage() {
             Your {terms.relative}&apos;s safety, academics, and contact info — straight talk.
           </h1>
           <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
-            {chapterAttribution} is the chapter at {schoolName}. We
+            {chapterAttribution}{schoolName ? ` is the chapter at ${schoolName}` : " is your chapter"}. We
             run a dry, FIPG-compliant rush with a hard zero-tolerance hazing policy. This page
             answers the questions you&apos;ll want answered before your {terms.relative} fills out our interest
             form — and tells you exactly how to reach a real adult if you have a concern.
@@ -183,32 +185,36 @@ export default async function ParentsPage() {
                   {cfg["contact.advisorEmail"]} (advisor, anonymous OK)
                 </a>
               </li>
-              <li className="flex items-start gap-2">
-                <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
-                <span>
-                  <a
-                    href={cleanUrl(schoolUrl)}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="text-phisig-red hover:underline"
-                  >
-                    {schoolShort} Office of Fraternity &amp; Sorority Life
-                  </a>
-                  <span className="text-muted-foreground"> · the school's escalation channel above any chapter</span>
-                </span>
-              </li>
+              {schoolUrl && (
+                <li className="flex items-start gap-2">
+                  <Building2 className="h-3.5 w-3.5 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    <a
+                      href={cleanUrl(schoolUrl)}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-phisig-red hover:underline"
+                    >
+                      {[schoolShort, "Office of Fraternity & Sorority Life"].filter(Boolean).join(" ")}
+                    </a>
+                    <span className="text-muted-foreground"> · the school's escalation channel above any chapter</span>
+                  </span>
+                </li>
+              )}
               <li className="flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
                 <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
                   hazingprevention.org · 24/7 reporting + resources
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
-                <a href={cleanUrl(nationalHqUrl)} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
-                  {nationalHqUrl.replace(/^https?:\/\//, "")} · National HQ
-                </a>
-              </li>
+              {nationalHqUrl && (
+                <li className="flex items-center gap-2">
+                  <FileText className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
+                  <a href={cleanUrl(nationalHqUrl)} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                    {nationalHqUrl.replace(/^https?:\/\//, "")} · National HQ
+                  </a>
+                </li>
+              )}
             </ul>
           </article>
         </section>
@@ -219,7 +225,7 @@ export default async function ParentsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Fact icon={GraduationCap} label="Chapter GPA" value={cfg["stats.gpa"]} sub={cfg["stats.gpa.sub"]} />
             <Fact icon={Users} label={cfg["stats.brothers.label"] || "Active brothers"} value={cfg["stats.brothers"]} sub={cfg["stats.brothers.sub"]} />
-            <Fact icon={Building2} label={cfg["stats.years.label"] || "Years at USC"} value={cfg["stats.years"]} sub={cfg["stats.years.sub"]} />
+            <Fact icon={Building2} label={cfg["stats.years.label"] || (schoolShort ? `Years at ${schoolShort}` : "Years on campus")} value={cfg["stats.years"]} sub={cfg["stats.years.sub"]} />
             <Fact icon={HandHeart} label={cfg["stats.charity.label"] || "Raised for charity"} value={cfg["stats.charity"]} sub={cfg["stats.charity.sub"]} />
           </div>
           <p className="mt-4 text-xs text-muted-foreground">

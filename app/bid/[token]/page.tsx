@@ -60,11 +60,14 @@ export default async function BidPage({ params }: { params: { token: string } })
     lookup(params.token),
     getSiteConfig().catch(() => ({} as Record<string, string>)),
   ]);
-  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
-  const greekLetters = cfg["chapter.greekLetters"] || "Gamma Triton";
-  const schoolShort = cfg["chapter.schoolShort"] || "USC";
-  const chapterAttribution = `${fraternityName}, ${greekLetters} at ${schoolShort}`;
-  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+  const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const schoolShort = cfg["chapter.schoolShort"] || "";
+  const chapterAttribution = [
+    [fraternityName, greekLetters].filter(Boolean).join(", "),
+    schoolShort ? `at ${schoolShort}` : "",
+  ].filter(Boolean).join(" ");
+  const rushEmail = cfg["contact.rushEmail"] || "";
 
   return (
     <main id="main-content" className="min-h-screen bg-phisig-mist">

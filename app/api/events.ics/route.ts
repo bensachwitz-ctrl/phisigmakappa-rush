@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       `URL:${origin}/#schedule`,
       `STATUS:CONFIRMED`,
       `TRANSP:OPAQUE`,
-      `CATEGORIES:Rush,${escapeIcs(cfg["philanthropy.beneficiaryShort"] || "Phi Sigma Kappa")}`,
+      `CATEGORIES:${["Rush", cfg["philanthropy.beneficiaryShort"] || ""].filter(Boolean).map(escapeIcs).join(",")}`,
       "END:VEVENT",
     );
   }

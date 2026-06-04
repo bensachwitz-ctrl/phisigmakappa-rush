@@ -82,8 +82,15 @@ export async function POST(req: Request) {
             currency,
             unit_amount: amountCents,
             product_data: {
-              name: `Donation to ${cfg["chapter.fraternityShort"] || "Phi Sigma Kappa"} — ${campaign}`,
-              description: `Thank you for supporting the Gamma Triton chapter at ${cfg["chapter.schoolShort"] || "USC"}.`,
+              name: `Donation to ${cfg["chapter.fraternityShort"] || cfg["chapter.fraternityName"] || "Your Chapter"} — ${campaign}`,
+              description: (() => {
+                const greek = cfg["chapter.greekLetters"] || "";
+                const schoolShort = cfg["chapter.schoolShort"] || "";
+                const who = [greek ? `the ${greek} chapter` : "the chapter", schoolShort ? `at ${schoolShort}` : ""]
+                  .filter(Boolean)
+                  .join(" ");
+                return `Thank you for supporting ${who}.`;
+              })(),
             },
           },
           quantity: 1,

@@ -21,8 +21,8 @@ async function sendWelcomeEmail(opts: { to: string; firstName: string; siteUrl: 
   } catch {
     identity = null;
   }
-  const fratName = identity?.fraternityName || "Phi Sigma Kappa";
-  const fratShort = identity?.fraternityShort || "Phi Sig";
+  const fratName = identity?.fraternityName || "Your Chapter";
+  const fratShort = identity?.fraternityShort || "Your Chapter";
   const greek = identity?.greekLetters || "";
   const school = identity?.schoolShort || "";
   const tagline = identity?.tagline || "";
