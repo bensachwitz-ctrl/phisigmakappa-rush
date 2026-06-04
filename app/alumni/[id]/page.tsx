@@ -157,7 +157,9 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
 
         {/* CTA */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-maroon-700 mb-3">Are you a Gamma Triton alum too?</p>
+          <p className="text-sm text-maroon-700 mb-3">
+            {id.greekLetters ? `Are you a ${id.greekLetters} alum too?` : "Are you an alum of this chapter too?"}
+          </p>
           <Link href="/alumni/join">
             <Button className="bg-maroon-700 hover:bg-maroon-800 text-cream-50">
               Add yourself to the directory

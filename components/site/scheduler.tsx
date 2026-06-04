@@ -44,7 +44,7 @@ const TIME_SLOTS = [
   "09:00 AM", "10:00 AM", "11:00 AM", "12:30 PM", "01:30 PM", "02:30 PM", "03:30 PM", "04:30 PM", "05:30 PM"
 ];
 
-export function Scheduler({ calDiyUrl, chapterShort = "Phi Sig", schoolShort = "USC", tagline = "#DamnProud" }: SchedulerProps) {
+export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShort = "", tagline = "" }: SchedulerProps) {
   const { push } = useToast();
   const [useEmbed, setUseEmbed] = React.useState(!!calDiyUrl);
   const [selectedType, setSelectedType] = React.useState(EVENT_TYPES[0].name);
