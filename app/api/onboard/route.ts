@@ -189,12 +189,19 @@ export async function POST(req: Request) {
     //                         chapters pay via a % of dues, so entitlement must
     //                         treat them as a paying customer (good standing), not
     //                         a trial that can lapse into the dunning banner.
-    const ALLOWED_PLANS = new Set(["monthly", "semester", "dues_percentage"]);
+    //   custom              → Custom build (a "talk to us" path in the wizard).
+    //                         Rarely lands here since the wizard's Custom card
+    //                         links out to /contact#custom, but it's an allowed
+    //                         value so the chosen plan always round-trips cleanly.
+    //                         Treated as "active" (a negotiated, paying
+    //                         arrangement — never a trial that can lapse).
+    const ALLOWED_PLANS = new Set(["monthly", "semester", "dues_percentage", "custom"]);
     const normalizedPlan =
       typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
         ? rawPlan.trim()
         : "monthly";
-    const subscriptionStatus = normalizedPlan === "dues_percentage" ? "active" : "trialing";
+    const subscriptionStatus =
+      normalizedPlan === "dues_percentage" || normalizedPlan === "custom" ? "active" : "trialing";
 
     const updates: Record<string, string> = {
       "chapter.orgType": normalizedOrgType,
@@ -372,25 +379,32 @@ export async function POST(req: Request) {
       const adminFirst = (adminName || "").trim().split(" ")[0] || "there";
       // Plan-aware billing copy so a dues-share chapter is never told about a
       // "14-day trial" it isn't on. Base plans keep the trial language (monthly
-      // also leads with first-month-free); dues-share leads with $0 upfront.
+      // also leads with first-month-free); dues-share + custom lead with $0
+      // upfront / a negotiated arrangement.
       const planLabel =
         normalizedPlan === "semester"
-          ? "Base plan ($129 / semester)"
+          ? "Base plan ($250 / semester)"
           : normalizedPlan === "dues_percentage"
           ? "Dues-share plan ($0 upfront)"
-          : "Base plan ($29/mo)";
+          : normalizedPlan === "custom"
+          ? "Custom plan"
+          : "Base plan ($50/mo)";
       const billingLineHtml =
         normalizedPlan === "dues_percentage"
           ? `Your <strong>Dues-share plan</strong> is active — <strong>$0 upfront</strong>, full access to every feature, no card required. We only ever earn a small percentage of the dues you collect.`
+          : normalizedPlan === "custom"
+          ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
           : normalizedPlan === "semester"
-          ? `Your <strong>Base plan</strong> is set up with a <strong>14-day free trial</strong> — full access, no card required. You're on per-semester billing ($129/semester); we'll remind you before your trial ends.`
-          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's just $29/mo, and we'll remind you before your trial ends so there's no interruption.`;
+          ? `Your <strong>Base plan</strong> is set up with a <strong>14-day free trial</strong> — full access, no card required. You're on per-semester billing ($250/semester); we'll remind you before your trial ends.`
+          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's just $50/mo, and we'll remind you before your trial ends so there's no interruption.`;
       const billingLineText =
         normalizedPlan === "dues_percentage"
           ? "Your Dues-share plan is active — $0 upfront, full access, no card required."
+          : normalizedPlan === "custom"
+          ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
           : normalizedPlan === "semester"
-          ? "Your Base plan includes a 14-day free trial — full access, no card required ($129/semester after)."
-          : "Your first month is free — full access, no card required ($29/mo after).";
+          ? "Your Base plan includes a 14-day free trial — full access, no card required ($250/semester after)."
+          : "Your first month is free — full access, no card required ($50/mo after).";
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
         <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>

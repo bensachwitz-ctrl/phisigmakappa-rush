@@ -12,6 +12,7 @@ import { SuccessState } from "@/components/onboard/success-state";
 import { OrgPresetPicker } from "@/components/onboard/org-preset-picker";
 import { GreekLetterInserter } from "@/components/onboard/greek-letter-inserter";
 import { ColorPresets } from "@/components/onboard/color-presets";
+import { BookACall } from "@/components/onboard/book-a-call";
 import {
   SchoolPicker,
   OrgPicker,
@@ -22,11 +23,11 @@ import { Magnetic, Reveal3D, FloatingOrbs, Spotlight, ShimmerBorder } from "@/co
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
-  IconChapter, IconBranding, IconComms, IconAdmin, IconLaunch, IconSpark,
+  IconBranding, IconAdmin, IconLaunch, IconSpark,
   IconCheck, IconCheckCircle, IconArrowRight, IconSecurity, IconClose, IconExternal, type IconProps,
 } from "@/components/brand/icons";
 import {
-  IconSchool, IconCrest, IconPricing, IconCoins, IconPercent, IconCalendar,
+  IconCrest, IconPricing, IconCoins, IconPercent, IconCalendar, IconSettingsGear,
 } from "@/components/brand/icons/onboarding-wizard";
 import { cn } from "@/lib/utils";
 
@@ -63,13 +64,18 @@ function GsChip({
   );
 }
 
+// ── The streamlined 4-stage flow ─────────────────────────────────────────────
+// Re-ordered + slimmed from the old 6-step wall of fields. The order is
+// deliberate: pick how you pay FIRST (no card, lowest-commitment yes), fill the
+// essentials, set the login, then launch + (optionally) book a call. Each stage
+// is intentionally light — fewer, larger, well-spaced inputs; the long identity
+// field-wall is collapsed behind a "fine-tune details" expander on the Chapter
+// stage so the default surface stays calm.
 const STEPS = [
-  { id: "identity", label: "School & Org", icon: IconSchool, blurb: "Pick your school and organization to auto-theme your site, then fine-tune the details." },
-  { id: "brand", label: "Brand & Preview", icon: IconBranding, blurb: "Dial in your colors and hero copy — edit the live preview until it feels like yours." },
-  { id: "contact", label: "Contact Details", icon: IconComms, blurb: "Set up recruitment contacts, social handles, and house location." },
-  { id: "admin", label: "Admin Credentials", icon: IconAdmin, blurb: "Create your chapter's primary administrator account." },
   { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — no card required to launch." },
-  { id: "launch", label: "Launch Site", icon: IconLaunch, blurb: "Confirm details and activate the chapter management system." },
+  { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then make it yours in the live preview." },
+  { id: "admin", label: "Admin Login", icon: IconAdmin, blurb: "Create your chapter's administrator account — this is how you'll sign in." },
+  { id: "launch", label: "Launch", icon: IconLaunch, blurb: "Go live in seconds — then optionally grab a hand from the owner." },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -78,7 +84,7 @@ export default function OnboardWizard() {
   const router = useRouter();
   const { push } = useToast();
   const reduce = useReducedMotion();
-  const [step, setStep] = React.useState<StepId>("identity");
+  const [step, setStep] = React.useState<StepId>("pricing");
   // Animation direction for the step transition: 1 = advancing, -1 = going back.
   // Drives the directional slide in the AnimatePresence wrapper below.
   const [dir, setDir] = React.useState<1 | -1>(1);
@@ -95,7 +101,7 @@ export default function OnboardWizard() {
 
   // Identity State — start EMPTY so a new chapter never publishes Phi Sig's
   // real identity by skimming the form. Placeholders show the reference values
-  // as hints; required fields are enforced in validateStep("identity").
+  // as hints; required fields are enforced in validateStep("chapter").
   const [fraternityName, setFraternityName] = React.useState("");
   const [fraternityShort, setFraternityShort] = React.useState("");
   // Organization type drives the member-noun terminology layer once the chapter
@@ -137,14 +143,16 @@ export default function OnboardWizard() {
   const [heroHeadline, setHeroHeadline] = React.useState("");
   const [heroTagline, setHeroTagline] = React.useState("");
 
-  // Pricing method (Step "pricing"). `plan` is the value persisted to the Tenant:
-  //   "monthly"         — Base plan, $29/mo, FIRST MONTH FREE
-  //   "semester"        — Base plan, $129 / semester
+  // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
+  //   "monthly"         — Base plan, $50/mo, FIRST MONTH FREE
+  //   "semester"        — Base plan, $250 / semester
   //   "dues_percentage" — Dues-share, $0 upfront, 1.5% → 3% of dues collected
-  // (Method 3 "Custom" is a link out to /contact#custom, not a selectable plan.)
+  //   "custom"          — Custom build (a "talk to us" path → /contact#custom)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
-  // skips straight through still lands on the most generous, no-card option.
-  const [plan, setPlan] = React.useState<"monthly" | "semester" | "dues_percentage">("monthly");
+  // skips straight through still lands on the most generous, no-card option. The
+  // Custom card is primarily a link out to /contact#custom; "custom" is part of
+  // the persisted allowlist so the value round-trips cleanly if ever selected.
+  const [plan, setPlan] = React.useState<"monthly" | "semester" | "dues_percentage" | "custom">("monthly");
 
   // Contact State
   const [rushEmail, setRushEmail] = React.useState("");
@@ -265,29 +273,18 @@ export default function OnboardWizard() {
 
   function validateStep(currentStep: StepId): boolean {
     const e: Record<string, string> = {};
-    if (currentStep === "identity") {
+    // Stage 1 "pricing" — always valid (a default plan is always selected).
+    if (currentStep === "chapter") {
+      // The four essentials for a valid, on-brand launch. Brand colors are
+      // auto-themed from the pickers (and always carry a sensible default), so
+      // they no longer gate the step — the chapter identity + subdomain do.
       if (!fraternityName.trim()) e.fraternityName = "Required";
       if (!greekLetters.trim()) e.greekLetters = "Required";
       if (!schoolName.trim()) e.schoolName = "Required";
       if (!subdomain.trim()) e.subdomain = "Required";
       if (Object.keys(e).length) {
         setErrors(e);
-        push({ title: "Validation Error", description: "Organization name, Greek letters, school name, and desired subdomain are required.", variant: "destructive" });
-        return false;
-      }
-    } else if (currentStep === "brand") {
-      if (!primaryColor.trim()) e.primaryColor = "Required";
-      if (!darkColor.trim()) e.darkColor = "Required";
-      if (!softColor.trim()) e.softColor = "Required";
-      if (Object.keys(e).length) {
-        setErrors(e);
-        push({ title: "Validation Error", description: "All three brand colors are required.", variant: "destructive" });
-        return false;
-      }
-    } else if (currentStep === "contact") {
-      if (!rushEmail.trim()) {
-        setErrors({ rushEmail: "Required" });
-        push({ title: "Validation Error", description: "Rush contact email is required.", variant: "destructive" });
+        push({ title: "A few details needed", description: "Organization name, chapter Greek letters, school, and a subdomain are required.", variant: "destructive" });
         return false;
       }
     } else if (currentStep === "admin") {
@@ -296,12 +293,12 @@ export default function OnboardWizard() {
       if (!adminPassword.trim()) e.adminPassword = "Required";
       if (Object.keys(e).length) {
         setErrors(e);
-        push({ title: "Validation Error", description: "Admin name, email, and password are required.", variant: "destructive" });
+        push({ title: "A few details needed", description: "Admin name, email, and password are required.", variant: "destructive" });
         return false;
       }
       if (adminPassword.length < 8) {
         setErrors({ adminPassword: "Must be at least 8 characters" });
-        push({ title: "Validation Error", description: "Password must be at least 8 characters.", variant: "destructive" });
+        push({ title: "Password too short", description: "Password must be at least 8 characters.", variant: "destructive" });
         return false;
       }
     }
@@ -311,10 +308,10 @@ export default function OnboardWizard() {
 
   function goNext() {
     if (!validateStep(step)) return;
-    // On the identity step, refuse to advance past a known-bad subdomain so the
+    // On the chapter step, refuse to advance past a known-bad subdomain so the
     // user fixes it here instead of at the final Launch. (Mirrors the disabled
     // Continue button; this guards the keyboard/Enter path too.)
-    if (step === "identity" && subdomainBlocks) {
+    if (step === "chapter" && subdomainBlocks) {
       setErrors((prev) => ({
         ...prev,
         subdomain:
@@ -587,18 +584,20 @@ export default function OnboardWizard() {
         {/* Step chips, over a connecting spine. */}
         <div className="relative mt-3">
           {/* Spine: a faint base line + an emerald progress line tracing completed
-              steps. Inset so it spans between chip centers, behind the chips. */}
-          <div className="pointer-events-none absolute inset-x-[8.33%] top-[22px] -z-0 h-0.5 rounded-full bg-white/[0.07]" aria-hidden="true" />
+              steps. Inset to the first/last chip CENTERS so it spans between them,
+              behind the chips. With 4 equal columns the centers sit at 12.5% and
+              87.5%, so we inset by 12.5% (1/8). */}
+          <div className="pointer-events-none absolute inset-x-[12.5%] top-[22px] -z-0 h-0.5 rounded-full bg-white/[0.07]" aria-hidden="true" />
           <motion.div
-            className="pointer-events-none absolute left-[8.33%] top-[22px] -z-0 h-0.5 origin-left rounded-full bg-gradient-to-r from-emerald-400/70 to-sky-400/60"
-            style={{ right: "8.33%" }}
+            className="pointer-events-none absolute left-[12.5%] top-[22px] -z-0 h-0.5 origin-left rounded-full bg-gradient-to-r from-emerald-400/70 to-sky-400/60"
+            style={{ right: "12.5%" }}
             initial={false}
             animate={{ scaleX: STEPS.length > 1 ? stepIndex / (STEPS.length - 1) : 0 }}
             transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
             aria-hidden="true"
           />
 
-          <ol className="relative z-[1] grid grid-cols-6 gap-1.5 sm:gap-3" role="list" aria-label="Setup steps">
+          <ol className="relative z-[1] grid grid-cols-4 gap-2 sm:gap-3" role="list" aria-label="Setup steps">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const current = s.id === step;
@@ -683,8 +682,18 @@ export default function OnboardWizard() {
         </div>
       </div>
 
-      {/* Two-column: wizard + live preview */}
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
+      {/* Layout — the editable live preview is CHAPTER-specific, so it only joins
+          as a second column on that stage. Pricing / Admin / Launch render the
+          wizard alone in a centered, focused column so each of those stages feels
+          calm and uncluttered (no irrelevant device mock competing for the eye). */}
+      <div
+        className={cn(
+          "grid items-start gap-6",
+          step === "chapter"
+            ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]"
+            : "mx-auto max-w-3xl grid-cols-1"
+        )}
+      >
         {/* Wizard card */}
         <GlassPanel>
           {/* Cursor-tracking glow for fine-pointer devices only (no-op on touch /
@@ -729,7 +738,7 @@ export default function OnboardWizard() {
                   transition={reduce ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   className="will-change-transform"
                 >
-              {step === "identity" && (
+              {step === "chapter" && (
                 <div className="space-y-5">
                   {/* ── Fast path: pick a school + org to auto-theme everything ── */}
                   <div className="relative overflow-hidden rounded-2xl border border-blue-400/25 bg-gradient-to-b from-blue-500/[0.09] to-white/[0.02] p-4 shadow-inner sm:p-5">
@@ -792,15 +801,22 @@ export default function OnboardWizard() {
                   <div className="flex items-center gap-3" aria-hidden="true">
                     <span className="h-px flex-1 bg-white/10" />
                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Or edit details
+                      Or enter the essentials
                     </span>
                     <span className="h-px flex-1 bg-white/10" />
                   </div>
 
+                  {/* ── The four essentials ─────────────────────────────────────
+                      Slimmed from the old field-wall to exactly what a valid,
+                      on-brand launch needs: a subdomain, the org name, the
+                      chapter's Greek letters, and the school. The pickers above
+                      auto-fill most of these; anything left blank can be typed
+                      here. Everything else lives in the optional expander below so
+                      this surface stays calm — no dense blotchy wall. */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <WField
-                        label="Desired Subdomain"
+                        label="Choose your subdomain"
                         value={subdomain}
                         onChange={setSubdomain}
                         placeholder="phisig-usc"
@@ -818,69 +834,90 @@ export default function OnboardWizard() {
                         }
                       />
                     </div>
-                    <WField label="Organization Name (Full)" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
-                    <WField label="Organization Name (Short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
-                    <WField
-                      label="Organization Letters (Glyphs/Abbr)"
-                      value={fraternityLetters}
-                      onChange={setFraternityLetters}
-                      placeholder="ΦΣΚ"
-                      glyphInsert={(g) => appendGlyph(setFraternityLetters, fraternityLetters, g)}
-                    />
-                    <WField label="Greek Letters (Chapter Name)" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
-                    <WField
-                      label="Greek Letters (Glyphs)"
-                      value={greekLettersGlyphs}
-                      onChange={setGreekLettersGlyphs}
-                      placeholder="ΓΤ"
-                      glyphInsert={(g) => appendGlyph(setGreekLettersGlyphs, greekLettersGlyphs, g)}
-                    />
-                    <WField label="School / University" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
-                    <WField label="School Abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
-                    <WField label="Chapter Charter Year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
-                    <WField label="Organization Founding Year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
-                  </div>
-                </div>
-              )}
-
-              {step === "brand" && (
-                <div className="space-y-5">
-                  <p className="text-sm leading-relaxed text-slate-300">
-                    Pick your colors and watch the preview update live. These propagate across
-                    your entire site the moment you launch.
-                  </p>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <WColor label="Primary Theme Color" value={primaryColor} onChange={setPrimaryColor} fallback="#C8102E" error={errors.primaryColor} />
-                    <WColor label="Dark Gradient/Text Color" value={darkColor} onChange={setDarkColor} fallback="#A20D26" error={errors.darkColor} />
-                    <WColor label="Soft Background Tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" error={errors.softColor} />
+                    <WField label="Organization name" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
+                    <WField label="Chapter Greek letters" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
+                    <div className="sm:col-span-2">
+                      <WField label="School / university" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
+                    </div>
                   </div>
 
-                  {/* Quick-pick brand color presets — sets primary + auto-suggests dark/soft */}
-                  <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
+                  {/* ── Optional: fine-tune everything else ──────────────────────
+                      The long-tail identity, brand-color, and contact fields,
+                      tucked behind one expander so they're available without
+                      crowding the default view. All optional — sensible defaults
+                      and the live preview cover anyone who skips this. */}
+                  <details className="group rounded-xl border border-white/10 bg-white/[0.02]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60">
+                      <span className="flex items-center gap-2">
+                        <IconSettingsGear className="h-4 w-4 text-sky-300" aria-hidden="true" />
+                        Fine-tune details
+                        <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          Optional
+                        </span>
+                      </span>
+                      <IconArrowRight className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-90" aria-hidden="true" />
+                    </summary>
+                    <div className="space-y-6 border-t border-white/10 p-4 sm:p-5">
+                      {/* Extra identity fields */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Identity</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <WField label="Organization name (short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+                          <WField label="School abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
+                          <WField
+                            label="Organization letters (glyphs)"
+                            value={fraternityLetters}
+                            onChange={setFraternityLetters}
+                            placeholder="ΦΣΚ"
+                            glyphInsert={(g) => appendGlyph(setFraternityLetters, fraternityLetters, g)}
+                          />
+                          <WField
+                            label="Chapter letters (glyphs)"
+                            value={greekLettersGlyphs}
+                            onChange={setGreekLettersGlyphs}
+                            placeholder="ΓΤ"
+                            glyphInsert={(g) => appendGlyph(setGreekLettersGlyphs, greekLettersGlyphs, g)}
+                          />
+                          <WField label="Chapter charter year" value={charterYear} onChange={setCharterYear} placeholder="1975" />
+                          <WField label="Organization founding year" value={foundingYear} onChange={setFoundingYear} placeholder="1873" />
+                        </div>
+                      </div>
 
-                  <div className="rounded-xl border border-sky-400/15 bg-sky-500/[0.06] p-3.5">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-sky-100">
-                      <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Edit your headline &amp; tagline live
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-300">
-                      Click the headline, chapter name, or tagline right on the preview{" "}
+                      {/* Brand colors (also editable live on the preview) */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Brand colors</p>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <WColor label="Primary" value={primaryColor} onChange={setPrimaryColor} fallback="#C8102E" />
+                          <WColor label="Dark / text" value={darkColor} onChange={setDarkColor} fallback="#A20D26" />
+                          <WColor label="Soft tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" />
+                        </div>
+                        <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
+                      </div>
+
+                      {/* Contact + social (optional) */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Recruitment contact &amp; social</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <WField label="Recruitment email" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" />
+                          <WField label="Recruitment phone" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" />
+                          <WField label="Instagram handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" />
+                          <WField label="Instagram URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" />
+                          <WField label="Chapter house address" value={address} onChange={setAddress} placeholder="1525 College Street" />
+                          <WField label="City, state & ZIP" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+
+                  {/* Gentle nudge to the live preview (mobile shows it below; desktop to the side). */}
+                  <p className="flex items-center gap-1.5 rounded-xl border border-sky-400/15 bg-sky-500/[0.06] px-3 py-2.5 text-xs text-slate-300">
+                    <IconSpark className="h-3.5 w-3.5 shrink-0 text-amber-400" aria-hidden="true" />
+                    <span>
+                      Tip: edit your headline, name, and colors right on the live preview{" "}
                       <span className="lg:hidden">below</span>
-                      <span className="hidden lg:inline">on the right</span> to make it yours. Leave them
-                      as-is to use our polished defaults — you can refine everything later in
-                      Admin&nbsp;→&nbsp;Settings.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {step === "contact" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <WField label="Recruitment Email Address" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" error={errors.rushEmail} required />
-                  <WField label="Recruitment Phone Number" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" />
-                  <WField label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" />
-                  <WField label="Instagram Profile URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" />
-                  <WField label="Chapter House Address" value={address} onChange={setAddress} placeholder="1525 College Street" />
-                  <WField label="City, State & Zip Code" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
+                      <span className="hidden lg:inline">on the right</span> — it updates instantly.
+                    </span>
+                  </p>
                 </div>
               )}
 
@@ -969,6 +1006,12 @@ export default function OnboardWizard() {
                       <span className="font-semibold text-white">{PLAN_SUMMARY[plan]}</span>.
                     </span>
                   </p>
+
+                  {/* ── Optional: book a 15-min call with the owner (Cal.com) ─────
+                      Embeds the booker when NEXT_PUBLIC_CAL_LINK is set; otherwise
+                      shows a tasteful "we'll reach out / skip" card — never a
+                      broken embed. Always optional; the site is already live. */}
+                  <BookACall />
                 </div>
               )}
                 </motion.div>
@@ -997,7 +1040,7 @@ export default function OnboardWizard() {
                       variant="platform"
                       size="lg"
                       onClick={goNext}
-                      disabled={busy || (step === "identity" && subdomainBlocks)}
+                      disabled={busy || (step === "chapter" && subdomainBlocks)}
                       className="gs-sheen"
                     >
                       Continue <IconArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -1032,27 +1075,31 @@ export default function OnboardWizard() {
           </div>
         </GlassPanel>
 
-        {/* Live preview — fully editable in real time (colors, name, hero copy). */}
-        <EditableLivePreview
-          fraternityName={fraternityName}
-          onFraternityName={setFraternityName}
-          greekLetters={greekLetters}
-          greekLettersGlyphs={greekLettersGlyphs}
-          fraternityLetters={fraternityLetters}
-          schoolName={schoolName}
-          schoolShort={schoolShort}
-          primaryColor={primaryColor}
-          onPrimaryColor={setPrimaryColor}
-          darkColor={darkColor}
-          onDarkColor={setDarkColor}
-          softColor={softColor}
-          onSoftColor={setSoftColor}
-          heroHeadline={heroHeadline}
-          onHeroHeadline={setHeroHeadline}
-          heroTagline={heroTagline}
-          onHeroTagline={setHeroTagline}
-          subdomain={subdomain}
-        />
+        {/* Live preview — fully editable in real time (colors, name, hero copy).
+            Only mounted on the Chapter stage, where the founder is actively
+            shaping their site; it animates in/out with the stage change. */}
+        {step === "chapter" && (
+          <EditableLivePreview
+            fraternityName={fraternityName}
+            onFraternityName={setFraternityName}
+            greekLetters={greekLetters}
+            greekLettersGlyphs={greekLettersGlyphs}
+            fraternityLetters={fraternityLetters}
+            schoolName={schoolName}
+            schoolShort={schoolShort}
+            primaryColor={primaryColor}
+            onPrimaryColor={setPrimaryColor}
+            darkColor={darkColor}
+            onDarkColor={setDarkColor}
+            softColor={softColor}
+            onSoftColor={setSoftColor}
+            heroHeadline={heroHeadline}
+            onHeroHeadline={setHeroHeadline}
+            heroTagline={heroTagline}
+            onHeroTagline={setHeroTagline}
+            subdomain={subdomain}
+          />
+        )}
       </div>
     </div>
   );
@@ -1073,13 +1120,14 @@ const stepVariants = {
 
 /* ── Pricing step ──────────────────────────────────────────────────────────── */
 
-type PlanId = "monthly" | "semester" | "dues_percentage";
+type PlanId = "monthly" | "semester" | "dues_percentage" | "custom";
 
 /* One-line plan label reused in the launch summary + the "no card required" note. */
 const PLAN_SUMMARY: Record<PlanId, string> = {
-  monthly: "Base — $29/mo (first month free)",
-  semester: "Base — $129 / semester",
+  monthly: "Base — $50/mo (first month free)",
+  semester: "Base — $250 / semester",
   dues_percentage: "Dues-share — $0 upfront",
+  custom: "Custom — tailored quote",
 };
 
 /**
@@ -1101,7 +1149,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-slate-300">
-        Pick the plan that fits your chapter. You can launch on any option with{" "}
+        First, pick the plan that fits your chapter. You can launch on any option with{" "}
         <span className="font-semibold text-white">no card required</span> — switch or add a
         payment method later from Admin&nbsp;→&nbsp;Billing.
       </p>
@@ -1120,12 +1168,19 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
           title="Base"
           recommended
           headline={
-            <>
-              <span className="text-3xl font-extrabold text-white">$29</span>
-              <span className="text-sm font-semibold text-slate-400">/mo</span>
-            </>
+            plan === "semester" ? (
+              <>
+                <span className="text-3xl font-extrabold text-white">$250</span>
+                <span className="text-sm font-semibold text-slate-400">/semester</span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-white">$50</span>
+                <span className="text-sm font-semibold text-slate-400">/mo</span>
+              </>
+            )
           }
-          highlight="First month free"
+          highlight={plan === "semester" ? "Save ~17% vs monthly" : "First month free"}
           features={[
             "Everything included — recruitment, dues, events, roster, compliance",
             "Cancel anytime, no contract",
@@ -1146,7 +1201,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
               }}
               icon={IconCalendar}
               title="Monthly"
-              sub="$29/mo · 1st mo free"
+              sub="$50/mo · 1st mo free"
             />
             <CadencePill
               active={plan === "semester"}
@@ -1156,7 +1211,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
               }}
               icon={IconCalendar}
               title="Per semester"
-              sub="$129 / sem · save ~26%"
+              sub="$250 / sem · save ~17%"
             />
           </div>
         </PlanCard>

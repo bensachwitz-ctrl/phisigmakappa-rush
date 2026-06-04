@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
@@ -30,9 +32,7 @@ import {
   IconEvents,
   IconShieldCheck,
   IconRoles,
-  IconSafety,
   IconWhiteLabel,
-  IconAlumni,
   IconCheck,
   IconCheckCircle,
   IconArrowRight,
@@ -41,8 +41,9 @@ import {
   IconDashboard,
   IconGrowth,
   IconSecurity,
-  IconComms,
   IconChevronDown,
+  IconMenu,
+  IconClose,
   type IconProps,
 } from "@/components/brand/icons";
 // Bespoke marketing/pricing glyphs — imported DIRECTLY (not via the barrel) per
@@ -58,6 +59,26 @@ import {
   IconUnlimited,
   IconPayout,
 } from "@/components/brand/icons/marketing";
+// Bespoke feature glyphs for the (now larger, interactive) feature grid —
+// imported DIRECTLY per the brief so the grid stays 100% custom (zero lucide).
+import {
+  IconChat,
+  IconAlumniNetwork,
+  IconTreasury,
+} from "@/components/brand/icons/feature-extras";
+import {
+  FeatureDetailModal,
+  type FeatureDetail,
+} from "@/components/site/feature-detail-modal";
+import {
+  PreviewRecruitment,
+  PreviewDues,
+  PreviewEvents,
+  PreviewRoles,
+  PreviewWhiteLabel,
+  PreviewChat,
+  PreviewAlumni,
+} from "@/components/site/feature-previews";
 
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
 type GsIcon = (props: IconProps) => React.JSX.Element;
@@ -106,43 +127,127 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-const FEATURES: { icon: GsIcon; title: string; desc: string; span?: boolean }[] = [
+/* The feature cards ("squares"). Each is now a FeatureDetail: the grid shows the
+   icon + title + short `desc`, and clicking a card opens <FeatureDetailModal>
+   with the richer `long` copy, capability `bullets`, and an in-app `preview`
+   mockup. `wide` cards span two columns on large screens so the grid breathes
+   and the hero features read bigger. The "Anti-hazing & incident reporting" card
+   was REMOVED per the brief and replaced with the real "Chapter chat" feature so
+   the grid stays full + balanced. */
+const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   {
     icon: IconRecruitment,
+    eyebrow: "Recruitment",
     title: "Recruitment pipeline",
-    desc: "QR check-in for PNMs, a Kanban rush funnel, anonymous brother voting, and double-opt-in SMS that texts rushees the schedule the moment events go live.",
-    span: true,
+    desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS — your whole recruitment cycle in one board.",
+    long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and the moment you publish an event the platform texts rushees the schedule — with double opt-in consent captured for you.",
+    bullets: [
+      "Drag-and-drop Kanban funnel from interest → bid",
+      "QR check-in that builds the PNM list automatically",
+      "Anonymous brother voting with running vote sums",
+      "TCPA-compliant double opt-in SMS to rushees",
+    ],
+    preview: <PreviewRecruitment />,
+    wide: true,
   },
   {
     icon: IconDues,
+    eyebrow: "Finance",
     title: "Automated dues",
     desc: "Stripe-powered dues with treasurer payouts, auto-reconciled ledgers, reminders, and payment plans — collected without the group-chat nagging.",
+    long: "Stop chasing dues in the group chat. Members pay by card, money lands straight in your chapter's connected Stripe account, and the ledger reconciles itself. Set up payment plans, automatic reminders, and late tracking once — then let it run.",
+    bullets: [
+      "Card payments via Stripe Connect, paid out to your account",
+      "Self-reconciling ledger — always know who owes what",
+      "Payment plans + automatic reminders",
+      "No Greekstack markup on top of Stripe's standard rate",
+    ],
+    preview: <PreviewDues />,
   },
   {
     icon: IconEvents,
+    eyebrow: "Calendar",
     title: "Events & calendar",
     desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
+    long: "Every meeting, social, mixer, and service event in one shared calendar. Members RSVP, you take attendance with a tap, and required-event tracking rolls up automatically. One click syncs the whole calendar to Google, iCloud, or Outlook.",
+    bullets: [
+      "RSVP + live attendance with roster check-in",
+      "Required-event tracking that rolls up per member",
+      "Service-hour logging for standards",
+      "One-click sync to Google / iCloud / Outlook",
+    ],
+    preview: <PreviewEvents />,
+  },
+  {
+    icon: IconTreasury,
+    eyebrow: "Treasury",
+    title: "Treasury & budgets",
+    desc: "Chapter budgets, ledgers, and expense tracking in one place — every dollar in and out, reconciled against dues automatically.",
+    long: "Give your treasurer a real back office. Build a semester budget by line item, log and categorize expenses, and watch spend track against budget in real time — all reconciled against the dues coming in so the books are always current.",
+    bullets: [
+      "Line-item semester budgets with live spend tracking",
+      "Categorized expense logging + receipts",
+      "Reconciles against incoming dues automatically",
+      "Clean exports for the next treasurer or nationals",
+    ],
+    preview: <PreviewDues />,
   },
   {
     icon: IconRoles,
-    title: "Officer RBAC",
+    eyebrow: "Permissions",
+    title: "Officer roles & access",
     desc: "Granular role-based access for President, Treasurer, Recruitment, and Risk — everyone sees exactly what they should, nothing more.",
+    long: "Officers get exactly the tools their job needs and nothing else. Role-based access control scopes every screen and action, so a Recruitment chair never sees the treasury and a new e-board hands off cleanly each year.",
+    bullets: [
+      "Preset roles: President, Treasurer, Recruitment, Risk & more",
+      "Every screen + action scoped by permission",
+      "Clean year-over-year e-board handoff",
+      "Full audit trail of officer actions",
+    ],
+    preview: <PreviewRoles />,
   },
   {
-    icon: IconSafety,
-    title: "Anti-hazing & incident reporting",
-    desc: "A zero-tolerance, anonymous incident intake with an audit log and mandatory officer acknowledgments — compliance you can actually prove.",
+    icon: IconChat,
+    eyebrow: "Community",
+    title: "Chapter chat",
+    desc: "Real-time announcements and group chat built right in — replace the scattered GroupMe with one channel tied to your roster.",
+    long: "Keep the whole chapter in one place. Built-in real-time chat and announcement channels are tied to your actual roster and officer roles, so the right people see the right messages — no more managing a tangle of side group chats.",
+    bullets: [
+      "Real-time chat + broadcast announcement channels",
+      "Tied to your roster — new members are added automatically",
+      "Officer-only and committee channels",
+      "Read on web or mobile, push when it matters",
+    ],
+    preview: <PreviewChat />,
   },
   {
     icon: IconWhiteLabel,
+    eyebrow: "Branding",
     title: "White-label branding",
     desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
+    long: "It's your chapter's platform, not ours. Drop in your letters, colors, and crest and the entire site — every page, email, member portal, and your own subdomain — re-skins instantly. No rebuild, no agency, no developer required.",
+    bullets: [
+      "Your letters, colors & crest applied site-wide",
+      "Custom subdomain for your chapter",
+      "Branded emails + member portal",
+      "Re-theme in seconds from the admin panel",
+    ],
+    preview: <PreviewWhiteLabel />,
   },
   {
-    icon: IconAlumni,
+    icon: IconAlumniNetwork,
+    eyebrow: "Alumni",
     title: "Alumni & donations",
     desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
-    span: true,
+    long: "Turn graduated brothers into a living network and a recurring giving base. A searchable alumni directory, secure gated onboarding, and Stripe-powered donation flows make it easy to stay connected and easy for alumni to give back.",
+    bullets: [
+      "Searchable alumni directory by class year",
+      "Secure single-use onboarding invites",
+      "Stripe donation + recurring-giving flows",
+      "Giving totals and engagement at a glance",
+    ],
+    preview: <PreviewAlumni />,
+    wide: true,
   },
 ];
 
@@ -191,10 +296,10 @@ const GREEK_GLYPHS = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split(""
 /* ── Pricing ──────────────────────────────────────────────────────────────
    THREE honest ways to pay for the SAME full platform — buyers pick the model
    that fits how their chapter thinks about money, not a stripped-down tier:
-     1. BASE PLATFORM — flat $29/mo, FIRST MONTH FREE (or $129/semester).
+     1. BASE PLATFORM — flat $50/mo, FIRST MONTH FREE (or $250/semester).
      2. DUES-SHARE   — $0 upfront; Greekstack takes a small % of dues (1.5% the
         first semester, then 3%). "Pay as your chapter pays."
-     3. CUSTOM BUILD — a tailored system on a custom base fee → talk to us.
+     3. CUSTOM BUILD — a tailored system on a custom base fee → /contact#custom.
    Every method unlocks the entire product (same features, same support); the
    "Dues-share" card is the recommended/most-popular one and wears the shimmer
    ring. All CTAs route real (/onboard, /contact#custom). */
@@ -202,7 +307,7 @@ type Plan = {
   id: string;
   name: string;
   icon: GsIcon;
-  /** Big headline price, e.g. "$29" / "0%" / "Custom". */
+  /** Big headline price, e.g. "$50" / "1.5%" / "Custom". */
   price: string;
   /** Small unit beside the price, e.g. "/month". */
   unit?: string;
@@ -223,16 +328,16 @@ const PLANS: Plan[] = [
     id: "base",
     name: "Base platform",
     icon: IconPlanBase,
-    price: "$29",
+    price: "$50",
     unit: "/month",
-    priceNote: "First month free · or $129/semester",
+    priceNote: "First month free · or $250/semester",
     tagline: "One flat price for your whole white-label site.",
     highlights: [
       "Predictable flat monthly bill — easy to budget",
-      "Switch to a semester plan and save",
+      "Go semester at $250 and save vs. monthly",
     ],
     cta: { label: "Start free month", href: "/onboard" },
-    fineprint: "No card to start · cancel anytime",
+    fineprint: "First month free · cancel anytime",
   },
   {
     id: "dues-share",
@@ -271,14 +376,14 @@ const PLANS: Plan[] = [
 const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconRecruitment, label: "Recruitment pipeline — QR check-in, Kanban funnel & anonymous voting" },
   { icon: IconPayout, label: "Automated dues with Stripe Connect treasurer payouts" },
-  { icon: IconGrowth, label: "Treasury — budgets, ledgers & expense tracking" },
+  { icon: IconTreasury, label: "Treasury — budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
-  { icon: IconSafety, label: "Anti-hazing reporting & TCPA-compliant SMS comms" },
+  { icon: IconChat, label: "Chapter chat & announcement channels tied to your roster" },
   { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
-  { icon: IconAlumni, label: "Alumni directory & Stripe donation flows" },
+  { icon: IconAlumniNetwork, label: "Alumni directory & Stripe donation flows" },
   { icon: IconUnlimited, label: "Unlimited members & officers — never priced per seat" },
-  { icon: IconShieldCheck, label: "Isolated tenant data, audit trails & honest no-markup processing" },
+  { icon: IconShieldCheck, label: "TCPA-compliant SMS, isolated tenant data & no-markup processing" },
 ];
 
 /* ── FAQ ──────────────────────────────────────────────────────────────────
@@ -295,7 +400,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "Greekstack is $29/month flat. Card processing runs on Stripe, which charges its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share (1.5% of dues your first semester, then 3%). Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -346,6 +451,7 @@ function SiteNav() {
   // Condense the header (tighter height + stronger blur/shadow) after the user
   // scrolls past the hero fold. Passive listener; no layout thrash.
   const [scrolled, setScrolled] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -359,54 +465,82 @@ function SiteNav() {
         // Frosted-glass header: .gs-glass-nav supplies the translucent base +
         // heavier backdrop-blur + saturation. We keep a scroll-reactive border +
         // shadow on top so the bar gains definition once the page scrolls under
-        // it, and stays nearly borderless over the hero.
+        // it, and stays nearly borderless over the hero. A hairline blue→sky→gold
+        // bottom edge fades in on scroll for a premium "lit" seam.
         "gs-glass-nav sticky top-0 z-50 w-full border-b transition-all duration-300 " +
         (scrolled
           ? "border-border/60 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)]"
           : "border-transparent shadow-none")
       }
     >
+      {/* Lit bottom seam — fades in once the page scrolls under the bar. */}
+      <div
+        aria-hidden="true"
+        className={
+          "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent transition-opacity duration-300 " +
+          (scrolled ? "opacity-100" : "opacity-0")
+        }
+      />
       <div
         className={
-          "container flex items-center justify-between transition-all duration-300 " +
+          // gap-4+ between the wordmark and the nav so the lockup never crowds the
+          // links; min-w-0 lets the center nav shrink gracefully before anything
+          // would wrap (it collapses into the sheet well before that point).
+          "container flex items-center gap-4 transition-all duration-300 " +
           (scrolled ? "h-14" : "h-16")
         }
       >
-        <Link href="/" className="group flex items-center" aria-label="Greekstack home">
+        {/* Brand lockup — never shrinks. */}
+        <Link href="/" className="group flex shrink-0 items-center" aria-label="Greekstack home">
           {/* The "Keystone Stack" wordmark lockup — mark + "Greek"(ink)/"stack"
               (gradient), so the name itself encodes the brand split. The mark
-              tilts on hover for a touch of life. */}
+              tilts on hover for a touch of life. A separate agent owns the mark;
+              we only lay it out. */}
           <GreekstackWordmark
             size="md"
             markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+
+        {/* Center nav — lives on lg+ ONLY so the long primary CTA + Sign-in never
+            collide with the links at the 1024 breakpoint (where they used to
+            wrap). On md-and-below the links move into the sheet menu. The
+            min-w-0 + justify-center keep it optically centered without pushing
+            the actions off-screen. */}
+        <nav
+          className="hidden min-w-0 flex-1 items-center justify-center gap-7 lg:flex xl:gap-9"
+          aria-label="Primary"
+        >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group relative whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
               {/* Animated underline that wipes in from the left on hover/focus. */}
               <span
                 aria-hidden="true"
-                className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
+                className="absolute -bottom-1.5 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
               />
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex">
+
+        {/* Right actions. On lg+ this sits after the centered nav; below lg the
+            nav is gone so this group is pushed to the end with ms-auto. */}
+        <div className="flex shrink-0 items-center gap-2 lg:ms-0 ms-auto">
+          <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex">
             <Link href="/contact#book">Book a call</Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/admin/login">Sign in</Link>
           </Button>
-          <Magnetic strength={12} innerStrength={4} radius={70}>
+          {/* Primary CTA — full label on sm+, compact "Get started" on the
+              tightest phones so it never wraps next to the hamburger. */}
+          <Magnetic strength={12} innerStrength={4} radius={70} className="hidden sm:inline-flex">
             <ShimmerBorder rounded="rounded-md">
-              <Button asChild variant="platform" size="sm" className="gs-sheen">
+              <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
                 <Link href="/onboard" className="group/btn">
                   Create your chapter site
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
@@ -414,9 +548,158 @@ function SiteNav() {
               </Button>
             </ShimmerBorder>
           </Magnetic>
+          <ShimmerBorder rounded="rounded-md" className="sm:hidden">
+            <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
+              <Link href="/onboard">Get started</Link>
+            </Button>
+          </ShimmerBorder>
+
+          {/* Hamburger — shown on lg-and-below (everything the nav can't fit
+              lives in the sheet). 44px touch target. */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={menuOpen}
+            aria-haspopup="dialog"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/70 text-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 lg:hidden"
+          >
+            <IconMenu className="h-5 w-5" />
+          </button>
         </div>
       </div>
+
+      {/* Mobile / tablet sheet menu. */}
+      <MobileNavSheet open={menuOpen} onClose={() => setMenuOpen(false)} />
     </header>
+  );
+}
+
+/* The slide-in sheet that holds the full nav + auth links + CTA on md-and-below.
+   Closes on Escape, backdrop click, and any link tap. Locks body scroll while
+   open (scrollbar-width compensated → no CLS) and moves focus into the panel,
+   restoring it to the trigger on close. Spring entrance via framer; collapses to
+   an instant show/hide under prefers-reduced-motion. */
+function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const reduce = useReducedMotion();
+  const [mounted, setMounted] = React.useState(false);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => setMounted(true), []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const { body, documentElement: html } = document;
+    const scrollbar = window.innerWidth - html.clientWidth;
+    const prevOverflow = body.style.overflow;
+    const prevPad = body.style.paddingRight;
+    body.style.overflow = "hidden";
+    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusTimer = window.setTimeout(() => {
+      const panel = panelRef.current;
+      const first = panel?.querySelector<HTMLElement>('a, button');
+      (first ?? panel)?.focus();
+    }, 0);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.paddingRight = prevPad;
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus?.();
+    };
+  }, [open, onClose]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="mobile-nav"
+          className="fixed inset-0 z-[90] lg:hidden"
+          initial={reduce ? false : { opacity: 0 }}
+          animate={reduce ? {} : { opacity: 1 }}
+          exit={reduce ? {} : { opacity: 0 }}
+          transition={{ duration: 0.18 }}
+        >
+          {/* Backdrop */}
+          <button
+            type="button"
+            aria-label="Close menu"
+            tabIndex={-1}
+            onClick={onClose}
+            className="absolute inset-0 cursor-default bg-slate-950/45 backdrop-blur-sm"
+          />
+          {/* Panel — slides in from the right, full-height, frosted. */}
+          <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            tabIndex={-1}
+            initial={reduce ? false : { x: "100%" }}
+            animate={reduce ? {} : { x: 0 }}
+            exit={reduce ? {} : { x: "100%" }}
+            transition={{ type: "spring", stiffness: 380, damping: 38 }}
+            className="absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col gs-glass-nav bg-card/95 shadow-[-20px_0_60px_-20px_rgba(15,23,42,0.4)] outline-none"
+          >
+            {/* lit left edge */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-blue-500/0 via-sky-400/60 to-amber-400/0"
+            />
+            <div className="flex h-16 items-center justify-between border-b border-border px-5">
+              <GreekstackWordmark size="sm" />
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close menu"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+              >
+                <IconClose className="h-5 w-5" />
+              </button>
+            </div>
+
+            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Mobile">
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={onClose}
+                  className="group flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                >
+                  {l.label}
+                  <IconArrowRight className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5" />
+                </Link>
+              ))}
+            </nav>
+
+            <div className="space-y-2.5 border-t border-border px-5 py-5">
+              <Button asChild variant="platform" size="lg" className="gs-sheen w-full">
+                <Link href="/onboard" onClick={onClose} className="group/btn">
+                  Create your chapter site
+                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                </Link>
+              </Button>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Button asChild variant="outline" size="lg" className="w-full">
+                  <Link href="/admin/login" onClick={onClose}>Sign in</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="w-full">
+                  <Link href="/contact#book" onClick={onClose}>Book a call</Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 }
 
@@ -506,7 +789,7 @@ function Hero() {
               jumps to the pricing section. Anchored, crawlable, AA-contrast. */}
           <p className="mt-3 text-sm text-muted-foreground animate-slide-up [animation-delay:400ms]">
             From{" "}
-            <span className="font-semibold text-foreground">$29/mo with the first month free</span>,
+            <span className="font-semibold text-foreground">$50/mo with the first month free</span>,
             a{" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               $0-upfront dues-share
@@ -695,7 +978,7 @@ function TrustBar() {
     { icon: IconSubdomain, label: "Custom subdomain per chapter" },
     { icon: IconSecurity, label: "Isolated, secure tenant data" },
     { icon: IconDues, label: "Stripe dues & payouts built in" },
-    { icon: IconShieldCheck, label: "Anti-hazing audit trail" },
+    { icon: IconShieldCheck, label: "TCPA-compliant SMS & audit trail" },
   ];
   return (
     <section className="border-b border-border bg-secondary/30" aria-label="Highlights">
@@ -721,6 +1004,12 @@ function TrustBar() {
 /* ──────────────────────────── Features ──────────────────────────── */
 
 function Features() {
+  // Which feature's detail modal is open (null = closed). The cards are real
+  // buttons that set this; <FeatureDetailModal> reads it and handles all the
+  // a11y (focus-trap, esc, restore).
+  const [openIdx, setOpenIdx] = React.useState<number | null>(null);
+  const active = openIdx == null ? null : FEATURES[openIdx];
+
   return (
     <section id="features" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
       {/* Faint masked grid band for depth behind the feature cards. Decorative
@@ -746,39 +1035,72 @@ function Features() {
             Recruitment to alumni giving — the tools your officers actually need, in a single
             branded system instead of a dozen spreadsheets and group chats.
           </p>
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/[0.06] px-4 py-1.5 text-xs font-medium text-blue-800">
+            <IconSpark className="h-3.5 w-3.5" accent="#38bdf8" />
+            Tap any feature to see it inside the app
+          </p>
         </Reveal>
 
-        {/* Bento grid: each card is a cursor-tracking 3D tilt card, revealed in a
-            staggered 3D sequence as the grid scrolls into view. */}
+        {/* Bigger, generously-spaced bento grid. Two columns on large screens so
+            each card is wide and roomy (the brief's "make the squares bigger");
+            `wide` cards span the full row for rhythm. Equal-height rows via
+            auto-rows-fr. Each card is a cursor-tracking 3D tilt card revealed in
+            a staggered 3D sequence as the grid scrolls into view. */}
         <Reveal3D
-          stagger={0.08}
-          className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          stagger={0.07}
+          className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:auto-rows-fr"
         >
-          {FEATURES.map((f) => (
+          {FEATURES.map((f, i) => (
             <Reveal3DItem
               key={f.title}
-              className={f.span ? "sm:col-span-2 lg:col-span-1" : ""}
+              className={f.wide ? "sm:col-span-2" : ""}
             >
-              <Tilt3DCard max={8} glareColor="rgba(37,99,235,0.22)" className="h-full rounded-2xl">
-                <FeatureCard {...f} />
+              <Tilt3DCard max={7} glareColor="rgba(37,99,235,0.22)" className="h-full rounded-3xl">
+                <FeatureCard feature={f} wide={f.wide} onOpen={() => setOpenIdx(i)} />
               </Tilt3DCard>
             </Reveal3DItem>
           ))}
         </Reveal3D>
       </div>
+
+      {/* Single shared detail modal — opened by whichever card was clicked. */}
+      <FeatureDetailModal feature={active} open={active != null} onClose={() => setOpenIdx(null)} />
     </section>
   );
 }
 
-function FeatureCard({ icon, title, desc }: { icon: GsIcon; title: string; desc: string }) {
+/* A big, interactive feature "square". It's a real <button> (keyboard + focus
+   for free) that opens the detail modal. Frosted glass + layered depth, with a
+   hover lift, warming border, top-edge light line, corner bloom + gold glint,
+   and a "See inside" affordance that slides in. The 3D tilt comes from the
+   wrapping <Tilt3DCard>. */
+function FeatureCard({
+  feature,
+  wide,
+  onOpen,
+}: {
+  feature: FeatureDetail & { wide?: boolean };
+  wide?: boolean;
+  onOpen: () => void;
+}) {
+  const { icon, title, desc } = feature;
+
+  // The "See inside" affordance, shared by both layouts.
+  const seeInside = (
+    <span className="relative inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition-colors group-hover:text-blue-800">
+      See inside
+      <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+    </span>
+  );
+
   return (
-    // Frosted-glass bento card with layered depth. .gs-glass supplies the
-    // translucent surface + hairline + top inner-highlight + layered shadow;
-    // on hover the card lifts, the border warms to blue, and the shadow deepens
-    // into a blue-tinted ambient glow. Decorative accents (corner bloom, top-
-    // edge gradient line, gold under-glow) are real children so they never
-    // collide with the .gs-glass ::before hairline.
-    <div className="group relative h-full overflow-hidden rounded-2xl gs-glass p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)]">
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-haspopup="dialog"
+      aria-label={`${title} — see details and an in-app preview`}
+      className="group relative flex h-full w-full overflow-hidden rounded-3xl gs-glass p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
+    >
       {/* Thin gradient top-edge that lights up on hover (blue→sky→gold). */}
       <div
         aria-hidden="true"
@@ -787,18 +1109,50 @@ function FeatureCard({ icon, title, desc }: { icon: GsIcon; title: string; desc:
       {/* Decorative corner accent — soft blue→cyan glow that brightens on hover */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
       />
       {/* Gold under-glow that "lights up" from the bottom-left on hover — the
           warm accent the brief asks for, kept very soft so it reads as a glint. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-16 -left-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
       />
-      <IconChip icon={icon} tone="platform" size="md" className="relative transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6" />
-      <h3 className="relative mt-4 text-base font-semibold tracking-tight">{title}</h3>
-      <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-    </div>
+
+      {wide ? (
+        // Wide cards (full-row span) read as a premium horizontal panel: a large
+        // icon block on the left, copy on the right — so the extra width is used
+        // intentionally instead of leaving the right half empty.
+        <div className="relative flex w-full flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
+          <IconChip
+            icon={icon}
+            tone="platform"
+            size="lg"
+            className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+          />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+              {desc}
+            </p>
+            <span className="mt-4 inline-flex">{seeInside}</span>
+          </div>
+        </div>
+      ) : (
+        // Standard cards: vertical, with the affordance pinned to the bottom so
+        // every card in a row aligns.
+        <div className="relative flex h-full w-full flex-col">
+          <IconChip
+            icon={icon}
+            tone="platform"
+            size="lg"
+            className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+          />
+          <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
+          <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+          <span className="mt-auto inline-flex pt-6">{seeInside}</span>
+        </div>
+      )}
+    </button>
   );
 }
 

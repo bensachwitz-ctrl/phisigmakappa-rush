@@ -13,9 +13,9 @@ import { centralDb } from "@/lib/prisma";
  * tenant schema.
  *
  * THREE owner pricing methods + a contact-driven plan (Tenant.plan):
- *   • "monthly"          — Stripe subscription $29/mo, 30-DAY FREE TRIAL (first
+ *   • "monthly"          — Stripe subscription $50/mo, 30-DAY FREE TRIAL (first
  *                          month free). interval=month.
- *   • "semester"         — Stripe subscription ~$129 billed every 6 months
+ *   • "semester"         — Stripe subscription $250 billed every 6 months
  *                          (interval=month, interval_count=6). No trial.
  *   • "dues_percentage"  — NO platform subscription. The chapter is entitled
  *                          always; Greekstack earns via the dues Connect
@@ -59,7 +59,7 @@ export function isSubscriptionPlan(
 /**
  * Normalize a raw `plan` string off a Tenant row / request into a known slug.
  * Unknown/empty/legacy values resolve to "monthly" (the historical default —
- * a $29/mo subscription with a trial), so an unprovisioned or legacy "chapter"
+ * a $50/mo subscription with a trial), so an unprovisioned or legacy "chapter"
  * row keeps the prior behavior.
  */
 export function normalizePlan(plan: string | null | undefined): PlatformPlan {
@@ -77,14 +77,14 @@ export function normalizePlan(plan: string | null | undefined): PlatformPlan {
 
 export const PLATFORM_PLAN_CURRENCY = "usd";
 
-/** MONTHLY plan — $29/mo, 30-day free trial. */
-export const PLATFORM_MONTHLY_PRICE_CENTS = 2900; // $29.00 / mo
+/** MONTHLY plan — $50/mo, 30-day free trial. */
+export const PLATFORM_MONTHLY_PRICE_CENTS = 5000; // $50.00 / mo
 export const PLATFORM_MONTHLY_INTERVAL = "month";
 export const PLATFORM_MONTHLY_INTERVAL_COUNT = 1;
 export const PLATFORM_TRIAL_DAYS = 30; // first month free
 
-/** SEMESTER plan — ~$129 billed every 6 months. No trial. */
-export const PLATFORM_SEMESTER_PRICE_CENTS = 12900; // $129.00 / 6 mo
+/** SEMESTER plan — $250 billed every 6 months. No trial. */
+export const PLATFORM_SEMESTER_PRICE_CENTS = 25000; // $250.00 / 6 mo
 export const PLATFORM_SEMESTER_INTERVAL = "month";
 export const PLATFORM_SEMESTER_INTERVAL_COUNT = 6;
 
@@ -129,7 +129,7 @@ export function planDisplayName(plan: string | null | undefined): string {
   }
 }
 
-/** Short price label for the plan ("$29/mo", "$129 / 6 mo", "1.5% of dues…"). */
+/** Short price label for the plan ("$50/mo", "$250 every 6 months", "1.5% of dues…"). */
 export function planPriceLabel(plan: string | null | undefined): string {
   switch (normalizePlan(plan)) {
     case "semester":

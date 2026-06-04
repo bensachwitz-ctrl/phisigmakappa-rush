@@ -451,13 +451,13 @@ function SwitchPlan({
   const options: { plan: Plan; label: string; icon: React.ReactNode; selfServe: boolean }[] = [
     {
       plan: "monthly",
-      label: "Monthly — $29/mo (first month free)",
+      label: "Monthly — $50/mo (first month free)",
       icon: <CreditCard className="h-4 w-4" />,
       selfServe: true,
     },
     {
       plan: "semester",
-      label: "Semester — $129 every 6 months",
+      label: "Semester — $250 every 6 months",
       icon: <CalendarDays className="h-4 w-4" />,
       selfServe: true,
     },
