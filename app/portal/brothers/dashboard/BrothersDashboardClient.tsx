@@ -40,6 +40,15 @@ import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";
 import { useToast } from "@/components/ui/toast";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import {
+  IllustrationWelcome,
+  IllustrationCalendar,
+  IllustrationInbox,
+  IllustrationLedger,
+  IllustrationSearch,
+  IllustrationRoster,
+  type IllustrationProps,
+} from "@/components/brand/illustrations";
 
 // Interfaces to ensure strict type safety matching the server page props
 interface Brother {
@@ -236,28 +245,37 @@ function parsePollOptions(raw: string): { id: string; label: string }[] {
 }
 
 /**
- * Designed empty-state for the brother portal — a soft maroon icon medallion
- * with a glow, a headline, and a sub. Keeps the portal's cream/maroon identity
- * (the platform <IconChip> is indigo-toned and would clash here) while making
- * blank tabs feel intentional rather than unfinished.
+ * Designed empty-state for the brother portal — a bespoke, on-brand SPOT
+ * ILLUSTRATION (a small maroon-tinted scene that re-themes via currentColor)
+ * with the section icon tucked into a soft maroon medallion badge, a headline,
+ * and a sub. Keeps the portal's cream/maroon identity (the platform <IconChip>
+ * is indigo-toned and would clash here) while making blank tabs feel intentional
+ * and friendly rather than unfinished.
+ *
+ * NON-BREAKING: existing callers keep passing { icon, title, sub, className };
+ * `illustration` is a new optional override (defaults to the welcome scene).
+ * The illustration is decorative (aria-hidden) and reduced-motion-safe.
  */
 function PortalEmpty({
   icon: Icon,
+  illustration: Illustration = IllustrationWelcome,
   title,
   sub,
   className = "",
 }: {
   icon: LucideIcon;
+  illustration?: React.ComponentType<IllustrationProps>;
   title: string;
   sub?: string;
   className?: string;
 }) {
   return (
     <div className={`flex flex-col items-center justify-center gap-3 px-6 py-12 text-center ${className}`}>
-      <div className="relative">
-        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-300/40 blur-2xl" />
-        <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_10px_26px_-12px_rgba(74,17,29,0.4)]">
-          <Icon className="h-7 w-7" aria-hidden />
+      <div className="relative text-maroon-700">
+        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-300/30 blur-2xl" />
+        <Illustration className="h-24 w-28" aria-hidden="true" />
+        <span className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_8px_20px_-10px_rgba(74,17,29,0.45)]">
+          <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
       <div className="space-y-1">
@@ -1015,6 +1033,7 @@ export default function BrothersDashboardClient({
                   ) : (
                     <PortalEmpty
                       icon={MessageSquare}
+                      illustration={IllustrationInbox}
                       title="No announcements yet"
                       sub="Chapter news and officer updates will show up here the moment they're posted."
                     />
@@ -1190,6 +1209,7 @@ export default function BrothersDashboardClient({
                 <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
                   <PortalEmpty
                     icon={Calendar}
+                    illustration={IllustrationCalendar}
                     title="No upcoming events"
                     sub="When officers schedule meetings, socials, or philanthropy, they'll appear here to RSVP."
                   />
@@ -1507,6 +1527,7 @@ export default function BrothersDashboardClient({
                   ) : (
                     <PortalEmpty
                       icon={Clipboard}
+                      illustration={IllustrationLedger}
                       title="No payment history"
                       sub="Your dues receipts and payment records will be listed here once you've paid."
                     />
@@ -1668,6 +1689,7 @@ export default function BrothersDashboardClient({
                 <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
                   <PortalEmpty
                     icon={Users}
+                    illustration={IllustrationSearch}
                     title="No alumni match your filters"
                     sub="Try clearing the search or choosing a different graduation year or pledge class."
                   />
@@ -1756,6 +1778,7 @@ export default function BrothersDashboardClient({
                 <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
                   <PortalEmpty
                     icon={FileText}
+                    illustration={IllustrationInbox}
                     title="No active surveys"
                     sub="When officers open a chapter poll, you'll be able to cast your vote right here."
                   />

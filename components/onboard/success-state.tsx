@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { IconCheckCircle, IconExternal, IconSpark } from "@/components/brand/icons";
+import { IconExternal, IconSpark } from "@/components/brand/icons";
 import { IconChip } from "@/components/ui/icon-chip";
+import { IllustrationCelebrate } from "@/components/brand/illustrations";
 
 /**
  * Celebratory success screen shown the instant /api/onboard provisions the
@@ -33,15 +34,18 @@ export function SuccessState({
 
   return (
     <div className="animate-soft-enter py-6 text-center">
-      {/* Decorative pinging halo behind the check */}
-      <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
+      {/* Bespoke celebration illustration — a laurel-wreathed success medallion
+          with a confetti burst — over a soft pinging halo. The illustration's
+          linework follows `currentColor` (emerald here so it reads on the dark
+          success panel); its accent fill follows the same colour. Static shapes
+          convey the celebration, so it's reduced-motion-safe (the surrounding
+          halo + soft-enter are decorative and collapse under reduced-motion). */}
+      <div className="relative mx-auto mb-6 flex h-32 w-36 items-center justify-center text-emerald-300">
         <span
           aria-hidden="true"
           className="absolute inset-0 animate-glow rounded-full bg-gradient-to-br from-emerald-400/40 via-sky-400/30 to-blue-500/30 blur-xl"
         />
-        <span className="relative inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-xl shadow-emerald-500/40 ring-4 ring-emerald-300/30">
-          <IconCheckCircle className="h-10 w-10" />
-        </span>
+        <IllustrationCelebrate className="relative h-32 w-36 drop-shadow-[0_8px_24px_rgba(16,185,129,0.35)]" aria-hidden="true" />
       </div>
 
       <div className="mb-2 flex items-center justify-center gap-2">

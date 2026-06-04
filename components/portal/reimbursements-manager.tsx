@@ -19,6 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import {
+  IllustrationWelcome,
+  IllustrationLedger,
+  type IllustrationProps,
+} from "@/components/brand/illustrations";
 
 /**
  * Member-facing Treasury reimbursement manager (brothers portal).
@@ -111,14 +116,31 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** Soft maroon medallion empty-state matching the dashboard's PortalEmpty. */
-function PortalEmpty({ icon: Icon, title, sub }: { icon: LucideIcon; title: string; sub?: string }) {
+/**
+ * Soft maroon empty-state matching the dashboard's PortalEmpty — a bespoke,
+ * on-brand SPOT ILLUSTRATION (maroon-tinted, re-themes via currentColor) with
+ * the section icon tucked into a medallion badge. NON-BREAKING: `illustration`
+ * is optional and defaults to the welcome scene; existing callers are unchanged.
+ * The illustration is decorative (aria-hidden) and reduced-motion-safe.
+ */
+function PortalEmpty({
+  icon: Icon,
+  illustration: Illustration = IllustrationWelcome,
+  title,
+  sub,
+}: {
+  icon: LucideIcon;
+  illustration?: React.ComponentType<IllustrationProps>;
+  title: string;
+  sub?: string;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-      <div className="relative">
+      <div className="relative text-maroon-700">
         <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-200/40 blur-2xl" />
-        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
-          <Icon className="h-6 w-6" aria-hidden />
+        <Illustration className="h-24 w-28" aria-hidden="true" />
+        <span className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
+          <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
       <div className="space-y-1">
@@ -454,6 +476,7 @@ export default function ReimbursementsManager({
               ) : expenses.length === 0 ? (
                 <PortalEmpty
                   icon={Receipt}
+                  illustration={IllustrationLedger}
                   title="No reimbursement requests yet"
                   sub="Submit your first request using the form on the left — it'll show up here with a live status."
                 />
