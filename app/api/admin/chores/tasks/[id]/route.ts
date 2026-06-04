@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
@@ -20,7 +20,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  await requireOfficerPermission("house", "write");
+  const denied = await guardOfficer("house", "write");
+  if (denied) return denied;
 
   const body = await req.json().catch(() => null);
   const parsed = UpdateSchema.safeParse(body);
@@ -80,7 +81,8 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  await requireOfficerPermission("house", "write");
+  const denied = await guardOfficer("house", "write");
+  if (denied) return denied;
 
   const existing = await prisma.choreWheelTask.findUnique({
     where: { id: params.id },

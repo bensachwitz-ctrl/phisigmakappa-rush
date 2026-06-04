@@ -225,7 +225,7 @@ export default async function ChapterLandingPage({
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
-            <RushForm booth />
+            <RushForm booth socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} />
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-6">
             Tablet auto-clears between rushees · {cfg["contact.instagramHandle"]}
@@ -607,7 +607,7 @@ export default async function ChapterLandingPage({
           {/* The conversion form itself is left exactly as shipped — no motion
               wrapper around it, so submit / validation / focus are untouched. */}
           <div className="max-w-3xl mx-auto">
-            <RushForm />
+            <RushForm socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} />
           </div>
         </div>
       </section>

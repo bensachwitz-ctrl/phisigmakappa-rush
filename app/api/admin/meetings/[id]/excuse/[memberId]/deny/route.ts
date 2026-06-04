@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
@@ -26,7 +26,8 @@ export const dynamic = "force-dynamic";
  * unexcused without the schema sprawl.
  */
 export async function POST(req: Request, { params }: { params: { id: string; memberId: string } }) {
-  await requireOfficerPermission("brothers", "write");
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
 
   const row = await prisma.chapterMeetingAttendance.findUnique({
     where: { meetingId_memberId: { meetingId: params.id, memberId: params.memberId } },

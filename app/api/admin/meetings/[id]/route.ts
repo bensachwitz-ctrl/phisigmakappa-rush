@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { MEMBER_STATUSES } from "@/lib/member-lifecycle";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
@@ -21,7 +21,8 @@ const PatchSchema = z.object({
 
 /** GET /api/admin/meetings/[id] — meeting detail + full attendance roster. */
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  await requireOfficerPermission("brothers", "read");
+  const denied = await guardOfficer("brothers", "read");
+  if (denied) return denied;
   const meeting = await prisma.chapterMeeting.findUnique({
     where: { id: params.id },
     include: {
@@ -37,7 +38,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
 /** PATCH /api/admin/meetings/[id] — edit a meeting. */
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  await requireOfficerPermission("brothers", "write");
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => null);
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) {
@@ -93,7 +95,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 /** DELETE /api/admin/meetings/[id] — only allowed for scheduled meetings with no attendance. */
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  await requireOfficerPermission("brothers", "write");
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   const existing = await prisma.chapterMeeting.findUnique({
     where: { id: params.id },
     include: { _count: { select: { attendance: true } } },

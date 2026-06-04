@@ -11,6 +11,7 @@
 //
 // Hot path: a single Prisma query with a join. We can layer Redis or memo later.
 
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
 import {
@@ -78,6 +79,35 @@ export async function requireOfficerPermission(
     throw err;
   }
   return perms;
+}
+
+/**
+ * Route-handler guard: run the permission check and convert a thrown
+ * permission error into a JSON 403 response instead of letting it bubble to
+ * Next's default 500. Returns `null` when access is allowed (caller proceeds)
+ * or a ready-to-return `NextResponse` when denied.
+ *
+ * Usage at a route call site:
+ *
+ *   const denied = await guardOfficer("service", "write");
+ *   if (denied) return denied;
+ *
+ * Access decisions are unchanged — this only fixes the HTTP status/shape of a
+ * denial (was 500, now 403) so the client and UX see the correct code.
+ */
+export async function guardOfficer(
+  domain: DomainKey,
+  action: "read" | "write" = "read"
+): Promise<NextResponse | null> {
+  try {
+    await requireOfficerPermission(domain, action);
+    return null;
+  } catch (e: any) {
+    return NextResponse.json(
+      { error: e?.message || "Forbidden" },
+      { status: e?.status || 403 }
+    );
+  }
 }
 
 /**

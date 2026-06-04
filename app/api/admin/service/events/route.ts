@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { getCurrentBrother, getCurrentBrotherId } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
@@ -20,7 +20,8 @@ const CreateSchema = z.object({
 
 /** GET /api/admin/service/events?status=proposed */
 export async function GET(req: Request) {
-  await requireOfficerPermission("service", "read");
+  const denied = await guardOfficer("service", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
   const where: any = {};
@@ -35,7 +36,8 @@ export async function GET(req: Request) {
 
 /** POST /api/admin/service/events — philanthropy chair only. */
 export async function POST(req: Request) {
-  await requireOfficerPermission("service", "write");
+  const denied = await guardOfficer("service", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {

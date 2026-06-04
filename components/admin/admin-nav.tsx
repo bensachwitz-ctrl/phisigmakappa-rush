@@ -13,7 +13,7 @@ import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
   HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert,
   ShieldCheck, CalendarCheck, HandHeart, BookMarked, FileDown, LayoutGrid, ChevronDown, Command,
-  Banknote, Wallet, ScrollText, Rocket,
+  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -35,6 +35,8 @@ const ITEMS: NavItem[] = [
   { href: "/admin", label: "Rush", icon: LayoutDashboard, adminOnly: false, group: "primary" },
   { href: "/admin/rushees", label: "PNMs", icon: UserPlus, adminOnly: true, group: "primary" },
   { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false, group: "primary" },
+  { href: "/admin/directory", label: "Directory", icon: BookUser, adminOnly: false, group: "more" },
+  { href: "/admin/family", label: "Big/Little", icon: Network, adminOnly: true, group: "more" },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true, group: "primary" },
   { href: "/admin/meetings", label: "Meetings", icon: CalendarCheck, adminOnly: false, group: "primary" },
   { href: "/admin/risk", label: "Risk Desk", icon: ShieldAlert, adminOnly: false, group: "primary" },
@@ -49,6 +51,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/exports", label: "Exports", icon: FileDown, adminOnly: true, group: "more" },
   { href: "/admin/dues", label: "Dues", icon: Wallet, adminOnly: true, group: "more" },
   { href: "/admin/dues/connect", label: "Payouts", icon: Banknote, adminOnly: true, group: "more" },
+  { href: "/admin/treasury", label: "Treasury", icon: Landmark, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: Rocket, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true, group: "more" },

@@ -11,6 +11,7 @@ import {
   ArrowRight, Command,
   UserPlus, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
   HandHeart, ShieldCheck, BookMarked, FileDown, Banknote,
+  Landmark, Network, BookUser,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +64,8 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "nav-rush", group: "Navigate", icon: LayoutDashboard, label: "Rush dashboard", href: "/admin", synonyms: ["pnms", "candidates", "decisions", "stats", "kpi"] },
       { id: "nav-rushees", group: "Navigate", icon: UserPlus, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], adminOnly: true },
       { id: "nav-brothers", group: "Navigate", icon: Users, label: "Brothers", href: "/admin/brothers", synonyms: ["roster", "people", "members", "directory"] },
+      { id: "nav-directory", group: "Navigate", icon: BookUser, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
+      { id: "nav-family", group: "Navigate", icon: Network, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },
       { id: "nav-meetings", group: "Navigate", icon: CalendarCheck, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
       { id: "nav-risk", group: "Navigate", icon: ShieldAlert, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
       { id: "nav-academic", group: "Navigate", icon: GraduationCap, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
@@ -78,6 +81,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       // Actions / quick jumps
       { id: "act-setup", group: "Actions", icon: Rocket, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
       { id: "act-dues-connect", group: "Actions", icon: Banknote, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
+      { id: "act-treasury", group: "Actions", icon: Landmark, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
       { id: "act-exports", group: "Actions", icon: FileDown, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
       { id: "act-export-rushes", group: "Actions", icon: ScrollText, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
       { id: "act-export-brothers", group: "Actions", icon: ScrollText, label: "Download Brothers CSV", href: "/api/admin/export/brothers", adminOnly: true },

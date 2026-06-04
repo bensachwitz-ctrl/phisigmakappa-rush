@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { parseSundayWeek } from "@/lib/chore-wheel";
 
 export const runtime = "nodejs";
@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/admin/chores/assignments?week=2026-W14 */
 export async function GET(req: Request) {
-  await requireOfficerPermission("house", "read");
+  const denied = await guardOfficer("house", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const weekStr = url.searchParams.get("week");
   const where: any = {};

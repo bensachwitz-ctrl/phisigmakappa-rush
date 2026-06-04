@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
@@ -17,7 +17,8 @@ const CreateSchema = z.object({
 
 /** GET /api/admin/chores/tasks?active=1 */
 export async function GET(req: Request) {
-  await requireOfficerPermission("house", "read");
+  const denied = await guardOfficer("house", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const activeOnly = url.searchParams.get("active") === "1";
   const tasks = await prisma.choreWheelTask.findMany({
@@ -29,7 +30,8 @@ export async function GET(req: Request) {
 
 /** POST /api/admin/chores/tasks — house manager only. */
 export async function POST(req: Request) {
-  await requireOfficerPermission("house", "write");
+  const denied = await guardOfficer("house", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {

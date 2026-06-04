@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
@@ -19,7 +19,8 @@ const CreateSchema = z.object({
 
 /** GET /api/admin/service/partners */
 export async function GET() {
-  await requireOfficerPermission("service", "read");
+  const denied = await guardOfficer("service", "read");
+  if (denied) return denied;
   const partners = await prisma.servicePartnerOrg.findMany({
     orderBy: [{ active: "desc" }, { name: "asc" }],
   });
@@ -28,7 +29,8 @@ export async function GET() {
 
 /** POST /api/admin/service/partners — philanthropy chair only. */
 export async function POST(req: Request) {
-  await requireOfficerPermission("service", "write");
+  const denied = await guardOfficer("service", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {

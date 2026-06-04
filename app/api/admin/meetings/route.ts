@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { MEMBER_STATUSES } from "@/lib/member-lifecycle";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
@@ -20,7 +20,8 @@ const CreateSchema = z.object({
 
 /** GET /api/admin/meetings?from=ISO&to=ISO&status=scheduled */
 export async function GET(req: Request) {
-  await requireOfficerPermission("brothers", "read");
+  const denied = await guardOfficer("brothers", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
@@ -48,7 +49,8 @@ export async function GET(req: Request) {
 
 /** POST /api/admin/meetings — secretary/president only. */
 export async function POST(req: Request) {
-  await requireOfficerPermission("brothers", "write");
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   let body: any;
   try {
     body = await req.json();

@@ -14,6 +14,8 @@ import {
   GraduationCap, MapPin, BookOpen, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import type { ChapterIdentity } from "@/lib/chapter-identity";
 
 type FormData = {
   name: string;
@@ -65,9 +67,11 @@ const SMS_PRE_DISCLOSURE =
 
 // The line that appears next to the express-consent checkbox on the Review step.
 // Identifies the sender by full legal name, the program, frequency, opt-out keywords,
-// and links to the privacy policy. This is the recorded consent text.
+// and links to the privacy policy. This is the recorded consent text — it MUST
+// match the server's stored disclosure (app/api/rush buildSmsDisclosureText) in
+// structure, with the chapter IDENTITY substituted per-tenant.
 //
-// Note on age: incoming USC freshmen can be 17 (early-grad / late-Aug birthdays /
+// Note on age: incoming freshmen can be 17 (early-grad / late-birthday /
 // transfers from accelerated programs), so the consent allows 17 with verified
 // parental permission — matching the under-18 guardian-consent path in /privacy.
 // Hard-blocking 18+ would lock out legitimate rushees.
@@ -75,11 +79,45 @@ const SMS_PRE_DISCLOSURE =
 // R11: includes the 47 CFR §64.1200(f)(9) "automatic telephone dialing system"
 // disclosure language so this consent qualifies as prior express written
 // consent under TCPA — a plaintiff lawyer can no longer argue otherwise.
-const SMS_EXPRESS_CONSENT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent is not a condition of any membership consideration. My information will only be used to communicate about Fall ‘26 rush and is never sold or shared.";
+//
+// White-label: the org name is derived from the current chapter identity
+// (ChapterIdentityProvider). When unconfigured it falls back to a NEUTRAL
+// "this chapter" — never a hardcoded chapter.
+function buildExpressConsent(identity: ChapterIdentity): string {
+  const org =
+    [identity.chapterFullName, identity.schoolShort ? `(${identity.schoolShort})` : ""]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "this chapter";
+  return (
+    "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. " +
+    `I agree to receive recurring marketing and informational text and email recruitment/rush messages from ${org} ` +
+    "sent using an automatic telephone dialing system or other automated technology. " +
+    "Msg frequency varies (up to about 8 msgs per rush cycle). Msg & data rates may apply. " +
+    "Reply HELP for help, STOP to opt out at any time. " +
+    "Consent is not a condition of any membership consideration. " +
+    "My information will only be used to communicate about recruitment/rush and is never sold or shared."
+  );
+}
 
-export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
+export function RushForm({
+  booth: boothProp,
+  socialHandle,
+  socialUrl,
+}: {
+  booth?: boolean;
+  /** Chapter's social handle (e.g. "@phisig_usc") for the success-screen
+   *  share/follow CTA. Omitted → no hardcoded chapter; the follow button and
+   *  handle simply don't render. */
+  socialHandle?: string;
+  /** Full URL to the chapter's social profile for the follow button. */
+  socialUrl?: string;
+} = {}) {
   const { push } = useToast();
+  // Chapter identity (per-tenant, via ChapterIdentityProvider) drives the
+  // recorded express-consent text and the share copy — no hardcoded chapter.
+  const identity = useChapterIdentity();
+  const SMS_EXPRESS_CONSENT = buildExpressConsent(identity);
   // If a parent server component already detected ?booth=1 and passed it as a
   // prop, use that as the SSR-correct initial state so the Contact step (with
   // its TCPA pre-disclosure) renders on first paint without waiting for hydration.
@@ -266,7 +304,7 @@ export function RushForm({ booth: boothProp }: { booth?: boolean } = {}) {
   }
 
   if (done) {
-    return <SuccessCard data={data} booth={booth} receiptId={receiptId} onRestart={() => { setDone(false); setData(initial); setStep(FIRST_STEP); setReceiptId(null); }} />;
+    return <SuccessCard data={data} booth={booth} receiptId={receiptId} identity={identity} socialHandle={socialHandle} socialUrl={socialUrl} onRestart={() => { setDone(false); setData(initial); setStep(FIRST_STEP); setReceiptId(null); }} />;
   }
 
   return (
@@ -724,16 +762,26 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
   );
 }
 
-function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; booth: boolean; receiptId: string | null; onRestart: () => void }) {
+function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl, onRestart }: { data: FormData; booth: boolean; receiptId: string | null; identity: ChapterIdentity; socialHandle?: string; socialUrl?: string; onRestart: () => void }) {
   const first = data.name.split(" ")[0] || "there";
   const { push } = useToast();
 
+  // Share copy is derived from the current chapter identity + the live origin —
+  // no hardcoded chapter handle or URL. The org name falls back to a neutral
+  // "our chapter" if identity is unconfigured.
+  const orgName =
+    [identity.fraternityName, identity.schoolShort].filter(Boolean).join(" at ") ||
+    identity.chapterFullName ||
+    "our chapter";
+  const shareTitle = identity.chapterAttribution || identity.fraternityName || "Rush";
+
   async function shareWithFriends() {
-    const url = "https://phisigmakappa.vercel.app";
-    const text = `Just signed up for Fall Rush 2026 with Phi Sigma Kappa at USC. ${url}`;
+    const url =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const text = `Just signed up for rush with ${orgName}.${url ? ` ${url}` : ""}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title: "Phi Sigma Kappa USC", text, url });
+        await navigator.share({ title: shareTitle, text, url: url || undefined });
       } catch { /* user cancelled */ }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
@@ -808,11 +856,16 @@ function SuccessCard({ data, booth, receiptId, onRestart }: { data: FormData; bo
           <Button onClick={shareWithFriends} className="group">
             <Send className="h-4 w-4" /> Tell your buddies
           </Button>
-          <Button asChild variant="outline">
-            <a href="https://www.instagram.com/phisig_usc/" target="_blank" rel="noreferrer noopener">
-              Follow @phisig_usc
-            </a>
-          </Button>
+          {/* Follow CTA renders ONLY when this chapter has a social handle + URL
+              configured. No hardcoded chapter — an unconfigured tenant simply
+              omits the button. */}
+          {socialUrl && socialHandle && (
+            <Button asChild variant="outline">
+              <a href={socialUrl} target="_blank" rel="noreferrer noopener">
+                Follow {socialHandle}
+              </a>
+            </Button>
+          )}
           <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">
             Submit another
           </Button>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { guardOfficer } from "@/lib/permissions";
 import { computeChoreRotation, parseSundayWeek } from "@/lib/chore-wheel";
 import { getCurrentBrother } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
@@ -24,7 +24,8 @@ const Schema = z.object({
  * touching the database.
  */
 export async function POST(req: Request) {
-  await requireOfficerPermission("house", "write");
+  const denied = await guardOfficer("house", "write");
+  if (denied) return denied;
 
   const url = new URL(req.url);
   const fromQuery = url.searchParams.get("week");

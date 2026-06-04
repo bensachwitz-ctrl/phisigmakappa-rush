@@ -3,28 +3,64 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enrichRushee } from "@/lib/enrich";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { isAdminAuthed } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Bump this whenever the legal disclosure copy changes. Persisted alongside
-// each consent receipt so we can prove what the user saw at consent time
-// even after the on-page wording is updated. TCPA defense relies on this.
+// Bump this whenever the legal disclosure copy STRUCTURE changes. Persisted
+// alongside each consent receipt so we can prove what the user saw at consent
+// time even after the on-page wording is updated. TCPA defense relies on this.
 //
 // 2026-05-05 (R11): added the 47 CFR §64.1200(f)(9) "automated technology"
 // disclosure language so the receipt qualifies as prior express written
 // consent under TCPA. The R10 audit caught its absence as a class-action vector.
+//
+// White-label: the ORG IDENTITY inside the disclosure is now derived per-tenant
+// from SiteConfig (chapterIdentityFromCfg) — see buildSmsDisclosureText. A
+// non-Phi-Sig tenant's RushConsent row stores THEIR org name, never a hardcoded
+// chapter. The version is unchanged because only the substituted identity
+// differs, not the legal structure (purpose, ADAD disclosure, rates, frequency,
+// STOP/HELP, not-a-condition).
 const DISCLOSURE_VERSION = "2026-05-05";
-const SMS_DISCLOSURE_TEXT =
-  "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. I agree to receive recurring marketing and informational text and email rush updates from Phi Sigma Kappa Gamma Triton (USC) sent using an automatic telephone dialing system or other automated technology. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply HELP for help, STOP to opt out at any time. Consent to receive these messages is not a condition of any membership consideration. My information will only be used to communicate about Fall '26 rush and is never sold or shared.";
+
+/**
+ * Build the recorded express-written-consent disclosure for the CURRENT tenant.
+ * Every TCPA-required element is preserved verbatim — actual org name, purpose
+ * (recruitment/rush messages), automated-technology disclosure, "Msg & data
+ * rates may apply", message-frequency, "Reply STOP to opt out, HELP for help",
+ * and the not-a-condition-of-membership clause. Only the chapter IDENTITY is
+ * substituted. When cfg is unset the org falls back to a NEUTRAL "this chapter"
+ * (never "Phi Sigma Kappa"), so the apex / an unconfigured tenant still stores
+ * a legally-complete receipt.
+ */
+function buildSmsDisclosureText(cfg: Record<string, string>): string {
+  const id = chapterIdentityFromCfg(cfg);
+  // "Phi Sigma Kappa Gamma Triton (USC)" → built from the tenant's identity;
+  // neutral "this chapter" when nothing is configured.
+  const org =
+    [id.chapterFullName, id.schoolShort ? `(${id.schoolShort})` : ""]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "this chapter";
+  return (
+    "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. " +
+    `I agree to receive recurring marketing and informational text and email recruitment/rush messages from ${org} ` +
+    "sent using an automatic telephone dialing system or other automated technology. " +
+    "Msg frequency varies (up to about 8 msgs per rush cycle). Msg & data rates may apply. " +
+    "Reply HELP for help, STOP to opt out at any time. " +
+    "Consent to receive these messages is not a condition of any membership consideration. " +
+    "My information will only be used to communicate about recruitment/rush and is never sold or shared."
+  );
+}
 
 /**
  * Fire a confirmation SMS to the rushee asking them to reply YES to confirm.
  * Best-effort: if Twilio is not configured or fails, we log and move on. The
  * RushConsent record is what determines TCPA compliance, not the send result.
  */
-async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string) {
+async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string, orgLabel: string) {
   try {
     const sid = process.env.TWILIO_ACCOUNT_SID;
     const token = process.env.TWILIO_AUTH_TOKEN;
@@ -33,7 +69,10 @@ async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: s
       console.info("[double-opt-in] Twilio env not set; skipping confirmation SMS for", receiptId);
       return;
     }
-    const body = `Phi Sig USC Gamma Triton: hey ${firstName}! Reply YES to confirm rush updates (about 6-8 msgs/cycle). Reply HELP for help, STOP to opt out. Msg & data rates may apply.`;
+    // Org label is the tenant's identity (neutral "The chapter" fallback) — no
+    // hardcoded chapter in the confirmation SMS for non-Phi-Sig tenants.
+    const who = orgLabel || "The chapter";
+    const body = `${who}: hey ${firstName}! Reply YES to confirm rush updates (about 6-8 msgs/cycle). Reply HELP for help, STOP to opt out. Msg & data rates may apply.`;
     const auth = Buffer.from(`${sid}:${token}`).toString("base64");
     await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: "POST",
@@ -187,6 +226,18 @@ export async function POST(req: Request) {
 
     const ageAttestation = data.ageAttestation || "ADULT_18_PLUS";
 
+    // Build the tenant-specific consent disclosure ONCE for this request so
+    // both the re-affirmation and first-submission RushConsent rows store the
+    // SAME text — and that text names THIS chapter (or a neutral fallback),
+    // never a hardcoded one. getSiteConfig resolves the current tenant schema;
+    // on failure we fall back to empty cfg → neutral "this chapter" copy.
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    const disclosureText = buildSmsDisclosureText(cfg);
+    // Short org label for the confirmation SMS sender prefix (neutral fallback).
+    const cfgIdentity = chapterIdentityFromCfg(cfg);
+    const orgLabel =
+      cfgIdentity.chapterAttribution || cfgIdentity.chapterFullName || cfgIdentity.fraternityName || "The chapter";
+
     // Best-effort log of accepted submission for rate-limit math.
     if (ipAddress) {
       prisma.rushSubmitLog.create({
@@ -267,7 +318,7 @@ export async function POST(req: Request) {
         data: {
           rushId: upserted.id,
           disclosureVersion: DISCLOSURE_VERSION,
-          disclosureText: SMS_DISCLOSURE_TEXT,
+          disclosureText,
           ipAddress,
           userAgent,
           ageAttestation,
@@ -288,7 +339,7 @@ export async function POST(req: Request) {
       data: {
         rushId: created.id,
         disclosureVersion: DISCLOSURE_VERSION,
-        disclosureText: SMS_DISCLOSURE_TEXT,
+        disclosureText,
         ipAddress,
         userAgent,
         ageAttestation,
@@ -305,7 +356,7 @@ export async function POST(req: Request) {
     });
 
     // Fire double-opt-in confirmation SMS in the background.
-    sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id);
+    sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id, orgLabel);
 
     return NextResponse.json({
       ok: true,
