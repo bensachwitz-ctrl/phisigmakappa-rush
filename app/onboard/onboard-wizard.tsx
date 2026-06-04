@@ -18,7 +18,8 @@ import {
   type SchoolSelection,
   type OrgSelection,
 } from "@/components/site/school-org-picker";
-import { Magnetic, Reveal3D, FloatingOrbs } from "@/components/site/anim";
+import { Magnetic, Reveal3D, FloatingOrbs, Spotlight, ShimmerBorder } from "@/components/site/anim";
+import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
   IconChapter, IconBranding, IconComms, IconAdmin, IconLaunch, IconSpark,
@@ -504,23 +505,69 @@ export default function OnboardWizard() {
 
       {/* Header */}
       <Reveal3D className="text-center" y={18}>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300 backdrop-blur-md">
-          <IconSpark className="h-3.5 w-3.5 text-amber-400" /> Greekstack
-        </span>
-        <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+        {/* Platform wordmark lockup — the de-purpled keystone mark + "Greekstack"
+            so the whole flow reads as the platform brand, not a chapter brand. */}
+        <div className="flex justify-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 shadow-lg shadow-blue-950/30 backdrop-blur-md">
+            <GreekstackWordmark size="sm" textClassName="text-base text-white" />
+            <span className="ml-1 hidden h-3.5 w-px bg-white/15 sm:inline-block" aria-hidden="true" />
+            <span className="hidden items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 sm:inline-flex">
+              <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Setup
+            </span>
+          </span>
+        </div>
+        <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
           Your chapter site, <span className="gs-gradient-text">live in seconds</span>
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
           Answer a few quick questions and watch your fully branded website take shape in
           real time. Hit launch and it goes live instantly — no code, no waiting.
         </p>
+
+        {/* Trust strip — three quiet reassurances under the hero. AA-contrast,
+            decorative icons aria-hidden, wraps cleanly on mobile. */}
+        <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
+          {[
+            { icon: IconSecurity, text: "No card required" },
+            { icon: IconLaunch, text: "Live in under a minute" },
+            { icon: IconCheckCircle, text: "Edit anything later" },
+          ].map((t) => {
+            const Ico = t.icon;
+            return (
+              <li key={t.text} className="inline-flex items-center gap-1.5">
+                <Ico className="h-3.5 w-3.5 text-emerald-400/90" aria-hidden="true" />
+                {t.text}
+              </li>
+            );
+          })}
+        </ul>
       </Reveal3D>
 
-      {/* Progress rail */}
-      <div className="mx-auto max-w-4xl space-y-3">
-        {/* Animated fill track — eases to the % complete as steps advance. */}
+      {/* ── Progress rail ──────────────────────────────────────────────────────
+          A glass-framed stepper: a labeled readout, an animated gradient fill
+          track, and a row of step chips sitting over a connecting "spine" so the
+          path between steps reads as one continuous journey. The active chip
+          retints its icon accent to gold (--gs-accent) and breathes; completed
+          steps flip to an emerald check. */}
+      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-xl shadow-blue-950/20 ring-1 ring-white/5 backdrop-blur-md sm:p-4">
+        {/* Readout + percentage */}
+        <div className="mb-2.5 flex items-center justify-between px-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+            Step {stepIndex + 1}
+            <span className="text-slate-500"> / {STEPS.length}</span>
+            <span className="ml-2 font-medium normal-case tracking-normal text-slate-300">
+              {STEPS[stepIndex].label}
+            </span>
+          </p>
+          <p className="text-[11px] font-semibold tabular-nums text-slate-400">
+            {Math.round((stepIndex / (STEPS.length - 1)) * 100)}%
+          </p>
+        </div>
+
+        {/* Animated fill track — eases to the % complete as steps advance. A soft
+            sheen rides the leading edge for a touch of life. */}
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
+          className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
           role="progressbar"
           aria-label="Setup progress"
           aria-valuemin={0}
@@ -528,93 +575,125 @@ export default function OnboardWizard() {
           aria-valuenow={stepIndex}
         >
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
+            className="relative h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
             initial={false}
             animate={{ width: `${(stepIndex / (STEPS.length - 1)) * 100}%` }}
             transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
-          />
+          >
+            <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(251,191,36,0.6)]" aria-hidden="true" />
+          </motion.div>
         </div>
 
-        <ol className="grid grid-cols-6 gap-1.5 sm:gap-3" role="list" aria-label="Setup steps">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon;
-          const current = s.id === step;
-          const done = stepIndex > i;
-          const reachable = i <= stepIndex;
-          return (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  if (i < stepIndex) {
-                    setErrors({});
-                    setDir(-1);
-                    setStep(s.id);
-                  }
-                }}
-                disabled={i > stepIndex || busy}
-                aria-current={current ? "step" : undefined}
-                className={cn(
-                  "group flex w-full flex-col items-center gap-2 rounded-2xl border p-2.5 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 sm:p-3",
-                  current && "border-amber-400/50 bg-white/[0.07] shadow-lg shadow-blue-950/40",
-                  done && "border-emerald-400/30 bg-emerald-500/[0.08]",
-                  !current && !done && "border-white/10 bg-white/[0.02]",
-                  !reachable && "cursor-not-allowed opacity-50",
-                  reachable && !current && "hover:border-white/20 hover:bg-white/[0.05]"
-                )}
-              >
-                {done ? (
-                  <motion.span
-                    initial={reduce ? false : { scale: 0.5, rotate: -12 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 18 }}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm"
-                  >
-                    <IconCheckCircle className="h-5 w-5" />
-                  </motion.span>
-                ) : current ? (
-                  // Current step "breathes" subtly so the eye knows where it is.
-                  // Active step carries a gold-tinted accent layer for energy.
-                  <motion.span
-                    animate={reduce ? undefined : { scale: [1, 1.07, 1] }}
-                    transition={reduce ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                    className="will-change-transform [--gs-accent:#fbbf24]"
-                  >
-                    <GsChip icon={Icon} tone="platform" size="md" />
-                  </motion.span>
-                ) : (
-                  <GsChip icon={Icon} tone="muted" size="md" />
-                )}
-                <span
+        {/* Step chips, over a connecting spine. */}
+        <div className="relative mt-3">
+          {/* Spine: a faint base line + an emerald progress line tracing completed
+              steps. Inset so it spans between chip centers, behind the chips. */}
+          <div className="pointer-events-none absolute inset-x-[8.33%] top-[22px] -z-0 h-0.5 rounded-full bg-white/[0.07]" aria-hidden="true" />
+          <motion.div
+            className="pointer-events-none absolute left-[8.33%] top-[22px] -z-0 h-0.5 origin-left rounded-full bg-gradient-to-r from-emerald-400/70 to-sky-400/60"
+            style={{ right: "8.33%" }}
+            initial={false}
+            animate={{ scaleX: STEPS.length > 1 ? stepIndex / (STEPS.length - 1) : 0 }}
+            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
+            aria-hidden="true"
+          />
+
+          <ol className="relative z-[1] grid grid-cols-6 gap-1.5 sm:gap-3" role="list" aria-label="Setup steps">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            const current = s.id === step;
+            const done = stepIndex > i;
+            const reachable = i <= stepIndex;
+            return (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (i < stepIndex) {
+                      setErrors({});
+                      setDir(-1);
+                      setStep(s.id);
+                    }
+                  }}
+                  disabled={i > stepIndex || busy}
+                  aria-current={current ? "step" : undefined}
+                  title={s.label}
                   className={cn(
-                    "hidden text-[10px] font-bold uppercase tracking-wide sm:block",
-                    current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-400"
+                    "group flex w-full flex-col items-center gap-2 rounded-2xl border p-2.5 text-center transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 sm:p-3",
+                    current && "border-amber-400/50 bg-white/[0.07] shadow-lg shadow-blue-950/40",
+                    done && "border-emerald-400/30 bg-emerald-500/[0.08]",
+                    !current && !done && "border-white/10 bg-white/[0.02]",
+                    !reachable && "cursor-not-allowed opacity-50",
+                    reachable && !current && "hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.05]"
                   )}
                 >
-                  {s.label}
-                </span>
-                <span
-                  className={cn(
-                    "text-[10px] font-semibold uppercase tracking-wide sm:hidden",
-                    current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-500"
+                  {done ? (
+                    <motion.span
+                      initial={reduce ? false : { scale: 0.5, rotate: -12 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 18 }}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md ring-1 ring-emerald-300/30"
+                    >
+                      <IconCheckCircle className="h-5 w-5" />
+                    </motion.span>
+                  ) : current ? (
+                    // Current step "breathes" subtly so the eye knows where it is.
+                    // Active step carries a gold-tinted accent layer + a soft halo.
+                    <span className="relative will-change-transform [--gs-accent:#fbbf24]">
+                      {!reduce && (
+                        <motion.span
+                          className="absolute inset-0 rounded-xl bg-amber-400/20 blur-md"
+                          animate={{ opacity: [0.35, 0.7, 0.35], scale: [1, 1.12, 1] }}
+                          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <motion.span
+                        className="relative block"
+                        animate={reduce ? undefined : { scale: [1, 1.07, 1] }}
+                        transition={reduce ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <GsChip icon={Icon} tone="platform" size="md" className="ring-amber-300/40" />
+                      </motion.span>
+                    </span>
+                  ) : (
+                    <GsChip icon={Icon} tone="muted" size="md" className="transition-transform group-hover:scale-105" />
                   )}
-                >
-                  {i + 1}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        </ol>
+                  <span
+                    className={cn(
+                      "hidden text-[10px] font-bold uppercase tracking-wide transition-colors sm:block",
+                      current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-400"
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold uppercase tracking-wide sm:hidden",
+                      current ? "text-sky-200" : done ? "text-emerald-300" : "text-slate-500"
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          </ol>
+        </div>
       </div>
 
       {/* Two-column: wizard + live preview */}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
         {/* Wizard card */}
         <GlassPanel>
-          <div className="space-y-6 p-6 sm:p-8">
+          {/* Cursor-tracking glow for fine-pointer devices only (no-op on touch /
+              reduced-motion). Sits behind the content; the panel clips it. */}
+          <Spotlight size={520} color="rgba(37,99,235,0.16)" edgeColor="rgba(56,189,248,0.10)" />
+          <div className="relative space-y-6 p-6 sm:p-8">
             <div className="flex items-start gap-3">
-              <GsChip icon={StepIcon} tone="platform" size="lg" className="shrink-0" />
+              {/* Active-step chip — gold-accented to match the rail's active state. */}
+              <GsChip icon={StepIcon} tone="platform" size="lg" className="shrink-0 ring-amber-300/30 [--gs-accent:#fbbf24]" />
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
                   Step {stepIndex + 1} of {STEPS.length}
@@ -630,7 +709,7 @@ export default function OnboardWizard() {
               </div>
             </div>
 
-            <div className="h-px bg-white/10" />
+            <div className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
             {/* Step body — directional slide/fade between steps via AnimatePresence.
                 mode="wait" so the outgoing step finishes before the next enters;
@@ -653,13 +732,26 @@ export default function OnboardWizard() {
               {step === "identity" && (
                 <div className="space-y-5">
                   {/* ── Fast path: pick a school + org to auto-theme everything ── */}
-                  <div className="rounded-2xl border border-blue-400/20 bg-gradient-to-b from-blue-500/[0.07] to-white/[0.02] p-4 shadow-inner sm:p-5">
+                  <div className="relative overflow-hidden rounded-2xl border border-blue-400/25 bg-gradient-to-b from-blue-500/[0.09] to-white/[0.02] p-4 shadow-inner sm:p-5">
                     <div className="flex items-center gap-2.5">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
-                        <IconSpark className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                      <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
+                        {!reduce && (
+                          <motion.span
+                            className="absolute inset-0 rounded-xl bg-amber-400/15 blur-md"
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                            aria-hidden="true"
+                          />
+                        )}
+                        <IconSpark className="relative h-4 w-4 text-amber-400" aria-hidden="true" />
                       </span>
-                      <div>
-                        <h3 className="text-sm font-bold text-white">Pick your school &amp; organization</h3>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-white">Pick your school &amp; organization</h3>
+                          <span className="hidden rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300 ring-1 ring-amber-400/20 sm:inline-flex">
+                            Fastest
+                          </span>
+                        </div>
                         <p className="text-xs text-slate-400">
                           We&apos;ll auto-fill your name, letters &amp; colors — edit anything after.
                         </p>
@@ -809,8 +901,8 @@ export default function OnboardWizard() {
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="••••••••"
                         className={cn(
-                          "border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
-                          errors.adminPassword && "border-rose-400/60 focus-visible:ring-rose-400/50"
+                          "border-white/10 bg-white/5 pl-9 text-white transition-colors placeholder:text-slate-500 hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-sky-400/60",
+                          errors.adminPassword && "border-rose-400/60 hover:border-rose-400/60 focus-visible:ring-rose-400/50"
                         )}
                         aria-invalid={errors.adminPassword ? true : undefined}
                         required
@@ -831,19 +923,35 @@ export default function OnboardWizard() {
 
               {step === "launch" && (
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] p-4">
-                    <p className="flex items-center gap-2 text-sm font-bold text-emerald-200">
-                      <IconCheckCircle className="h-4 w-4 text-emerald-400" /> Everything is ready to launch.
-                    </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-100/80">
-                      Hit the button below and Greekstack provisions your branded site, admin
-                      dashboard, and database instantly — then takes you straight to it.
-                    </p>
+                  {/* Celebratory "ready" banner — a soft emerald→sky glass card with
+                      a gentle breathing rocket badge to mark the finish line. */}
+                  <div className="relative overflow-hidden rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/[0.12] via-sky-500/[0.06] to-transparent p-4">
+                    <div className="flex items-start gap-3">
+                      <motion.span
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-900/30 ring-1 ring-emerald-300/30"
+                        animate={reduce ? undefined : { y: [0, -3, 0] }}
+                        transition={reduce ? undefined : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                        aria-hidden="true"
+                      >
+                        <IconLaunch className="h-5 w-5" />
+                      </motion.span>
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-bold text-emerald-100">
+                          Everything is ready to launch.
+                        </p>
+                        <p className="mt-1 text-sm leading-relaxed text-emerald-100/80">
+                          Hit the button below and Greekstack provisions your branded site, admin
+                          dashboard, and database instantly — then takes you straight to it.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Summary</h3>
-                    <div className="mt-3 grid grid-cols-1 gap-y-2.5 text-sm sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 shadow-inner">
+                    <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-200">
+                      <IconCheckCircle className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> Review &amp; confirm
+                    </h3>
+                    <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-2">
                       <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "—"}</SummaryRow>
                       <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "—"}</SummaryRow>
                       <SummaryRow label="Site URL">
@@ -854,10 +962,12 @@ export default function OnboardWizard() {
                     </div>
                   </div>
 
-                  <p className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
-                    <IconSecurity className="h-3.5 w-3.5 text-emerald-400/80" aria-hidden="true" />
-                    No card required now — you&apos;re launching on the{" "}
-                    <span className="font-semibold text-slate-200">{PLAN_SUMMARY[plan]}</span>.
+                  <p className="flex items-center gap-1.5 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-3 py-2.5 text-xs text-emerald-100/90">
+                    <IconSecurity className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
+                    <span>
+                      No card required now — you&apos;re launching on the{" "}
+                      <span className="font-semibold text-white">{PLAN_SUMMARY[plan]}</span>.
+                    </span>
                   </p>
                 </div>
               )}
@@ -865,7 +975,7 @@ export default function OnboardWizard() {
               </AnimatePresence>
             </div>
 
-            <div className="h-px bg-white/10" />
+            <div className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
             {/* Footer controls */}
             <div className="flex items-center justify-between gap-3">
@@ -874,44 +984,48 @@ export default function OnboardWizard() {
                 variant="glass"
                 onClick={goPrev}
                 disabled={stepIndex === 0 || busy}
-                className="text-slate-200"
+                className="text-slate-200 transition-transform hover:-translate-x-0.5"
               >
                 <IconArrowRight className="mr-1 h-4 w-4 rotate-180" /> Back
               </Button>
 
               {!isLastStep ? (
                 <Magnetic strength={14} radius={80}>
-                  <Button
-                    type="button"
-                    variant="platform"
-                    size="lg"
-                    onClick={goNext}
-                    disabled={busy || (step === "identity" && subdomainBlocks)}
-                    className="gs-sheen"
-                  >
-                    Continue <IconArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  <ShimmerBorder rounded="rounded-full">
+                    <Button
+                      type="button"
+                      variant="platform"
+                      size="lg"
+                      onClick={goNext}
+                      disabled={busy || (step === "identity" && subdomainBlocks)}
+                      className="gs-sheen"
+                    >
+                      Continue <IconArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </Button>
+                  </ShimmerBorder>
                 </Magnetic>
               ) : (
                 <Magnetic strength={16} radius={90}>
-                  <Button
-                    type="button"
-                    variant="platform"
-                    size="xl"
-                    onClick={handleLaunch}
-                    disabled={busy}
-                    className="gs-sheen"
-                  >
-                    {busy ? (
-                      <>
-                        <IconSpark className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
-                      </>
-                    ) : (
-                      <>
-                        <IconLaunch className="mr-2 h-5 w-5" /> Launch My Site
-                      </>
-                    )}
-                  </Button>
+                  <ShimmerBorder rounded="rounded-full">
+                    <Button
+                      type="button"
+                      variant="platform"
+                      size="xl"
+                      onClick={handleLaunch}
+                      disabled={busy}
+                      className="gs-sheen"
+                    >
+                      {busy ? (
+                        <>
+                          <IconSpark className="mr-2 h-5 w-5 animate-spin" /> Launching your site…
+                        </>
+                      ) : (
+                        <>
+                          <IconLaunch className="mr-2 h-5 w-5" /> Launch My Site
+                        </>
+                      )}
+                    </Button>
+                  </ShimmerBorder>
                 </Magnetic>
               )}
             </div>
@@ -997,13 +1111,14 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
         aria-label="Pricing method"
         className="grid gap-4 lg:grid-cols-2"
       >
-        {/* ── Method 1 — Base ─────────────────────────────────────────────── */}
+        {/* ── Method 1 — Base (recommended) ───────────────────────────────── */}
         <PlanCard
           selected={baseSelected}
           onSelect={() => onChange("monthly")}
           icon={IconCoins}
           eyebrow="Method 1"
           title="Base"
+          recommended
           headline={
             <>
               <span className="text-3xl font-extrabold text-white">$29</span>
@@ -1107,7 +1222,9 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
   );
 }
 
-/* A single big selectable plan card (radio semantics). */
+/* A single big selectable plan card (radio semantics). When `recommended`, the
+   card is wrapped in an animated shimmer ring and flagged with a "Most popular"
+   ribbon so the eye lands on the headline offer. */
 function PlanCard({
   selected,
   onSelect,
@@ -1117,6 +1234,7 @@ function PlanCard({
   headline,
   highlight,
   features,
+  recommended = false,
   children,
 }: {
   selected: boolean;
@@ -1127,9 +1245,12 @@ function PlanCard({
   headline: React.ReactNode;
   highlight: string;
   features: string[];
+  recommended?: boolean;
   children?: React.ReactNode;
 }) {
-  return (
+  const reduce = useReducedMotion();
+
+  const card = (
     <div
       role="radio"
       aria-checked={selected}
@@ -1142,22 +1263,32 @@ function PlanCard({
         }
       }}
       className={cn(
-        "relative flex cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
+        "relative flex h-full cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
         selected
-          ? "border-sky-400/60 bg-sky-500/[0.10] shadow-lg shadow-blue-950/40"
-          : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.06]",
+          ? "border-sky-400/60 bg-sky-500/[0.10] shadow-xl shadow-blue-950/50"
+          : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-blue-950/30",
       )}
     >
-      {/* Selected check */}
-      <span
+      {/* "Most popular" ribbon for the recommended plan. */}
+      {recommended && (
+        <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-950 shadow-md shadow-amber-900/30">
+          <IconSpark className="h-3 w-3" aria-hidden="true" /> Most popular
+        </span>
+      )}
+
+      {/* Selected check — pops in when the card is chosen. */}
+      <motion.span
+        initial={false}
+        animate={selected && !reduce ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 16 }}
         className={cn(
-          "absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all",
-          selected ? "bg-sky-400 text-slate-950" : "bg-white/5 text-transparent ring-1 ring-white/15",
+          "absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+          selected ? "bg-sky-400 text-slate-950 shadow-sm shadow-sky-500/40" : "bg-white/5 text-transparent ring-1 ring-white/15",
         )}
         aria-hidden="true"
       >
         <IconCheck className="h-3.5 w-3.5" strokeWidth={3} />
-      </span>
+      </motion.span>
 
       <div className="flex items-center gap-2.5">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
@@ -1170,7 +1301,7 @@ function PlanCard({
       </div>
 
       <div className="mt-4 flex items-end gap-1.5">{headline}</div>
-      <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-300">
+      <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-300 ring-1 ring-amber-400/20">
         <IconSpark className="h-3 w-3" aria-hidden="true" /> {highlight}
       </span>
 
@@ -1185,6 +1316,16 @@ function PlanCard({
 
       {children}
     </div>
+  );
+
+  // The recommended card rides an animated gradient ring (reduced-motion-safe via
+  // the .gs-shimmer-border CSS). `block` so it lays out as a normal grid cell.
+  return recommended ? (
+    <ShimmerBorder rounded="rounded-2xl" inline={false} className="h-full">
+      {card}
+    </ShimmerBorder>
+  ) : (
+    card
   );
 }
 
@@ -1416,8 +1557,8 @@ function WField({
         placeholder={placeholder}
         aria-invalid={showInvalid ? true : undefined}
         className={cn(
-          "border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:ring-sky-400/60",
-          showInvalid && "border-rose-400/60 focus-visible:ring-rose-400/50"
+          "border-white/10 bg-white/5 text-white transition-colors placeholder:text-slate-500 hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-sky-400/60",
+          showInvalid && "border-rose-400/60 hover:border-rose-400/60 focus-visible:ring-rose-400/50"
         )}
       />
       {error ? <FieldError>{error}</FieldError> : hint ? <div className="mt-1.5 text-xs text-slate-400">{hint}</div> : null}
@@ -1436,15 +1577,19 @@ function WColor({
   error?: string;
 }) {
   const id = React.useId();
+  // The native color input needs a valid #rrggbb; fall back so a partial hex
+  // mid-type doesn't blank the swatch. The glow ring picks up the live color.
+  const swatch = /^#([0-9a-fA-F]{6})$/.test((value || "").trim()) ? value.trim() : fallback;
   return (
     <div>
       <FieldLabel htmlFor={id} required>{label}</FieldLabel>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 rounded-lg p-0.5 transition-colors focus-within:bg-white/[0.03]">
         <input
           type="color"
           value={value || fallback}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 w-12 cursor-pointer rounded-lg border border-white/10 bg-white/5 p-0.5 shadow-sm"
+          style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.10), 0 3px 10px -3px ${swatch}aa` }}
+          className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-white/5 p-0.5 shadow-sm transition-transform hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
           aria-label={`${label} Color Picker`}
         />
         <Input

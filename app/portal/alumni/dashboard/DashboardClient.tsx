@@ -12,7 +12,6 @@ import {
   Search,
   Check,
   Building,
-  User,
   LogOut,
   Mail,
   Phone,
@@ -154,16 +153,65 @@ function PortalEmpty({
   return (
     <div className={`flex flex-col items-center justify-center gap-3 px-6 py-10 text-center ${className}`}>
       <div className="relative">
-        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-200/40 blur-2xl" />
-        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
-          <Icon className="h-6 w-6" aria-hidden />
+        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-300/40 blur-2xl" />
+        <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_10px_26px_-12px_rgba(74,17,29,0.4)]">
+          <Icon className="h-7 w-7" aria-hidden />
         </span>
       </div>
       <div className="space-y-1">
         <p className="text-sm font-bold text-maroon-900">{title}</p>
-        {sub && <p className="text-xs text-maroon-500 max-w-xs">{sub}</p>}
+        {sub && <p className="text-xs text-maroon-500 max-w-xs leading-relaxed">{sub}</p>}
       </div>
     </div>
+  );
+}
+
+/** Deterministic initials from a full name (max 2 letters). */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
+ * Avatar with a maroon→cream initials-gradient fallback for member/alumni cards.
+ * Shows the headshot when present; otherwise a tasteful gradient monogram — a
+ * small touch that makes directory cards read as designed rather than generic.
+ */
+function InitialsAvatar({
+  name,
+  src,
+  size = 48,
+  rounded = "rounded-xl",
+  className = "",
+}: {
+  name: string;
+  src?: string | null;
+  size?: number;
+  rounded?: string;
+  className?: string;
+}) {
+  const dim = { width: size, height: size };
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarSrc(src, size * 2)}
+        alt={name}
+        style={dim}
+        className={`${rounded} object-cover border border-maroon-100 ${className}`}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      style={dim}
+      className={`${rounded} inline-flex items-center justify-center bg-gradient-to-br from-maroon-700 via-maroon-600 to-maroon-800 text-cream-50 font-bold ring-1 ring-maroon-900/10 shadow-sm select-none ${className}`}
+    >
+      <span style={{ fontSize: Math.max(11, Math.round(size * 0.36)) }}>{initialsOf(name)}</span>
+    </span>
   );
 }
 
@@ -410,11 +458,14 @@ export default function DashboardClient({
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
         {/* Top Header / Portal Banner */}
-        <header className="bg-white border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-sm sticky top-0 z-10">
+        <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(74,17,29,0.25)] sticky top-0 z-20">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 text-cream-50 flex items-center justify-center font-bold shadow-sm">
-                <GraduationCap className="w-5 h-5" />
+              <div className="relative">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-amber-400/40 blur-lg" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(217,119,6,0.6)] ring-1 ring-amber-700/20">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
               </div>
               <div>
                 <h1 className="text-lg font-bold text-maroon-900 leading-tight">Alumni Network Portal</h1>
@@ -459,10 +510,11 @@ export default function DashboardClient({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap shrink-0 min-h-[44px] ${
-                    active 
-                      ? "bg-maroon-800 text-cream-50 shadow" 
-                      : "text-maroon-700 hover:bg-white hover:text-maroon-900"
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                    active
+                      ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
+                      : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -478,7 +530,7 @@ export default function DashboardClient({
           {activeTab === "overview" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                   <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
                   <p className="text-sm text-maroon-700 leading-relaxed mb-4">
                     As an alum of {fraternityName}, your involvement is crucial to our chapter&apos;s growth.
@@ -512,7 +564,7 @@ export default function DashboardClient({
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                   <h2 className="text-lg font-bold text-maroon-900 mb-4">Quick Stats & Insights</h2>
                   <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                     <div className="p-3 bg-cream-50/50 rounded-xl border border-maroon-50">
@@ -531,7 +583,7 @@ export default function DashboardClient({
                 </div>
 
                 {/* DONATION HISTORY */}
-                <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                   <h2 className="text-lg font-bold text-maroon-900 mb-4 flex items-center gap-2">
                     <Heart className="w-5 h-5 text-amber-600 fill-amber-600/10" />
                     Your Donation History
@@ -574,8 +626,9 @@ export default function DashboardClient({
 
               {/* Sidebar */}
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-maroon-800 to-maroon-950 text-cream-50 rounded-2xl p-6 shadow-md">
-                  <h3 className="text-base font-bold mb-2">Next Chapter Event</h3>
+                <div className="relative overflow-hidden bg-gradient-to-br from-maroon-800 to-maroon-950 text-cream-50 rounded-2xl p-6 shadow-[0_18px_44px_-20px_rgba(74,17,29,0.7)] ring-1 ring-maroon-900/30">
+                  <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-amber-400/15 blur-3xl" />
+                  <h3 className="relative text-base font-bold mb-2">Next Chapter Event</h3>
                   {events.length > 0 ? (
                     <div>
                       <h4 className="text-lg font-bold text-amber-300">{events[0].name}</h4>
@@ -589,9 +642,9 @@ export default function DashboardClient({
                           {events[0].location}
                         </p>
                       )}
-                      <button 
-                        onClick={() => setActiveTab("events")} 
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-maroon-950 font-bold text-xs py-2 rounded-lg mt-4 transition"
+                      <button
+                        onClick={() => setActiveTab("events")}
+                        className="w-full bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-maroon-950 font-bold text-xs py-2 rounded-lg mt-4 shadow-[0_6px_16px_-6px_rgba(217,119,6,0.7)] transition-all duration-200 active:scale-[0.98]"
                       >
                         View Calendar
                       </button>
@@ -601,7 +654,7 @@ export default function DashboardClient({
                   )}
                 </div>
 
-                <div className="bg-white rounded-2xl border border-maroon-100 p-5 shadow-sm">
+                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-5 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                   <h3 className="text-sm font-bold text-maroon-900 mb-3 flex items-center gap-1.5">
                     <Vote className="w-4 h-4 text-amber-600" />
                     Quick Survey
@@ -627,7 +680,7 @@ export default function DashboardClient({
           {/* HOMETOWN PNMS TAB */}
           {activeTab === "pnms" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Hometown PNM Matching</h2>
                 <p className="text-sm text-maroon-700">
                   Actively match Potential New Members (PNMs) whose hometown is near your current location (<strong>{alumni.city || "N/A"}, {alumni.state || "N/A"}</strong>). 
@@ -647,7 +700,7 @@ export default function DashboardClient({
                       const isVouched = vouchList.some(v => v.rushId === pnm.id);
                       const vouch = vouchList.find(v => v.rushId === pnm.id);
                       return (
-                        <div key={pnm.id} className="bg-white rounded-xl border border-maroon-100 p-4 shadow-sm flex flex-col justify-between hover:border-amber-400 transition">
+                        <div key={pnm.id} className="rounded-xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-4 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]">
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-bold text-maroon-900">{pnm.name}</span>
@@ -708,7 +761,7 @@ export default function DashboardClient({
 
               {/* General Search & Vouch */}
               <div className="pt-4">
-                <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                   <h3 className="text-base font-bold text-maroon-900 mb-3">Search all active PNMs</h3>
                   <div className="relative mb-4">
                     <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
@@ -771,7 +824,7 @@ export default function DashboardClient({
           {/* ACTIVE BROTHERS TAB */}
           {activeTab === "brothers" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-3">Undergraduate Active Roster</h2>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
@@ -789,15 +842,8 @@ export default function DashboardClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {filteredBrothers.length > 0 ? (
                   filteredBrothers.map(b => (
-                    <div key={b.id} className="bg-white rounded-2xl border border-maroon-100 p-4 shadow-sm flex items-start gap-4 hover:border-amber-300 transition">
-                      <div className="w-12 h-12 rounded-xl bg-cream-100 overflow-hidden shrink-0 flex items-center justify-center border border-maroon-50">
-                        {b.headshotUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={avatarSrc(b.headshotUrl, 96)} alt={b.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-6 h-6 text-maroon-400" />
-                        )}
-                      </div>
+                    <div key={b.id} className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-4 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] flex items-start gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]">
+                      <InitialsAvatar name={b.name} src={b.headshotUrl} size={48} rounded="rounded-xl" className="shrink-0" />
                       <div className="space-y-0.5">
                         <h3 className="font-bold text-maroon-900 text-sm leading-snug">{b.name}</h3>
                         {b.position && (
@@ -828,7 +874,7 @@ export default function DashboardClient({
           {/* ALUMNI DIRECTORY TAB */}
           {activeTab === "alumni" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-3">Alumni Directory & Network</h2>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
@@ -846,7 +892,7 @@ export default function DashboardClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {filteredAlumni.length > 0 ? (
                   filteredAlumni.map(a => (
-                    <div key={a.id} className="bg-white rounded-2xl border border-maroon-100 p-5 shadow-sm hover:border-amber-300 transition flex flex-col justify-between">
+                    <div key={a.id} className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-5 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)] flex flex-col justify-between">
                       <div className="space-y-2">
                         <div>
                           <h3 className="font-bold text-maroon-900 text-base">{a.fullName}</h3>
@@ -908,7 +954,7 @@ export default function DashboardClient({
           {/* SURVEYS & POLLS TAB */}
           {activeTab === "polls" && (
             <div className="space-y-6 max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-2">Alumni Opinion Polls</h2>
                 <p className="text-sm text-maroon-700">
                   Participate in voting for critical chapter matters, homecoming plans, and general feedback.
@@ -929,7 +975,7 @@ export default function DashboardClient({
                     const myVote = poll.votes.find(v => v.alumniId === alumni.id);
 
                     return (
-                      <div key={poll.id} className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+                      <div key={poll.id} className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                         <h3 className="text-base font-bold text-maroon-900 mb-4">{poll.question}</h3>
                         
                         <div className="space-y-3">
@@ -998,7 +1044,7 @@ export default function DashboardClient({
           {/* EVENTS CALENDAR TAB */}
           {activeTab === "events" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Alumni Calendar & Events</h2>
                 <p className="text-sm text-maroon-700">
                   Stay updated on upcoming alumni networking dinners, tailgates, and homecoming weekends.
@@ -1013,7 +1059,7 @@ export default function DashboardClient({
                     const isAlumni = event.category === "ALUMNI" || event.category === "OTHER";
 
                     return (
-                      <div key={event.id} className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm flex flex-col justify-between hover:border-amber-300 transition">
+                      <div key={event.id} className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]">
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
@@ -1091,7 +1137,7 @@ export default function DashboardClient({
           {/* DONATE & SUPPORT TAB */}
           {activeTab === "donate" && (
             <div className="space-y-6 max-w-xl mx-auto">
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Donate &amp; Support Chapter</h2>
                 <p className="text-sm text-maroon-700">
                   Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and we take a 5% platform fee on all online donations.
@@ -1099,7 +1145,7 @@ export default function DashboardClient({
               </div>
 
               {/* Donation Form */}
-              <div className="bg-white rounded-2xl border border-maroon-100 p-6 shadow-sm space-y-6">
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] space-y-6">
                 <div>
                   <label className="block text-xs font-bold text-maroon-900 uppercase tracking-wider mb-2">1. Select Amount</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
@@ -1180,7 +1226,7 @@ export default function DashboardClient({
                   type="button"
                   disabled={submittingDonation || !donationAmount || Number(donationAmount) < 5}
                   onClick={handleDonationCheckout}
-                  className="w-full bg-maroon-800 hover:bg-maroon-900 disabled:bg-maroon-800/50 text-cream-50 font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2 font-semibold"
+                  className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 disabled:from-maroon-800/50 disabled:to-maroon-900/50 text-cream-50 font-bold py-3 rounded-xl transition-all duration-200 active:scale-[0.98] disabled:active:scale-100 shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] flex items-center justify-center gap-2"
                 >
                   {submittingDonation ? (
                     <span>Creating checkout...</span>

@@ -222,7 +222,10 @@ export function DashboardInsights({
         </Link>
       )}
 
-      {/* ── KPI strip ────────────────────────────────────────────────────── */}
+      {/* ── KPI strip ──────────────────────────────────────────────────────
+          Brand-tinted frosted tiles: a translucent surface with a hairline
+          brand ring, a layered soft shadow that deepens on hover, a thin
+          tone-colored top accent, and a gentle rise on hover. */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
@@ -230,19 +233,37 @@ export function DashboardInsights({
             <Link
               key={kpi.label}
               href={kpi.href}
-              className="group block rounded-2xl border border-border bg-card p-3.5 transition-all hover:border-phisig-red/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+              className={cn(
+                "group relative block overflow-hidden rounded-2xl border border-phisig-red/10 bg-white/80 backdrop-blur-xl p-3.5",
+                "ring-1 ring-[hsl(var(--primary)/0.05)]",
+                "shadow-[0_1px_0_0_rgba(255,255,255,0.8)_inset,0_8px_22px_-14px_rgba(11,11,12,0.16)]",
+                "transition-all duration-300 hover:-translate-y-0.5 hover:border-phisig-red/40",
+                "hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_16px_34px_-16px_hsl(var(--primary)/0.28)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+              )}
             >
+              {/* tone-colored top accent rule */}
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute inset-x-0 top-0 h-[3px] opacity-70 transition-opacity duration-300 group-hover:opacity-100",
+                  kpi.tone === "phisig-red" && "bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent",
+                  kpi.tone === "emerald" && "bg-gradient-to-r from-emerald-400/70 via-emerald-400/30 to-transparent",
+                  kpi.tone === "amber" && "bg-gradient-to-r from-amber-400/70 via-amber-400/30 to-transparent",
+                  kpi.tone === "muted" && "bg-gradient-to-r from-border via-border/40 to-transparent",
+                )}
+              />
               <div className="flex items-start justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {kpi.label}
                 </p>
                 <span
                   className={cn(
-                    "inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors",
-                    kpi.tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red",
-                    kpi.tone === "emerald" && "bg-emerald-50 text-emerald-700",
-                    kpi.tone === "amber" && "bg-amber-50 text-amber-700",
-                    kpi.tone === "muted" && "bg-secondary text-muted-foreground",
+                    "inline-flex h-6 w-6 items-center justify-center rounded-full ring-1 transition-transform duration-300 group-hover:scale-110",
+                    kpi.tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red ring-phisig-red/15",
+                    kpi.tone === "emerald" && "bg-emerald-50 text-emerald-700 ring-emerald-200/60",
+                    kpi.tone === "amber" && "bg-amber-50 text-amber-700 ring-amber-200/60",
+                    kpi.tone === "muted" && "bg-secondary text-muted-foreground ring-border",
                   )}
                 >
                   <Icon className="h-3 w-3" aria-hidden="true" />
@@ -264,7 +285,7 @@ export function DashboardInsights({
         <div id="decisions" className="grid lg:grid-cols-3 gap-3">
           {/* Recommend BID */}
           {recommendBid.length > 0 && (
-            <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white">
+            <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-20px_rgba(16,185,129,0.4)]">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shrink-0">
@@ -282,7 +303,7 @@ export function DashboardInsights({
                     <li key={rush.id}>
                       <Link
                         href={`/admin/rushees/${rush.id}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-white px-3 py-2 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
+                        className="group/row flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-white px-3 py-2 hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
                         <span className="flex items-center gap-2 shrink-0">
@@ -292,7 +313,7 @@ export function DashboardInsights({
                           <span className="text-[10px] text-muted-foreground tabular-nums">
                             {rush.voteCount} votes
                           </span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                          <ArrowRight className="h-3 w-3 text-muted-foreground transition-transform duration-300 group-hover/row:translate-x-0.5" aria-hidden="true" />
                         </span>
                       </Link>
                     </li>
@@ -304,7 +325,7 @@ export function DashboardInsights({
 
           {/* Recommend DROP */}
           {recommendDrop.length > 0 && (
-            <Card className="border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-white">
+            <Card className="border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-20px_rgba(244,63,94,0.4)]">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white shrink-0">
@@ -322,7 +343,7 @@ export function DashboardInsights({
                     <li key={rush.id}>
                       <Link
                         href={`/admin/rushees/${rush.id}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-rose-100 bg-white px-3 py-2 hover:border-rose-300 hover:bg-rose-50/40 transition-colors"
+                        className="group/row flex items-center justify-between gap-2 rounded-lg border border-rose-100 bg-white px-3 py-2 hover:border-rose-300 hover:bg-rose-50/40 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
                         <span className="flex items-center gap-2 shrink-0">
@@ -332,7 +353,7 @@ export function DashboardInsights({
                           <span className="text-[10px] text-muted-foreground tabular-nums">
                             {rush.voteCount} votes
                           </span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                          <ArrowRight className="h-3 w-3 text-muted-foreground transition-transform duration-300 group-hover/row:translate-x-0.5" aria-hidden="true" />
                         </span>
                       </Link>
                     </li>
@@ -344,7 +365,7 @@ export function DashboardInsights({
 
           {/* Needs YOUR vote */}
           {needsMyVote.length > 0 && (
-            <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white">
+            <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-20px_hsl(var(--primary)/0.4)]">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-phisig-red text-white shrink-0">
@@ -362,14 +383,14 @@ export function DashboardInsights({
                     <li key={rush.id}>
                       <Link
                         href={`/admin/rushees/${rush.id}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-phisig-red/10 bg-white px-3 py-2 hover:border-phisig-red/40 hover:bg-phisig-red-soft/30 transition-colors"
+                        className="group/row flex items-center justify-between gap-2 rounded-lg border border-phisig-red/10 bg-white px-3 py-2 hover:border-phisig-red/40 hover:bg-phisig-red-soft/30 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
                         <span className="flex items-center gap-2 shrink-0">
                           <span className="text-[10px] text-muted-foreground tabular-nums">
                             {rush.voteCount} {rush.voteCount === 1 ? "vote" : "votes"} so far
                           </span>
-                          <ArrowRight className="h-3 w-3 text-phisig-red" aria-hidden="true" />
+                          <ArrowRight className="h-3 w-3 text-phisig-red transition-transform duration-300 group-hover/row:translate-x-0.5" aria-hidden="true" />
                         </span>
                       </Link>
                     </li>

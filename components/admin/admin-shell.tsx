@@ -29,21 +29,38 @@ export function AdminShell({
   }
 
   return (
-    <div className="min-h-screen bg-phisig-mist">
+    <div className="relative min-h-screen bg-phisig-mist">
+      {/* Branded ambient backdrop — two soft, fixed brand-tinted radial washes
+          (top-left + a warm band beneath the nav) lift the flat mist canvas into
+          a quietly premium surface without ever competing with content. Purely
+          decorative, GPU-cheap (static gradients, no blur/animation), and hidden
+          on the login screen so the auth view stays clean. */}
+      {!isLogin && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 -z-0"
+          style={{
+            background:
+              "radial-gradient(60rem 32rem at 12% -8%, hsl(var(--primary) / 0.07), transparent 60%), radial-gradient(48rem 26rem at 100% 0%, hsl(var(--primary) / 0.045), transparent 55%)",
+          }}
+        />
+      )}
       {/* Soft-gate billing banner — rendered above the nav. The banner self-hides
           on the login screen, when the subscription is healthy, and when the
           admin dismissed it this session. It never blocks the app. */}
-      {!isLogin && banner}
-      {!isLogin && <AdminNav isAdmin={isAdmin} />}
-      {/* CommandPalette mounts itself globally and listens for ⌘K / Ctrl+K
-          at the window level. Renders nothing visible until opened. Skipped
-          on the login screen so a misfired keypress doesn't open a palette
-          full of admin-only routes the user can't access yet. */}
-      {!isLogin && <CommandPalette isAdmin={isAdmin} />}
-      {/* Floating mobile launcher so touch users can reach the palette without
-          knowing the ⌘K shortcut. It triggers the exact same open mechanism. */}
-      {!isLogin && <CommandPaletteLauncher onOpen={openPalette} />}
-      <div>{children}</div>
+      <div className="relative z-10">
+        {!isLogin && banner}
+        {!isLogin && <AdminNav isAdmin={isAdmin} />}
+        {/* CommandPalette mounts itself globally and listens for ⌘K / Ctrl+K
+            at the window level. Renders nothing visible until opened. Skipped
+            on the login screen so a misfired keypress doesn't open a palette
+            full of admin-only routes the user can't access yet. */}
+        {!isLogin && <CommandPalette isAdmin={isAdmin} />}
+        {/* Floating mobile launcher so touch users can reach the palette without
+            knowing the ⌘K shortcut. It triggers the exact same open mechanism. */}
+        {!isLogin && <CommandPaletteLauncher onOpen={openPalette} />}
+        <div>{children}</div>
+      </div>
     </div>
   );
 }

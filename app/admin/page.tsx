@@ -8,9 +8,19 @@ import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, GraduationCap, Gift, Building, Calendar, Vote, User, LayoutDashboard } from "lucide-react";
+import { Reveal } from "@/components/site/reveal";
+import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
+import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+// Brand-tinted glass surface — a frosted white card with a 1px brand-tinted
+// hairline ring and a layered soft shadow for real depth. Pairs with `.lift`
+// for the hover rise. Uses hsl(var(--primary)) so it re-tints per chapter
+// (the portal's maroon scale is separate; this is the admin/brand surface).
+const GLASS_CARD =
+  "lift relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-white/80 backdrop-blur-xl " +
+  "ring-1 ring-[hsl(var(--primary)/0.06)] shadow-[0_1px_0_0_rgba(255,255,255,0.8)_inset,0_10px_30px_-14px_rgba(11,11,12,0.16),0_28px_56px_-32px_hsl(var(--primary)/0.20)]";
 
 export default async function AdminDashboard({ searchParams }: { searchParams?: { view?: string } }) {
   const currentView = searchParams?.view === "alumni" ? "alumni" : "brothers";
@@ -229,21 +239,28 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
   return (
     <main className="container py-8">
-      {/* E-Board View Slider Toggle */}
+      {/* E-Board View Slider Toggle — frosted glass pill with a brand-tinted
+          active chip and a soft layered shadow. */}
       <div className="flex justify-center mb-8">
-        <div className="inline-flex rounded-xl bg-muted p-1 border border-border">
+        <div className="inline-flex rounded-2xl bg-white/70 backdrop-blur-xl p-1 border border-phisig-red/10 ring-1 ring-[hsl(var(--primary)/0.05)] shadow-[0_8px_24px_-14px_rgba(11,11,12,0.18)]">
           <Link
             href="/admin?view=brothers"
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
-              currentView === "brothers" ? "bg-background text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+            aria-current={currentView === "brothers" ? "page" : undefined}
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
+              currentView === "brothers"
+                ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/60"
             }`}
           >
             Brothers/Rush View
           </Link>
           <Link
             href="/admin?view=alumni"
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
-              currentView === "alumni" ? "bg-background text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+            aria-current={currentView === "alumni" ? "page" : undefined}
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
+              currentView === "alumni"
+                ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/60"
             }`}
           >
             Alumni Network View
@@ -253,157 +270,159 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       {currentView === "alumni" ? (
         <div className="space-y-8">
-          <div className="flex items-start gap-4">
-            <IconChip icon={GraduationCap} tone="brand" size="lg" className="hidden sm:inline-flex" />
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Alumni Network Dashboard</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Monitor alumni network metrics, recent registrations, campaign donations, and active polls.
-              </p>
+          <Reveal as="div" className="relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-gradient-to-br from-phisig-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
+            {/* soft brand orb for depth — decorative */}
+            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-phisig-red/10 blur-3xl" />
+            <div className="relative flex items-start gap-4">
+              <IconChip icon={IconAlumni} tone="brand" size="lg" className="hidden sm:inline-flex" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Alumni Network Dashboard</h1>
+                <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+                  Monitor alumni network metrics, recent registrations, campaign donations, and active polls.
+                </p>
+              </div>
             </div>
-          </div>
+          </Reveal>
 
-          {/* Alumni KPI Cards */}
+          {/* Alumni KPI Cards — brand-tinted glass with a top accent rule, a
+              duotone glyph, and an in-view rise that staggers across the row. */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <div className="flex items-center justify-between space-y-0 pb-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Alumni</p>
-                <IconChip icon={GraduationCap} tone="brand" size="sm" />
-              </div>
-              <div className="text-2xl font-bold">{totalAlumni}</div>
-              <p className="text-xs text-muted-foreground mt-1">Graduated brothers cataloged</p>
-            </div>
-
-            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <div className="flex items-center justify-between space-y-0 pb-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Directory Opt-In</p>
-                <IconChip icon={Building} tone="brand" size="sm" />
-              </div>
-              <div className="text-2xl font-bold">{optedInDirectoryCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Visible on public directory</p>
-            </div>
-
-            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <div className="flex items-center justify-between space-y-0 pb-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Donations</p>
-                <IconChip icon={Gift} tone="brand" size="sm" />
-              </div>
-              <div className="text-2xl font-bold">${(totalDonationsCents / 100).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">Raised from alumni network</p>
-            </div>
-
-            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <div className="flex items-center justify-between space-y-0 pb-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Active Polls</p>
-                <IconChip icon={Vote} tone="brand" size="sm" />
-              </div>
-              <div className="text-2xl font-bold">{activeAlumniPollsCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Surveys currently open</p>
-            </div>
+            {[
+              { label: "Total Alumni", value: String(totalAlumni), sub: "Graduated brothers cataloged", icon: IconAlumni },
+              { label: "Directory Opt-In", value: String(optedInDirectoryCount), sub: "Visible on public directory", icon: IconMembers },
+              { label: "Total Donations", value: `$${(totalDonationsCents / 100).toLocaleString()}`, sub: "Raised from alumni network", icon: IconDues },
+              { label: "Active Polls", value: String(activeAlumniPollsCount), sub: "Surveys currently open", icon: Vote },
+            ].map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <Reveal key={kpi.label} delay={i * 70}>
+                  <div className={`group ${GLASS_CARD} p-6 h-full`}>
+                    <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent opacity-80" />
+                    <div className="flex items-center justify-between space-y-0 pb-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
+                      <IconChip icon={Icon} tone="brand" size="sm" className="transition-transform duration-300 group-hover:scale-105" />
+                    </div>
+                    <div className="text-2xl font-bold tracking-tight tabular-nums">{kpi.value}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Registrations Card */}
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
-                <IconChip icon={User} tone="brand" size="sm" />
-                Recent Alumni Registrations
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase">
-                      <th className="pb-2">Name</th>
-                      <th className="pb-2">Class</th>
-                      <th className="pb-2">Company</th>
-                      <th className="pb-2">City/State</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {recentAlumniList.length > 0 ? (
-                      recentAlumniList.map((a) => (
-                        <tr key={a.id} className="hover:bg-muted/50 transition">
-                          <td className="py-2.5 font-medium">{a.fullName}</td>
-                          <td className="py-2.5">{a.graduationYear}</td>
-                          <td className="py-2.5 truncate max-w-[120px]">{a.employer || "N/A"}</td>
-                          <td className="py-2.5">{a.city ? `${a.city}, ${a.state || ""}` : "N/A"}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="py-8">
-                          <div className="flex flex-col items-center gap-2.5 text-center">
-                            <IconChip icon={User} tone="muted" size="md" />
-                            <p className="text-xs text-muted-foreground max-w-[220px]">
-                              No alumni have registered yet. New sign-ups appear here as they come in.
-                            </p>
-                          </div>
-                        </td>
+            <Reveal delay={40}>
+              <div className={`${GLASS_CARD} p-6 h-full`}>
+                <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
+                  <IconChip icon={User} tone="brand" size="sm" />
+                  Recent Alumni Registrations
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="border-b border-phisig-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
+                        <th className="pb-2">Name</th>
+                        <th className="pb-2">Class</th>
+                        <th className="pb-2">Company</th>
+                        <th className="pb-2">City/State</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border/70">
+                      {recentAlumniList.length > 0 ? (
+                        recentAlumniList.map((a) => (
+                          <tr key={a.id} className="hover:bg-phisig-red-soft/40 transition-colors">
+                            <td className="py-2.5 font-medium">{a.fullName}</td>
+                            <td className="py-2.5 tabular-nums">{a.graduationYear}</td>
+                            <td className="py-2.5 truncate max-w-[120px]">{a.employer || "N/A"}</td>
+                            <td className="py-2.5">{a.city ? `${a.city}, ${a.state || ""}` : "N/A"}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="py-10">
+                            <div className="flex flex-col items-center gap-3 text-center">
+                              <span className="relative">
+                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-phisig-red/15 blur-2xl" />
+                                <IconChip icon={IconAlumni} tone="brand" size="md" />
+                              </span>
+                              <p className="text-xs text-muted-foreground max-w-[220px]">
+                                No alumni have registered yet. New sign-ups appear here as they come in.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </Reveal>
 
             {/* Recent Donations Card */}
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
-              <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
-                <IconChip icon={Gift} tone="brand" size="sm" />
-                Recent Alumni Donations
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase">
-                      <th className="pb-2">Alumnus</th>
-                      <th className="pb-2">Amount</th>
-                      <th className="pb-2">Campaign</th>
-                      <th className="pb-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {recentDonations.length > 0 ? (
-                      recentDonations.map((d) => (
-                        <tr key={d.id} className="hover:bg-muted/50 transition">
-                          <td className="py-2.5 font-medium">{d.alumni?.fullName || "Anonymous"}</td>
-                          <td className="py-2.5 font-bold">${(d.amountCents / 100).toFixed(2)}</td>
-                          <td className="py-2.5 truncate max-w-[120px]">{d.campaign || "General"}</td>
-                          <td className="py-2.5">{new Date(d.recordedAt).toLocaleDateString()}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="py-8">
-                          <div className="flex flex-col items-center gap-2.5 text-center">
-                            <IconChip icon={Gift} tone="muted" size="md" />
-                            <p className="text-xs text-muted-foreground max-w-[220px]">
-                              No donations recorded yet. Alumni gifts will show up here once they give.
-                            </p>
-                          </div>
-                        </td>
+            <Reveal delay={110}>
+              <div className={`${GLASS_CARD} p-6 h-full`}>
+                <h3 className="text-base font-semibold mb-4 flex items-center gap-2.5">
+                  <IconChip icon={IconDues} tone="brand" size="sm" />
+                  Recent Alumni Donations
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="border-b border-phisig-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
+                        <th className="pb-2">Alumnus</th>
+                        <th className="pb-2">Amount</th>
+                        <th className="pb-2">Campaign</th>
+                        <th className="pb-2">Date</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border/70">
+                      {recentDonations.length > 0 ? (
+                        recentDonations.map((d) => (
+                          <tr key={d.id} className="hover:bg-phisig-red-soft/40 transition-colors">
+                            <td className="py-2.5 font-medium">{d.alumni?.fullName || "Anonymous"}</td>
+                            <td className="py-2.5 font-bold tabular-nums">${(d.amountCents / 100).toFixed(2)}</td>
+                            <td className="py-2.5 truncate max-w-[120px]">{d.campaign || "General"}</td>
+                            <td className="py-2.5 tabular-nums">{new Date(d.recordedAt).toLocaleDateString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="py-10">
+                            <div className="flex flex-col items-center gap-3 text-center">
+                              <span className="relative">
+                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-phisig-red/15 blur-2xl" />
+                                <IconChip icon={IconDues} tone="brand" size="md" />
+                              </span>
+                              <p className="text-xs text-muted-foreground max-w-[220px]">
+                                No donations recorded yet. Alumni gifts will show up here once they give.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       ) : (
         <>
-          <div className="mb-6 flex items-end justify-between">
-            <div className="flex items-start gap-4">
-              <IconChip icon={LayoutDashboard} tone="brand" size="lg" className="hidden sm:inline-flex" />
+          <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-gradient-to-br from-phisig-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
+            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-phisig-red/10 blur-3xl" />
+            <div className="relative flex items-start gap-4">
+              <IconChip icon={IconDashboard} tone="brand" size="lg" className="hidden sm:inline-flex" />
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight">Rush Roster</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Rush Roster</h1>
+                <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
                   {me ? <>Signed in as <span className="text-foreground font-medium">{me.name}</span> · </> : null}
                   Manage potential new members. Update status, vote, take notes, send mass email or text.
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
 
           <DashboardInsights
             rushes={serializable}
@@ -424,48 +443,77 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           {(rushes.length > 0 || recentEntries.length > 0) && (
             <div className="mb-6 grid lg:grid-cols-2 gap-4">
               {rushes.length > 0 && (
-                <RushFunnel
-                  submitted={rushes.length}
-                  active={rushes.filter((r) => r.status === "ACTIVE").length}
-                  bid={bidsExtendedCount}
-                  accepted={acceptedCount}
-                />
+                <Reveal delay={40} className="h-full [&>*]:h-full">
+                  <RushFunnel
+                    submitted={rushes.length}
+                    active={rushes.filter((r) => r.status === "ACTIVE").length}
+                    bid={bidsExtendedCount}
+                    accepted={acceptedCount}
+                  />
+                </Reveal>
               )}
               {recentEntries.length > 0 && (
-                <RecentActivity entries={recentEntries} />
+                <Reveal delay={110} className="h-full [&>*]:h-full">
+                  <RecentActivity entries={recentEntries} />
+                </Reveal>
               )}
             </div>
           )}
 
           {remaining > 0 && (
-            <div className="mb-6 rounded-2xl border border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white p-5">
-              <div className="flex items-start gap-3 mb-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-phisig-red text-white shrink-0">
+            <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]">
+              <span aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-phisig-red/10 blur-3xl" />
+              <div className="relative flex items-start gap-3 mb-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
                   <Sparkles className="h-4 w-4" />
                 </span>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold tracking-tight">
                     Get rush ready — {remaining} item{remaining === 1 ? "" : "s"} pending
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Wrap these up so the public site reads as a finished product to parents and freshmen.
                   </p>
+                  {/* Completion progress — done vs total. A quick, scannable
+                      sense of how close the chapter is to launch-ready. */}
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <div
+                      className="h-1.5 flex-1 rounded-full bg-phisig-red/10 overflow-hidden"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={checklist.length}
+                      aria-valuenow={checklist.length - remaining}
+                      aria-label="Rush readiness progress"
+                    >
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700"
+                        style={{ width: `${Math.round(((checklist.length - remaining) / checklist.length) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-semibold text-phisig-red tabular-nums shrink-0">
+                      {checklist.length - remaining}/{checklist.length} done
+                    </span>
+                  </div>
                 </div>
               </div>
-              <ul className="space-y-2">
+              <ul className="relative space-y-2">
                 {checklist.map((c) => (
                   <li
                     key={c.label}
-                    className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${
+                    className={`group flex items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
                       c.ok
-                        ? "border-emerald-200 bg-emerald-50/40"
-                        : "border-amber-200 bg-amber-50/40"
+                        ? "border-emerald-200/70 bg-emerald-50/40"
+                        : "border-amber-200/70 bg-amber-50/40 hover:bg-amber-50/70"
                     }`}
                   >
                     {c.ok ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shrink-0 mt-px ring-1 ring-emerald-200">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      </span>
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700 shrink-0 mt-px ring-1 ring-amber-200">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                      </span>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium ${c.ok ? "text-emerald-900" : "text-amber-900"}`}>
@@ -478,15 +526,15 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                     {!c.ok && (
                       <Link
                         href={c.href}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-phisig-red hover:underline shrink-0"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-phisig-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
                       >
-                        Fix <ArrowRight className="h-3 w-3" />
+                        Fix <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                       </Link>
                     )}
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           )}
 
           <Roster

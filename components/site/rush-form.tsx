@@ -10,10 +10,16 @@ import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2,
-  User, Mail, Phone, Sparkles, Send, Check,
-  Camera, Upload, X as XIcon, ImagePlus,
-  GraduationCap, MapPin, BookOpen, ShieldCheck,
+  Check, Upload, X as XIcon,
 } from "lucide-react";
+// Bespoke chapter-brand duotone icons (imported direct from the file, NOT the
+// barrel). They default their accent to the live chapter primary so every mark
+// on the conversion form reads in the CHAPTER color — never platform blue/gold.
+import {
+  IconUser, IconPhone, IconMail as IconMailDuo, IconBook, IconPin as IconPinDuo,
+  IconGradCap, IconCamera, IconSend, IconCheckCircle, IconShieldCheck as IconShieldCheckDuo,
+  IconSparkle, IconBolt, IconCalendarStar,
+} from "@/components/brand/icons/chapter";
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import type { ChapterIdentity } from "@/lib/chapter-identity";
@@ -309,7 +315,15 @@ export function RushForm({
   }
 
   return (
-    <Card className="overflow-hidden border-border/80 shadow-xl shadow-phisig-red/5 hover:shadow-2xl hover:shadow-phisig-red/10 transition-shadow duration-500">
+    // The conversion panel is the most important surface on the page. Rather
+    // than frosting the form itself (inputs must stay crisply legible), we keep
+    // a solid card and ELEVATE it: a frosted-glass FRAME around it (.gs-glass)
+    // over a deep grounding shadow (.gs-float-shadow) so the panel reads as
+    // floating above the section's aurora — the same "important surface" cue the
+    // apex site uses for its product mockup. Wrapper is purely presentational;
+    // the stateful form Card inside is untouched.
+    <div className="gs-glass gs-float-shadow rounded-[1.35rem] p-1.5 sm:p-2">
+    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card/95 shadow-sm transition-shadow duration-500">
       {/* Honeypot — bot bait. Real users never see this field; assistive tech
           skips it via aria-hidden + tabIndex=-1; the offscreen position keeps
           it out of the visual viewport without using display:none (display:none
@@ -380,15 +394,23 @@ export function RushForm({
           {step === "review" && (
             <>
               <ReviewStep data={data} totalSteps={STEPS.length} booth={booth} />
-              <label className="mt-6 flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-4 cursor-pointer hover:bg-secondary/60 transition-colors">
+              {/* Consent box — the trust-critical element. Lifted to a soft
+                  brand-tinted surface with a shield lead so it reads as the
+                  formal, important step (not a throwaway checkbox). The input,
+                  its handler, and the aria-describedby linkage are UNCHANGED;
+                  the whole <label> still toggles the checkbox on click. */}
+              <label className="group mt-6 flex items-start gap-3 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4 cursor-pointer transition-colors hover:border-phisig-red/35 hover:bg-phisig-red-soft/60">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
                   aria-describedby="sms-consent-text"
                 />
                 <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-phisig-red">
+                    <IconShieldCheckDuo className="h-3.5 w-3.5" /> Consent to contact
+                  </span>
                   {SMS_EXPRESS_CONSENT}{" "}
                   See our{" "}
                   <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
@@ -407,21 +429,90 @@ export function RushForm({
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
             {step === "review" ? (
-              <Button onClick={submit} disabled={submitting || !consent} size="lg" className="group" title={!consent ? "Please review and accept the consent disclosure to submit." : undefined}>
-                {submitting ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                ) : (
-                  <>{booth ? "Add rushee" : "Submit registration"} <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
-                )}
-              </Button>
+              // Final submit — the conversion action. Wrapped in a CHAPTER-brand
+              // shimmer ring (BrandShimmerRing) that blooms on hover so it reads
+              // as the primary action. The ring is decorative; the real, focusable
+              // button stays exactly as wired (consent-gated, submit handler).
+              // While disabled (consent unchecked) we drop the ring so it doesn't
+              // imply the button is actionable yet.
+              <BrandShimmerRing disabled={submitting || !consent} className="rounded-md">
+                <Button onClick={submit} disabled={submitting || !consent} size="lg" className="group" title={!consent ? "Please review and accept the consent disclosure to submit." : undefined}>
+                  {submitting ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
+                  ) : (
+                    <>{booth ? "Add rushee" : "Submit registration"} <IconSend className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
+                  )}
+                </Button>
+              </BrandShimmerRing>
             ) : (
               <Button onClick={next} size="lg" className="group">
                 Continue <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             )}
           </div>
+
+        {/* Trust micro-row — a quiet, always-visible reassurance strip at the
+            base of the conversion panel. Custom brand duotone icons; no new copy
+            obligations (these restate the disclosures already shown). It makes
+            the form feel considered + trustworthy at the point of conversion
+            without adding a step or touching the submit flow. */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> Never sold or shared
+          </span>
+          <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <IconCheckCircle className="h-3.5 w-3.5 text-phisig-red" /> Opt out anytime — reply STOP
+          </span>
+          <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> Goes straight to the rush chair
+          </span>
+        </div>
       </CardContent>
     </Card>
+    </div>
+  );
+}
+
+/**
+ * BrandShimmerRing — a slow CHAPTER-brand gradient ring (primary → soft primary
+ * → transparent) around a primary CTA, reusing the global `gs-border-spin`
+ * keyframe (defined in app/globals.css; NOT redefined here). The platform
+ * `.gs-shimmer-border` utility is hardwired to blue/sky/gold, so on the chapter
+ * site we recolor it inline to the live `hsl(var(--primary))`.
+ *
+ * The ring sits OUTSIDE the child via a padding-box mask (never clips it) and is
+ * decorative only — the focusable element is the child. `disabled` collapses the
+ * ring so a not-yet-actionable button doesn't glow. Reduced-motion-safe: the
+ * global prefers-reduced-motion block neutralizes the spin to a static ring.
+ */
+function BrandShimmerRing({
+  children,
+  className,
+  disabled,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+}) {
+  if (disabled) return <span className={cn("inline-flex", className)}>{children}</span>;
+  const ring: React.CSSProperties = {
+    padding: "1.5px",
+    background:
+      "conic-gradient(from 0deg, hsl(var(--primary) / 0) 0deg, hsl(var(--primary)) 80deg, hsl(var(--primary) / 0.55) 170deg, hsl(var(--primary) / 0) 300deg)",
+    WebkitMask:
+      "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    WebkitMaskComposite: "xor",
+    mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    maskComposite: "exclude",
+    animation: "gs-border-spin 6s linear infinite",
+  };
+  return (
+    <span className={cn("relative inline-flex isolate", className)}>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit]" style={ring} />
+      {children}
+    </span>
   );
 }
 
@@ -455,14 +546,14 @@ function ContactStep({
         title={booth ? "Name & phone" : "Drop your number"}
         sub={booth ? "Two fields. Then year. Then you're done." : "Phone is required — that's how we'll text the schedule."}
       />
-      <Field id="name" label="Full name" required error={errors.name} icon={User} valid={nameValid}>
+      <Field id="name" label="Full name" required error={errors.name} icon={IconUser} valid={nameValid}>
         <Input
           id="name" autoComplete="name" autoFocus
           value={data.name} onChange={(e) => update("name", e.target.value)}
           placeholder="James Carter" className="pl-9 pr-10" inputMode="text"
         />
       </Field>
-      <Field id="phone" label="Phone" required error={errors.phone} icon={Phone} valid={phoneValid}>
+      <Field id="phone" label="Phone" required error={errors.phone} icon={IconPhone} valid={phoneValid}>
         <Input
           id="phone" type="tel" inputMode="tel" autoComplete="tel"
           value={data.phone} onChange={(e) => update("phone", e.target.value)}
@@ -470,7 +561,7 @@ function ContactStep({
         />
       </Field>
       {!booth && (
-        <Field id="email" label="Email (optional)" error={errors.email} icon={Mail} valid={emailEntered && emailValid}>
+        <Field id="email" label="Email (optional)" error={errors.email} icon={IconMailDuo} valid={emailEntered && emailValid}>
           <Input
             id="email" type="email" autoComplete="email"
             value={data.email} onChange={(e) => update("email", e.target.value)}
@@ -478,8 +569,11 @@ function ContactStep({
           />
         </Field>
       )}
-      {/* TCPA pre-disclosure: must appear before / at the point of phone collection. */}
+      {/* TCPA pre-disclosure: must appear before / at the point of phone collection.
+          Copy is unchanged (compliance-critical); only a small brand shield is
+          added inline as a visual lead. */}
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
+        <IconShieldCheckDuo className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px text-phisig-red align-middle" />
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
         <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
@@ -559,7 +653,7 @@ function ProfileStep({
         </div>
       </Field>
       <div className="grid sm:grid-cols-2 gap-5">
-        <Field id="major" label="Major" icon={BookOpen}>
+        <Field id="major" label="Major" icon={IconBook}>
           <Input
             id="major"
             value={data.major} onChange={(e) => update("major", e.target.value)}
@@ -581,7 +675,7 @@ function ProfileStep({
             ))}
           </datalist>
         </Field>
-        <Field id="hometown" label="Hometown" icon={MapPin}>
+        <Field id="hometown" label="Hometown" icon={IconPinDuo}>
           <Input
             id="hometown"
             value={data.hometown} onChange={(e) => update("hometown", e.target.value)}
@@ -680,7 +774,7 @@ function PhotoStep({
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200",
+            "group relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200",
             "flex flex-col items-center justify-center text-center px-6 py-12",
             drag
               ? "border-phisig-red bg-phisig-red-soft scale-[1.01]"
@@ -688,8 +782,8 @@ function PhotoStep({
             busy && "pointer-events-none opacity-60"
           )}
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red mb-4">
-            {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImagePlus className="h-6 w-6" />}
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red mb-4 transition-transform duration-300 group-hover:scale-105">
+            {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <IconCamera className="h-6 w-6" />}
           </div>
           <p className="text-base font-medium">
             {busy ? "Uploading…" : "Tap to choose or drag & drop"}
@@ -736,8 +830,8 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
               className="h-20 w-20 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-background shrink-0"
             />
           ) : (
-            <div className="h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border shrink-0 flex items-center justify-center text-muted-foreground">
-              <Camera className="h-7 w-7" />
+            <div className="h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border shrink-0 flex items-center justify-center text-phisig-red/70">
+              <IconCamera className="h-7 w-7" />
             </div>
           )}
           <dl className="flex-1 grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
@@ -808,7 +902,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
             </p>
           )}
           <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-phisig-red-soft border border-phisig-red/20 px-4 py-2 text-xs font-semibold text-phisig-red">
-            <Sparkles className="h-3.5 w-3.5" /> Next rushee in 6 seconds…
+            <IconSparkle className="h-3.5 w-3.5" /> Next rushee in 6 seconds…
           </div>
           <div className="mt-4">
             <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">
@@ -840,13 +934,16 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
 
         <div className="mt-7 grid sm:grid-cols-3 gap-3 max-w-xl mx-auto text-left">
           {[
-            { num: "1", label: "Schedule drops mid-August" },
-            { num: "2", label: "We'll text & email you" },
-            { num: "3", label: "Show up & meet the brothers" },
+            { num: "1", label: "Schedule drops mid-August", Icon: IconCalendarStar },
+            { num: "2", label: "We'll text & email you", Icon: IconBolt },
+            { num: "3", label: "Show up & meet the brothers", Icon: IconSparkle },
           ].map((s) => (
-            <div key={s.num} className="rounded-xl border border-border bg-card px-3 py-2.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white text-[11px] font-semibold">
-                {s.num}
+            <div key={s.num} className="group rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-phisig-red/30">
+              <div className="flex items-center justify-between">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white text-[11px] font-semibold">
+                  {s.num}
+                </div>
+                <s.Icon className="h-4 w-4 text-phisig-red transition-transform duration-300 group-hover:scale-110" />
               </div>
               <p className="mt-2 text-xs font-medium leading-snug">{s.label}</p>
             </div>
@@ -855,7 +952,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
 
         <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
           <Button onClick={shareWithFriends} className="group">
-            <Send className="h-4 w-4" /> Tell your buddies
+            <IconSend className="h-4 w-4" /> Tell your buddies
           </Button>
           {/* Follow CTA renders ONLY when this chapter has a social handle + URL
               configured. No hardcoded chapter — an unconfigured tenant simply

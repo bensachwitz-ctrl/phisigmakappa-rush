@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { IconSubdomain, IconSecurity, IconSpark } from "@/components/brand/icons";
+import {
+  IconSubdomain,
+  IconSecurity,
+  IconSpark,
+  IconArrowRight,
+  IconCheckCircle,
+} from "@/components/brand/icons";
 import {
   IconPencil,
   IconSettingsGear,
@@ -95,10 +101,10 @@ export function EditableLivePreview({
     <div className="lg:sticky lg:top-8">
       {/* Eyebrow — now explicitly EDITABLE so the founder knows to type here. */}
       <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 ring-1 ring-sky-400/20">
           <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Live Preview
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/20">
           <IconPencil className="h-3.5 w-3.5" aria-hidden="true" /> Editable
         </span>
         <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
@@ -112,28 +118,55 @@ export function EditableLivePreview({
         </span>
       </div>
 
-      {/* Idle float wrapper — gentle drift, disabled under reduced-motion. */}
-      <motion.div
-        animate={reduce ? undefined : { y: [0, -6, 0] }}
-        transition={reduce ? undefined : { duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        className="will-change-transform"
-      >
-        <Tilt3DCard max={6} glareColor="rgba(56,189,248,0.22)" className="rounded-2xl">
-          {/* Mock browser window */}
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 shadow-2xl shadow-blue-950/40 ring-1 ring-white/5 backdrop-blur-md">
-            {/* Browser chrome */}
-            <div
-              aria-hidden="true"
-              className="flex items-center gap-2 border-b border-white/5 bg-slate-900/70 px-3 py-2.5"
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-              <div className="ml-2 flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-slate-950/70 px-2.5 py-1 text-[11px] text-slate-400">
-                <IconSecurity className="h-3 w-3 shrink-0 text-emerald-400/80" />
-                <span className="truncate font-mono">{host}</span>
+      {/* Device stage — a brand-tinted glow halo that morphs with the primary
+          color sits behind the floating browser mock, grounding it as the visual
+          centerpiece. The halo + float are decorative and reduced-motion-safe. */}
+      <div className="relative">
+        {/* Morphing brand glow halo (decorative). Recolors with the primary +
+            dark brand colors via colorTween so the whole stage feels alive. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] opacity-70 blur-2xl"
+          style={{
+            background: `radial-gradient(60% 55% at 50% 32%, ${primaryColor}33, transparent 70%), radial-gradient(50% 50% at 70% 80%, ${darkColor}26, transparent 75%)`,
+            transition: colorTween,
+          }}
+        />
+
+        {/* Idle float wrapper — gentle drift, disabled under reduced-motion. */}
+        <motion.div
+          animate={reduce ? undefined : { y: [0, -6, 0] }}
+          transition={reduce ? undefined : { duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          className="will-change-transform"
+        >
+          <Tilt3DCard max={6} glareColor="rgba(56,189,248,0.22)" className="rounded-2xl">
+            {/* Mock browser window — grounded with a deep floating shadow so it
+                reads as a real device hovering above the page. */}
+            <div className="gs-float-shadow relative overflow-hidden rounded-2xl border border-white/12 bg-slate-950/60 ring-1 ring-white/5 backdrop-blur-md">
+              {/* Browser chrome — traffic lights, nav affordances, a secure URL
+                  pill, and a tiny live dot, so the mock reads as a real browser. */}
+              <div
+                aria-hidden="true"
+                className="flex items-center gap-2 border-b border-white/8 bg-gradient-to-b from-slate-900/85 to-slate-900/60 px-3 py-2.5"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80 ring-1 ring-inset ring-black/10" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80 ring-1 ring-inset ring-black/10" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80 ring-1 ring-inset ring-black/10" />
+                </span>
+                {/* Back / forward chevrons (purely decorative chrome). */}
+                <span className="ml-1 hidden items-center gap-0.5 text-slate-500 sm:flex">
+                  <IconArrowRight className="h-3.5 w-3.5 rotate-180 opacity-60" />
+                  <IconArrowRight className="h-3.5 w-3.5 opacity-30" />
+                </span>
+                <div className="ml-1.5 flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-slate-950/70 px-2.5 py-1 text-[11px] text-slate-400 ring-1 ring-white/5">
+                  <IconSecurity className="h-3 w-3 shrink-0 text-emerald-400/80" />
+                  <span className="truncate font-mono">{host}</span>
+                  <span className="ml-auto hidden items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300 sm:inline-flex">
+                    <span className="h-1 w-1 rounded-full bg-emerald-400" /> Live
+                  </span>
+                </div>
               </div>
-            </div>
 
             {/* Rendered "site" hero — driven by the chosen brand colors. Recolors
                 smoothly via colorTween. The headline + name + tagline are inline
@@ -241,7 +274,7 @@ export function EditableLivePreview({
                 {["Rush", "Events", "Members"].map((t) => (
                   <div
                     key={t}
-                    className="rounded-lg px-2 py-2 text-center text-[10px] font-semibold"
+                    className="rounded-lg px-2 py-2 text-center text-[10px] font-semibold shadow-sm ring-1 ring-black/[0.04]"
                     style={{ backgroundColor: "#ffffff", color: darkColor, transition: colorTween }}
                   >
                     {t}
@@ -249,15 +282,36 @@ export function EditableLivePreview({
                 ))}
               </div>
             </div>
-          </div>
-        </Tilt3DCard>
-      </motion.div>
+
+            {/* Screen reflection — a faint diagonal sheen across the whole device
+                glass, sitting above the rendered "site". Decorative, no motion. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/[0.04] to-white/[0.08]"
+            />
+            </div>
+          </Tilt3DCard>
+        </motion.div>
+      </div>
 
       {/* ── Inline editor rail — brand colors as real controls ──────────────── */}
       <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
-        <p className="mb-2.5 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
-          <IconPencil className="h-3.5 w-3.5 text-sky-300" aria-hidden="true" /> Edit your brand colors
-        </p>
+        <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
+          <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+            <IconPencil className="h-3.5 w-3.5 text-sky-300" aria-hidden="true" /> Edit your brand colors
+          </p>
+          {/* Live palette read — a tiny strip mirroring the three chosen colors so
+              the founder sees their whole brand at a glance. Morphs with edits. */}
+          <span className="flex items-center gap-1" aria-hidden="true">
+            {[primaryColor, darkColor, softColor].map((c, i) => (
+              <span
+                key={i}
+                className="h-3.5 w-3.5 rounded-full ring-1 ring-white/25 shadow-sm"
+                style={{ backgroundColor: c, transition: colorTween }}
+              />
+            ))}
+          </span>
+        </div>
         <div className="grid grid-cols-3 gap-2">
           <ColorEditable label="Primary" value={primaryColor} onChange={onPrimaryColor} />
           <ColorEditable label="Dark" value={darkColor} onChange={onDarkColor} />
@@ -304,7 +358,10 @@ function HeroEditable({
   const id = React.useId();
   const shared = cn(
     "w-full rounded-md bg-transparent outline-none transition-colors placeholder:text-current/45",
-    "border border-transparent hover:border-white/15 focus:border-sky-300/60 focus:bg-white/5",
+    // A faint dashed border at rest signals "editable" without adding chrome;
+    // it brightens to a solid sky ring + soft tint on hover/focus. Border lives
+    // in the box at all states (transparent→colored) so there is zero layout shift.
+    "border border-dashed border-white/10 hover:border-white/25 focus:border-solid focus:border-sky-300/70 focus:bg-white/5 focus:shadow-[0_0_0_3px_rgba(56,189,248,0.12)]",
     "px-1.5 py-0.5",
     align === "center" ? "text-center" : "text-left",
     className,
@@ -367,14 +424,16 @@ function ColorEditable({
   // mid-type doesn't reset the swatch to black.
   const swatchValue = /^#([0-9a-fA-F]{6})$/.test(value.trim()) ? value.trim() : "#2563eb";
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-slate-950/40 p-1.5">
+    <div className="flex items-center gap-2 rounded-lg bg-slate-950/40 p-1.5 ring-1 ring-white/5 transition-all hover:bg-slate-950/60 hover:ring-white/10 focus-within:ring-2 focus-within:ring-sky-400/50">
       <input
         id={`${id}-swatch`}
         type="color"
         value={swatchValue}
         onChange={(e) => onChange(e.target.value)}
         aria-label={`${label} color`}
-        className="h-9 w-9 min-h-[36px] shrink-0 cursor-pointer rounded-md border border-white/15 bg-transparent p-0.5"
+        // A soft glow ring in the current color makes each swatch feel "lit".
+        style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.12), 0 2px 8px -2px ${swatchValue}99` }}
+        className="h-9 w-9 min-h-[36px] shrink-0 cursor-pointer rounded-md border border-white/15 bg-transparent p-0.5 transition-transform hover:scale-105"
       />
       <div className="min-w-0 flex-1">
         <label

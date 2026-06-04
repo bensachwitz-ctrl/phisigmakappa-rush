@@ -18,7 +18,19 @@ import {
   Reveal3DItem,
   FloatingOrbs,
   AnimatedCounter,
+  Spotlight,
+  Grain,
 } from "@/components/site/anim";
+// Bespoke chapter-brand duotone icons (imported direct from the file, NOT the
+// barrel, so components/brand/icons/index.ts stays untouched). These default
+// their accent to the live chapter primary, so every decorative mark on the
+// rush site reads in the CHAPTER color — never platform blue/gold.
+import {
+  IconBond, IconScholarship, IconCharacter, IconHandshake,
+  IconCalendarStar, IconPin, IconMail as IconMailDuo, IconInstagram as IconInstagramDuo,
+  IconHouse, IconSparkle, IconShieldCheck as IconShieldCheckDuo, IconBolt,
+  IconCrown as IconCrownDuo, IconCheckCircle as IconCheckCircleDuo,
+} from "@/components/brand/icons/chapter";
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
@@ -30,14 +42,14 @@ import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
   GraduationCap, Sparkles, Quote, Star, Calendar,
-  MapPin, Award, Zap, Music, BookOpen, HandHeart,
+  MapPin, Award, Music, BookOpen, HandHeart,
   Instagram, Mail, Phone, Building2, Flame, Crown,
   CheckCircle2, ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
+import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress, cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
@@ -216,7 +228,7 @@ export default async function ChapterLandingPage({
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <div className="mb-4 flex justify-center">
-              <SectionEyebrow icon={Sparkles}>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
+              <SectionEyebrow icon={IconSparkle}>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
             </div>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the Fall&nbsp;&apos;26 rush list.
@@ -325,6 +337,19 @@ export default async function ChapterLandingPage({
             decorative (aria-hidden + pointer-events-none) and reduced-motion
             safe inside the primitive. */}
         <FloatingOrbs colors={BRAND_ORB_COLORS} blur={100} className="-z-10 opacity-70" />
+        {/* Tactile film-grain over the aurora wash for a premium, printed-poster
+            depth. Static (no motion), self-contained data-URI, decorative. */}
+        <Grain className="-z-10" opacity={0.05} />
+        {/* Cursor-tracked brand spotlight — a soft radial glow in the CHAPTER
+            color that follows the pointer across the hero for interactive depth.
+            Fine-pointer-only + reduced-motion-safe (renders nothing on touch),
+            so it never costs a phone user anything. Brand-tinted, never blue. */}
+        <Spotlight
+          size={520}
+          color="hsl(var(--primary) / 0.16)"
+          edgeColor="hsl(var(--primary) / 0.07)"
+          className="-z-10"
+        />
         {/* Faint brand-tinted grid that parallaxes on scroll for real depth.
             Masked to fade at the edges so it never competes with the headline. */}
         <Parallax
@@ -389,16 +414,20 @@ export default async function ChapterLandingPage({
               {cfg["hero.subline"]}
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              {/* Primary rush CTA — magnetic pull toward the cursor. The real
-                  <Link> stays focusable/navigable inside; magnetism is inert
-                  for keyboard + reduced-motion users. */}
+              {/* Primary rush CTA — magnetic pull toward the cursor, now ringed
+                  by a slow CHAPTER-brand shimmer (BrandShimmer) that blooms on
+                  hover so the conversion action glows. The real <Link> stays
+                  focusable/navigable inside; both magnetism and the shimmer spin
+                  are inert for keyboard + reduced-motion users. */}
               <Magnetic strength={16} innerStrength={5}>
-                <Button asChild variant="gradient" size="xl" className="group cta-shine press">
-                  <Link href={cfg["hero.cta.href"] || "#register"}>
-                    {cfg["hero.cta.label"] || "Get on the interest list"}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                  </Link>
-                </Button>
+                <BrandShimmer className="rounded-full">
+                  <Button asChild variant="gradient" size="xl" className="group cta-shine press">
+                    <Link href={cfg["hero.cta.href"] || "#register"}>
+                      {cfg["hero.cta.label"] || "Get on the interest list"}
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </BrandShimmer>
               </Magnetic>
               <Magnetic strength={10} innerStrength={3}>
                 <Button asChild variant="outline" size="xl" className="press bg-white/70 backdrop-blur">
@@ -407,23 +436,27 @@ export default async function ChapterLandingPage({
               </Magnetic>
             </div>
 
+            {/* Credibility row — upgraded from flat translucent pills to frosted
+                glass chips (.gs-glass) with custom brand duotone icons. Each
+                lifts a hair on hover for a tactile, premium micro-interaction.
+                The icons inherit the chapter color via text-phisig-red. */}
             <div className="mt-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
-                <MapPin className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> {titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconPin className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
-                <Zap className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> Reply within 24 hours
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/70 px-3 py-1.5 backdrop-blur">
-                <ShieldCheck className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" /> {identity.greekLetters} chapter
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{identity.greekLetters} chapter</span>
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/25 bg-phisig-red-soft/60 px-3 py-1.5 font-medium text-phisig-red backdrop-blur transition-colors hover:bg-phisig-red-soft"
+                className="group/ig inline-flex items-center gap-1.5 rounded-full border border-phisig-red/25 bg-phisig-red-soft/60 px-3 py-1.5 font-medium text-phisig-red backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-phisig-red-soft hover:shadow-md hover:shadow-phisig-red/15"
               >
-                <Instagram className="h-3.5 w-3.5" aria-hidden="true" /> {cfg["contact.instagramHandle"]}
+                <IconInstagramDuo className="h-3.5 w-3.5 text-phisig-red transition-transform duration-300 group-hover/ig:scale-110" /> {cfg["contact.instagramHandle"]}
               </Link>
             </div>
             </div>
@@ -432,7 +465,7 @@ export default async function ChapterLandingPage({
                 The grid tilts in 3D toward the cursor with a brand-colored
                 glow; the "Since {year}" badge stays pinned outside the tilt. */}
             <div className="relative animate-slide-up [animation-delay:200ms]">
-              <Tilt3DCard max={7} glareColor={BRAND_TILT_GLOW} className="rounded-2xl">
+              <Tilt3DCard max={7} glareColor={BRAND_TILT_GLOW} className="rounded-2xl gs-float-shadow">
                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:gap-4">
                   <PostTile
                     slug={cfg["hero.tile1.slug"]}
@@ -520,9 +553,9 @@ export default async function ChapterLandingPage({
             return (
               <span
                 key={h.label}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm transition-colors hover:border-phisig-red/30 hover:text-foreground"
+                className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-phisig-red/30 hover:text-foreground hover:shadow-md hover:shadow-phisig-red/10"
               >
-                <Icon className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
+                <Icon className="h-3.5 w-3.5 text-phisig-red transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
                 <span>{h.label}</span>
               </span>
             );
@@ -574,7 +607,7 @@ export default async function ChapterLandingPage({
         />
         <div className="relative container section-y">
           <Reveal3D className="max-w-xl mx-auto text-center mb-8">
-            <IconChip icon={Sparkles} tone="brand" size="md" className="mx-auto mb-4" />
+            <IconChip icon={IconSparkle} tone="brand" size="md" className="mx-auto mb-4" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
               Get on the list
             </span>
@@ -585,17 +618,20 @@ export default async function ChapterLandingPage({
               No spam, no ceremony — about 60 seconds. We'll text the second the
               Fall '26 schedule drops.
             </p>
-            <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-              <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+            {/* Trust signals — frosted glass chips (the section's aurora frosts
+                through them) with custom brand check icons. They lift on hover
+                so the conversion section feels considered + premium. */}
+            <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-2 text-xs text-muted-foreground">
+              <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
                 Goes straight to the rush chair
               </li>
-              <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
                 Up to 8 texts per cycle, opt out anytime
               </li>
-              <li className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
                 Never sold or shared
               </li>
             </ul>
@@ -618,7 +654,7 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={Instagram}>{cfg["contact.instagramHandle"]}</SectionEyebrow>
+            <SectionEyebrow icon={IconInstagramDuo}>{cfg["contact.instagramHandle"]}</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl leading-relaxed">
@@ -666,7 +702,7 @@ export default async function ChapterLandingPage({
       <section className="border-y border-border bg-secondary/40">
         <div className="container section-y">
           <Reveal3D className="max-w-2xl mb-10">
-            <SectionEyebrow icon={Calendar}>How rush works</SectionEyebrow>
+            <SectionEyebrow icon={IconCalendarStar}>How rush works</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Three weeks. Zero pressure.
             </h2>
@@ -717,7 +753,7 @@ export default async function ChapterLandingPage({
         <div className="container">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={Calendar}>Fall &apos;26 calendar</SectionEyebrow>
+            <SectionEyebrow icon={IconCalendarStar}>Fall &apos;26 calendar</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
             </h2>
@@ -810,7 +846,7 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <Reveal3D className="order-2 lg:order-1">
-            <SectionEyebrow icon={Star}>{terms.member} of the Month</SectionEyebrow>
+            <SectionEyebrow icon={IconSparkle}>{terms.member} of the Month</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Real {terms.membersLower}. Real recognition.
             </h2>
@@ -888,7 +924,7 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
-              <SectionEyebrow icon={Crown}>Chapter leadership</SectionEyebrow>
+              <SectionEyebrow icon={IconCrownDuo}>Chapter leadership</SectionEyebrow>
               <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Meet the e-board.
               </h2>
@@ -939,7 +975,7 @@ export default async function ChapterLandingPage({
       <section id="about" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <Reveal3D>
-            <SectionEyebrow icon={ShieldCheck}>About the chapter</SectionEyebrow>
+            <SectionEyebrow icon={IconShieldCheckDuo}>About the chapter</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Founded in {identity.foundingYear}.<br/> Built for what's next.
             </h2>
@@ -1005,9 +1041,9 @@ export default async function ChapterLandingPage({
             </div>
 
             <div className="mt-8 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-              <ContactPill icon={MapPin} label={titleCaseAddress(cfg["contact.address"])} sub={titleCaseAddress(cfg["contact.cityState"])} />
-              <ContactPill icon={Mail} label={cfg["contact.rushEmail"]} sub="Rush questions" />
-              <ContactPill icon={Instagram} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
+              <ContactPill icon={IconPin} label={titleCaseAddress(cfg["contact.address"])} sub={titleCaseAddress(cfg["contact.cityState"])} />
+              <ContactPill icon={IconMailDuo} label={cfg["contact.rushEmail"]} sub="Rush questions" />
+              <ContactPill icon={IconInstagramDuo} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
             </div>
 
             <div className="mt-8 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4">
@@ -1083,7 +1119,7 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
             <Reveal3D>
-              <SectionEyebrow icon={Sparkles}>FAQ</SectionEyebrow>
+              <SectionEyebrow icon={IconSparkle}>FAQ</SectionEyebrow>
               <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Common questions.
               </h2>
@@ -1139,7 +1175,7 @@ export default async function ChapterLandingPage({
             and the address + contact cards carry this section. */}
         <div className="max-w-3xl mx-auto">
           <Reveal3D>
-            <SectionEyebrow icon={MapPin}>Where we live</SectionEyebrow>
+            <SectionEyebrow icon={IconPin}>Where we live</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
@@ -1156,10 +1192,10 @@ export default async function ChapterLandingPage({
                   href={cleanUrl(cfg["contact.mapsUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="lift block h-full rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
                 >
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                    <MapPin className="h-3 w-3" aria-hidden="true" /> Address
+                    <IconPin className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Address
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{titleCaseAddress(cfg["contact.address"])}</p>
                   <p className="text-xs text-muted-foreground">{titleCaseAddress(cfg["contact.cityState"])}</p>
@@ -1170,10 +1206,10 @@ export default async function ChapterLandingPage({
                   href={cleanUrl(cfg["contact.instagramUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="lift block h-full rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
                 >
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                    <Instagram className="h-3 w-3" aria-hidden="true" /> Daily updates
+                    <IconInstagramDuo className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Daily updates
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{cfg["contact.instagramHandle"]}</p>
                   <p className="text-xs text-muted-foreground">Follow for chapter life</p>
@@ -1182,10 +1218,10 @@ export default async function ChapterLandingPage({
               <Reveal3DItem className="h-full">
                 <Link
                   href={cleanMailto(cfg["contact.rushEmail"])}
-                  className="lift block h-full rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
                 >
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                    <Mail className="h-3 w-3" aria-hidden="true" /> Rush questions
+                    <IconMailDuo className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Rush questions
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{cfg["contact.rushEmail"]}</p>
                   <p className="text-xs text-muted-foreground">We reply within 24 hours</p>
@@ -1196,10 +1232,10 @@ export default async function ChapterLandingPage({
                   href={cleanUrl(cfg["chapter.schoolUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="lift block h-full rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
                 >
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-                    <Building2 className="h-3 w-3" aria-hidden="true" /> {identity.schoolShort} chapter info
+                    <IconHouse className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> {identity.schoolShort} chapter info
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{identity.schoolShort} FSL</p>
                   <p className="text-xs text-muted-foreground">Fraternity &amp; Sorority Life</p>
@@ -1311,13 +1347,61 @@ function SectionEyebrow({
   );
 }
 
+/**
+ * BrandShimmer — a slow, premium animated gradient ring tinted to the CHAPTER
+ * brand, wrapped around a primary CTA (or the form panel). It mirrors the
+ * platform `.gs-shimmer-border` technique but, because that utility is hardwired
+ * to the Greekstack blue→sky→gold palette, we recolor it here to the live
+ * per-tenant primary (`hsl(var(--primary))`) so the rush site never shows
+ * platform colors.
+ *
+ * Self-contained + additive: the spin reuses the existing `gs-border-spin`
+ * keyframe already defined in app/globals.css (we do NOT redefine it). The ring
+ * sits OUTSIDE the child via a padding-box mask, so it never clips the button.
+ * Reduced-motion-safe: the global `prefers-reduced-motion` block in globals.css
+ * already collapses every `animation` to a ~0ms instant, so the ring renders as
+ * a static brand gradient with no spin for vestibular-sensitive users. Purely
+ * decorative — the real, focusable element is the child.
+ */
+function BrandShimmer({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  // padding-box mask carves the 1.5px ring; the conic gradient is brand-tinted
+  // (primary → soft primary → transparent) and shares the global spin keyframe.
+  const maskStyle: React.CSSProperties = {
+    padding: "1.5px",
+    background:
+      "conic-gradient(from 0deg, hsl(var(--primary) / 0) 0deg, hsl(var(--primary)) 80deg, hsl(var(--primary) / 0.55) 170deg, hsl(var(--primary) / 0) 300deg)",
+    WebkitMask:
+      "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    WebkitMaskComposite: "xor",
+    mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    maskComposite: "exclude",
+    animation: "gs-border-spin 6s linear infinite",
+  };
+  return (
+    <span className={cn("relative inline-flex isolate", className)}>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
+        style={maskStyle}
+      />
+      {children}
+    </span>
+  );
+}
+
 function ContactPill({
   icon: Icon, label, sub,
 }: { icon: React.ElementType; label: string; sub: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3 lift">
+    <div className="group rounded-xl border border-border bg-card p-3 lift transition-colors hover:border-phisig-red/30">
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0" aria-hidden="true" />
+        <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
         <span className="text-xs font-medium truncate">{label}</span>
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{sub}</p>

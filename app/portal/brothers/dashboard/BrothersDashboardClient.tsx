@@ -255,16 +255,81 @@ function PortalEmpty({
   return (
     <div className={`flex flex-col items-center justify-center gap-3 px-6 py-12 text-center ${className}`}>
       <div className="relative">
-        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-200/40 blur-2xl" />
-        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
-          <Icon className="h-6 w-6" aria-hidden />
+        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-300/40 blur-2xl" />
+        <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_10px_26px_-12px_rgba(74,17,29,0.4)]">
+          <Icon className="h-7 w-7" aria-hidden />
         </span>
       </div>
       <div className="space-y-1">
         <p className="text-sm font-bold text-maroon-900">{title}</p>
-        {sub && <p className="text-xs text-maroon-500 max-w-xs">{sub}</p>}
+        {sub && <p className="text-xs text-maroon-500 max-w-xs leading-relaxed">{sub}</p>}
       </div>
     </div>
+  );
+}
+
+/**
+ * Premium frosted-glass surface for the portal's cream/maroon identity. A
+ * translucent white card with a hairline maroon ring and a layered soft shadow
+ * for real depth; pairs with `hover:` lift utilities at the call site. This is
+ * the maroon twin of the admin GLASS_CARD (which is brand-red) so the two
+ * surfaces feel like one product without sharing a palette.
+ */
+const PORTAL_CARD =
+  "rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl " +
+  "ring-1 ring-maroon-900/[0.03] " +
+  "shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]";
+
+/** Hover-lift transition shared by interactive portal cards. */
+const PORTAL_LIFT =
+  "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)] hover:border-maroon-200";
+
+/** Deterministic initials from a full name (max 2 letters). */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
+ * Avatar with a maroon→cream initials-gradient fallback. Shows the headshot
+ * when present; otherwise a tasteful gradient monogram instead of a bare icon —
+ * a small touch that makes member cards read as designed.
+ */
+function InitialsAvatar({
+  name,
+  src,
+  size = 48,
+  rounded = "rounded-xl",
+  className = "",
+}: {
+  name: string;
+  src?: string | null;
+  size?: number;
+  rounded?: string;
+  className?: string;
+}) {
+  const dim = { width: size, height: size };
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarSrc(src, size * 2)}
+        alt={name}
+        style={dim}
+        className={`${rounded} object-cover border border-maroon-100 ${className}`}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      style={dim}
+      className={`${rounded} inline-flex items-center justify-center bg-gradient-to-br from-maroon-700 via-maroon-600 to-maroon-800 text-cream-50 font-bold ring-1 ring-maroon-900/10 shadow-sm select-none ${className}`}
+    >
+      <span style={{ fontSize: Math.max(11, Math.round(size * 0.36)) }}>{initialsOf(name)}</span>
+    </span>
   );
 }
 
@@ -665,11 +730,14 @@ export default function BrothersDashboardClient({
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
         {/* Top Header / Portal Banner */}
-        <header className="bg-white border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-sm sticky top-0 z-10">
+        <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(74,17,29,0.25)] sticky top-0 z-20">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-maroon-800 text-cream-50 flex items-center justify-center font-bold shadow-sm">
-                <Users className="w-5 h-5" />
+              <div className="relative">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-500/30 blur-lg" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20">
+                  <Users className="w-5 h-5" />
+                </div>
               </div>
               <div>
                 <h1 className="text-lg font-bold text-maroon-900 leading-tight">{greekLetters} Portal</h1>
@@ -721,13 +789,14 @@ export default function BrothersDashboardClient({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap shrink-0 min-h-[44px] ${
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
                     active
-                      ? "bg-maroon-800 text-cream-50 shadow"
-                      : "text-maroon-700 hover:bg-white hover:text-maroon-900"
+                      ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
+                      : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${active ? "" : "group-hover:scale-110"}`} />
                   {tab.label}
                 </button>
               );
@@ -743,19 +812,9 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Profile Brief Info Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm flex flex-col justify-between">
+                <div className={`${PORTAL_CARD} ${PORTAL_LIFT} p-6 flex flex-col justify-between`}>
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-xl bg-cream-100 border border-maroon-100 overflow-hidden relative flex-shrink-0 flex items-center justify-center">
-                      {brother.headshotUrl ? (
-                        <img
-                          src={avatarSrc(brother.headshotUrl, 128)}
-                          alt={brother.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-8 h-8 text-maroon-400" />
-                      )}
-                    </div>
+                    <InitialsAvatar name={brother.name} src={brother.headshotUrl} size={64} rounded="rounded-xl" className="flex-shrink-0" />
                     <div>
                       <h3 className="font-bold text-maroon-900 text-lg">{brother.name}</h3>
                       <p className="text-xs text-maroon-600 font-medium">Class: {brother.pledgeClass || "N/A"}</p>
@@ -780,7 +839,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Meeting Attendance Metric Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm flex flex-col justify-between">
+                <div className={`${PORTAL_CARD} ${PORTAL_LIFT} p-6 flex flex-col justify-between`}>
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-semibold uppercase tracking-wider text-maroon-500">Meeting Attendance</span>
@@ -811,7 +870,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Service Hours Metric Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm flex flex-col justify-between">
+                <div className={`${PORTAL_CARD} ${PORTAL_LIFT} p-6 flex flex-col justify-between`}>
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-semibold uppercase tracking-wider text-maroon-500">Service Hours Logged</span>
@@ -846,7 +905,7 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Chore Assignment Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-1 flex flex-col justify-between">
+                <div className={`${PORTAL_CARD} ${PORTAL_LIFT} p-6 md:col-span-1 flex flex-col justify-between`}>
                   <div>
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2 mb-4">
                       <Settings className="w-4 h-4 text-maroon-600 animate-spin" style={{ animationDuration: '6s' }} />
@@ -910,7 +969,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Announcements Feed Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2 space-y-4">
+                <div className={`${PORTAL_CARD} p-6 md:col-span-2 space-y-4`}>
                   <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-maroon-600" />
                     Chapter Announcements
@@ -921,10 +980,18 @@ export default function BrothersDashboardClient({
                         <div
                           key={a.id}
                           onClick={() => setActiveAnnouncement(a)}
-                          className={`p-3.5 rounded-xl border border-maroon-100 cursor-pointer transition text-left relative ${
-                            a.pinned 
-                              ? "bg-amber-50/50 hover:bg-amber-50 border-amber-200" 
-                              : "bg-cream-50/30 hover:bg-cream-50"
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setActiveAnnouncement(a);
+                            }
+                          }}
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 text-left relative hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(74,17,29,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                            a.pinned
+                              ? "bg-amber-50/50 hover:bg-amber-50 border-amber-200"
+                              : "bg-cream-50/30 hover:bg-cream-50 border-maroon-100"
                           }`}
                         >
                           {a.pinned && (
@@ -976,7 +1043,7 @@ export default function BrothersDashboardClient({
                     return (
                       <div
                         key={e.id}
-                        className="bg-white rounded-2xl border border-maroon-100 shadow-sm p-6 flex flex-col justify-between space-y-4"
+                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-6 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
@@ -1134,7 +1201,7 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Submit New Service Log Form */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-1">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1">
                   <h3 className="font-bold text-maroon-900 text-lg mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-maroon-600" />
                     Log Service Hours
@@ -1219,7 +1286,7 @@ export default function BrothersDashboardClient({
                     <Button
                       type="submit"
                       disabled={submittingService}
-                      className="w-full bg-maroon-800 hover:bg-maroon-900 text-cream-50 py-2 rounded-xl shadow font-semibold"
+                      className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2 rounded-xl shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] font-semibold transition-all duration-200 active:scale-[0.98]"
                     >
                       {submittingService ? "Logging Hours..." : "Submit Log"}
                     </Button>
@@ -1227,7 +1294,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Service History Table */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2 space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2 space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5 text-maroon-600" />
@@ -1311,7 +1378,7 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Active Semester Dues Card */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-1 flex flex-col justify-between">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-maroon-600" />
@@ -1360,7 +1427,7 @@ export default function BrothersDashboardClient({
                         <Button
                           onClick={handlePayDues}
                           disabled={payingDues}
-                          className="w-full bg-maroon-800 hover:bg-maroon-900 text-cream-50 py-2.5 rounded-xl font-bold shadow flex items-center justify-center gap-2"
+                          className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2.5 rounded-xl font-bold shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
                         >
                           {payingDues ? (
                             <span>Redirecting to Stripe...</span>
@@ -1381,7 +1448,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Past Transactions Ledger */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2 space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2 space-y-4">
                   <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                     <Clipboard className="w-5 h-5 text-maroon-600" />
                     Chapter Payment Ledger
@@ -1448,7 +1515,7 @@ export default function BrothersDashboardClient({
               {/* Reimbursement CTA — spent your own money for the chapter? */}
               <a
                 href="/portal/brothers/reimbursements"
-                className="group flex items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-maroon-100 shadow-sm hover:border-maroon-300 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500"
+                className="group flex items-center justify-between gap-4 p-5 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 rounded-xl bg-maroon-800 text-cream-50 flex items-center justify-center shadow-sm flex-shrink-0">
@@ -1520,7 +1587,7 @@ export default function BrothersDashboardClient({
                   {filteredAlumni.map((a) => (
                     <div
                       key={a.id}
-                      className="bg-white rounded-2xl border border-maroon-100 shadow-sm p-5 flex flex-col justify-between space-y-4 hover:border-maroon-300 transition"
+                      className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
                     >
                       <div className="space-y-2.5">
                         <div className="flex justify-between items-start gap-2">
@@ -1624,7 +1691,7 @@ export default function BrothersDashboardClient({
                     return (
                       <div
                         key={p.id}
-                        className="bg-white rounded-2xl border border-maroon-100 shadow-sm p-6 space-y-4 flex flex-col justify-between"
+                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-6 space-y-4 flex flex-col justify-between"
                       >
                         <div className="space-y-3.5">
                           <h3 className="font-bold text-maroon-900 text-lg leading-snug">{p.question}</h3>
@@ -1705,10 +1772,10 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Visual Preview Panel */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-1 flex flex-col items-center justify-between space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1 flex flex-col items-center justify-between space-y-4">
                   <div className="text-center space-y-3.5 w-full">
                     <span className="text-xs font-semibold uppercase tracking-wider text-maroon-500">Registry Headshot</span>
-                    <div className="w-32 h-32 rounded-2xl border border-maroon-100 bg-cream-50 overflow-hidden relative mx-auto flex items-center justify-center shadow-sm">
+                    <div className="w-32 h-32 rounded-2xl border border-maroon-100 bg-cream-50 overflow-hidden relative mx-auto flex items-center justify-center shadow-[0_10px_26px_-12px_rgba(74,17,29,0.35)]">
                       {profileForm.headshotUrl ? (
                         <img
                           src={avatarSrc(profileForm.headshotUrl, 256)}
@@ -1716,7 +1783,7 @@ export default function BrothersDashboardClient({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-12 h-12 text-maroon-400" />
+                        <InitialsAvatar name={brother.name} size={128} rounded="rounded-2xl" className="w-full h-full" />
                       )}
                       {uploadingImage && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-cream-50 text-[10px] font-bold">
@@ -1764,7 +1831,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Editable Profile Form */}
-                <div className="bg-white p-6 rounded-2xl border border-maroon-100 shadow-sm md:col-span-2">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2">
                   {profileError && (
                     <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs font-semibold">
                       {profileError}
