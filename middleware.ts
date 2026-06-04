@@ -44,13 +44,17 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // CSRF check on state-changing API routes
+  // CSRF check on ALL state-changing API routes. SameSite=Lax already blocks
+  // cross-site cookie attachment on XHR, but not top-level form-POST navigations
+  // or Chromium's Lax+POST grace window — so we also reject any state-changing
+  // /api request carrying an explicit foreign Origin/Referer. Requests with no
+  // Origin/Referer (server-to-server, curl, Vercel cron, payment webhooks) pass
+  // through and are authenticated by their own signature/secret checks. Webhook
+  // routes are excluded outright since they are signature-verified by design.
   if (
     STATE_CHANGING_METHODS.has(req.method) &&
-    (pathname.startsWith("/api/admin/") ||
-      pathname.startsWith("/api/polls/") ||
-      pathname.startsWith("/api/polls") ||
-      /^\/api\/events\/[^\/]+\/rsvp/.test(pathname))
+    pathname.startsWith("/api/") &&
+    !pathname.includes("/webhook")
   ) {
     if (!isSameOriginEdge(req)) {
       return NextResponse.json(
