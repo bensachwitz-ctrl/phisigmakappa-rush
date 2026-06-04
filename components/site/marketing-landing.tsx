@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
-import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { Reveal } from "@/components/site/reveal";
 import {
   TypewriterCycle,
@@ -45,6 +45,19 @@ import {
   IconChevronDown,
   type IconProps,
 } from "@/components/brand/icons";
+// Bespoke marketing/pricing glyphs — imported DIRECTLY (not via the barrel) per
+// the brief. These keep EVERY symbol on the page custom (zero lucide).
+import {
+  IconPlanBase,
+  IconPlanDuesShare,
+  IconPlanCustom,
+  IconSchoolPicker,
+  IconBookCall,
+  IconTalkToSales,
+  IconFreeTag,
+  IconUnlimited,
+  IconPayout,
+} from "@/components/brand/icons/marketing";
 
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
 type GsIcon = (props: IconProps) => React.JSX.Element;
@@ -173,28 +186,96 @@ const HERO_SETTLE = "Run your whole chapter.";
 const GREEK_GLYPHS = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split("");
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
-   One honest plan. SALES.md carries no per-seat apex pricing, so we ship the
-   simple, transparent "Chapter" plan: $29/mo, 14-day free trial, no card to
-   start, every feature, unlimited members/officers, cancel anytime. No fake
-   "Enterprise" tier — the platform is one product for every chapter. */
-const PLAN = {
-  name: "Chapter",
-  price: 29,
-  cadence: "/month",
-  tagline: "Everything your chapter runs on, one flat price.",
-  trial: "14-day free trial · no card required",
+   THREE honest ways to pay for the SAME full platform — buyers pick the model
+   that fits how their chapter thinks about money, not a stripped-down tier:
+     1. BASE PLATFORM — flat $29/mo, FIRST MONTH FREE (or $129/semester).
+     2. DUES-SHARE   — $0 upfront; Greekstack takes a small % of dues (1.5% the
+        first semester, then 3%). "Pay as your chapter pays."
+     3. CUSTOM BUILD — a tailored system on a custom base fee → talk to us.
+   Every method unlocks the entire product (same features, same support); the
+   "Dues-share" card is the recommended/most-popular one and wears the shimmer
+   ring. All CTAs route real (/onboard, /contact#custom). */
+type Plan = {
+  id: string;
+  name: string;
+  icon: GsIcon;
+  /** Big headline price, e.g. "$29" / "0%" / "Custom". */
+  price: string;
+  /** Small unit beside the price, e.g. "/month". */
+  unit?: string;
+  /** One-line "how this model works" under the price. */
+  priceNote: string;
+  tagline: string;
+  /** The 1–2 differentiators unique to THIS method (beyond the shared list). */
+  highlights: string[];
+  cta: { label: string; href: string };
+  /** Recommended card → shimmer ring + "Most popular" ribbon. */
+  featured?: boolean;
+  /** Tiny reassurance line under the CTA. */
+  fineprint: string;
 };
 
-/* What's included — the load-bearing capabilities a buyer is checking for. */
+const PLANS: Plan[] = [
+  {
+    id: "base",
+    name: "Base platform",
+    icon: IconPlanBase,
+    price: "$29",
+    unit: "/month",
+    priceNote: "First month free · or $129/semester",
+    tagline: "One flat price for your whole white-label site.",
+    highlights: [
+      "Predictable flat monthly bill — easy to budget",
+      "Switch to a semester plan and save",
+    ],
+    cta: { label: "Start free month", href: "/onboard" },
+    fineprint: "No card to start · cancel anytime",
+  },
+  {
+    id: "dues-share",
+    name: "Dues-share",
+    icon: IconPlanDuesShare,
+    price: "1.5%",
+    unit: "of dues",
+    priceNote: "$0 upfront · 1.5% first semester, then 3%",
+    tagline: "Pay as your chapter pays. Nothing out of pocket to launch.",
+    highlights: [
+      "Zero upfront cost — perfect for a new or lean treasury",
+      "We only earn when dues actually come in",
+    ],
+    cta: { label: "Launch with $0 down", href: "/onboard" },
+    featured: true,
+    fineprint: "No monthly fee · cancel anytime",
+  },
+  {
+    id: "custom",
+    name: "Custom build",
+    icon: IconPlanCustom,
+    price: "Custom",
+    priceNote: "Tailored system · custom base fee",
+    tagline: "Bespoke flows, integrations, and reporting for your council.",
+    highlights: [
+      "Custom recruitment, dues, or alumni-giving workflows",
+      "Council / national integrations + custom reporting",
+    ],
+    cta: { label: "Talk to us", href: "/contact#custom" },
+    fineprint: "We scope it with you first — no surprise fees",
+  },
+];
+
+/* What EVERY method includes — the load-bearing capabilities a buyer checks for.
+   Shown once beneath the three cards so the comparison stays clean. */
 const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconRecruitment, label: "Recruitment pipeline — QR check-in, Kanban funnel & anonymous voting" },
-  { icon: IconDues, label: "Automated dues with Stripe Connect treasurer payouts" },
+  { icon: IconPayout, label: "Automated dues with Stripe Connect treasurer payouts" },
   { icon: IconGrowth, label: "Treasury — budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
   { icon: IconSafety, label: "Anti-hazing reporting & TCPA-compliant SMS comms" },
   { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
   { icon: IconAlumni, label: "Alumni directory & Stripe donation flows" },
+  { icon: IconUnlimited, label: "Unlimited members & officers — never priced per seat" },
+  { icon: IconShieldCheck, label: "Isolated tenant data, audit trails & honest no-markup processing" },
 ];
 
 /* ── FAQ ──────────────────────────────────────────────────────────────────
@@ -288,11 +369,14 @@ function SiteNav() {
           (scrolled ? "h-14" : "h-16")
         }
       >
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-          <span className="transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105">
-            <GreekstackLogo className="h-8 w-8" />
-          </span>
-          <span className="text-lg font-bold tracking-tight gs-gradient-text">Greekstack</span>
+        <Link href="/" className="group flex items-center" aria-label="Greekstack home">
+          {/* The "Keystone Stack" wordmark lockup — mark + "Greek"(ink)/"stack"
+              (gradient), so the name itself encodes the brand split. The mark
+              tilts on hover for a touch of life. */}
+          <GreekstackWordmark
+            size="md"
+            markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+          />
         </Link>
         <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           {NAV_LINKS.map((l) => (
@@ -311,6 +395,9 @@ function SiteNav() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex">
+            <Link href="/contact#book">Book a call</Link>
+          </Button>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/admin/login">Sign in</Link>
           </Button>
@@ -402,14 +489,30 @@ function Hero() {
 
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No credit card to start
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> No credit card to start
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Live in 60 seconds
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Live in 60 seconds
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Cancel anytime
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Cancel anytime
             </span>
+          </p>
+
+          {/* Pricing hint — surfaces the three honest models right in the hero and
+              jumps to the pricing section. Anchored, crawlable, AA-contrast. */}
+          <p className="mt-3 text-sm text-muted-foreground animate-slide-up [animation-delay:400ms]">
+            From{" "}
+            <span className="font-semibold text-foreground">$29/mo with the first month free</span>,
+            a{" "}
+            <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+              $0-upfront dues-share
+            </Link>
+            , or a custom build —{" "}
+            <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+              see pricing
+            </Link>
+            .
           </p>
         </div>
 
@@ -630,7 +733,7 @@ function Features() {
       <Spotlight size={420} color="rgba(37,99,235,0.10)" edgeColor="rgba(56,189,248,0.06)" />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Everything a chapter runs on
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -703,7 +806,7 @@ function HowItWorks() {
     <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Live in three steps
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -714,10 +817,30 @@ function HowItWorks() {
           </p>
         </Reveal>
 
+        {/* Selling point: pick your school + letters and the whole site themes
+            itself instantly. Sits right above the live demo so the claim and the
+            proof read as one beat. */}
+        <Reveal delay={60} className="mx-auto mt-12 max-w-3xl">
+          <div className="flex flex-col items-center gap-4 rounded-2xl gs-glass px-6 py-5 text-center sm:flex-row sm:text-left">
+            <IconChip icon={IconSchoolPicker} tone="platform" size="lg" />
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight">
+                Pick your school + letters &rarr;{" "}
+                <span className="gs-gradient-text">instantly themed</span>
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/80">
+                Search your campus and choose your chapter — Greekstack auto-applies your school&apos;s
+                colors and your letters across the entire site. Fine-tune any shade after, or leave it
+                exactly as it lands.
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
         {/* The "instant, branded site" promise, made visual: as this scrolls
             into view a chapter name + colors type in and a live preview card
             re-skins to match in real time. */}
-        <Reveal delay={80} className="mx-auto mt-14 max-w-5xl">
+        <Reveal delay={80} className="mx-auto mt-6 max-w-5xl">
           <BrandItDemo />
         </Reveal>
 
@@ -746,7 +869,7 @@ function HowItWorks() {
                 <div className="mx-auto flex justify-center">
                   <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
-                <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-500">
+                <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-700">
                   STEP {s.step}
                 </span>
                 <h3 className="mt-1 text-lg font-semibold tracking-tight">{s.title}</h3>
@@ -831,7 +954,7 @@ function BrandItDemo() {
     >
       {/* Left: the "fill in your chapter" inputs typing themselves. */}
       <div className="space-y-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
           <IconWhiteLabel className="h-3.5 w-3.5" />
           Watch it brand itself
         </span>
@@ -977,116 +1100,203 @@ function Pricing() {
 
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Simple, honest pricing
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            One plan. <span className="gs-gradient-text">Every feature.</span> No surprises.
+            <span className="gs-gradient-text">Three ways to pay.</span> One full platform.
           </h2>
-          <p className="mt-4 text-pretty text-muted-foreground">
-            No per-seat math, no tiers to decode, no fake &ldquo;enterprise&rdquo; upsell. One flat
-            price runs your whole chapter — start free, add the whole roster, cancel anytime.
+          <p className="mt-4 text-pretty text-base text-muted-foreground">
+            Same product, same support, every feature — pick the model that fits how your chapter
+            thinks about money. No per-seat math, no stripped-down tiers, no fake
+            &ldquo;enterprise&rdquo; upsell.
           </p>
         </Reveal>
 
-        {/* The plan card: a shimmer-bordered frosted-glass panel, revealed on
-            scroll. The ring's hover-bloom glows outside the panel, so we don't
-            clip it here. */}
-        <Reveal delay={80} className="mx-auto mt-14 max-w-lg [perspective:1200px]">
-          <Tilt3DCard max={5} glareColor="rgba(37,99,235,0.18)" className="rounded-3xl">
-            <ShimmerBorder inline={false} rounded="rounded-3xl" className="p-[1.5px]">
-              <div className="gs-glass gs-float-shadow relative overflow-hidden rounded-[calc(1.5rem-1.5px)] p-7 sm:p-9">
-                {/* Thin gradient top-edge (blue→sky→gold) for the premium glint. */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
-                />
-                {/* Soft corner bloom — same language as the feature cards. */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-70"
-                />
+        {/* Three comparable plan cards. The recommended "Dues-share" card wears
+            the shimmer ring + a ribbon and sits raised on desktop. */}
+        <Reveal3D
+          stagger={0.1}
+          className="mx-auto mt-14 grid max-w-6xl grid-cols-1 items-stretch gap-6 lg:grid-cols-3"
+        >
+          {PLANS.map((plan) => (
+            <Reveal3DItem key={plan.id} className="h-full">
+              <PlanCard plan={plan} />
+            </Reveal3DItem>
+          ))}
+        </Reveal3D>
 
-                <div className="relative flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">
-                      {PLAN.name}
-                    </span>
-                    <p className="mt-1 text-sm text-muted-foreground">{PLAN.tagline}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-600">
-                    <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
-                    All features
+        {/* Shared "every method includes" panel — keeps the cards clean while
+            still proving the full capability set behind every price. */}
+        <Reveal delay={80} className="mx-auto mt-8 max-w-5xl">
+          <div className="relative overflow-hidden rounded-2xl gs-glass p-6 sm:p-8">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-base font-semibold tracking-tight">
+                Every plan includes the whole platform
+              </h3>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-700">
+                <IconSpark className="h-3.5 w-3.5" accent="#f59e0b" />
+                No feature gates
+              </span>
+            </div>
+            <ul
+              className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2"
+              aria-label="Included in every plan"
+            >
+              {PLAN_INCLUDES.map((item) => (
+                <li key={item.label} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-sky-500/10 ring-1 ring-blue-500/25">
+                    <IconCheck className="h-3 w-3 text-blue-700" />
                   </span>
-                </div>
+                  <span className="text-sm leading-relaxed text-foreground/90">{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
 
-                {/* Price */}
-                <div className="relative mt-6 flex items-end gap-1.5">
-                  <span className="text-6xl font-bold leading-none tracking-tight gs-gradient-text">
-                    ${PLAN.price}
-                  </span>
-                  <span className="mb-1.5 text-lg font-medium text-muted-foreground">
-                    {PLAN.cadence}
-                  </span>
-                </div>
-
-                {/* Trial callout */}
-                <div className="relative mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/5 px-3.5 py-2 text-sm font-medium text-blue-700">
-                  <IconCheckCircle className="h-4 w-4 text-blue-500" />
-                  {PLAN.trial}
-                </div>
-
-                {/* What's included */}
-                <ul className="relative mt-7 space-y-3" aria-label="What's included">
-                  {PLAN_INCLUDES.map((item) => (
-                    <li key={item.label} className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20">
-                        <IconCheck className="h-3 w-3 text-blue-600" />
-                      </span>
-                      <span className="text-sm leading-relaxed text-foreground/90">{item.label}</span>
-                    </li>
-                  ))}
-                  <li className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20">
-                      <IconCheck className="h-3 w-3 text-blue-600" />
-                    </span>
-                    <span className="text-sm leading-relaxed text-foreground/90">
-                      <span className="font-semibold text-foreground">Unlimited members &amp; officers</span> — never priced per seat
-                    </span>
-                  </li>
-                </ul>
-
-                {/* CTA */}
-                <div className="relative mt-8">
-                  <Magnetic className="w-full">
-                    <ShimmerBorder rounded="rounded-xl" className="w-full">
-                      <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
-                        <Link href="/onboard" className="group/btn">
-                          Start your free trial
-                          <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                        </Link>
-                      </Button>
-                    </ShimmerBorder>
-                  </Magnetic>
-                  <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No setup fee
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> No credit card to start
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <IconCheckCircle className="h-3.5 w-3.5 text-blue-500" /> Cancel anytime
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </ShimmerBorder>
-          </Tilt3DCard>
+        {/* Honest framing + a "talk to a human" path for anyone still deciding. */}
+        <Reveal delay={120} className="mx-auto mt-10 max-w-3xl text-center">
+          <p className="text-sm text-muted-foreground">
+            On any plan, card processing runs on Stripe at its standard rate
+            {" "}(2.9% + 30&cent;) with <span className="font-semibold text-foreground">zero Greekstack markup</span>{" "}
+            on dues or donations. Not sure which model fits? Talk it through with the owner.
+          </p>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+              <Link href="/contact" className="group/btn">
+                <IconTalkToSales className="h-5 w-5 text-blue-700" />
+                Talk to sales
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+              <Link href="/contact#book" className="group/btn">
+                <IconBookCall className="h-5 w-5 text-blue-700" />
+                Book a 15-min call
+              </Link>
+            </Button>
+          </div>
         </Reveal>
       </div>
     </section>
   );
+}
+
+/* A single pricing-method card. Frosted glass with the shared depth language;
+   the recommended card is wrapped in the shimmer ring + carries a ribbon and a
+   subtle raise. Each card's CTA routes for real (/onboard or /contact#custom). */
+function PlanCard({ plan }: { plan: Plan }) {
+  const Card = (
+    <div
+      className={
+        "group relative flex h-full flex-col overflow-hidden gs-glass p-7 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_44px_80px_-44px_rgba(37,99,235,0.55)] " +
+        (plan.featured
+          ? "rounded-[calc(1.5rem-1.5px)] lg:-translate-y-2 lg:hover:-translate-y-3"
+          : "rounded-3xl")
+      }
+    >
+      {/* Thin gradient top-edge (blue→sky→gold). On the featured card it's always
+          lit; on the others it warms in on hover. */}
+      <div
+        aria-hidden="true"
+        className={
+          "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 transition-opacity duration-300 " +
+          (plan.featured ? "opacity-100" : "opacity-0 group-hover:opacity-100")
+        }
+      />
+      {/* Soft corner bloom — shared card language. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+      />
+
+      {/* Ribbon (featured only). */}
+      {plan.featured && (
+        <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
+          <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
+          Most popular
+        </span>
+      )}
+
+      <div className="relative flex items-center gap-3">
+        <IconChip icon={plan.icon} tone="platform" size="md" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6" />
+        <span className="text-sm font-bold uppercase tracking-[0.16em] text-blue-700">
+          {plan.name}
+        </span>
+      </div>
+
+      <p className="relative mt-3 min-h-[2.5rem] text-sm leading-relaxed text-foreground/80">
+        {plan.tagline}
+      </p>
+
+      {/* Price */}
+      <div className="relative mt-5 flex items-end gap-1.5">
+        <span className="text-5xl font-bold leading-none tracking-tight gs-gradient-text">
+          {plan.price}
+        </span>
+        {plan.unit && (
+          <span className="mb-1 text-base font-medium text-muted-foreground">{plan.unit}</span>
+        )}
+      </div>
+      <div className="relative mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.07] px-3 py-1.5 text-[13px] font-medium text-blue-800">
+        {plan.id === "base" ? (
+          <IconFreeTag className="h-4 w-4 text-blue-700" accent="#f59e0b" />
+        ) : (
+          <IconCheckCircle className="h-4 w-4 text-blue-600" />
+        )}
+        {plan.priceNote}
+      </div>
+
+      {/* Method-specific highlights. */}
+      <ul className="relative mt-6 space-y-2.5" aria-label={`${plan.name} highlights`}>
+        {plan.highlights.map((h) => (
+          <li key={h} className="flex items-start gap-2.5">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-sky-500/10 ring-1 ring-blue-500/25">
+              <IconCheck className="h-3 w-3 text-blue-700" />
+            </span>
+            <span className="text-sm leading-relaxed text-foreground/85">{h}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA pinned to the bottom so all three cards align. */}
+      <div className="relative mt-auto pt-7">
+        {plan.featured ? (
+          <Magnetic className="w-full">
+            <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full">
+              <Link href={plan.cta.href} className="group/btn">
+                {plan.cta.label}
+                <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+              </Link>
+            </Button>
+          </Magnetic>
+        ) : (
+          <Button asChild variant="outline" size="lg" className="w-full">
+            <Link href={plan.cta.href} className="group/btn">
+              {plan.cta.label}
+              <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+            </Link>
+          </Button>
+        )}
+        <p className="mt-3 text-center text-xs text-muted-foreground">{plan.fineprint}</p>
+      </div>
+    </div>
+  );
+
+  // Wrap only the recommended card in the shimmer ring (it glows outside the
+  // panel, so no overflow-clip on the wrapper).
+  if (plan.featured) {
+    return (
+      <ShimmerBorder inline={false} rounded="rounded-3xl" className="h-full p-[1.5px]">
+        {Card}
+      </ShimmerBorder>
+    );
+  }
+  return Card;
 }
 
 /* ───────────────────────────── FAQ ───────────────────────────── */
@@ -1103,7 +1313,7 @@ function Faq() {
     <section id="faq" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Questions, answered
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1197,7 +1407,7 @@ function Proof() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Why chapters choose Greekstack
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1297,9 +1507,22 @@ function FinalCta() {
                 </ShimmerBorder>
               </Magnetic>
               <Button asChild variant="glass" size="xl" className="w-full sm:w-auto">
-                <Link href="#features">Explore features</Link>
+                <Link href="/contact#book" className="group/btn">
+                  <IconBookCall className="h-5 w-5" />
+                  Book a call
+                </Link>
               </Button>
             </div>
+            <p className="mt-5 text-sm text-foreground/70">
+              Prefer to ask first?{" "}
+              <Link
+                href="/contact"
+                className="font-semibold text-blue-700 underline-offset-4 hover:underline"
+              >
+                Talk to sales
+              </Link>{" "}
+              — a real person (the owner) answers.
+            </p>
           </Reveal>
         </AnimatedBackground>
       </ShimmerBorder>
@@ -1314,11 +1537,11 @@ function SiteFooter() {
     <footer className="border-t border-border bg-secondary/30">
       <div className="container py-12">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-            <span className="transition-transform duration-300 group-hover:rotate-[-6deg]">
-              <GreekstackLogo className="h-7 w-7" />
-            </span>
-            <span className="text-base font-bold tracking-tight gs-gradient-text">Greekstack</span>
+          <Link href="/" className="group flex items-center" aria-label="Greekstack home">
+            <GreekstackWordmark
+              size="sm"
+              markClassName="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg]"
+            />
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
             {NAV_LINKS.map((l) => (
@@ -1331,6 +1554,12 @@ function SiteFooter() {
               </Link>
             ))}
             <Link
+              href="/contact"
+              className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Contact
+            </Link>
+            <Link
               href="/privacy"
               className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -1338,7 +1567,7 @@ function SiteFooter() {
             </Link>
             <Link
               href="/onboard"
-              className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+              className="text-sm font-medium text-blue-700 transition-colors hover:text-blue-800"
             >
               Get started
             </Link>

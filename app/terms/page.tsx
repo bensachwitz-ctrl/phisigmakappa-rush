@@ -6,8 +6,8 @@
 // on any tenant host it 404s, because a chapter's public site should never
 // surface the platform's commercial terms to its rushees/parents.
 //
-// Apex-only means we use the Greekstack-branded chrome (GreekstackLogo +
-// gs-gradient-text) inline rather than the chapter-flavored PublicNav/
+// Apex-only means we use the Greekstack-branded chrome (GreekstackWordmark)
+// inline rather than the chapter-flavored PublicNav/
 // PublicFooter (whose links point at /schedule, /alumni, /portal — all of
 // which 404 on the apex). Indexable: this is a real marketing/legal page.
 
@@ -15,8 +15,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { getSubdomain } from "@/lib/prisma";
-import { GreekstackLogo } from "@/components/brand/greekstack-logo";
-import { Scale, ArrowLeft } from "lucide-react";
+import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
+import { IconScale, IconArrowLeft } from "@/components/brand/icons/contact";
 
 export const dynamic = "force-dynamic";
 
@@ -73,13 +73,13 @@ export default async function TermsPage() {
       <main id="main-content" className="container section-y max-w-3xl">
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="group mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to home
+          <IconArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> Back to home
         </Link>
 
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-blue-600">
-          <Scale className="h-3 w-3" aria-hidden="true" /> Terms of Service
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+          <IconScale className="h-3.5 w-3.5" aria-hidden="true" /> Terms of Service
         </span>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">
           The agreement between Greekstack and your chapter.
@@ -349,18 +349,15 @@ function ApexHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-          <span className="transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105">
-            <GreekstackLogo className="h-8 w-8" />
-          </span>
-          <span className="text-lg font-bold tracking-tight">
-            <span className="text-foreground">Greek</span>
-            <span className="gs-gradient-text">stack</span>
-          </span>
+        <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
+          <GreekstackWordmark
+            size="md"
+            markClassName="h-8 w-8 transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105"
+          />
         </Link>
         <Link
           href="/onboard"
-          className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+          className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
         >
           Get started
         </Link>
@@ -374,11 +371,11 @@ function ApexFooter() {
     <footer className="mt-12 border-t border-border bg-secondary/30">
       <div className="container py-10">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-            <span className="transition-transform duration-300 group-hover:rotate-[-6deg]">
-              <GreekstackLogo className="h-7 w-7" />
-            </span>
-            <span className="text-base font-bold tracking-tight gs-gradient-text">Greekstack</span>
+          <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
+            <GreekstackWordmark
+              size="sm"
+              markClassName="h-7 w-7 transition-transform duration-300 group-hover:rotate-[-6deg]"
+            />
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
             <Link href="/privacy" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -387,7 +384,7 @@ function ApexFooter() {
             <Link href="/terms" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
               Terms
             </Link>
-            <Link href="/onboard" className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
+            <Link href="/onboard" className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800">
               Get started
             </Link>
           </nav>

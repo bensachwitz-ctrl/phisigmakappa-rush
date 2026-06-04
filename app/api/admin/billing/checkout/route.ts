@@ -6,9 +6,11 @@ import { isAdminRole, isSameOrigin } from "@/lib/auth";
 import { getCurrentBrother } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import {
-  PLATFORM_PLAN,
-  PLATFORM_TRIAL_DAYS,
+  type SubscriptionPlan,
+  isSubscriptionPlan,
+  normalizePlan,
   platformLineItem,
+  platformSubscriptionData,
   getOrCreatePlatformCustomer,
   billingReturnOrigin,
 } from "@/lib/platform-billing";
@@ -26,13 +28,23 @@ const ROUTE = "/api/admin/billing/checkout";
  * chapter can start PAYING Greekstack for the platform (distinct from the dues
  * Connect flow, which is the chapter collecting from its own members).
  *
+ * Accepts an optional `{ plan: "monthly" | "semester" }` in the JSON body:
+ *   • "monthly"  → $29/mo subscription with a 30-DAY FREE TRIAL (first month
+ *                  free) — but only the FIRST time (a chapter that already
+ *                  trialed/canceled re-subscribes without a fresh trial).
+ *   • "semester" → ~$129 billed every 6 months (interval_count=6). No trial.
+ * When `plan` is omitted we fall back to the chapter's stored plan, then to
+ * "monthly". The two non-subscription plans ("dues_percentage" — earns via the
+ * dues Connect fee; "custom" — talk to sales) are NOT mintable here and return a
+ * graceful 400 with guidance (the UI routes them elsewhere).
+ *
  *   1. Resolve THIS chapter's subdomain from the request Host and its central
  *      registry row (public."Tenant").
  *   2. Create/reuse the chapter's Stripe Customer, persisting stripeCustomerId.
- *   3. Create a subscription Checkout Session for the "chapter" plan with
- *      metadata.subdomain set (so the platform webhook can route the resulting
- *      subscription/invoice events back to this tenant), success → /admin/billing?ok=1,
- *      cancel → /admin/billing.
+ *   3. Create a subscription Checkout Session for the chosen plan with
+ *      metadata.subdomain + metadata.plan set (so the platform webhook can route
+ *      and label the resulting subscription/invoice events), success →
+ *      /admin/billing?ok=1, cancel → /admin/billing.
  *
  * Graceful 503 when Stripe is unconfigured (getStripe() null) — the billing page
  * shows the manual/contact fallback rather than a 500.
@@ -66,11 +78,26 @@ export async function POST(req: Request) {
     );
   }
 
+  // Parse the requested plan from the body (best-effort — body may be empty).
+  let requestedPlan: string | null = null;
+  try {
+    const body = await req.json();
+    if (body && typeof body.plan === "string") requestedPlan = body.plan;
+  } catch {
+    // No / invalid JSON body — fall back to the stored plan below.
+  }
+
   // Load (or self-heal) the central registry row for this chapter.
   let tenant = await centralDb.tenant
     .findUnique({
       where: { subdomain },
-      select: { id: true, name: true, stripeCustomerId: true, subscriptionStatus: true },
+      select: {
+        id: true,
+        name: true,
+        plan: true,
+        stripeCustomerId: true,
+        subscriptionStatus: true,
+      },
     })
     .catch(() => null);
 
@@ -81,12 +108,30 @@ export async function POST(req: Request) {
     try {
       tenant = await centralDb.tenant.create({
         data: { subdomain, name: subdomain },
-        select: { id: true, name: true, stripeCustomerId: true, subscriptionStatus: true },
+        select: {
+          id: true,
+          name: true,
+          plan: true,
+          stripeCustomerId: true,
+          subscriptionStatus: true,
+        },
       });
     } catch {
       tenant = null;
     }
   }
+
+  // Resolve the EFFECTIVE plan: explicit request → stored plan → "monthly".
+  // Only the two self-serve subscription plans are mintable here.
+  const effective = normalizePlan(requestedPlan ?? tenant?.plan ?? null);
+  if (!isSubscriptionPlan(effective)) {
+    const msg =
+      effective === "dues_percentage"
+        ? "Your chapter is on the dues-percentage plan — there's no monthly subscription to start. Greekstack's share comes out of dues automatically."
+        : "Custom plans are set up with our team. Visit /contact to talk to sales.";
+    return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+  }
+  const plan: SubscriptionPlan = effective;
 
   // Best-effort label for the Stripe customer (admin's email if available).
   const admin = await getCurrentBrother().catch(() => null);
@@ -111,25 +156,32 @@ export async function POST(req: Request) {
 
   // Only offer a Checkout-time trial if the chapter has never subscribed (no
   // status yet). A chapter that already trialed/canceled doesn't get a fresh
-  // 14 days on re-subscribe — Stripe would honor whatever we pass, so gate it.
+  // 30 days on re-subscribe — Stripe would honor whatever we pass, so gate it.
+  // (Only the monthly plan trials at all; platformSubscriptionData enforces that.)
   const neverSubscribed =
     !tenant?.subscriptionStatus || tenant.subscriptionStatus === "trialing";
+
+  // Persist the chosen plan on the registry row up-front so the page/banner and
+  // any webhook that arrives before a status update reflect the selection.
+  // Best-effort — a write failure must not block checkout.
+  if (tenant && tenant.plan !== plan) {
+    await centralDb.tenant
+      .update({ where: { subdomain }, data: { plan } })
+      .catch(() => {});
+  }
 
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     customer: customerId,
-    line_items: [platformLineItem()],
+    line_items: [platformLineItem(plan)],
     allow_promotion_codes: true,
     success_url: `${origin}/admin/billing?ok=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/admin/billing`,
     // metadata.subdomain is the routing key the platform webhook reads to map the
-    // resulting subscription/invoice back to THIS chapter's registry row. Stamp
-    // it on BOTH the session and the subscription so either object resolves.
-    metadata: { subdomain, plan: PLATFORM_PLAN },
-    subscription_data: {
-      metadata: { subdomain, plan: PLATFORM_PLAN },
-      ...(neverSubscribed ? { trial_period_days: PLATFORM_TRIAL_DAYS } : {}),
-    },
+    // resulting subscription/invoice back to THIS chapter's registry row; plan is
+    // a label. Stamp both on the session AND the subscription so either resolves.
+    metadata: { subdomain, plan },
+    subscription_data: platformSubscriptionData({ plan, subdomain, neverSubscribed }),
   };
 
   let session: Stripe.Checkout.Session;
@@ -153,6 +205,7 @@ export async function POST(req: Request) {
   logger.info("platform.billing.checkout_started", {
     route: ROUTE,
     tenant: subdomain,
+    plan,
     outcome: "session_created",
   });
 

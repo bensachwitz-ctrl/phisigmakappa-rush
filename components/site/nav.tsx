@@ -4,7 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
-import { Lock, Sparkles } from "lucide-react";
+import { IconSpark } from "@/components/brand/icons";
+import { IconLock } from "@/components/brand/icons/contact";
 
 export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
   // Read ?booth=1 from window after hydration so we never throw during SSR.
@@ -24,7 +25,7 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
             <Wordmark variant="compact" />
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-phisig-red/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-            <Sparkles className="h-3 w-3" /> Booth mode
+            <IconSpark className="h-3.5 w-3.5" accent="currentColor" aria-hidden="true" /> Booth mode
           </span>
         </div>
       </header>
@@ -61,7 +62,7 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
           </Button>
           <Button asChild variant="ghost" size="sm">
             <Link href="/portal" className="text-muted-foreground">
-              <Lock className="h-3.5 w-3.5 mr-1.5" />
+              <IconLock className="h-3.5 w-3.5 mr-1.5" accent="currentColor" aria-hidden="true" />
               Portal
             </Link>
           </Button>

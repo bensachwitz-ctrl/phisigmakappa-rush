@@ -7,17 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-import { LivePreview } from "@/components/onboard/live-preview";
+import { EditableLivePreview } from "@/components/onboard/editable-live-preview";
 import { SuccessState } from "@/components/onboard/success-state";
 import { OrgPresetPicker } from "@/components/onboard/org-preset-picker";
 import { GreekLetterInserter } from "@/components/onboard/greek-letter-inserter";
 import { ColorPresets } from "@/components/onboard/color-presets";
+import {
+  SchoolPicker,
+  OrgPicker,
+  type SchoolSelection,
+  type OrgSelection,
+} from "@/components/site/school-org-picker";
 import { Magnetic, Reveal3D, FloatingOrbs } from "@/components/site/anim";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
   IconChapter, IconBranding, IconComms, IconAdmin, IconLaunch, IconSpark,
-  IconCheckCircle, IconArrowRight, IconSecurity, IconClose, type IconProps,
+  IconCheck, IconCheckCircle, IconArrowRight, IconSecurity, IconClose, IconExternal, type IconProps,
 } from "@/components/brand/icons";
+import {
+  IconSchool, IconCrest, IconPricing, IconCoins, IconPercent, IconCalendar,
+} from "@/components/brand/icons/onboarding-wizard";
 import { cn } from "@/lib/utils";
 
 // Local platform "chip" — a soft blue→sky gradient rounded square holding a
@@ -54,10 +63,11 @@ function GsChip({
 }
 
 const STEPS = [
-  { id: "identity", label: "Chapter Details", icon: IconChapter, blurb: "Configure organization identity, school details, and charter details." },
-  { id: "brand", label: "Brand Styling", icon: IconBranding, blurb: "Configure local chapter primary, dark, and soft-tint colors." },
+  { id: "identity", label: "School & Org", icon: IconSchool, blurb: "Pick your school and organization to auto-theme your site, then fine-tune the details." },
+  { id: "brand", label: "Brand & Preview", icon: IconBranding, blurb: "Dial in your colors and hero copy — edit the live preview until it feels like yours." },
   { id: "contact", label: "Contact Details", icon: IconComms, blurb: "Set up recruitment contacts, social handles, and house location." },
   { id: "admin", label: "Admin Credentials", icon: IconAdmin, blurb: "Create your chapter's primary administrator account." },
+  { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — no card required to launch." },
   { id: "launch", label: "Launch Site", icon: IconLaunch, blurb: "Confirm details and activate the chapter management system." },
 ] as const;
 
@@ -108,10 +118,32 @@ export default function OnboardWizard() {
   type SubStatus = "idle" | "checking" | "available" | "taken" | "reserved" | "invalid";
   const [subStatus, setSubStatus] = React.useState<SubStatus>("idle");
 
+  // School + Org picker selections (the NEW typeahead source of truth for the
+  // auto-theme). These mirror into the flat identity/brand fields below on every
+  // pick so the rest of the wizard + the POST body stay unchanged; keeping the
+  // selection objects lets each picker re-show its chosen label + swatches.
+  const [schoolSel, setSchoolSel] = React.useState<SchoolSelection | null>(null);
+  const [orgSel, setOrgSel] = React.useState<OrgSelection | null>(null);
+
   // Brand State
   const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
   const [darkColor, setDarkColor] = React.useState("#A20D26");
   const [softColor, setSoftColor] = React.useState("#FCEFF1");
+
+  // Hero copy — editable directly on the live preview. Empty = the launched
+  // site keeps its neutral white-label default (lib/site-config.ts); a non-empty
+  // value is persisted to hero.h1.lead / hero.subline by /api/onboard.
+  const [heroHeadline, setHeroHeadline] = React.useState("");
+  const [heroTagline, setHeroTagline] = React.useState("");
+
+  // Pricing method (Step "pricing"). `plan` is the value persisted to the Tenant:
+  //   "monthly"         — Base plan, $29/mo, FIRST MONTH FREE
+  //   "semester"        — Base plan, $129 / semester
+  //   "dues_percentage" — Dues-share, $0 upfront, 1.5% → 3% of dues collected
+  // (Method 3 "Custom" is a link out to /contact#custom, not a selectable plan.)
+  // Defaults to "monthly" — the headline first-month-free offer — so a founder who
+  // skips straight through still lands on the most generous, no-card option.
+  const [plan, setPlan] = React.useState<"monthly" | "semester" | "dues_percentage">("monthly");
 
   // Contact State
   const [rushEmail, setRushEmail] = React.useState("");
@@ -154,6 +186,58 @@ export default function OnboardWizard() {
     // gender. Fraternity/sorority map straight through.
     setOrgType(org.type === "sorority" ? "sorority" : org.type === "nphc" ? "other" : "fraternity");
     // Clear any identity/brand errors the preset just satisfied.
+    clearErrors("fraternityName", "primaryColor", "darkColor", "softColor");
+  }
+
+  // ── School picker → identity + (school-themed) brand ──────────────────────
+  // Picking a school fills schoolName/schoolShort and seeds the brand palette
+  // from the school's own colors (primary + a derived dark + soft) so the preview
+  // themes to e.g. USC cardinal instantly. The org pick (below) intentionally
+  // wins on color when it runs afterward — an org's own letters/colors are the
+  // truer chapter identity — but either is fully overridable downstream.
+  function applySchool(sel: SchoolSelection | null) {
+    setSchoolSel(sel);
+    if (!sel) {
+      // Cleared — leave the typed values alone (don't yank a name the user kept).
+      return;
+    }
+    setSchoolName(sel.name);
+    setSchoolShort(sel.custom ? "" : sel.short);
+    const [p, s] = sel.colors;
+    // Prefer the school's secondary as the "dark" gradient when it's a real
+    // distinct color; fall back to a derived shade (white/near-white secondaries
+    // make poor gradient floors, so derive in that case).
+    const secondaryIsUsable = !/^#f{3,6}$/i.test(s.replace(/[^0-9a-f]/gi, "")) && s.toLowerCase() !== p.toLowerCase();
+    setPrimaryColor(p);
+    setDarkColor(secondaryIsUsable ? s : shade(p, "dark"));
+    setSoftColor(shade(p, "soft"));
+    clearErrors("schoolName", "primaryColor", "darkColor", "softColor");
+  }
+
+  // ── Org picker → identity + brand (the richer NEW catalog) ────────────────
+  // Picking an org fills the full org name, glyph letters, council type, and the
+  // brand palette from the org's heraldic colors. This is the primary auto-theme
+  // path; it runs the same effect as the preset picker but sourced from the
+  // broader ~90-org typeahead catalog.
+  function applyOrg(sel: OrgSelection | null) {
+    setOrgSel(sel);
+    if (!sel) return;
+    setFraternityName(sel.name);
+    setFraternityShort(sel.custom ? "" : sel.short);
+    // The catalog's `letters` are the glyphs (e.g. "ΦΣΚ") — fill both the
+    // glyph/abbreviation field and the glyph helper so the crest + preview render.
+    if (sel.letters) {
+      setFraternityLetters(sel.letters);
+      setGreekLettersGlyphs(sel.letters);
+    }
+    setOrgType(sel.type === "sorority" ? "sorority" : "fraternity");
+    const [p] = sel.colors;
+    setPrimaryColor(p);
+    // Derive dark + soft from the primary for a cohesive gradient floor + tint
+    // (org heraldic secondaries are often white/metallic, which read poorly as a
+    // gradient base). All three remain fully overridable on the preview.
+    setDarkColor(shade(p, "dark"));
+    setSoftColor(shade(p, "soft"));
     clearErrors("fraternityName", "primaryColor", "darkColor", "softColor");
   }
 
@@ -359,6 +443,12 @@ export default function OnboardWizard() {
           adminName,
           adminEmail,
           adminPassword,
+          // Pricing method chosen on the pricing step → persisted to the Tenant.
+          plan,
+          // Hero copy the founder edited live on the preview (empty = keep the
+          // neutral white-label defaults). Trimmed server-side too.
+          heroHeadline,
+          heroTagline,
         }),
       });
 
@@ -445,7 +535,7 @@ export default function OnboardWizard() {
           />
         </div>
 
-        <ol className="grid grid-cols-5 gap-2 sm:gap-3" role="list" aria-label="Setup steps">
+        <ol className="grid grid-cols-6 gap-1.5 sm:gap-3" role="list" aria-label="Setup steps">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const current = s.id === step;
@@ -562,12 +652,50 @@ export default function OnboardWizard() {
                 >
               {step === "identity" && (
                 <div className="space-y-5">
-                  {/* Preset library — pick any organization to auto-fill below */}
-                  <OrgPresetPicker
-                    selectedName={fraternityName}
-                    onPick={applyOrgPreset}
-                    onCustom={applyCustomOrg}
-                  />
+                  {/* ── Fast path: pick a school + org to auto-theme everything ── */}
+                  <div className="rounded-2xl border border-blue-400/20 bg-gradient-to-b from-blue-500/[0.07] to-white/[0.02] p-4 shadow-inner sm:p-5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
+                        <IconSpark className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                      </span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">Pick your school &amp; organization</h3>
+                        <p className="text-xs text-slate-400">
+                          We&apos;ll auto-fill your name, letters &amp; colors — edit anything after.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3.5 grid gap-3 sm:grid-cols-2">
+                      <SchoolPicker value={schoolSel} onChange={applySchool} />
+                      <OrgPicker value={orgSel} onChange={applyOrg} />
+                    </div>
+
+                    {/* Tiny reassurance that picks are a starting point, not a lock-in. */}
+                    <p className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                      <IconCrest className="h-3.5 w-3.5 text-sky-300" aria-hidden="true" />
+                      Both have a &ldquo;Can&apos;t find it? Enter manually&rdquo; option — and every field stays editable below.
+                    </p>
+                  </div>
+
+                  {/* Browse-by-card preset library (kept) — an alternate way to pick
+                      an org as a visual grid; mirrors into the same fields. */}
+                  <details className="group rounded-xl border border-white/10 bg-white/[0.02]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60">
+                      <span className="flex items-center gap-2">
+                        <IconBranding className="h-4 w-4 text-sky-300" aria-hidden="true" />
+                        Prefer to browse a visual grid of organizations?
+                      </span>
+                      <IconArrowRight className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-90" aria-hidden="true" />
+                    </summary>
+                    <div className="border-t border-white/10 p-3 sm:p-4">
+                      <OrgPresetPicker
+                        selectedName={fraternityName}
+                        onPick={applyOrgPreset}
+                        onCustom={applyCustomOrg}
+                      />
+                    </div>
+                  </details>
 
                   <div className="flex items-center gap-3" aria-hidden="true">
                     <span className="h-px flex-1 bg-white/10" />
@@ -638,12 +766,18 @@ export default function OnboardWizard() {
                   {/* Quick-pick brand color presets — sets primary + auto-suggests dark/soft */}
                   <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
 
-                  <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <IconSpark className="h-3.5 w-3.5 text-amber-400" /> See it all come together in the
-                    live preview{" "}
-                    <span className="lg:hidden">below</span>
-                    <span className="hidden lg:inline">on the right</span>.
-                  </p>
+                  <div className="rounded-xl border border-sky-400/15 bg-sky-500/[0.06] p-3.5">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-sky-100">
+                      <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Edit your headline &amp; tagline live
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                      Click the headline, chapter name, or tagline right on the preview{" "}
+                      <span className="lg:hidden">below</span>
+                      <span className="hidden lg:inline">on the right</span> to make it yours. Leave them
+                      as-is to use our polished defaults — you can refine everything later in
+                      Admin&nbsp;→&nbsp;Settings.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -691,6 +825,10 @@ export default function OnboardWizard() {
                 </div>
               )}
 
+              {step === "pricing" && (
+                <PricingStep plan={plan} onChange={setPlan} />
+              )}
+
               {step === "launch" && (
                 <div className="space-y-4">
                   <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] p-4">
@@ -712,8 +850,15 @@ export default function OnboardWizard() {
                         <span className="font-mono text-sky-200">{(subdomain.trim() || "your-chapter")}.greekstack.vercel.app</span>
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
+                      <SummaryRow label="Plan">{PLAN_SUMMARY[plan]}</SummaryRow>
                     </div>
                   </div>
+
+                  <p className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
+                    <IconSecurity className="h-3.5 w-3.5 text-emerald-400/80" aria-hidden="true" />
+                    No card required now — you&apos;re launching on the{" "}
+                    <span className="font-semibold text-slate-200">{PLAN_SUMMARY[plan]}</span>.
+                  </p>
                 </div>
               )}
                 </motion.div>
@@ -773,18 +918,25 @@ export default function OnboardWizard() {
           </div>
         </GlassPanel>
 
-        {/* Live preview */}
-        <LivePreview
+        {/* Live preview — fully editable in real time (colors, name, hero copy). */}
+        <EditableLivePreview
           fraternityName={fraternityName}
-          fraternityShort={fraternityShort}
+          onFraternityName={setFraternityName}
           greekLetters={greekLetters}
           greekLettersGlyphs={greekLettersGlyphs}
           fraternityLetters={fraternityLetters}
           schoolName={schoolName}
           schoolShort={schoolShort}
           primaryColor={primaryColor}
+          onPrimaryColor={setPrimaryColor}
           darkColor={darkColor}
+          onDarkColor={setDarkColor}
           softColor={softColor}
+          onSoftColor={setSoftColor}
+          heroHeadline={heroHeadline}
+          onHeroHeadline={setHeroHeadline}
+          heroTagline={heroTagline}
+          onHeroTagline={setHeroTagline}
           subdomain={subdomain}
         />
       </div>
@@ -804,6 +956,272 @@ const stepVariants = {
   exit: (d: 1 | -1) => ({ opacity: 0, x: d > 0 ? -28 : 28 }),
   reduced: { opacity: 0, x: 0 },
 };
+
+/* ── Pricing step ──────────────────────────────────────────────────────────── */
+
+type PlanId = "monthly" | "semester" | "dues_percentage";
+
+/* One-line plan label reused in the launch summary + the "no card required" note. */
+const PLAN_SUMMARY: Record<PlanId, string> = {
+  monthly: "Base — $29/mo (first month free)",
+  semester: "Base — $129 / semester",
+  dues_percentage: "Dues-share — $0 upfront",
+};
+
+/**
+ * PRICING STEP — choose how the chapter pays Greekstack. Two selectable methods
+ * (Base: monthly|semester · Dues-share: a % of dues) presented as big radio
+ * cards, plus a link out to Method 3 "Custom" (→ /contact#custom). NOTHING here
+ * collects a card — the trial / dues-share start with no payment, so the founder
+ * launches first and is billed (or not) later.
+ *
+ * Fully controlled: the selected `plan` lives in the wizard; this just renders +
+ * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
+ * so it's keyboard + screen-reader navigable; the "Base" card has a nested
+ * monthly/semester sub-toggle that itself maps to the monthly|semester plan ids.
+ */
+function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) => void }) {
+  const baseSelected = plan === "monthly" || plan === "semester";
+  const duesSelected = plan === "dues_percentage";
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed text-slate-300">
+        Pick the plan that fits your chapter. You can launch on any option with{" "}
+        <span className="font-semibold text-white">no card required</span> — switch or add a
+        payment method later from Admin&nbsp;→&nbsp;Billing.
+      </p>
+
+      <div
+        role="radiogroup"
+        aria-label="Pricing method"
+        className="grid gap-4 lg:grid-cols-2"
+      >
+        {/* ── Method 1 — Base ─────────────────────────────────────────────── */}
+        <PlanCard
+          selected={baseSelected}
+          onSelect={() => onChange("monthly")}
+          icon={IconCoins}
+          eyebrow="Method 1"
+          title="Base"
+          headline={
+            <>
+              <span className="text-3xl font-extrabold text-white">$29</span>
+              <span className="text-sm font-semibold text-slate-400">/mo</span>
+            </>
+          }
+          highlight="First month free"
+          features={[
+            "Everything included — recruitment, dues, events, roster, compliance",
+            "Cancel anytime, no contract",
+            "Stripe processing at cost (no platform markup)",
+          ]}
+        >
+          {/* Monthly / semester sub-toggle — only meaningful when Base is chosen. */}
+          <div
+            className="mt-3 grid grid-cols-2 gap-2"
+            role="group"
+            aria-label="Base billing cadence"
+          >
+            <CadencePill
+              active={plan === "monthly"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange("monthly");
+              }}
+              icon={IconCalendar}
+              title="Monthly"
+              sub="$29/mo · 1st mo free"
+            />
+            <CadencePill
+              active={plan === "semester"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange("semester");
+              }}
+              icon={IconCalendar}
+              title="Per semester"
+              sub="$129 / sem · save ~26%"
+            />
+          </div>
+        </PlanCard>
+
+        {/* ── Method 2 — Dues-share ───────────────────────────────────────── */}
+        <PlanCard
+          selected={duesSelected}
+          onSelect={() => onChange("dues_percentage")}
+          icon={IconPercent}
+          eyebrow="Method 2"
+          title="Dues-share"
+          headline={
+            <>
+              <span className="text-3xl font-extrabold text-white">$0</span>
+              <span className="text-sm font-semibold text-slate-400">upfront</span>
+            </>
+          }
+          highlight="Pay as you grow"
+          features={[
+            "No fixed fee — we earn only when you collect",
+            "1.5% of dues collected, then 3% as you scale",
+            "Perfect for chapters starting from scratch",
+          ]}
+        />
+      </div>
+
+      {/* ── Method 3 — Custom (link out) ──────────────────────────────────── */}
+      <a
+        href="/contact#custom"
+        className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-sky-400/40 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
+            <IconPricing className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-white">
+              Method 3 — Custom
+              <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                Talk to us
+              </span>
+            </p>
+            <p className="truncate text-xs text-slate-400">
+              Multi-chapter, councils, or a tailored build? We&apos;ll quote a custom plan.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-sky-200">
+          Contact us
+          <IconExternal className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </span>
+      </a>
+
+      {/* Reassurance footer */}
+      <p className="flex items-start gap-2 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-3 py-2.5 text-xs leading-relaxed text-emerald-100/90">
+        <IconSecurity className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
+        <span>
+          We never ask for a card at signup. Your chapter goes live today; you only set up
+          payment when you&apos;re ready.
+        </span>
+      </p>
+    </div>
+  );
+}
+
+/* A single big selectable plan card (radio semantics). */
+function PlanCard({
+  selected,
+  onSelect,
+  icon: Icon,
+  eyebrow,
+  title,
+  headline,
+  highlight,
+  features,
+  children,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: React.ComponentType<IconProps>;
+  eyebrow: string;
+  title: string;
+  headline: React.ReactNode;
+  highlight: string;
+  features: string[];
+  children?: React.ReactNode;
+}) {
+  return (
+    <div
+      role="radio"
+      aria-checked={selected}
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={cn(
+        "relative flex cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
+        selected
+          ? "border-sky-400/60 bg-sky-500/[0.10] shadow-lg shadow-blue-950/40"
+          : "border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.06]",
+      )}
+    >
+      {/* Selected check */}
+      <span
+        className={cn(
+          "absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all",
+          selected ? "bg-sky-400 text-slate-950" : "bg-white/5 text-transparent ring-1 ring-white/15",
+        )}
+        aria-hidden="true"
+      >
+        <IconCheck className="h-3.5 w-3.5" strokeWidth={3} />
+      </span>
+
+      <div className="flex items-center gap-2.5">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-400/10 text-sky-300 ring-1 ring-blue-500/20">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300">{eyebrow}</p>
+          <h3 className="text-base font-bold text-white">{title}</h3>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-end gap-1.5">{headline}</div>
+      <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-300">
+        <IconSpark className="h-3 w-3" aria-hidden="true" /> {highlight}
+      </span>
+
+      <ul className="mt-4 space-y-2">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2 text-xs leading-relaxed text-slate-300">
+            <IconCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      {children}
+    </div>
+  );
+}
+
+/* The monthly/semester cadence sub-toggle inside the Base card. */
+function CadencePill({
+  active,
+  onClick,
+  icon: Icon,
+  title,
+  sub,
+}: {
+  active: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  icon: React.ComponentType<IconProps>;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
+        active
+          ? "border-sky-400/60 bg-sky-500/15"
+          : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]",
+      )}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+        <Icon className={cn("h-3.5 w-3.5", active ? "text-sky-300" : "text-slate-400")} aria-hidden="true" />
+        {title}
+      </span>
+      <span className="text-[10px] font-medium text-slate-400">{sub}</span>
+    </button>
+  );
+}
 
 function GlassPanel({ children }: { children: React.ReactNode }) {
   return (

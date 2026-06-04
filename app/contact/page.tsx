@@ -7,8 +7,8 @@
 //   3. "Book a 15-min call"             → Cal.com embed, or a request-call form
 //
 // Like /terms this is a PLATFORM page, so it renders the Greekstack apex chrome
-// (GreekstackLogo + gs-gradient-text + inline ApexHeader/ApexFooter) rather than
-// the chapter-flavored PublicNav/PublicFooter. Unlike /terms it does NOT 404 on
+// (GreekstackWordmark + inline ApexHeader/ApexFooter) rather than the
+// chapter-flavored PublicNav/PublicFooter. Unlike /terms it does NOT 404 on
 // a tenant host — a prospect could land here from any Greekstack URL — but it is
 // only INDEXED on the apex (see generateMetadata robots) to avoid duplicate
 // content across tenant subdomains.
@@ -25,14 +25,22 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { getSubdomain } from "@/lib/prisma";
-import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import {
   ContactForm,
   CustomQuoteForm,
   CalEmbed,
   RequestCallForm,
 } from "@/components/site/sales-contact-forms";
-import { ArrowLeft, Mail, Phone, Sparkles, CalendarClock, MessageSquare, ShieldCheck, Zap } from "lucide-react";
+import { IconSpark, IconShieldCheck } from "@/components/brand/icons";
+import {
+  IconArrowLeft,
+  IconMail,
+  IconPhone,
+  IconCalendar,
+  IconMessage,
+  IconBolt,
+} from "@/components/brand/icons/contact";
 
 export const dynamic = "force-dynamic";
 
@@ -92,15 +100,15 @@ export default async function ContactPage() {
       <main id="main-content" className="container section-y max-w-5xl">
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="group mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to home
+          <IconArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> Back to home
         </Link>
 
         {/* ── Hero ── */}
         <header className="max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-blue-600">
-            <MessageSquare className="h-3 w-3" aria-hidden="true" /> Talk to sales
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+            <IconMessage className="h-4 w-4" aria-hidden="true" /> Talk to sales
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">
             Let&apos;s get your chapter on{" "}
@@ -116,16 +124,16 @@ export default async function ContactPage() {
           <div className="mt-6 flex flex-wrap gap-2.5">
             <a
               href={`mailto:${email}`}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-blue-300 hover:text-blue-700"
+              className="group inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-blue-300 hover:text-blue-800"
             >
-              <Mail className="h-4 w-4 text-blue-600" aria-hidden="true" /> {email}
+              <IconMail className="h-4 w-4 text-blue-700 transition-transform group-hover:-translate-y-0.5" aria-hidden="true" /> {email}
             </a>
             {phone ? (
               <a
                 href={telHref}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-blue-300 hover:text-blue-700"
+                className="group inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-blue-300 hover:text-blue-800"
               >
-                <Phone className="h-4 w-4 text-blue-600" aria-hidden="true" /> {phone}
+                <IconPhone className="h-4 w-4 text-blue-700 transition-transform group-hover:-translate-y-0.5" aria-hidden="true" /> {phone}
               </a>
             ) : null}
           </div>
@@ -148,17 +156,17 @@ export default async function ContactPage() {
           {/* Reassurance rail */}
           <aside className="space-y-4">
             <ValueRow
-              icon={<Zap className="h-5 w-5" aria-hidden="true" />}
+              icon={<IconBolt className="h-5 w-5" aria-hidden="true" />}
               title="Fast, personal replies"
               body="No ticket queue — the owner reads and answers every message directly."
             />
             <ValueRow
-              icon={<Sparkles className="h-5 w-5" aria-hidden="true" />}
+              icon={<IconSpark className="h-5 w-5" aria-hidden="true" />}
               title="Three ways to start"
               body="Pick a plan, request a fully custom build, or just book a quick call — whatever fits."
             />
             <ValueRow
-              icon={<ShieldCheck className="h-5 w-5" aria-hidden="true" />}
+              icon={<IconShieldCheck className="h-5 w-5" aria-hidden="true" />}
               title="No pressure"
               body="We'll point you to the right option for your chapter, even if that's the free trial."
             />
@@ -174,8 +182,8 @@ export default async function ContactPage() {
           <div className="rounded-2xl bg-background p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
               <div className="lg:w-2/5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-blue-600">
-                  <Sparkles className="h-3 w-3" aria-hidden="true" /> Fully custom
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                  <IconSpark className="h-4 w-4" aria-hidden="true" /> Fully custom
                 </span>
                 <h2 id="custom-heading" className="mt-2 text-2xl font-semibold tracking-tight">
                   Request a customized chapter system
@@ -202,8 +210,8 @@ export default async function ContactPage() {
         {/* ── Book a 15-min call ── */}
         <section id="book" aria-labelledby="book-heading" className="mt-16 scroll-mt-24">
           <div className="mb-6 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-blue-600">
-              <CalendarClock className="h-3 w-3" aria-hidden="true" /> 15 minutes
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <IconCalendar className="h-4 w-4" aria-hidden="true" /> 15 minutes
             </span>
             <h2 id="book-heading" className="mt-2 text-2xl font-semibold tracking-tight">
               Book a 15-minute call
@@ -266,18 +274,15 @@ function ApexHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-          <span className="transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105">
-            <GreekstackLogo className="h-8 w-8" />
-          </span>
-          <span className="text-lg font-bold tracking-tight">
-            <span className="text-foreground">Greek</span>
-            <span className="gs-gradient-text">stack</span>
-          </span>
+        <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
+          <GreekstackWordmark
+            size="md"
+            markClassName="h-8 w-8 transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105"
+          />
         </Link>
         <Link
           href="/onboard"
-          className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+          className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
         >
           Get started
         </Link>
@@ -291,11 +296,11 @@ function ApexFooter() {
     <footer className="mt-12 border-t border-border bg-secondary/30">
       <div className="container py-10">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <Link href="/" className="group flex items-center gap-2.5" aria-label="Greekstack home">
-            <span className="transition-transform duration-300 group-hover:rotate-[-6deg]">
-              <GreekstackLogo className="h-7 w-7" />
-            </span>
-            <span className="text-base font-bold tracking-tight gs-gradient-text">Greekstack</span>
+          <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
+            <GreekstackWordmark
+              size="sm"
+              markClassName="h-7 w-7 transition-transform duration-300 group-hover:rotate-[-6deg]"
+            />
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
             <Link href="/privacy" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -304,7 +309,7 @@ function ApexFooter() {
             <Link href="/terms" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
               Terms
             </Link>
-            <Link href="/onboard" className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
+            <Link href="/onboard" className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800">
               Get started
             </Link>
           </nav>

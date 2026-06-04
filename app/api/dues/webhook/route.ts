@@ -8,6 +8,7 @@ import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
+import { DUES_INTRO_FEE_USED_KEY } from "@/lib/platform-billing";
 import { logger, errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -164,6 +165,15 @@ async function handleCheckoutCompleted(
   // Idempotency: already-PAID rows are a no-op on replay.
   if (payment.status === "PAID") return;
 
+  // INTRO DUES FEE consumption — for chapters on the "dues_percentage" platform
+  // plan, the FIRST successful dues payment marks the intro (1.5%) cycle as used
+  // so every LATER dues checkout charges the 3% standard Greekstack share. We do
+  // this on the first NEW->PAID transition only (above replay guard ensures
+  // once-only). Best-effort + idempotent upsert — a failure here must NEVER fail
+  // the webhook (Stripe would retry a confirmed payment). Read the plan signal
+  // from the metadata stamped at checkout (Stripe carries no Host/subdomain).
+  await markIntroFeeUsedIfDuesPercentage(db, session);
+
   // Extract Stripe-provided receipt + payment intent. The receipt URL
   // is on the latest_charge — we fetch the PaymentIntent to get it.
   let receiptUrl: string | null = null;
@@ -300,6 +310,43 @@ async function handleCheckoutCompleted(
     }
   } catch (e) {
     errorSink(e, { route: ROUTE, outcome: "dues_receipt_email_failed" });
+  }
+}
+
+/**
+ * Mark the intro dues fee as consumed for a "dues_percentage" chapter on its
+ * FIRST successful dues payment. Idempotent (upsert to "true") + best-effort:
+ * any failure is swallowed so a confirmed payment is never re-driven by Stripe.
+ *
+ * The plan signal rides in the Checkout session metadata (`platformPlan ===
+ * "dues_percentage"`), stamped at checkout time — Stripe POSTs here with no Host,
+ * so we can't read the central registry by subdomain proxy, and the metadata is
+ * the authoritative, already-routed signal. `db` is the explicit tenant client
+ * the caller resolved from metadata.subdomain. No-op for any other plan.
+ */
+async function markIntroFeeUsedIfDuesPercentage(
+  db: PrismaClient,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  try {
+    const meta = (session.metadata as Record<string, string> | null) || null;
+    if (!meta || meta.platformPlan !== "dues_percentage") return;
+    // Already consumed (the checkout saw it as used) → nothing to write.
+    if (meta.introFeeUsed === "true") return;
+
+    await db.siteConfig.upsert({
+      where: { key: DUES_INTRO_FEE_USED_KEY },
+      update: { value: "true" },
+      create: { key: DUES_INTRO_FEE_USED_KEY, value: "true" },
+    });
+
+    logger.info("dues.intro_fee.consumed", {
+      route: ROUTE,
+      tenant: meta.subdomain || null,
+      outcome: "intro_fee_marked_used",
+    });
+  } catch (e) {
+    errorSink(e, { route: ROUTE, outcome: "mark_intro_fee_used_failed" });
   }
 }
 

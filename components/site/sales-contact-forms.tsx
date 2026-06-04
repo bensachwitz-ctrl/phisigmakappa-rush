@@ -27,7 +27,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, CalendarClock } from "lucide-react";
+import { IconCheck, IconSpark } from "@/components/brand/icons";
+import {
+  IconAlert,
+  IconSpinner,
+  IconSend,
+  IconCalendar,
+} from "@/components/brand/icons/contact";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -95,7 +101,7 @@ function SuccessPanel({ title, body }: { title: string; body: string }) {
       className="animate-spring-in flex flex-col items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/60 px-6 py-10 text-center"
     >
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
-        <CheckCircle2 className="h-7 w-7" aria-hidden="true" />
+        <IconCheck className="h-7 w-7" accent="#ffffff" aria-hidden="true" />
       </span>
       <p className="text-lg font-semibold text-foreground">{title}</p>
       <p className="max-w-sm text-sm text-muted-foreground">{body}</p>
@@ -110,7 +116,7 @@ function ErrorBanner({ message }: { message: string }) {
       role="alert"
       className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive"
     >
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <IconAlert className="mt-0.5 h-4 w-4 shrink-0" accent="currentColor" aria-hidden="true" />
       <span>{message}</span>
     </div>
   );
@@ -253,11 +259,11 @@ export function ContactForm({ contactEmail }: { contactEmail: string }) {
         >
           {state === "submitting" ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
+              <IconSpinner className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
             </>
           ) : (
             <>
-              <Send className="h-4 w-4" aria-hidden="true" /> Send message
+              <IconSend className="h-4 w-4" accent="#ffffff" aria-hidden="true" /> Send message
             </>
           )}
         </Button>
@@ -380,11 +386,11 @@ export function CustomQuoteForm({ contactEmail }: { contactEmail: string }) {
         >
           {state === "submitting" ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
+              <IconSpinner className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4" aria-hidden="true" /> Request my quote
+              <IconSpark className="h-4 w-4" accent="#ffffff" aria-hidden="true" /> Request my quote
             </>
           )}
         </Button>
@@ -519,11 +525,11 @@ export function RequestCallForm({ contactEmail }: { contactEmail: string }) {
         >
           {state === "submitting" ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
+              <IconSpinner className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending…
             </>
           ) : (
             <>
-              <CalendarClock className="h-4 w-4" aria-hidden="true" /> Request a call
+              <IconCalendar className="h-4 w-4" accent="#ffffff" aria-hidden="true" /> Request a call
             </>
           )}
         </Button>

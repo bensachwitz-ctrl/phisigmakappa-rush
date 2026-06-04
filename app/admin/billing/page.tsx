@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { centralDb, getSubdomain } from "@/lib/prisma";
 import { getEntitlement } from "@/lib/entitlement";
+import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { BillingManager } from "@/components/admin/billing-manager";
 import {
@@ -43,13 +44,18 @@ export default async function BillingPage({
     ? await centralDb.tenant
         .findUnique({
           where: { subdomain },
-          select: { stripeCustomerId: true },
+          select: { stripeCustomerId: true, plan: true },
         })
         .catch(() => null)
     : null;
 
   // Stripe configured? (drives the graceful "contact support" state)
   const stripeConfigured = !!getStripe();
+
+  // The chosen pricing method + whether the intro dues fee has been used, so the
+  // manager can render the dues-share ("1.5% then 3%") vs subscription view.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const introFeeUsed = cfg["dues.introFeeUsed"] === "true";
 
   const priceLabel = `$${(PLATFORM_PLAN_PRICE_CENTS / 100).toFixed(
     PLATFORM_PLAN_PRICE_CENTS % 100 === 0 ? 0 : 2,
@@ -87,6 +93,8 @@ export default async function BillingPage({
       <BillingManager
         planName={PLATFORM_PLAN_NAME}
         priceLabel={priceLabel}
+        plan={tenant?.plan ?? undefined}
+        introFeeUsed={introFeeUsed}
         status={entitlement.status}
         reason={entitlement.reason}
         trialEndsAt={entitlement.trialEndsAt ? entitlement.trialEndsAt.toISOString() : null}

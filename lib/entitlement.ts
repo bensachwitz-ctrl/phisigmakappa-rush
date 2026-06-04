@@ -1,4 +1,5 @@
 import { centralDb } from "@/lib/prisma";
+import { normalizePlan } from "@/lib/platform-billing";
 
 /**
  * PLATFORM-BILLING ENTITLEMENT — "is this chapter allowed to use Greekstack?"
@@ -141,6 +142,32 @@ export async function getEntitlement(subdomain: string): Promise<Entitlement> {
     // Still report the most informative billing reason so the banner can nudge
     // even an operator-comped chapter that is past_due/expired. Entitlement is
     // unconditionally true here, but the reason reflects real billing state.
+    return { entitled: true, ...base, reason: reasonFor(status, daysLeft) };
+  }
+
+  // 1b. PLAN-AWARE entitlement (the three owner pricing methods).
+  //
+  //  • "dues_percentage" — there is NO platform subscription; Greekstack earns
+  //    from the dues Connect application fee. The chapter is ALWAYS entitled
+  //    regardless of subscriptionStatus/trial. Reason "operator_active" reuses an
+  //    existing (banner-suppressing) value so no false "set up billing" nag shows
+  //    for a chapter that has no subscription to set up. (We do NOT widen the
+  //    EntitlementReason union, to keep every downstream banner/type in sync.)
+  //
+  //  • "custom" — contact-driven; entitled iff the operator isActive flag is set.
+  //    isActive===true was already handled by branch 1 above, so reaching here
+  //    means isActive!==true. Per the FAIL-OPEN contract this guard still returns
+  //    entitled:true (it NEVER returns false) — actual suspension of a non-active
+  //    chapter is enforced by the operator hard switch in app/page.tsx
+  //    (isTenantActive), not here. We surface a nudge reason so the banner can
+  //    prompt the chapter to finish setup with sales.
+  const normalizedPlan = normalizePlan(plan);
+  if (normalizedPlan === "dues_percentage") {
+    return { entitled: true, ...base, reason: "operator_active" };
+  }
+  if (normalizedPlan === "custom") {
+    // isActive!==true here (branch 1 owns the active case). Fail open with the
+    // most informative reason; the operator hard switch governs real access.
     return { entitled: true, ...base, reason: reasonFor(status, daysLeft) };
   }
 

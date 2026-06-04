@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { prisma, getSubdomain } from "@/lib/prisma";
+import { prisma, centralDb, getSubdomain } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
+import {
+  duesPlatformFeePct,
+  normalizePlan,
+  DUES_INTRO_FEE_USED_KEY,
+} from "@/lib/platform-billing";
 import { audit } from "@/lib/audit";
 import { errorSink } from "@/lib/logger";
 import type Stripe from "stripe";
@@ -169,6 +174,24 @@ export async function POST(req: Request) {
     },
   };
 
+  // PLATFORM PLAN — the chapter's OWN subscription model TO Greekstack, read from
+  // the central registry (public."Tenant"), NOT the tenant SiteConfig. Only the
+  // "dues_percentage" plan layers a Greekstack share onto the dues Connect fee
+  // below (1.5% intro → 3% standard). Best-effort: any lookup error leaves plan
+  // null, which normalizes to a NON-dues_percentage plan → no extra fee (safe).
+  let platformPlan: string | null = null;
+  if (sub) {
+    const treg = await centralDb.tenant
+      .findUnique({ where: { subdomain: sub }, select: { plan: true } })
+      .catch(() => null);
+    platformPlan = treg?.plan ?? null;
+  }
+  const isDuesPercentagePlan = normalizePlan(platformPlan) === "dues_percentage";
+  // Intro fee is consumed once: the FIRST successful dues payment flips
+  // dues.introFeeUsed → "true" (see app/api/dues/webhook). Until then the chapter
+  // pays the 1.5% intro rate; after, the 3% standard rate.
+  const introUsed = cfg[DUES_INTRO_FEE_USED_KEY] === "true";
+
   // ADDITIVE Stripe Connect routing (Wave-C). ONLY when this chapter has a
   // connected Express account AND Stripe reports charges_enabled do we route
   // the charge to the chapter's account via destination charges. If the chapter
@@ -179,14 +202,32 @@ export async function POST(req: Request) {
     const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
       transfer_data: { destination },
     };
-    // Optional platform application fee. Only applied when an admin set a
-    // positive dues.platformFeePct; otherwise no fee is taken (default).
-    const feePct = parseFloat(cfg["dues.platformFeePct"] || "0");
-    if (Number.isFinite(feePct) && feePct > 0) {
-      const fee = Math.round(totalCents * (feePct / 100));
+    // Optional admin-configured platform application fee. Applied when an admin
+    // set a positive dues.platformFeePct; otherwise 0 (legacy default).
+    const adminFeePct = parseFloat(cfg["dues.platformFeePct"] || "0");
+    let effectiveFeePct = Number.isFinite(adminFeePct) && adminFeePct > 0 ? adminFeePct : 0;
+
+    // INTRO DUES FEE — LAYERED ON TOP for dues_percentage chapters ONLY. This is
+    // how Greekstack monetizes the dues_percentage plan: 1.5% of every member's
+    // dues for the first cycle, then 3%. Added to any admin fee so Greekstack's
+    // share is collected regardless of the chapter's own passthrough config.
+    // Other plans (monthly/semester/custom/none) are untouched → 0 platform share.
+    effectiveFeePct += duesPlatformFeePct(platformPlan, introUsed);
+
+    if (effectiveFeePct > 0) {
+      const fee = Math.round(totalCents * (effectiveFeePct / 100));
       if (fee > 0) piData.application_fee_amount = fee;
     }
     sessionParams.payment_intent_data = piData;
+  }
+
+  // Stamp the platform plan + intro-fee state into the Checkout metadata so the
+  // webhook can flip dues.introFeeUsed on the first paid dues cycle WITHOUT a
+  // central-registry round-trip (Stripe carries no Host/subdomain server-to-
+  // server; the webhook routes by metadata.subdomain already present below).
+  if (isDuesPercentagePlan && sessionParams.metadata) {
+    (sessionParams.metadata as Record<string, string>).platformPlan = "dues_percentage";
+    (sessionParams.metadata as Record<string, string>).introFeeUsed = introUsed ? "true" : "false";
   }
 
   let session;

@@ -67,6 +67,9 @@ export async function POST(req: Request) {
     primaryColor, darkColor, softColor,
     rushEmail, rushPhone, instagramHandle, instagramUrl, address, cityState,
     adminName, adminEmail, adminPassword, billingPlan,
+    // Pricing method + live-edited hero copy from the upgraded wizard.
+    plan: rawPlan,
+    heroHeadline, heroTagline,
   } = body;
 
   const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -175,6 +178,24 @@ export async function POST(req: Request) {
         ? orgType.trim()
         : "fraternity";
 
+    // Pricing METHOD chosen in the wizard, validated against the known plan set so
+    // a forged/unknown body value can't poison the registry. Persisted to the
+    // central Tenant.plan column (distinct from the SiteConfig "billing.plan"
+    // display key below). Defaults to "monthly" (the first-month-free Base offer)
+    // — the same default the wizard ships with.
+    //   monthly | semester  → Base plan, billed to Greekstack → status "trialing"
+    //                         (the free-trial window the soft-gate already honors)
+    //   dues_percentage     → Dues-share, $0 upfront → status "active": these
+    //                         chapters pay via a % of dues, so entitlement must
+    //                         treat them as a paying customer (good standing), not
+    //                         a trial that can lapse into the dunning banner.
+    const ALLOWED_PLANS = new Set(["monthly", "semester", "dues_percentage"]);
+    const normalizedPlan =
+      typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
+        ? rawPlan.trim()
+        : "monthly";
+    const subscriptionStatus = normalizedPlan === "dues_percentage" ? "active" : "trialing";
+
     const updates: Record<string, string> = {
       "chapter.orgType": normalizedOrgType,
       // Seed a default timezone so a fresh tenant has TCPA SMS quiet-hours
@@ -226,9 +247,23 @@ export async function POST(req: Request) {
       "testimonial.author": "",
       "testimonial.classYear": "",
       "testimonial.attribution": "",
-      "billing.plan": (billingPlan || "dues_split").trim(),
+      // Display-side billing key in the tenant's own config. Prefer the explicit
+      // pricing METHOD the founder chose; fall back to a legacy `billingPlan` body
+      // field, then the historical default. (The authoritative platform-billing
+      // state lives on the central Tenant row written below.)
+      "billing.plan": (billingPlan || normalizedPlan || "dues_split").trim(),
       "chapter.onboarded": "true",
     };
+
+    // Hero copy the founder edited live on the preview. Only seed a key when they
+    // actually typed something — an empty value must NOT overwrite the polished
+    // white-label defaults in lib/site-config.ts (hero.h1.lead / hero.subline).
+    // The headline maps to the lead line of the hero <h1>; the tagline to the
+    // supporting subline. Both are fully editable later in Admin → Settings.
+    const heroHeadlineTrim = typeof heroHeadline === "string" ? heroHeadline.trim() : "";
+    const heroTaglineTrim = typeof heroTagline === "string" ? heroTagline.trim() : "";
+    if (heroHeadlineTrim) updates["hero.h1.lead"] = heroHeadlineTrim;
+    if (heroTaglineTrim) updates["hero.subline"] = heroTaglineTrim;
     for (const [key, value] of Object.entries(updates)) {
       await tenantPrisma.siteConfig.upsert({ where: { key }, update: { value }, create: { key, value } });
     }
@@ -273,9 +308,16 @@ export async function POST(req: Request) {
         name: fraternityName.trim(),
         school: (schoolName || "").trim(),
         isActive: true,
-        subscriptionStatus: "trialing",
+        // Persist the chosen pricing method as the canonical platform-billing
+        // state. Base (monthly|semester) starts a "trialing" subscription with a
+        // real trial window; Dues-share is "active" from day one (the chapter
+        // pays via a % of dues, so the soft-gate must treat it as good standing,
+        // never surfacing the trial/dunning banner). trialEndsAt is still stamped
+        // for Base so the admin sees an accurate countdown; it's inert for the
+        // active dues-share status.
+        subscriptionStatus,
         trialEndsAt,
-        plan: "chapter",
+        plan: normalizedPlan,
       },
     });
 
@@ -306,6 +348,7 @@ export async function POST(req: Request) {
       route: ROUTE,
       tenant: subdomain,
       orgType: normalizedOrgType,
+      plan: normalizedPlan,
       outcome: "success",
     });
 
@@ -327,15 +370,37 @@ export async function POST(req: Request) {
         .join(" ");
       const brandHex = (primaryColor || "").trim();
       const adminFirst = (adminName || "").trim().split(" ")[0] || "there";
+      // Plan-aware billing copy so a dues-share chapter is never told about a
+      // "14-day trial" it isn't on. Base plans keep the trial language (monthly
+      // also leads with first-month-free); dues-share leads with $0 upfront.
+      const planLabel =
+        normalizedPlan === "semester"
+          ? "Base plan ($129 / semester)"
+          : normalizedPlan === "dues_percentage"
+          ? "Dues-share plan ($0 upfront)"
+          : "Base plan ($29/mo)";
+      const billingLineHtml =
+        normalizedPlan === "dues_percentage"
+          ? `Your <strong>Dues-share plan</strong> is active — <strong>$0 upfront</strong>, full access to every feature, no card required. We only ever earn a small percentage of the dues you collect.`
+          : normalizedPlan === "semester"
+          ? `Your <strong>Base plan</strong> is set up with a <strong>14-day free trial</strong> — full access, no card required. You're on per-semester billing ($129/semester); we'll remind you before your trial ends.`
+          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's just $29/mo, and we'll remind you before your trial ends so there's no interruption.`;
+      const billingLineText =
+        normalizedPlan === "dues_percentage"
+          ? "Your Dues-share plan is active — $0 upfront, full access, no card required."
+          : normalizedPlan === "semester"
+          ? "Your Base plan includes a 14-day free trial — full access, no card required ($129/semester after)."
+          : "Your first month is free — full access, no card required ($29/mo after).";
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
         <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
           <tr><td style="padding:6px 0;color:#71717a;">Chapter</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escHtml(chapterDisplay)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Plan</td><td style="padding:6px 0;text-align:right;">${escHtml(planLabel)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.greekstack.vercel.app</a></td></tr>
         </table>
-        <p style="margin:16px 0 0;">Your <strong>14-day free trial</strong> has started — full access to every feature, no card required. We'll remind you before it ends so there's no interruption to your chapter.</p>`;
+        <p style="margin:16px 0 0;">${billingLineHtml}</p>`;
       const html = renderEmail({
         brandHex,
         chapterName: chapterDisplay || fraternityName.trim(),
@@ -344,7 +409,7 @@ export async function POST(req: Request) {
         bodyHtml: welcomeBody,
         cta: { label: "Open your admin dashboard", url: adminUrl },
         footerNote:
-          "You're receiving this because a Greekstack chapter was created with this email. Your 14-day free trial has begun.",
+          "You're receiving this because a Greekstack chapter was created with this email.",
       });
       await sendEmail({
         to: adminEmailAddr,
@@ -354,9 +419,10 @@ export async function POST(req: Request) {
           heading: "Welcome to Greekstack",
           lines: [
             `Hi ${adminFirst}, your chapter ${chapterDisplay} is live.`,
+            `Plan: ${planLabel}`,
             `Admin login: ${adminEmailAddr}`,
             `Your site: ${adminUrl}`,
-            "Your 14-day free trial has started — full access, no card required.",
+            billingLineText,
           ],
           cta: { label: "Open your admin dashboard", url: adminUrl },
           chapterName: chapterDisplay || fraternityName.trim(),
