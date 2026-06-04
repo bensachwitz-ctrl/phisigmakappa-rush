@@ -12,10 +12,11 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
   CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
-  CreditCard,
+  CreditCard, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,8 +68,24 @@ export function BrothersManager({
   const [editing, setEditing] = React.useState<Brother | null>(null);
   const [open, setOpen] = React.useState(false);
   const [inviteOpen, setInviteOpen] = React.useState(false);
+  const [wizardOpen, setWizardOpen] = React.useState(false);
   const [form, setForm] = React.useState(empty);
   const [busy, setBusy] = React.useState(false);
+
+  // After the Add-Members wizard creates rows, re-pull the full directory so
+  // the new cards render with every field (the wizard only returns id+name).
+  async function refreshAfterWizard() {
+    try {
+      const res = await fetch("/api/admin/brothers");
+      const json = await res.json();
+      if (Array.isArray(json?.brothers)) {
+        setList(json.brothers.slice().sort((a: Brother, b: Brother) => a.name.localeCompare(b.name)));
+      }
+    } catch {
+      // The wizard already toasted success; a refresh failure just means the
+      // page needs a manual reload to show the new rows — non-fatal.
+    }
+  }
 
   // ---- Confirm dialog (replaces window.confirm) ----
   const [confirmState, setConfirmState] = React.useState<{
@@ -280,12 +297,25 @@ export function BrothersManager({
             <Button variant="outline" onClick={() => setInviteOpen(true)}>
               <Send className="h-4 w-4" /> Invite brother
             </Button>
-            <Button onClick={openCreate}>
+            <Button variant="outline" onClick={openCreate}>
               <Plus className="h-4 w-4" /> Add brother
+            </Button>
+            <Button onClick={() => setWizardOpen(true)}>
+              <Sparkles className="h-4 w-4" /> Add members
             </Button>
           </>
         )}
       </div>
+
+      {isAdmin && (
+        <AddMembersWizard
+          type="brothers"
+          lockType
+          open={wizardOpen}
+          onOpenChange={setWizardOpen}
+          onAdded={() => { void refreshAfterWizard(); }}
+        />
+      )}
 
       {isAdmin && <InviteBrotherDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />}
 

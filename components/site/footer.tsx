@@ -108,6 +108,12 @@ export async function PublicFooter() {
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <span aria-hidden>·</span>
             <a href={cleanMailto(cfg["contact.rushEmail"])} className="hover:text-foreground transition-colors">Contact</a>
+            <span aria-hidden>·</span>
+            {/* Talk to sales — links to the Greekstack APEX sales/contact surface
+                (/contact). Distinct from the chapter "Contact" mailto above: this
+                reaches the PLATFORM owner about Greekstack itself (demo, pricing,
+                custom build), not the chapter's rush inbox. */}
+            <Link href="/contact" className="hover:text-foreground transition-colors">Talk to sales</Link>
           </p>
         </div>
       </div>

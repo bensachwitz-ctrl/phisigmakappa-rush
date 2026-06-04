@@ -224,23 +224,8 @@ function GreekstackCard() {
           backgroundSize: "32px 32px",
         }}
       />
-      <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 16, position: "relative" }}>
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 16,
-            background: "#FFFFFF",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#0F172A",
-            fontSize: 34,
-            fontWeight: 800,
-          }}
-        >
-          GS
-        </div>
+      <div style={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 18, position: "relative" }}>
+        <GreekstackOgMark size={84} />
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: 14, letterSpacing: 6, textTransform: "uppercase", opacity: 0.85 }}>
             Greekstack
@@ -277,6 +262,42 @@ function GreekstackCard() {
           greekstack.vercel.app
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The Greekstack "Keystone Stack" brand mark for social cards — the same
+ * geometry as components/brand/greekstack-logo.tsx, rendered as a gradient chip
+ * so it pops on the dark apex card. Satori-friendly (inline <svg>).
+ */
+function GreekstackOgMark({ size }: { size: number }) {
+  return (
+    <div style={{ display: "flex", width: size, height: size }}>
+      <svg width={size} height={size} viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="og-body" x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#3B82F6" />
+            <stop offset="0.5" stopColor="#2563EB" />
+            <stop offset="1" stopColor="#0EA5E9" />
+          </linearGradient>
+          <linearGradient id="og-key" x1="13" y1="6" x2="27" y2="15" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#FBBF24" />
+            <stop offset="1" stopColor="#F59E0B" />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="40" height="40" rx="11" fill="url(#og-body)" />
+        <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="10.25" fill="none" stroke="#FFFFFF" strokeOpacity="0.2" strokeWidth="1" />
+        <path d="M9.4 16.4 L20 10.0 L30.6 16.4" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16.5 6.0 L23.5 6.0 L21.7 11.6 L18.3 11.6 Z" fill="url(#og-key)" />
+        <rect x="13.6" y="18.4" width="12.8" height="3.7" rx="1.5" fill="#FFFFFF" />
+        <rect x="14.9" y="23.1" width="10.2" height="3.7" rx="1.5" fill="#FFFFFF" fillOpacity="0.82" />
+        <rect x="16.2" y="27.8" width="7.6" height="3.7" rx="1.5" fill="#FFFFFF" fillOpacity="0.66" />
+        <rect x="9.0" y="32.6" width="22" height="3.1" rx="1.4" fill="#FFFFFF" />
+        <rect x="13.1" y="33.4" width="2.0" height="1.5" rx="0.4" fill="url(#og-body)" />
+        <rect x="19.0" y="32.6" width="2.0" height="1.6" rx="0.4" fill="url(#og-body)" />
+        <rect x="24.9" y="33.4" width="2.0" height="1.5" rx="0.4" fill="url(#og-body)" />
+      </svg>
     </div>
   );
 }

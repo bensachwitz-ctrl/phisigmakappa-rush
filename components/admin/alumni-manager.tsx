@@ -20,11 +20,13 @@ import {
   X,
   Loader2
 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 
 interface Alumnus {
   id: string;
@@ -52,6 +54,7 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCsvModal, setShowCsvModal] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // Confirm dialog (replaces window.confirm) for deleting an alumnus.
@@ -252,6 +255,20 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
     }
   };
 
+  // After the Add-Members wizard creates alumni rows, re-pull the directory so
+  // the new rows render fully (the wizard only returns id+name).
+  async function refreshAfterWizard() {
+    try {
+      const res = await fetch("/api/admin/alumni");
+      const json = await res.json();
+      if (json?.ok && Array.isArray(json.alumni)) {
+        setAlumniList(json.alumni);
+      }
+    } catch {
+      // Wizard already toasted success; a refresh miss just needs a reload.
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Controls Bar */}
@@ -269,8 +286,16 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
 
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setWizardOpen(true)}
             className="flex-1 sm:flex-none bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 rounded-xl font-semibold"
+          >
+            <Sparkles className="w-4 h-4" />
+            Add Members
+          </Button>
+          <Button
+            onClick={() => setShowAddModal(true)}
+            variant="outline"
+            className="flex-1 sm:flex-none border-maroon-200 text-maroon-900 hover:bg-cream-50 flex items-center justify-center gap-1.5 rounded-xl font-semibold"
           >
             <UserPlus className="w-4 h-4" />
             Add Alumnus
@@ -285,6 +310,16 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
           </Button>
         </div>
       </div>
+
+      <AddMembersWizard
+        type="alumni"
+        lockType
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        onAdded={() => { void refreshAfterWizard(); }}
+        memberTermSingular="alumnus"
+        memberTermPlural="alumni"
+      />
 
       {/* Directory Table */}
       <div className="bg-white rounded-2xl border border-maroon-100 shadow-sm overflow-hidden">
