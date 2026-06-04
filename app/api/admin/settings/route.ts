@@ -8,9 +8,21 @@ import { audit } from "@/lib/audit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Secret-shaped config keys are masked in the GET payload (write-only). The
+// dues.stripeWebhookSecret leaking to a member let them forge Stripe events;
+// publishable keys (no "secret" in the name) are still returned.
+const SECRET_KEY_RE = /secret/i;
+
 export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  const settings = await getSiteConfig();
+  // Admins only — isAdminAuthed() accepts a plain MEMBER cookie (adminFlag=0),
+  // so reads of the full chapter config (incl. dues secrets) must require the
+  // admin ROLE, matching the PATCH gate.
+  if (!isAdminRole()) return NextResponse.json({ ok: false }, { status: 403 });
+  const all = await getSiteConfig();
+  const settings: Record<string, string> = {};
+  for (const [k, v] of Object.entries(all)) {
+    settings[k] = SECRET_KEY_RE.test(k) ? (v ? "••••••••" : "") : v;
+  }
   return NextResponse.json({ settings });
 }
 
@@ -81,6 +93,15 @@ export async function PATCH(req: Request) {
 
 function scrubAdminValue(key: string, raw: string): string {
   let s = String(raw);
+  // Brand colors are interpolated into a <style> block (app/layout.tsx) — reject
+  // anything that isn't a clean #RRGGBB hex to prevent stored CSS/markup
+  // injection (XSS). A value like "red;}body{display:none" or one carrying a
+  // </style> breakout would otherwise land verbatim in the document head.
+  // Non-hex coerces to empty -> the render falls back to the built-in default.
+  if (/hex$/i.test(key)) {
+    const m = /^#?([0-9a-fA-F]{6})$/.exec(s.trim());
+    return m ? `#${m[1]}` : "";
+  }
   // Normalize smart quotes that auto-replace converters slip in
   s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
   // Strip trailing backslash + ellipsis + repeated trailing dots — but only on

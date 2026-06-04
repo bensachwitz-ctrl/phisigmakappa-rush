@@ -88,11 +88,20 @@ export async function POST(req: Request) {
       }
     }
 
+    // Shared-credential login requires ADMIN_PASSWORD to be EXPLICITLY set — no
+    // hardcoded fallback. The old "DamnProud" default meant every chapter whose
+    // operator hadn't set the env var accepted a well-known password as admin.
+    // When unset, the shared path is disabled and only per-chapter DB admins
+    // (brother.role=ADMIN with a passwordHash) can log in. Username keeps a
+    // non-secret default so existing logins don't break.
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
-    const expectedPass = process.env.ADMIN_PASSWORD || "DamnProud";
+    const expectedPass = process.env.ADMIN_PASSWORD;
+    const sharedConfigured = !!expectedPass;
 
-    const sharedUserOk = data.username.trim().toLowerCase() === expectedUser.toLowerCase();
-    const sharedPassOk = constantTimeStringEqual(String(data.password || ""), expectedPass);
+    const sharedUserOk =
+      sharedConfigured && data.username.trim().toLowerCase() === expectedUser.toLowerCase();
+    const sharedPassOk =
+      sharedConfigured && constantTimeStringEqual(String(data.password || ""), expectedPass!);
 
     let matchedAdminBrother = null;
     let loginSuccess = sharedUserOk && sharedPassOk;

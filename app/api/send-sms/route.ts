@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { isAdminRole } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,8 +48,10 @@ async function sendTwilio(opts: {
 }
 
 export async function POST(req: Request) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  // Admin ROLE only — an SMS blast spends Twilio credits and texts every rushee,
+  // so a plain member session (adminFlag=0) must not be able to fire it.
+  if (!isAdminRole()) {
+    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
 
   let payload: z.infer<typeof PayloadSchema>;
