@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatDate, formatTime } from "@/lib/utils";
+import { avatarSrc } from "@/lib/image-url";
 import {
   CalendarDays,
   MapPin,
@@ -696,7 +697,7 @@ function Avatar({ name, src }: { name: string; src: string | null }) {
     // eslint-disable-next-line @next/next/no-img-element
     return (
       <img
-        src={src}
+        src={avatarSrc(src, 40)}
         alt={name}
         className="h-5 w-5 rounded-full object-cover ring-1 ring-border"
       />

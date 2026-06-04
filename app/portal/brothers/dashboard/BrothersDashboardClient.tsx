@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { avatarSrc } from "@/lib/image-url";
 import {
   Users,
   CheckCircle,
@@ -747,7 +748,7 @@ export default function BrothersDashboardClient({
                     <div className="w-16 h-16 rounded-xl bg-cream-100 border border-maroon-100 overflow-hidden relative flex-shrink-0 flex items-center justify-center">
                       {brother.headshotUrl ? (
                         <img
-                          src={brother.headshotUrl}
+                          src={avatarSrc(brother.headshotUrl, 128)}
                           alt={brother.name}
                           className="w-full h-full object-cover"
                         />
@@ -1710,7 +1711,7 @@ export default function BrothersDashboardClient({
                     <div className="w-32 h-32 rounded-2xl border border-maroon-100 bg-cream-50 overflow-hidden relative mx-auto flex items-center justify-center shadow-sm">
                       {profileForm.headshotUrl ? (
                         <img
-                          src={profileForm.headshotUrl}
+                          src={avatarSrc(profileForm.headshotUrl, 256)}
                           alt={brother.name}
                           className="w-full h-full object-cover"
                         />

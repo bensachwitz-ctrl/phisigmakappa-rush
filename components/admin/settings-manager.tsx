@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import { imageSrc } from "@/lib/image-url";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
   RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
@@ -1288,7 +1289,7 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
     <div className="flex items-center gap-3">
       {value ? (
         <img
-          src={/^https?:\/\//.test(value) ? value : `/api/photo/${value}`}
+          src={imageSrc(value, { w: 96, h: 96, crop: "fill", gravity: "auto" })}
           alt="Headshot preview"
           className="h-12 w-12 rounded-full object-cover ring-2 ring-phisig-red/20"
         />

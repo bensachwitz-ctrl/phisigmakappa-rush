@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import {
   CheckCircle2, XCircle, HelpCircle, Clock, MapPin, Shirt,
   Lock, Globe, Loader2, Users, Sparkles, Heart, Crown, PartyPopper, Calendar,
@@ -359,7 +360,7 @@ export function EventDetailsModal({
                   {r.brother.headshotUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={r.brother.headshotUrl}
+                      src={avatarSrc(r.brother.headshotUrl, 72)}
                       alt={r.brother.name}
                       className="h-9 w-9 rounded-full object-cover bg-zinc-100"
                       loading="lazy"

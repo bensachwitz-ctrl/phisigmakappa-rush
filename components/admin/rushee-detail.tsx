@@ -31,6 +31,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { avatarSrc } from "@/lib/image-url";
 import {
   ArrowLeft, Send, UserCheck, UserX, MessageSquarePlus, Loader2,
   Calendar, Mail, Phone, MapPin, Sparkles, Copy, RefreshCw,
@@ -396,7 +397,7 @@ function PnmAvatar({ headshotUrl, name }: { headshotUrl: string | null; name: st
     return (
       <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-phisig-red/40 bg-secondary">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={headshotUrl} alt={`${name} headshot`} className="h-full w-full object-cover" />
+        <img src={avatarSrc(headshotUrl, 192)} alt={`${name} headshot`} className="h-full w-full object-cover" />
       </div>
     );
   }

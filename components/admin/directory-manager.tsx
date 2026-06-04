@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { avatarSrc } from "@/lib/image-url";
 import { IconDirectory } from "@/components/brand/icons/directory";
 import {
   IconMembers,
@@ -483,7 +484,7 @@ function Avatar({ name, src, exec }: { name: string; src: string | null; exec: b
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
+        src={avatarSrc(src, 112)}
         alt=""
         className={cn(
           "h-14 w-14 rounded-full object-cover shrink-0 ring-2 ring-offset-2 ring-offset-card",
@@ -628,7 +629,7 @@ function AvatarSm({ name, src, exec }: { name: string; src: string | null; exec:
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
+        src={avatarSrc(src, 72)}
         alt=""
         className={cn(
           "h-9 w-9 rounded-full object-cover shrink-0 ring-1",

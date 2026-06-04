@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { prisma } from "@/lib/prisma";
+import { prisma, getSubdomain } from "@/lib/prisma";
+import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,6 +72,22 @@ export async function POST(req: Request) {
       prisma.rushSubmitLog.create({
         data: { ipAddress, status: "HEADSHOT_UPLOAD" },
       }).catch(() => {});
+    }
+
+    // Cloudinary path (additive) — only when configured. Uploads under a
+    // per-tenant folder and persists the returned secure URL. When Cloudinary
+    // is unset, this branch is skipped entirely and the existing Blob/mock path
+    // below runs byte-for-byte unchanged.
+    if (isCloudinaryConfigured()) {
+      const subdomain =
+        getSubdomain(
+          req.headers.get("host") || req.headers.get("x-forwarded-host"),
+        ) || "apex";
+      const buf = Buffer.from(await blob.arrayBuffer());
+      const { url } = await uploadImage(buf, {
+        folder: `greekstack/${subdomain}/headshots`,
+      });
+      return NextResponse.json({ ok: true, url, provider: "cloudinary" });
     }
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;

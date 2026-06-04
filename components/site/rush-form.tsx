@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2,
   User, Mail, Phone, Sparkles, Send, Check,
@@ -650,7 +651,7 @@ function PhotoStep({
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
             <img
-              src={data.headshotUrl}
+              src={avatarSrc(data.headshotUrl, 352)}
               alt="Your headshot"
               className="h-44 w-44 rounded-full object-cover ring-4 ring-phisig-red/15 ring-offset-2 ring-offset-background shadow-lg animate-fade-in"
             />
@@ -731,7 +732,7 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
         <div className="flex items-start gap-5">
           {data.headshotUrl ? (
             <img
-              src={data.headshotUrl} alt=""
+              src={avatarSrc(data.headshotUrl, 160)} alt=""
               className="h-20 w-20 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-background shrink-0"
             />
           ) : (

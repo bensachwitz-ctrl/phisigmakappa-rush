@@ -25,6 +25,7 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg, type ChapterTerms } from "@/lib/chapter-identity";
+import { imageSrc, avatarSrc, isCloudinaryUrl } from "@/lib/image-url";
 import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
@@ -852,7 +853,7 @@ export default async function ChapterLandingPage({
                 className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl shadow-phisig-red/10 block"
               >
                 <img
-                  src={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `/api/photo/${cfg["spotlight.slug"]}`}
+                  src={imageSrc(cfg["spotlight.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
                   alt={`${terms.member} of the Month — ${cfg["spotlight.name"]}`}
                   width={640}
                   height={800}
@@ -906,7 +907,7 @@ export default async function ChapterLandingPage({
                   <div className="group relative h-full rounded-2xl border border-border bg-card p-5 overflow-hidden transition-colors hover:border-phisig-red/30">
                     {m.headshotUrl ? (
                       <img
-                        src={/^https?:\/\//.test(m.headshotUrl) ? m.headshotUrl : `/api/photo/${m.headshotUrl}`}
+                        src={avatarSrc(m.headshotUrl, 112)}
                         alt={`${m.name}, ${m.role}`}
                         width={56}
                         height={56}
@@ -1038,7 +1039,7 @@ export default async function ChapterLandingPage({
                 className="aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl block relative"
               >
                 <img
-                  src={/^https?:\/\//.test(cfg["about.slug"]) ? cfg["about.slug"] : `/api/photo/${cfg["about.slug"]}`}
+                  src={imageSrc(cfg["about.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
                   alt={cfg["about.caption"]}
                   width={640}
                   height={800}
@@ -1355,7 +1356,21 @@ function PostTile({
     );
   }
   const isUrl = /^https?:\/\//.test(slug);
-  const imgSrc = isUrl ? slug : `/api/photo/${slug}`;
+  const cloud = isCloudinaryUrl(slug);
+  // Cloudinary assets get a sized auto-format delivery URL + a Cloudinary
+  // responsive srcSet. Everything else keeps the exact prior behavior: a full
+  // (Blob/IG-CDN) URL renders as-is with no srcSet; a bare slug goes through the
+  // /api/photo proxy with its ?w= responsive set.
+  const imgSrc = cloud
+    ? imageSrc(slug, { w: 960, crop: "limit" })
+    : isUrl
+      ? slug
+      : `/api/photo/${slug}`;
+  const cloudSrcSet = cloud
+    ? [480, 960, 1280, 1600]
+        .map((w) => `${imageSrc(slug, { w, crop: "limit" })} ${w}w`)
+        .join(", ")
+    : undefined;
   const linkHref = isUrl ? slug : `https://www.instagram.com/p/${slug}/`;
   return (
     <a
@@ -1372,9 +1387,10 @@ function PostTile({
       <img
         src={imgSrc}
         // Responsive srcset — phones get a 480-width WebP, tablets 960, 4K
-        // displays 1600. Photo proxy honors ?w= and snaps to ALLOWED_WIDTHS.
-        // Keeping the URL stable means the cache key matches across requests.
-        srcSet={isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
+        // displays 1600. Photo proxy honors ?w= and snaps to ALLOWED_WIDTHS;
+        // Cloudinary assets emit an equivalent Cloudinary-sized srcSet. A direct
+        // (Blob) URL keeps no srcSet, exactly as before.
+        srcSet={cloud ? cloudSrcSet : isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
         sizes={priority ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"}
         alt={`Chapter life — ${caption}`}
         width={640}

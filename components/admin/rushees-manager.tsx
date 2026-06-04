@@ -36,6 +36,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { avatarSrc } from "@/lib/image-url";
 import {
   Users, Plus, MessageCircle, Search, Loader2, TrendingUp,
   Flame, CalendarCheck, UserX, Send, CheckCircle2, XCircle,
@@ -427,7 +428,7 @@ function Thumb({ headshotUrl, name }: { headshotUrl: string | null; name: string
       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-border bg-secondary">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={headshotUrl}
+          src={avatarSrc(headshotUrl, 80)}
           alt={`${name} headshot`}
           className="h-full w-full object-cover"
         />

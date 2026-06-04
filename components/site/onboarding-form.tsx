@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import { CheckCircle2, Loader2, Upload } from "lucide-react";
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Grad"];
@@ -192,7 +193,7 @@ export function OnboardingForm({
             <Label htmlFor="onb-headshot" className="mb-1.5 inline-block">Headshot (optional)</Label>
             <div className="flex items-center gap-3">
               {form.headshotUrl ? (
-                <img src={form.headshotUrl} alt="" className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
+                <img src={avatarSrc(form.headshotUrl, 112)} alt="" className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
               ) : (
                 <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-muted-foreground" aria-hidden="true">
                   <Upload className="h-5 w-5" />

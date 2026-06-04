@@ -4,6 +4,7 @@ import {
   Vote, CalendarCheck, Clock, Trophy, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { avatarSrc } from "@/lib/image-url";
 
 /**
  * Brother engagement leaderboard — top 5 brothers in 3 categories. Renders
@@ -145,7 +146,7 @@ function LeaderboardColumn({
             {e.headshotUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={e.headshotUrl}
+                src={avatarSrc(e.headshotUrl, 48)}
                 alt=""
                 className="h-6 w-6 rounded-full object-cover ring-1 ring-border shrink-0"
               />

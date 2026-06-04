@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import {
   Mail,
   MessageSquare,
@@ -781,7 +782,7 @@ function Avatar({ rush, size = 36 }: { rush: Rush; size?: number }) {
   if (rush.headshotUrl) {
     return (
       <img
-        src={rush.headshotUrl}
+        src={avatarSrc(rush.headshotUrl, size * 2)}
         alt=""
         style={{ width: size, height: size }}
         className="rounded-full object-cover ring-1 ring-border shrink-0"

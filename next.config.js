@@ -31,6 +31,10 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.cdninstagram.com' },
       { protocol: 'https', hostname: '**.fbcdn.net' },
       { protocol: 'https', hostname: '**.vercel-storage.com' },
+      // Cloudinary delivery host — used only when Cloudinary is configured
+      // (CLOUDINARY_* env set). Inert otherwise: no asset is served from this
+      // host unless an upload landed in Cloudinary, so this is purely additive.
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   // R44 — REMOVED the `config.optimization.minimize = false` webpack
@@ -83,7 +87,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "img-src 'self' data: blob: https://*.cdninstagram.com https://*.fbcdn.net https://*.vercel-storage.com",
+              "img-src 'self' data: blob: https://*.cdninstagram.com https://*.fbcdn.net https://*.vercel-storage.com https://res.cloudinary.com",
               "style-src 'self' 'unsafe-inline'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "font-src 'self' data:",

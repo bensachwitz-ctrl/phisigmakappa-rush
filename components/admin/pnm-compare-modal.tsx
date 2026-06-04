@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { avatarSrc } from "@/lib/image-url";
 import {
   Mail, Phone, GraduationCap, MapPin, ThumbsUp, ThumbsDown,
   Minus, Star, Calendar, Sparkles,
@@ -99,7 +100,7 @@ export function PnmCompareModal({
                 {r.headshotUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={r.headshotUrl}
+                    src={avatarSrc(r.headshotUrl, 96)}
                     alt={r.name}
                     className="h-12 w-12 rounded-full object-cover ring-1 ring-border shrink-0"
                   />

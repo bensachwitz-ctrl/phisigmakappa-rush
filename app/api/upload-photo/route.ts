@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { getSubdomain } from "@/lib/prisma";
+import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +32,21 @@ export async function POST(req: Request) {
     }
     if (blob.type && !ALLOWED.includes(blob.type)) {
       return NextResponse.json({ ok: false, error: "Only JPG, PNG, WEBP, HEIC, GIF allowed" }, { status: 415 });
+    }
+
+    // Cloudinary path (additive) — only when configured. Stores the photo under
+    // a per-tenant folder and returns the secure URL. Skipped entirely when
+    // Cloudinary is unset, leaving the Blob/mock path below unchanged.
+    if (isCloudinaryConfigured()) {
+      const subdomain =
+        getSubdomain(
+          req.headers.get("host") || req.headers.get("x-forwarded-host"),
+        ) || "apex";
+      const buf = Buffer.from(await blob.arrayBuffer());
+      const { url } = await uploadImage(buf, {
+        folder: `greekstack/${subdomain}/site`,
+      });
+      return NextResponse.json({ ok: true, url, provider: "cloudinary" });
     }
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;

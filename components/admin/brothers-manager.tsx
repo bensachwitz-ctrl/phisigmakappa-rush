@@ -12,6 +12,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
@@ -361,7 +362,7 @@ export function BrothersManager({
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
                   {b.headshotUrl ? (
-                    <img src={b.headshotUrl} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-border shrink-0" />
+                    <img src={avatarSrc(b.headshotUrl, 96)} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-border shrink-0" />
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-sm font-semibold shrink-0">
                       {b.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}

@@ -11,7 +11,7 @@ import {
   ArrowRight, Command,
   UserPlus, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
   HandHeart, ShieldCheck, BookMarked, FileDown, Banknote,
-  Landmark, Network, BookUser, CreditCard,
+  Landmark, Network, BookUser, CreditCard, MessagesSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +67,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "nav-directory", group: "Navigate", icon: BookUser, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
       { id: "nav-family", group: "Navigate", icon: Network, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },
       { id: "nav-meetings", group: "Navigate", icon: CalendarCheck, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
+      { id: "nav-chat", group: "Navigate", icon: MessagesSquare, label: "Chapter Chat", href: "/admin/chat", synonyms: ["message", "messages", "dm", "talk", "stream", "groupme", "slack"] },
       { id: "nav-risk", group: "Navigate", icon: ShieldAlert, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
       { id: "nav-academic", group: "Navigate", icon: GraduationCap, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
       { id: "nav-chores", group: "Navigate", icon: CheckSquare, label: "Chores / House", href: "/admin/chores", synonyms: ["tasks", "duties", "house", "cleaning", "checklist"] },

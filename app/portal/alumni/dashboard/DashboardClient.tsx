@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PublicFooter } from "@/components/site/footer";
 import { useToast } from "@/components/ui/toast";
+import { avatarSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -792,7 +793,7 @@ export default function DashboardClient({
                       <div className="w-12 h-12 rounded-xl bg-cream-100 overflow-hidden shrink-0 flex items-center justify-center border border-maroon-50">
                         {b.headshotUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={b.headshotUrl} alt={b.name} className="w-full h-full object-cover" />
+                          <img src={avatarSrc(b.headshotUrl, 96)} alt={b.name} className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-6 h-6 text-maroon-400" />
                         )}

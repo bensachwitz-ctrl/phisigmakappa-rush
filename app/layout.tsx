@@ -7,6 +7,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
 import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
+import { isClerkConfigured } from "@/lib/clerk-config";
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
 // when the request has no subdomain (greekstack.vercel.app, localhost,
@@ -412,7 +413,11 @@ export default async function RootLayout({
     .replace(/>/g, "\\u003e")
     .replace(/&/g, "\\u0026");
 
-  return (
+  // The full document tree. Identical whether or not Clerk is configured — the
+  // ONLY difference is whether it gets wrapped in <ClerkProvider> below. None of
+  // the existing providers (Toast, ChapterIdentity), the tenant-bound auth, or
+  // the middleware are touched by the Clerk branch.
+  const tree = (
     <html lang="en" className={inter.variable}>
       <head>
         <script
@@ -441,4 +446,21 @@ export default async function RootLayout({
       </body>
     </html>
   );
+
+  // OPTIONAL Clerk enhancement — env-gated and fully inert by default.
+  // When NEITHER Clerk key is set, isClerkConfigured() is false and we return
+  // the tree as-is: the dynamic import below NEVER runs, so `@clerk/nextjs` is
+  // never evaluated, no <ClerkProvider> mounts, and the app authenticates
+  // byte-identically to a build where Clerk was never installed.
+  // When BOTH keys are present we dynamically import the provider wrapper (the
+  // sole module that touches Clerk's runtime) and wrap the SAME tree — adding
+  // social-login UX without altering the existing portal/admin sessions.
+  if (isClerkConfigured()) {
+    const { default: ClerkProviderWrapper } = await import(
+      "@/components/auth/clerk-provider-wrapper"
+    );
+    return <ClerkProviderWrapper>{tree}</ClerkProviderWrapper>;
+  }
+
+  return tree;
 }
