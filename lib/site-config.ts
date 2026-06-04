@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, getSubdomain } from "@/lib/prisma";
 
 /**
  * Default site config — used when the SiteConfig DB table is empty or a key is unset.
@@ -12,25 +12,27 @@ export const DEFAULTS = {
   // once on the /admin/setup wizard. NO source code changes required to
   // re-brand for Beta Sigma @ Maryland, Epsilon @ Drexel, etc.
   //
-  // The Phi Sig + Gamma Triton + USC defaults are reference values only.
-  // A net-new chapter run through /admin/setup overrides every line below.
-  "chapter.fraternityName": "Phi Sigma Kappa",
-  "chapter.fraternityShort": "Phi Sig",
-  "chapter.greekLetters": "Gamma Triton",
-  "chapter.greekLettersGlyphs": "ΓΤ",
-  "chapter.schoolName": "University of South Carolina",
-  "chapter.schoolShort": "USC",
-  "chapter.schoolUrl": "https://sc.edu",
-  "chapter.charterYear": "1975",
-  "chapter.foundingYear": "1873",
-  "chapter.foundingLocation": "Massachusetts Agricultural College",
-  "chapter.nationalName": "Phi Sigma Kappa",
-  "chapter.nationalHqUrl": "https://phisigmakappa.org",
+  // White-label DEFAULTS are intentionally BLANK so the apex + any unconfigured
+  // tenant NEVER render a specific chapter (these were Phi Sig reference values
+  // and leaked onto the marketing apex). Provisioning (/admin/setup) seeds the
+  // real per-chapter identity; chapterIdentityFromCfg() neutral-fallbacks the rest.
+  "chapter.fraternityName": "",
+  "chapter.fraternityShort": "",
+  "chapter.greekLetters": "",
+  "chapter.greekLettersGlyphs": "",
+  "chapter.schoolName": "",
+  "chapter.schoolShort": "",
+  "chapter.schoolUrl": "",
+  "chapter.charterYear": "",
+  "chapter.foundingYear": "",
+  "chapter.foundingLocation": "",
+  "chapter.nationalName": "",
+  "chapter.nationalHqUrl": "",
   "chapter.cardinalPrinciples": "Brotherhood, Scholarship, Character",
-  "chapter.tagline": "#DamnProud",
+  "chapter.tagline": "",
   // Max 12 chars — iOS home-screen launcher caption.
-  "chapter.appShortTitle": "Phi Sig USC",
-  "chapter.fraternityLetters": "ΦΣΚ",
+  "chapter.appShortTitle": "",
+  "chapter.fraternityLetters": "",
 
   // Hero photo collage tiles. Slugs must point at IG posts whose og:image
   // resolves to the actual chapter photo, not Instagram's branding asset.
@@ -295,6 +297,13 @@ export type ConfigKey = keyof typeof DEFAULTS;
  * Fetch all site config from DB, merged with defaults so missing keys still resolve.
  * Returns a plain map of key → value strings.
  */
+// On the APEX (no subdomain) the public schema may still hold the seed/first
+// chapter's content rows (e.g. the original Phi Sig identity), which must NEVER
+// render on the generic Greekstack marketing site. These key prefixes are
+// chapter-identity/content; on the apex they are dropped so they fall back to the
+// neutral DEFAULTS. Operational config (brand.*, show.*, dues.*) still applies.
+const APEX_DROP_PREFIX = /^(chapter\.|contact\.|hero\.|spotlight\.|eboard\.|testimonial\.|about\.|philanthropy\.|antiHazing\.|stats\.)/;
+
 export async function getSiteConfig(): Promise<Record<string, string>> {
   let rows: { key: string; value: string }[] = [];
   try {
@@ -302,7 +311,21 @@ export async function getSiteConfig(): Promise<Record<string, string>> {
   } catch {
     rows = [];
   }
+
+  // Detect the apex (request context only; headers() throws at build → not apex).
+  let isApex = false;
+  try {
+    const { headers } = require("next/headers");
+    const h = headers();
+    isApex = getSubdomain(h.get("host") || h.get("x-forwarded-host")) === null;
+  } catch {
+    isApex = false;
+  }
+
   const map: Record<string, string> = { ...DEFAULTS };
-  for (const r of rows) map[r.key] = r.value;
+  for (const r of rows) {
+    if (isApex && APEX_DROP_PREFIX.test(r.key)) continue;
+    map[r.key] = r.value;
+  }
   return map;
 }
