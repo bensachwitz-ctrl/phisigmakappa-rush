@@ -60,6 +60,15 @@ export function Reveal3D({
   const reduce = useReducedMotion();
   const ref = React.useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once, amount });
+  // Safety net — never leave content stuck at opacity:0 if the IntersectionObserver
+  // doesn't fire (no-JS, observer quirks, off-viewport composite renders). After a
+  // grace period the reveal plays regardless. Mirrors components/site/reveal.tsx.
+  const [forceShow, setForceShow] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setForceShow(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+  const visible = inView || forceShow;
 
   const MotionTag =
     Tag === "section"
@@ -86,7 +95,7 @@ export function Reveal3D({
         ref={ref as any}
         className={className}
         initial="hidden"
-        animate={inView ? "show" : "hidden"}
+        animate={visible ? "show" : "hidden"}
         variants={{
           hidden: {},
           show: {
@@ -105,7 +114,7 @@ export function Reveal3D({
       ref={ref as any}
       className={cn("will-change-transform", className)}
       initial="hidden"
-      animate={inView ? "show" : "hidden"}
+      animate={visible ? "show" : "hidden"}
       variants={{
         hidden: { opacity: 0, y, rotateX: -8, transformPerspective: 800 },
         show: {
