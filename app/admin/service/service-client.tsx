@@ -395,18 +395,23 @@ export function ServiceClient({
         <div className="space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border p-3 bg-card">
-              <div className="text-[10px] uppercase text-muted-foreground font-semibold">
+            <div className="lift rounded-xl border p-3 bg-card">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+                <Hourglass className="h-3.5 w-3.5 text-phisig-red" />
                 {statusFilter === "submitted" ? "Pending Reviews" : statusFilter === "approved" ? "Approved Logs" : "Rejected Logs"}
               </div>
               <div className="text-2xl font-bold mt-0.5">{queueStats.count}</div>
             </div>
-            <div className="rounded-xl border p-3 bg-card">
-              <div className="text-[10px] uppercase text-muted-foreground font-semibold">Total Hours</div>
+            <div className="lift rounded-xl border p-3 bg-card">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+                <HeartHandshake className="h-3.5 w-3.5 text-phisig-red" /> Total Hours
+              </div>
               <div className="text-2xl font-bold mt-0.5 text-phisig-red">{queueStats.totalHours.toFixed(1)}</div>
             </div>
-            <div className="rounded-xl border p-3 bg-card">
-              <div className="text-[10px] uppercase text-muted-foreground font-semibold">Members</div>
+            <div className="lift rounded-xl border p-3 bg-card">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+                <User className="h-3.5 w-3.5 text-phisig-red" /> Members
+              </div>
               <div className="text-2xl font-bold mt-0.5">{queueStats.members}</div>
             </div>
           </div>
@@ -440,17 +445,22 @@ export function ServiceClient({
               <Loader2 className="h-8 w-8 animate-spin text-phisig-red" />
             </div>
           ) : filteredHours.length === 0 ? (
-            <Card className="text-center py-12 border-dashed bg-muted/20">
-              <CardContent className="space-y-3">
-                <IconChip icon={HeartHandshake} tone="muted" size="lg" className="mx-auto" />
-                <h3 className="text-lg font-semibold">
-                  {statusFilter === "submitted" ? "Queue is clear" : "No records"}
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  {statusFilter === "submitted"
-                    ? "There are no service-hour submissions waiting for review."
-                    : `No ${statusFilter} service-hour logs to show.`}
-                </p>
+            <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+              <CardContent className="space-y-4">
+                <div className="relative mx-auto w-fit">
+                  <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+                  <IconChip icon={statusFilter === "submitted" ? CheckCircle2 : HeartHandshake} tone="brand" size="lg" className="mx-auto" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-semibold">
+                    {statusFilter === "submitted" ? "Queue is clear" : "No records"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    {statusFilter === "submitted"
+                      ? "Every service-hour submission has been reviewed — nothing waiting on you."
+                      : `No ${statusFilter} service-hour logs to show.`}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -543,15 +553,20 @@ export function ServiceClient({
           </div>
 
           {events.length === 0 ? (
-            <Card className="text-center py-12 border-dashed bg-muted/20">
-              <CardContent className="space-y-3">
-                <IconChip icon={Calendar} tone="muted" size="lg" className="mx-auto" />
-                <h3 className="text-lg font-semibold">No Service Events</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Create your first service event so members can log hours against it.
-                </p>
+            <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+              <CardContent className="space-y-4">
+                <div className="relative mx-auto w-fit">
+                  <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+                  <IconChip icon={Calendar} tone="brand" size="lg" className="mx-auto" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-semibold">No Service Events</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Create your first service event so members can log hours against it.
+                  </p>
+                </div>
                 {canWrite && (
-                  <Button onClick={openAddEvent} className="mt-2">
+                  <Button onClick={openAddEvent} className="mt-1">
                     <Plus className="h-4 w-4 mr-1.5" /> New Event
                   </Button>
                 )}
@@ -618,15 +633,20 @@ export function ServiceClient({
           </div>
 
           {partners.length === 0 ? (
-            <Card className="text-center py-12 border-dashed bg-muted/20">
-              <CardContent className="space-y-3">
-                <IconChip icon={Building2} tone="muted" size="lg" className="mx-auto" />
-                <h3 className="text-lg font-semibold">No Partner Organizations</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Add the nonprofits and community partners your chapter volunteers with.
-                </p>
+            <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+              <CardContent className="space-y-4">
+                <div className="relative mx-auto w-fit">
+                  <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+                  <IconChip icon={Building2} tone="brand" size="lg" className="mx-auto" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-semibold">No Partner Organizations</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Add the nonprofits and community partners your chapter volunteers with.
+                  </p>
+                </div>
                 {canWrite && (
-                  <Button onClick={openAddPartner} className="mt-2">
+                  <Button onClick={openAddPartner} className="mt-1">
                     <Plus className="h-4 w-4 mr-1.5" /> New Partner
                   </Button>
                 )}

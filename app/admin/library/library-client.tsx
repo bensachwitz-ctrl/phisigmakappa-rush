@@ -266,16 +266,22 @@ export function LibraryClient({
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Documents</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <FileText className="h-3.5 w-3.5 text-phisig-red" /> Documents
+          </div>
           <div className="text-2xl font-bold mt-0.5">{stats.total}</div>
         </div>
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Categories</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <FolderOpen className="h-3.5 w-3.5 text-phisig-red" /> Categories
+          </div>
           <div className="text-2xl font-bold mt-0.5">{stats.categories}</div>
         </div>
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Total Size</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <BookMarked className="h-3.5 w-3.5 text-phisig-red" /> Total Size
+          </div>
           <div className="text-2xl font-bold mt-0.5">{formatBytes(stats.totalBytes)}</div>
         </div>
       </div>
@@ -306,19 +312,24 @@ export function LibraryClient({
 
       {/* List */}
       {filtered.length === 0 ? (
-        <Card className="text-center py-12 border-dashed bg-muted/20">
-          <CardContent className="space-y-3">
-            <IconChip icon={FolderOpen} tone="muted" size="lg" className="mx-auto" />
-            <h3 className="text-lg font-semibold">
-              {docs.length === 0 ? "No Documents Yet" : "No Matching Documents"}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {docs.length === 0
-                ? "Upload your chapter's bylaws, policies, and forms to keep them in one place."
-                : "Try a different search term or category filter."}
-            </p>
+        <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+          <CardContent className="space-y-4">
+            <div className="relative mx-auto w-fit">
+              <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+              <IconChip icon={FolderOpen} tone="brand" size="lg" className="mx-auto" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-semibold">
+                {docs.length === 0 ? "No Documents Yet" : "No Matching Documents"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                {docs.length === 0
+                  ? "Upload your chapter's bylaws, policies, and forms to keep them in one place."
+                  : "Try a different search term or category filter."}
+              </p>
+            </div>
             {docs.length === 0 && canWrite && (
-              <Button onClick={openUpload} className="mt-2">
+              <Button onClick={openUpload} className="mt-1">
                 <Upload className="h-4 w-4 mr-1.5" /> Upload Document
               </Button>
             )}

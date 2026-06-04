@@ -564,20 +564,28 @@ export function MeetingsClient({
 
       {/* KPI stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Total Meetings</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <CalendarDays className="h-3.5 w-3.5 text-phisig-red" /> Total Meetings
+          </div>
           <div className="text-2xl font-bold mt-0.5">{stats.total}</div>
         </div>
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Upcoming</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <Clock className="h-3.5 w-3.5 text-amber-500" /> Upcoming
+          </div>
           <div className="text-2xl font-bold mt-0.5 text-amber-600">{stats.upcoming}</div>
         </div>
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Completed</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Completed
+          </div>
           <div className="text-2xl font-bold mt-0.5 text-emerald-600">{stats.completed}</div>
         </div>
-        <div className="rounded-xl border p-3 bg-card">
-          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Canceled</div>
+        <div className="lift rounded-xl border p-3 bg-card">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
+            <XCircle className="h-3.5 w-3.5 text-zinc-400" /> Canceled
+          </div>
           <div className="text-2xl font-bold mt-0.5 text-zinc-500">{stats.canceled}</div>
         </div>
       </div>
@@ -609,15 +617,20 @@ export function MeetingsClient({
 
       {/* Meeting list — 4-state coverage */}
       {filtered.length === 0 ? (
-        <Card className="text-center py-12 bg-muted/20 border-dashed">
-          <CardContent className="space-y-3">
-            <IconChip icon={CalendarDays} tone="muted" size="lg" className="mx-auto" />
-            <h3 className="text-lg font-semibold">No meetings found</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {list.length === 0
-                ? "No chapter meetings have been scheduled yet."
-                : "No meetings match the current filters."}
-            </p>
+        <Card className="text-center py-12 bg-gradient-to-b from-muted/30 to-transparent border-dashed">
+          <CardContent className="space-y-4">
+            <div className="relative mx-auto w-fit">
+              <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+              <IconChip icon={CalendarDays} tone="brand" size="lg" className="mx-auto" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-semibold">No meetings found</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                {list.length === 0
+                  ? "Schedule your first chapter meeting to start taking roll and tracking attendance."
+                  : "No meetings match the current filters."}
+              </p>
+            </div>
             {canWrite && list.length === 0 && (
               <Button onClick={openCreate} className="mt-1">
                 <Plus className="h-4 w-4 mr-1.5" /> Schedule First Meeting
@@ -852,15 +865,15 @@ export function MeetingsClient({
                 </div>
               ) : rosterError ? (
                 <div className="flex flex-col items-center gap-3 py-10 text-center">
-                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                  <IconChip icon={AlertTriangle} tone="muted" size="lg" className="text-destructive ring-destructive/25 bg-gradient-to-br from-destructive/15 to-destructive/5" />
                   <p className="text-sm text-muted-foreground">{rosterError}</p>
                   <Button variant="outline" size="sm" onClick={() => loadRoster(rosterMeeting)}>
                     <RotateCw className="h-4 w-4 mr-1.5" /> Retry
                   </Button>
                 </div>
               ) : draftRows.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-10 text-center">
-                  <Users className="h-8 w-8 text-muted-foreground" />
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <IconChip icon={Users} tone="muted" size="lg" />
                   <p className="text-sm text-muted-foreground">No eligible members to mark.</p>
                 </div>
               ) : (

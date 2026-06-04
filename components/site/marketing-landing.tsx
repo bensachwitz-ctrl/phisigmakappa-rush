@@ -351,7 +351,16 @@ function TrustBar() {
 
 function Features() {
   return (
-    <section id="features" className="container scroll-mt-20 py-20 sm:py-28">
+    <section id="features" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+      {/* Faint masked grid band for depth behind the feature cards. Decorative
+          only, fades at the edges so it never competes with the content. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(99,102,241,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
+      {/* Soft top gradient divider */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+      <div className="container">
       <Reveal className="mx-auto max-w-2xl text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
           Everything a chapter runs on
@@ -376,16 +385,22 @@ function Features() {
           </Reveal>
         ))}
       </div>
+      </div>
     </section>
   );
 }
 
 function FeatureCard({ icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
   return (
-    <div className="group h-full rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
-      <IconChip icon={icon} tone="platform" size="md" />
-      <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+    <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
+      {/* Decorative corner accent — soft indigo→cyan glow that brightens on hover */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-indigo-500/15 to-cyan-400/10 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+      />
+      <IconChip icon={icon} tone="platform" size="md" className="relative transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
+      <h3 className="relative mt-4 text-base font-semibold tracking-tight">{title}</h3>
+      <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
     </div>
   );
 }
@@ -416,9 +431,9 @@ function HowItWorks() {
           />
           {STEPS.map((s, i) => (
             <Reveal key={s.step} delay={i * 110}>
-              <div className="relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+              <div className="group relative h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
                 <div className="mx-auto flex justify-center">
-                  <IconChip icon={s.icon} tone="platform" size="lg" />
+                  <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
                 <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-indigo-500">
                   STEP {s.step}
@@ -447,7 +462,13 @@ function HowItWorks() {
 
 function Proof() {
   return (
-    <section id="proof" className="container scroll-mt-20 py-20 sm:py-28">
+    <section id="proof" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+      {/* Faint masked grid band behind the stat tiles for quiet depth. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(99,102,241,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
+      <div className="container">
       <Reveal className="mx-auto max-w-2xl text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
           Why chapters choose Greekstack
@@ -460,7 +481,7 @@ function Proof() {
       <div className="mx-auto mt-14 grid max-w-5xl grid-cols-2 gap-6 lg:grid-cols-4">
         {STATS.map((s, i) => (
           <Reveal key={s.label} delay={i * 80}>
-            <div className="h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+            <div className="group h-full rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/10">
               <span className="block text-4xl font-bold tracking-tight gs-gradient-text sm:text-5xl">
                 <CountUp
                   value={s.value}
@@ -489,6 +510,7 @@ function Proof() {
           </figcaption>
         </figure>
       </Reveal>
+      </div>
     </section>
   );
 }

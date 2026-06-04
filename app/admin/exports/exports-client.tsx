@@ -202,7 +202,7 @@ export function ExportsClient({
                   maxLength={32}
                 />
               </div>
-              <Button onClick={runExport} disabled={running} className="bg-phisig-red text-white hover:bg-phisig-red-dark">
+              <Button onClick={runExport} disabled={running} className="gs-sheen bg-phisig-red text-white hover:bg-phisig-red-dark">
                 {running ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
                 Run Export
               </Button>
@@ -230,15 +230,20 @@ export function ExportsClient({
 
       {/* History list */}
       {runs.length === 0 ? (
-        <Card className="text-center py-12 border-dashed bg-muted/20">
-          <CardContent className="space-y-3">
-            <IconChip icon={FileSpreadsheet} tone="muted" size="lg" className="mx-auto" />
-            <h3 className="text-lg font-semibold">No Exports Yet</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {canWrite
-                ? "Run your first HQ export above. Each run is recorded here with a download link."
-                : "No HQ exports have been generated yet."}
-            </p>
+        <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+          <CardContent className="space-y-4">
+            <div className="relative mx-auto w-fit">
+              <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+              <IconChip icon={FileSpreadsheet} tone="brand" size="lg" className="mx-auto" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-semibold">No Exports Yet</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                {canWrite
+                  ? "Run your first HQ export above. Each run is recorded here with a download link."
+                  : "No HQ exports have been generated yet."}
+              </p>
+            </div>
           </CardContent>
         </Card>
       ) : (

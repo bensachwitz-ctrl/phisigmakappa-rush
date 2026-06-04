@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { Users, ArrowLeft, Mail, Lock, LogIn, UserPlus } from "lucide-react";
+import { Users, ArrowLeft, Mail, Lock, LogIn } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 
 export default function BrothersLoginPage() {
@@ -59,8 +59,11 @@ export default function BrothersLoginPage() {
 
           <div className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-maroon-650 to-maroon-900 text-cream-50 mb-3 shadow-sm">
-                <Users className="w-6 h-6" />
+              <div className="relative inline-flex mb-3">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-400/30 blur-xl" />
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-maroon-650 to-maroon-900 text-cream-50 shadow-md ring-1 ring-maroon-900/10">
+                  <Users className="w-6 h-6" />
+                </span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-maroon-900">Brothers Sign In</h1>
               <p className="text-xs text-maroon-600 mt-1">

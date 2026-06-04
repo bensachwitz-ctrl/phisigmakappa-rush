@@ -20,7 +20,8 @@ import {
   ShieldAlert,
   ChevronRight,
   BookOpen,
-  Heart
+  Heart,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicFooter } from "@/components/site/footer";
@@ -126,6 +127,38 @@ function safeParseOptions(raw: string): { id: string; label: string }[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Designed empty-state for the alumni portal — a soft maroon icon medallion
+ * with a glow, headline, and sub. Matches the portal's cream/maroon identity
+ * (the platform <IconChip> is indigo-toned and would clash here).
+ */
+function PortalEmpty({
+  icon: Icon,
+  title,
+  sub,
+  className = "",
+}: {
+  icon: LucideIcon;
+  title: string;
+  sub?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col items-center justify-center gap-3 px-6 py-10 text-center ${className}`}>
+      <div className="relative">
+        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-200/40 blur-2xl" />
+        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
+          <Icon className="h-6 w-6" aria-hidden />
+        </span>
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-bold text-maroon-900">{title}</p>
+        {sub && <p className="text-xs text-maroon-500 max-w-xs">{sub}</p>}
+      </div>
+    </div>
+  );
 }
 
 interface DashboardClientProps {
@@ -620,8 +653,12 @@ export default function DashboardClient({
                     })}
                   </div>
                 ) : (
-                  <div className="bg-cream-100/50 rounded-xl border border-maroon-50 border-dashed p-6 text-center text-sm text-maroon-600">
-                    No active PNMs found from your current city or state.
+                  <div className="bg-cream-100/50 rounded-xl border border-maroon-50 border-dashed">
+                    <PortalEmpty
+                      icon={MapPin}
+                      title="No hometown matches"
+                      sub="We didn't find active PNMs near your city or state. Use the search below to find anyone you know."
+                    />
                   </div>
                 )}
               </div>
@@ -733,8 +770,12 @@ export default function DashboardClient({
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full py-8 text-center text-sm text-maroon-500">
-                    No active brothers found matching your search.
+                  <div className="col-span-full">
+                    <PortalEmpty
+                      icon={Users}
+                      title="No brothers match your search"
+                      sub="Try a different name, position, or pledge class."
+                    />
                   </div>
                 )}
               </div>
@@ -809,8 +850,12 @@ export default function DashboardClient({
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full py-8 text-center text-sm text-maroon-500">
-                    No alumni found matching your query.
+                  <div className="col-span-full">
+                    <PortalEmpty
+                      icon={GraduationCap}
+                      title="No alumni match your query"
+                      sub="Try a different name, company, city, or state."
+                    />
                   </div>
                 )}
               </div>
@@ -895,8 +940,12 @@ export default function DashboardClient({
                     );
                   })
                 ) : (
-                  <div className="bg-white rounded-2xl border border-maroon-100 p-8 text-center text-sm text-maroon-500">
-                    No active polls for alumni at this time.
+                  <div className="bg-white rounded-2xl border border-maroon-100">
+                    <PortalEmpty
+                      icon={Vote}
+                      title="No active polls"
+                      sub="When the chapter opens an alumni poll, you'll be able to weigh in right here."
+                    />
                   </div>
                 )}
               </div>
@@ -984,8 +1033,12 @@ export default function DashboardClient({
                     );
                   })
                 ) : (
-                  <div className="col-span-full bg-white rounded-2xl border border-maroon-100 p-8 text-center text-sm text-maroon-500">
-                    No upcoming events scheduled.
+                  <div className="col-span-full bg-white rounded-2xl border border-maroon-100">
+                    <PortalEmpty
+                      icon={Calendar}
+                      title="No upcoming events"
+                      sub="Alumni dinners, tailgates, and homecoming weekends will be listed here as they're announced."
+                    />
                   </div>
                 )}
               </div>

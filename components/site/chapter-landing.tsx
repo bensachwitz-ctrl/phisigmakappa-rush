@@ -580,7 +580,11 @@ export default async function ChapterLandingPage({
       )}
 
       {/* ─── SCHEDULE ─── */}
-      <section id="schedule" className="container section-y scroll-mt-20">
+      <section id="schedule" className="relative section-y scroll-mt-20 overflow-hidden">
+        {/* Faint brand-tinted grid band for depth behind the schedule. The dot
+            grid + masked fade match the hero so the page reads as one set. */}
+        <div className="absolute inset-0 -z-10 bg-dot-grid opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]" aria-hidden />
+        <div className="container">
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
             <SectionEyebrow icon={Calendar}>Fall &apos;26 calendar</SectionEyebrow>
@@ -619,6 +623,7 @@ export default async function ChapterLandingPage({
         </div>
         <div className="max-w-3xl">
           <ScheduleList />
+        </div>
         </div>
       </section>
 

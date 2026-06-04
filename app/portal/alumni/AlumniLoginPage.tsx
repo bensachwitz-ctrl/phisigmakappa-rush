@@ -59,8 +59,11 @@ export default function AlumniLoginPage() {
 
           <div className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-cream-50 mb-3 shadow-sm">
-                <GraduationCap className="w-6 h-6" />
+              <div className="relative inline-flex mb-3">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-amber-400/35 blur-xl" />
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-cream-50 shadow-md ring-1 ring-amber-900/10">
+                  <GraduationCap className="w-6 h-6" />
+                </span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-maroon-900">Alumni Sign In</h1>
               <p className="text-xs text-maroon-600 mt-1">

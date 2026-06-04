@@ -31,7 +31,8 @@ import {
   Award,
   Heart,
   HelpCircle,
-  ChevronDown
+  ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -229,6 +230,39 @@ function parsePollOptions(raw: string): { id: string; label: string }[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Designed empty-state for the brother portal — a soft maroon icon medallion
+ * with a glow, a headline, and a sub. Keeps the portal's cream/maroon identity
+ * (the platform <IconChip> is indigo-toned and would clash here) while making
+ * blank tabs feel intentional rather than unfinished.
+ */
+function PortalEmpty({
+  icon: Icon,
+  title,
+  sub,
+  className = "",
+}: {
+  icon: LucideIcon;
+  title: string;
+  sub?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col items-center justify-center gap-3 px-6 py-12 text-center ${className}`}>
+      <div className="relative">
+        <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-200/40 blur-2xl" />
+        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 to-cream-100 text-maroon-700 ring-1 ring-maroon-200 shadow-sm">
+          <Icon className="h-6 w-6" aria-hidden />
+        </span>
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-bold text-maroon-900">{title}</p>
+        {sub && <p className="text-xs text-maroon-500 max-w-xs">{sub}</p>}
+      </div>
+    </div>
+  );
 }
 
 export default function BrothersDashboardClient({
@@ -845,9 +879,12 @@ export default function BrothersDashboardClient({
                         )}
                       </div>
                     ) : (
-                      <div className="p-8 text-center text-maroon-400 text-sm">
-                        No chores assigned for this week. Good job!
-                      </div>
+                      <PortalEmpty
+                        icon={CheckCircle}
+                        title="All clear this week"
+                        sub="No chores on the wheel for you right now. Nice work staying on top of it."
+                        className="py-8"
+                      />
                     )}
                   </div>
                   {chores.length > 1 && (
@@ -899,9 +936,11 @@ export default function BrothersDashboardClient({
                       ))}
                     </div>
                   ) : (
-                    <div className="p-12 text-center text-maroon-400 text-sm">
-                      No chapter announcements posted recently.
-                    </div>
+                    <PortalEmpty
+                      icon={MessageSquare}
+                      title="No announcements yet"
+                      sub="Chapter news and officer updates will show up here the moment they're posted."
+                    />
                   )}
                 </div>
 
@@ -1071,8 +1110,12 @@ export default function BrothersDashboardClient({
                   })}
                 </div>
               ) : (
-                <div className="bg-white p-12 text-center border border-maroon-100 rounded-2xl shadow-sm text-maroon-500">
-                  No upcoming events listed in the chapter calendar.
+                <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
+                  <PortalEmpty
+                    icon={Calendar}
+                    title="No upcoming events"
+                    sub="When officers schedule meetings, socials, or philanthropy, they'll appear here to RSVP."
+                  />
                 </div>
               )}
             </div>
@@ -1243,9 +1286,11 @@ export default function BrothersDashboardClient({
                       </table>
                     </div>
                   ) : (
-                    <div className="p-12 text-center text-maroon-400">
-                      No service logs found. Get out there and support the community!
-                    </div>
+                    <PortalEmpty
+                      icon={Award}
+                      title="No service hours logged yet"
+                      sub="Submit your first log on the left — get out there and support the community."
+                    />
                   )}
                 </div>
 
@@ -1383,9 +1428,11 @@ export default function BrothersDashboardClient({
                       </table>
                     </div>
                   ) : (
-                    <div className="p-12 text-center text-maroon-400">
-                      No payment records found on file.
-                    </div>
+                    <PortalEmpty
+                      icon={Clipboard}
+                      title="No payment history"
+                      sub="Your dues receipts and payment records will be listed here once you've paid."
+                    />
                   )}
                 </div>
 
@@ -1522,8 +1569,12 @@ export default function BrothersDashboardClient({
                   ))}
                 </div>
               ) : (
-                <div className="bg-white p-12 text-center border border-maroon-100 rounded-2xl shadow-sm text-maroon-400">
-                  No alumni profile matches found. Try broadening your filter.
+                <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
+                  <PortalEmpty
+                    icon={Users}
+                    title="No alumni match your filters"
+                    sub="Try clearing the search or choosing a different graduation year or pledge class."
+                  />
                 </div>
               )}
             </div>
@@ -1606,8 +1657,12 @@ export default function BrothersDashboardClient({
                   })}
                 </div>
               ) : (
-                <div className="bg-white p-12 text-center border border-maroon-100 rounded-2xl shadow-sm text-maroon-400">
-                  No active surveys or polls found. Check back later!
+                <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
+                  <PortalEmpty
+                    icon={FileText}
+                    title="No active surveys"
+                    sub="When officers open a chapter poll, you'll be able to cast your vote right here."
+                  />
                 </div>
               )}
             </div>

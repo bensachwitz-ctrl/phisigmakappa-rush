@@ -352,21 +352,21 @@ export function OfficersClient({
 
       {/* KPI strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl border p-4 bg-card">
+        <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <Briefcase className="h-3.5 w-3.5" /> Active positions
+            <Briefcase className="h-3.5 w-3.5 text-phisig-red" /> Active positions
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.positions}</div>
         </div>
-        <div className="rounded-xl border p-4 bg-card">
+        <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <Users className="h-3.5 w-3.5" /> Officers serving
+            <Users className="h-3.5 w-3.5 text-phisig-red" /> Officers serving
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.officers}</div>
         </div>
-        <div className="rounded-xl border p-4 bg-card">
+        <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <ShieldCheck className="h-3.5 w-3.5" /> Current terms
+            <ShieldCheck className="h-3.5 w-3.5 text-phisig-red" /> Current terms
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.currentAssignments}</div>
         </div>
@@ -474,15 +474,25 @@ export function OfficersClient({
         </div>
 
         {assignments.length === 0 ? (
-          <Card className="border-dashed bg-muted/20">
-            <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-              <IconChip icon={Users} tone="muted" size="lg" />
-              <p className="text-sm text-muted-foreground max-w-sm">
-                No officers assigned yet.{" "}
-                {activePositions.length === 0
-                  ? "Seed positions above first, then assign brothers to them."
-                  : "Click “Assign a brother” to grant someone an officer role."}
-              </p>
+          <Card className="border-dashed bg-gradient-to-b from-muted/30 to-transparent">
+            <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+              <div className="relative">
+                <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl" />
+                <IconChip icon={Users} tone="brand" size="lg" />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-base font-semibold">No officers assigned yet</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {activePositions.length === 0
+                    ? "Seed positions above first, then assign brothers to them."
+                    : "Assign a brother to grant them an officer role and its permissions for the term."}
+                </p>
+              </div>
+              {activePositions.length > 0 && (
+                <Button onClick={openAssign}>
+                  <UserPlus className="h-4 w-4" /> Assign a brother
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (

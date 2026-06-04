@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
-import { Home, Calendar } from "lucide-react";
+import { AnimatedBackground } from "@/components/ui/animated-background";
+import { IconChip } from "@/components/ui/icon-chip";
+import { Home, Calendar, Compass } from "lucide-react";
 
 export const metadata = {
   title: "Not found",
@@ -9,37 +11,47 @@ export const metadata = {
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-background flex flex-col">
-      <div className="container py-6">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <Wordmark variant="compact" />
-        </Link>
-      </div>
-      <div className="flex-1 flex items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-lg text-center">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-            404 · Not found
-          </span>
-          <h1 className="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight">
-            That page doesn't exist.
-          </h1>
-          <p className="mt-3 text-muted-foreground leading-relaxed">
-            Maybe a stale link. Try the rush page or jump to the schedule.
-          </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="group">
-              <Link href="/">
-                <Home className="h-4 w-4" /> Home
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/#schedule">
-                <Calendar className="h-4 w-4" /> Rush schedule
-              </Link>
-            </Button>
+    <AnimatedBackground variant="aurora-grid" tone="brand" className="min-h-screen bg-background">
+      <main className="relative z-10 flex min-h-screen flex-col">
+        <div className="container py-6">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <Wordmark variant="compact" />
+          </Link>
+        </div>
+        <div className="flex flex-1 items-center justify-center px-4 pb-12">
+          <div className="w-full max-w-lg text-center animate-slide-up">
+            {/* Decorative chip — a soft brand-tinted compass to signal "off the map" */}
+            <div className="relative mx-auto mb-6 w-fit">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 rounded-2xl bg-[hsl(var(--primary)/0.18)] blur-2xl"
+              />
+              <IconChip icon={Compass} tone="brand" size="lg" className="animate-float" />
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+              404 · Not found
+            </span>
+            <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
+              That page doesn&apos;t exist.
+            </h1>
+            <p className="mx-auto mt-3 max-w-sm text-muted-foreground leading-relaxed">
+              Maybe a stale link. Try the rush page or jump to the schedule.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Button asChild size="lg" className="group cta-shine press">
+                <Link href="/">
+                  <Home className="h-4 w-4" /> Home
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="press bg-white/70 backdrop-blur">
+                <Link href="/#schedule">
+                  <Calendar className="h-4 w-4" /> Rush schedule
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </AnimatedBackground>
   );
 }

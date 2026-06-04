@@ -56,9 +56,11 @@ export default async function PnmPortalPage() {
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           <Link
             href="/onboard"
-            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md transition-all"
+            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all"
           >
-            <FileText className="w-6 h-6 text-emerald-700 mb-3" aria-hidden />
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 ring-1 ring-emerald-200 shadow-sm mb-3 transition-transform group-hover:scale-105">
+              <FileText className="w-5 h-5" aria-hidden />
+            </span>
             <h2 className="text-base font-semibold text-maroon-900 mb-1 group-hover:text-emerald-800">
               Submit your application
             </h2>
@@ -68,9 +70,11 @@ export default async function PnmPortalPage() {
           </Link>
           <Link
             href="/#schedule"
-            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md transition-all"
+            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all"
           >
-            <Calendar className="w-6 h-6 text-emerald-700 mb-3" aria-hidden />
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 ring-1 ring-emerald-200 shadow-sm mb-3 transition-transform group-hover:scale-105">
+              <Calendar className="w-5 h-5" aria-hidden />
+            </span>
             <h2 className="text-base font-semibold text-maroon-900 mb-1 group-hover:text-emerald-800">
               Rush schedule
             </h2>
@@ -80,18 +84,23 @@ export default async function PnmPortalPage() {
           </Link>
           <Link
             href="/#contact"
-            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md transition-all"
+            className="group bg-white rounded-2xl border border-maroon-100 p-5 hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all"
           >
-            <Mail className="w-6 h-6 text-emerald-700 mb-3" aria-hidden />
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 ring-1 ring-emerald-200 shadow-sm mb-3 transition-transform group-hover:scale-105">
+              <Mail className="w-5 h-5" aria-hidden />
+            </span>
             <h2 className="text-base font-semibold text-maroon-900 mb-1 group-hover:text-emerald-800">
               Contact the rush chair
             </h2>
             <p className="text-sm text-maroon-700">Question about rush? Reach out direct.</p>
           </Link>
-          <div className="bg-cream-100 rounded-2xl border border-maroon-100 border-dashed p-5">
-            <Sparkles className="w-6 h-6 text-maroon-400 mb-3" aria-hidden />
-            <h2 className="text-base font-semibold text-maroon-600 mb-1">Track your bid</h2>
-            <p className="text-sm text-maroon-500">
+          <div className="relative bg-cream-100 rounded-2xl border border-maroon-100 border-dashed p-5 overflow-hidden">
+            <span aria-hidden className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-200/30 blur-2xl" />
+            <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-cream-100 text-amber-600 ring-1 ring-amber-200 shadow-sm mb-3">
+              <Sparkles className="w-5 h-5" aria-hidden />
+            </span>
+            <h2 className="relative text-base font-semibold text-maroon-700 mb-1">Track your bid</h2>
+            <p className="relative text-sm text-maroon-500">
               Once a bid is sent, it shows up here. You can accept or decline in one tap.
             </p>
           </div>

@@ -265,37 +265,37 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
           {/* Alumni KPI Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
               <div className="flex items-center justify-between space-y-0 pb-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Alumni</p>
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <IconChip icon={GraduationCap} tone="brand" size="sm" />
               </div>
               <div className="text-2xl font-bold">{totalAlumni}</div>
               <p className="text-xs text-muted-foreground mt-1">Graduated brothers cataloged</p>
             </div>
 
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
               <div className="flex items-center justify-between space-y-0 pb-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Directory Opt-In</p>
-                <Building className="h-4 w-4 text-muted-foreground" />
+                <IconChip icon={Building} tone="brand" size="sm" />
               </div>
               <div className="text-2xl font-bold">{optedInDirectoryCount}</div>
               <p className="text-xs text-muted-foreground mt-1">Visible on public directory</p>
             </div>
 
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
               <div className="flex items-center justify-between space-y-0 pb-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Donations</p>
-                <Gift className="h-4 w-4 text-muted-foreground" />
+                <IconChip icon={Gift} tone="brand" size="sm" />
               </div>
               <div className="text-2xl font-bold">${(totalDonationsCents / 100).toLocaleString()}</div>
               <p className="text-xs text-muted-foreground mt-1">Raised from alumni network</p>
             </div>
 
-            <div className="rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
+            <div className="lift rounded-xl border bg-card text-card-foreground p-6 shadow-sm">
               <div className="flex items-center justify-between space-y-0 pb-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Active Polls</p>
-                <Vote className="h-4 w-4 text-muted-foreground" />
+                <IconChip icon={Vote} tone="brand" size="sm" />
               </div>
               <div className="text-2xl font-bold">{activeAlumniPollsCount}</div>
               <p className="text-xs text-muted-foreground mt-1">Surveys currently open</p>
@@ -331,7 +331,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">No recent registrations.</td>
+                        <td colSpan={4} className="py-8">
+                          <div className="flex flex-col items-center gap-2.5 text-center">
+                            <IconChip icon={User} tone="muted" size="md" />
+                            <p className="text-xs text-muted-foreground max-w-[220px]">
+                              No alumni have registered yet. New sign-ups appear here as they come in.
+                            </p>
+                          </div>
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -367,7 +374,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">No donations recorded yet.</td>
+                        <td colSpan={4} className="py-8">
+                          <div className="flex flex-col items-center gap-2.5 text-center">
+                            <IconChip icon={Gift} tone="muted" size="md" />
+                            <p className="text-xs text-muted-foreground max-w-[220px]">
+                              No donations recorded yet. Alumni gifts will show up here once they give.
+                            </p>
+                          </div>
+                        </td>
                       </tr>
                     )}
                   </tbody>
