@@ -22,7 +22,7 @@
 // gates on `status: 'scheduled'` so even a manual `UPDATE` that flipped
 // status='sent' is respected.
 
-import { prisma } from "@/lib/prisma";
+import type { PrismaClient } from "@prisma/client";
 
 export interface FireResult {
   /** Total scheduled rows whose deadline has passed at the time we ran. */
@@ -48,16 +48,22 @@ export interface FireResult {
  * Fire every scheduled announcement whose deadline has passed.
  *
  * Called from the cron route at /api/cron/send-scheduled-announcements
- * (Vercel cron, every 15 min in prod). Safe to invoke from any context
- * because every mutation is gated on `status: 'scheduled'`.
+ * (Vercel cron, every 15 min in prod). The cron route fans this out across
+ * every ACTIVE tenant via `forEachTenant`, passing each tenant's explicit
+ * schema-bound client as `db`. ALL queries/updates run on that `db` — never
+ * on the Host-header `prisma` proxy, which in a cron (no subdomain) context
+ * would wrongly resolve to the empty `public` schema. Safe to invoke from any
+ * context because every mutation is gated on `status: 'scheduled'`.
+ *
+ * @param db Explicit tenant-bound PrismaClient (one chapter's schema).
  */
-export async function fireDueScheduledAnnouncements(): Promise<FireResult> {
+export async function fireDueScheduledAnnouncements(db: PrismaClient): Promise<FireResult> {
   const now = new Date();
 
   // Pull every announcement whose deadline has landed and that hasn't
   // already been transitioned. We include the author + audience so the
   // admin run-log can show "Spring formal reminder — President Doe".
-  const due = await prisma.announcement.findMany({
+  const due = await db.announcement.findMany({
     where: {
       status: "scheduled",
       scheduledFor: { lte: now },
@@ -80,13 +86,13 @@ export async function fireDueScheduledAnnouncements(): Promise<FireResult> {
       // Resolve the recipient count up-front so the admin "Y of X read"
       // widget has a denominator. Active brothers + (officer overlay when
       // audience='EBOARD') is the right count for v1.
-      const totalRecipients = await resolveAudienceCount(row.audience);
+      const totalRecipients = await resolveAudienceCount(db, row.audience);
 
       // No recipients? Still fire — but record skipped so the run-log
       // surfaces it. Some chapters may seed announcements before the
       // roster lands (e.g. for an upcoming rush class).
       if (totalRecipients === 0) {
-        await prisma.announcement.update({
+        await db.announcement.update({
           where: { id: row.id },
           data: {
             status: "sent",
@@ -99,7 +105,7 @@ export async function fireDueScheduledAnnouncements(): Promise<FireResult> {
         continue;
       }
 
-      await prisma.announcement.update({
+      await db.announcement.update({
         where: { id: row.id },
         data: {
           status: "sent",
@@ -115,7 +121,7 @@ export async function fireDueScheduledAnnouncements(): Promise<FireResult> {
       // admin list shows the gap. We swallow here because we want the next
       // row to still process.
       try {
-        await prisma.announcement.update({
+        await db.announcement.update({
           where: { id: row.id },
           data: {
             status: "failed",
@@ -147,21 +153,21 @@ export async function fireDueScheduledAnnouncements(): Promise<FireResult> {
  * the totalRecipients field at fire-time so the "Y of X read" widget has
  * its denominator without re-querying every announcement render.
  */
-async function resolveAudienceCount(audience: string): Promise<number> {
+async function resolveAudienceCount(db: PrismaClient, audience: string): Promise<number> {
   switch (audience) {
     case "ALL":
       // Everyone-with-a-row: prospects + actives + alumni — used when the
       // chapter wants the broadest possible reach (closures, emergencies).
-      return prisma.brother.count();
+      return db.brother.count();
     case "BROTHERS":
       // Active members + initiates + pledges — the standard chapter
       // audience.
-      return prisma.brother.count({
+      return db.brother.count({
         where: { status: { in: ["ACTIVE", "INITIATE", "PLEDGE"] } },
       });
     case "EBOARD":
       // Brothers with at least one active officer assignment.
-      return prisma.brother.count({
+      return db.brother.count({
         where: {
           officerAssignments: {
             some: {
@@ -175,7 +181,7 @@ async function resolveAudienceCount(audience: string): Promise<number> {
       // Prospect status — pre-bid candidates only. Note: brothers with
       // status PROSPECT may not have email/SMS columns populated yet;
       // the in-app card still renders for any who do sign in.
-      return prisma.brother.count({ where: { status: "PROSPECT" } });
+      return db.brother.count({ where: { status: "PROSPECT" } });
     default:
       return 0;
   }

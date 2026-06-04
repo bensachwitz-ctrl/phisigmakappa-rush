@@ -45,11 +45,14 @@ function currentTenant(): string {
 }
 
 /** Per-tenant signing key = HMAC(rootSecret, "gs-tenant:<tenant>"). */
-function tenantSecret(): string {
+function tenantKeyFor(tenant: string): string {
   return crypto
     .createHmac("sha256", getSecret())
-    .update(`gs-tenant:${currentTenant()}`)
+    .update(`gs-tenant:${tenant}`)
     .digest("hex");
+}
+function tenantSecret(): string {
+  return tenantKeyFor(currentTenant());
 }
 
 /**
@@ -64,8 +67,11 @@ function timingSafeEqualHex(a: string, b: string): boolean {
 }
 
 // Token format: <brotherId>.<isAdmin01>.<ts>.<sig>, signed with the per-tenant key.
-export function createSessionToken(brotherId: string, isAdmin: boolean) {
-  const secret = tenantSecret();
+export function createSessionToken(brotherId: string, isAdmin: boolean, tenantOverride?: string) {
+  // tenantOverride lets the apex (e.g. /api/onboard) mint a cookie bound to the
+  // NEW chapter's subdomain key, so the post-signup redirect to that subdomain
+  // verifies. Without it a token signed with the apex key fails on the subdomain.
+  const secret = tenantOverride ? tenantKeyFor(tenantOverride) : tenantSecret();
   const ts = Date.now().toString();
   const adminFlag = isAdmin ? "1" : "0";
   const payload = `${brotherId}.${adminFlag}.${ts}`;
@@ -102,13 +108,21 @@ export function verifySessionToken(token: string | undefined) {
   return !!parsed?.valid;
 }
 
-export function setBrotherCookie(brotherId: string, isAdmin: boolean = false) {
-  cookies().set(COOKIE_NAME, createSessionToken(brotherId, isAdmin), {
+export function setBrotherCookie(
+  brotherId: string,
+  isAdmin: boolean = false,
+  opts?: { tenant?: string; domain?: string },
+) {
+  cookies().set(COOKIE_NAME, createSessionToken(brotherId, isAdmin, opts?.tenant), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: MAX_AGE,
+    // Domain=.<apex> lets the cookie cross from the apex (where onboarding runs)
+    // to the new chapter's subdomain. Only set when COOKIE_DOMAIN is configured
+    // (prod w/ a wildcard custom domain); host-only otherwise (localhost/single).
+    ...(opts?.domain ? { domain: opts.domain } : {}),
   });
 }
 

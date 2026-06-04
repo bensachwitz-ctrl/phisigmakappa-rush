@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { getResendConfig, getTwilioConfig } from "@/lib/messaging-config";
+import { filterOptedOut, isWithinQuietHours } from "@/lib/tcpa";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -20,31 +23,6 @@ const Schema = z.object({
   forceQuietHours: z.boolean().optional(),
 });
 
-/**
- * Returns true if the current time is within the recipient's local 8am-9pm
- * quiet-hours window. Defaults to America/New_York for Phi Sig USC since the
- * chapter's roster is overwhelmingly East Coast — this is conservative
- * (errs on the side of NOT sending to a few mountain/west coast brothers
- * before 11am their time, but never sends after their 9pm local).
- *
- * TCPA recommended: don't send marketing SMS before 8am or after 9pm
- * recipient-local. Our chapter messages are mixed marketing/informational,
- * so we apply the strictest interpretation.
- */
-function withinQuietHours(): boolean {
-  const now = new Date();
-  // Get current hour in America/New_York.
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    hour: "numeric",
-    hour12: false,
-  });
-  const hourStr = fmt.format(now);
-  const hour = Number.parseInt(hourStr, 10);
-  if (Number.isNaN(hour)) return true; // fail open
-  return hour >= 8 && hour < 21;
-}
-
 function normalizePhone(p: string) {
   const d = p.replace(/\D/g, "");
   if (d.length === 10) return `+1${d}`;
@@ -52,14 +30,14 @@ function normalizePhone(p: string) {
   return p.startsWith("+") ? p : `+${d}`;
 }
 
-async function twilioSend(to: string, msg: string) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-  if (!sid || !token || !from) return { ok: false, mock: true };
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-  const auth = Buffer.from(`${sid}:${token}`).toString("base64");
-  const form = new URLSearchParams({ From: from, To: to, Body: msg });
+async function twilioSend(
+  creds: { sid: string; token: string; from: string },
+  to: string,
+  msg: string,
+) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${creds.sid}/Messages.json`;
+  const auth = Buffer.from(`${creds.sid}:${creds.token}`).toString("base64");
+  const form = new URLSearchParams({ From: creds.from, To: to, Body: msg });
   const res = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
@@ -81,33 +59,38 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   const { audience, channel, subject, body: msg, forceQuietHours } = parsed.data;
 
+  // Chapter config drives both the quiet-hours timezone and the From-line.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const tz = cfg["chapter.timezone"] || "America/New_York";
+
   // TCPA quiet-hours gate. Block SMS sends outside 8am-9pm recipient-local
   // unless the admin explicitly overrode (forceQuietHours: true). Email is
   // unaffected. Returns 425 (Too Early) so the UI can branch on the status.
   const wantsSms = channel === "SMS" || channel === "BOTH";
-  if (wantsSms && !withinQuietHours() && !forceQuietHours) {
+  if (wantsSms && !isWithinQuietHours(tz) && !forceQuietHours) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Outside SMS quiet hours (8am–9pm Eastern). Resend with forceQuietHours:true to override, or schedule for tomorrow.",
-        quietHours: { tz: "America/New_York", window: "08:00–21:00" },
+        error: `Outside SMS quiet hours (8am–9pm ${tz}). Resend with forceQuietHours:true to override, or schedule for tomorrow.`,
+        quietHours: { tz, window: "08:00–21:00" },
       },
       { status: 425 },
     );
   }
 
-  // Collect recipients
-  const recipients: { name: string; email: string | null; phone: string | null }[] = [];
+  // Collect recipients. `rushId` is carried for rushees so opted-out PNMs can
+  // be excluded from the SMS set below (brothers have no RushConsent → null).
+  const recipients: { name: string; email: string | null; phone: string | null; rushId: string | null }[] = [];
   if (audience === "BROTHERS" || audience === "ALL") {
     const bros = await prisma.brother.findMany({ select: { name: true, email: true, phone: true } });
-    recipients.push(...bros);
+    recipients.push(...bros.map((b) => ({ ...b, rushId: null })));
   }
   if (audience === "RUSHES" || audience === "ALL") {
     const rushes = await prisma.rush.findMany({
       where: { status: { in: ["ACTIVE", "BID_EXTENDED", "ACCEPTED"] } },
-      select: { name: true, email: true, phone: true },
+      select: { id: true, name: true, email: true, phone: true },
     });
-    recipients.push(...rushes);
+    recipients.push(...rushes.map((r) => ({ name: r.name, email: r.email, phone: r.phone, rushId: r.id })));
   }
 
   if (!recipients.length) {
@@ -121,10 +104,11 @@ export async function POST(req: Request) {
 
   // Email
   if (channel === "EMAIL" || channel === "BOTH") {
-    const apiKey = process.env.RESEND_API_KEY;
-    const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
+    // Per-tenant Resend creds (SiteConfig) with env fallback. apiKey is null
+    // when this chapter hasn't configured Resend (or env is the placeholder).
+    const { apiKey, fromEmail: fromAddr } = await getResendConfig();
     const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
-    if (!apiKey || apiKey.startsWith("re_xxxxx")) {
+    if (!apiKey) {
       mockMode = true;
     } else {
       const resend = new Resend(apiKey);
@@ -156,12 +140,30 @@ export async function POST(req: Request) {
   }
 
   // SMS
+  let optedOutSms = 0;
   if (channel === "SMS" || channel === "BOTH") {
-    for (const r of recipients) {
-      if (!r.phone) continue;
-      const result = await twilioSend(normalizePhone(r.phone), msg);
-      if (result.mock) mockMode = true;
-      if (result.ok) sentSms++;
+    // Candidate SMS recipients = anyone with a phone.
+    const smsRecipients = recipients.filter((r) => r.phone);
+
+    // TCPA opt-out: drop any rushee whose latest RushConsent is optedOut
+    // (texted STOP). Only rushees have consent rows; brothers (rushId null)
+    // are never filtered here. A rushee with no consent row is allowed.
+    const rushIds = smsRecipients.map((r) => r.rushId).filter((id): id is string => !!id);
+    const allowedRushIds = new Set(rushIds.length ? await filterOptedOut(prisma, rushIds) : []);
+    const smsTargets = smsRecipients.filter((r) => r.rushId === null || allowedRushIds.has(r.rushId));
+    optedOutSms = smsRecipients.length - smsTargets.length;
+
+    // Per-tenant Twilio creds (SiteConfig) with env fallback; null when this
+    // chapter hasn't configured Twilio → preserve mock-mode signalling.
+    const twilio = await getTwilioConfig();
+    if (!twilio.accountSid || !twilio.authToken || !twilio.phoneNumber) {
+      if (smsTargets.length) mockMode = true;
+    } else {
+      const creds = { sid: twilio.accountSid, token: twilio.authToken, from: twilio.phoneNumber };
+      for (const r of smsTargets) {
+        const result = await twilioSend(creds, normalizePhone(r.phone!), msg);
+        if (result.ok) sentSms++;
+      }
     }
   }
 
@@ -172,7 +174,7 @@ export async function POST(req: Request) {
     subjectType: "Broadcast",
     subjectId: null,
     subjectName: `${audience} (${recipients.length} recipients)`,
-    details: `${channel}${sentEmail ? ` · ${sentEmail} email` : ""}${sentSms ? ` · ${sentSms} sms` : ""}${mockMode ? " · mock mode" : ""}`,
+    details: `${channel}${sentEmail ? ` · ${sentEmail} email` : ""}${sentSms ? ` · ${sentSms} sms` : ""}${optedOutSms ? ` · ${optedOutSms} opted-out` : ""}${mockMode ? " · mock mode" : ""}`,
     req,
   });
 
@@ -183,6 +185,7 @@ export async function POST(req: Request) {
     recipients: recipients.length,
     sentEmail,
     sentSms,
+    optedOutSms,
     mockMode,
   });
 }

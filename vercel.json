@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/send-scheduled-announcements",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-stripe",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

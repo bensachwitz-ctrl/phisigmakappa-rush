@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { prisma } from "@/lib/prisma";
+import type { PrismaClient } from "@prisma/client";
+import { prisma, getTenantClient } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,10 +14,23 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/dues/webhook
  *
- * PUBLIC endpoint — Stripe POSTs payment lifecycle events here. We
- * authenticate every request with `stripe.webhooks.constructEvent`
- * using the chapter's `dues.stripeWebhookSecret` (whsec_...). A
- * missing or invalid signature → 400, NO DB writes.
+ * PUBLIC endpoint — Stripe POSTs payment lifecycle events here. Because
+ * Stripe calls this server-to-server with NO chapter subdomain on the Host,
+ * the Host-header `prisma` proxy would resolve to the empty `public` schema
+ * and the payment would never confirm against the chapter's row (which lives
+ * in `schema_<sub>`). So this endpoint:
+ *
+ *   1. Verifies the signature with the platform's GLOBAL signing secret
+ *      `process.env.STRIPE_WEBHOOK_SECRET` (the single webhook endpoint Stripe
+ *      delivers ALL chapters' events to). If that env is unset we FALL BACK
+ *      to the legacy per-chapter `dues.stripeWebhookSecret` (resolved via the
+ *      Host proxy) for backward compatibility. Neither configured → 503.
+ *
+ *   2. Routes the event to the correct tenant by reading
+ *      `event.data.object.metadata.subdomain` (stamped at checkout time) and
+ *      binding an EXPLICIT `getTenantClient(subdomain)` — no Host needed. Only
+ *      when a legacy in-flight session carries no subdomain do we fall back to
+ *      the Host-proxy `prisma`.
  *
  * Idempotency: every mutation keys off DuesPayment.stripeSessionId
  * (@unique). Stripe retries failed deliveries — a second arrival of
@@ -33,8 +48,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const webhookSecret = cfg["dues.stripeWebhookSecret"] || "";
+  // SIGNATURE SECRET resolution. Prefer the platform's single GLOBAL endpoint
+  // secret (new model). Fall back to the legacy per-chapter secret read via
+  // the Host proxy so existing single-tenant deploys keep verifying.
+  let webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+  if (!webhookSecret) {
+    const cfg = await getSiteConfig().catch(
+      () => ({}) as Record<string, string>,
+    );
+    webhookSecret = cfg["dues.stripeWebhookSecret"] || "";
+  }
   if (!webhookSecret) {
     return NextResponse.json(
       { ok: false, error: "Webhook secret not configured" },
@@ -55,21 +78,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 400 });
   }
 
+  // TENANT RESOLUTION — only AFTER the signature is verified, so an attacker
+  // can't steer writes at an arbitrary schema. Route by the subdomain we
+  // stamped into metadata at checkout. Legacy in-flight sessions with no
+  // subdomain fall back to the Host-proxy `prisma`.
+  const obj = event.data.object as any;
+  const sub = obj?.metadata?.subdomain || null;
+  const db: PrismaClient = sub ? getTenantClient(sub) : prisma;
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(session, req);
+        await handleCheckoutCompleted(db, session, req);
         break;
       }
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutFailed(session, "expired", req);
+        await handleCheckoutFailed(db, session, "expired", req);
         break;
       }
       case "payment_intent.payment_failed": {
         const pi = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentFailed(pi, req);
+        await handlePaymentFailed(db, pi, req);
         break;
       }
       default:
@@ -86,21 +117,22 @@ export async function POST(req: Request) {
 }
 
 async function handleCheckoutCompleted(
+  db: PrismaClient,
   session: Stripe.Checkout.Session,
   req: Request,
 ) {
   const sessionId = session.id;
-  const payment = await prisma.duesPayment.findUnique({
+  const payment = await db.duesPayment.findUnique({
     where: { stripeSessionId: sessionId },
   });
 
   if (!payment) {
     // Check if it's an alumni donation instead
-    const donation = await prisma.alumniDonation.findUnique({
+    const donation = await db.alumniDonation.findUnique({
       where: { stripeSessionId: sessionId },
     });
     if (donation) {
-      await handleDonationCompleted(donation, session);
+      await handleDonationCompleted(db, donation, session);
       return;
     }
 
@@ -134,8 +166,8 @@ async function handleCheckoutCompleted(
   }
 
   const now = new Date();
-  await prisma.$transaction([
-    prisma.duesPayment.update({
+  await db.$transaction([
+    db.duesPayment.update({
       where: { id: payment.id },
       data: {
         status: "PAID",
@@ -143,7 +175,7 @@ async function handleCheckoutCompleted(
         receiptUrl,
       },
     }),
-    prisma.brother.update({
+    db.brother.update({
       where: { id: payment.brotherId },
       data: {
         duesPaid: true,
@@ -156,7 +188,7 @@ async function handleCheckoutCompleted(
     }),
   ]);
 
-  const brother = await prisma.brother.findUnique({
+  const brother = await db.brother.findUnique({
     where: { id: payment.brotherId },
     select: { name: true },
   }).catch(() => null);
@@ -165,8 +197,8 @@ async function handleCheckoutCompleted(
   // so the chapter can see at a glance "this is a system-confirmed
   // payment, not a brother / admin action". audit() resolves actor
   // from session cookies — there's no cookie on a Stripe POST, so we
-  // bypass with a direct prisma.auditLog.create() here.
-  await prisma.auditLog.create({
+  // bypass with a direct db.auditLog.create() here.
+  await db.auditLog.create({
     data: {
       actorId: null,
       actorName: "stripe-webhook",
@@ -181,20 +213,21 @@ async function handleCheckoutCompleted(
 }
 
 async function handleCheckoutFailed(
+  db: PrismaClient,
   session: Stripe.Checkout.Session,
   reason: "expired" | "failed",
   req: Request,
 ) {
-  const payment = await prisma.duesPayment.findUnique({
+  const payment = await db.duesPayment.findUnique({
     where: { stripeSessionId: session.id },
   });
   if (!payment) {
-    const donation = await prisma.alumniDonation.findUnique({
+    const donation = await db.alumniDonation.findUnique({
       where: { stripeSessionId: session.id },
     });
     if (donation) {
       if (donation.status === "PAID") return;
-      await prisma.alumniDonation.update({
+      await db.alumniDonation.update({
         where: { id: donation.id },
         data: { status: "FAILED", notes: `Session ${reason}` },
       });
@@ -203,17 +236,17 @@ async function handleCheckoutFailed(
   }
   if (payment.status === "PAID") return; // already paid → ignore the noise
 
-  await prisma.duesPayment.update({
+  await db.duesPayment.update({
     where: { id: payment.id },
     data: { status: "FAILED", notes: `Session ${reason}` },
   });
 
-  const brother = await prisma.brother.findUnique({
+  const brother = await db.brother.findUnique({
     where: { id: payment.brotherId },
     select: { name: true },
   }).catch(() => null);
 
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
       actorId: null,
       actorName: "stripe-webhook",
@@ -227,22 +260,26 @@ async function handleCheckoutFailed(
   }).catch(() => {});
 }
 
-async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
+async function handlePaymentFailed(
+  db: PrismaClient,
+  pi: Stripe.PaymentIntent,
+  req: Request,
+) {
   // PaymentIntents don't carry our DuesPayment.id, but the session that
   // created the PI does carry it in metadata. We look up by the
   // payment_intent column we wrote on `completed`. For pre-completion
   // failures we may not have it — that's OK, the session.expired event
   // will catch it.
-  const payment = await prisma.duesPayment.findFirst({
+  const payment = await db.duesPayment.findFirst({
     where: { stripePaymentIntentId: pi.id },
   });
   if (!payment) {
-    const donation = await prisma.alumniDonation.findFirst({
+    const donation = await db.alumniDonation.findFirst({
       where: { stripePaymentIntentId: pi.id },
     });
     if (donation) {
       if (donation.status === "PAID") return;
-      await prisma.alumniDonation.update({
+      await db.alumniDonation.update({
         where: { id: donation.id },
         data: {
           status: "FAILED",
@@ -254,7 +291,7 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
   }
   if (payment.status === "PAID") return;
 
-  await prisma.duesPayment.update({
+  await db.duesPayment.update({
     where: { id: payment.id },
     data: {
       status: "FAILED",
@@ -262,12 +299,12 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
     },
   });
 
-  const brother = await prisma.brother.findUnique({
+  const brother = await db.brother.findUnique({
     where: { id: payment.brotherId },
     select: { name: true },
   }).catch(() => null);
 
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
       actorId: null,
       actorName: "stripe-webhook",
@@ -282,6 +319,7 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent, req: Request) {
 }
 
 async function handleDonationCompleted(
+  db: PrismaClient,
   donation: any,
   session: Stripe.Checkout.Session,
 ) {
@@ -292,7 +330,7 @@ async function handleDonationCompleted(
     paymentIntentId = session.payment_intent;
   }
 
-  await prisma.alumniDonation.update({
+  await db.alumniDonation.update({
     where: { id: donation.id },
     data: {
       status: "PAID",
@@ -301,11 +339,21 @@ async function handleDonationCompleted(
     },
   });
 
-  const alumni = await prisma.alumniProfile.findUnique({
+  const alumni = await db.alumniProfile.findUnique({
     where: { id: donation.alumniId },
   });
 
   if (!alumni) return;
+
+  // White-label the thank-you email: read THIS chapter's identity from the
+  // explicit tenant db (never the Host proxy — Stripe carries no subdomain),
+  // so a donation to Beta Sigma @ Maryland doesn't thank the donor on behalf
+  // of Phi Sigma Kappa @ USC.
+  const cfgRows = await db.siteConfig.findMany().catch(
+    () => [] as { key: string; value: string }[],
+  );
+  const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
+  const id = chapterIdentityFromCfg(cfg);
 
   // Send thank you email to alumnus
   const html = `
@@ -317,19 +365,19 @@ async function handleDonationCompleted(
         <p style="margin:0 0 8px;"><strong>Amount:</strong> $${(donation.amountCents / 100).toFixed(2)}</p>
         <p style="margin:0 0 8px;"><strong>Date:</strong> ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}</p>
       </div>
-      <p style="color:#52525b;margin:18px 0;">Your contribution directly supports our active brothers, housing operations, and scholarship programs. Thank you for your continued dedication and character.</p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">Phi Sigma Kappa Fraternity &middot; USC</p>
+      <p style="color:#52525b;margin:18px 0;">Your contribution directly supports our members, housing operations, and scholarship programs. Thank you for your continued dedication and character.</p>
+      <p style="color:#71717a;font-size:12px;margin-top:24px">${id.fraternityName} &middot; ${id.schoolShort}</p>
     </div>
   `;
 
   await sendEmail({
     to: alumni.email || "",
-    subject: `Thank you for your donation to Phi Sigma Kappa`,
+    subject: `Thank you for your donation to ${id.fraternityName}`,
     html,
   }).catch((e) => console.error("Failed to send thank you email:", e));
 
   // Write audit log
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
       actorId: null,
       actorName: "stripe-webhook",

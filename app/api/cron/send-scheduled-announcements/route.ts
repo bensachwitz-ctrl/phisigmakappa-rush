@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fireDueScheduledAnnouncements } from "@/lib/scheduled-announcements";
+import { forEachTenant } from "@/lib/prisma";
 import { auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -23,6 +24,13 @@ export const dynamic = "force-dynamic";
 // Idempotent: every iteration is gated on `status: 'scheduled'`, so re-runs
 // after a partial batch (e.g. Vercel timed out mid-loop) pick up exactly
 // the rows that haven't transitioned yet.
+//
+// Multi-tenant fan-out: Vercel hits this deployment with NO chapter
+// subdomain, so the Host-header `prisma` proxy would resolve to the empty
+// `public` schema and fire nothing. Instead we loop EVERY active tenant via
+// `forEachTenant`, handing each chapter's explicit schema-bound client to
+// `fireDueScheduledAnnouncements(db)`. Per-tenant failures are isolated by
+// `forEachTenant`; we aggregate every chapter's FireResult into the response.
 //
 // One auditAndNotify call per run with the aggregate stats — keeps the
 // audit log readable. Per-announcement audit happens at compose time,
@@ -53,13 +61,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  let result;
+  // Fan out across every ACTIVE tenant — each gets its own schema-bound client.
+  // forEachTenant isolates every chapter in its own try/catch, so one bad
+  // schema can't abort the rest.
+  let perTenant;
   try {
-    result = await fireDueScheduledAnnouncements();
+    perTenant = await forEachTenant((db) => fireDueScheduledAnnouncements(db));
   } catch (err) {
-    // Catastrophic failure — DB unreachable, schema drift, etc. We still
-    // want to return a useful 500 + log it loud so the next ops review
-    // sees the gap.
+    // Catastrophic failure — the tenant registry itself is unreachable, etc.
+    // (Per-tenant failures are already swallowed by forEachTenant, so this
+    // only fires for a wholesale outage.) Return a useful 500 + log it loud
+    // so the next ops review sees the gap.
     // eslint-disable-next-line no-console
     console.error("[cron/send-scheduled-announcements] catastrophic failure:", err);
     return NextResponse.json(
@@ -70,6 +82,37 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
+
+  // Aggregate every chapter's FireResult into one run-level summary, plus a
+  // per-tenant breakdown for the ops run-log.
+  const totals = { candidates: 0, fired: 0, failed: 0, skipped: 0 };
+  const tenants = perTenant.map((t) => {
+    if (t.ok && t.result) {
+      totals.candidates += t.result.candidates;
+      totals.fired += t.result.fired;
+      totals.failed += t.result.failed;
+      totals.skipped += t.result.skipped;
+      return {
+        tenant: t.tenant,
+        ok: true as const,
+        candidates: t.result.candidates,
+        fired: t.result.fired,
+        failed: t.result.failed,
+        skipped: t.result.skipped,
+        rows: t.result.rows,
+      };
+    }
+    return { tenant: t.tenant, ok: false as const, error: t.error };
+  });
+
+  // Back-compat: keep the flat aggregate stats the previous single-schema
+  // response exposed (candidates/fired/failed/skipped + a flattened rows[]),
+  // now summed across all chapters, and add the per-tenant breakdown.
+  const result = {
+    ...totals,
+    rows: tenants.flatMap((t) => (t.ok ? t.rows : [])),
+    tenants,
+  };
 
   // Best-effort audit row so the super-admin run log shows every cron
   // execution. Wrapped in try/catch because the cron run already
@@ -86,21 +129,26 @@ export async function GET(req: Request) {
       entity: {
         type: "AnnouncementsCron",
         id: new Date().toISOString(),
-        name: `${result.fired} fired, ${result.failed} failed, ${result.skipped} skipped`,
+        name: `${result.fired} fired, ${result.failed} failed, ${result.skipped} skipped across ${result.tenants.length} chapters`,
       },
       payload: {
         candidates: result.candidates,
         fired: result.fired,
         failed: result.failed,
         skipped: result.skipped,
+        tenantCount: result.tenants.length,
         rows: result.rows,
+        tenants: result.tenants,
       },
     });
   } catch {
     // Audit drop is non-fatal; cron run already committed.
   }
 
-  return NextResponse.json({ ok: true, ...result });
+  // ok reflects whether every chapter's fan-out succeeded; a single bad
+  // schema flips ok=false but never blocks the other chapters' results.
+  const ok = result.tenants.every((t) => t.ok);
+  return NextResponse.json({ ok, ...result });
 }
 
 // POST is the same path so ops + Vercel Cron can both invoke it without

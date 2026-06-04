@@ -208,7 +208,16 @@ export async function POST(req: Request) {
       },
     });
 
-    setBrotherCookie(brother.id, true);
+    // Mint the new admin's cookie bound to the NEW chapter's subdomain key (not
+    // the apex key this request runs under) and, when a wildcard custom domain is
+    // configured (COOKIE_DOMAIN=".yourapex.com"), set Domain so the cookie carries
+    // across the post-signup redirect to <subdomain>.<apex>/admin. Without
+    // COOKIE_DOMAIN the cookie is host-only and the new admin logs in once on the
+    // subdomain (still correct — middleware just bounces them to /admin/login).
+    setBrotherCookie(brother.id, true, {
+      tenant: subdomain,
+      domain: process.env.COOKIE_DOMAIN || undefined,
+    });
     await tenantPrisma.$disconnect();
     tenantPrisma = null;
 

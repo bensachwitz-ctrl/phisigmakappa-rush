@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { getChapterIdentity } from "./chapter-identity";
+import { getResendConfig } from "./messaging-config";
 
 export async function sendEmail(opts: {
   to: string | string[];
@@ -8,9 +9,11 @@ export async function sendEmail(opts: {
   text?: string;
   replyTo?: string;
 }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
-  
+  // Per-tenant Resend creds (SiteConfig) with env fallback. apiKey is null
+  // when the chapter hasn't configured Resend (or env is the re_xxxxx
+  // placeholder), which keeps the mock path below.
+  const { apiKey, fromEmail: fromAddr } = await getResendConfig();
+
   let fromName = "Phi Sigma Kappa";
   try {
     const identity = await getChapterIdentity();
@@ -18,10 +21,10 @@ export async function sendEmail(opts: {
   } catch (e) {
     // ignore
   }
-  
+
   const from = `${fromName} <${fromAddr}>`;
 
-  if (!apiKey || apiKey.startsWith("re_xxxxx") || !apiKey.trim()) {
+  if (!apiKey) {
     console.log(`[Mock Email] to: ${opts.to}, subject: ${opts.subject}`);
     return { ok: true, mock: true };
   }

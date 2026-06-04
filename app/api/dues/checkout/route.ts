@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
+import { prisma, getSubdomain } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
@@ -118,6 +119,10 @@ export async function POST(req: Request) {
 
   // Stripe Checkout Session.
   const siteUrl = getSiteUrl();
+  // Chapter subdomain — read from the request Host so the platform's single
+  // webhook endpoint (called server-to-server by Stripe with NO subdomain)
+  // can route the event back to THIS chapter's schema via metadata.subdomain.
+  const sub = getSubdomain(headers().get("host")) || "";
   let session;
   try {
     session = await stripe.checkout.sessions.create({
@@ -143,6 +148,7 @@ export async function POST(req: Request) {
         brotherId: brother.id,
         duesPaymentId: payment.id,
         duesYear: year,
+        subdomain: sub,
       },
     });
   } catch (err: any) {

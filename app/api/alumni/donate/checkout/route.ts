@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
+import { prisma, getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
 import { z } from "zod";
@@ -61,7 +62,11 @@ export async function POST(req: Request) {
     
     const siteUrl = getSiteUrl();
     const currency = (cfg["dues.currency"] || "usd").toLowerCase();
-    
+    // Chapter subdomain — read from the request Host so the platform's single
+    // webhook endpoint (called server-to-server by Stripe with NO subdomain)
+    // can route the event back to THIS chapter's schema via metadata.subdomain.
+    const sub = getSubdomain(headers().get("host")) || "";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -86,6 +91,7 @@ export async function POST(req: Request) {
         donationId: donation.id,
         campaign,
         platformFeeCents: platformFeeCents.toString(),
+        subdomain: sub,
       },
     });
     
