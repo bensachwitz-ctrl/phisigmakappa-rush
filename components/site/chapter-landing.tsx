@@ -428,7 +428,7 @@ export default async function ChapterLandingPage({
         </Reveal>
         <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
           {VALUES.map((v, i) => (
-            <Reveal key={v.title} delay={i * 90}>
+            <Reveal key={v.title} delay={i * 90} className="h-full">
               <div className="lift h-full rounded-2xl border border-border bg-card p-6 sm:p-7 relative overflow-hidden group transition-colors hover:border-phisig-red/30">
                 <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
                 <IconChip icon={chipIconFor(v.icon)} tone="brand" size="lg" className="relative transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
@@ -457,8 +457,8 @@ export default async function ChapterLandingPage({
         <div className="relative container section-y">
           <div className="max-w-xl mx-auto text-center mb-8 animate-slide-up">
             <IconChip icon={Sparkles} tone="brand" size="md" className="mx-auto mb-4" />
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Get on the list
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
+              Get on the list
             </span>
             <h2 className="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight">
               Drop your number.
@@ -513,7 +513,7 @@ export default async function ChapterLandingPage({
         {/* Recent activity strip */}
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {RECENT.map((r, i) => (
-            <Reveal key={r.title} delay={i * 70}>
+            <Reveal key={r.title} delay={i * 70} className="h-full">
               <div className="h-full rounded-2xl border border-border bg-card p-5 lift transition-colors hover:border-phisig-red/30">
                 <div className="flex items-center gap-2.5">
                   <IconChip icon={chipIconFor(r.icon)} tone="brand" size="sm" />
@@ -937,7 +937,7 @@ export default async function ChapterLandingPage({
               {FAQ.map((item, i) => (
                 <li
                   key={item.q}
-                  className="group rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-phisig-red/40 hover:shadow-md"
+                  className="group rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-phisig-red/40 hover:shadow-md"
                 >
                   <details className="cursor-pointer">
                     <summary className="flex items-center justify-between gap-4 px-5 py-4 list-none">

@@ -24,7 +24,10 @@ export function Reveal({
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
       setShown(true);
       return;
     }
@@ -40,7 +43,14 @@ export function Reveal({
       { rootMargin: "-40px 0px -10% 0px", threshold: 0.05 }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    // Safety net: content must NEVER stay permanently invisible if the observer
+    // doesn't fire (full-page render, atypical viewport, non-scrolling parent).
+    // Scrolling users still trigger the reveal animation well before this.
+    const fallback = window.setTimeout(() => setShown(true), 1500);
+    return () => {
+      obs.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (
