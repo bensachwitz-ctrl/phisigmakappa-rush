@@ -34,6 +34,7 @@ export async function PublicFooter() {
               height={32}
               className="h-6 w-auto"
               loading="lazy"
+              decoding="async"
             />
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               National brotherhood · Founded {foundingYear}

@@ -2,6 +2,37 @@
 const nextConfig = {
   reactStrictMode: true,
   optimizeFonts: false,
+  // Gzip/Brotli the HTML + RSC payload. Vercel compresses at its edge already,
+  // but setting this keeps non-Vercel deploys (preview boxes, self-host, custom
+  // origins) from shipping uncompressed responses. No-op where the platform
+  // already compresses.
+  compress: true,
+  // Never emit a `X-Powered-By: Next.js` header — trims a header off every
+  // response and avoids advertising the framework/version to scanners.
+  poweredByHeader: false,
+  // Explicit (these are the framework defaults for Next 14, but pinning them
+  // documents intent and guards against an accidental override regression like
+  // the R44 minifier-disable). swcMinify keeps the SWC minifier on in prod;
+  // productionBrowserSourceMaps:false keeps multi-MB *.map files out of the
+  // client bundle shipped to chapter members.
+  swcMinify: true,
+  productionBrowserSourceMaps: false,
+  // next/image is intentionally NOT used on the public pages — chapter photos
+  // go through the custom /api/photo proxy (SSRF-hardened, AVIF/WebP transcode,
+  // 30-day edge cache) so the existing `<img src="/api/photo/...">` responsive
+  // pattern is preserved. This block only governs the built-in next/image
+  // optimizer IF a future surface adopts it; it has no effect on the current
+  // <img> proxy pattern. Formats + remotePatterns mirror the CSP img-src
+  // allowlist so the two stay coherent.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2592000, // 30 days — matches the /api/photo edge TTL
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' },
+      { protocol: 'https', hostname: '**.vercel-storage.com' },
+    ],
+  },
   // R44 — REMOVED the `config.optimization.minimize = false` webpack
   // override that a prior in-progress wave left behind. It disabled JS
   // minification in PRODUCTION builds, which would have shipped the full

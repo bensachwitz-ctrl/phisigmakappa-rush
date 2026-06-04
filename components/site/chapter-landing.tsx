@@ -263,6 +263,10 @@ export default async function ChapterLandingPage({
           <img
             src="/brand/3d-shield.png"
             alt=""
+            width={360}
+            height={360}
+            loading="lazy"
+            decoding="async"
             className="h-[360px] w-auto object-contain animate-orbit-slow"
             style={{ animationDuration: '45s' }}
             aria-hidden="true"
@@ -824,6 +828,7 @@ export default async function ChapterLandingPage({
                 width={84}
                 height={104}
                 loading="lazy"
+                decoding="async"
                 className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
               />
               <div className="flex-1 min-w-0">

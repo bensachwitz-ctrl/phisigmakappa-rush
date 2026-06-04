@@ -64,6 +64,7 @@ export function Wordmark({
             alt={fraternityName}
             width={28}
             height={28}
+            decoding="async"
             className="h-7 w-auto object-contain"
           />
         ) : (
@@ -90,6 +91,7 @@ export function Wordmark({
           alt={fraternityName}
           width={36}
           height={36}
+          decoding="async"
           className="h-9 w-auto object-contain"
         />
       ) : (
