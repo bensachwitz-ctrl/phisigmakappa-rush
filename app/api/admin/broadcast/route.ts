@@ -7,6 +7,7 @@ import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 import { getResendConfig, getTwilioConfig } from "@/lib/messaging-config";
 import { filterOptedOut, isWithinQuietHours } from "@/lib/tcpa";
+import { renderEmail } from "@/lib/email-template";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -108,30 +109,45 @@ export async function POST(req: Request) {
     // when this chapter hasn't configured Resend (or env is the placeholder).
     const { apiKey, fromEmail: fromAddr } = await getResendConfig();
     const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
+    const brandHex = cfg["brand.primaryHex"] || "";
+    const emailSubject = subject || `${identity.chapterAttribution} — Chapter Update`;
     if (!apiKey) {
       mockMode = true;
     } else {
       const resend = new Resend(apiKey);
+      // HTML-escape the admin-typed message before HTML-interpolating into the
+      // email body. Admin-only field, but defense-in-depth — a malicious admin
+      // shouldn't be able to ship arbitrary HTML (cloaked links, tracking
+      // pixels) to members/rushees via the chapter's verified Resend domain.
+      const safeBody = msg
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/\n/g, "<br/>");
+      // Branded wrapper: masthead in the chapter's brand color + a footer with
+      // the chapter name, a neutral platform line, and a CAN-SPAM unsubscribe
+      // line (the bare <p>${msg}</p> had no branding/footer/unsubscribe).
+      const html = renderEmail({
+        brandHex,
+        chapterName: identity.chapterAttribution,
+        chapterSubline: identity.schoolName || undefined,
+        heading: emailSubject,
+        bodyHtml: `<div>${safeBody}</div>`,
+        unsubscribe: true,
+        unsubscribeText:
+          "You received this as a member of this chapter. Reply STOP to opt out of broadcast messages.",
+      });
       for (const r of recipients) {
         if (!r.email) continue;
         try {
           await resend.emails.send({
             from: fromHeader,
             to: r.email,
-            subject: subject || `${identity.chapterAttribution} — Chapter Update`,
+            subject: emailSubject,
             text: msg,
-            // HTML-escape the admin-typed message before HTML-interpolating
-            // into the email body. Admin-only field, but defense-in-depth —
-            // a malicious admin shouldn't be able to ship arbitrary HTML
-            // (cloaked links, tracking pixels) to brothers/rushees via the
-            // chapter's verified Resend domain.
-            html: `<p>${msg
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&#39;")
-              .replace(/\n/g, "<br/>")}</p>`,
+            html,
           });
           sentEmail++;
         } catch { /* skip */ }

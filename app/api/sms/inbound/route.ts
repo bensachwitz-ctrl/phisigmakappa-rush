@@ -181,20 +181,30 @@ export async function POST(req: Request) {
   const rushee = matches.length ? { name: matches[0].rusheeName } : null;
   const latestConsent = matches.some((m) => m.consentId) ? {} : null;
 
-  // Pull chapter identity once for all CTIA-mandated replies. Falls back to
-  // the Phi Sig USC reference values if cfg is empty — so an existing deploy
-  // with no overrides reads identical to the pre-R43 build.
+  // Pull chapter identity once for all CTIA-mandated replies. WHITE-LABEL: the
+  // contact email + site URL come from THIS chapter's cfg / request host — never
+  // a hardcoded Phi Sig address or domain (cross-brand leak). When the chapter
+  // hasn't set a rush email we omit the "Help: <email>" clause rather than leak
+  // another chapter's address.
   const identity = await getChapterIdentity();
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  const rushEmail = (cfg["contact.rushEmail"] || cfg["contact.advisorEmail"] || "").trim();
+  const helpClause = rushEmail ? ` Help: ${rushEmail}.` : "";
+  const emailClause = rushEmail ? ` or email ${rushEmail}` : "";
+  // Resolve the site URL from env, else the request's own origin — so the
+  // privacy/sign-up link points at THIS deploy, not phisigmakappa.vercel.app.
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    new URL(req.url).origin
+  ).replace(/\/$/, "");
   const chapterSig = `${identity.fraternityName} ${identity.greekLetters} (${identity.schoolShort})`;
   const shortSig = identity.chapterAttribution;
 
   // ── HELP keyword — ALWAYS reply (CTIA mandate) ─────────────────────────
   if (isHelp) {
     return twiml(
-      `${chapterSig} rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out. Help: ${rushEmail}. Privacy: ${siteUrl}/privacy`
+      `${chapterSig} rush updates. Up to 8 msgs per rush cycle. Msg & data rates may apply. Reply STOP to opt out.${helpClause} Privacy: ${siteUrl}/privacy`
     );
   }
 
@@ -247,7 +257,7 @@ export async function POST(req: Request) {
       );
     }
     // Unknown number replying YES/START — friendly redirect.
-    return twiml(`${chapterSig}: we don't have your info on file. Sign up at ${siteUrl} or email ${rushEmail}.`);
+    return twiml(`${chapterSig}: we don't have your info on file. Sign up at ${siteUrl}${emailClause}.`);
   }
 
   // ── Unrecognized keyword ───────────────────────────────────────────────

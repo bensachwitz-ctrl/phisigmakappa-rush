@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
+import { isSameOrigin } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { currentPeriod } from "@/lib/treasury";
 
@@ -16,7 +17,11 @@ export const dynamic = "force-dynamic";
  *   PATCH  { id, ...fields }   update any field incl. actualCents
  *   DELETE ?id=...             remove a line
  *
- * All handlers require an admin session (isAdminAuthed). Every write also
+ * Authorization: the budget is chapter money, so every handler requires the
+ * "payments" officer domain (the Treasurer position grants write; admins/
+ * president short-circuit via superAdmin) — read to GET, write to mutate.
+ * isAdminAuthed() was too weak: it accepts ANY valid member cookie (adminFlag=0),
+ * so a regular brother could read and rewrite the budget. Every write also
  * requires a same-origin request (isSameOrigin) and emits an audit row
  * (BUDGET_LINE_CREATED / UPDATED / DELETED). Amounts are integer cents and are
  * validated non-negative.
@@ -57,7 +62,8 @@ const PatchSchema = z
   .strict();
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const period = url.searchParams.get("period")?.trim() || currentPeriod();
   try {
@@ -82,7 +88,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
@@ -119,7 +126,8 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = PatchSchema.safeParse(body);
@@ -161,7 +169,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   const url = new URL(req.url);
   // Accept id from the query string OR a JSON body, mirroring the brothers route.

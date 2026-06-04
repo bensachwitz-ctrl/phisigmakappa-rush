@@ -4,6 +4,9 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/auth";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { getResendConfig } from "@/lib/messaging-config";
+import { renderEmail } from "@/lib/email-template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,34 +18,51 @@ const PayloadSchema = z.object({
   replyTo: z.string().email().optional(),
 });
 
-function htmlTemplate(opts: { subject: string; body: string; identity: ChapterIdentity }) {
-  const { subject, body, identity } = opts;
-  // Body is plain text — convert newlines to <br/> and escape HTML
-  const escaped = body
+/** Escape plain text for safe HTML interpolation. */
+function escHtml(s: string): string {
+  return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  const html = escaped.replace(/\n/g, "<br/>");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-  return `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f5f5f7;font-family:Inter,Arial,sans-serif;color:#0B0B0C;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #eaeaef;">
-        <tr><td style="background:#C8102E;padding:28px 32px;color:#fff;">
-          <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;">${identity.fraternityName} &middot; ${identity.schoolName}</div>
-          <div style="font-size:22px;font-weight:600;margin-top:6px;">${subject.replace(/</g, "&lt;")}</div>
-        </td></tr>
-        <tr><td style="padding:28px 32px;font-size:15px;line-height:1.65;">
-          ${html}
-        </td></tr>
-        <tr><td style="padding:18px 32px 28px;font-size:12px;color:#71717a;border-top:1px solid #eaeaef;">
-          You received this because you registered as a potential new member with ${identity.fraternityName} at ${identity.schoolShort}.
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+/**
+ * Build the branded rush-blast HTML for one recipient. The masthead + (no CTA
+ * here) chrome render in THIS chapter's brand color via renderEmail — the old
+ * template hardcoded Phi Sig cardinal (#C8102E). `greeting` personalizes the
+ * lead line ("Hey Alex,"). Body is admin-typed plain text → escaped + <br/>.
+ */
+function blastHtml(opts: {
+  subject: string;
+  body: string;
+  greeting: string;
+  identity: ChapterIdentity;
+  brandHex: string;
+}): string {
+  const { subject, body, greeting, identity, brandHex } = opts;
+  const bodyHtml = `${greeting ? `<p style="margin:0 0 14px;">${escHtml(greeting)}</p>` : ""}<div>${escHtml(
+    body,
+  ).replace(/\n/g, "<br/>")}</div>`;
+  return renderEmail({
+    brandHex,
+    chapterName: identity.fraternityName,
+    chapterSubline: identity.schoolName || undefined,
+    heading: subject,
+    bodyHtml,
+    footerNote: `You received this because you registered as a potential new member with ${esc2(
+      identity.fraternityName,
+    )}${identity.schoolShort ? ` at ${esc2(identity.schoolShort)}` : ""}.`,
+    unsubscribe: true,
+    unsubscribeText: "Reply to this email and ask us to remove you, and we will.",
+  });
+}
+
+/** Footer-note escape (renderEmail escapes heading/chapterName itself, but the
+ *  footerNote string is interpolated verbatim, so escape chapter values here). */
+function esc2(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export async function POST(req: Request) {
@@ -67,15 +87,18 @@ export async function POST(req: Request) {
   }
 
   // Chapter identity drives the From header + the masthead in the HTML
-  // template. Reference defaults preserve the existing Phi Sig USC look.
+  // template. Per-tenant Resend creds (SiteConfig) with env fallback; the
+  // from-ADDRESS defaults to a NEUTRAL platform address (never a tenant
+  // domain) when this chapter hasn't set resend.fromEmail. brandHex tints the
+  // masthead so a navy/gold chapter no longer sends a red email.
   const identity = await getChapterIdentity();
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromAddr = process.env.RESEND_FROM_EMAIL || "rush@phisig-usc.com";
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const brandHex = cfg["brand.primaryHex"] || "";
+  const { apiKey, fromEmail: fromAddr } = await getResendConfig();
   const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
-  const html = htmlTemplate({ subject: payload.subject, body: payload.body, identity });
 
   // No Resend key — log & return success in mock mode (useful for dev)
-  if (!apiKey || apiKey.startsWith("re_xxxxx")) {
+  if (!apiKey) {
     await prisma.emailLog.create({
       data: {
         subject: payload.subject,
@@ -99,11 +122,14 @@ export async function POST(req: Request) {
   // for personalization and to avoid exposing emails via Bcc-style leaks.
   for (const r of rushes) {
     try {
-      const personalized = html.replace(
-        '<tr><td style="padding:28px 32px;font-size:15px;line-height:1.65;">',
-        `<tr><td style="padding:28px 32px;font-size:15px;line-height:1.65;">
-          <p style="margin:0 0 14px;">${r.name ? `Hey ${r.name.split(" ")[0]},` : "Hey,"}</p>`
-      );
+      const greeting = r.name ? `Hey ${r.name.split(" ")[0]},` : "Hey,";
+      const personalized = blastHtml({
+        subject: payload.subject,
+        body: payload.body,
+        greeting,
+        identity,
+        brandHex,
+      });
       const res = await resend.emails.send({
         from: fromHeader,
         to: r.email,

@@ -7,6 +7,7 @@ import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { logger, errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -208,7 +209,7 @@ async function handleCheckoutCompleted(
 
   const brother = await db.brother.findUnique({
     where: { id: payment.brotherId },
-    select: { name: true },
+    select: { name: true, email: true },
   }).catch(() => null);
 
   // Write the audit row with actorName overridden to "stripe-webhook"
@@ -238,6 +239,78 @@ async function handleCheckoutCompleted(
     year: payment.year,
     outcome: "paid",
   });
+
+  // Branded dues RECEIPT email to the paying brother — BEST-EFFORT. The Stripe
+  // receipt_url was captured above but never emailed (only donations got a
+  // confirmation). Read THIS chapter's identity + brand color from the explicit
+  // tenant db (Stripe carries no subdomain, so never the Host proxy), so a
+  // payment to Beta Sigma @ Maryland isn't branded as Phi Sig @ USC. A send
+  // failure must NEVER fail the webhook (Stripe would retry a confirmed payment).
+  try {
+    if (brother?.email) {
+      const cfgRows = await db.siteConfig.findMany().catch(
+        () => [] as { key: string; value: string }[],
+      );
+      const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
+      const id = chapterIdentityFromCfg(cfg);
+      const brandHex = cfg["brand.primaryHex"] || "";
+      const duesLabel = cfg["dues.label"] || `Chapter dues — ${payment.year}`;
+      const amount = `$${(payment.amountCents / 100).toFixed(2)}`;
+      const paidOn = now.toLocaleDateString("en-US", { dateStyle: "long" });
+      const firstName = (brother.name || "").split(" ")[0] || "brother";
+      const receiptRow = receiptUrl
+        ? `<tr><td style="padding:6px 0;color:#71717a;">Stripe receipt</td><td style="padding:6px 0;text-align:right;"><a href="${escUrl(
+            receiptUrl,
+          )}" style="color:${brandHex || "#1F2937"};">View / print receipt</a></td></tr>`
+        : "";
+      const bodyHtml = `
+        <p style="margin:0 0 16px;">Hi ${escUrl(firstName)}, thanks — your chapter dues payment was received. Here's your receipt for your records.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
+          <tr><td style="padding:6px 0;color:#71717a;">Item</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escUrl(duesLabel)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Period</td><td style="padding:6px 0;text-align:right;">${escUrl(payment.year)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Amount paid</td><td style="padding:6px 0;text-align:right;font-weight:700;">${amount}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Date</td><td style="padding:6px 0;text-align:right;">${escUrl(paidOn)}</td></tr>
+          ${receiptRow}
+        </table>`;
+      const html = renderEmail({
+        brandHex,
+        chapterName: id.chapterAttribution || id.fraternityName,
+        chapterSubline: id.schoolName || undefined,
+        heading: "Your dues payment receipt",
+        bodyHtml,
+        cta: receiptUrl ? { label: "View your Stripe receipt", url: receiptUrl } : null,
+        footerNote: `Paid via Stripe to ${escUrl(id.fraternityName)}. Keep this email as your receipt.`,
+      });
+      await sendEmail({
+        to: brother.email,
+        subject: `Dues receipt — ${id.fraternityName} (${amount})`,
+        html,
+        text: renderEmailText({
+          heading: "Your dues payment receipt",
+          lines: [
+            `${duesLabel} — ${payment.year}`,
+            `Amount paid: ${amount} on ${paidOn}`,
+            receiptUrl ? `Stripe receipt: ${receiptUrl}` : "",
+          ],
+          chapterName: id.chapterAttribution || id.fraternityName,
+        }),
+      }).catch((e) =>
+        errorSink(e, { route: ROUTE, outcome: "dues_receipt_email_failed" }),
+      );
+    }
+  } catch (e) {
+    errorSink(e, { route: ROUTE, outcome: "dues_receipt_email_failed" });
+  }
+}
+
+/** Escape plain strings for safe HTML interpolation in the receipt body. */
+function escUrl(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function handleCheckoutFailed(
@@ -382,26 +455,42 @@ async function handleDonationCompleted(
   );
   const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
   const id = chapterIdentityFromCfg(cfg);
+  const brandHex = cfg["brand.primaryHex"] || "";
 
-  // Send thank you email to alumnus
-  const html = `
-    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-      <h1 style="font-size:22px;margin:0 0 6px">Thank you for your donation!</h1>
-      <p style="color:#52525b;margin:0 0 18px">Dear ${alumni.fullName}, we have successfully received your donation of $${(donation.amountCents / 100).toFixed(2)} to the chapter.</p>
-      <div style="background:#f4f4f5;padding:16px;border-radius:8px;margin:18px 0;">
-        <p style="margin:0 0 8px;"><strong>Campaign:</strong> ${donation.campaign || "General"}</p>
-        <p style="margin:0 0 8px;"><strong>Amount:</strong> $${(donation.amountCents / 100).toFixed(2)}</p>
-        <p style="margin:0 0 8px;"><strong>Date:</strong> ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}</p>
-      </div>
-      <p style="color:#52525b;margin:18px 0;">Your contribution directly supports our members, housing operations, and scholarship programs. Thank you for your continued dedication and character.</p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">${id.fraternityName} &middot; ${id.schoolShort}</p>
-    </div>
-  `;
+  // Send a branded thank-you to the alumnus. renderEmail tints the masthead
+  // with the chapter's brand color (neutral fallback) and adds the chapter +
+  // platform footer — consistent with every other transactional email.
+  const amount = `$${(donation.amountCents / 100).toFixed(2)}`;
+  const campaign = donation.campaign || "General";
+  const donatedOn = new Date().toLocaleDateString("en-US", { dateStyle: "long" });
+  const html = renderEmail({
+    brandHex,
+    chapterName: id.chapterAttribution || id.fraternityName,
+    chapterSubline: id.schoolName || undefined,
+    heading: "Thank you for your donation!",
+    bodyHtml: `
+      <p style="margin:0 0 16px;">Dear ${escUrl(alumni.fullName)}, we've successfully received your donation of ${amount} to the chapter.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
+        <tr><td style="padding:6px 0;color:#71717a;">Campaign</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escUrl(campaign)}</td></tr>
+        <tr><td style="padding:6px 0;color:#71717a;">Amount</td><td style="padding:6px 0;text-align:right;font-weight:700;">${amount}</td></tr>
+        <tr><td style="padding:6px 0;color:#71717a;">Date</td><td style="padding:6px 0;text-align:right;">${escUrl(donatedOn)}</td></tr>
+      </table>
+      <p style="margin:16px 0 0;">Your contribution directly supports our members, housing operations, and scholarship programs. Thank you for your continued dedication.</p>`,
+    footerNote: "Keep this email as your donation receipt.",
+  });
 
   await sendEmail({
     to: alumni.email || "",
     subject: `Thank you for your donation to ${id.fraternityName}`,
     html,
+    text: renderEmailText({
+      heading: "Thank you for your donation!",
+      lines: [
+        `Dear ${alumni.fullName}, we've received your donation of ${amount}.`,
+        `Campaign: ${campaign} · Date: ${donatedOn}`,
+      ],
+      chapterName: id.chapterAttribution || id.fraternityName,
+    }),
   }).catch((e) => errorSink(e, { route: ROUTE, outcome: "donation_thankyou_email_failed" }));
 
   // Donation money confirmed — amount + campaign + outcome only.

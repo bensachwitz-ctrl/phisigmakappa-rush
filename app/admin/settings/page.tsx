@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SettingsManager } from "@/components/admin/settings-manager";
 import { ExternalLink, Sparkles } from "lucide-react";
@@ -6,6 +8,13 @@ import { ExternalLink, Sparkles } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
+  // Admin-only: this page edits every chapter config knob (brand, e-board,
+  // dues/Stripe keys). The middleware only checks for *a* session, not the role,
+  // so without this gate any logged-in brother could open it by direct URL and
+  // see/edit the full config. Matches the /api/admin/settings GET (isAdminRole).
+  if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fsettings");
+  if (!isAdminRole()) redirect("/admin");
+
   const settings = await getSiteConfig();
   return (
     <main className="container py-8">

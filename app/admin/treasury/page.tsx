@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireOfficerPermission } from "@/lib/permissions";
 import { TreasuryManager } from "@/components/admin/treasury-manager";
 import { IconTreasury } from "@/components/brand/icons/treasury";
 import { currentPeriod } from "@/lib/treasury";
@@ -10,15 +11,18 @@ export const dynamic = "force-dynamic";
  * reimbursement queue. Server-loads the current term's budget lines and all
  * expenses, then hands off to the client manager for the interactive UI.
  *
- * Auth note: this lives under /admin, which is gated by the admin layout +
- * middleware. The API routes it calls enforce isAdminAuthed() independently, so
- * even a direct fetch can't bypass the session check.
+ * Auth: gated on the "payments" officer domain (Treasurer + chapter admins via
+ * superAdmin). The middleware only checks for *a* session, not the role, so a
+ * page-level gate is required — without it any logged-in brother could open this
+ * by direct URL and see the chapter's budget + every reimbursement. Mirrors the
+ * exports page; the treasury API routes enforce the same domain independently.
  */
 export default async function TreasuryPage({
   searchParams,
 }: {
   searchParams?: { period?: string };
 }) {
+  await requireOfficerPermission("payments", "read");
   const period = (searchParams?.period || "").trim() || currentPeriod();
 
   let lines: any[] = [];

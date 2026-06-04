@@ -16,6 +16,8 @@ import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { getResendConfig, getTwilioConfig } from "@/lib/messaging-config";
+import { getSiteConfig } from "@/lib/site-config";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
@@ -50,35 +52,57 @@ async function sendBidEmail(
   link: string,
   firstName: string,
   identity: ChapterIdentity,
+  brandHex: string,
 ): Promise<boolean> {
   try {
     const { apiKey, fromEmail } = await getResendConfig();
     if (!apiKey) return false; // chapter hasn't configured Resend → mock/skip
     const from = `${identity.chapterAttribution || identity.fraternityName} <${fromEmail}>`;
     const org = identity.chapterFullName || identity.fraternityName || "the chapter";
-    const html = `
-      <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-        <h1 style="font-size:22px;margin:0 0 6px">You've received a bid from ${org}.</h1>
-        <p style="color:#52525b;margin:0 0 18px">${firstName ? `${firstName}, congratulations` : "Congratulations"} — ${org} has extended you a bid. Tap below to accept or decline.</p>
-        <p style="margin:18px 0">
-          <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">View your bid</a>
-        </p>
-        <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
-        <p style="color:#71717a;font-size:12px">This link expires in ${BID_TOKEN_TTL_DAYS} days.</p>
-      </div>`;
+    const orgEsc = esc(org);
+    // renderEmail tints the masthead + "View your bid" CTA with THIS chapter's
+    // brand color (neutral platform fallback) — the old template hardcoded the
+    // Phi Sig cardinal #a3001a, so a navy/gold chapter sent a red bid email.
+    const html = renderEmail({
+      brandHex,
+      chapterName: identity.chapterAttribution || identity.fraternityName,
+      chapterSubline: identity.schoolName || undefined,
+      heading: `You've received a bid from ${org}.`,
+      bodyHtml: `<p style="margin:0;">${
+        firstName ? `${esc(firstName)}, congratulations` : "Congratulations"
+      } — ${orgEsc} has extended you a bid. Tap below to accept or decline.</p>`,
+      cta: { label: "View your bid", url: link },
+      footerNote: `Or open this URL: ${esc(link)} · This link expires in ${BID_TOKEN_TTL_DAYS} days.`,
+    });
+    const text = renderEmailText({
+      heading: `You've received a bid from ${org}.`,
+      lines: [`${org} has extended you a bid. Accept or decline below (expires in ${BID_TOKEN_TTL_DAYS} days).`],
+      cta: { label: "View your bid", url: link },
+      chapterName: identity.chapterAttribution || identity.fraternityName,
+    });
     const resend = new Resend(apiKey);
     const res = await resend.emails.send({
       from,
       to,
       subject: `You've received a bid from ${identity.fraternityName || "the chapter"}`,
       html,
-      text: `${org} has extended you a bid. Accept or decline here: ${link} (expires in ${BID_TOKEN_TTL_DAYS} days).`,
+      text,
     });
     if (res && typeof res === "object" && "error" in res && (res as any).error) return false;
     return true;
   } catch {
     return false;
   }
+}
+
+/** Escape caller-supplied plain strings before HTML interpolation. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /** Best-effort bid-link SMS via the chapter's own Twilio creds. Returns `false`
@@ -165,8 +189,10 @@ export async function POST(
     if (link) {
       const identity = await getChapterIdentity().catch(() => null);
       if (identity) {
+        const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+        const brandHex = cfg["brand.primaryHex"] || "";
         if (isRealEmail(before.email)) {
-          sentEmail = await sendBidEmail(before.email, link, firstName, identity);
+          sentEmail = await sendBidEmail(before.email, link, firstName, identity, brandHex);
         }
         if (before.phone && before.phone.replace(/\D/g, "").length >= 10) {
           sentSms = await sendBidSms(before.phone, link, identity);

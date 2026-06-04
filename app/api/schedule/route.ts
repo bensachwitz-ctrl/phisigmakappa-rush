@@ -94,8 +94,11 @@ export async function POST(req: Request) {
       html: htmlToUser,
     });
     
-    // Send notification to the chapter administrator/contact
-    const adminEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+    // Send notification to the chapter administrator/contact. White-label-safe:
+    // fall back through the chapter's own configured contacts, never a hardcoded
+    // tenant address — if none is configured we simply skip the admin alert.
+    const adminEmail =
+      cfg["contact.rushEmail"] || cfg["contact.advisorEmail"] || cfg["contact.email"] || "";
     const htmlToAdmin = `
       <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
         <h1 style="font-size:22px;margin:0 0 6px">New Event Scheduled!</h1>
@@ -111,12 +114,14 @@ export async function POST(req: Request) {
       </div>
     `;
     
-    await sendEmail({
-      to: adminEmail,
-      subject: `[Booking Alert] ${eventType} - ${name}`,
-      html: htmlToAdmin,
-    });
-    
+    if (adminEmail) {
+      await sendEmail({
+        to: adminEmail,
+        subject: `[Booking Alert] ${eventType} - ${name}`,
+        html: htmlToAdmin,
+      });
+    }
+
     return NextResponse.json({ ok: true, event });
   } catch (err: any) {
     console.error("Booking error:", err);

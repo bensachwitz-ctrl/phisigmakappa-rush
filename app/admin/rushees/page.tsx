@@ -13,6 +13,7 @@
 // around the rush-chair's workflow ("who haven't I texted recently? who's
 // hot? who needs a bid?") rather than the chapter's voting view.
 import { prisma } from "@/lib/prisma";
+import { requireOfficerPermission } from "@/lib/permissions";
 import { RusheesManager, type RusheeListRow } from "@/components/admin/rushees-manager";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
@@ -20,6 +21,11 @@ import { getSiteConfig } from "@/lib/site-config";
 export const dynamic = "force-dynamic";
 
 export default async function RusheesPage() {
+  // Loads every PNM's PII (name, email, phone, votes). Gated on the
+  // "rushPipeline" officer domain (Recruitment Chair + chapter admins). The
+  // middleware only checks for *a* session, not the role, so without this gate
+  // any logged-in brother could pull the whole PNM list by direct URL.
+  await requireOfficerPermission("rushPipeline", "read");
   let initial: RusheeListRow[] = [];
   try {
     const rushes = await prisma.rush.findMany({

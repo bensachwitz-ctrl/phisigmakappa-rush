@@ -4,6 +4,9 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { sendEmail } from "@/lib/email";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,26 +22,57 @@ function baseUrl(req: Request) {
   return process.env.SITE_URL || `${new URL(req.url).origin}`;
 }
 
-async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return { sent: false, reason: "no-resend" };
-  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@phisig-usc.com>`;
-  const html = `
-    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-      <h1 style="font-size:22px;margin:0 0 6px">You're being added to ${identity.fraternityShort}.</h1>
-      <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the brothers directory at ${identity.greekLetters}, ${identity.schoolShort}.</p>
-      <p style="margin:18px 0">
-        <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Complete your brother profile</a>
-      </p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
-      <p style="color:#71717a;font-size:12px">Link expires in 30 days. ${identity.tagline}</p>
-    </div>`;
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ from, to, subject: `Welcome to ${identity.fraternityName} — finish your profile`, html }),
+/** Branded brother-invite email via the chapter's OWN Resend creds (lib/email
+ *  resolves per-tenant key + neutral from-address; renderEmail tints the
+ *  masthead + CTA with the chapter's brand color, never a hardcoded red). */
+async function sendInviteEmail(
+  to: string,
+  link: string,
+  sender: string,
+  identity: ChapterIdentity,
+  brandHex: string,
+) {
+  const memberLower = identity.terms.memberLower; // "brother" | "sister" | "member"
+  const where = [identity.greekLetters, identity.schoolShort].filter(Boolean).join(", ");
+  const html = renderEmail({
+    brandHex,
+    chapterName: identity.chapterAttribution,
+    chapterSubline: identity.schoolName || undefined,
+    heading: `You're being added to ${identity.fraternityShort}.`,
+    bodyHtml: `<p style="margin:0;">${
+      sender ? `${esc(sender)} from the chapter` : "The chapter"
+    } invited you to join the ${identity.terms.membersLower} directory${where ? ` at ${esc(where)}` : ""}.</p>`,
+    cta: { label: `Complete your ${memberLower} profile`, url: link },
+    footerNote: `Or open this URL: ${esc(link)} · Link expires in 30 days.${
+      identity.tagline ? ` ${esc(identity.tagline)}` : ""
+    }`,
   });
-  return { sent: r.ok, reason: r.ok ? "ok" : `resend-${r.status}` };
+  const text = renderEmailText({
+    heading: `You're being added to ${identity.fraternityShort}.`,
+    lines: [
+      `${sender ? `${sender} from the chapter` : "The chapter"} invited you to join the ${identity.terms.membersLower} directory${where ? ` at ${where}` : ""}.`,
+      "Link expires in 30 days.",
+    ],
+    cta: { label: `Complete your ${memberLower} profile`, url: link },
+    chapterName: identity.chapterAttribution,
+  });
+  const res = await sendEmail({
+    to,
+    subject: `Welcome to ${identity.fraternityName} — finish your profile`,
+    html,
+    text,
+  });
+  return { sent: !!res.ok, reason: res.ok ? "ok" : (res as any).error || "send-failed" };
+}
+
+/** Escape caller-supplied plain strings before HTML interpolation. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function sendSms(to: string, link: string, sender: string, identity: ChapterIdentity) {
@@ -101,12 +135,15 @@ export async function POST(req: Request) {
 
   const link = `${baseUrl(req)}/onboard/${token}`;
   const senderName = sender?.name || "";
-  // Pull identity once so both channels share the same chapter signature.
+  // Pull identity + brand color once so both channels share the same chapter
+  // signature and the email masthead/CTA render in THIS chapter's brand color.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const identity = await getChapterIdentity();
+  const brandHex = cfg["brand.primaryHex"] || "";
 
   let delivery: { channel: string; sent: boolean; reason: string } = { channel: "link", sent: false, reason: "manual" };
   if (channel === "email" && email) {
-    const r = await sendEmail(email, link, senderName, identity);
+    const r = await sendInviteEmail(email, link, senderName, identity, brandHex);
     delivery = { channel: "email", ...r };
   } else if (channel === "sms" && phone) {
     const r = await sendSms(phone, link, senderName, identity);

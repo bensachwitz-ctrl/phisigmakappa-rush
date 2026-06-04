@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isSameOrigin, getCurrentBrother } from "@/lib/auth";
+import { isSameOrigin, getCurrentBrother } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -14,9 +15,13 @@ export const dynamic = "force-dynamic";
  *   PATCH { id, status }    treasurer decides — sets status, stamps
  *                           decidedByName + decidedAt
  *
- * Admin-gated. PATCH additionally requires a same-origin request. Moving a
- * request to APPROVED or REIMBURSED emits an EXPENSE_DECIDED audit row (DENIED
- * too, so the forensic trail is complete).
+ * Authorization: the reimbursement queue is chapter money, so both handlers
+ * require the "payments" officer domain (Treasurer writes; admins/president
+ * short-circuit via superAdmin) — read to view the queue, write to decide.
+ * isAdminAuthed() was too weak: any valid member cookie (adminFlag=0) could
+ * approve/deny its own reimbursements. PATCH additionally requires a same-origin
+ * request. Moving a request to APPROVED or REIMBURSED emits an EXPENSE_DECIDED
+ * audit row (DENIED too, so the forensic trail is complete).
  */
 
 const STATUSES = ["PENDING", "APPROVED", "REIMBURSED", "DENIED"] as const;
@@ -28,7 +33,8 @@ const PatchSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "read");
+  if (denied) return denied;
   const url = new URL(req.url);
   const statusParam = url.searchParams.get("status")?.toUpperCase();
   const where =
@@ -48,7 +54,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = PatchSchema.safeParse(body);

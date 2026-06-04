@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
+import { requireOfficerPermission } from "@/lib/permissions";
 import { getSiteConfig } from "@/lib/site-config";
 import { FamilyManager, type FamilyBrother } from "@/components/admin/family-manager";
 import { IconFamily } from "@/components/brand/icons/family";
@@ -11,11 +12,17 @@ export const dynamic = "force-dynamic";
  *
  * Loads every brother in the lean shape the forest needs and hands it to the
  * client manager, which builds the tree, runs the assign/clear flows against
- * /api/admin/family, and renders the lineage. Read-only members still see the
- * tree; only admins get the assign controls (gated client-side + enforced by
- * the route's isSameOrigin + cookie auth).
+ * /api/admin/family, and renders the lineage. Officers with the "brothers"
+ * domain (and chapter admins) get the assign controls; everyone else with the
+ * domain sees a read-only tree (gated client-side via isAdmin + enforced by the
+ * route's brothers-write guard + isSameOrigin).
+ *
+ * Auth: gated on the "brothers" officer domain. The middleware only checks for
+ * *a* session, not the role, so without this gate any logged-in brother could
+ * open the admin family console by direct URL. Mirrors the meetings page.
  */
 export default async function FamilyPage() {
+  await requireOfficerPermission("brothers", "read");
   let brothers: FamilyBrother[] = [];
   try {
     const rows = await prisma.brother.findMany({

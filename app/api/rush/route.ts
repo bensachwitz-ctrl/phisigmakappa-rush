@@ -182,11 +182,14 @@ export async function POST(req: Request) {
           // Pull rush email from cfg so a chapter that changes their address
           // in admin doesn't dead-letter rate-limited rushees to the default.
           const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-          const rushEmail = cfg["contact.rushEmail"] || "rush@phisig-usc.com";
+          const rushEmail =
+            cfg["contact.rushEmail"] || cfg["contact.advisorEmail"] || cfg["contact.email"] || "";
           return NextResponse.json(
             {
               ok: false,
-              error: `Too many submissions. If this isn't a typo, email ${rushEmail} and we'll get you on the list.`,
+              error: rushEmail
+                ? `Too many submissions. If this isn't a typo, email ${rushEmail} and we'll get you on the list.`
+                : `Too many submissions. If this isn't a typo, reach out to the chapter directly and we'll get you on the list.`,
             },
             { status: 429, headers: { "Retry-After": "3600" } },
           );

@@ -6,6 +6,8 @@ import { setPortalCookie } from "@/lib/portal-auth";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
 import { sendEmail } from "@/lib/email";
 import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +16,15 @@ export const dynamic = "force-dynamic";
 // Fire-and-forget: never blocks the response, and sendEmail() already
 // no-ops gracefully (mock mode) when RESEND_API_KEY isn't configured, so
 // this is safe in every environment.
+function escHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function sendWelcomeEmail(opts: { to: string; firstName: string; siteUrl: string }) {
   let identity;
   try {
@@ -21,33 +32,52 @@ async function sendWelcomeEmail(opts: { to: string; firstName: string; siteUrl: 
   } catch {
     identity = null;
   }
+  // Brand color tints the masthead + CTA (neutral platform fallback) so the
+  // welcome email matches the chapter — the old template hardcoded the Phi Sig
+  // cardinal #a3001a, painting every chapter's welcome email red.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const brandHex = cfg["brand.primaryHex"] || "";
   const fratName = identity?.fraternityName || "Your Chapter";
   const fratShort = identity?.fraternityShort || "Your Chapter";
   const greek = identity?.greekLetters || "";
   const school = identity?.schoolShort || "";
   const tagline = identity?.tagline || "";
+  const memberRoster = (identity?.terms.memberLower || "member") + " roster";
+  const recruit = identity?.terms.recruit || "Recruitment";
+  const attribution = identity?.chapterAttribution || fratName;
   const dash = `${opts.siteUrl.replace(/\/$/, "")}/portal/alumni/dashboard`;
-  const html = `
-    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-      <h1 style="font-size:22px;margin:0 0 6px">Welcome to the ${fratShort} alumni portal, ${opts.firstName}.</h1>
-      <p style="color:#52525b;margin:0 0 18px">Your account is live. You're now connected to ${greek ? greek + " · " : ""}${school} — the active chapter and your fellow alumni.</p>
-      <p style="color:#3f3f46;margin:0 0 8px;font-weight:600">From your dashboard you can:</p>
-      <ul style="color:#52525b;margin:0 0 18px;padding-left:18px;line-height:1.6">
-        <li>See the active brother roster and your alumni network</li>
+  const connectedTo = [greek, school].filter(Boolean).join(" · ");
+  const html = renderEmail({
+    brandHex,
+    chapterName: attribution,
+    chapterSubline: identity?.schoolName || undefined,
+    heading: `Welcome to the ${fratShort} alumni portal, ${opts.firstName}.`,
+    bodyHtml: `
+      <p style="margin:0 0 14px;">Your account is live. You're now connected to ${
+        connectedTo ? escHtml(connectedTo) + " — " : ""
+      }the active chapter and your fellow alumni.</p>
+      <p style="margin:0 0 8px;font-weight:600;color:#27272a;">From your dashboard you can:</p>
+      <ul style="margin:0;padding-left:18px;line-height:1.7;">
+        <li>See the active ${escHtml(memberRoster)} and your alumni network</li>
         <li>Vote in alumni polls and RSVP to chapter events</li>
-        <li>Vouch for PNMs during rush</li>
+        <li>Vouch for PNMs during ${escHtml(recruit.toLowerCase())}</li>
         <li>Support the chapter with a secure donation</li>
-      </ul>
-      <p style="margin:18px 0">
-        <a href="${dash}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Open your dashboard</a>
-      </p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">You're receiving this because you created a ${fratName} alumni portal account. ${tagline}</p>
-    </div>`;
+      </ul>`,
+    cta: { label: "Open your dashboard", url: dash },
+    footerNote: `You're receiving this because you created a ${escHtml(fratName)} alumni portal account.${
+      tagline ? ` ${escHtml(tagline)}` : ""
+    }`,
+  });
   return sendEmail({
     to: opts.to,
     subject: `Welcome to the ${fratName} alumni portal`,
     html,
-    text: `Welcome to the ${fratShort} alumni portal, ${opts.firstName}. Your account is live — open your dashboard: ${dash}`,
+    text: renderEmailText({
+      heading: `Welcome to the ${fratShort} alumni portal, ${opts.firstName}.`,
+      lines: ["Your account is live."],
+      cta: { label: "Open your dashboard", url: dash },
+      chapterName: attribution,
+    }),
   });
 }
 

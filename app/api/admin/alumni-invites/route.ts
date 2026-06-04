@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
+import { getSiteConfig } from "@/lib/site-config";
+import { sendEmail } from "@/lib/email";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,27 +37,58 @@ function baseUrl(req: Request) {
   return process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || `${new URL(req.url).origin}`;
 }
 
-async function sendEmail(to: string, link: string, sender: string, identity: ChapterIdentity) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || key.startsWith("re_xxxxx")) return { sent: false, reason: "no-resend" };
-  const from = process.env.RESEND_FROM || `${identity.chapterAttribution} <onboarding@phisig-usc.com>`;
-  const html = `
-    <div style="font-family:system-ui,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#0a0a0a">
-      <h1 style="font-size:22px;margin:0 0 6px">Welcome back to ${identity.fraternityShort}.</h1>
-      <p style="color:#52525b;margin:0 0 18px">${sender ? `${sender} from the chapter` : "The chapter"} invited you to the ${identity.greekLetters} alumni portal at ${identity.schoolShort} — see brothers, vote in alumni polls, RSVP to events, and support the chapter.</p>
-      <p style="margin:18px 0">
-        <a href="${link}" style="display:inline-block;background:#a3001a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">Create your alumni account</a>
-      </p>
-      <p style="color:#71717a;font-size:12px;margin-top:24px">Or open this URL: ${link}</p>
-      <p style="color:#71717a;font-size:12px">This link is for you only and expires in 30 days. ${identity.tagline || ""}</p>
-    </div>`;
+/** Escape caller-supplied plain strings before HTML interpolation. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Branded alumni-invite email via the chapter's OWN Resend creds (lib/email
+ *  resolves per-tenant key + neutral from-address; renderEmail tints the
+ *  masthead + CTA with the chapter's brand color, never a hardcoded red). */
+async function sendInviteEmail(
+  to: string,
+  link: string,
+  sender: string,
+  identity: ChapterIdentity,
+  brandHex: string,
+) {
+  const where = identity.schoolShort ? ` at ${esc(identity.schoolShort)}` : "";
+  const portalScope = [identity.greekLetters, "alumni portal"].filter(Boolean).join(" ");
+  const html = renderEmail({
+    brandHex,
+    chapterName: identity.chapterAttribution,
+    chapterSubline: identity.schoolName || undefined,
+    heading: `Welcome back to ${identity.fraternityShort}.`,
+    bodyHtml: `<p style="margin:0;">${
+      sender ? `${esc(sender)} from the chapter` : "The chapter"
+    } invited you to the ${esc(portalScope)}${where} — see ${identity.terms.membersLower}, vote in alumni polls, RSVP to events, and support the chapter.</p>`,
+    cta: { label: "Create your alumni account", url: link },
+    footerNote: `Or open this URL: ${esc(link)} · This link is for you only and expires in 30 days.${
+      identity.tagline ? ` ${esc(identity.tagline)}` : ""
+    }`,
+  });
+  const text = renderEmailText({
+    heading: `Welcome back to ${identity.fraternityShort}.`,
+    lines: [
+      `${sender ? `${sender} from the chapter` : "The chapter"} invited you to the ${portalScope}${identity.schoolShort ? ` at ${identity.schoolShort}` : ""}.`,
+      "This link is for you only and expires in 30 days.",
+    ],
+    cta: { label: "Create your alumni account", url: link },
+    chapterName: identity.chapterAttribution,
+  });
   try {
-    const r = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-      body: JSON.stringify({ from, to, subject: `${identity.fraternityName} — create your alumni account`, html }),
+    const res = await sendEmail({
+      to,
+      subject: `${identity.fraternityName} — create your alumni account`,
+      html,
+      text,
     });
-    return { sent: r.ok, reason: r.ok ? "ok" : `resend-${r.status}` };
+    return { sent: !!res.ok, reason: res.ok ? "ok" : (res as any).error || "send-failed" };
   } catch (err: any) {
     return { sent: false, reason: `resend-error:${err?.message || "unknown"}` };
   }
@@ -141,13 +175,15 @@ export async function POST(req: Request) {
 
   const link = `${baseUrl(req)}/alumni/onboard/${token}`;
   const senderName = sender?.name || "";
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const identity = await getChapterIdentity();
+  const brandHex = cfg["brand.primaryHex"] || "";
 
   let delivery: { channel: string; sent: boolean; reason: string } = { channel: "link", sent: false, reason: "manual" };
   const targetEmail = email || boundAlumni?.email || "";
   const targetPhone = phone || boundAlumni?.phone || "";
   if (channel === "email" && targetEmail) {
-    const r = await sendEmail(targetEmail, link, senderName, identity);
+    const r = await sendInviteEmail(targetEmail, link, senderName, identity, brandHex);
     delivery = { channel: "email", ...r };
   } else if (channel === "sms" && targetPhone) {
     const r = await sendSms(targetPhone, link, senderName, identity);

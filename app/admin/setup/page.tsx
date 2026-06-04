@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SetupWizard } from "@/components/admin/setup-wizard";
 import { Sparkles, ArrowLeft } from "lucide-react";
@@ -19,8 +21,16 @@ export const dynamic = "force-dynamic";
  *
  * Each step's "Save & continue" PATCHes the values via /api/admin/settings —
  * same endpoint as the full settings page. Nothing here is wizard-only state.
+ *
+ * Admin-only: this is the chapter-config wizard (identity, brand, contact,
+ * national policy). The middleware only checks for *a* session, not the role, so
+ * without this gate any logged-in brother could open it by direct URL. Mirrors
+ * the settings page + the /api/admin/settings PATCH (isAdminRole).
  */
 export default async function SetupPage() {
+  if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fsetup");
+  if (!isAdminRole()) redirect("/admin");
+
   const cfg = await getSiteConfig();
   return (
     <main className="container py-8 max-w-3xl">

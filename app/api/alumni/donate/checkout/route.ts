@@ -4,6 +4,7 @@ import { prisma, getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
+import { getPortalSession, isAdminOverride } from "@/lib/portal-auth";
 import { errorSink } from "@/lib/logger";
 import { z } from "zod";
 import type Stripe from "stripe";
@@ -13,33 +14,112 @@ export const dynamic = "force-dynamic";
 
 const ROUTE = "/api/alumni/donate/checkout";
 
+// The donor's alumniId is ALWAYS derived from the authenticated portal session
+// (see below) — never from the request body. We deliberately omit alumniId from
+// the schema so a body-supplied value is ignored entirely: it can't drive which
+// AlumniProfile gets a PENDING row, and it can't leak another alum's email into
+// the Checkout session. amountCents/campaign/notes are the only donor-controlled
+// fields.
 const DonationSchema = z.object({
-  alumniId: z.string().min(1),
   amountCents: z.number().min(500), // Min donation $5.00
   campaign: z.string().min(1).max(100).optional().default("General"),
   notes: z.string().max(1000).optional().default(""),
 });
 
+// ── Per-IP rate limit (in-memory bucket) ─────────────────────────────────────
+// Mirrors the intent of app/api/rush/route.ts (windowed per-IP cap + 429 +
+// Retry-After) to stop unbounded PENDING-row / live-Stripe-session creation if a
+// session is ever replayed or scripted. We use an in-memory bucket (same shape
+// as lib/incident.ts) rather than a DB log table so this fix stays self-contained
+// to one file and needs no schema migration. A process restart resets the bucket,
+// which is acceptable at chapter scale and behind the auth gate below.
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_MAX = 10; // ~10 checkout attempts per IP per hour
+const RATE_BUCKETS = new Map<string, { count: number; resetAt: number }>();
+
+function checkDonationRateLimit(
+  ipKey: string,
+  now = Date.now()
+): { ok: true } | { ok: false; retryAfterMs: number } {
+  const k = ipKey || "unknown";
+  const bucket = RATE_BUCKETS.get(k);
+  if (!bucket || bucket.resetAt < now) {
+    RATE_BUCKETS.set(k, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { ok: true };
+  }
+  if (bucket.count >= RATE_MAX) {
+    return { ok: false, retryAfterMs: bucket.resetAt - now };
+  }
+  bucket.count += 1;
+  return { ok: true };
+}
+
 export async function POST(req: Request) {
   try {
+    // ── AuthZ: donor identity comes from the portal session, never the body ──
+    // Only a logged-in alumnus (or an admin overriding into the alumni portal —
+    // the same override the dashboard page honors) may open a donation checkout.
+    // This is the sole caller path (app/portal/alumni/dashboard/DashboardClient
+    // .tsx). Resolving alumniId from the session kills the prior abuse where any
+    // anonymous caller could POST an arbitrary alumniId to create PENDING rows +
+    // live Stripe sessions AND leak that alum's email via customer_email.
+    const sess = getPortalSession();
+    const isAdmin = isAdminOverride();
+
+    if ((!sess || sess.role !== "alumni") && !isAdmin) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Map the portal session (PortalUser id) → the AlumniProfile id. Same
+    // pattern as app/api/alumni/vouch/route.ts and the dashboard page loader.
+    let alumniId: string | null = null;
+    if (sess?.role === "alumni") {
+      const portalUser = await prisma.portalUser.findUnique({
+        where: { id: sess.userId },
+      });
+      alumniId = portalUser?.alumniId || null;
+    }
+    if (isAdmin && !alumniId) {
+      // Admin override (no alumni cookie): fall back to the first alumnus, exactly
+      // as the dashboard page does when an admin views the alumni portal.
+      const firstAlumni = await prisma.alumniProfile.findFirst();
+      alumniId = firstAlumni?.id || null;
+    }
+    if (!alumniId) {
+      return NextResponse.json({ ok: false, error: "Alumni profile not found" }, { status: 404 });
+    }
+
+    // ── Per-IP rate limit ────────────────────────────────────────────────────
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const rl = checkDonationRateLimit(ip);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { ok: false, error: "Too many donation attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const parsed = DonationSchema.safeParse(body);
-    
+
     if (!parsed.success) {
       return NextResponse.json({ ok: false, error: "Invalid donation details" }, { status: 400 });
     }
-    
-    const { alumniId, amountCents, campaign, notes } = parsed.data;
-    
-    // Fetch alumni profile to verify it exists
+
+    const { amountCents, campaign, notes } = parsed.data;
+
+    // Fetch the SESSION-resolved alumni profile (id derived above, not from body).
     const alumni = await prisma.alumniProfile.findUnique({
       where: { id: alumniId },
     });
-    
+
     if (!alumni) {
       return NextResponse.json({ ok: false, error: "Alumni profile not found" }, { status: 404 });
     }
-    
+
     const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
     const stripe = getStripe();
     

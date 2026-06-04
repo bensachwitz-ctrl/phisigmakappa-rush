@@ -15,13 +15,19 @@
 //         (B) through its ancestor chain; if we ever reach A, the edge would
 //         create a loop, so we 400. A brother also cannot be their own big.
 //
-// Gated with isAdminAuthed() on read + isSameOrigin() on the write (CSRF
+// Authorization: GET stays session-readable (isAdminAuthed — any valid member
+// cookie) because the lineage forest is a member-visible roster view. The PATCH
+// WRITE, however, assigns/clears bigs and so requires the "brothers" officer
+// domain (guardOfficer("brothers","write") — admins/president short-circuit via
+// superAdmin); isAdminAuthed() was too weak there, letting any logged-in brother
+// rewire the family tree. The write also keeps isSameOrigin() (CSRF
 // belt-and-suspenders, mirrors the other admin mutation routes). Writes a
 // FAMILY_ASSIGNED / FAMILY_CLEARED audit row via lib/audit.
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -61,7 +67,8 @@ const PatchSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   }
