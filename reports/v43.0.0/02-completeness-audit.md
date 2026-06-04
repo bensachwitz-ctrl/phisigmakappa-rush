@@ -1,3 +1,5 @@
+> _Part of [[projects/plug and play greek life/_INDEX|Greekstack — Plug-and-Play Greek Life]] · companion: [[projects/plug and play greek life/README|README]] · [[projects/plug and play greek life/FINAL|FINAL]]._
+
 # R43 Completeness Audit — Phi Sigma Kappa Chapter Platform
 
 Scope: final pre-nationals scan covering TODOs, dead code, admin-route patterns,

@@ -1,3 +1,5 @@
+> _Part of [[projects/plug and play greek life/_INDEX|Greekstack — Plug-and-Play Greek Life]] · companion: [[projects/plug and play greek life/README|README]] · [[projects/plug and play greek life/FINAL|FINAL]]._
+
 # R43-A Builder Report — Dues Payment v1 (Stripe Checkout)
 
 **Branch:** `claude/nice-neumann-9722d9`

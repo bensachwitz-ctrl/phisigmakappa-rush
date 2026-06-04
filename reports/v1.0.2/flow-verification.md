@@ -1,3 +1,5 @@
+> _Part of [[projects/plug and play greek life/_INDEX|Greekstack — Plug-and-Play Greek Life]] · companion: [[projects/plug and play greek life/README|README]] · [[projects/plug and play greek life/FINAL|FINAL]]._
+
 # Phi Sigma Kappa — End-to-End Flow Verification (v1.0.2)
 
 **Date:** 2026-05-28

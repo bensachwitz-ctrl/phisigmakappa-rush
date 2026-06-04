@@ -1,3 +1,5 @@
+> _Part of [[projects/plug and play greek life/_INDEX|Greekstack — Plug-and-Play Greek Life]] · companion: [[projects/plug and play greek life/README|README]] · [[projects/plug and play greek life/FINAL|FINAL]]._
+
 # WHITE-LABEL — Deploying this platform for another chapter
 
 This document is the runbook for spinning up the chapter-management platform

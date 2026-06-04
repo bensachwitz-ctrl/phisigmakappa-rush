@@ -137,6 +137,7 @@ const NAV_LINKS = [
 const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   {
     icon: IconRecruitment,
+    img: "feat-recruitment",
     eyebrow: "Recruitment",
     title: "Recruitment pipeline",
     desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS — your whole recruitment cycle in one board.",
@@ -152,6 +153,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconDues,
+    img: "feat-dues",
     eyebrow: "Finance",
     title: "Automated dues",
     desc: "Stripe-powered dues with treasurer payouts, auto-reconciled ledgers, reminders, and payment plans — collected without the group-chat nagging.",
@@ -166,6 +168,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconEvents,
+    img: "feat-events",
     eyebrow: "Calendar",
     title: "Events & calendar",
     desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
@@ -180,6 +183,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconTreasury,
+    img: "feat-treasury",
     eyebrow: "Treasury",
     title: "Treasury & budgets",
     desc: "Chapter budgets, ledgers, and expense tracking in one place — every dollar in and out, reconciled against dues automatically.",
@@ -194,6 +198,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconRoles,
+    img: "feat-officers",
     eyebrow: "Permissions",
     title: "Officer roles & access",
     desc: "Granular role-based access for President, Treasurer, Recruitment, and Risk — everyone sees exactly what they should, nothing more.",
@@ -208,6 +213,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconChat,
+    img: "feat-chat",
     eyebrow: "Community",
     title: "Chapter chat",
     desc: "Real-time announcements and group chat built right in — replace the scattered GroupMe with one channel tied to your roster.",
@@ -222,6 +228,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconWhiteLabel,
+    img: "feat-branding",
     eyebrow: "Branding",
     title: "White-label branding",
     desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
@@ -236,6 +243,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean })[] = [
   },
   {
     icon: IconAlumniNetwork,
+    img: "feat-alumni",
     eyebrow: "Alumni",
     title: "Alumni & donations",
     desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
@@ -726,10 +734,37 @@ function Hero() {
 
       <section className="container relative z-10 pb-16 pt-20 sm:pb-24 sm:pt-28">
         <div className="mx-auto max-w-3xl text-center">
+          {/* Eyebrow pill — bespoke + premium. The OUTER span paints a hairline
+              gradient border (gold→amber→sky) by laying the gradient under a 1px
+              pad; the INNER span is a frosted-glass pill (.gs-glass) that masks
+              all but that 1px rim. The brand mark (rounded, ~18px) leads instead
+              of a generic sparkle, a soft gold glow sits behind for warmth, and
+              the label is a crisp, saturated gold→amber gradient (amber-700→
+              gold-400) with bold weight so it reads with strong contrast rather
+              than the old washed-out amber. Decorative layers are aria-hidden. */}
           <div className="animate-slide-up [animation-delay:40ms]">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-amber-600 shadow-sm">
-              <IconSpark className="h-3.5 w-3.5 animate-heartbeat" accent="#fbbf24" />
-              The white-label Greek-life platform
+            <span className="relative inline-flex rounded-full bg-gradient-to-r from-amber-400/70 via-amber-300/40 to-sky-400/50 p-px shadow-[0_4px_20px_-6px_rgba(245,158,11,0.45)]">
+              {/* soft gold glow bloom behind the pill */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-2 -z-10 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.28),transparent_70%)] blur-md"
+              />
+              <span className="inline-flex items-center gap-2 rounded-full gs-glass px-3.5 py-1.5">
+                <img
+                  src="/brand/greekstack-mark.png"
+                  alt=""
+                  width={512}
+                  height={512}
+                  decoding="async"
+                  loading="eager"
+                  className="h-[18px] w-[18px] shrink-0 rounded-[5px] object-contain shadow-sm ring-1 ring-black/5"
+                />
+                <span
+                  className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-400 bg-clip-text text-xs font-bold uppercase tracking-[0.16em] text-transparent"
+                >
+                  The white-label Greek-life platform
+                </span>
+              </span>
             </span>
           </div>
 
@@ -753,7 +788,7 @@ function Hero() {
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground animate-slide-up [animation-delay:200ms] sm:text-lg">
             Greekstack runs recruitment pipelines, automated dues, events, officer access, and
-            anti-hazing reporting on one multi-tenant platform — re-skinned to your letters and
+            alumni relations on one multi-tenant platform — re-skinned to your letters and
             colors, live the same day.
           </p>
 
@@ -1083,7 +1118,33 @@ function FeatureCard({
   wide?: boolean;
   onOpen: () => void;
 }) {
-  const { icon, title, desc } = feature;
+  const { icon, img, title, desc } = feature;
+
+  // Feature icon — the bespoke pre-rendered tile (a self-contained frosted-glass
+  // app-icon) stands ALONE: no IconChip background wrapper, so it never double-
+  // ups a glass-tile-on-a-glass-chip. Rendered at ~60px (within the brief's
+  // 56–64px window) and inheriting the same hover lift/tilt the chip had so the
+  // card's micro-interaction is preserved. Falls back to the SVG-in-chip only if
+  // a feature has no image. Shared by both card layouts.
+  const featureIcon = img ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/brand/gen/${img}.png`}
+      alt=""
+      width={256}
+      height={256}
+      decoding="async"
+      loading="lazy"
+      className="h-[60px] w-[60px] shrink-0 rounded-2xl object-contain transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+    />
+  ) : (
+    <IconChip
+      icon={icon}
+      tone="platform"
+      size="lg"
+      className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+    />
+  );
 
   // The "See inside" affordance, shared by both layouts.
   const seeInside = (
@@ -1123,12 +1184,7 @@ function FeatureCard({
         // icon block on the left, copy on the right — so the extra width is used
         // intentionally instead of leaving the right half empty.
         <div className="relative flex w-full flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
-          <IconChip
-            icon={icon}
-            tone="platform"
-            size="lg"
-            className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
-          />
+          {featureIcon}
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
@@ -1141,12 +1197,7 @@ function FeatureCard({
         // Standard cards: vertical, with the affordance pinned to the bottom so
         // every card in a row aligns.
         <div className="relative flex h-full w-full flex-col">
-          <IconChip
-            icon={icon}
-            tone="platform"
-            size="lg"
-            className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
-          />
+          {featureIcon}
           <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
           <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
           <span className="mt-auto inline-flex pt-6">{seeInside}</span>

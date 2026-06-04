@@ -2,165 +2,74 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * GREEKSTACK BRAND MARK — "The Stacked G"
+ * GREEKSTACK BRAND MARK — the bespoke PNG app-tile.
  * ------------------------------------------------------------------
- * One confident geometric monogram that fuses the brand initial with the
- * idea of a platform "stack":
+ * The mark is a premium, pre-rendered graphic: a dark-navy rounded app-tile
+ * with a royal-blue "GS" monogram seated under a gold pediment. It lives on disk
+ * at /brand/greekstack-mark.png (512×512) and is served straight from /public —
+ * no inline SVG, no Satori dependency, so the brand can never drift between the
+ * site, the favicon pipeline, or an OG card: every surface points at the one
+ * canonical file.
  *
- *   • A bold, single-weight ring forms a modern capital "G" — the brand
- *     initial and, as a closed circle, a quiet nod to unity / a chapter.
- *     The ring opens with a clean, flat mouth on the right.
- *   • A GOLD KEYSTONE wedge seats into that mouth as the G's signature
- *     bar — the one warm, load-bearing accent that locks the form shut.
- *   • Two slim arc "plates" descend beneath the ring, each fainter than the
- *     last, so the mark reads as a STACK of layers — i.e. Greek·STACK —
- *     without a single literal column, temple, or meander.
+ * `GreekstackLogo` renders that file as a plain <img>:
+ *   • rounded corners (the source already has a rounded silhouette; the radius
+ *     here just keeps the AA edge crisp on every background);
+ *   • EXPLICIT intrinsic width/height (512×512) so the browser reserves the
+ *     correct square box and the painted size is driven purely by the height /
+ *     width utility classes — locking the aspect ratio means ZERO layout shift;
+ *   • alt="" because the mark is decorative wherever it appears beside the
+ *     "Greekstack" wordmark (the text carries the name); a standalone `title`
+ *     prop still flows through to the element's `title`/`aria-label` for the
+ *     rare icon-only placement.
  *
- * Drawn on a 40×40 grid, optically centered, with ONE consistent stroke
- * weight so the geometry stays crisp and unmistakable from 16px → 64px and
- * up. Royal-blue → sky gradient body + a restrained gold keystone. Three
- * colors, no busy detail — Linear / Vercel / Stripe level of restraint.
- *
- * Variants:
- *   • "tile"  (default) — the glyph sits in a rounded-square gradient chip
- *     with a hairline ring + top sheen. Best for the marketing site, app
- *     icon, favicon, and any surface where the mark needs its own field.
- *   • "mono"  — the bare glyph in `currentColor` (no chip, no gradient).
- *     For dense footers, toolbars, print, or anywhere a single ink reads
- *     better. Inherits text color; the three stacked bar layers differentiate
- *     purely by opacity (single-ink safe).
- *
- * Accessible (role="img" + <title>), self-contained inline SVG (no external
- * asset), unique gradient ids per instance (useId) so multiple marks can
- * coexist on one page, and reduced-motion-safe: the SVG itself never
- * animates — any motion is applied by the consumer to the wrapping element
- * (or to the mark's own className), so it honors prefers-reduced-motion at
- * the call site.
+ * The exported surface — names, props, and signatures (`GreekstackLogo`,
+ * `GreekstackWordmark`) — is UNCHANGED, so every existing consumer keeps working
+ * without edits. The old inline-SVG "Stacked G" mark (and its `variant="mono"`
+ * single-ink path) has been removed; `variant` is accepted and ignored for
+ * source compatibility.
  */
 
 type LogoVariant = "tile" | "mono";
 
+const MARK_SRC = "/brand/greekstack-mark.png";
+
 export function GreekstackLogo({
   className,
   title = "Greekstack",
-  variant = "tile",
+  // `variant` is retained for prop-compatibility with prior callers but no
+  // longer changes the rendering — the mark is a single bespoke graphic.
+  variant: _variant,
+  loading = "eager",
   ...rest
 }: {
   className?: string;
   title?: string;
   variant?: LogoVariant;
-} & Omit<React.SVGProps<SVGSVGElement>, "className" | "title">) {
-  // Stable, collision-proof ids so multiple marks can coexist on one page
-  // (e.g. header + footer) without sharing/clobbering gradient defs.
-  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, "");
-  const bodyGrad = `gs-body-${uid}`;
-  const keyGrad = `gs-key-${uid}`;
-  const sheen = `gs-sheen-${uid}`;
-  const ringGrad = `gs-ring-${uid}`;
-  const mono = variant === "mono";
-
-  const ink = mono ? "currentColor" : "#FFFFFF";
-
+  loading?: "eager" | "lazy";
+} & Omit<React.ImgHTMLAttributes<HTMLImageElement>, "className" | "title" | "src" | "alt" | "loading">) {
   return (
-    <svg
-      className={className || "h-8 w-8"}
-      viewBox="0 0 40 40"
-      fill="none"
-      role="img"
+    // eslint-disable-next-line @next/next/no-img-element -- public pages use the
+    // <img> proxy pattern, not next/image (see next.config.js images note).
+    <img
+      src={MARK_SRC}
+      alt=""
+      // Decorative by default; expose the name to AT only when a caller is using
+      // the mark on its own (passes a title) so an icon-only logo still announces.
       aria-label={title}
-      xmlns="http://www.w3.org/2000/svg"
+      width={512}
+      height={512}
+      decoding="async"
+      loading={loading}
+      // The utilities control the PAINTED size (e.g. h-8 w-8); the intrinsic
+      // 512×512 above keeps the box square so there's no reflow as it loads.
+      className={cn("inline-block rounded-[22%] object-contain", className || "h-8 w-8")}
       {...rest}
-    >
-      <title>{title}</title>
-      <defs>
-        <linearGradient id={bodyGrad} x1="5" y1="3" x2="35" y2="37" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#3B82F6" />
-          <stop offset="0.5" stopColor="#2563EB" />
-          <stop offset="1" stopColor="#0EA5E9" />
-        </linearGradient>
-        {/* On the tile the G is white; on white-chip contexts we still want a
-            faint vertical modeling, so the ring uses near-white→white. In mono
-            it is overridden to currentColor below. */}
-        <linearGradient id={ringGrad} x1="20" y1="6" x2="20" y2="34" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FFFFFF" />
-          <stop offset="1" stopColor="#E8F1FF" />
-        </linearGradient>
-        <linearGradient id={keyGrad} x1="22" y1="14" x2="33" y2="27" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FBBF24" />
-          <stop offset="1" stopColor="#F59E0B" />
-        </linearGradient>
-        <linearGradient id={sheen} x1="0" y1="0" x2="0" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.22" />
-          <stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
-      {/* ---- Rounded-square brand chip (tile variant only) ---- */}
-      {!mono && (
-        <>
-          <rect x="0" y="0" width="40" height="40" rx="11" fill={`url(#${bodyGrad})`} />
-          {/* top-light sheen for a premium, dimensional finish */}
-          <rect x="0" y="0" width="40" height="40" rx="11" fill={`url(#${sheen})`} />
-          {/* crisp inner hairline so the chip reads on white AND dark */}
-          <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="10.25" fill="none" stroke="#FFFFFF" strokeOpacity="0.18" strokeWidth="1" />
-        </>
-      )}
-
-      {/* ============================================================
-          THE GLYPH — "The Stacked G"
-          Symmetric grid, optically centered at (20, 20.2).
-          On the tile the glyph is white with a gold top layer on the bar.
-          In mono everything is the current text color, with the stacked bar
-          layers set apart purely by opacity (single-ink safe).
-         ============================================================ */}
-      {(() => {
-        // For mono, scale the glyph up slightly to fill the absent chip padding.
-        const gt = mono ? "translate(20 20) scale(1.12) translate(-20 -20)" : undefined;
-        const ringFill = mono ? "currentColor" : `url(#${ringGrad})`;
-        // Top bar layer = the gold "keystone" plate; the two lower layers are ink.
-        const topLayer = mono ? "currentColor" : `url(#${keyGrad})`;
-
-        // THE G is a filled annular sector (a thick ring with a flat ~70° mouth
-        // on the right), NOT a stroked-dashed circle: a filled path renders
-        // identically in every engine — the browser AND Satori (next/og favicon /
-        // OG card) — so the brand can never drift between surfaces. Geometry:
-        // centered (20,20), outer r=14.1, inner r=8.7 (≡ a 5.4 stroke on r=11.4),
-        // mouth half-angle 35°. The outer/inner arcs wind opposite ways so the
-        // default nonzero fill leaves the counter hollow (no fillRule needed).
-        const G_PATH =
-          "M 31.55 28.087 A 14.1 14.1 0 1 1 31.55 11.913 " +
-          "L 27.127 15.01 A 8.7 8.7 0 1 0 27.127 24.99 Z";
-
-        // Stacked crossbar — three layered rungs (a literal "stack") seated in
-        // the counter, bridging out to the mouth to close the G. Tuned so the
-        // top rung lines up with the upper inner arm of the ring.
-        const rungX = 19.4; // springs from just inside the counter centerline
-        const rungW = 8.0; // reaches out into the mouth
-        const rungH = 1.9;
-        return (
-          <g transform={gt}>
-            {/* THE G — one thick ring with a flat mouth on the right. */}
-            <path d={G_PATH} fill={ringFill} />
-
-            {/* STACKED CROSSBAR — three rungs = the platform "stack" AND the G's
-                bar. Top rung is the warm GOLD keystone layer (the one load-bearing
-                accent); the two below descend in ink + opacity so the eye reads a
-                neat stack of layers locked into the letterform. Rounded ends keep
-                it friendly at small sizes. */}
-            <g>
-              <rect x={rungX} y="16.2" width={rungW} height={rungH} rx="0.95" fill={topLayer} fillOpacity={mono ? 0.95 : 1} />
-              <rect x={rungX} y="19.05" width={rungW} height={rungH} rx="0.95" fill={ink} fillOpacity={mono ? 0.62 : 0.92} />
-              <rect x={rungX} y="21.9" width={rungW} height={rungH} rx="0.95" fill={ink} fillOpacity={mono ? 0.42 : 0.7} />
-            </g>
-          </g>
-        );
-      })()}
-    </svg>
+    />
   );
 }
 
 /**
- * GREEKSTACK WORDMARK LOCKUP — the mark + "Greekstack".
+ * GREEKSTACK WORDMARK LOCKUP — the PNG mark + "Greekstack".
  *
  * The "Greek" reads in the foreground ink and "stack" in the platform gradient,
  * so the name itself encodes the brand split. Premium, confident tracking with
@@ -200,11 +109,7 @@ export function GreekstackWordmark({
   const mono = variant === "mono";
   return (
     <span className={cn("inline-flex items-center", s.gap, className)}>
-      <GreekstackLogo
-        variant={mono ? "mono" : "tile"}
-        title={title}
-        className={markClassName || s.mark}
-      />
+      <GreekstackLogo title={title} className={markClassName || s.mark} />
       <span
         className={cn(
           // -0.02em tracking + tight leading = a settled, premium wordmark.

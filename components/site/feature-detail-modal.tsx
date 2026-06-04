@@ -19,6 +19,14 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
 /** The shape a feature must provide to open in the detail modal. */
 export type FeatureDetail = {
   icon: GsIcon;
+  /**
+   * Bespoke pre-rendered feature tile served from /brand/gen/<img>.png — a
+   * self-contained frosted-glass app-icon. When present it REPLACES the SVG
+   * `icon` glyph + its chip wrapper everywhere this feature renders (the grid
+   * card and this modal's header), since the image is already a finished tile.
+   * `icon` is kept on the type for back-compat / non-image surfaces.
+   */
+  img?: string;
   title: string;
   /** Short eyebrow shown above the title in the modal (e.g. "Recruitment"). */
   eyebrow: string;
@@ -213,7 +221,22 @@ export function FeatureDetailModal({
               {/* Left: copy */}
               <div className="p-6 sm:p-8">
                 <div className="flex items-center gap-3">
-                  {Icon && <IconChip icon={Icon} tone="platform" size="lg" />}
+                  {feature.img ? (
+                    // The bespoke tile is already a finished glass app-icon — it
+                    // stands alone (no IconChip wrapper) so it doesn't double up.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/brand/gen/${feature.img}.png`}
+                      alt=""
+                      width={256}
+                      height={256}
+                      decoding="async"
+                      loading="lazy"
+                      className="h-14 w-14 shrink-0 rounded-2xl object-contain"
+                    />
+                  ) : (
+                    Icon && <IconChip icon={Icon} tone="platform" size="lg" />
+                  )}
                   <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
                     {feature.eyebrow}
                   </span>
