@@ -34,36 +34,40 @@ export const DEFAULTS = {
 
   // Hero photo collage tiles. Slugs must point at IG posts whose og:image
   // resolves to the actual chapter photo, not Instagram's branding asset.
-  // Verified working: DUyvfpokpy6 (Polar Plunge), DRxIVRXkYCn (Movember
-  // fundraiser group photo), DXHwOJCkUbi (paintball at Trigger Tyme).
-  "hero.tile1.slug": "DUyvfpokpy6",
-  "hero.tile1.caption": "Polar Plunge for Special Olympics SC",
+  // WHITE-LABEL: slugs default EMPTY so a fresh tenant never loads another
+  // chapter's real Instagram photos — the PostTile component renders its
+  // designed cardinal-red Crest fallback tile instead until the rush chair
+  // sets each chapter's own post code (or uploaded image URL) in /admin.
+  // Captions are generic, chapter-agnostic labels (no real people/events).
+  "hero.tile1.slug": "",
+  "hero.tile1.caption": "Philanthropy",
   "hero.tile1.icon": "HandHeart",
 
-  "hero.tile2.slug": "DRxIVRXkYCn",
-  "hero.tile2.caption": "No Shave November · Movember $1,600",
+  "hero.tile2.slug": "",
+  "hero.tile2.caption": "Brotherhood",
   "hero.tile2.icon": "HandHeart",
 
-  "hero.tile3.slug": "DXHwOJCkUbi",
-  "hero.tile3.caption": "Annual paintball at Trigger Tyme",
+  "hero.tile3.slug": "",
+  "hero.tile3.caption": "Chapter events",
   "hero.tile3.icon": "Trophy",
 
-  // Brother of the Month
-  "spotlight.slug": "DXzzTaFjSyj",
-  "spotlight.name": "Michael McCarthy",
-  "spotlight.role": "Freshman · Philanthropy Chair",
-  // Default empty so a stale "April" label never ships in production. The
-  // page suppresses the month chip when this is blank — so until the rush
-  // chair updates it, the spotlight shows the brother without a month
-  // attribution. Better than ?WRONG MONTH? on May 1.
+  // Brother of the Month. WHITE-LABEL: all fields default EMPTY so a fresh
+  // tenant never renders another chapter's real member, photo, or bio. The
+  // rush chair fills these in per chapter via /admin/settings; the section
+  // can also be hidden entirely via show.spotlight until then.
+  "spotlight.slug": "",
+  "spotlight.name": "",
+  "spotlight.role": "",
+  // Default empty so a stale month label never ships in production. The
+  // page suppresses the month chip when this is blank.
   "spotlight.month": "",
-  "spotlight.bio":
-    "Michael joined as a freshman and within a semester took over Philanthropy Chair, transforming the chapter's Special Olympics partnership.",
+  "spotlight.bio": "",
 
-  // About section photo
-  "about.slug": "DWmioxGCaBG",
-  "about.objectPosition": "50% 80%",
-  "about.caption": "Chapter formal · third-party vendor, sober transportation, FIPG-compliant",
+  // About section photo. WHITE-LABEL: slug defaults EMPTY (no foreign
+  // chapter photo); caption stays a generic, chapter-agnostic label.
+  "about.slug": "",
+  "about.objectPosition": "50% 50%",
+  "about.caption": "Chapter formal · third-party vendor, sober transportation",
 
   // ── Brand colors — admin-editable for white-label deployments ──
   // Primary brand color (default = Phi Sigma Kappa cardinal red #C8102E).
@@ -76,8 +80,10 @@ export const DEFAULTS = {
   "brand.primaryDarkHex": "#A20D26",
   "brand.primarySoftHex": "#FCEFF1",
 
-  // Hero tagline
-  "hero.eyebrow": "USC · Fall Rush 2026 · Gamma Triton chapter",
+  // Hero tagline. WHITE-LABEL: chapter-agnostic — no school/chapter name
+  // baked in, so a fresh tenant never shows "USC · Gamma Triton". The rush
+  // chair personalizes this per chapter via /admin/settings.
+  "hero.eyebrow": "Fall Rush 2026",
   "hero.subline":
     "Drop your number and we'll text you the date and location of every rush event the moment it's confirmed. No spam — about 6–8 messages across the whole rush cycle, then we're done.",
 
@@ -91,66 +97,80 @@ export const DEFAULTS = {
   "stats.gpa": "3.45",
   "stats.gpa.label": "Chapter GPA",
   "stats.gpa.sub": "Above the all-fraternity average",
-  // The "years" slot was previously "150+ / Years strong / Founded 1873" —
-  // round-1 through round-7 Rushee critic flagged that as a museum-plaque stat
-  // an 18yo has no reason to care about. Defaults now lead with USC-relevant
-  // chapter age (Gamma Triton at USC since 1975 ≈ 50 years).
+  // The "years" slot leads with chapter age. WHITE-LABEL: label + sub are
+  // chapter-agnostic; sub defaults EMPTY so no other chapter inherits Phi
+  // Sig's "Gamma Triton chartered 1975" line. Each chapter sets its own.
   "stats.years": "50+",
-  "stats.years.label": "Years at USC",
-  "stats.years.sub": "Gamma Triton chartered 1975",
+  "stats.years.label": "Years strong",
+  "stats.years.sub": "",
   "stats.charity": "$25k+",
   "stats.charity.label": "Raised for charity",
-  "stats.charity.sub": "Special Olympics SC",
+  // WHITE-LABEL: empty so the spotlight/stat copy falls back to the generic
+  // "our philanthropy partner" rather than naming Phi Sig's beneficiary.
+  "stats.charity.sub": "",
 
-  // Hero headline & CTA — punchier, single-beat reading. Round-7 Rushee critic
-  // called the previous "Rush Phi Sigma Kappa. Fall '26 at USC." two-fragment
-  // construction "two stiff facts mashed together." Now reads as one line.
+  // Hero headline & CTA — punchier, single-beat reading.
   // Page renders as: "<lead> <tail> <highlight>." — final period added by
   // the JSX template, so don't end any of these three with a period or you
   // get a double-period bug at the seam.
-  "hero.h1.lead": "Rush Phi Sig at USC",
-  "hero.h1.tail": "— Fall '26",
-  "hero.h1.highlight": "starts soon",
+  // WHITE-LABEL: chapter-agnostic default headline (no "Phi Sig" / "USC").
+  "hero.h1.lead": "Rush starts",
+  "hero.h1.tail": "Fall '26",
+  "hero.h1.highlight": "this fall",
   "hero.cta.label": "Drop my number",
   "hero.cta.href": "#register",
 
   // Executive board — 5 slots; leave any slot empty to hide it.
-  "eboard.1.name": "Mark Laughery",
+  // WHITE-LABEL: names default EMPTY so a fresh tenant never publishes
+  // another chapter's real members. The landing page filters out any slot
+  // missing a name (so the whole e-board section stays hidden until the
+  // rush chair adds real officers in /admin/settings). Roles are kept as
+  // generic placeholders for the repeater UI labels only.
+  "eboard.1.name": "",
   "eboard.1.role": "President",
   "eboard.1.headshotUrl": "",
-  "eboard.2.name": "Jake Benoudiz",
+  "eboard.2.name": "",
   "eboard.2.role": "Vice President",
   "eboard.2.headshotUrl": "",
-  "eboard.3.name": "Mitchell West",
+  "eboard.3.name": "",
   "eboard.3.role": "Secretary",
   "eboard.3.headshotUrl": "",
-  "eboard.4.name": "Charlie Moore",
+  "eboard.4.name": "",
   "eboard.4.role": "Treasurer",
   "eboard.4.headshotUrl": "",
-  "eboard.5.name": "Joshua Barteet",
+  "eboard.5.name": "",
   "eboard.5.role": "Sentinel",
   "eboard.5.headshotUrl": "",
 
   // Contact — every public-facing email, address, and social link comes from here.
-  "contact.rushEmail": "rush@phisig-usc.com",
+  // WHITE-LABEL: every chapter-specific value defaults EMPTY so a fresh tenant
+  // never leaks Phi Sig's real email domain, Instagram, house address, or maps
+  // pin. Provisioning (app/api/onboard) seeds the new chapter's own contact
+  // values; the rush chair can fill any remaining blanks in /admin/settings.
+  // The components tolerate "" (titleCaseAddress/cleanUrl/cleanMailto/cleanTel
+  // all return "" on empty — no broken hrefs, no crash).
+  "contact.rushEmail": "",
   // Default is a friendly placeholder until the admin sets the real name.
   // "Our Chapter Advisor" reads as a role rather than an unfilled template
-  // field — even before the chapter sets the actual person.
+  // field — even before the chapter sets the actual person. (Role-only, not PII.)
   "contact.advisorName": "Our Chapter Advisor",
-  "contact.advisorTitle": "Alumni Advisor · Gamma Triton",
-  "contact.advisorEmail": "advisor@phisig-usc.com",
+  "contact.advisorTitle": "Alumni Advisor",
+  "contact.advisorEmail": "",
   "contact.rushPhone": "",
-  "contact.address": "1525 College Street",
-  "contact.cityState": "Columbia, SC 29208",
-  "contact.instagramHandle": "@phisig_usc",
-  "contact.instagramUrl": "https://www.instagram.com/phisig_usc/",
-  "contact.mapsUrl": "https://maps.google.com/?q=1525+College+St+Columbia+SC+29208",
+  "contact.address": "",
+  "contact.cityState": "",
+  "contact.instagramHandle": "",
+  "contact.instagramUrl": "",
+  "contact.mapsUrl": "",
 
   // Philanthropy — beneficiary + concrete dollars raised. Used in highlights, testimonial, etc.
-  "philanthropy.beneficiary": "Special Olympics South Carolina",
-  "philanthropy.beneficiaryShort": "Special Olympics SC",
-  "philanthropy.raisedYear": "2025",
-  "philanthropy.raisedAmount": "$700",
+  // WHITE-LABEL: a generic partner name (never Phi Sig's real beneficiary) so
+  // the spotlight/about copy reads cleanly for a fresh tenant; the rush chair
+  // sets the real partner + amounts per chapter via /admin/settings.
+  "philanthropy.beneficiary": "our philanthropy partner",
+  "philanthropy.beneficiaryShort": "our philanthropy partner",
+  "philanthropy.raisedYear": "",
+  "philanthropy.raisedAmount": "",
   "philanthropy.raisedTotal": "$25k+",
 
   // Anti-hazing — chapter affirmation + national hotline (visible on About + Privacy).
@@ -215,17 +235,27 @@ export const DEFAULTS = {
     { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
   ]),
 
-  // Testimonial
-  "testimonial.quote": "Phi Sig isn't a four-year decision — it's a forty-year one. The brothers I met during rush are the same guys standing next to me at every wedding, every promotion, every milestone.",
-  "testimonial.author": "A. Mitchell",
-  "testimonial.classYear": "'22",
-  "testimonial.attribution": "Gamma Triton alumnus, finance",
+  // Testimonial. WHITE-LABEL: defaults EMPTY so a fresh tenant never publishes
+  // Phi Sig's real alum quote/name. A chapter-agnostic quote is used as the
+  // fallback copy (names no fraternity/chapter); author/year/attribution stay
+  // blank until the rush chair adds a real alum via /admin/settings. The
+  // section can also be hidden entirely via show.testimonial. (The avatar-
+  // initials helper falls back to "A. Mitchell" only for the monogram glyph
+  // when author is blank — no real name is rendered.)
+  "testimonial.quote": "Joining this brotherhood wasn't a four-year decision — it was a lifelong one. The friends I met during rush are the same guys standing next to me at every milestone.",
+  "testimonial.author": "",
+  "testimonial.classYear": "",
+  "testimonial.attribution": "",
 
-  // About-section history paragraph (Founded 1873 / Gamma Triton 1975)
-  "about.history": "Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873 on three cardinal principles: Brotherhood, Scholarship, and Character. The Gamma Triton chapter chartered at the University of South Carolina in 1975 and has built USC men around those same principles for fifty years — leaders in the classroom, in the community, and beyond.",
+  // About-section history paragraph. WHITE-LABEL: chapter-agnostic copy that
+  // names NO specific fraternity/chapter/school (those render from the cfg
+  // identity keys elsewhere on the page). The rush chair replaces this with
+  // their own chapter's founding story via /admin/settings.
+  "about.history": "Our fraternity was founded on three cardinal principles: Brotherhood, Scholarship, and Character. The chapter has built campus leaders around those same principles for generations — leaders in the classroom, in the community, and beyond.",
 
-  // Anti-hazing block body (the long paragraph under the Zero-Tolerance heading)
-  "antiHazing.body": "Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form. Our new-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm.",
+  // Anti-hazing block body (the long paragraph under the Zero-Tolerance heading).
+  // WHITE-LABEL: chapter-agnostic — names no specific national org or chapter.
+  "antiHazing.body": "Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm.",
 
   // ── DUES COLLECTION (Stripe Checkout — R43-A) ─────────────────────
   // Optional white-label payment acceptance. All four prereqs must be

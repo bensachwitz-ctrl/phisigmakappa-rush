@@ -168,6 +168,34 @@ export async function POST(req: Request) {
       "contact.instagramUrl": (instagramUrl || "").trim(),
       "contact.address": (address || "").trim(),
       "contact.cityState": (cityState || "").trim(),
+      // Explicitly blank the remaining chapter-specific contact/maps keys in the
+      // NEW schema so they are present-and-empty from day one (clarity + the
+      // /admin/settings repeaters render an empty field rather than a missing
+      // row). Defaults in lib/site-config.ts are already neutral; seeding "" here
+      // guarantees a fresh tenant never inherits any reference value.
+      "contact.advisorEmail": "",
+      "contact.mapsUrl": "",
+      // White-label PII/content/photo keys — seed EMPTY so a brand-new chapter
+      // NEVER publicly renders another chapter's real members, photos, address,
+      // spotlight, or testimonial before the rush chair fills them in. (These
+      // mirror the neutralized DEFAULTS; explicit here for present-and-blank
+      // rows in the tenant schema.)
+      "eboard.1.name": "",
+      "eboard.2.name": "",
+      "eboard.3.name": "",
+      "eboard.4.name": "",
+      "eboard.5.name": "",
+      "spotlight.slug": "",
+      "spotlight.name": "",
+      "spotlight.role": "",
+      "spotlight.bio": "",
+      "about.slug": "",
+      "hero.tile1.slug": "",
+      "hero.tile2.slug": "",
+      "hero.tile3.slug": "",
+      "testimonial.author": "",
+      "testimonial.classYear": "",
+      "testimonial.attribution": "",
       "billing.plan": (billingPlan || "dues_split").trim(),
       "chapter.onboarded": "true",
     };

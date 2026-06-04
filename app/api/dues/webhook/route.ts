@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import type { PrismaClient } from "@prisma/client";
-import { prisma, getTenantClient } from "@/lib/prisma";
+import { prisma, getTenantClient, forEachTenant } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
@@ -101,6 +101,16 @@ export async function POST(req: Request) {
       case "payment_intent.payment_failed": {
         const pi = event.data.object as Stripe.PaymentIntent;
         await handlePaymentFailed(db, pi, req);
+        break;
+      }
+      case "account.updated": {
+        // Stripe Connect: a chapter's Express account capabilities changed.
+        // This event carries NO metadata.subdomain (the object is an Account,
+        // not a Checkout Session), so we can't use the route-level `db`. Scan
+        // every tenant to find the chapter whose dues.stripeConnectAccountId
+        // matches, then mirror charges/payouts flags into ITS SiteConfig.
+        const account = event.data.object as Stripe.Account;
+        await handleAccountUpdated(account);
         break;
       }
       default:
@@ -389,4 +399,44 @@ async function handleDonationCompleted(
       ipAddress: null,
     },
   }).catch(() => {});
+}
+
+/**
+ * Stripe Connect `account.updated` handler. ADDITIVE — touches only the
+ * connect-status mirror, never any dues/donation payment row or the
+ * metadata.subdomain routing above.
+ *
+ * The event object is a Stripe Account with no chapter subdomain, so we fan out
+ * across every active tenant (forEachTenant) and update the SiteConfig of the
+ * ONE chapter whose dues.stripeConnectAccountId matches this account id. Keeping
+ * the SiteConfig mirror (connectChargesEnabled / connectPayoutsEnabled) in sync
+ * is what lets the checkout-time gate route charges the moment Stripe enables
+ * the account — without a per-payment Stripe round-trip.
+ */
+async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
+  const accountId = account.id;
+  if (!accountId) return;
+
+  const chargesEnabled = account.charges_enabled ? "true" : "false";
+  const payoutsEnabled = account.payouts_enabled ? "true" : "false";
+
+  await forEachTenant(async (tdb) => {
+    const row = await tdb.siteConfig
+      .findUnique({ where: { key: "dues.stripeConnectAccountId" } })
+      .catch(() => null);
+    // Only the chapter that owns this connected account is updated; everyone
+    // else is a no-op. (forEachTenant isolates each tenant in its own try.)
+    if (!row || (row.value || "").trim() !== accountId) return;
+
+    await tdb.siteConfig.upsert({
+      where: { key: "dues.connectChargesEnabled" },
+      update: { value: chargesEnabled },
+      create: { key: "dues.connectChargesEnabled", value: chargesEnabled },
+    });
+    await tdb.siteConfig.upsert({
+      where: { key: "dues.connectPayoutsEnabled" },
+      update: { value: payoutsEnabled },
+      create: { key: "dues.connectPayoutsEnabled", value: payoutsEnabled },
+    });
+  });
 }

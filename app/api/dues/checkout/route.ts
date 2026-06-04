@@ -4,7 +4,9 @@ import { prisma, getSubdomain } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
+import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
 import { audit } from "@/lib/audit";
+import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -123,34 +125,60 @@ export async function POST(req: Request) {
   // webhook endpoint (called server-to-server by Stripe with NO subdomain)
   // can route the event back to THIS chapter's schema via metadata.subdomain.
   const sub = getSubdomain(headers().get("host")) || "";
+
+  // Base Checkout params — IDENTICAL to the legacy platform-collects flow.
+  // metadata.subdomain MUST stay intact: the single platform webhook routes
+  // each event back to this chapter's schema by reading it.
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: "payment",
+    payment_method_types: ["card"],
+    customer_email: brother.email || undefined,
+    line_items: [
+      {
+        price_data: {
+          currency,
+          unit_amount: totalCents,
+          product_data: {
+            name: label,
+            description: `${brother.name} — ${year}`,
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: `${siteUrl}/admin/dues/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/admin/brothers`,
+    metadata: {
+      brotherId: brother.id,
+      duesPaymentId: payment.id,
+      duesYear: year,
+      subdomain: sub,
+    },
+  };
+
+  // ADDITIVE Stripe Connect routing (Wave-C). ONLY when this chapter has a
+  // connected Express account AND Stripe reports charges_enabled do we route
+  // the charge to the chapter's account via destination charges. If the chapter
+  // has NOT connected, sessionParams is left byte-for-byte unchanged and the
+  // platform collects (exact legacy behavior — do not change this default).
+  if (isConnectChargesReady(cfg)) {
+    const destination = getConnectAccountId(cfg);
+    const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
+      transfer_data: { destination },
+    };
+    // Optional platform application fee. Only applied when an admin set a
+    // positive dues.platformFeePct; otherwise no fee is taken (default).
+    const feePct = parseFloat(cfg["dues.platformFeePct"] || "0");
+    if (Number.isFinite(feePct) && feePct > 0) {
+      const fee = Math.round(totalCents * (feePct / 100));
+      if (fee > 0) piData.application_fee_amount = fee;
+    }
+    sessionParams.payment_intent_data = piData;
+  }
+
   let session;
   try {
-    session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      customer_email: brother.email || undefined,
-      line_items: [
-        {
-          price_data: {
-            currency,
-            unit_amount: totalCents,
-            product_data: {
-              name: label,
-              description: `${brother.name} — ${year}`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${siteUrl}/admin/dues/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/admin/brothers`,
-      metadata: {
-        brotherId: brother.id,
-        duesPaymentId: payment.id,
-        duesYear: year,
-        subdomain: sub,
-      },
-    });
+    session = await stripe.checkout.sessions.create(sessionParams);
   } catch (err: any) {
     console.error("[/api/dues/checkout] Stripe.create failed:", err);
     // Mark the row FAILED so it's not stuck PENDING forever.

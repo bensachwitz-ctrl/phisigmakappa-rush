@@ -117,6 +117,34 @@ export interface TenantRecord {
   isActive: boolean;
 }
 
+/**
+ * Is the chapter for this subdomain allowed to serve? Enforces the registry's
+ * `isActive` flag at the public chapter entry (app/page.tsx).
+ *
+ * Returns TRUE (serve) when:
+ *   • the subdomain has no registry row (unprovisioned / legacy public fallback —
+ *     never block a chapter that predates the registry), OR
+ *   • the row exists and isActive !== false.
+ * Returns FALSE (block) ONLY when a row exists with isActive explicitly false.
+ *
+ * Deliberately resilient: any lookup error resolves to TRUE so a transient
+ * registry hiccup can never take a live, paying chapter offline. The operator
+ * console is the single place a chapter is intentionally suspended.
+ */
+export async function isTenantActive(subdomain: string): Promise<boolean> {
+  if (!subdomain) return true;
+  try {
+    const row = await centralDb.tenant.findUnique({
+      where: { subdomain },
+      select: { isActive: true },
+    });
+    if (!row) return true; // unprovisioned / legacy → serve
+    return row.isActive !== false; // block only on explicit false
+  } catch {
+    return true; // registry hiccup → never blackhole a live chapter
+  }
+}
+
 /** All ACTIVE chapters from the central registry (public."Tenant"). [] on error. */
 export async function listActiveTenants(): Promise<TenantRecord[]> {
   try {

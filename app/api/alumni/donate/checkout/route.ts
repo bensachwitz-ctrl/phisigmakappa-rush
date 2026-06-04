@@ -3,7 +3,9 @@ import { headers } from "next/headers";
 import { prisma, getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
+import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
 import { z } from "zod";
+import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,7 +69,10 @@ export async function POST(req: Request) {
     // can route the event back to THIS chapter's schema via metadata.subdomain.
     const sub = getSubdomain(headers().get("host")) || "";
 
-    const session = await stripe.checkout.sessions.create({
+    // Base Checkout params — IDENTICAL to the legacy platform-collects flow.
+    // metadata.subdomain MUST stay intact so the single platform webhook can
+    // route the event back to this chapter's schema.
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: alumni.email || undefined,
@@ -93,7 +98,28 @@ export async function POST(req: Request) {
         platformFeeCents: platformFeeCents.toString(),
         subdomain: sub,
       },
-    });
+    };
+
+    // ADDITIVE Stripe Connect routing (Wave-C). ONLY when this chapter has a
+    // connected Express account AND Stripe reports charges_enabled do we route
+    // the donation to the chapter's account. If the chapter has NOT connected,
+    // sessionParams is left unchanged and the platform collects (exact legacy
+    // behavior). An optional platform fee comes from dues.platformFeePct only
+    // when an admin set a positive value (default: no fee).
+    if (isConnectChargesReady(cfg)) {
+      const destination = getConnectAccountId(cfg);
+      const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
+        transfer_data: { destination },
+      };
+      const feePct = parseFloat(cfg["dues.platformFeePct"] || "0");
+      if (Number.isFinite(feePct) && feePct > 0) {
+        const fee = Math.round(amountCents * (feePct / 100));
+        if (fee > 0) piData.application_fee_amount = fee;
+      }
+      sessionParams.payment_intent_data = piData;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     
     // Save stripe session ID on the donation record
     await prisma.alumniDonation.update({

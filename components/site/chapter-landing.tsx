@@ -671,8 +671,9 @@ export default async function ChapterLandingPage({
       </section>
       )}
 
-      {/* ─── BROTHER SPOTLIGHT ─── */}
-      {cfg["show.spotlight"] !== "false" && (
+      {/* ─── BROTHER SPOTLIGHT ─── only when this chapter configured one, so a
+          fresh tenant never shows an empty/placeholder spotlight. */}
+      {cfg["show.spotlight"] !== "false" && !!cfg["spotlight.name"] && (
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div className="order-2 lg:order-1">
@@ -685,19 +686,25 @@ export default async function ChapterLandingPage({
               the classroom, in service, on the field, in leadership.{" "}
               {cfg["spotlight.bio"]}
             </p>
-            <ul className="mt-6 space-y-2.5 text-sm">
-              {[
-                "Philanthropy Chair (freshman)",
-                `Led Polar Plunge — ${cfg["philanthropy.raisedAmount"]} raised for ${cfg["philanthropy.beneficiaryShort"]}`,
-                `Dry fundraiser dinner for ${cfg["philanthropy.beneficiary"]}`,
-                "Embodies the cardinal principle of Character",
-              ].map((p) => (
-                <li key={p} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
+            {(() => {
+              // Achievement bullets are per-member — drive them from a
+              // pipe/newline-delimited `spotlight.bullets` chapter-config value;
+              // fall back to the member's role only (never hardcoded chapter copy).
+              const bullets = (cfg["spotlight.bullets"] || cfg["spotlight.role"] || "")
+                .split(/\s*[|\n]\s*/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+              return bullets.length > 0 ? (
+                <ul className="mt-6 space-y-2.5 text-sm">
+                  {bullets.map((p) => (
+                    <li key={p} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" aria-hidden="true" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null;
+            })()}
             <p className="mt-6 text-sm text-phisig-red font-medium">
               {identity.tagline}
             </p>
