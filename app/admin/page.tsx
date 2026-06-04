@@ -10,7 +10,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid, CalendarRange } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -469,11 +469,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               <LayoutGrid className="h-4 w-4 text-phisig-red" />
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Chapter tools</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {[
                 { href: "/admin/treasury", label: "Treasury", sub: "Budgets, ledgers & expenses", icon: Landmark },
                 { href: "/admin/family", label: "Big/Little", sub: "Family tree & pairings", icon: Network },
                 { href: "/admin/directory", label: "Member Directory", sub: "Searchable roster", icon: BookUser },
+                { href: "/admin/calendar", label: "Calendar", sub: "Events, meetings & dues", icon: CalendarRange },
                 { href: "/admin/billing", label: "Billing", sub: "Plan & subscription", icon: CreditCard },
                 { href: "/admin/chat", label: "Chapter Chat", sub: "Real-time messaging", icon: MessagesSquare },
               ].map((t, i) => {
