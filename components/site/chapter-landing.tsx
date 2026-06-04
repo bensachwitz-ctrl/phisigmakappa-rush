@@ -29,7 +29,6 @@ import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
-import { SaasSimulator } from "@/components/site/saas-simulator";
 
 export const dynamic = "force-dynamic";
 
@@ -441,8 +440,6 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      <SaasSimulator />
 
       {/* ─── REGISTER ─── */}
       <section id="register" className="relative bg-phisig-mist border-y border-border scroll-mt-20 overflow-hidden">
@@ -1193,8 +1190,7 @@ function PostTile({
         width={640}
         height={640}
         loading={priority ? "eager" : "lazy"}
-        // @ts-expect-error: fetchPriority is a valid HTML attribute, types still catching up.
-        fetchpriority={priority ? "high" : "auto"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding={priority ? "sync" : "async"}
         className={`relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${priority ? "animate-ken-burns-in" : ""}`}
       />

@@ -102,7 +102,7 @@ export function LivePreview({
               {displayName}
             </h3>
             <p className="text-sm font-medium" style={{ color: softColor }}>
-              {displayChapter} Chapter
+              {greekLetters.trim() ? `${displayChapter} Chapter` : displayChapter}
             </p>
           </div>
 

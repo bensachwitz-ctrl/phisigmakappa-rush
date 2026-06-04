@@ -251,7 +251,7 @@ function ProductPreview() {
           </div>
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
             <Lock className="h-3 w-3" />
-            yourchapter.greekstack.app
+            yourchapter.greeklifesystems.vercel.app
           </span>
           <span className="w-12" aria-hidden="true" />
         </div>
