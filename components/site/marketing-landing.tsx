@@ -49,7 +49,6 @@ import {
 // the brief. These keep EVERY symbol on the page custom (zero lucide).
 import {
   IconPlanBase,
-  IconPlanDuesShare,
   IconPlanCustom,
   IconSchoolPicker,
   IconBookCall,
@@ -61,10 +60,10 @@ import {
 // Bespoke feature glyphs for the (now larger, interactive) feature grid —
 // imported DIRECTLY per the brief so the grid stays 100% custom (zero lucide).
 import {
-  IconChat,
   IconAlumniNetwork,
   IconTreasury,
 } from "@/components/brand/icons/feature-extras";
+import { IconComms } from "@/components/brand/icons/onboarding";
 import {
   FeatureDetailModal,
   type FeatureDetail,
@@ -75,7 +74,7 @@ import {
   PreviewEvents,
   PreviewRoles,
   PreviewWhiteLabel,
-  PreviewChat,
+  PreviewAnnouncements,
   PreviewAlumni,
 } from "@/components/site/feature-previews";
 
@@ -274,9 +273,9 @@ const NAV_LINKS = [
    and the hero features read bigger. Each card also carries a concrete one-line
    `outcome` surfaced ON the card face, so the value is legible WITHOUT opening
    the modal. The grid LEADS with the three painkillers — Recruitment, Dues,
-   Treasury — so the most load-bearing value reads first. The "Anti-hazing &
-   incident reporting" card was REMOVED per the brief and replaced with the real
-   "Chapter chat" feature so the grid stays full + balanced. "Officer elections"
+   Treasury — so the most load-bearing value reads first. The "Chapter
+   announcements" card surfaces the real officer-broadcast announcements feature
+   so the grid stays full + balanced. "Officer elections"
    (real secret-ballot voting that auto-seats winners) sits next to "Officer roles
    & access" so the governance story reads together; its in-app preview is the
    locally-defined <PreviewElections> mockup above. Two more genuinely-shipped
@@ -383,20 +382,20 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
     preview: <PreviewElections />,
   },
   {
-    icon: IconChat,
-    img: "feat-chat",
+    icon: IconComms,
+    img: "feat-announcements",
     eyebrow: "Community",
-    title: "Chapter chat",
-    outcome: "Retire the tangle of GroupMes for one channel tied to your roster.",
-    desc: "Real-time announcements and group chat built right in — replace the scattered GroupMe with one channel tied to your roster.",
-    long: "Keep the whole chapter in one place. Built-in real-time chat and announcement channels are tied to your actual roster and officer roles, so the right people see the right messages — no more managing a tangle of side group chats.",
+    title: "Chapter announcements",
+    outcome: "Get chapter news to everyone in one place — not buried in a group chat.",
+    desc: "Officer-broadcast announcements built right in — post once and the whole chapter sees it on their dashboard, tied to your roster.",
+    long: "Keep the whole chapter informed from one place. Officers post announcements that land on every member's dashboard — pinned when it matters — tied to your actual roster, so the right people always see the latest chapter news without digging through a side group chat.",
     bullets: [
-      "Real-time chat + broadcast announcement channels",
-      "Tied to your roster — new members are added automatically",
-      "Officer-only and committee channels",
-      "Read on web or mobile, push when it matters",
+      "Officer-broadcast announcements with pinning",
+      "Tied to your roster — new members see them automatically",
+      "Lands on every member's portal dashboard",
+      "Posted by officers, read on web or mobile",
     ],
-    preview: <PreviewChat />,
+    preview: <PreviewAnnouncements />,
   },
   {
     icon: IconWhiteLabel,
@@ -532,33 +531,38 @@ const TRUST_BAND: { img: string; label: string }[] = [
 ];
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
-   THREE honest ways to pay for the SAME full platform — buyers pick the model
-   that fits how their chapter thinks about money, not a stripped-down tier:
-     1. BASE PLATFORM — flat $50/mo, FIRST MONTH FREE (or $250/semester).
-     2. DUES-SHARE   — $0 upfront; the standard rate is 3% of dues, and your
-        FIRST SEMESTER is 50% off at 1.5% (a real intro discount, framed as a
-        discount OFF the baseline — never a hidden step-up). Stated everywhere as
-        the canonical line "1.5% of dues your first semester (50% off), then 3% —
-        cancel anytime." "Pay as your chapter pays."
-     3. CUSTOM BUILD — a tailored system on a custom base fee → /contact#custom.
-   Every method unlocks the entire product (same features, same support); the
-   "Dues-share" card is the recommended/most-popular one and wears the shimmer
-   ring. All CTAs route real (/onboard, /contact#custom). */
+   TWO simple, honest ways to pay for the SAME full platform — kept deliberately
+   minimal so the choice is fluid (fewer options = easier decision):
+     1. PLATFORM — the lead is FIRST MONTH FREE. After that you pick how you pay:
+        • Monthly: $50/month + $150 per rush cycle, OR
+        • Yearly:  $800/year — all rush fees included (the better value; this is
+          the recommended/featured card and wears the shimmer ring + ribbon).
+     2. CUSTOM — need something tailored? Talk to Ben about a custom build +
+        pricing → /contact#book (the existing book-a-call path).
+   There is NO semester option and NO dues-share plan — pricing is flat monthly,
+   flat yearly, or custom. Every method unlocks the entire product (same
+   features, same support). CTAs route real (/onboard, /contact#book). */
 type Plan = {
   id: string;
   name: string;
   icon: GsIcon;
-  /** Big headline price, e.g. "$50" / "3%" / "Custom" — the BASELINE rate. */
+  /** Big headline price, e.g. "Free" / "Custom" — the lead the eye lands on. */
   price: string;
-  /** Small unit beside the price, e.g. "/month" / "of dues". */
+  /** Small unit beside the price, e.g. "your first month". */
   unit?: string;
-  /** Optional intro-discount badge shown beside the price, e.g. "Half-price intro". */
+  /** Optional intro-discount badge shown beside the price. */
   introBadge?: string;
-  /** One-line "how this model works" under the price. */
+  /** One-line "what happens after" / framing under the price. */
   priceNote: string;
   tagline: string;
-  /** The 1–2 differentiators unique to THIS method (beyond the shared list). */
+  /** The differentiators unique to THIS plan (beyond the shared list). */
   highlights: string[];
+  /** Optional explicit monthly-vs-yearly choice rendered as two clear rows so
+      it's obvious which is the better deal. Only the platform plan uses this. */
+  billing?: {
+    monthly: { price: string; cadence: string; note: string };
+    yearly: { price: string; cadence: string; note: string; badge?: string };
+  };
   cta: { label: string; href: string };
   /** Recommended card → shimmer ring + "Most popular" ribbon. */
   featured?: boolean;
@@ -568,51 +572,48 @@ type Plan = {
 
 const PLANS: Plan[] = [
   {
-    id: "base",
-    name: "Base platform",
+    id: "platform",
+    name: "Platform",
     icon: IconPlanBase,
     price: "Free",
     unit: "your first month",
-    priceNote: "Then $50/month + $150 per rush cycle",
-    tagline: "One flat price for your whole white-label site.",
+    priceNote: "Your whole white-label site, free for the first month.",
+    tagline: "Everything your chapter needs, on one branded site.",
     highlights: [
-      "$50/month after your free first month — cancel anytime",
-      "$150 per rush cycle",
-      "Unlimited members & officers — no per-seat fees",
+      "First month free — no card to start, cancel anytime",
+      "Unlimited members & officers — never per-seat",
+      "Best value yearly: all rush fees included",
     ],
+    billing: {
+      monthly: {
+        price: "$50",
+        cadence: "/month",
+        note: "+ $150 per rush cycle",
+      },
+      yearly: {
+        price: "$800",
+        cadence: "/year",
+        note: "All rush fees included",
+        badge: "Best value",
+      },
+    },
     cta: { label: "Start free month", href: "/onboard" },
-    fineprint: "First month free · no card to start · cancel anytime",
-  },
-  {
-    id: "dues-share",
-    name: "Dues-share",
-    icon: IconPlanDuesShare,
-    price: "3%",
-    unit: "of dues",
-    introBadge: "50% off intro",
-    priceNote: "1.5% of dues your first semester (50% off), then 3% — cancel anytime.",
-    tagline: "Pay as your chapter pays. Nothing out of pocket to launch.",
-    highlights: [
-      "1.5% of dues your first semester (50% off), then 3% — cancel anytime.",
-      "Zero upfront cost — perfect for a new or lean treasury",
-      "We only earn when dues actually come in",
-    ],
-    cta: { label: "Launch with $0 down", href: "/onboard" },
     featured: true,
-    fineprint: "No monthly fee · cancel anytime",
+    fineprint: "First month free · no card to start · cancel anytime",
   },
   {
     id: "custom",
     name: "Custom build",
     icon: IconPlanCustom,
     price: "Custom",
-    priceNote: "Tailored system · custom base fee",
+    priceNote: "Need something tailored? We scope it with you.",
     tagline: "Bespoke flows, integrations, and reporting for your council.",
     highlights: [
       "Custom recruitment, dues, or alumni-giving workflows",
       "Council / national integrations + custom reporting",
+      "Custom pricing built around what you actually need",
     ],
-    cta: { label: "Talk to us", href: "/contact#custom" },
+    cta: { label: "Talk to Ben about a custom build", href: "/contact#book" },
     fineprint: "We scope it with you first — no surprise fees",
   },
 ];
@@ -626,7 +627,7 @@ const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
   { icon: IconRoles, label: "Secret-ballot officer elections that auto-seat the winners" },
-  { icon: IconChat, label: "Chapter chat & announcement channels tied to your roster" },
+  { icon: IconComms, label: "Chapter announcements broadcast to your whole roster" },
   { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
   { icon: IconAlumniNetwork, label: "Alumni directory & Stripe donation flows" },
   { icon: IconUnlimited, label: "Unlimited members & officers — never priced per seat" },
@@ -647,7 +648,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "Your first month is completely free. After that, the base platform is $50/month plus a $150 fee per rush cycle, or go $0-upfront with dues-share — 1.5% of dues your first semester (50% off), then 3% — cancel anytime. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+    a: "First month free, then $50/mo + $150 per rush cycle — or $800/year (rush fees included). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect. Need something tailored? Talk to Ben about a custom build and pricing.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -667,7 +668,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I have to pay anything to start?",
-    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. (Prefer to pay as you go? The dues-share model is $0 upfront too.)",
+    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that it's $50/mo + $150 per rush cycle, or $800/year with rush fees included.",
   },
 ];
 
@@ -1687,7 +1688,7 @@ function BeforeAfter() {
                     "Roster & members",
                     "Forms & voting",
                     "Events & calendar",
-                    "Files, chat & alumni",
+                    "Files, announcements & alumni",
                   ].map((c) => (
                     <li key={c} className="flex items-center gap-2.5">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-sky-500/10 ring-1 ring-blue-500/25">
@@ -2016,20 +2017,21 @@ function Pricing() {
             Simple, honest pricing
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            <span className="gs-gradient-text">Three ways to pay.</span> One full platform.
+            <span className="gs-gradient-text">First month free.</span> Then pick what fits.
           </h2>
           <p className="mt-4 text-pretty text-base text-foreground/80">
-            Same product, same support, every feature — pick the model that fits how your chapter
-            thinks about money. No per-seat math, no stripped-down tiers, no fake
-            &ldquo;enterprise&rdquo; upsell.
+            Start free for a month, then keep it simple: $50/month + $150 per rush cycle, or go
+            yearly at $800 with every rush fee included. Same product, same support, every feature —
+            unlimited members, no per-seat math.
           </p>
         </Reveal>
 
-        {/* Three comparable plan cards. The recommended "Dues-share" card wears
-            the shimmer ring + a ribbon and sits raised on desktop. */}
+        {/* Two clean plan cards — the recommended Platform card (first month free,
+            monthly-vs-yearly) wears the shimmer ring + ribbon, with a Custom card
+            beside it. Centered + capped so two cards never stretch awkwardly. */}
         <Reveal3D
           stagger={0.1}
-          className="mx-auto mt-14 grid max-w-6xl grid-cols-1 items-stretch gap-6 lg:grid-cols-3"
+          className="mx-auto mt-14 grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2"
         >
           {PLANS.map((plan) => (
             <Reveal3DItem key={plan.id} className="h-full">
@@ -2145,9 +2147,9 @@ function PlanCard({ plan }: { plan: Plan }) {
         {plan.tagline}
       </p>
 
-      {/* Price — the BASELINE rate. An optional intro-discount badge sits beside
-          it so the first-semester discount reads as a discount OFF this rate,
-          never as a hidden later step-up. */}
+      {/* Lead price — the first thing the eye lands on (e.g. "Free" for the
+          first month, or "Custom"). The monthly-vs-yearly choice renders below
+          as two clear rows so it's obvious what happens after the free month. */}
       <div className="relative mt-5 flex flex-wrap items-end gap-x-1.5 gap-y-2">
         <span className="text-5xl font-bold leading-none tracking-tight gs-gradient-text">
           {plan.price}
@@ -2163,13 +2165,62 @@ function PlanCard({ plan }: { plan: Plan }) {
         )}
       </div>
       <div className="relative mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.07] px-3 py-1.5 text-[13px] font-medium text-blue-800">
-        {plan.id === "base" ? (
+        {plan.billing ? (
           <IconFreeTag className="h-4 w-4 text-blue-700" accent="#f59e0b" />
         ) : (
           <IconCheckCircle className="h-4 w-4 text-blue-600" />
         )}
         {plan.priceNote}
       </div>
+
+      {/* Then how you pay — a clean monthly-vs-yearly choice. Two stacked rows so
+          it's instantly obvious which is the better deal: the yearly row is
+          accented (gold "Best value" badge) and folds the rush fees in, while the
+          monthly row spells out the $50 + $150-per-rush math. Static + legible —
+          no toggle state to fumble, so the comparison reads at a glance. */}
+      {plan.billing && (
+        <div className="relative mt-4">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Then choose how you pay
+          </p>
+          <div className="space-y-2">
+            {/* Monthly */}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-3.5 py-2.5">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-lg font-bold tracking-tight text-foreground">
+                  {plan.billing.monthly.price}
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {plan.billing.monthly.cadence}
+                </span>
+              </div>
+              <span className="text-right text-[12px] font-medium text-foreground/70">
+                {plan.billing.monthly.note}
+              </span>
+            </div>
+            {/* Yearly — the better-value option, accented. */}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-500/40 bg-gradient-to-r from-blue-500/[0.10] to-amber-400/[0.10] px-3.5 py-2.5 ring-1 ring-blue-500/15">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-lg font-bold tracking-tight text-foreground">
+                  {plan.billing.yearly.price}
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {plan.billing.yearly.cadence}
+                </span>
+                {plan.billing.yearly.badge && (
+                  <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
+                    <IconSpark className="h-3 w-3" accent="#f59e0b" />
+                    {plan.billing.yearly.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-right text-[12px] font-semibold text-blue-800">
+                {plan.billing.yearly.note}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Method-specific highlights. */}
       <ul className="relative mt-6 space-y-2.5" aria-label={`${plan.name} highlights`}>

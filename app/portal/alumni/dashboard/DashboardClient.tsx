@@ -15,7 +15,6 @@ import {
   LogOut,
   Mail,
   Phone,
-  MessageSquare,
   ShieldAlert,
   ChevronRight,
   BookOpen,
@@ -613,7 +612,6 @@ export default function DashboardClient({
             {[
               { id: "overview", label: "Overview", icon: Users },
               { id: "profile", label: "My Profile", icon: User },
-              { id: "chat", label: "Chat", icon: MessageSquare },
               { id: "pnms", label: "Hometown PNMs", icon: MapPin },
               { id: "brothers", label: `Active ${terms.members}`, icon: Users },
               { id: "alumni", label: "Alumni Directory", icon: GraduationCap },
@@ -1010,37 +1008,6 @@ export default function DashboardClient({
                   </div>
                 </form>
               </div>
-            </div>
-          )}
-
-          {/* CHAT TAB */}
-          {activeTab === "chat" && (
-            <div className="space-y-6 max-w-2xl mx-auto">
-              <div className="relative overflow-hidden rounded-2xl border border-maroon-100/80 bg-gradient-to-br from-maroon-800 to-maroon-950 text-cream-50 p-8 ring-1 ring-maroon-900/30 shadow-[0_18px_44px_-20px_rgba(74,17,29,0.7)]">
-                <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-amber-400/15 blur-3xl" />
-                <div className="relative">
-                  <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/15 ring-1 ring-amber-300/30 mb-4">
-                    <MessageSquare className="h-7 w-7 text-amber-300" />
-                  </span>
-                  <h2 className="text-2xl font-bold mb-2">Chapter Chat</h2>
-                  <p className="text-sm text-cream-200/85 leading-relaxed max-w-md">
-                    Jump into real-time conversation with the {fraternityName} community — coordinate
-                    homecoming, reconnect with your pledge class, and stay in the loop on chapter news.
-                  </p>
-                  <a
-                    href="/portal/alumni/chat"
-                    className="inline-flex items-center gap-2 mt-6 bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-maroon-950 font-bold text-sm px-5 py-2.5 rounded-xl shadow-[0_6px_16px_-6px_rgba(217,119,6,0.7)] transition-all duration-200 active:scale-[0.98]"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Open Chapter Chat
-                    <ChevronRight className="h-4 w-4" />
-                  </a>
-                </div>
-              </div>
-              <p className="text-center text-xs text-maroon-500">
-                Real-time chat is powered by Stream. If your chapter hasn&apos;t enabled it yet,
-                you&apos;ll see a friendly note instead.
-              </p>
             </div>
           )}
 

@@ -356,45 +356,33 @@ export function PreviewWhiteLabel() {
   );
 }
 
-/* ── Chapter chat — a live message thread (replacement feature) ────────────── */
-export function PreviewChat() {
-  const msgs = [
-    { g: "ΑΒ", tone: "blue" as const, side: "l", w: "w-32" },
-    { g: "ΓΔ", tone: "gold" as const, side: "l", w: "w-24" },
-    { g: "me", tone: "sky" as const, side: "r", w: "w-28" },
-    { g: "ΕΖ", tone: "emerald" as const, side: "l", w: "w-20" },
+/* ── Chapter announcements — an officer broadcast feed (replacement feature) ── */
+export function PreviewAnnouncements() {
+  const posts = [
+    { g: "ΑΒ", tone: "blue" as const, w: "w-32", pinned: true },
+    { g: "ΓΔ", tone: "gold" as const, w: "w-28", pinned: false },
+    { g: "ΕΖ", tone: "emerald" as const, w: "w-24", pinned: false },
   ];
   return (
     <Panel>
-      <MiniHeader title="#announcements" badge="6 online" />
+      <MiniHeader title="#announcements" badge="312 members" />
       <div className="mt-3 space-y-2">
-        {msgs.map((m, i) =>
-          m.side === "l" ? (
-            <div key={i} className="flex items-end gap-1.5">
-              <Avatar glyph={m.g} tone={m.tone} />
-              <div className={"rounded-2xl rounded-bl-sm border border-border bg-secondary/40 px-2.5 py-1.5 " + m.w}>
-                <span className="block h-1.5 w-full rounded-full bg-border" />
-                <span className="mt-1 block h-1.5 w-2/3 rounded-full bg-border" />
+        {posts.map((p, i) => (
+          <div key={i} className="flex items-start gap-1.5">
+            <Avatar glyph={p.g} tone={p.tone} />
+            <div className="flex-1 rounded-2xl rounded-bl-sm border border-border bg-secondary/40 px-2.5 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className={"block h-1.5 rounded-full bg-border " + p.w} />
+                {p.pinned && (
+                  <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-700">
+                    Pinned
+                  </span>
+                )}
               </div>
+              <span className="mt-1 block h-1.5 w-2/3 rounded-full bg-border" />
             </div>
-          ) : (
-            <div key={i} className="flex items-end justify-end gap-1.5">
-              <div className={"rounded-2xl rounded-br-sm bg-gradient-to-br from-blue-600 to-sky-500 px-2.5 py-1.5 " + m.w}>
-                <span className="block h-1.5 w-full rounded-full bg-white/50" />
-                <span className="mt-1 block h-1.5 w-1/2 rounded-full bg-white/40" />
-              </div>
-            </div>
-          )
-        )}
-      </div>
-      {/* composer */}
-      <div className="mt-2.5 flex items-center gap-2 rounded-full border border-border bg-secondary/30 px-3 py-1.5">
-        <span className="h-1.5 flex-1 rounded-full bg-border" />
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500">
-          <svg viewBox="0 0 24 24" className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12h14M12 6l6 6-6 6" />
-          </svg>
-        </span>
+          </div>
+        ))}
       </div>
     </Panel>
   );

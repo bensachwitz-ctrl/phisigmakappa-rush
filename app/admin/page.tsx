@@ -11,7 +11,7 @@ import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid, CalendarRange } from "lucide-react";
+import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, LayoutGrid, CalendarRange } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -494,7 +494,6 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 { href: "/admin/directory", label: "Member Directory", sub: "Searchable roster", icon: BookUser },
                 { href: "/admin/calendar", label: "Calendar", sub: "Events, meetings & dues", icon: CalendarRange },
                 { href: "/admin/billing", label: "Billing", sub: "Plan & subscription", icon: CreditCard },
-                { href: "/admin/chat", label: "Chapter Chat", sub: "Real-time messaging", icon: MessagesSquare },
               ].map((t, i) => {
                 const Icon = t.icon;
                 return (

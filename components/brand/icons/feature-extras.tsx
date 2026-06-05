@@ -17,30 +17,6 @@ import { IconBase, GS_ACCENT, type IconProps } from "./icon-base";
  * through ./index.ts), per the build brief.
  */
 
-/* ── Chapter chat ────────────────────────────────────────────────────────────
-   Two overlapping speech bubbles with a live presence dot — the chapter's
-   real-time group chat / announcements channel. Replaces the removed
-   "Anti-hazing & incident reporting" card. */
-export function IconChat({ accent = GS_ACCENT, ...props }: IconProps) {
-  return (
-    <IconBase {...props}>
-      {/* accent: back bubble */}
-      <path
-        d="M8 4h9a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-1v3l-3.6-3H8a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z"
-        fill={accent}
-        opacity={0.16}
-        stroke="none"
-      />
-      {/* back bubble outline */}
-      <path d="M8 4h9a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-1v3l-3.6-3H8a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z" />
-      {/* message lines */}
-      <path d="M9 8.4h7M9 11h4.5" />
-      {/* live presence dot */}
-      <circle cx="18.5" cy="5.5" r="2" fill={accent} opacity={0.5} stroke="currentColor" />
-    </IconBase>
-  );
-}
-
 /* ── Alumni network ──────────────────────────────────────────────────────────
    A connected node graph — graduated brothers linked into one giving + mentoring
    network. The central node is the chapter; the satellites are alumni. */

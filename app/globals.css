@@ -471,14 +471,16 @@
 @keyframes grid-pan{from{background-position:0 0;}to{background-position:42px 42px;}}
 .animate-grid-pan{animation:grid-pan 8s linear infinite;}
 @keyframes sheen{to{transform:translateX(200%);}}
-/* Drifting Greek-letter background field — letters rise (one direction), each at
-   its own size/speed (vars set per-letter in greek-letter-field.tsx), fading in
-   and out. Transform/opacity only. */
+/* Cross-screen Greek-letter background field — each letter travels horizontally
+   from one side toward the other (large --dx in vw, small --dy wobble), centered
+   on its start anchor so it enters → crosses → exits, fading in and out. Three
+   parallax tiers (size/speed/opacity correlated) set per-letter in
+   greek-letter-field.tsx give the field depth. Transform/opacity only (GPU). */
 @keyframes gs-greek-drift{
-  0%{transform:translate3d(0,0,0) rotate(var(--gr,0deg));opacity:0;}
-  14%{opacity:var(--go,0.1);}
-  86%{opacity:var(--go,0.1);}
-  100%{transform:translate3d(var(--dx,0),var(--dy,-140px),0) rotate(var(--gr,0deg));opacity:0;}
+  0%{transform:translate3d(calc(var(--dx,0px) * -0.5),calc(var(--dy,0px) * -0.5),0) rotate(var(--gr,0deg));opacity:0;}
+  10%{opacity:var(--go,0.1);}
+  90%{opacity:var(--go,0.1);}
+  100%{transform:translate3d(calc(var(--dx,0px) * 0.5),calc(var(--dy,0px) * 0.5),0) rotate(var(--gr,0deg));opacity:0;}
 }
 .gs-greek-letter{animation:gs-greek-drift var(--dur,30s) linear var(--delay,0s) infinite;}
 /* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */

@@ -6,6 +6,7 @@ import { setBrotherCookie } from "@/lib/auth";
 import { logger, errorSink } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
+import { sendSalesEmail } from "@/lib/sales-contact";
 import fs from "fs";
 import path from "path";
 
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
     schoolName, schoolShort, charterYear, foundingYear, fraternityLetters,
     primaryColor, darkColor, softColor,
-    rushEmail, rushPhone, instagramHandle, instagramUrl, address, cityState,
+    rushEmail, rushPhone, instagramHandle, instagramUrl, schoolInstagramHandle, address, cityState,
     adminName, adminEmail, adminPassword, billingPlan,
     // Pricing method + live-edited hero copy from the upgraded wizard.
     plan: rawPlan,
@@ -195,13 +196,42 @@ export async function POST(req: Request) {
     //                         value so the chosen plan always round-trips cleanly.
     //                         Treated as "active" (a negotiated, paying
     //                         arrangement — never a trial that can lapse).
-    const ALLOWED_PLANS = new Set(["monthly", "semester", "dues_percentage", "custom"]);
+    //   yearly              → Annual plan ($800/year, includes all rush fees).
+    //                         A committed, paying arrangement → status "active"
+    //                         (never a trial that can lapse into the dunning
+    //                         banner). The first-month-free language is a monthly-
+    //                         only offer, so yearly leads with the annual price.
+    // ("semester"/"dues_percentage" stay in the allowlist ONLY for back-compat /
+    // round-trip safety with already-provisioned tenants; the wizard no longer
+    // offers either — the live model is monthly | yearly | custom.)
+    const ALLOWED_PLANS = new Set(["monthly", "yearly", "semester", "dues_percentage", "custom"]);
     const normalizedPlan =
       typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
         ? rawPlan.trim()
         : "monthly";
     const subscriptionStatus =
-      normalizedPlan === "dues_percentage" || normalizedPlan === "custom" ? "active" : "trialing";
+      normalizedPlan === "dues_percentage" ||
+      normalizedPlan === "custom" ||
+      normalizedPlan === "yearly"
+        ? "active"
+        : "trialing";
+
+    // 2-WEEK PAYMENT DEADLINE. The chapter goes live immediately with no card;
+    // they must set up payment within 14 days of launch or the site is taken down
+    // (the welcome email below states this explicitly). We STORE the deadline here
+    // (and message it) — the actual auto-takedown is a separate, intentionally
+    // un-built cron. Stored as an ISO string in the tenant's own config so the
+    // admin/billing UI can surface an accurate countdown from day one.
+    const PAYMENT_DEADLINE_DAYS = 14;
+    const paymentDeadline = new Date(Date.now() + PAYMENT_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+    const paymentDeadlineIso = paymentDeadline.toISOString();
+    // Friendly human-readable deadline (e.g. "June 19, 2026") reused by both the
+    // prospect welcome email and the owner notification below.
+    const deadlineLabel = paymentDeadline.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
 
     const updates: Record<string, string> = {
       "chapter.orgType": normalizedOrgType,
@@ -224,6 +254,10 @@ export async function POST(req: Request) {
       "contact.rushPhone": (rushPhone || "").trim(),
       "contact.instagramHandle": (instagramHandle || "").trim(),
       "contact.instagramUrl": (instagramUrl || "").trim(),
+      // The school's own Instagram handle (optional). Persisted into the tenant's
+      // contact config so it's stored on the chapter site's records from day one
+      // (mirrors the chapter handle the public site already renders).
+      "contact.schoolInstagramHandle": (schoolInstagramHandle || "").trim(),
       "contact.address": (address || "").trim(),
       "contact.cityState": (cityState || "").trim(),
       // Explicitly blank the remaining chapter-specific contact/maps keys in the
@@ -259,6 +293,10 @@ export async function POST(req: Request) {
       // field, then the historical default. (The authoritative platform-billing
       // state lives on the central Tenant row written below.)
       "billing.plan": (billingPlan || normalizedPlan || "dues_split").trim(),
+      // 2-week payment deadline (ISO). Set-up-payment-by date from launch; after
+      // this the site is subject to takedown (messaged in the welcome email). The
+      // auto-takedown cron is intentionally NOT built — this is the stored value.
+      "billing.paymentDeadline": paymentDeadlineIso,
       "chapter.onboarded": "true",
     };
 
@@ -377,34 +415,28 @@ export async function POST(req: Request) {
         .join(" ");
       const brandHex = (primaryColor || "").trim();
       const adminFirst = (adminName || "").trim().split(" ")[0] || "there";
-      // Plan-aware billing copy so a dues-share chapter is never told about a
-      // "14-day trial" it isn't on. Base plans keep the trial language (monthly
-      // also leads with first-month-free); dues-share + custom lead with $0
-      // upfront / a negotiated arrangement.
+      // Plan-aware billing copy matching the LIVE model exactly: Monthly (first
+      // month free, then $50/mo + $150 per rush cycle), Annual ($800/year incl.
+      // all rush fees), or Custom. Legacy semester/dues_percentage values (no
+      // longer offered) fall through to the Monthly copy.
       const planLabel =
-        normalizedPlan === "semester"
-          ? "Base plan ($250 / semester)"
-          : normalizedPlan === "dues_percentage"
-          ? "Dues-share plan ($0 upfront)"
+        normalizedPlan === "yearly"
+          ? "Annual plan ($800/year, includes all rush fees)"
           : normalizedPlan === "custom"
           ? "Custom plan"
-          : "Base plan ($50/mo)";
+          : "Monthly plan ($50/mo + $150/rush cycle, first month free)";
       const billingLineHtml =
-        normalizedPlan === "dues_percentage"
-          ? `Your <strong>Dues-share plan</strong> is active — <strong>$0 upfront</strong>, full access to every feature, no card required. We only ever earn a small percentage of the dues you collect.`
+        normalizedPlan === "yearly"
+          ? `You're on the <strong>Annual plan — $800/year</strong>, which includes every rush-cycle fee. Full access to every feature, no card required to launch.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
-          : normalizedPlan === "semester"
-          ? `Your <strong>Base plan</strong> is set up with a <strong>14-day free trial</strong> — full access, no card required. You're on per-semester billing ($250/semester); we'll remind you before your trial ends.`
-          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's just $50/mo, and we'll remind you before your trial ends so there's no interruption.`;
+          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's <strong>$50/mo + $150 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`;
       const billingLineText =
-        normalizedPlan === "dues_percentage"
-          ? "Your Dues-share plan is active — $0 upfront, full access, no card required."
+        normalizedPlan === "yearly"
+          ? "You're on the Annual plan — $800/year, includes all rush fees. No card required to launch."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
-          : normalizedPlan === "semester"
-          ? "Your Base plan includes a 14-day free trial — full access, no card required ($250/semester after)."
-          : "Your first month is free — full access, no card required ($50/mo after).";
+          : "Your first month is free — then $50/mo + $150 per rush cycle (or $800/year, which includes all rush fees). No card required to launch.";
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
         <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>
@@ -414,7 +446,9 @@ export async function POST(req: Request) {
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.greekstack.vercel.app</a></td></tr>
         </table>
-        <p style="margin:16px 0 0;">${billingLineHtml}</p>`;
+        <p style="margin:16px 0 0;">${billingLineHtml}</p>
+        <p style="margin:16px 0 0;">Keep an eye on your inbox — <strong>Ben, the founder, will personally email you</strong> shortly to say hi and make sure you have everything you need to get going.</p>
+        <p style="margin:16px 0 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;"><strong>Heads up:</strong> please set up payment within <strong>2 weeks</strong> of going live (by <strong>${escHtml(deadlineLabel)}</strong>) from <strong>Admin → Billing</strong>. If payment isn't set up by then, your site will be taken down — we don't want that to happen, so just add a method before the deadline and you're all set.</p>`;
       const html = renderEmail({
         brandHex,
         chapterName: chapterDisplay || fraternityName.trim(),
@@ -437,6 +471,8 @@ export async function POST(req: Request) {
             `Admin login: ${adminEmailAddr}`,
             `Your site: ${adminUrl}`,
             billingLineText,
+            "Keep an eye on your inbox — Ben, the founder, will personally email you shortly.",
+            `Heads up: please set up payment within 2 weeks of going live (by ${deadlineLabel}) from Admin -> Billing, or your site will be taken down.`,
           ],
           cta: { label: "Open your admin dashboard", url: adminUrl },
           chapterName: chapterDisplay || fraternityName.trim(),
@@ -447,6 +483,52 @@ export async function POST(req: Request) {
     } catch (e) {
       // Swallow — provisioning already succeeded; the welcome email is a nicety.
       errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "welcome_email_failed" });
+    }
+
+    // OWNER NOTIFICATION — let Ben know a new chapter just signed up so he can
+    // send the promised personal follow-up. BEST-EFFORT (same contract as the
+    // welcome email above): never fails provisioning. Routes to salesContactEmail()
+    // (bensachwitz@gmail.com unless SALES_CONTACT_EMAIL is set) via the shared
+    // neutral-platform sales pipeline, with replyTo set to the new admin so Ben
+    // can reply straight from his inbox.
+    try {
+      const chapterDisplay = [fraternityName.trim(), (greekLetters || "").trim()]
+        .filter(Boolean)
+        .join(" ");
+      const adminEmailAddr = adminEmail.trim().toLowerCase();
+      const planLabelOwner =
+        normalizedPlan === "yearly"
+          ? "Annual ($800/year, includes all rush fees)"
+          : normalizedPlan === "custom"
+          ? "Custom"
+          : "Monthly ($50/mo + $150/rush cycle, first month free)";
+      const igHandle = (instagramHandle || "").trim();
+      const schoolIg = (schoolInstagramHandle || "").trim();
+      const igDisplay =
+        [igHandle, schoolIg && `school: ${schoolIg}`].filter(Boolean).join("  ·  ") || "—";
+      await sendSalesEmail({
+        heading: "New chapter signed up",
+        subject: `New Greekstack chapter — ${chapterDisplay || fraternityName.trim()}`,
+        intro: `A new chapter just launched on Greekstack. They've been told to expect a personal email from you, and that payment must be set up within 2 weeks (by ${deadlineLabel}).`,
+        fields: [
+          { label: "Chapter", value: chapterDisplay || fraternityName.trim() },
+          { label: "School", value: (schoolName || "").trim() },
+          { label: "Admin name", value: (adminName || "").trim() },
+          { label: "Admin email", value: adminEmailAddr },
+          { label: "Plan", value: planLabelOwner },
+          { label: "Instagram", value: igDisplay },
+          { label: "Site", value: `${subdomain}.greekstack.vercel.app` },
+          { label: "Payment deadline", value: deadlineLabel },
+        ],
+        replyTo: adminEmailAddr,
+        cta: { label: "Open the chapter site", url: `https://${subdomain}.greekstack.vercel.app` },
+        footerNote: "Sent automatically when a chapter completes signup.",
+      }).catch((e) =>
+        errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "owner_notify_failed" }),
+      );
+    } catch (e) {
+      // Swallow — provisioning already succeeded; the owner notice is best-effort.
+      errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "owner_notify_failed" });
     }
 
     return NextResponse.json({ ok: true, url: redirectUrl });

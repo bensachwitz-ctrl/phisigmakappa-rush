@@ -20,14 +20,14 @@ import {
   type OrgSelection,
 } from "@/components/site/school-org-picker";
 import { Magnetic, Reveal3D, FloatingOrbs, Spotlight, ShimmerBorder } from "@/components/site/anim";
-import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
 import {
   IconBranding, IconAdmin, IconLaunch, IconSpark,
   IconCheck, IconCheckCircle, IconArrowRight, IconSecurity, IconClose, IconExternal, type IconProps,
 } from "@/components/brand/icons";
 import {
-  IconCrest, IconPricing, IconCoins, IconPercent, IconSettingsGear,
+  IconCrest, IconPricing, IconCoins, IconSettingsGear,
 } from "@/components/brand/icons/onboarding-wizard";
 import { cn } from "@/lib/utils";
 
@@ -144,23 +144,24 @@ export default function OnboardWizard() {
   const [heroTagline, setHeroTagline] = React.useState("");
 
   // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
-  //   "monthly"         — Base plan, FIRST MONTH FREE, then $50/mo + $150 per rush cycle
-  //   "dues_percentage" — Dues-share, $0 upfront, 1.5% → 3% of dues collected
-  //   "custom"          — Custom build (a "talk to us" path → /contact#custom)
+  //   "monthly" — Base, FIRST MONTH FREE, then $50/mo + $150 per rush cycle
+  //   "yearly"  — Annual, $800/year, INCLUDES all rush-cycle fees (best value)
+  //   "custom"  — Custom build (a "talk to Ben" path → the book-a-call/Cal link)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
-  // skips straight through still lands on the most generous, no-card option. The
-  // Custom card is primarily a link out to /contact#custom; "custom" is part of
-  // the persisted allowlist so the value round-trips cleanly if ever selected.
-  // ("semester" is retained in the union ONLY for persistence/round-trip safety;
-  // it is no longer offered in the UI — marketing prices Base as $50/mo + a per-
-  // rush-cycle fee, with no per-semester option.)
-  const [plan, setPlan] = React.useState<"monthly" | "semester" | "dues_percentage" | "custom">("monthly");
+  // skips straight through still lands on the most generous, no-card option.
+  // ("semester" / "dues_percentage" are retained in the persisted union ONLY for
+  // round-trip/back-compat safety with already-provisioned tenants; NEITHER is
+  // offered in the UI anymore — the model is monthly vs yearly, plus custom.)
+  const [plan, setPlan] = React.useState<"monthly" | "yearly" | "semester" | "dues_percentage" | "custom">("monthly");
 
   // Contact State
   const [rushEmail, setRushEmail] = React.useState("");
   const [rushPhone, setRushPhone] = React.useState("");
   const [instagramHandle, setInstagramHandle] = React.useState("");
   const [instagramUrl, setInstagramUrl] = React.useState("");
+  // The school's own Instagram handle (optional). Persisted alongside the
+  // chapter handle into the tenant's contact config (contact.schoolInstagramHandle).
+  const [schoolInstagramHandle, setSchoolInstagramHandle] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [cityState, setCityState] = React.useState("");
 
@@ -438,6 +439,7 @@ export default function OnboardWizard() {
           rushPhone,
           instagramHandle,
           instagramUrl,
+          schoolInstagramHandle,
           address,
           cityState,
           adminName,
@@ -505,10 +507,21 @@ export default function OnboardWizard() {
       {/* Header */}
       <Reveal3D className="text-center" y={18}>
         {/* Platform wordmark lockup — the de-purpled keystone mark + "Greekstack"
-            so the whole flow reads as the platform brand, not a chapter brand. */}
+            so the whole flow reads as the platform brand, not a chapter brand.
+            On this DARK header pill we render the wordmark inline (rather than the
+            shared <GreekstackWordmark>, whose "Greek" span is hardcoded to the
+            near-black `text-foreground` token and would vanish here) — forcing the
+            "Greek" half to white while "stack" keeps the platform gradient, so
+            BOTH words read clearly against the dark/colored background. */}
         <div className="flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 shadow-lg shadow-blue-950/30 backdrop-blur-md">
-            <GreekstackWordmark size="sm" textClassName="text-base text-white" />
+            <span className="inline-flex items-center gap-2">
+              <GreekstackLogo title="Greekstack" className="h-7 w-7" />
+              <span className="text-base font-bold leading-none tracking-[-0.02em]">
+                <span className="text-white">Greek</span>
+                <span className="gs-gradient-text">stack</span>
+              </span>
+            </span>
             <span className="ml-1 hidden h-3.5 w-px bg-white/15 sm:inline-block" aria-hidden="true" />
             <span className="hidden items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 sm:inline-flex">
               <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Setup
@@ -843,6 +856,47 @@ export default function OnboardWizard() {
                     </div>
                   </div>
 
+                  {/* ── Instagram (optional) ─────────────────────────────────────
+                      Surfaced up top (not buried in the expander) because recruits
+                      check the chapter's IG first — and the handle renders right on
+                      the public site (it persists to contact.instagramHandle, which
+                      chapter-landing reads for the rush form, footer, and "follow"
+                      links). Both fields are OPTIONAL; the chapter handle also stays
+                      in sync with the matching field in "Fine-tune details" below.
+                      The school handle is stored for the chapter's records. */}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500/15 to-amber-400/10 text-pink-300 ring-1 ring-pink-400/20">
+                        <IconBranding className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-white">Instagram</h3>
+                          <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                            Optional
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400">
+                          Add your chapter&apos;s handle and it shows on your live site so recruits can follow you.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
+                      <WField
+                        label="Chapter Instagram handle"
+                        value={instagramHandle}
+                        onChange={setInstagramHandle}
+                        placeholder="@yourchapter"
+                      />
+                      <WField
+                        label="School Instagram handle"
+                        value={schoolInstagramHandle}
+                        onChange={setSchoolInstagramHandle}
+                        placeholder="@youruniversity"
+                      />
+                    </div>
+                  </div>
+
                   {/* ── Optional: fine-tune everything else ──────────────────────
                       The long-tail identity, brand-color, and contact fields,
                       tucked behind one expander so they're available without
@@ -1009,6 +1063,36 @@ export default function OnboardWizard() {
                     </span>
                   </p>
 
+                  {/* ── Want it fully customized? → talk to Ben ───────────────────
+                      A clear path to a tailored build + custom pricing, routed to
+                      the book-a-call (Cal.com) link when configured, else the apex
+                      custom-quote form. Distinct from the no-pressure "book a hand
+                      getting set up" card below — this is the "I want something
+                      bespoke" door. */}
+                  <a
+                    href={customBuildHref()}
+                    target={customBuildHref().startsWith("http") ? "_blank" : undefined}
+                    rel={customBuildHref().startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.08] via-amber-400/[0.04] to-transparent p-4 transition-all hover:-translate-y-0.5 hover:border-amber-300/50 hover:bg-amber-500/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400/25 to-amber-500/10 text-amber-200 ring-1 ring-amber-400/25">
+                        <IconSpark className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white">Want it fully customized?</p>
+                        <p className="truncate text-xs text-slate-300">
+                          Talk to Ben about a custom build + pricing — tailored to exactly how your
+                          chapter runs.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-100 ring-1 ring-amber-400/25">
+                      Talk to Ben
+                      <IconExternal className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    </span>
+                  </a>
+
                   {/* ── Optional: book a 15-min call with the owner (Cal.com) ─────
                       Embeds the booker when NEXT_PUBLIC_CAL_LINK is set; otherwise
                       shows a tasteful "we'll reach out / skip" card — never a
@@ -1122,56 +1206,76 @@ const stepVariants = {
 
 /* ── Pricing step ──────────────────────────────────────────────────────────── */
 
-type PlanId = "monthly" | "semester" | "dues_percentage" | "custom";
+type PlanId = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
 
 /* One-line plan label reused in the launch summary + the "no card required" note.
-   ("semester" is kept only for round-trip safety on the persisted value; it is not
-   selectable in the UI, so its label mirrors the single Base offer.) */
+   Only "monthly", "yearly", and "custom" are selectable in the UI; "semester" /
+   "dues_percentage" are kept only for round-trip safety on already-persisted
+   values and map to the closest current label. */
 const PLAN_SUMMARY: Record<PlanId, string> = {
-  monthly: "Base — first month free, then $50/mo + $150 per rush cycle",
-  semester: "Base — first month free, then $50/mo + $150 per rush cycle",
-  dues_percentage: "Dues-share — $0 upfront",
+  monthly: "Monthly — first month free, then $50/mo + $150 per rush cycle",
+  yearly: "Annual — $800/year (includes all rush fees)",
+  semester: "Monthly — first month free, then $50/mo + $150 per rush cycle",
+  dues_percentage: "Monthly — first month free, then $50/mo + $150 per rush cycle",
   custom: "Custom — tailored quote",
 };
 
+/* Where the "Talk to Ben about a custom build" CTAs point. Prefer the owner's
+   Cal.com book-a-call link (NEXT_PUBLIC_CAL_LINK, inlined by Next at build) so
+   the prospect can grab time with Ben directly; fall back to the apex custom-quote
+   form (/contact#custom) when no Cal link is configured, so the button is never
+   dead. The env value is the "handle/event" slug (e.g. "ben/30min") OR an absolute
+   URL; we normalize to a full cal.com URL. */
+function customBuildHref(): string {
+  const raw = (process.env.NEXT_PUBLIC_CAL_LINK || "").trim();
+  if (!raw) return "/contact#custom";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://cal.com/${raw.replace(/^\/+/, "")}`;
+}
+
 /**
- * PRICING STEP — choose how the chapter pays Greekstack. Two selectable methods
- * (Base: first month free, then $50/mo + $150 per rush cycle · Dues-share: a % of
- * dues) presented as big radio cards, plus a link out to Method 3 "Custom"
- * (→ /contact#custom). NOTHING here collects a card — the trial / dues-share start
- * with no payment, so the founder launches first and is billed (or not) later.
- * Pricing mirrors the marketing landing page exactly so a prospect never sees two
- * different numbers.
+ * PRICING STEP — choose how the chapter pays Greekstack. The model is simple:
+ *   • Monthly — first month free, then $50/mo + $150 per rush cycle
+ *   • Annual  — $800/year, which INCLUDES every rush-cycle fee (best value)
+ * presented as two big radio cards, plus a link out to a "Custom" build that
+ * opens a conversation with Ben (the Cal.com book-a-call link when configured,
+ * else the apex /contact#custom form). NOTHING here collects a card — the founder
+ * launches first (first month free) and sets up payment later. Pricing mirrors
+ * the marketing landing page exactly so a prospect never sees two different
+ * numbers.
  *
  * Fully controlled: the selected `plan` lives in the wizard; this just renders +
  * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
- * so it's keyboard + screen-reader navigable; selecting "Base" maps to the
- * "monthly" plan id.
+ * so it's keyboard + screen-reader navigable.
  */
 function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) => void }) {
-  const baseSelected = plan === "monthly" || plan === "semester";
-  const duesSelected = plan === "dues_percentage";
+  // Map any legacy persisted value onto the two live cards so an existing tenant
+  // editing their plan still highlights the right card. semester/dues_percentage
+  // are no longer selectable, but if they ever round-trip in they read as Monthly.
+  const monthlySelected = plan === "monthly" || plan === "semester" || plan === "dues_percentage";
+  const yearlySelected = plan === "yearly";
 
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-slate-300">
-        First, pick the plan that fits your chapter. You can launch on any option with{" "}
-        <span className="font-semibold text-white">no card required</span> — switch or add a
-        payment method later from Admin&nbsp;→&nbsp;Billing.
+        First, pick the plan that fits your chapter. Your{" "}
+        <span className="font-semibold text-white">first month is free</span> and{" "}
+        <span className="font-semibold text-white">no card is required</span> to launch — switch
+        or add payment later from Admin&nbsp;→&nbsp;Billing.
       </p>
 
       <div
         role="radiogroup"
-        aria-label="Pricing method"
+        aria-label="Pricing plan"
         className="grid gap-4 lg:grid-cols-2"
       >
-        {/* ── Method 1 — Base (recommended) ───────────────────────────────── */}
+        {/* ── Monthly (recommended) ───────────────────────────────────────── */}
         <PlanCard
-          selected={baseSelected}
+          selected={monthlySelected}
           onSelect={() => onChange("monthly")}
           icon={IconCoins}
-          eyebrow="Method 1"
-          title="Base"
+          eyebrow="Pay monthly"
+          title="Monthly"
           recommended
           headline={
             <>
@@ -1189,31 +1293,34 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
           ]}
         />
 
-        {/* ── Method 2 — Dues-share ───────────────────────────────────────── */}
+        {/* ── Annual — best value, rush fees included ─────────────────────── */}
         <PlanCard
-          selected={duesSelected}
-          onSelect={() => onChange("dues_percentage")}
-          icon={IconPercent}
-          eyebrow="Method 2"
-          title="Dues-share"
+          selected={yearlySelected}
+          onSelect={() => onChange("yearly")}
+          icon={IconCoins}
+          eyebrow="Pay yearly"
+          title="Annual"
           headline={
             <>
-              <span className="text-3xl font-extrabold text-white">$0</span>
-              <span className="text-sm font-semibold text-slate-400">upfront</span>
+              <span className="text-3xl font-extrabold text-white">$800</span>
+              <span className="text-sm font-semibold text-slate-400">/year</span>
             </>
           }
-          highlight="Pay as you grow"
+          highlight="Includes all rush fees"
           features={[
-            "No fixed fee — we earn only when you collect",
-            "1.5% of dues collected, then 3% as you scale",
-            "Perfect for chapters starting from scratch",
+            "Everything in Monthly — every feature, no limits",
+            "All rush-cycle fees included — no $150 per cycle",
+            "Best value — save vs. paying monthly + rush cycles",
+            "Stripe processing at cost (no platform markup)",
           ]}
         />
       </div>
 
-      {/* ── Method 3 — Custom (link out) ──────────────────────────────────── */}
+      {/* ── Custom (link out → talk to Ben) ───────────────────────────────── */}
       <a
-        href="/contact#custom"
+        href={customBuildHref()}
+        target={customBuildHref().startsWith("http") ? "_blank" : undefined}
+        rel={customBuildHref().startsWith("http") ? "noopener noreferrer" : undefined}
         className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-sky-400/40 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
       >
         <div className="flex min-w-0 items-center gap-3">
@@ -1222,18 +1329,19 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
           </span>
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm font-bold text-white">
-              Method 3 — Custom
+              Want it fully customized?
               <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                Talk to us
+                Talk to Ben
               </span>
             </p>
             <p className="truncate text-xs text-slate-400">
-              Multi-chapter, councils, or a tailored build? We&apos;ll quote a custom plan.
+              Multi-chapter, councils, or a tailored build &amp; pricing? Ben will put together a
+              custom plan.
             </p>
           </div>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-sky-200">
-          Contact us
+          Talk to Ben
           <IconExternal className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
       </a>
