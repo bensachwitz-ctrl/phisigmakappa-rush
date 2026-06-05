@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 type LogoVariant = "tile" | "mono";
 
-const MARK_SRC = "/brand/greekstack-mark.png";
+const MARK_SRC = "/brand/greekstack-mark.png?v=2";
 
 export function GreekstackLogo({
   className,

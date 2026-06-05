@@ -1574,7 +1574,7 @@ function BeforeAfter() {
                 />
                 <div className="relative flex items-center gap-3">
                   <img
-                    src="/brand/greekstack-mark.png"
+                    src="/brand/greekstack-mark.png?v=2"
                     alt=""
                     width={512}
                     height={512}
