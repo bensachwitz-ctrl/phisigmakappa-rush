@@ -9,6 +9,7 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { Reveal } from "@/components/site/reveal";
+import { GreekLetterField } from "@/components/site/greek-letter-field";
 import {
   TypewriterCycle,
   Tilt3DCard,
@@ -589,10 +590,19 @@ const FAQS: { q: string; a: string }[] = [
 
 export default function MarketingLandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20">
+    <div className="relative min-h-screen text-foreground antialiased selection:bg-blue-500/20">
+      {/* Tinted base wash — replaces the flat-white background so the page never
+          reads as plain: a soft blue radial up top fading to white, then a faint
+          blue floor. Fixed + furthest back. */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 -z-20 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
+      />
+      {/* Greek letters drifting up across the entire screen, behind all content. */}
+      <GreekLetterField />
       <ScrollProgressBar />
       <SiteNav />
-      <main id="main">
+      <main id="main" className="relative z-10">
         <Hero />
         <GlyphMarquee />
         <TrustBar />
@@ -900,27 +910,26 @@ function Hero() {
               gold-400) with bold weight so it reads with strong contrast rather
               than the old washed-out amber. Decorative layers are aria-hidden. */}
           <div className="animate-slide-up [animation-delay:40ms]">
-            <span className="relative inline-flex rounded-full bg-gradient-to-r from-amber-400/70 via-amber-300/40 to-sky-400/50 p-px shadow-[0_4px_20px_-6px_rgba(245,158,11,0.45)]">
-              {/* soft gold glow bloom behind the pill */}
+            {/* Clean, legible, low-color tagline pill: frosted white glass with a
+                hairline slate border, the navy house mark, crisp slate label, and
+                a slow shimmer sweep for life (no gold gradient → less colorful,
+                far easier to read). */}
+            <span className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-slate-200/90 bg-white/75 px-4 py-1.5 shadow-[0_2px_16px_-7px_rgba(15,23,42,0.3)] backdrop-blur-md">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute -inset-2 -z-10 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.28),transparent_70%)] blur-md"
+                className="gs-tagline-sheen pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent"
               />
-              <span className="inline-flex items-center gap-2 rounded-full gs-glass px-3.5 py-1.5">
-                <img
-                  src="/brand/greekstack-mark.png"
-                  alt=""
-                  width={512}
-                  height={512}
-                  decoding="async"
-                  loading="eager"
-                  className="h-[18px] w-[18px] shrink-0 rounded-[5px] object-contain shadow-sm ring-1 ring-black/5"
-                />
-                <span
-                  className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-400 bg-clip-text text-xs font-bold uppercase tracking-[0.16em] text-transparent"
-                >
-                  The white-label Greek-life platform
-                </span>
+              <img
+                src="/brand/greekstack-mark.png"
+                alt=""
+                width={512}
+                height={512}
+                decoding="async"
+                loading="eager"
+                className="relative h-5 w-5 shrink-0 rounded-[6px] object-contain"
+              />
+              <span className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700 sm:text-xs">
+                The white-label Greek-life platform
               </span>
             </span>
           </div>

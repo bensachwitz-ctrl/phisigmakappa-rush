@@ -471,6 +471,23 @@
 @keyframes grid-pan{from{background-position:0 0;}to{background-position:42px 42px;}}
 .animate-grid-pan{animation:grid-pan 8s linear infinite;}
 @keyframes sheen{to{transform:translateX(200%);}}
+/* Drifting Greek-letter background field — letters rise (one direction), each at
+   its own size/speed (vars set per-letter in greek-letter-field.tsx), fading in
+   and out. Transform/opacity only. */
+@keyframes gs-greek-drift{
+  0%{transform:translate3d(0,0,0) rotate(var(--gr,0deg));opacity:0;}
+  14%{opacity:var(--go,0.1);}
+  86%{opacity:var(--go,0.1);}
+  100%{transform:translate3d(var(--dx,0),var(--dy,-140px),0) rotate(var(--gr,0deg));opacity:0;}
+}
+.gs-greek-letter{animation:gs-greek-drift var(--dur,30s) linear var(--delay,0s) infinite;will-change:transform,opacity;}
+/* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */
+@keyframes gs-tagline-sheen{0%,55%{transform:translateX(-130%);}100%{transform:translateX(130%);}}
+.gs-tagline-sheen{animation:gs-tagline-sheen 5.5s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){
+  .gs-greek-letter{animation:none;opacity:var(--go,0.07);}
+  .gs-tagline-sheen{animation:none;display:none;}
+}
 .gs-gradient-text{background:linear-gradient(90deg,#2563eb,#0ea5e9,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-sheen{position:relative;overflow:hidden;}
