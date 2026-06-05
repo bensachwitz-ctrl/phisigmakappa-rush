@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  TrendingUp, AlertCircle, CheckCircle2, Clock, Users, Calendar,
-  ThumbsUp, ThumbsDown, Sparkles, ArrowRight, Vote, Mail,
-  Download, FileText, Palette, ScrollText,
+  TrendingUp, CheckCircle2, Users, Calendar,
+  ThumbsUp, ThumbsDown, Sparkles, ArrowRight, Vote,
+  Download, FileText, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -178,49 +178,12 @@ export function DashboardInsights({
 
   return (
     <section className="space-y-4 mb-6" aria-label="Chapter insights and decision queue">
-      {/* ── Brand readiness banner — only shown when chapter identity is
-          still mostly defaults. Tells a brand-new chapter where to go to
-          re-brand the site from "Phi Sig Gamma Triton USC" to their own
-          identity. Hides itself once enough fields are customized. */}
-      {brandReadiness && !brandReadiness.isSetupComplete && (
-        <Link
-          href="/admin/setup"
-          className="group block rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50/80 via-white to-white p-4 hover:border-amber-400 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
-        >
-          <div className="flex items-start gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shrink-0">
-              <Palette className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold tracking-tight text-amber-900">
-                Finish chapter setup — {brandReadiness.customizedFields}/{brandReadiness.totalFields} identity fields customized
-              </p>
-              <p className="text-xs text-amber-800/80 mt-0.5">
-                The site is still rendering with the Phi Sig Gamma Triton USC reference defaults.
-                Run the 5-minute setup wizard to re-brand page titles, social cards, footer attribution, and the Knowledge Panel record.
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-900 shrink-0 group-hover:translate-x-0.5 transition-transform">
-              Open wizard <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </span>
-          </div>
-          <div className="mt-3 ml-12">
-            <div
-              className="h-1.5 rounded-full bg-amber-100 overflow-hidden"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={brandReadiness.totalFields}
-              aria-valuenow={brandReadiness.customizedFields}
-              aria-label="Chapter setup progress"
-            >
-              <div
-                className="h-full rounded-full bg-amber-500 transition-all duration-500"
-                style={{ width: `${Math.round((brandReadiness.customizedFields / brandReadiness.totalFields) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </Link>
-      )}
+      {/* NOTE: The first-run "set up your chapter" prompt that used to live here
+          has been consolidated into the single FirstRunCard on /admin (see
+          components/admin/setup-wizard.tsx → FirstRunCard). This panel now owns
+          only the live KPI insights + decision queue; the brandReadiness prop is
+          still accepted so the page can compute the unified card without a second
+          query, but it no longer renders a competing setup banner here. */}
 
       {/* ── KPI strip ──────────────────────────────────────────────────────
           Brand-tinted frosted tiles: a translucent surface with a hairline

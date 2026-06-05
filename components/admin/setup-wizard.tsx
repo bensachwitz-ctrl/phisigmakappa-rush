@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
   Building2, Palette, Mail, ShieldCheck, Rocket,
+  ArrowRight, AlertCircle, UserPlus, Database, Trash2, Wand2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -409,5 +411,249 @@ function WSelect({
       </select>
       {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  FirstRunCard — the SINGLE guided first-run surface on the dashboard.
+//
+//  This replaces the two competing "set up your chapter" prompts a brand-new
+//  admin used to see at once (the old "Get rush ready" checklist AND the
+//  separate "Finish chapter setup — X/12 fields" banner). It presents ONE
+//  progress meter, ONE clear path, and three accelerators:
+//    1. Deep-linked checklist steps (each jumps to the exact screen).
+//    2. One-click sample-data load/clear (so the app isn't an empty shell).
+//    3. A prominent "Invite your e-board" CTA → /admin/brothers.
+//
+//  Completion-detection lives in the server component (app/admin/page.tsx);
+//  this component is presentation + the client-side actions only.
+// ════════════════════════════════════════════════════════════════════════════
+
+export type FirstRunStep = {
+  /** Short label, e.g. "Add your first rush event". */
+  label: string;
+  /** True when this step is already satisfied. */
+  ok: boolean;
+  /** One-line nudge shown under the label when incomplete. */
+  hint: string;
+  /** Deep link to the exact screen that resolves this step. */
+  href: string;
+};
+
+export function FirstRunCard({
+  steps,
+  /** When true the full identity/brand wizard still has fields to fill —
+   *  drives the "Resume full setup" deep-link to /admin/setup. */
+  brandSetupComplete,
+}: {
+  steps: FirstRunStep[];
+  brandSetupComplete: boolean;
+}) {
+  const { push } = useToast();
+  const router = useRouter();
+  const [sampleBusy, setSampleBusy] = React.useState<null | "seed" | "clear">(null);
+
+  const total = steps.length;
+  const done = steps.filter((s) => s.ok).length;
+  const remaining = total - done;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = remaining === 0 && brandSetupComplete;
+
+  async function runSample(action: "seed" | "clear") {
+    if (sampleBusy) return;
+    setSampleBusy(action);
+    try {
+      const res = await fetch("/api/admin/sample-data", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) {
+        // Surface a server-provided message when there is one, else a default.
+        let msg = "Please try again in a moment.";
+        try {
+          const j = await res.json();
+          if (j?.error && typeof j.error === "string") msg = j.error;
+        } catch {}
+        throw new Error(msg);
+      }
+      push({
+        title: action === "seed" ? "Sample data loaded" : "Sample data cleared",
+        description:
+          action === "seed"
+            ? "Your dashboard is now populated so you can explore every feature."
+            : "Demo records removed. Your real chapter data is untouched.",
+        variant: "success",
+      });
+      // Re-pull the server component so the new counts + checklist reflect
+      // immediately without a hard navigation.
+      router.refresh();
+    } catch (err) {
+      push({
+        title: action === "seed" ? "Couldn't load sample data" : "Couldn't clear sample data",
+        description: err instanceof Error ? err.message : "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setSampleBusy(null);
+    }
+  }
+
+  return (
+    <section
+      aria-label="Get your chapter live"
+      className="relative overflow-hidden rounded-2xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]"
+    >
+      <span aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-phisig-red/10 blur-3xl" />
+
+      {/* ── Header + single unified progress meter ───────────────────────── */}
+      <div className="relative flex items-start gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
+          <Sparkles className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold tracking-tight">
+            {allDone
+              ? "Your chapter is live-ready"
+              : `Get your chapter live — ${remaining} step${remaining === 1 ? "" : "s"} to go`}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {allDone
+              ? "Everything's set. Hand the public URL to your e-board and your first prospect."
+              : "Finish these so the public site reads as a polished, finished product."}
+          </p>
+          {/* Single progress bar — done vs total across the whole flow. */}
+          <div className="mt-3 flex items-center gap-2.5">
+            <div
+              className="h-1.5 flex-1 rounded-full bg-phisig-red/10 overflow-hidden"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={done}
+              aria-label="Chapter setup progress"
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-semibold text-phisig-red tabular-nums shrink-0">
+              {done}/{total} done
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Accelerators: sample data + invite e-board ───────────────────── */}
+      <div className="relative mt-4 grid gap-2.5 sm:grid-cols-2">
+        {/* Invite your e-board — prominent 1-click CTA to the real members
+            screen (invite links + Add-Members wizard live there). */}
+        <Link
+          href="/admin/brothers"
+          className="group flex items-center gap-3 rounded-xl border border-phisig-red/20 bg-white/70 p-3 transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.55)]">
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold tracking-tight">Invite your e-board</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Send invite links so officers set their own login
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" aria-hidden="true" />
+        </Link>
+
+        {/* Load sample data — instant populated value for a new admin. */}
+        <div className="flex items-center gap-3 rounded-xl border border-phisig-red/15 bg-white/70 p-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-phisig-red-soft text-phisig-red shrink-0 ring-1 ring-phisig-red/15">
+            <Database className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold tracking-tight">Load sample data</p>
+            <p className="text-xs text-muted-foreground">
+              Populate the dashboard with demo records to explore
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => runSample("seed")}
+            disabled={sampleBusy !== null}
+            className="shrink-0"
+          >
+            {sampleBusy === "seed" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            Load
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Deep-linked checklist ────────────────────────────────────────── */}
+      <ul className="relative mt-4 space-y-2">
+        {steps.map((c) => (
+          <li
+            key={c.label}
+            className={cn(
+              "group flex items-start gap-3 rounded-xl border p-3 text-sm transition-colors",
+              c.ok
+                ? "border-emerald-200/70 bg-emerald-50/40"
+                : "border-amber-200/70 bg-amber-50/40 hover:bg-amber-50/70",
+            )}
+          >
+            {c.ok ? (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shrink-0 mt-px ring-1 ring-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+            ) : (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700 shrink-0 mt-px ring-1 ring-amber-200">
+                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className={cn("font-medium", c.ok ? "text-emerald-900" : "text-amber-900")}>
+                {c.label}
+              </p>
+              {!c.ok && <p className="text-xs text-amber-800/80 mt-0.5">{c.hint}</p>}
+            </div>
+            {!c.ok && (
+              <Link
+                href={c.href}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-phisig-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+              >
+                Fix <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* ── Footer: resume the full wizard + subtle clear-sample link ────── */}
+      <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-phisig-red/10 pt-3">
+        <Link
+          href="/admin/setup"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-phisig-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 rounded"
+        >
+          <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+          {brandSetupComplete ? "Review chapter setup wizard" : "Resume full setup wizard"}
+          <ArrowRight className="h-3 w-3" aria-hidden="true" />
+        </Link>
+        <button
+          type="button"
+          onClick={() => runSample("clear")}
+          disabled={sampleBusy !== null}
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/20 rounded"
+        >
+          {sampleBusy === "clear" ? (
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+          ) : (
+            <Trash2 className="h-3 w-3" aria-hidden="true" />
+          )}
+          Clear sample data
+        </button>
+      </div>
+    </section>
   );
 }

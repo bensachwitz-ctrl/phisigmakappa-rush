@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Roster } from "@/components/admin/roster";
 import { DashboardInsights, type InsightEvent } from "@/components/admin/dashboard-insights";
+import { FirstRunCard, type FirstRunStep } from "@/components/admin/setup-wizard";
 import { RushFunnel } from "@/components/admin/rush-funnel";
 import { RecentActivity, type RecentEntry } from "@/components/admin/recent-activity";
 import { getRecentAudit } from "@/lib/audit";
@@ -10,7 +11,7 @@ import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid, CalendarRange } from "lucide-react";
+import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, MessagesSquare, LayoutGrid, CalendarRange } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -140,27 +141,39 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   // dashboard layout stays clean.
   const recentEntries: RecentEntry[] = await getRecentAudit(8);
 
-  const checklist = [
+  // ── Unified first-run checklist ──────────────────────────────────────────
+  // ONE list that governs the single FirstRunCard's progress meter. It folds
+  // the chapter-identity/brand wizard (formerly its own "Finish chapter setup"
+  // banner) into the same checklist as the launch-readiness items, so a
+  // brand-new admin sees exactly one setup system with one meter. Copy is kept
+  // white-label / org-neutral (no fraternity-specific wording).
+  const checklist: FirstRunStep[] = [
     {
-      label: "Real chapter advisor name",
+      label: "Brand your chapter identity",
+      ok: brandReadiness.isSetupComplete,
+      hint: `Name, school, colors & contact (${brandReadiness.customizedFields}/${brandReadiness.totalFields} fields set). Re-brands page titles, social cards & footer.`,
+      href: "/admin/setup",
+    },
+    {
+      label: "Add a real advisor name",
       ok: !!cfg["contact.advisorName"] && cfg["contact.advisorName"] !== "Chapter Advisor",
       hint: 'Replace the "Chapter Advisor" placeholder so parents can identify a real adult.',
       href: "/admin/settings#contact",
     },
     {
-      label: "Rush phone number",
+      label: "Add a recruitment phone number",
       ok: !!cfg["contact.rushPhone"],
       hint: "A callable phone number — parents expect more than just an email.",
       href: "/admin/settings#contact",
     },
     {
-      label: "E-board roster (5 slots)",
+      label: "Fill the executive board roster",
       ok: [1, 2, 3, 4, 5].every((n) => !!cfg[`eboard.${n}.name`] && !!cfg[`eboard.${n}.role`]),
       hint: "Fill every slot or hide the section so the public site doesn't look incomplete.",
       href: "/admin/settings",
     },
     {
-      label: "Hero photos uploaded",
+      label: "Upload your hero photos",
       ok: ["hero.tile1.slug", "hero.tile2.slug", "hero.tile3.slug"].every(
         (k) => !!cfg[k] && !cfg[k]?.includes("Pending"),
       ),
@@ -168,15 +181,15 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       href: "/admin/settings",
     },
     {
-      label: "First public rush event",
+      label: "Add your first public event",
       ok: publicEventCount > 0,
       hint: "Add at least one public event so the homepage countdown ticks and the schedule isn't a placeholder.",
       href: "/admin/events",
     },
     {
-      label: "Brothers directory populated",
+      label: "Build out your member roster",
       ok: brotherCount >= 5,
-      hint: "Invite the e-board so they can vote on PNMs (need ≥5 brothers in the directory).",
+      hint: "Invite your e-board so they can vote on prospects (aim for at least 5 members).",
       href: "/admin/brothers",
     },
   ];
@@ -501,80 +514,16 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             </div>
           </Reveal>
 
+          {/* ── Single first-run card ────────────────────────────────────
+              The ONE guided onboarding surface. Consolidates the former
+              "Get rush ready" checklist AND the separate "Finish chapter
+              setup" banner (which used to live in DashboardInsights) into a
+              single card with one progress meter, deep-linked steps, one-click
+              sample-data controls, and a prominent "Invite your e-board" CTA.
+              Auto-hides once every step (including branding) is complete. */}
           {remaining > 0 && (
-            <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]">
-              <span aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-phisig-red/10 blur-3xl" />
-              <div className="relative flex items-start gap-3 mb-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
-                  <Sparkles className="h-4 w-4" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold tracking-tight">
-                    Get rush ready — {remaining} item{remaining === 1 ? "" : "s"} pending
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Wrap these up so the public site reads as a finished product to parents and freshmen.
-                  </p>
-                  {/* Completion progress — done vs total. A quick, scannable
-                      sense of how close the chapter is to launch-ready. */}
-                  <div className="mt-3 flex items-center gap-2.5">
-                    <div
-                      className="h-1.5 flex-1 rounded-full bg-phisig-red/10 overflow-hidden"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={checklist.length}
-                      aria-valuenow={checklist.length - remaining}
-                      aria-label="Rush readiness progress"
-                    >
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700"
-                        style={{ width: `${Math.round(((checklist.length - remaining) / checklist.length) * 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-[11px] font-semibold text-phisig-red tabular-nums shrink-0">
-                      {checklist.length - remaining}/{checklist.length} done
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <ul className="relative space-y-2">
-                {checklist.map((c) => (
-                  <li
-                    key={c.label}
-                    className={`group flex items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
-                      c.ok
-                        ? "border-emerald-200/70 bg-emerald-50/40"
-                        : "border-amber-200/70 bg-amber-50/40 hover:bg-amber-50/70"
-                    }`}
-                  >
-                    {c.ok ? (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shrink-0 mt-px ring-1 ring-emerald-200">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      </span>
-                    ) : (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700 shrink-0 mt-px ring-1 ring-amber-200">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      </span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium ${c.ok ? "text-emerald-900" : "text-amber-900"}`}>
-                        {c.label}
-                      </p>
-                      {!c.ok && (
-                        <p className="text-xs text-amber-800/80 mt-0.5">{c.hint}</p>
-                      )}
-                    </div>
-                    {!c.ok && (
-                      <Link
-                        href={c.href}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-phisig-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
-                      >
-                        Fix <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
+            <Reveal as="div" className="mb-6">
+              <FirstRunCard steps={checklist} brandSetupComplete={brandReadiness.isSetupComplete} />
             </Reveal>
           )}
 
