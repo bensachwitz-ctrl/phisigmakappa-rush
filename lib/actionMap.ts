@@ -222,6 +222,48 @@ export const actionMap: Record<string, ActionMapEntry> = {
     rolesToNotify: ["president", "secretary"],
   },
 
+  // ── Officer elections ───────────────────────────────────────────────────
+  "election.create": {
+    verb: "created an officer election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.update": {
+    verb: "updated the officer election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.delete": {
+    verb: "deleted the officer election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.seat.add": {
+    verb: "added a seat to the election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.seat.remove": {
+    verb: "removed a seat from the election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.candidate.add": {
+    verb: "nominated a candidate",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.candidate.remove": {
+    verb: "withdrew a candidate",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.open": {
+    verb: "opened voting for the election",
+    rolesToNotify: ["all"],
+  },
+  "election.close": {
+    verb: "closed voting for the election",
+    rolesToNotify: ["president", "secretary", "super-admin"],
+  },
+  "election.seat_winners": {
+    verb: "seated the winners of the election",
+    rolesToNotify: ["all"],
+  },
+
   // ── W5 calendar (Google Calendar link lifecycle) ────────────────────────
   "calendar.link.create": {
     verb: "linked a Google calendar for",

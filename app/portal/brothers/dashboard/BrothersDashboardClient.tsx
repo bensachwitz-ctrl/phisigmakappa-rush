@@ -33,6 +33,7 @@ import {
   Heart,
   HelpCircle,
   ChevronDown,
+  Vote,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -800,8 +801,9 @@ export default function BrothersDashboardClient({
               { id: "alumni", label: "Alumni Directory", icon: Users },
               { id: "polls", label: "Chapter Polls", icon: FileText },
               { id: "profile", label: "My Profile", icon: User },
-              // Chat is a standalone page (not a tab-panel), so this item routes
-              // there with router.push instead of flipping the active tab.
+              // Standalone pages (not tab-panels) route via router.push instead
+              // of flipping the active tab — same pattern as Chat.
+              { id: "elections", label: "Officer Elections", icon: Vote, href: "/portal/brothers/elections" },
               { id: "chat", label: "Chapter Chat", icon: MessageSquare, href: "/portal/brothers/chat" },
             ].map((tab) => {
               const Icon = tab.icon;

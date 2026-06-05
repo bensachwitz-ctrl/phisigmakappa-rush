@@ -29,7 +29,8 @@ export type DomainKey =
   | "alumni"
   | "documents"
   | "siteSettings"
-  | "payments";
+  | "payments"
+  | "elections";
 
 export type DomainAccess = "none" | "read" | "write";
 
@@ -57,6 +58,7 @@ export const SUPER_ADMIN_PERMISSIONS: OfficerPermissions = {
     documents: "write",
     siteSettings: "write",
     payments: "write",
+    elections: "write",
   },
 };
 
@@ -102,11 +104,11 @@ export const DEFAULT_OFFICER_CATALOG: OfficerSeed[] = [
   {
     title: "Secretary",
     slug: "secretary",
-    description: "Meeting minutes, announcements, document library upkeep.",
+    description: "Meeting minutes, announcements, document library upkeep, officer elections.",
     sortOrder: 30,
     permissions: perms([
       r("brothers"), w("events"), w("announcements"),
-      w("documents"), r("siteSettings"),
+      w("documents"), r("siteSettings"), w("elections"),
     ]),
   },
   {

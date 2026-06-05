@@ -1043,3 +1043,79 @@ ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_alumniId_fkey" FOREIGN KEY
 ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "hometown" TEXT;
 ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "gradYear" TEXT;
 
+-- ── Officer Elections (secret ballot → seat winners into OfficerAssignment) ──
+-- CreateTable
+CREATE TABLE "Election" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "termCode" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "anonymous" BOOLEAN NOT NULL DEFAULT true,
+    "audience" TEXT NOT NULL DEFAULT 'BROTHERS',
+    "opensAt" TIMESTAMP(3),
+    "closesAt" TIMESTAMP(3),
+    "closedAt" TIMESTAMP(3),
+    "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Election_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ElectionSeat" (
+    "id" TEXT NOT NULL,
+    "electionId" TEXT NOT NULL,
+    "positionId" TEXT,
+    "title" TEXT NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 100,
+    "winnerCandidateId" TEXT,
+    "winnerBrotherId" TEXT,
+    "winnerName" TEXT,
+    "seatedAssignmentId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ElectionSeat_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ElectionCandidate" (
+    "id" TEXT NOT NULL,
+    "seatId" TEXT NOT NULL,
+    "brotherId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "statement" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ElectionCandidate_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ElectionBallot" (
+    "id" TEXT NOT NULL,
+    "seatId" TEXT NOT NULL,
+    "candidateId" TEXT NOT NULL,
+    "voterBrotherId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ElectionBallot_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Election_status_idx" ON "Election"("status");
+CREATE INDEX "Election_termCode_idx" ON "Election"("termCode");
+CREATE INDEX "ElectionSeat_electionId_idx" ON "ElectionSeat"("electionId");
+CREATE UNIQUE INDEX "ElectionCandidate_seatId_brotherId_key" ON "ElectionCandidate"("seatId", "brotherId");
+CREATE INDEX "ElectionCandidate_seatId_idx" ON "ElectionCandidate"("seatId");
+CREATE UNIQUE INDEX "ElectionBallot_seatId_voterBrotherId_key" ON "ElectionBallot"("seatId", "voterBrotherId");
+CREATE INDEX "ElectionBallot_seatId_idx" ON "ElectionBallot"("seatId");
+CREATE INDEX "ElectionBallot_candidateId_idx" ON "ElectionBallot"("candidateId");
+
+-- AddForeignKey
+ALTER TABLE "ElectionSeat" ADD CONSTRAINT "ElectionSeat_electionId_fkey" FOREIGN KEY ("electionId") REFERENCES "Election"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ElectionCandidate" ADD CONSTRAINT "ElectionCandidate_seatId_fkey" FOREIGN KEY ("seatId") REFERENCES "ElectionSeat"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ElectionBallot" ADD CONSTRAINT "ElectionBallot_seatId_fkey" FOREIGN KEY ("seatId") REFERENCES "ElectionSeat"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ElectionBallot" ADD CONSTRAINT "ElectionBallot_candidateId_fkey" FOREIGN KEY ("candidateId") REFERENCES "ElectionCandidate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

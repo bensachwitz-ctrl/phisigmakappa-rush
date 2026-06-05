@@ -549,6 +549,85 @@ model OfficerAssignment {
   @@index([positionId, termCode])
 }
 
+// ── Officer Elections ────────────────────────────────────────────────────
+// Secret-ballot officer elections. A single Election holds many ElectionSeats
+// (one per office up for election); each seat has ElectionCandidates and
+// receives ElectionBallots. Cross-model references to Brother / OfficerPosition
+// are stored as plain id strings (+ denormalized names) so this whole feature
+// is self-contained — no new relations on the large Brother/Officer models and
+// no migration risk to existing tables. "anonymous" elections aggregate ballots
+// by candidate only and never expose who voted for whom (voterBrotherId is
+// stored solely to enforce one ballot per voter per seat).
+model Election {
+  id          String    @id @default(cuid())
+  title       String // "2026 Officer Elections"
+  termCode    String // "2026-FA" — applied to OfficerAssignment when seating winners
+  status      String    @default("DRAFT") // DRAFT | OPEN | CLOSED | SEATED
+  anonymous   Boolean   @default(true)
+  audience    String    @default("BROTHERS")
+  opensAt     DateTime?
+  closesAt    DateTime?
+  closedAt    DateTime?
+  createdById String? // Brother.id of the creator (plain pointer)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  seats ElectionSeat[]
+
+  @@index([status])
+  @@index([termCode])
+}
+
+model ElectionSeat {
+  id                 String   @id @default(cuid())
+  electionId         String
+  election           Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  positionId         String? // OfficerPosition.id (plain pointer; null = custom office)
+  title              String // denormalized office title, e.g. "President"
+  sortOrder          Int      @default(100)
+  winnerCandidateId  String? // set when tallied
+  winnerBrotherId    String? // denormalized winner Brother.id
+  winnerName         String? // denormalized winner name
+  seatedAssignmentId String? // OfficerAssignment.id created when seated
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  candidates ElectionCandidate[]
+  ballots    ElectionBallot[]
+
+  @@index([electionId])
+}
+
+model ElectionCandidate {
+  id        String       @id @default(cuid())
+  seatId    String
+  seat      ElectionSeat @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  brotherId String // Brother.id (plain pointer)
+  name      String // denormalized candidate name
+  statement String? // optional campaign blurb
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+
+  ballots ElectionBallot[]
+
+  @@unique([seatId, brotherId])
+  @@index([seatId])
+}
+
+model ElectionBallot {
+  id             String            @id @default(cuid())
+  seatId         String
+  seat           ElectionSeat      @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  candidateId    String
+  candidate      ElectionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  voterBrotherId String // dedup only — never exposed in anonymous tallies
+  createdAt      DateTime          @default(now())
+
+  @@unique([seatId, voterBrotherId])
+  @@index([seatId])
+  @@index([candidateId])
+}
+
 // ── W1: Member lifecycle audit ─────────────────────────────────────────────
 // Every status transition writes a row here so we can rebuild the lifecycle
 // timeline per brother. Additive audit only — never used for live gating.
