@@ -625,6 +625,44 @@
   opacity: 0.04;
 }
 
+/* ── Greek-key (meander) motif ────────────────────────────────────────────
+   The single most recognizable "Greek-life" decorative cue. A classic spiral
+   fret/meander stroked in royal-blue→navy at low opacity, tiled horizontally as
+   a thin hairline strip. Self-contained data-URI (no request, nothing to ship),
+   purely decorative → always pair with aria-hidden + pointer-events-none at the
+   call site. Used TASTEFULLY as a thin divider above/below a key section header
+   and as a top/bottom hairline band — not everywhere. The pattern is the same
+   continuous meander repeated; the SVG path draws two interlocking keys across a
+   40px tile so the repeat is seamless. Static (no animation) so it's inherently
+   reduced-motion-safe. The strip fades at both ends via a horizontal mask so it
+   reads as a premium accent rather than a hard rule.
+   Tokens:
+     .gs-greek-key        → the 16px-tall tiled strip (set width via the element)
+     .gs-greek-key--gold  → warm gold variant for a tasteful accent
+     .gs-greek-key-faint  → an even softer wash for a full-bleed hairline band */
+.gs-greek-key {
+  display: block;
+  height: 16px;
+  background-repeat: repeat-x;
+  background-position: center;
+  /* One meander tile (40×16). stroke ≈ royal-blue #2563eb at ~0.5 alpha; the
+     element-level opacity below keeps the overall presence subtle. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16' viewBox='0 0 40 16'%3E%3Cpath d='M0 13h6V3h10v7H9v-3h4M20 13h6V3h10v7h-7v-3h4' fill='none' stroke='%232563eb' stroke-width='1.5' stroke-opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 40px 16px;
+  opacity: 0.5;
+  /* Fade the strip in/out at the horizontal extremes so it never reads as a
+     hard ruled line. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent);
+}
+.gs-greek-key--gold {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16' viewBox='0 0 40 16'%3E%3Cpath d='M0 13h6V3h10v7H9v-3h4M20 13h6V3h10v7h-7v-3h4' fill='none' stroke='%23f59e0b' stroke-width='1.5' stroke-opacity='0.6'/%3E%3C/svg%3E");
+  opacity: 0.55;
+}
+.gs-greek-key-faint {
+  opacity: 0.3;
+}
+
 /* ── Depth helpers for the bento + mockup ─────────────────────────────────
    .gs-card-glow paints a soft inner top-edge gradient + a layered shadow that
    intensifies on hover; .gs-float-shadow grounds the hero mockup so it reads as

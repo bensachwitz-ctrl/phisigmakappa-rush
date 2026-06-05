@@ -13,6 +13,7 @@ import {
   IconCheckCircle,
   IconClose,
   IconExternal,
+  IconRoles,
 } from "@/components/brand/icons";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
@@ -374,6 +375,16 @@ export default function PlatformConsolePage() {
                       <TableCell className="text-slate-500">{fmtDate(t.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={rowBusy}
+                            onClick={() => router.push(`/platform/console/${t.id}`)}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                          >
+                            <IconRoles className="h-4 w-4" />
+                            Officers
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"

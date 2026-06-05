@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Wordmark } from "@/components/brand/wordmark";
+import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { Loader2, Lock, ArrowLeft, User, KeyRound, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ export default function LoginClient() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("phisig_brother_name");
+    const stored = localStorage.getItem("gs_brother_name");
     // If we have a remembered brother name AND the user wasn't redirected from a
     // protected admin page, default to brother login. Otherwise stay in admin mode.
     const fromQuery = params.get("from");
@@ -65,7 +65,7 @@ export default function LoginClient() {
         return;
       }
       try {
-        if (mode === "brother") localStorage.setItem("phisig_brother_name", j.brother?.name || firstName);
+        if (mode === "brother") localStorage.setItem("gs_brother_name", j.brother?.name || firstName);
       } catch {}
       const from = params.get("from") || "/admin";
       router.push(from);
@@ -78,7 +78,20 @@ export default function LoginClient() {
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-phisig-mist flex flex-col">      <div className="container py-6">
+    <main id="main-content" className="relative isolate flex min-h-screen flex-col overflow-hidden">
+      {/* Brand wash — the same blue-tinted radial+linear field the marketing
+          site paints, so the operator login reads as part of Greekstack rather
+          than a bare gray form. Decorative + non-interactive. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent"
+      />
+
+      <div className="container py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to public site
         </Link>
@@ -86,14 +99,14 @@ export default function LoginClient() {
       <div className="flex-1 flex items-center justify-center px-4 pb-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Wordmark className="justify-center" />
+            <GreekstackWordmark size="lg" className="justify-center" />
             <h1 className="mt-6 text-2xl font-semibold tracking-tight">Sign in</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {mode === "admin" ? "Chapter admin (e-board only)" : "Active brothers"}
             </p>
           </div>
 
-          <Card>
+          <Card className="gs-glass">
             <CardContent className="p-6 sm:p-8">
               {/* Mode tabs — radiogroup pattern so the choice between
                   Brother and Admin reads as one mutually-exclusive option
@@ -116,7 +129,7 @@ export default function LoginClient() {
                   tabIndex={mode === "brother" ? 0 : -1}
                   onClick={() => setMode("brother")}
                   className={cn(
-                    "rounded-md py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
+                    "rounded-md py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
                     mode === "brother" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -129,7 +142,7 @@ export default function LoginClient() {
                   tabIndex={mode === "admin" ? 0 : -1}
                   onClick={() => setMode("admin")}
                   className={cn(
-                    "rounded-md py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
+                    "rounded-md py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
                     mode === "admin" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -150,7 +163,7 @@ export default function LoginClient() {
                           autoComplete="username"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="Mark"
+                          placeholder="Alex"
                           className="pl-9"
                           required
                         />
@@ -188,7 +201,7 @@ export default function LoginClient() {
                           autoComplete="username"
                           value={adminUser}
                           onChange={(e) => setAdminUser(e.target.value)}
-                          placeholder="Phisig"
+                          placeholder="yourchapter"
                           className="pl-9"
                           required
                         />

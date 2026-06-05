@@ -144,7 +144,7 @@ export async function generateViewport(): Promise<Viewport> {
   let themeColor = GREEKSTACK.themeColor;
   if (getSubdomain(host) !== null) {
     const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-    themeColor = safeHex(cfg["brand.primaryHex"], "#C8102E");
+    themeColor = safeHex(cfg["brand.primaryHex"], "#2563eb");
   }
   return {
     themeColor,
@@ -355,12 +355,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Per-chapter brand colors. Defaults match the reference Phi Sig Gamma Triton
-  // build (cardinal red). Admin can override from /admin/settings → brand.
+  // Per-chapter brand colors. The DEFAULT is the Greekstack platform royal-blue
+  // so the apex + any not-yet-branded chapter stays on-brand (never the old Phi
+  // Sig cardinal red, which clashed with the blue marketing site). A real chapter
+  // overrides these from /admin/settings → brand.
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#C8102E");
-  const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], "#A20D26");
-  const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], "#FCEFF1");
+  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#2563eb");
+  const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], "#1e40af");
+  const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], "#eff6ff");
 
   // Inline CSS override binds the cfg-supplied colors to the same Tailwind
   // tokens (--phisig-red et al) used throughout the build. No client JS,

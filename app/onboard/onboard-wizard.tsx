@@ -27,7 +27,7 @@ import {
   IconCheck, IconCheckCircle, IconArrowRight, IconSecurity, IconClose, IconExternal, type IconProps,
 } from "@/components/brand/icons";
 import {
-  IconCrest, IconPricing, IconCoins, IconPercent, IconCalendar, IconSettingsGear,
+  IconCrest, IconPricing, IconCoins, IconPercent, IconSettingsGear,
 } from "@/components/brand/icons/onboarding-wizard";
 import { cn } from "@/lib/utils";
 
@@ -144,14 +144,16 @@ export default function OnboardWizard() {
   const [heroTagline, setHeroTagline] = React.useState("");
 
   // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
-  //   "monthly"         — Base plan, $50/mo, FIRST MONTH FREE
-  //   "semester"        — Base plan, $250 / semester
+  //   "monthly"         — Base plan, FIRST MONTH FREE, then $50/mo + $150 per rush cycle
   //   "dues_percentage" — Dues-share, $0 upfront, 1.5% → 3% of dues collected
   //   "custom"          — Custom build (a "talk to us" path → /contact#custom)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
   // skips straight through still lands on the most generous, no-card option. The
   // Custom card is primarily a link out to /contact#custom; "custom" is part of
   // the persisted allowlist so the value round-trips cleanly if ever selected.
+  // ("semester" is retained in the union ONLY for persistence/round-trip safety;
+  // it is no longer offered in the UI — marketing prices Base as $50/mo + a per-
+  // rush-cycle fee, with no per-semester option.)
   const [plan, setPlan] = React.useState<"monthly" | "semester" | "dues_percentage" | "custom">("monthly");
 
   // Contact State
@@ -1122,25 +1124,29 @@ const stepVariants = {
 
 type PlanId = "monthly" | "semester" | "dues_percentage" | "custom";
 
-/* One-line plan label reused in the launch summary + the "no card required" note. */
+/* One-line plan label reused in the launch summary + the "no card required" note.
+   ("semester" is kept only for round-trip safety on the persisted value; it is not
+   selectable in the UI, so its label mirrors the single Base offer.) */
 const PLAN_SUMMARY: Record<PlanId, string> = {
-  monthly: "Base — $50/mo (first month free)",
-  semester: "Base — $250 / semester",
+  monthly: "Base — first month free, then $50/mo + $150 per rush cycle",
+  semester: "Base — first month free, then $50/mo + $150 per rush cycle",
   dues_percentage: "Dues-share — $0 upfront",
   custom: "Custom — tailored quote",
 };
 
 /**
  * PRICING STEP — choose how the chapter pays Greekstack. Two selectable methods
- * (Base: monthly|semester · Dues-share: a % of dues) presented as big radio
- * cards, plus a link out to Method 3 "Custom" (→ /contact#custom). NOTHING here
- * collects a card — the trial / dues-share start with no payment, so the founder
- * launches first and is billed (or not) later.
+ * (Base: first month free, then $50/mo + $150 per rush cycle · Dues-share: a % of
+ * dues) presented as big radio cards, plus a link out to Method 3 "Custom"
+ * (→ /contact#custom). NOTHING here collects a card — the trial / dues-share start
+ * with no payment, so the founder launches first and is billed (or not) later.
+ * Pricing mirrors the marketing landing page exactly so a prospect never sees two
+ * different numbers.
  *
  * Fully controlled: the selected `plan` lives in the wizard; this just renders +
  * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
- * so it's keyboard + screen-reader navigable; the "Base" card has a nested
- * monthly/semester sub-toggle that itself maps to the monthly|semester plan ids.
+ * so it's keyboard + screen-reader navigable; selecting "Base" maps to the
+ * "monthly" plan id.
  */
 function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) => void }) {
   const baseSelected = plan === "monthly" || plan === "semester";
@@ -1168,53 +1174,20 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
           title="Base"
           recommended
           headline={
-            plan === "semester" ? (
-              <>
-                <span className="text-3xl font-extrabold text-white">$250</span>
-                <span className="text-sm font-semibold text-slate-400">/semester</span>
-              </>
-            ) : (
-              <>
-                <span className="text-3xl font-extrabold text-white">$50</span>
-                <span className="text-sm font-semibold text-slate-400">/mo</span>
-              </>
-            )
+            <>
+              <span className="text-3xl font-extrabold text-white">$50</span>
+              <span className="text-sm font-semibold text-slate-400">/mo</span>
+              <span className="text-sm font-semibold text-slate-400"> + $150 / rush cycle</span>
+            </>
           }
-          highlight={plan === "semester" ? "Save ~17% vs monthly" : "First month free"}
+          highlight="First month free"
           features={[
             "Everything included — recruitment, dues, events, roster, compliance",
-            "Cancel anytime, no contract",
+            "$50/month after your free first month — cancel anytime, no contract",
+            "$150 per rush cycle",
             "Stripe processing at cost (no platform markup)",
           ]}
-        >
-          {/* Monthly / semester sub-toggle — only meaningful when Base is chosen. */}
-          <div
-            className="mt-3 grid grid-cols-2 gap-2"
-            role="group"
-            aria-label="Base billing cadence"
-          >
-            <CadencePill
-              active={plan === "monthly"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onChange("monthly");
-              }}
-              icon={IconCalendar}
-              title="Monthly"
-              sub="$50/mo · 1st mo free"
-            />
-            <CadencePill
-              active={plan === "semester"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onChange("semester");
-              }}
-              icon={IconCalendar}
-              title="Per semester"
-              sub="$250 / sem · save ~17%"
-            />
-          </div>
-        </PlanCard>
+        />
 
         {/* ── Method 2 — Dues-share ───────────────────────────────────────── */}
         <PlanCard
@@ -1381,41 +1354,6 @@ function PlanCard({
     </ShimmerBorder>
   ) : (
     card
-  );
-}
-
-/* The monthly/semester cadence sub-toggle inside the Base card. */
-function CadencePill({
-  active,
-  onClick,
-  icon: Icon,
-  title,
-  sub,
-}: {
-  active: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  icon: React.ComponentType<IconProps>;
-  title: string;
-  sub: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
-        active
-          ? "border-sky-400/60 bg-sky-500/15"
-          : "border-white/10 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]",
-      )}
-    >
-      <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-        <Icon className={cn("h-3.5 w-3.5", active ? "text-sky-300" : "text-slate-400")} aria-hidden="true" />
-        {title}
-      </span>
-      <span className="text-[10px] font-medium text-slate-400">{sub}</span>
-    </button>
   );
 }
 

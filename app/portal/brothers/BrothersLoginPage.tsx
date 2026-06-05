@@ -71,7 +71,10 @@ export default function BrothersLoginPage() {
             Back to portals
           </Link>
 
-          <div className="bg-white rounded-2xl border border-maroon-100 p-6 sm:p-8 shadow-sm space-y-6">
+          {/* Frosted, layered card — a hairline ring + soft ambient shadow lift
+              it off the page for a premium, finished feel. Chapter-themed
+              (maroon = the white-label brand token), not the apex palette. */}
+          <div className="relative rounded-2xl border border-maroon-100 bg-white/95 backdrop-blur-sm p-6 sm:p-8 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-20px_rgba(80,0,20,0.35)] ring-1 ring-maroon-900/5 space-y-6">
             <div className="text-center">
               <div className="relative inline-flex mb-3">
                 <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-400/30 blur-xl" />
@@ -81,7 +84,7 @@ export default function BrothersLoginPage() {
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-maroon-900">Brothers Sign In</h1>
               <p className="text-xs text-maroon-600 mt-1">
-                Access your chapter dashboard & tools
+                Access your chapter dashboard &amp; tools
               </p>
             </div>
 
@@ -153,6 +156,15 @@ export default function BrothersLoginPage() {
               </p>
             </div>
           </div>
+
+          {/* Cohesion with the apex sign-in entry: let a member who landed on the
+              wrong chapter hop back to the school/chapter chooser. */}
+          <p className="mt-5 text-center text-xs text-maroon-600">
+            Not your chapter?{" "}
+            <Link href="/login" className="font-medium text-maroon-800 underline-offset-2 hover:underline">
+              Choose a different chapter
+            </Link>
+          </p>
         </main>
       </div>
 

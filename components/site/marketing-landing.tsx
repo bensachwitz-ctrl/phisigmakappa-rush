@@ -82,6 +82,74 @@ import {
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
 type GsIcon = (props: IconProps) => React.JSX.Element;
 
+/* ── Bespoke glassy icon TILE (the new custom character) ──────────────────────
+   Renders one of the pre-rendered 256px frosted-glass blue→gold app-icon tiles
+   from /public/brand/gen as a small rounded image — the SAME visual language as
+   the feature-card icons (see FeatureCard's `featureIcon`). Using these where the
+   page was previously a generic line-icon (or had none) is what gives the page
+   custom Greek-life character. It stands ALONE (no IconChip glass wrapper) so a
+   glass tile never double-ups on a glass chip, and it inherits the shared hover
+   lift/tilt when placed inside a `group`. Decorative → alt="". `size` matches the
+   IconChip footprints it replaces (sm≈32 / md≈44 / lg≈56) so swaps stay aligned. */
+function GlyphTile({
+  name,
+  size = "md",
+  className = "",
+}: {
+  /** File stem under /brand/gen, e.g. "gl-letters" or "feat-events". */
+  name: string;
+  /** xs≈24 (inline eyebrow) · sm≈36 · md≈44 · lg≈56 — matches IconChip footprints. */
+  size?: "xs" | "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const dim = { xs: "h-6 w-6", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[size];
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/brand/gen/${name}.png`}
+      alt=""
+      width={256}
+      height={256}
+      decoding="async"
+      loading="lazy"
+      className={
+        "shrink-0 rounded-2xl object-contain " + dim + (className ? " " + className : "")
+      }
+    />
+  );
+}
+
+/* ── Greek-key (meander) divider ──────────────────────────────────────────────
+   A thin, premium meander strip — the instantly-recognizable "Greek life" cue.
+   Decorative only (aria-hidden + pointer-events-none). Backed by the .gs-greek-key
+   utility in globals.css (static SVG-background, GPU-light, reduced-motion-safe).
+   Used tastefully above a couple of key section headers + as a hairline band. */
+function GreekKey({
+  className = "",
+  width = "w-28",
+  gold = false,
+  faint = false,
+}: {
+  className?: string;
+  /** Tailwind width utility for the strip (it tiles to fill). */
+  width?: string;
+  gold?: boolean;
+  faint?: boolean;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        "pointer-events-none gs-greek-key" +
+        (gold ? " gs-greek-key--gold" : "") +
+        (faint ? " gs-greek-key-faint" : "") +
+        " " + width +
+        (className ? " " + className : "")
+      }
+    />
+  );
+}
+
 /* In-app preview mockup for the Officer Elections feature. Built from divs in the
    exact visual language of components/site/feature-previews.tsx (royal-blue / sky
    / gold, never purple; every pixel a div so it stays crisp and adds no network
@@ -371,36 +439,41 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
    (the unified FirstRunCard) that walks a non-technical officer from sign-up to a
    live branded site the same day. They reuse already-imported SVG icons (rendered
    in an IconChip) so the strip stays on-brand without any new image files. */
-const LAUNCH_DAY: { icon: GsIcon; eyebrow: string; title: string; desc: string }[] = [
+const LAUNCH_DAY: { icon: GsIcon; img: string; eyebrow: string; title: string; desc: string }[] = [
   {
     icon: IconLaunch,
+    img: "gl-bid",
     eyebrow: "Instant demo",
     title: "See your chapter in one click",
     desc: "Load realistic sample data — PNMs, dues, events, and members — to explore everything populated, then clear it with one click before you go live. No throwaway typing to kick the tires.",
   },
   {
     icon: IconCheckCircle,
+    img: "feat-branding",
     eyebrow: "Guided setup",
     title: "Live the same day",
     desc: "A single guided checklist walks you from sign-up to a fully-branded, live site the same day — so a non-technical officer can get the whole chapter set up on day one.",
   },
 ];
 
-const STEPS: { icon: GsIcon; step: string; title: string; desc: string }[] = [
+const STEPS: { icon: GsIcon; img: string; step: string; title: string; desc: string }[] = [
   {
     icon: IconLaunch,
+    img: "gl-bid",
     step: "01",
     title: "Sign up",
     desc: "Create your account and claim a chapter subdomain. No credit card, no install — you're in within a minute.",
   },
   {
     icon: IconWhiteLabel,
+    img: "feat-branding",
     step: "02",
     title: "Brand it",
     desc: "Drop in your letters, colors, and crest. Every page, email, and portal instantly re-skins to your chapter.",
   },
   {
     icon: IconSubdomain,
+    img: "gl-letters",
     step: "03",
     title: "Go live",
     desc: "Publish your fully-branded recruitment + management site and start collecting PNMs and dues the same day.",
@@ -446,6 +519,16 @@ const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
   { icon: IconUnlimited, label: "Unlimited members — never per-seat" },
   { icon: IconMembers, label: "Fraternities & sororities" },
   { icon: IconRoles, label: "IFC · Panhellenic · NPHC" },
+];
+
+/* Trust band tiles — the four load-bearing trust claims shown beneath the hero,
+   now rendered with the bespoke glassy Greek-life icon tiles (custom character)
+   instead of generic line-icon chips. */
+const TRUST_BAND: { img: string; label: string }[] = [
+  { img: "feat-branding", label: "Custom subdomain per chapter" },
+  { img: "feat-portal", label: "Isolated, secure tenant data" },
+  { img: "feat-dues", label: "Stripe dues & payouts built in" },
+  { img: "gl-gavel", label: "TCPA-compliant SMS & audit trail" },
 ];
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
@@ -708,7 +791,7 @@ function SiteNav() {
             <Link href="/contact#book">Book a call</Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/admin/login">Sign in</Link>
+            <Link href="/login">Sign in</Link>
           </Button>
           {/* Primary CTA — standardized verb "Launch your chapter — free" on sm+,
               compact "Launch — free" on the tightest phones so it never wraps next
@@ -863,7 +946,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
               </Button>
               <div className="grid grid-cols-2 gap-2.5">
                 <Button asChild variant="outline" size="lg" className="w-full">
-                  <Link href="/admin/login" onClick={onClose}>Sign in</Link>
+                  <Link href="/login" onClick={onClose}>Sign in</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full">
                   <Link href="/contact#book" onClick={onClose}>Book a call</Link>
@@ -1213,12 +1296,6 @@ function GlyphMarquee() {
 /* ─────────────────────────── Trust bar ─────────────────────────── */
 
 function TrustBar() {
-  const items = [
-    { icon: IconSubdomain, label: "Custom subdomain per chapter" },
-    { icon: IconSecurity, label: "Isolated, secure tenant data" },
-    { icon: IconDues, label: "Stripe dues & payouts built in" },
-    { icon: IconShieldCheck, label: "TCPA-compliant SMS & audit trail" },
-  ];
   return (
     <section className="border-b border-border bg-secondary/30" aria-label="Highlights">
       <div className="container">
@@ -1226,11 +1303,15 @@ function TrustBar() {
           stagger={0.1}
           className="grid grid-cols-2 gap-x-6 gap-y-5 py-8 text-center md:grid-cols-4"
         >
-          {items.map((b) => (
-            <Reveal3DItem key={b.label} className="flex flex-col items-center gap-2">
-              <span className="transition-transform duration-300 hover:scale-110">
-                <IconChip icon={b.icon} tone="platform" size="sm" />
-              </span>
+          {TRUST_BAND.map((b) => (
+            <Reveal3DItem key={b.label} className="group flex flex-col items-center gap-2.5">
+              {/* Bespoke glassy Greek-life tile — replaces the old generic
+                  line-icon chip so the trust band carries custom character. */}
+              <GlyphTile
+                name={b.img}
+                size="md"
+                className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+              />
               <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
             </Reveal3DItem>
           ))}
@@ -1264,7 +1345,11 @@ function Features() {
       {/* (spotlight removed — compositing) */}
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+          {/* Greek-key (meander) divider — the recognizable "Greek life" motif,
+              placed once above this flagship section header. Decorative. */}
+          <GreekKey className="mx-auto mb-5" width="w-32" />
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            <GlyphTile name="gl-letters" size="xs" />
             Everything a chapter runs on
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1320,11 +1405,10 @@ function Features() {
                   className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 />
                 <div className="relative flex items-start gap-4">
-                  <IconChip
-                    icon={item.icon}
-                    tone="platform"
+                  <GlyphTile
+                    name={item.img}
                     size="lg"
-                    className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+                    className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
                   />
                   <div className="min-w-0">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -1503,7 +1587,8 @@ function BeforeAfter() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            <GlyphTile name="gl-brotherhood" size="xs" />
             Replace the whole stack
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1591,6 +1676,9 @@ function BeforeAfter() {
                 <p className="relative mt-4 text-lg font-semibold leading-snug text-foreground">
                   One branded site. One login. Every part of your chapter.
                 </p>
+                {/* Greek-key gold accent — a tasteful "Greek life" flourish on the
+                    winning card. Left-aligned to the copy, decorative. */}
+                <GreekKey className="relative mt-3" width="w-24" gold />
                 {/* The capabilities the six tools above were doing — now unified. */}
                 <ul className="relative mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {[
@@ -1629,7 +1717,8 @@ function HowItWorks() {
     <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            <GlyphTile name="gl-bid" size="xs" />
             Live in three steps
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1690,7 +1779,7 @@ function HowItWorks() {
                   blue-tinted ambient shadow on hover. */}
               <div className="group relative h-full rounded-2xl gs-glass p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)]">
                 <div className="mx-auto flex justify-center">
-                  <IconChip icon={s.icon} tone="platform" size="lg" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-rotate-3" />
+                  <GlyphTile name={s.img} size="lg" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
                 <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-700">
                   STEP {s.step}
@@ -2250,7 +2339,8 @@ function Proof() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            <GlyphTile name="gl-trophy" size="xs" />
             What you get
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -2426,7 +2516,7 @@ const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[
       { href: "#proof", label: "Why Greekstack" },
       { href: "/contact", label: "Contact" },
       { href: "/contact#book", label: "Book a call" },
-      { href: "/admin/login", label: "Sign in" },
+      { href: "/login", label: "Sign in" },
     ],
   },
   {
@@ -2440,7 +2530,16 @@ const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[
 
 function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-secondary/30">
+    <footer className="relative border-t border-border bg-secondary/30">
+      {/* Greek-key (meander) hairline band riding the very top of the footer —
+          the second (and final) tasteful placement of the motif, so the page
+          closes on the same "Greek life" cue it opened the feature section with.
+          Full-bleed + faint + decorative. */}
+      <GreekKey
+        className="absolute inset-x-0 top-0 mx-auto max-w-5xl"
+        width="w-full"
+        faint
+      />
       <div className="container py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           {/* Brand + one-line pitch + primary CTA. */}
