@@ -69,7 +69,7 @@ function buildLetters(glyphs: string[], count: number, seed: number): Letter[] {
 
 export function GreekLetterField({
   glyphs,
-  count = 64,
+  count = 30,
   seed = 0x51ed270b,
   className,
 }: {

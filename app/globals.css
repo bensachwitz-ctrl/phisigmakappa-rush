@@ -480,7 +480,7 @@
   86%{opacity:var(--go,0.1);}
   100%{transform:translate3d(var(--dx,0),var(--dy,-140px),0) rotate(var(--gr,0deg));opacity:0;}
 }
-.gs-greek-letter{animation:gs-greek-drift var(--dur,30s) linear var(--delay,0s) infinite;will-change:transform,opacity;}
+.gs-greek-letter{animation:gs-greek-drift var(--dur,30s) linear var(--delay,0s) infinite;}
 /* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */
 @keyframes gs-tagline-sheen{0%,55%{transform:translateX(-130%);}100%{transform:translateX(130%);}}
 .gs-tagline-sheen{animation:gs-tagline-sheen 5.5s ease-in-out infinite;}
@@ -599,36 +599,20 @@
   z-index: -1;
   border-radius: inherit;
   padding: 1.5px;
-  background: conic-gradient(
-    from 0deg,
-    rgba(37, 99, 235, 0) 0deg,
-    #2563eb 70deg,
-    #38bdf8 150deg,
-    #22d3ee 200deg,
-    #f59e0b 270deg,
-    rgba(37, 99, 235, 0) 360deg
-  );
+  /* STATIC linear gradient ring — a conic gradient's slice boundaries render as
+     sharp diagonal lines radiating from the center, and spinning them streaked
+     diagonal lines across the hero ("glitching"). A linear ring is clean. */
+  background: linear-gradient(135deg, #2563eb, #38bdf8 55%, #f59e0b);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: gs-border-spin 6s linear infinite;
 }
 /* Subtle bloom of the same gradient, blurred behind the element, that lifts on
    hover so primary CTAs feel like they're glowing. */
-.gs-shimmer-border::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  z-index: -2;
-  border-radius: inherit;
-  background: conic-gradient(from 0deg, #2563eb, #38bdf8, #22d3ee, #f59e0b, #2563eb);
-  filter: blur(12px);
-  opacity: 0;
-  transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  animation: gs-border-spin 6s linear infinite;
-}
-.gs-shimmer-border:hover::after { opacity: 0.45; }
+/* Bloom removed — the blurred spinning conic was a second source of the diagonal
+   streaks. A clean static border ring reads more premium anyway. */
+.gs-shimmer-border::after { display: none; }
 
 /* ── Tactile grain ────────────────────────────────────────────────────────
    A faint SVG fractal-noise texture for hero depth (~4% opacity). Self-

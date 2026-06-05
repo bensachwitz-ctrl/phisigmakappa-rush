@@ -21,7 +21,6 @@ import {
   FloatingOrbs,
   Marquee,
   AnimatedCounter,
-  Spotlight,
   ShimmerBorder,
   Grain,
 } from "@/components/site/anim";
@@ -889,9 +888,8 @@ function Hero() {
       <Grain />
       {/* Extra drifting orb layer + a parallaxing faint grid for real depth. */}
       <FloatingOrbs />
-      {/* Cursor-tracking radial glow — interactive depth on fine-pointer
-          devices only; renders nothing on touch / under reduced motion. */}
-      <Spotlight size={520} />
+      {/* (Cursor spotlight removed — its mousemove-repainted 520px blur was a
+          major source of compositing jank / "glitching".) */}
       <Parallax
         aria-hidden="true"
         translateY={70}
@@ -1263,7 +1261,7 @@ function Features() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
       {/* Cursor-tracking glow over the bento grid — subtler than the hero so it
           supports the cards without stealing focus. Fine-pointer-only. */}
-      <Spotlight size={420} color="rgba(37,99,235,0.10)" edgeColor="rgba(56,189,248,0.06)" />
+      {/* (spotlight removed — compositing) */}
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -1921,7 +1919,7 @@ function Pricing() {
       {/* Soft top gradient divider */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
       {/* Cursor-tracking glow, subtle, fine-pointer-only. */}
-      <Spotlight size={420} color="rgba(37,99,235,0.10)" edgeColor="rgba(56,189,248,0.06)" />
+      {/* (spotlight removed — compositing) */}
 
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
