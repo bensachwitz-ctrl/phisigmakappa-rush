@@ -484,9 +484,19 @@
 /* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */
 @keyframes gs-tagline-sheen{0%,55%{transform:translateX(-130%);}100%{transform:translateX(130%);}}
 .gs-tagline-sheen{animation:gs-tagline-sheen 5.5s ease-in-out infinite;}
+/* Staggered word-reveal for the hero subheader: each word fades + slides up +
+   un-blurs in sequence (delay set inline per word). `forwards` holds the end
+   state so it never reverts. */
+@keyframes gs-word-reveal{from{opacity:0;transform:translateY(12px);filter:blur(6px);}to{opacity:1;transform:none;filter:none;}}
+.gs-word-reveal{opacity:0;animation:gs-word-reveal .62s cubic-bezier(0.16,1,0.3,1) forwards;}
+/* Continuously animated brand gradient for the accent word. */
+@keyframes gs-grad-pan{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.gs-grad-anim{background-size:200% auto;animation:gs-grad-pan 6s ease-in-out infinite;}
 @media (prefers-reduced-motion: reduce){
   .gs-greek-letter{animation:none;opacity:var(--go,0.07);}
   .gs-tagline-sheen{animation:none;display:none;}
+  .gs-word-reveal{opacity:1;animation:none;}
+  .gs-grad-anim{animation:none;}
 }
 .gs-gradient-text{background:linear-gradient(90deg,#2563eb,#0ea5e9,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}

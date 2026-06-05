@@ -167,3 +167,86 @@ export async function sendSalesEmail(opts: {
     replyTo: opts.replyTo || undefined,
   });
 }
+
+// ── Prospect auto-confirmation ─────────────────────────────────────────────
+/** Resolve the public Cal.com booking URL from env, falling back to the LIVE
+ *  30-min link. Built once here so both this confirmation and the Cal webhook
+ *  notice point at the same place. NEXT_PUBLIC_CAL_LINK is the "handle/event"
+ *  slug (e.g. "benjamin-sachwitz-zdbpyc/30min"); we prefix the cal.com origin
+ *  unless an absolute URL was supplied. */
+export function calBookingUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_CAL_LINK || "benjamin-sachwitz-zdbpyc/30min").trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://cal.com/${raw.replace(/^\/+/, "")}`;
+}
+
+/**
+ * Send the PROSPECT a warm, on-brand confirmation right after they submit a
+ * sales form — the second half of "email BOTH the owner AND the prospect".
+ *
+ * Uses the neutral platform chrome (no chapter brand color — this is a
+ * Greekstack PLATFORM email to someone who isn't a tenant yet), thanks them,
+ * promises a personal reply from the founder, and — since NEXT_PUBLIC_CAL_LINK
+ * is live — surfaces a "Book a 15-min call" CTA so an eager prospect can grab
+ * time immediately instead of waiting. One sentence is tailored per `kind`.
+ *
+ * Best-effort: sets `replyTo` to the owner inbox (so a prospect reply reaches a
+ * human), swallows any error, and returns sendEmail's result (incl. the
+ * `{ ok: true, mock: true }` no-op when Resend isn't configured). NEVER throws.
+ */
+export async function sendProspectConfirmation(opts: {
+  to: string;
+  name?: string | null;
+  kind: "contact" | "call" | "quote";
+}): Promise<{ ok: boolean; mock?: boolean; id?: string; error?: string }> {
+  try {
+    const first = (opts.name || "").trim().split(/\s+/)[0] || "there";
+    const kindLine =
+      opts.kind === "call"
+        ? "We saw your request for a quick intro call and we'll be in touch to lock in a time."
+        : opts.kind === "quote"
+          ? "We got your custom-build request and we're already looking at how to tailor Greekstack to your chapter."
+          : "We got your message and we're glad you reached out.";
+
+    const bookUrl = calBookingUrl();
+    const bodyHtml = `
+      <p style="margin:0 0 14px;">Hi ${escHtml(first)},</p>
+      <p style="margin:0 0 14px;">${escHtml(kindLine)}</p>
+      <p style="margin:0 0 14px;">The founder personally reads and replies to every one of these — so you'll hear back from a real person, usually within a day. No autoresponder runaround.</p>
+      <p style="margin:0 0 4px;">If you'd rather just talk it through, you can grab a 15-minute call whenever suits you:</p>`;
+
+    const cta: EmailCta = { label: "Book a 15-min call", url: bookUrl };
+
+    const html = renderEmail({
+      chapterName: "Greekstack",
+      heading: "We got your message — talk soon",
+      bodyHtml,
+      cta,
+      footerNote: "You're receiving this because you contacted Greekstack. Just reply if you have anything to add.",
+    });
+
+    const text = renderEmailText({
+      heading: "We got your message — talk soon",
+      lines: [
+        `Hi ${first},`,
+        kindLine,
+        "The founder personally reads and replies to every one of these — you'll hear back from a real person, usually within a day.",
+        "Prefer to talk it through? Grab a 15-minute call whenever suits you:",
+      ],
+      cta,
+      chapterName: "Greekstack",
+    });
+
+    return await sendEmail({
+      to: opts.to,
+      subject: "Thanks for reaching out to Greekstack",
+      html,
+      text,
+      replyTo: salesContactEmail(),
+    });
+  } catch (err: any) {
+    // Best-effort: a confirmation failure must never bubble up to the route.
+    console.error("[sales-contact] sendProspectConfirmation failed:", err?.message || err);
+    return { ok: false, error: err?.message || "Unknown error" };
+  }
+}

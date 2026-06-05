@@ -11,7 +11,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { clientIp, salesRateLimit, sendSalesEmail } from "@/lib/sales-contact";
+import { clientIp, salesRateLimit, sendSalesEmail, sendProspectConfirmation } from "@/lib/sales-contact";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,6 +94,14 @@ export async function POST(req: Request) {
       { ok: false, error: "We couldn't send your message right now. Please email us directly." },
       { status: 502 },
     );
+  }
+
+  // Auto-confirm to the prospect too. Best-effort — a confirmation failure must
+  // NOT fail the request (the owner notification already went out above).
+  try {
+    await sendProspectConfirmation({ to: parsed.email.trim(), name, kind: "contact" });
+  } catch (e) {
+    console.error("[contact] prospect confirmation failed:", e);
   }
 
   return NextResponse.json({ ok: true });

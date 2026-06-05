@@ -489,16 +489,17 @@ const PLANS: Plan[] = [
     id: "base",
     name: "Base platform",
     icon: IconPlanBase,
-    price: "$50",
-    unit: "/month",
-    priceNote: "First month free · or $250/semester",
+    price: "Free",
+    unit: "your first month",
+    priceNote: "Then $50/month + $150 per rush cycle",
     tagline: "One flat price for your whole white-label site.",
     highlights: [
-      "Predictable flat monthly bill — easy to budget",
-      "Go semester at $250 and save vs. monthly",
+      "$50/month after your free first month — cancel anytime",
+      "$150 per rush cycle",
+      "Unlimited members & officers — no per-seat fees",
     ],
     cta: { label: "Start free month", href: "/onboard" },
-    fineprint: "First month free · cancel anytime",
+    fineprint: "First month free · no card to start · cancel anytime",
   },
   {
     id: "dues-share",
@@ -564,7 +565,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "You choose: the base platform is $50/month flat (first month free) or $250/semester, or go $0-upfront with dues-share — 1.5% of dues your first semester (50% off), then 3% — cancel anytime. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
+    a: "Your first month is completely free. After that, the base platform is $50/month plus a $150 fee per rush cycle, or go $0-upfront with dues-share — 1.5% of dues your first semester (50% off), then 3% — cancel anytime. Either way, card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -909,30 +910,25 @@ function Hero() {
               the label is a crisp, saturated gold→amber gradient (amber-700→
               gold-400) with bold weight so it reads with strong contrast rather
               than the old washed-out amber. Decorative layers are aria-hidden. */}
-          <div className="animate-slide-up [animation-delay:40ms]">
-            {/* Clean, legible, low-color tagline pill: frosted white glass with a
-                hairline slate border, the navy house mark, crisp slate label, and
-                a slow shimmer sweep for life (no gold gradient → less colorful,
-                far easier to read). */}
-            <span className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-slate-200/90 bg-white/75 px-4 py-1.5 shadow-[0_2px_16px_-7px_rgba(15,23,42,0.3)] backdrop-blur-md">
+          {/* Bold animated subheader — the tagline now reads as bold, tracked-out
+              letters that reveal word-by-word (fade + slide-up + un-blur), with the
+              brand-gradient accent word continuously panning. No pill, per owner
+              request ("just bold letters with a nice reveal"). SSR-safe (text is in
+              the markup) + reduced-motion-safe (see globals.css). */}
+          <p className="flex flex-wrap items-center justify-center gap-x-[0.5em] gap-y-1 text-base font-extrabold uppercase leading-none tracking-[0.2em] text-slate-900 sm:text-lg">
+            {["The", "white-label", "Greek-life", "platform"].map((w, i) => (
               <span
-                aria-hidden="true"
-                className="gs-tagline-sheen pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent"
-              />
-              <img
-                src="/brand/greekstack-mark.png"
-                alt=""
-                width={512}
-                height={512}
-                decoding="async"
-                loading="eager"
-                className="relative h-5 w-5 shrink-0 rounded-[6px] object-contain"
-              />
-              <span className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700 sm:text-xs">
-                The white-label Greek-life platform
+                key={w}
+                className={
+                  "gs-word-reveal inline-block " +
+                  (i === 2 ? "gs-gradient-text" : "")
+                }
+                style={{ animationDelay: `${140 + i * 95}ms` }}
+              >
+                {w}
               </span>
-            </span>
-          </div>
+            ))}
+          </p>
 
           {/* H1 keeps the full brand promise in the SSR markup (LCP target),
               with a typewriter line layered on top that cycles the value props
@@ -990,7 +986,7 @@ function Hero() {
               (the old duplicate links were folded into this single CTA).
               Anchored, crawlable, AA-contrast. */}
           <p className="mt-3 text-sm text-foreground/80 animate-slide-up [animation-delay:400ms]">
-            Start free, then $50/mo (first month free) or $0-upfront dues-share —{" "}
+            First month free, then $50/mo + $150 per rush cycle —{" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               see pricing
             </Link>
