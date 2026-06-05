@@ -935,11 +935,12 @@ function Hero() {
               then settles. The static line below the gradient phrase carries
               the meaning even if JS never runs. */}
           <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.06] tracking-tight animate-slide-up [animation-delay:120ms] sm:text-6xl">
-            <span className="block gs-gradient-text">
+            <span className="block">
               <TypewriterCycle
                 phrases={HERO_PHRASES}
                 settleText={HERO_SETTLE}
                 ssrText={HERO_SETTLE}
+                textClassName="gs-gradient-text"
                 caretClassName="bg-sky-500"
               />
             </span>
@@ -1797,7 +1798,7 @@ function BrandItDemo() {
                 settleText={chapter.letters}
                 ssrText={DEMO_CHAPTERS[0].letters}
                 typeSpeed={70}
-                className="gs-gradient-text"
+                textClassName="gs-gradient-text"
               />
             )}
           </div>

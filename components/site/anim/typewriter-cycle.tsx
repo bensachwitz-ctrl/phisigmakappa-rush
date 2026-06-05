@@ -31,6 +31,11 @@ export function TypewriterCycle({
   settleHoldDelay = 320,
   className,
   caretClassName,
+  /** Applied to the element that actually CONTAINS the typed text. Use this for
+   *  gradient/clip text (e.g. "gs-gradient-text") — putting such a class on a
+   *  PARENT wrapper fails because background-clip:text can't reach nested text,
+   *  which renders the typed line invisible. */
+  textClassName,
   /** Wrap the visible text in this element. Default span (inline). */
   as: Tag = "span",
 }: {
@@ -43,6 +48,7 @@ export function TypewriterCycle({
   settleHoldDelay?: number;
   className?: string;
   caretClassName?: string;
+  textClassName?: string;
   as?: "span" | "div";
 }) {
   const reduce = useReducedMotion();
@@ -127,7 +133,7 @@ export function TypewriterCycle({
 
   // Reduced motion: render the final promise, no caret, no animation.
   if (reduce) {
-    return <Tag className={className}>{fallback}</Tag>;
+    return <Tag className={cn(className, textClassName)}>{fallback}</Tag>;
   }
 
   return (
@@ -136,8 +142,9 @@ export function TypewriterCycle({
       <span aria-hidden="true" className="invisible block whitespace-pre-wrap">
         {longest}
       </span>
-      {/* Live typed text overlaid on the reserved box. */}
-      <span className="absolute inset-0 block" aria-live="polite">
+      {/* Live typed text overlaid on the reserved box. textClassName carries any
+          gradient/clip styling so it lands on the text-bearing element. */}
+      <span className={cn("absolute inset-0 block", textClassName)} aria-live="polite">
         {mounted ? text : fallback}
         <span
           aria-hidden="true"

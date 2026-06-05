@@ -1,27 +1,26 @@
 "use client";
 
 /**
- * GreekLetterField — a decorative, full-viewport background of Greek letters
- * that drift slowly UP across the whole screen, each at a different size and
- * speed, fading in and out. Sits fixed behind all content (-z-10,
- * pointer-events-none, aria-hidden) so it adds depth without ever competing
- * with or blocking the UI.
+ * GreekLetterField — a calm, ambient background of Greek letters that each drift
+ * smoothly in their own straight-line direction (any direction), at their own
+ * slow speed, fading gently in and out. Many small letters → soft texture, not
+ * clutter. Sits fixed behind the nav / over the page backdrop, pointer-events-
+ * none + aria-hidden, so it adds on-brand atmosphere without touching the UI.
  *
- * Determinism: the letter layout is generated once at module load with a SEEDED
- * PRNG (not Math.random), so the server and client render identical markup —
- * no hydration mismatch. Motion is pure transform/opacity (GPU-friendly) and is
- * disabled under prefers-reduced-motion (letters become a faint static wash).
+ * Determinism: layout generated once with a seeded PRNG (not Math.random) so SSR
+ * === CSR (no hydration mismatch). Motion is pure transform/opacity (GPU), linear
+ * + long-duration = smooth (never "spazzy"), and is disabled under
+ * prefers-reduced-motion (letters become a faint static wash).
+ *
+ * `glyphs` can be overridden so a TENANT site can drift ITS chapter's letters
+ * (e.g. "ΦΣΚ") instead of the full alphabet.
  */
 
 import React from "react";
 
-const GLYPHS = [
-  "Α", "Β", "Γ", "Δ", "Ε", "Ζ", "Η", "Θ", "Λ", "Ξ",
-  "Π", "Σ", "Φ", "Ψ", "Ω", "Φ", "Σ", "Δ", "Θ", "Λ",
-  "α", "β", "γ", "δ", "θ", "λ", "μ", "π", "σ", "φ", "ψ", "ω",
-];
+const FULL_ALPHABET =
+  "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω".split("");
 
-// mulberry32 — tiny deterministic PRNG so SSR === CSR (no Math.random).
 function makeRng(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -35,50 +34,67 @@ function makeRng(seed: number) {
 
 type Letter = {
   ch: string;
-  left: number; // %
-  top: number; // %
-  size: number; // px
-  dur: number; // s
-  delay: number; // s (negative → already mid-flight at load)
-  dx: number; // px horizontal drift
-  dy: number; // px vertical drift (negative = up)
-  rot: number; // deg
-  op: number; // peak opacity
+  left: number;
+  top: number;
+  size: number;
+  dur: number;
+  delay: number;
+  dx: number;
+  dy: number;
+  rot: number;
+  op: number;
 };
 
-const COUNT = 34;
-
-const LETTERS: Letter[] = (() => {
-  const rng = makeRng(0x9e3779b9);
+function buildLetters(glyphs: string[], count: number, seed: number): Letter[] {
+  const rng = makeRng(seed);
   const out: Letter[] = [];
-  for (let i = 0; i < COUNT; i++) {
-    const size = 16 + Math.round(rng() * 70); // 16–86px (varied sizes)
+  for (let i = 0; i < count; i++) {
+    const angle = rng() * Math.PI * 2; // any direction
+    const dist = 90 + rng() * 190; // how far it travels over its lifetime
     out.push({
-      ch: GLYPHS[Math.floor(rng() * GLYPHS.length)],
-      left: Math.round(rng() * 1000) / 10, // 0–100%
-      top: Math.round(rng() * 1000) / 10,
-      size,
-      dur: 16 + Math.round(rng() * 30), // 16–46s (varied speeds)
-      delay: -Math.round(rng() * 46), // staggered, already in-flight
-      dx: Math.round((rng() - 0.35) * 90), // mostly slight rightward
-      dy: -(90 + Math.round(rng() * 150)), // ALWAYS up → one direction
-      rot: Math.round((rng() - 0.5) * 24),
-      op: 0.05 + Math.round(rng() * 80) / 1000, // 0.05–0.13 (subtle over content)
+      ch: glyphs[Math.floor(rng() * glyphs.length)],
+      left: Math.round((-8 + rng() * 116) * 10) / 10, // -8%..108% (some enter from edges)
+      top: Math.round((-8 + rng() * 116) * 10) / 10,
+      size: 9 + Math.round(rng() * 26), // 9–35px (small)
+      dur: 26 + Math.round(rng() * 34), // 26–60s (slow), random speeds
+      delay: -Math.round(rng() * 60), // widely staggered → no synchronized "pop"
+      dx: Math.round(Math.cos(angle) * dist),
+      dy: Math.round(Math.sin(angle) * dist),
+      rot: Math.round((rng() - 0.5) * 16),
+      op: 0.035 + Math.round(rng() * 70) / 1000, // 0.035–0.105 (subtle)
     });
   }
   return out;
-})();
+}
 
-export function GreekLetterField() {
+export function GreekLetterField({
+  glyphs,
+  count = 64,
+  seed = 0x51ed270b,
+  className,
+}: {
+  /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
+  glyphs?: string[];
+  count?: number;
+  seed?: number;
+  className?: string;
+}) {
+  const letters = React.useMemo(
+    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, count, seed),
+    [glyphs, count, seed],
+  );
+
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[15] overflow-hidden"
+      className={
+        "pointer-events-none fixed inset-0 z-[14] overflow-hidden " + (className || "")
+      }
     >
-      {LETTERS.map((l, i) => (
+      {letters.map((l, i) => (
         <span
           key={i}
-          className="gs-greek-letter absolute select-none font-serif font-semibold text-slate-800"
+          className="gs-greek-letter absolute select-none font-serif font-semibold text-slate-700"
           style={
             {
               left: `${l.left}%`,
