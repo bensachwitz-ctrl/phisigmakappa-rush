@@ -13,7 +13,7 @@ import {
   LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
   HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert,
   ShieldCheck, CalendarCheck, HandHeart, BookMarked, FileDown, LayoutGrid, ChevronDown, Command,
-  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser, CreditCard, MessagesSquare, CalendarRange, Crown,
+  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser, CreditCard, MessagesSquare, CalendarRange, Crown, Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -36,6 +36,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/rushees", label: "PNMs", icon: UserPlus, adminOnly: true, group: "primary" },
   { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false, group: "primary" },
   { href: "/admin/directory", label: "Directory", icon: BookUser, adminOnly: false, group: "more" },
+  { href: "/admin/standing", label: "Standing", icon: Trophy, adminOnly: false, group: "more" },
   { href: "/admin/family", label: "Big/Little", icon: Network, adminOnly: true, group: "more" },
   { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true, group: "primary" },
   { href: "/admin/meetings", label: "Meetings", icon: CalendarCheck, adminOnly: false, group: "primary" },

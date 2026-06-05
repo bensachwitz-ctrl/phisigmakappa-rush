@@ -159,15 +159,29 @@ export default async function TermsPage() {
             refunds for partial periods.
           </p>
           <p className="mt-3">
-            <span className="font-medium text-foreground">Price changes.</span> We may change plan pricing; any
-            change applies to your next renewal, and we will give reasonable advance notice (at least 30 days
-            for the affected plan) by email or in-app.
+            <span className="font-medium text-foreground">Dues-share plan.</span> If you choose the dues-share
+            plan instead of a flat subscription, you pay nothing up front; instead, Greekstack&apos;s fee is a{" "}
+            <span className="font-medium text-foreground">percentage of the dues you collect</span> through the
+            platform (currently 1.5% of dues for your first semester as an introductory rate, then 3%
+            thereafter), which is calculated on, and charged against, the dues processed through your connected
+            Stripe account. You may cancel the dues-share plan at any time; the then-current percentage and any
+            introductory terms are disclosed at sign-up and on our pricing page.
           </p>
           <p className="mt-3">
-            <span className="font-medium text-foreground">Dues processing.</span> If your chapter enables dues
-            collection, member payments are processed through your own connected Stripe account. Greekstack is
-            not a party to, and is not responsible for, the dues transactions between your chapter and its
-            members; standard Stripe processing fees apply to those transactions.
+            <span className="font-medium text-foreground">Price changes.</span> We may change plan pricing
+            (including subscription fees and the dues-share percentage); any change applies to your next
+            renewal or billing cycle, and we will give reasonable advance notice (at least 30 days for the
+            affected plan) by email or in-app.
+          </p>
+          <p className="mt-3">
+            <span className="font-medium text-foreground">Dues processing &amp; payouts.</span> If your chapter
+            enables dues or donation collection, member and donor payments are processed through your own{" "}
+            <span className="font-medium text-foreground">connected Stripe account, with payouts settling to
+            that account via Stripe Connect</span>. Standard Stripe processing fees apply to those transactions.
+            Except for any dues-share percentage described above, Greekstack adds no markup to dues or
+            donations and is not a party to, and is not responsible for, the underlying transactions between
+            your chapter and its members or donors. Your use of Stripe is also subject to Stripe&apos;s own
+            connected-account and services agreements.
           </p>
         </Section>
 
@@ -198,9 +212,11 @@ export default async function TermsPage() {
           <ul className="mt-3 space-y-2">
             <SubProcessor name="Neon" role="Managed Postgres database hosting (the system of record for Customer Data)." />
             <SubProcessor name="Vercel" role="Application hosting, edge delivery, and Blob storage for uploaded images." />
-            <SubProcessor name="Stripe" role="Subscription billing for chapters and, where enabled, dues payment processing." />
+            <SubProcessor name="Stripe" role="Subscription billing for chapters and, where enabled, dues and donation processing with payouts to a chapter's own connected account via Stripe Connect. Stripe stores payment-card data; Greekstack does not." />
             <SubProcessor name="Resend" role="Transactional and chapter email delivery." />
-            <SubProcessor name="Twilio" role="SMS delivery for chapter recruitment and notification messages." />
+            <SubProcessor name="Twilio" role="SMS delivery for chapter recruitment and notification messages, with A2P 10DLC carrier registration handled at the platform level." />
+            <SubProcessor name="Cloudinary" role="Image storage, optimization, and delivery for chapter photos and headshots (where enabled)." />
+            <SubProcessor name="Stream" role="Real-time chapter chat and announcement messaging (where enabled)." />
           </ul>
           <p className="mt-3">
             We may add or replace sub-processors as the platform evolves and will keep this list current. Our
@@ -304,13 +320,17 @@ export default async function TermsPage() {
 
         <Section title="15. Contact">
           <p>
-            Questions about these Terms? Email{" "}
+            General questions? Email{" "}
+            <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>.
+            Legal notices may also be sent to{" "}
             <a href="mailto:legal@greekstack.app" className="text-blue-600 hover:underline">legal@greekstack.app</a>.
           </p>
         </Section>
 
         <p className="mt-12 text-xs text-muted-foreground">
-          Effective date: {EFFECTIVE_DATE} · Greekstack — the white-label Greek-life platform · See also our{" "}
+          Effective date: {EFFECTIVE_DATE} · Greekstack — the white-label Greek-life platform · Contact:{" "}
+          <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>{" "}
+          · See also our{" "}
           <Link href="/privacy" className="text-blue-600 hover:underline">privacy policy</Link>.
         </p>
       </main>

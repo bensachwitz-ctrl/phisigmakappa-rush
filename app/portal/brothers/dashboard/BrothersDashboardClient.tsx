@@ -42,6 +42,12 @@ import { PublicFooter } from "@/components/site/footer";
 import { useToast } from "@/components/ui/toast";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
+  standingLabel,
+  standingTone,
+  type Standing,
+  type BreakdownRow,
+} from "@/lib/points";
+import {
   IllustrationWelcome,
   IllustrationCalendar,
   IllustrationInbox,
@@ -216,6 +222,14 @@ interface DuesConfig {
   stripePublishableKey: string;
 }
 
+interface MemberStanding {
+  score: number;
+  max: number;
+  pct: number;
+  standing: Standing;
+  breakdown: BreakdownRow[];
+}
+
 interface BrothersDashboardClientProps {
   brother: Brother;
   meetings: Meeting[];
@@ -228,6 +242,7 @@ interface BrothersDashboardClientProps {
   announcements: Announcement[];
   alumniNetwork: Alumni[];
   duesConfig: DuesConfig;
+  standing: MemberStanding | null;
   isAdmin: boolean;
 }
 
@@ -352,6 +367,102 @@ function InitialsAvatar({
   );
 }
 
+/** Icon per scoreable dimension — reuses icons already imported in this file. */
+const STANDING_DIM_ICON: Record<string, LucideIcon> = {
+  dues: DollarSign,
+  meetings: CheckCircle,
+  service: Award,
+  study: Clock,
+  chores: Settings,
+};
+
+/**
+ * "Your standing" — the member-facing read of the engagement score. Mirrors the
+ * admin leaderboard math (same lib/points engine) but framed personally and
+ * read-only. Themed for the portal's cream/maroon surface; the standing tone
+ * (emerald/amber/rose) is palette-neutral so it reads correctly here.
+ */
+function StandingWidget({
+  standing,
+  memberName,
+}: {
+  standing: { score: number; max: number; pct: number; standing: Standing; breakdown: BreakdownRow[] };
+  memberName: string;
+}) {
+  const tone = standingTone(standing.standing);
+  const firstName = memberName.trim().split(/\s+/)[0] || memberName;
+  return (
+    <div className={`${PORTAL_CARD} p-6`}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            {/* Score dial */}
+            <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90" aria-hidden="true">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" className="text-cream-200" strokeWidth="3" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.5"
+                fill="none"
+                stroke="currentColor"
+                className={tone.text}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={`${(standing.pct / 100) * 97.4} 97.4`}
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-extrabold text-maroon-900 tabular-nums">
+              {standing.pct}%
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-maroon-500">Your standing</p>
+            <p className="mt-0.5 text-2xl font-extrabold text-maroon-900 tabular-nums leading-none">
+              {standing.score}
+              <span className="text-sm font-semibold text-maroon-400">/{standing.max}</span>
+            </p>
+            <span
+              className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} aria-hidden="true" />
+              {standingLabel(standing.standing)}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-maroon-500 max-w-[15rem] leading-relaxed">
+          Nice work, {firstName}. This score blends your dues, meeting attendance, service,
+          study hours, and chores. Keep it up to stay in good standing.
+        </p>
+      </div>
+
+      {/* Per-dimension breakdown */}
+      <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {standing.breakdown.map((row) => {
+          const Icon = STANDING_DIM_ICON[row.key] || Activity;
+          const rowPct = row.max > 0 ? Math.round((row.points / row.max) * 100) : 0;
+          return (
+            <div key={row.key} className="rounded-xl border border-maroon-100 bg-cream-50 p-3">
+              <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-maroon-500">
+                <Icon className="h-3 w-3" aria-hidden="true" /> {row.label}
+              </p>
+              <p className="mt-1.5 text-sm font-bold text-maroon-900 tabular-nums">
+                {row.points}
+                <span className="text-[11px] font-medium text-maroon-400">/{row.max}</span>
+              </p>
+              <div className="mt-1.5 h-1 rounded-full bg-cream-200 overflow-hidden">
+                <div className="h-full rounded-full bg-maroon-600" style={{ width: `${rowPct}%` }} />
+              </div>
+              <p className="mt-1 text-[10px] text-maroon-500 truncate" title={row.detail}>
+                {row.detail}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function BrothersDashboardClient({
   brother: initialBrother,
   meetings,
@@ -364,6 +475,7 @@ export default function BrothersDashboardClient({
   announcements,
   alumniNetwork,
   duesConfig,
+  standing,
   isAdmin,
 }: BrothersDashboardClientProps) {
   const router = useRouter();
@@ -831,6 +943,9 @@ export default function BrothersDashboardClient({
           {/* TAB 1: OVERVIEW */}
           {activeTab === "overview" && (
             <div className="space-y-6 animate-fade-in">
+              {/* Good-standing widget — your engagement score at a glance */}
+              {standing && <StandingWidget standing={standing} memberName={brother.name} />}
+
               {/* Profile Card & Key Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 

@@ -82,6 +82,79 @@ import {
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
 type GsIcon = (props: IconProps) => React.JSX.Element;
 
+/* In-app preview mockup for the Officer Elections feature. Built from divs in the
+   exact visual language of components/site/feature-previews.tsx (royal-blue / sky
+   / gold, never purple; every pixel a div so it stays crisp and adds no network
+   weight). Shown inside <FeatureDetailModal> when the Elections card is opened.
+   It depicts a closed, secret-ballot seat tally with the winner seated — never
+   real chapter data, and never any voter→vote linkage (the feature is anonymous
+   by design). Defined locally here because the shared previews file isn't part of
+   this change; it's `function`-declared so it's hoisted for the FEATURES array. */
+function PreviewElections() {
+  // One seat's anonymized result: candidate monogram, vote bar, vote count, and
+  // a "Seated" pill on the auto-installed winner.
+  const race: { glyph: string; tone: "blue" | "sky" | "gold"; pct: number; votes: number; seated?: boolean }[] = [
+    { glyph: "ΑΒ", tone: "blue", pct: 58, votes: 27, seated: true },
+    { glyph: "ΓΔ", tone: "sky", pct: 30, votes: 14 },
+    { glyph: "ΕΖ", tone: "gold", pct: 12, votes: 6 },
+  ];
+  const toneBar: Record<string, string> = {
+    blue: "bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500",
+    sky: "bg-gradient-to-r from-sky-500 to-cyan-400",
+    gold: "bg-gradient-to-r from-amber-500 to-amber-400",
+  };
+  const toneAvatar: Record<string, string> = {
+    blue: "from-blue-500/25 to-blue-500/10 text-blue-700 ring-blue-500/25",
+    sky: "from-sky-500/25 to-sky-500/10 text-sky-700 ring-sky-500/25",
+    gold: "from-amber-400/30 to-amber-400/10 text-amber-700 ring-amber-400/30",
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-3.5 shadow-[0_1px_2px_0_rgba(15,23,42,0.04)]">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-foreground">President · ballot</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Closed · 47 ballots
+        </span>
+      </div>
+      {/* Anonymity reassurance line — the load-bearing promise of the feature. */}
+      <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/[0.06] px-2.5 py-1.5">
+        <IconShieldCheck className="h-3.5 w-3.5 shrink-0 text-blue-700" />
+        <span className="text-[10px] font-medium text-blue-800">Secret ballot — votes aren&apos;t linked to voters</span>
+      </div>
+      <div className="mt-3 space-y-2">
+        {race.map((r, i) => (
+          <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
+            <span
+              aria-hidden="true"
+              className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-bold ring-1 " + toneAvatar[r.tone]}
+            >
+              {r.glyph}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                <div className={"h-full rounded-full " + toneBar[r.tone]} style={{ width: `${r.pct}%` }} />
+              </div>
+            </div>
+            <span className="w-7 shrink-0 text-right text-[11px] font-semibold tabular-nums text-foreground">{r.votes}</span>
+            {r.seated ? (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
+                <IconCheck className="h-2.5 w-2.5" />
+                Seated
+              </span>
+            ) : (
+              <span className="w-[52px] shrink-0" aria-hidden="true" />
+            )}
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 text-[10px] leading-relaxed text-muted-foreground">
+        Voting closed → the winner was seated into the President role automatically.
+      </p>
+    </div>
+  );
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    GREEKSTACK — apex marketing landing (no-subdomain).
    Platform brand: deep ink + royal-blue→sky gradient accents with tasteful gold
@@ -135,7 +208,14 @@ const NAV_LINKS = [
    the modal. The grid LEADS with the three painkillers — Recruitment, Dues,
    Treasury — so the most load-bearing value reads first. The "Anti-hazing &
    incident reporting" card was REMOVED per the brief and replaced with the real
-   "Chapter chat" feature so the grid stays full + balanced. */
+   "Chapter chat" feature so the grid stays full + balanced. "Officer elections"
+   (real secret-ballot voting that auto-seats winners) sits next to "Officer roles
+   & access" so the governance story reads together; its in-app preview is the
+   locally-defined <PreviewElections> mockup above. Two more genuinely-shipped
+   "launch-day" capabilities — one-click sample data and the guided same-day setup
+   checklist — are surfaced in a dedicated strip BELOW this grid (see <Features>)
+   rather than as core bento cards, since they're about getting started fast, not
+   day-to-day operations. */
 const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
   {
     icon: IconRecruitment,
@@ -204,7 +284,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
   },
   {
     icon: IconRoles,
-    img: "feat-officers",
+    img: "feat-portal",
     eyebrow: "Permissions",
     title: "Officer roles & access",
     outcome: "Every officer sees exactly their job — nothing more, handed off cleanly each year.",
@@ -217,6 +297,22 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
       "Full audit trail of officer actions",
     ],
     preview: <PreviewRoles />,
+  },
+  {
+    icon: IconRoles,
+    img: "feat-officers",
+    eyebrow: "Elections",
+    title: "Officer elections",
+    outcome: "Run a clean, secret-ballot election — and the winners are seated into their roles automatically.",
+    desc: "Run secret-ballot officer elections right in the app. Ballots are anonymous, votes tally live, and winners are seated into their officer roles automatically.",
+    long: "Hold your whole officer election in one place. Build the ballot, open voting to active members, and let votes tally in real time. Ballots are anonymous by design — the system never stores who voted for whom — and the moment voting closes, the winners are seated straight into their officer roles, with access and permissions applied for you.",
+    bullets: [
+      "Truly secret ballot — voter identity is never tied to a vote",
+      "Live tallies with a clear winner per seat (ties flagged, never guessed)",
+      "Winners auto-seated into their officer roles on close",
+      "Full audit trail of the election, kept separate from how anyone voted",
+    ],
+    preview: <PreviewElections />,
   },
   {
     icon: IconChat,
@@ -266,6 +362,27 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
     ],
     preview: <PreviewAlumni />,
     wide: true,
+  },
+];
+
+/* "Launch-day" capabilities surfaced in a strip beneath the feature grid. Both
+   are genuinely shipped: a one-click sample-data engine that populates (and then
+   clears) a believable demo chapter, and the single guided first-run checklist
+   (the unified FirstRunCard) that walks a non-technical officer from sign-up to a
+   live branded site the same day. They reuse already-imported SVG icons (rendered
+   in an IconChip) so the strip stays on-brand without any new image files. */
+const LAUNCH_DAY: { icon: GsIcon; eyebrow: string; title: string; desc: string }[] = [
+  {
+    icon: IconLaunch,
+    eyebrow: "Instant demo",
+    title: "See your chapter in one click",
+    desc: "Load realistic sample data — PNMs, dues, events, and members — to explore everything populated, then clear it with one click before you go live. No throwaway typing to kick the tires.",
+  },
+  {
+    icon: IconCheckCircle,
+    eyebrow: "Guided setup",
+    title: "Live the same day",
+    desc: "A single guided checklist walks you from sign-up to a fully-branded, live site the same day — so a non-technical officer can get the whole chapter set up on day one.",
   },
 ];
 
@@ -424,6 +541,7 @@ const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconTreasury, label: "Treasury — budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
+  { icon: IconRoles, label: "Secret-ballot officer elections that auto-seat the winners" },
   { icon: IconChat, label: "Chapter chat & announcement channels tied to your roster" },
   { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
   { icon: IconAlumniNetwork, label: "Alumni directory & Stripe donation flows" },
@@ -1178,6 +1296,44 @@ function Features() {
             </Reveal3DItem>
           ))}
         </Reveal3D>
+
+        {/* "Up and running today" strip — two genuinely-shipped launch-day
+            capabilities (one-click sample data + the guided same-day setup
+            checklist) that aren't day-to-day operations, so they live here
+            beneath the core grid rather than as bento cards. Same glass-card
+            language, already-imported icons (no new image files), revealed on
+            scroll, AA-contrast, reduced-motion-safe via <Reveal>. */}
+        <Reveal delay={80} className="mx-auto mt-8 max-w-6xl">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7">
+            {LAUNCH_DAY.map((item) => (
+              <div
+                key={item.title}
+                className="group relative overflow-hidden rounded-3xl gs-glass p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)] sm:p-7"
+              >
+                {/* lit top seam — shared card language */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
+                <div className="relative flex items-start gap-4">
+                  <IconChip
+                    icon={item.icon}
+                    tone="platform"
+                    size="lg"
+                    className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+                      {item.eyebrow}
+                    </span>
+                    <h3 className="mt-1 text-lg font-semibold tracking-tight sm:text-xl">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-foreground/80">{item.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
 
       {/* Single shared detail modal — opened by whichever card was clicked. */}

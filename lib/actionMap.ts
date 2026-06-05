@@ -341,4 +341,10 @@ export const actionMap: Record<string, ActionMapEntry> = {
     verb: "registered as an alumnus",
     rolesToNotify: ["president", "secretary", "super-admin"],
   },
+
+  // ── Engagement points / good-standing ───────────────────────────────────
+  "points.config.update": {
+    verb: "updated the engagement scoring rules",
+    rolesToNotify: ["president", "super-admin"],
+  },
 };

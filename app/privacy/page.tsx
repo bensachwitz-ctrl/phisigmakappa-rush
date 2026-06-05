@@ -302,9 +302,11 @@ function PlatformPrivacyPage() {
               setup.
             </li>
             <li>
-              <span className="font-medium text-foreground">Billing data:</span> your plan, subscription
-              status, and billing contact. Card details are collected and stored by Stripe — we never see or
-              store full card numbers.
+              <span className="font-medium text-foreground">Billing &amp; payment metadata:</span> your plan,
+              subscription status, billing contact, and payment metadata (such as amounts, dates, and status)
+              for subscriptions and — where a chapter enables dues or donations — for those transactions. Card
+              details are collected and stored by Stripe; we never see or store full card numbers, and dues
+              payouts settle to the chapter&apos;s own connected account via Stripe Connect.
             </li>
             <li>
               <span className="font-medium text-foreground">Usage &amp; logs:</span> sign-in events, audit
@@ -346,9 +348,11 @@ function PlatformPrivacyPage() {
           <ul className="mt-3 space-y-2">
             <PSubProcessor name="Neon" role="Managed Postgres database hosting (system of record)." />
             <PSubProcessor name="Vercel" role="Application hosting, edge delivery, and image (Blob) storage." />
-            <PSubProcessor name="Stripe" role="Subscription billing and, where a chapter enables it, dues payments." />
+            <PSubProcessor name="Stripe" role="Subscription billing and, where a chapter enables it, dues and donation payments — including payouts to a chapter's own connected account via Stripe Connect. Stripe collects and stores payment-card data; Greekstack never sees or stores full card numbers." />
             <PSubProcessor name="Resend" role="Transactional and platform email delivery." />
-            <PSubProcessor name="Twilio" role="SMS delivery for chapter recruitment and notifications." />
+            <PSubProcessor name="Twilio" role="SMS delivery for chapter recruitment and notifications, and A2P 10DLC carrier registration at the platform level." />
+            <PSubProcessor name="Cloudinary" role="Image storage, optimization, and delivery for chapter photos and headshots (used where a chapter enables it)." />
+            <PSubProcessor name="Stream" role="Real-time chapter chat and announcement messaging (used where a chapter enables it)." />
           </ul>
           <p className="mt-3">
             We may also disclose data if required by law, to protect our rights or the safety of users, or in
@@ -357,24 +361,67 @@ function PlatformPrivacyPage() {
           </p>
         </PSection>
 
-        <PSection title="Where data lives & security">
+        <PSection title="Multi-tenant data isolation">
           <p>
-            Data is stored in a Postgres database hosted on Neon and an application layer hosted on Vercel,
-            primarily in the United States. We maintain tenant isolation so one chapter cannot access
-            another&apos;s data, and we rely on industry-standard encryption in transit and at rest through
-            our providers, scoped access controls, and audit logging. No method of transmission or storage is
-            perfectly secure, but we work to protect your data using reasonable safeguards.
+            Greekstack is multi-tenant, but each chapter&apos;s data is{" "}
+            <span className="font-medium text-foreground">isolated in its own dedicated database schema</span>.
+            One chapter cannot read, query, or address another chapter&apos;s roster, recruitment, dues, or
+            member data, and every request is resolved to a single tenant before any data is read. Within a
+            chapter, officer access is further scoped by role-based permissions, and where optional services
+            (chat, SMS, image delivery) are used, channels, identifiers, and assets are namespaced per chapter
+            so they never cross tenants.
           </p>
         </PSection>
 
-        <PSection title="Retention">
+        <PSection title="Payments &amp; card data (Stripe)">
+          <p>
+            Subscription billing — and, where a chapter enables it, member dues and alumni donations — is
+            processed by <span className="font-medium text-foreground">Stripe</span>. Payment-card details are
+            collected and stored by Stripe under its own PCI-compliant systems;{" "}
+            <span className="font-medium text-foreground">Greekstack never sees or stores full card
+            numbers</span>. When a chapter collects dues or donations, funds are paid out to the chapter&apos;s
+            own connected account through <span className="font-medium text-foreground">Stripe Connect</span> —
+            Greekstack only stores payment metadata (such as amount, status, and the associated member or
+            invoice), not card data.
+          </p>
+        </PSection>
+
+        <PSection title="SMS consent, TCPA &amp; A2P 10DLC">
+          <p>
+            Where a chapter sends text messages through the platform, those messages are delivered via Twilio
+            and are subject to U.S. SMS rules. Recipients must provide the consent required by the{" "}
+            <span className="font-medium text-foreground">TCPA</span>, and every message stream honors{" "}
+            <span className="font-medium text-foreground">STOP / HELP / START</span> keywords and a recipient
+            quiet-hours window. <span className="font-medium text-foreground">A2P 10DLC</span> brand and
+            campaign registration is handled by Greekstack at the platform level with the carriers, so
+            individual chapters do not each register separately. A chapter is responsible for obtaining and
+            honoring the consent of the people it texts; the consent receipts a chapter captures are retained
+            as described in that chapter&apos;s own privacy notice.
+          </p>
+        </PSection>
+
+        <PSection title="Where data lives & security">
+          <p>
+            Data is stored in a Postgres database hosted on Neon and an application layer hosted on Vercel,
+            primarily in the United States; optional images may be delivered via Cloudinary and optional chat
+            via Stream. We maintain tenant isolation so one chapter cannot access another&apos;s data, and we
+            rely on industry-standard encryption in transit and at rest through our providers, scoped access
+            controls, hashed administrator credentials, and audit logging. No method of transmission or storage
+            is perfectly secure, but we work to protect your data using reasonable safeguards.
+          </p>
+        </PSection>
+
+        <PSection title="Retention, export & deletion">
           <p>
             We retain account, chapter, and billing data for as long as your subscription is active and as
-            needed to provide the service. After an account is closed or a subscription ends, Customer Data is
-            made available for export for <span className="font-medium text-foreground">30 days</span>, after
-            which it is deleted from active systems; residual copies in routine backups age out on our normal
-            backup cycle. We retain billing records and certain logs longer where required for legal,
-            accounting, tax, or security purposes.
+            needed to provide the service. You can{" "}
+            <span className="font-medium text-foreground">export your data (such as your roster, recruitment
+            records, and dues history) to CSV at any time</span>, and you may request a copy or deletion of
+            your data by contacting us. After an account is closed or a subscription ends, Customer Data is made
+            available for export for <span className="font-medium text-foreground">30 days</span>, after which
+            it is deleted from active systems; residual copies in routine backups age out on our normal backup
+            cycle. We retain billing records and certain logs longer where required for legal, accounting, tax,
+            or security purposes.
           </p>
         </PSection>
 
@@ -433,7 +480,9 @@ function PlatformPrivacyPage() {
 
         <PSection title="Contact">
           <p>
-            Privacy questions or requests:{" "}
+            General questions:{" "}
+            <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>.
+            Privacy-specific requests (access, export, correction, or deletion):{" "}
             <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>.
             See also our{" "}
             <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
@@ -441,8 +490,8 @@ function PlatformPrivacyPage() {
         </PSection>
 
         <p className="mt-12 text-xs text-muted-foreground">
-          Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Questions:{" "}
-          <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>
+          Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Contact:{" "}
+          <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>
         </p>
       </main>
 

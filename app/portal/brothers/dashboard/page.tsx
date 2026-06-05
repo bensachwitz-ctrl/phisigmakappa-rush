@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/portal-auth";
+import { loadMemberStanding } from "@/lib/points-server";
 import BrothersDashboardClient from "./BrothersDashboardClient";
 import type { Metadata } from "next";
 
@@ -219,6 +220,11 @@ export default async function BrothersDashboardPage() {
     stripePublishableKey: configs.find(c => c.key === "dues.stripePublishableKey")?.value || "",
   };
 
+  // Engagement / good-standing — computed from existing signals (no new tables).
+  // Best-effort: a failure here must never break the dashboard, so degrade to
+  // null and the widget simply doesn't render.
+  const standing = await loadMemberStanding(brother.id).catch(() => null);
+
   // Formatting helper
   const formattedBrother = {
     ...brother,
@@ -299,6 +305,7 @@ export default async function BrothersDashboardPage() {
       announcements={formattedAnnouncements}
       alumniNetwork={alumniNetwork}
       duesConfig={duesConfig}
+      standing={standing ? { score: standing.result.score, max: standing.result.max, pct: standing.result.pct, standing: standing.result.standing, breakdown: standing.result.breakdown } : null}
       isAdmin={sess.isAdmin}
     />
   );
