@@ -121,9 +121,14 @@ export async function POST(req: Request) {
     console.error("Failed to send reset email:", err);
   }
 
-  // Return token in response if in development/demo context for easy clipboard copy testing
-  const isDev = process.env.NODE_ENV === "development" || base.includes("localhost") || base.includes("vercel.app");
-  
+  // SECURITY: only ever echo the token/link in TRUE local development. The old
+  // check also matched `localhost`/`vercel.app` substrings — but production runs
+  // on *.vercel.app, so the token was leaking in the response to any unauthenticated
+  // caller → account takeover (request a reset for any email, read the token here,
+  // then POST it to /reset-password). The token must only leave the server via the
+  // emailed link. NODE_ENV is the only trustworthy signal.
+  const isDev = process.env.NODE_ENV === "development";
+
   return NextResponse.json({
     ok: true,
     message: "If your email is registered in our portal, a password reset link has been sent.",
