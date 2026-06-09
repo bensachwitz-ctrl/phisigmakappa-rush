@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Greek Stack</title>
+  <style>
+    html,body{margin:0;height:100%;background:#0b1220;color:#e8eefc;
+      font-family:-apple-system,system-ui,Segoe UI,sans-serif;
+      display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+    .w{text-align:center}
+    .l{font-weight:800;font-size:30px;letter-spacing:.5px}
+    .l span{color:#d4af37}
+    .s{opacity:.7;margin-top:10px;font-size:14px}
+    .b{margin-top:22px;border:2px solid rgba(212,175,55,.4);border-top-color:#d4af37;border-radius:50%;
+      width:26px;height:26px;display:inline-block;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){.b{animation:none}}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="l">Greek <span>Stack</span></div>
+    <div class="s">Loading your chapter…</div>
+    <div class="b" aria-hidden="true"></div>
+  </div>
+  <!-- Capacitor loads server.url (the hosted /app mobile client). This bundled
+       shell is the boot splash + offline fallback. v2 swaps in a static /app export. -->
+</body>
+</html>
