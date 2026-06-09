@@ -28,11 +28,14 @@ const ROUTE = "/api/admin/billing/checkout";
  * chapter can start PAYING Greekstack for the platform (distinct from the dues
  * Connect flow, which is the chapter collecting from its own members).
  *
- * Accepts an optional `{ plan: "monthly" | "semester" }` in the JSON body:
+ * Accepts an optional `{ plan: "monthly" | "yearly" | "semester" }` in the body:
  *   • "monthly"  → $50/mo subscription with a 30-DAY FREE TRIAL (first month
  *                  free) — but only the FIRST time (a chapter that already
- *                  trialed/canceled re-subscribes without a fresh trial).
- *   • "semester" → $250 billed every 6 months (interval_count=6). No trial.
+ *                  trialed/canceled re-subscribes without a fresh trial). The
+ *                  $200-per-rush-cycle add-on is billed separately (see
+ *                  /api/admin/billing/rush-charge).
+ *   • "yearly"   → $800/yr subscription (interval=year). No trial; rush included.
+ *   • "semester" → $250 every 6 months (legacy; hidden in UI). No trial.
  * When `plan` is omitted we fall back to the chapter's stored plan, then to
  * "monthly". The two non-subscription plans ("dues_percentage" — earns via the
  * dues Connect fee; "custom" — talk to sales) are NOT mintable here and return a

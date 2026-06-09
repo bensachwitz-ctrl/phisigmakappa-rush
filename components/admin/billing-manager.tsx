@@ -58,11 +58,12 @@ type Reason =
   | "trial_expired"
   | "unknown";
 
-type Plan = "monthly" | "semester" | "dues_percentage" | "custom";
+type Plan = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
 
 /** Normalize a possibly-legacy/empty plan slug coming from the server. */
 function normPlan(plan: string | null | undefined): Plan {
   const p = (plan || "").trim().toLowerCase();
+  if (p === "yearly" || p === "annual" || p === "annually" || p === "year") return "yearly";
   if (p === "semester") return "semester";
   if (p === "dues_percentage" || p === "dues" || p === "percentage") {
     return "dues_percentage";
@@ -103,9 +104,11 @@ export function BillingManager(props: {
   const activePlan = normPlan(plan);
   const isDuesPct = activePlan === "dues_percentage";
   const isCustom = activePlan === "custom";
-  const isSubscription = activePlan === "monthly" || activePlan === "semester";
+  const isSubscription = activePlan === "monthly" || activePlan === "yearly" || activePlan === "semester";
+  // Monthly chapters owe the $200 per-rush-cycle add-on; yearly includes rush.
+  const rushBillable = activePlan === "monthly";
 
-  const [submitting, setSubmitting] = React.useState<"checkout" | "portal" | null>(null);
+  const [submitting, setSubmitting] = React.useState<"checkout" | "portal" | "rush-charge" | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const isActive = status === "active";
@@ -113,7 +116,7 @@ export function BillingManager(props: {
   const isPastDue = status === "past_due" || reason === "past_due";
   const isCanceled = status === "canceled" || reason === "canceled" || reason === "trial_expired";
 
-  async function go(kind: "checkout" | "portal", planArg?: Plan) {
+  async function go(kind: "checkout" | "portal" | "rush-charge", planArg?: Plan) {
     setSubmitting(kind);
     setError(null);
     try {
@@ -357,6 +360,25 @@ export function BillingManager(props: {
             </>
           )}
 
+          {/* Per-rush-cycle $200 add-on — monthly chapters only (yearly includes rush). */}
+          {rushBillable && stripeConfigured && (
+            <Button
+              onClick={() => go("rush-charge")}
+              disabled={submitting !== null}
+              variant="outline"
+            >
+              {submitting === "rush-charge" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Opening Stripe…
+                </>
+              ) : (
+                <>
+                  Pay for a rush cycle — $200 <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          )}
+
           {/* Custom plan: talk to sales is the only action. */}
           {isCustom && (
             <a
@@ -456,8 +478,8 @@ function SwitchPlan({
       selfServe: true,
     },
     {
-      plan: "semester",
-      label: "Semester — $250 every 6 months",
+      plan: "yearly",
+      label: "Yearly — $800/yr (rush included, best value)",
       icon: <CalendarDays className="h-4 w-4" />,
       selfServe: true,
     },

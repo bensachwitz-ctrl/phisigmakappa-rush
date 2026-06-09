@@ -12,11 +12,14 @@ import { centralDb } from "@/lib/prisma";
  * stripeSubscriptionId / subscriptionStatus / trialEndsAt / plan), NOT in any
  * tenant schema.
  *
- * THREE owner pricing methods + a contact-driven plan (Tenant.plan):
+ * SELF-SERVE pricing methods + contact-driven plans (Tenant.plan):
  *   • "monthly"          — Stripe subscription $50/mo, 30-DAY FREE TRIAL (first
- *                          month free). interval=month.
- *   • "semester"         — Stripe subscription $250 billed every 6 months
- *                          (interval=month, interval_count=6). No trial.
+ *                          month free). interval=month. PLUS $200 per rush cycle
+ *                          (one-time, via platformRushChargeLineItem()).
+ *   • "yearly"           — Stripe subscription $800/yr (interval=year). No trial.
+ *                          ALL rush-cycle fees included (the "best value" plan).
+ *   • "semester"         — LEGACY. $250 billed every 6 months. No trial. Hidden in
+ *                          the UI but kept mintable for any pre-existing row.
  *   • "dues_percentage"  — NO platform subscription. The chapter is entitled
  *                          always; Greekstack earns via the dues Connect
  *                          application fee = 1.5% for the FIRST dues cycle, then
@@ -32,10 +35,10 @@ import { centralDb } from "@/lib/prisma";
  */
 
 /** The set of plan slugs a chapter row can carry. */
-export type PlatformPlan = "monthly" | "semester" | "dues_percentage" | "custom";
+export type PlatformPlan = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
 
-/** The two SELF-SERVE subscription plans (the only ones billing/checkout mints). */
-export type SubscriptionPlan = "monthly" | "semester";
+/** The SELF-SERVE subscription plans (the only ones billing/checkout mints). */
+export type SubscriptionPlan = "monthly" | "yearly" | "semester";
 
 /** Legacy default plan slug. Kept for back-compat with any pre-existing row /
  *  consumer that stamped "chapter"; treated as the monthly subscription. */
@@ -44,6 +47,7 @@ export const PLATFORM_PLAN = "monthly";
 /** All recognized plan slugs (for validation / iteration). */
 export const PLATFORM_PLANS: readonly PlatformPlan[] = [
   "monthly",
+  "yearly",
   "semester",
   "dues_percentage",
   "custom",
@@ -53,7 +57,7 @@ export const PLATFORM_PLANS: readonly PlatformPlan[] = [
 export function isSubscriptionPlan(
   plan: string | null | undefined,
 ): plan is SubscriptionPlan {
-  return plan === "monthly" || plan === "semester";
+  return plan === "monthly" || plan === "yearly" || plan === "semester";
 }
 
 /**
@@ -64,6 +68,7 @@ export function isSubscriptionPlan(
  */
 export function normalizePlan(plan: string | null | undefined): PlatformPlan {
   const p = (plan || "").trim().toLowerCase();
+  if (p === "yearly" || p === "annual" || p === "annually" || p === "year") return "yearly";
   if (p === "semester") return "semester";
   if (p === "dues_percentage" || p === "dues" || p === "percentage") {
     return "dues_percentage";
@@ -83,10 +88,21 @@ export const PLATFORM_MONTHLY_INTERVAL = "month";
 export const PLATFORM_MONTHLY_INTERVAL_COUNT = 1;
 export const PLATFORM_TRIAL_DAYS = 30; // first month free
 
-/** SEMESTER plan — $250 billed every 6 months. No trial. */
+/** SEMESTER plan — $250 billed every 6 months. No trial. (Legacy.) */
 export const PLATFORM_SEMESTER_PRICE_CENTS = 25000; // $250.00 / 6 mo
 export const PLATFORM_SEMESTER_INTERVAL = "month";
 export const PLATFORM_SEMESTER_INTERVAL_COUNT = 6;
+
+/** YEARLY plan — $800 billed once a year. Rush cycles INCLUDED (no per-rush fee).
+ *  No trial — the chapter pays the discounted annual rate up front ("best value"). */
+export const PLATFORM_YEARLY_PRICE_CENTS = 80000; // $800.00 / yr
+export const PLATFORM_YEARLY_INTERVAL = "year";
+export const PLATFORM_YEARLY_INTERVAL_COUNT = 1;
+
+/** RUSH-CYCLE add-on — a one-time $200 charge per rush cycle, billed ONLY to
+ *  MONTHLY chapters (yearly includes rush). Mint via platformRushChargeLineItem()
+ *  in a one-time (mode:"payment") Checkout, or invoice the customer directly. */
+export const PLATFORM_RUSH_CYCLE_PRICE_CENTS = 20000; // $200.00 / rush cycle
 
 // ── Dues Connect application-fee percentages (dues_percentage plan only) ──────
 // Greekstack's cut of each member's dues charge, taken as the Stripe Connect
@@ -117,6 +133,8 @@ export function duesPlatformFeePct(
 /** Human-facing plan name (page + checkout line item). */
 export function planDisplayName(plan: string | null | undefined): string {
   switch (normalizePlan(plan)) {
+    case "yearly":
+      return "Greekstack Chapter — Yearly";
     case "semester":
       return "Greekstack Chapter — Semester";
     case "dues_percentage":
@@ -132,6 +150,8 @@ export function planDisplayName(plan: string | null | undefined): string {
 /** Short price label for the plan ("$50/mo", "$250 every 6 months", "1.5% of dues…"). */
 export function planPriceLabel(plan: string | null | undefined): string {
   switch (normalizePlan(plan)) {
+    case "yearly":
+      return `$${dollars(PLATFORM_YEARLY_PRICE_CENTS)}/year`;
     case "semester":
       return `$${dollars(PLATFORM_SEMESTER_PRICE_CENTS)} every 6 months`;
     case "dues_percentage":
@@ -196,6 +216,27 @@ export function platformLineItem(
     };
   }
 
+  if (plan === "yearly") {
+    const yearlyPriceId = (process.env.STRIPE_PLATFORM_YEARLY_PRICE_ID || "").trim();
+    if (yearlyPriceId) return { price: yearlyPriceId, quantity: 1 };
+    return {
+      quantity: 1,
+      price_data: {
+        currency: PLATFORM_PLAN_CURRENCY,
+        recurring: {
+          interval: PLATFORM_YEARLY_INTERVAL,
+          interval_count: PLATFORM_YEARLY_INTERVAL_COUNT,
+        },
+        unit_amount: PLATFORM_YEARLY_PRICE_CENTS,
+        product_data: {
+          name: planDisplayName("yearly"),
+          description:
+            "Greekstack platform subscription — one chapter, billed yearly. All rush-cycle fees included.",
+        },
+      },
+    };
+  }
+
   // monthly (default)
   const priceId = (process.env.STRIPE_PLATFORM_PRICE_ID || "").trim();
   if (priceId) return { price: priceId, quantity: 1 };
@@ -214,6 +255,34 @@ export function platformLineItem(
       },
     },
   };
+}
+
+/**
+ * One-time Checkout line item for the $200 rush-cycle add-on (use with
+ * mode:"payment"). Billed to MONTHLY chapters per rush cycle; YEARLY chapters
+ * include rush, so callers must NOT mint this for them (guard with
+ * rushCycleBillable). Prefers STRIPE_PLATFORM_RUSH_PRICE_ID, else inline.
+ */
+export function platformRushChargeLineItem(): CheckoutLineItem {
+  const rushPriceId = (process.env.STRIPE_PLATFORM_RUSH_PRICE_ID || "").trim();
+  if (rushPriceId) return { price: rushPriceId, quantity: 1 };
+  return {
+    quantity: 1,
+    price_data: {
+      currency: PLATFORM_PLAN_CURRENCY,
+      unit_amount: PLATFORM_RUSH_CYCLE_PRICE_CENTS,
+      product_data: {
+        name: "Greekstack — Rush Cycle",
+        description: "One rush / recruitment cycle on the monthly plan.",
+      },
+    },
+  };
+}
+
+/** True when this plan owes a per-rush-cycle fee: MONTHLY does; YEARLY includes
+ *  rush; semester/dues_percentage/custom are handled out-of-band (no rush fee). */
+export function rushCycleBillable(plan: string | null | undefined): boolean {
+  return normalizePlan(plan) === "monthly";
 }
 
 /**
