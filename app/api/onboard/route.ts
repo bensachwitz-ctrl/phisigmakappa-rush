@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     orgType,
     fraternityName, fraternityShort, greekLetters, greekLettersGlyphs,
     schoolName, schoolShort, charterYear, foundingYear, fraternityLetters,
-    primaryColor, darkColor, softColor,
+    primaryColor, darkColor, softColor, logoUrl,
     rushEmail, rushPhone, instagramHandle, instagramUrl, schoolInstagramHandle, address, cityState,
     adminName, adminEmail, adminPassword, billingPlan,
     // Pricing method + live-edited hero copy from the upgraded wizard.
@@ -250,6 +250,11 @@ export async function POST(req: Request) {
       "brand.primaryHex": (primaryColor || "#C8102E").trim(),
       "brand.primaryDarkHex": (darkColor || "#A20D26").trim(),
       "brand.primarySoftHex": (softColor || "#FCEFF1").trim(),
+      // Chapter logo (optional). Seeded EMPTY so a fresh chapter gets the auto-
+      // generated brand-tinted shield until they upload their own crest in
+      // /admin/setup or /admin/settings → Brand. If the signup wizard captured
+      // a logo URL, persist it from day one.
+      "brand.logoUrl": (logoUrl || "").trim(),
       "contact.rushEmail": (rushEmail || "").trim(),
       "contact.rushPhone": (rushPhone || "").trim(),
       "contact.instagramHandle": (instagramHandle || "").trim(),

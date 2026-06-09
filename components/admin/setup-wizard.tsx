@@ -12,8 +12,10 @@ import {
   CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
   Building2, Palette, Mail, ShieldCheck, Rocket,
   ArrowRight, AlertCircle, UserPlus, Database, Trash2, Wand2,
+  Upload, Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { imageSrc } from "@/lib/image-url";
 
 type Cfg = Record<string, string>;
 
@@ -183,7 +185,22 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
 
           {step === "brand" && (
             <>
-              <p className="text-xs text-muted-foreground -mt-2">
+              <div className="rounded-xl border border-border bg-secondary/30 p-4">
+                <Label className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium">
+                  <ImageIcon className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Chapter logo (optional)
+                </Label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Upload your crest or logo (square / transparent PNG works best). It appears in the
+                  header, footer, and login screens. Skip this and we&apos;ll generate a clean shield in
+                  your brand colors automatically.
+                </p>
+                <WLogo
+                  value={values["brand.logoUrl"] || ""}
+                  onChange={(v) => set("brand.logoUrl", v)}
+                  push={push}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
                 Pick your school's primary hex. The platform derives a darker shade for gradient
                 stops and a soft tint for backgrounds — paste hex codes that match your school's
                 official brand guide. Examples: USC garnet <code className="font-mono text-foreground">#73000A</code>,
@@ -315,7 +332,7 @@ const STEP_KEYS: Record<StepId, string[]> = {
     "chapter.cardinalPrinciples", "chapter.tagline",
     "chapter.appShortTitle",
   ],
-  brand: ["brand.primaryHex", "brand.primaryDarkHex", "brand.primarySoftHex"],
+  brand: ["brand.logoUrl", "brand.primaryHex", "brand.primaryDarkHex", "brand.primarySoftHex"],
   contact: [
     "contact.rushEmail", "contact.rushPhone",
     "contact.advisorName", "contact.advisorTitle", "contact.advisorEmail",
@@ -380,6 +397,87 @@ function WColor({
           placeholder={fallback}
           className="font-mono"
         />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Logo uploader for the setup wizard's Brand step. Uploads to the admin-only
+ * /api/upload-photo endpoint and stores the returned URL in brand.logoUrl, so
+ * a chapter can add their crest during the few-clicks setup flow (not just in
+ * advanced settings). Empty → the site auto-generates a brand-tinted shield.
+ */
+function WLogo({
+  value, onChange, push,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  push: (t: { title: string; description?: string; variant?: "success" | "destructive" | "default" }) => void;
+}) {
+  const [uploading, setUploading] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-photo", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
+      onChange(json.url);
+      push({ title: "Logo uploaded", variant: "success" });
+    } catch (err: any) {
+      push({ title: err?.message || "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-border bg-card p-2 shrink-0">
+        {value ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={imageSrc(value, { w: 160, h: 160, crop: "limit" })}
+            alt="Logo preview"
+            className="max-h-full max-w-full object-contain"
+          />
+        ) : (
+          <span className="text-[9px] text-center text-muted-foreground leading-tight">
+            No logo<br />(auto shield)
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-[180px] space-y-2">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Upload a file or paste an image URL"
+        />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+        <div className="flex gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={uploading}>
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Upload className="h-3.5 w-3.5" aria-hidden="true" />}
+            {uploading ? "Uploading…" : "Upload logo"}
+          </Button>
+          {value && (
+            <Button type="button" size="sm" variant="ghost" onClick={() => onChange("")}>
+              Remove
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -88,6 +88,14 @@ export const DEFAULTS = {
   "brand.primaryDarkHex": "#A20D26",
   "brand.primarySoftHex": "#FCEFF1",
 
+  // Chapter logo / crest image (white-label). OPTIONAL — defaults EMPTY so a
+  // chapter that uploads nothing gets the auto-generated, brand-tinted shield
+  // (components/brand/wordmark.tsx) rather than another chapter's mark. When the
+  // admin uploads a logo in /admin/setup or /admin/settings → Brand, this holds
+  // the Cloudinary/Blob URL (or data URI in dev) and the header, footer, and
+  // login screens render the real image. Square or transparent-PNG works best.
+  "brand.logoUrl": "",
+
   // Hero tagline. WHITE-LABEL: chapter-agnostic — no school/chapter name
   // baked in, so a fresh tenant never shows "USC · Gamma Triton". The rush
   // chair personalizes this per chapter via /admin/settings.

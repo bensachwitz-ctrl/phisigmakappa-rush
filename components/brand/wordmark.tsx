@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { cn } from "@/lib/utils";
+import { imageSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "./chapter-identity-context";
 
 export function Wordmark({
@@ -19,12 +20,31 @@ export function Wordmark({
     schoolName,
     schoolShort,
     fraternityLetters,
+    logoUrl,
   } = useChapterIdentity();
 
   const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
   const wmUid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const wmGradId = `wm-shield-${wmUid}`;
   const wmGlyph = (fraternityLetters || greekLettersGlyphs || "G").slice(0, 4);
+
+  // A chapter-uploaded logo (set in /admin/setup or /admin/settings → Brand)
+  // takes precedence over both the Phi Sig reference image and the auto-
+  // generated shield. Rendered as a square, contained image so any aspect
+  // ratio sits cleanly next to the wordmark text.
+  const hasLogo = !!(logoUrl && logoUrl.trim());
+  const logoMark = (size: number) => (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={imageSrc(logoUrl, { w: size * 2, h: size * 2, crop: "limit" })}
+      alt={fraternityName}
+      width={size}
+      height={size}
+      decoding="async"
+      className="w-auto object-contain"
+      style={{ height: size }}
+    />
+  );
 
   // Auto-branded crest: the chapter's FULL glyph on a gradient of its OWN brand
   // colors (via the --brand-primary* CSS vars). Every chapter gets a polished
@@ -57,7 +77,9 @@ export function Wordmark({
           className
         )}
       >
-        {isPhiSig ? (
+        {hasLogo ? (
+          logoMark(28)
+        ) : isPhiSig ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src="/brand/phisigmakappa-shield-only.jpg"
@@ -84,7 +106,9 @@ export function Wordmark({
         className
       )}
     >
-      {isPhiSig ? (
+      {hasLogo ? (
+        logoMark(36)
+      ) : isPhiSig ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
           src="/brand/phisigmakappa-shield-only.jpg"

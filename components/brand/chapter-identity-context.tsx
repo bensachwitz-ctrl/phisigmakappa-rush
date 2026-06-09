@@ -38,6 +38,7 @@ const defaultIdentity: ChapterIdentity = {
   appShortTitle: "Your Chapter",
   fraternityLetters: "",
   timeZone: "America/New_York",
+  logoUrl: "",
   chapterFullName: "Your Chapter",
   chapterAttribution: "Your Chapter",
   pageTitle: "Your Chapter",

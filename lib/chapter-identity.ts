@@ -86,6 +86,7 @@ export type ChapterIdentity = {
   appShortTitle: string;        // "Phi Sig USC"
   fraternityLetters: string;    // "ΦΣΚ"
   timeZone: string;             // "America/New_York"
+  logoUrl: string;              // chapter-uploaded logo/crest image URL ("" = auto shield)
 
   // Derived (single source of truth for the four most-templated combos):
   chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
@@ -123,6 +124,7 @@ export const APEX_IDENTITY: ChapterIdentity = {
   appShortTitle: "Greekstack",
   fraternityLetters: "GS",
   timeZone: "America/New_York",
+  logoUrl: "",
   chapterFullName: "Greekstack",
   chapterAttribution: "Greekstack",
   pageTitle: "Greekstack",
@@ -176,6 +178,9 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const appShortTitle = cfg["chapter.appShortTitle"] || fraternityShort;
   const fraternityLetters = cfg["chapter.fraternityLetters"] || "";
   const timeZone = cfg["chapter.timezone"] || "America/New_York";
+  // Chapter-uploaded logo image (Cloudinary/Blob URL or data URI). Empty = the
+  // auto-generated brand-tinted shield in components/brand/wordmark.tsx.
+  const logoUrl = cfg["brand.logoUrl"] || "";
 
   const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
   return {
@@ -187,6 +192,7 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     cardinalPrinciples, tagline, appShortTitle,
     fraternityLetters,
     timeZone,
+    logoUrl,
     chapterFullName,
     chapterAttribution: [fraternityShort, schoolShort].filter(Boolean).join(" "),
     pageTitle: [chapterFullName, schoolShort ? `Rush at ${schoolShort}` : ""].filter(Boolean).join(" — "),

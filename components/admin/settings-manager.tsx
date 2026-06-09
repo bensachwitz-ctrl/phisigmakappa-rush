@@ -209,6 +209,19 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         </div>
       </Section>
 
+      {/* BRAND LOGO — chapter crest/logo upload (white-label) */}
+      <Section id="logo" title="Chapter logo" eyebrow="Upload your crest — replaces the auto-generated shield" icon={ImageIcon}>
+        <p className="text-xs text-muted-foreground mb-4">
+          Upload your chapter&apos;s logo or crest (square or transparent PNG works best). It appears in
+          the site header, footer, and login screens — replacing the auto-generated shield. Leave blank
+          to keep the generated mark in your brand colors. Click <strong>Save</strong> to apply.
+        </p>
+        <BrandLogoInput
+          value={values["brand.logoUrl"] || ""}
+          onChange={(v) => set("brand.logoUrl", v)}
+        />
+      </Section>
+
       {/* BRAND COLORS — chapter-level theme override (white-label) */}
       <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={Sparkles}>
         <p className="text-xs text-muted-foreground mb-4">
@@ -1259,6 +1272,88 @@ function JsonArrayEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/**
+ * Chapter logo uploader. Uploads to the admin-only /api/upload-photo endpoint
+ * (Cloudinary → Blob → dev data-URI fallback) and stores the returned URL in
+ * brand.logoUrl. A larger preview than the headshot input since the logo is the
+ * chapter's primary brand mark. Empty → the site renders the auto-generated
+ * brand-tinted shield instead.
+ */
+function BrandLogoInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { push } = useToast();
+  const [uploading, setUploading] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-photo", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
+      onChange(json.url);
+      push({ title: "Logo uploaded — click Save to apply", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-border bg-secondary/40 p-2 shrink-0">
+        {value ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={imageSrc(value, { w: 192, h: 192, crop: "limit" })}
+            alt="Chapter logo preview"
+            className="max-h-full max-w-full object-contain"
+          />
+        ) : (
+          <span className="text-[10px] text-center text-muted-foreground leading-tight">
+            No logo<br />(auto shield)
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-[200px] space-y-2">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Upload a file or paste an image URL"
+        />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+            {uploading ? "Uploading…" : "Upload logo"}
+          </Button>
+          {value && (
+            <Button type="button" size="sm" variant="ghost" onClick={() => onChange("")}>
+              Remove
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
