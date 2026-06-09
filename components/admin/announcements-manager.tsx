@@ -26,19 +26,21 @@ type Announcement = {
   id: string;
   title: string;
   body: string;
-  audience: "ALL" | "BROTHERS" | "RUSHES" | "EBOARD";
+  audience: "ALL" | "BROTHERS" | "RUSHES" | "EBOARD" | "ALUMNI";
   pinned: boolean;
+  pollId?: string | null;
   createdAt: string;
   author: { id: string; name: string } | null;
 };
 
-type Audience = "ALL" | "BROTHERS" | "RUSHES" | "EBOARD";
+type Audience = "ALL" | "BROTHERS" | "RUSHES" | "EBOARD" | "ALUMNI";
 
-const initial: { title: string; body: string; audience: Audience; pinned: boolean } = {
+const initial: { title: string; body: string; audience: Audience; pinned: boolean; pollId: string | null } = {
   title: "",
   body: "",
   audience: "ALL",
   pinned: false,
+  pollId: null,
 };
 
 export function AnnouncementsManager({ initial: initialAnnouncements }: { initial: Announcement[] }) {
@@ -49,6 +51,14 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
   const [form, setForm] = React.useState(initial);
   const [busy, setBusy] = React.useState(false);
   const [broadcastOpen, setBroadcastOpen] = React.useState(false);
+  const [polls, setPolls] = React.useState<{ id: string; question: string }[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/polls")
+      .then((r) => r.json())
+      .then((data) => setPolls(data.polls || []))
+      .catch((err) => console.error("failed to load polls:", err));
+  }, []);
 
   // ---- Confirm dialog (replaces window.confirm) ----
   const [confirmState, setConfirmState] = React.useState<{
@@ -83,7 +93,7 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
 
   function openEdit(a: Announcement) {
     setEditing(a);
-    setForm({ title: a.title, body: a.body, audience: a.audience, pinned: a.pinned });
+    setForm({ title: a.title, body: a.body, audience: a.audience, pinned: a.pinned, pollId: a.pollId || null });
     setOpen(true);
   }
 
@@ -272,6 +282,7 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
                     <SelectItem value="BROTHERS">Brothers only</SelectItem>
                     <SelectItem value="RUSHES">Rushes only</SelectItem>
                     <SelectItem value="EBOARD">E-board only</SelectItem>
+                    <SelectItem value="ALUMNI">Alumni only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -279,6 +290,18 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
                 <Checkbox checked={form.pinned} onCheckedChange={(v) => setForm({ ...form, pinned: !!v })} />
                 <span>Pin to top</span>
               </label>
+            </div>
+            <div>
+              <Label className="mb-1 inline-block">Link a poll (optional)</Label>
+              <Select value={form.pollId || "none"} onValueChange={(v) => setForm({ ...form, pollId: v === "none" ? null : v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No poll linked</SelectItem>
+                  {polls.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.question}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

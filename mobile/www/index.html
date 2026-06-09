@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GreekStack</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #020617; /* Deep Slate dark background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #e2e8f0;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .logo-glow {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.05em;
+      margin: 0;
+      position: relative;
+      z-index: 2;
+      animation: pulse 2s ease-in-out infinite alternate;
+    }
+    .loader {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.05);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      z-index: 2;
+    }
+    .status {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin: 0;
+      z-index: 2;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      from { transform: scale(0.98); opacity: 0.95; }
+      to { transform: scale(1.02); opacity: 1; }
+    }
+  </style>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('GreekStack native bootloader active.');
+    });
+  </script>
+</head>
+<body>
+  <div class="logo-glow"></div>
+  <div class="container">
+    <h1 class="logo">GREEKSTACK</h1>
+    <div class="loader"></div>
+    <p class="status">Connecting to Chapter...</p>
+  </div>
+</body>
+</html>

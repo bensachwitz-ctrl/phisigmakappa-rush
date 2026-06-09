@@ -41,23 +41,23 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
         <nav aria-label="Primary" className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/schedule"
-            className="hidden sm:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
+            className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
           >
             Schedule
           </Link>
           <Link
             href="#about"
-            className="hidden sm:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
+            className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
           >
             About
           </Link>
           <Link
             href="/alumni"
-            className="hidden sm:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
+            className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
           >
             Alumni
           </Link>
-          <Button asChild size="sm" className="hidden sm:inline-flex">
+          <Button asChild size="sm" className="hidden md:inline-flex">
             <Link href="#register">Register</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">

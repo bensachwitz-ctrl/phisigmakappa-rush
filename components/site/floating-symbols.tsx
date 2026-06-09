@@ -50,7 +50,7 @@ export function FloatingSymbols({ greekLettersGlyphs = "ΓΤ" }: { greekLettersG
   if (symbols.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[-10]" aria-hidden="true">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes float-up {
           0% {

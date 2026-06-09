@@ -1,0 +1,52 @@
+# Greekstack: White-Label Greek Life SaaS Platform
+
+Greekstack is a modern, white-label, multi-tenant SaaS platform designed for fraternity and sorority chapter management, recruitment, dues collection, alumni engagement, and scheduling. It runs on a multi-tenant PostgreSQL schema architecture with automated tenant resolution based on subdomains or apex domain hosts.
+
+## Core Modules & Features
+
+### 1. Chapter Marketing & Public Pages
+- **Interactive Home Page**: Dynamic, fully-branded marketing page customized to each chapter's Greek letters, crest, identity, and colors.
+- **Interactive Demo**: A primary web-app demo accessible at `/app?demo=true` that lets chapters simulate portal usage.
+- **Parents Portal**: Dedicated public page (`/parents`) for parents to read updates and access officer contact info.
+- **Premium Scheduler / Booking**: High-end scheduling system at `/schedule` for booking recruitment calls, officer meetings, and house tours.
+
+### 2. Native-Style Mobile Portal (`/app`)
+A simulated mobile UI mockup shell served directly on the platform (responsive full-bleed on mobile viewports, smartphone mock container on desktop viewports) featuring:
+- **Searchable Chapter Picker**: Search and select any active school/chapter database tenant.
+- **Unified Login**: Role-based authentication (Active Brother or Alumni) validating credentials dynamically against the selected tenant database.
+- **Dynamic Bottom Tab Navigation**:
+  - **Feed**: Recent chapter announcements and pinned posts.
+  - **Events**: Directory of calendar events with active RSVP toggles.
+  - **Dues/Giving**: Visual invoices and donation campaign trackers.
+  - **Roster**: Searchable directories of active brothers and graduated alumni.
+  - **Settings**: Local state management, session tokens, and portal switcher.
+
+### 3. Active Brother & Alumni Network Dashboard (`/portal`)
+- **Alumni Directory**: A searchable database of graduated alumni filtered by graduation year, pledge class, location, employer, and job title.
+- **Career & Internship Board**: A dual-tab career board allowing alumni to post career opportunities and active brothers to view/apply. It includes pre-filled `mailto` contact templates to streamline referral introductions.
+- **Hometown PNM Matching**: Matching algorithm linking prospective new members (PNMs) with alumni from the same city/state for character vouches.
+- **Surveys & Polls**: Opinion surveys with dynamic Radix-based choices, preventing duplicate voting and ensuring resilience against malformed options.
+- **Dues Management**: Invoices with a percentage-only card fee passthrough calculation (eliminating any flat-cents fee component to simplify transaction logs).
+- **Alumni Giving**: Dedicated Stripe Connected checkouts for chapter donations (General, Scholarship, Housing, and Homecoming campaigns).
+
+## Key Public & Crawler Routes
+
+- `GET /` - Public marketing landing page.
+- `GET /app` - Central mobile app portal (onboarding and client shell).
+- `GET /app?demo=true` - Interactive offline-resilient demo simulator.
+- `GET /schedule` - Professional chapter scheduler.
+- `GET /login` - Admin/user portal gate.
+- `GET /privacy` - Privacy policy.
+- `GET /terms` - Terms of service.
+- `GET /parents` - Parent resources page (subdomains only).
+
+## API Directory
+
+- `POST /api/mobile/auth` - Role-based credentials validation and session token signature.
+- `GET /api/mobile/data` - Dynamic portal dashboard feed aggregator.
+- `POST /api/mobile/events/rsvp` - Multi-tenant RSVP submission.
+- `POST /api/portal/career/post` - Create dynamic job/internship listings in the career board database.
+- `POST /api/alumni/vouch` - Create and modify character vouches for PNM candidates.
+- `DELETE /api/alumni/vouch` - Revoke candidate vouches.
+- `POST /api/alumni/donate/checkout` - Create a custom Stripe checkout session for giving campaign donations.
+- `POST /api/polls/[id]/vote` - Dynamic poll vote validation and submission.

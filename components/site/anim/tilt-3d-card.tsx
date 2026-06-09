@@ -33,6 +33,7 @@ export function Tilt3DCard({
   /** Spotlight glow tint that follows the cursor. */
   glareColor = "rgba(99,102,241,0.28)",
   spring = { stiffness: 220, damping: 22, mass: 0.6 },
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -40,6 +41,7 @@ export function Tilt3DCard({
   glare?: boolean;
   glareColor?: string;
   spring?: { stiffness: number; damping: number; mass: number };
+  onClick?: () => void;
 }) {
   const reduce = useReducedMotion();
   const ref = React.useRef<HTMLDivElement>(null);
@@ -89,11 +91,11 @@ export function Tilt3DCard({
   }, [hovering, px, py]);
 
   if (reduce) {
-    return <div className={className}>{children}</div>;
+    return <div className={cn(onClick && "cursor-pointer", className)} onClick={onClick}>{children}</div>;
   }
 
   return (
-    <div style={{ perspective: 1000 }} className={cn("[transform-style:preserve-3d]", className)}>
+    <div style={{ perspective: 1000 }} className={cn("[transform-style:preserve-3d]", onClick && "cursor-pointer", className)} onClick={onClick}>
       <motion.div
         ref={ref}
         onPointerMove={onMove}

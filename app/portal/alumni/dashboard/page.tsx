@@ -174,6 +174,56 @@ export default async function AlumniDashboardPage() {
     },
   });
 
+  // Fetch pinned & recent announcements for Alumni
+  const announcements = await prisma.announcement.findMany({
+    where: {
+      audience: { in: ["ALUMNI", "ALL"] },
+      status: "sent"
+    },
+    orderBy: [
+      { pinned: "desc" },
+      { createdAt: "desc" }
+    ],
+    take: 15,
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      pinned: true,
+      createdAt: true,
+      author: {
+        select: { name: true, position: true }
+      },
+      pollId: true,
+      poll: {
+        select: {
+          id: true,
+          question: true,
+          options: true,
+          createdById: true,
+          closesAt: true,
+          closedAt: true,
+          audience: true,
+          createdAt: true,
+          updatedAt: true,
+          votes: {
+            select: {
+              id: true,
+              brotherId: true,
+              alumniId: true,
+              optionId: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Fetch career opportunities / job postings
+  const jobPostings = await prisma.jobPosting.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
   // Collapse type definition safety
   const formattedAlumni = {
     ...alumniProfile,
@@ -191,6 +241,35 @@ export default async function AlumniDashboardPage() {
     recordedAt: d.recordedAt.toISOString(),
   }));
 
+  const formattedJobPostings = jobPostings.map(j => ({
+    id: j.id,
+    title: j.title,
+    company: j.company,
+    location: j.location,
+    description: j.description,
+    requirements: j.requirements,
+    salary: j.salary,
+    contactName: j.contactName,
+    contactEmail: j.contactEmail,
+    contactPhone: j.contactPhone,
+    postedById: j.postedById,
+    postedByName: j.postedByName,
+    postedByRole: j.postedByRole,
+    createdAt: j.createdAt.toISOString(),
+  }));
+
+  const formattedAnnouncements = announcements.map(a => ({
+    ...a,
+    createdAt: a.createdAt.toISOString(),
+    poll: a.poll ? {
+      ...a.poll,
+      createdAt: a.poll.createdAt.toISOString(),
+      updatedAt: a.poll.updatedAt.toISOString(),
+      closesAt: a.poll.closesAt ? a.poll.closesAt.toISOString() : null,
+      closedAt: a.poll.closedAt ? a.poll.closedAt.toISOString() : null,
+    } : null
+  }));
+
   return (
     <DashboardClient
       alumni={formattedAlumni}
@@ -201,6 +280,8 @@ export default async function AlumniDashboardPage() {
       polls={polls}
       events={formattedEvents}
       donations={formattedDonations}
+      jobPostings={formattedJobPostings}
+      announcements={formattedAnnouncements}
       isAdmin={sess.isAdmin}
     />
   );

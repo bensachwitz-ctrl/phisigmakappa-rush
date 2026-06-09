@@ -18,7 +18,8 @@ import {
   Copy,
   Link2,
   X,
-  Loader2
+  Loader2,
+  KeyRound
 } from "lucide-react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,37 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
     }
   };
 
+  async function sendPasswordReset(email: string | null, name: string) {
+    if (!email) {
+      push({
+        title: "No email address",
+        description: `Please set an email address for ${name} before sending a reset link.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await fetch("/api/portal/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, role: "alumni" }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send reset link");
+      push({
+        title: "Reset link sent",
+        description: `Password reset link has been dispatched to ${email}.`,
+        variant: "success",
+      });
+    } catch (err: any) {
+      push({
+        title: "Error",
+        description: err.message || "Failed to send reset link",
+        variant: "destructive",
+      });
+    }
+  }
+
   const handleCsvImport = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -384,6 +416,14 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => sendPasswordReset(alumni.email, alumni.fullName)}
+                          className="p-1.5 hover:bg-amber-50 text-amber-750 rounded-lg transition"
+                          title="Send password reset link"
+                          aria-label={`Send password reset to ${alumni.fullName}`}
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => openInvite(alumni)}
                           className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg transition"

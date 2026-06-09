@@ -196,6 +196,24 @@ interface Announcement {
     name: string;
     position: string | null;
   } | null;
+  pollId?: string | null;
+  poll?: {
+    id: string;
+    question: string;
+    options: string;
+    createdById: string;
+    closesAt: string | null;
+    closedAt: string | null;
+    audience: string;
+    createdAt: string;
+    updatedAt: string;
+    votes: {
+      id: string;
+      brotherId: string | null;
+      alumniId: string | null;
+      optionId: string;
+    }[];
+  } | null;
 }
 
 interface Alumni {
@@ -230,6 +248,23 @@ interface MemberStanding {
   breakdown: BreakdownRow[];
 }
 
+interface JobPosting {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  description: string;
+  requirements: string | null;
+  salary: string | null;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string | null;
+  postedById: string;
+  postedByName: string;
+  postedByRole: string;
+  createdAt: string;
+}
+
 interface BrothersDashboardClientProps {
   brother: Brother;
   meetings: Meeting[];
@@ -241,6 +276,7 @@ interface BrothersDashboardClientProps {
   polls: Poll[];
   announcements: Announcement[];
   alumniNetwork: Alumni[];
+  jobPostings: JobPosting[];
   duesConfig: DuesConfig;
   standing: MemberStanding | null;
   isAdmin: boolean;
@@ -472,8 +508,9 @@ export default function BrothersDashboardClient({
   serviceEvents,
   duesPayments,
   polls: initialPolls,
-  announcements,
+  announcements: initialAnnouncements,
   alumniNetwork,
+  jobPostings,
   duesConfig,
   standing,
   isAdmin,
@@ -490,6 +527,29 @@ export default function BrothersDashboardClient({
   const [serviceLogs, setServiceLogs] = useState<ServiceLog[]>(initialServiceLogs);
   const [pollList, setPollList] = useState<Poll[]>(initialPolls);
   const [eventList, setEventList] = useState<Event[]>(events);
+  const [announcementList, setAnnouncementList] = useState<Announcement[]>(initialAnnouncements);
+
+  const isOfficer = brother.position && brother.position !== "Active Member" && brother.position.trim() !== "";
+  const showAdminConsole = isOfficer || isAdmin;
+
+  // Career board states
+  const [alumniTab, setAlumniTab] = useState("directory"); // "directory" or "careers"
+  const [localJobPostings, setLocalJobPostings] = useState<JobPosting[]>(jobPostings || []);
+  const [showPostJobModal, setShowPostJobModal] = useState(false);
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobCompany, setJobCompany] = useState("");
+  const [jobLocation, setJobLocation] = useState("");
+  const [jobSalary, setJobSalary] = useState("");
+  const [jobContactName, setJobContactName] = useState(initialBrother.name || "");
+  const [jobContactEmail, setJobContactEmail] = useState(initialBrother.email || "");
+  const [jobContactPhone, setJobContactPhone] = useState(initialBrother.phone || "");
+  const [jobDescription, setJobDescription] = useState("");
+  const [jobRequirements, setJobRequirements] = useState("");
+  const [postJobError, setPostJobError] = useState<string | null>(null);
+  const [postJobSuccess, setPostJobSuccess] = useState(false);
+  const [submittingJob, setSubmittingJob] = useState(false);
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [jobSearch, setJobSearch] = useState("");
 
   // Search & filter states
   const [alumniSearch, setAlumniSearch] = useState("");
@@ -539,7 +599,11 @@ export default function BrothersDashboardClient({
   const [uploadingImage, setUploadingImage] = useState(false);
 
   // Announcement details modal state
-  const [activeAnnouncement, setActiveAnnouncement] = useState<Announcement | null>(null);
+  const [activeAnnouncementId, setActiveAnnouncementId] = useState<string | null>(null);
+  const activeAnnouncement = announcementList.find(a => a.id === activeAnnouncementId) || null;
+  const setActiveAnnouncement = (ann: Announcement | null) => {
+    setActiveAnnouncementId(ann ? ann.id : null);
+  };
 
   // Poll voting state
   const [votingOnPollId, setVotingOnPollId] = useState<string | null>(null);
@@ -552,6 +616,58 @@ export default function BrothersDashboardClient({
       router.refresh();
     } catch {
       window.location.href = "/portal/brothers";
+    }
+  };
+
+  const handlePostJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPostJobError(null);
+    setPostJobSuccess(false);
+    setSubmittingJob(true);
+
+    try {
+      const res = await fetch("/api/portal/career/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: jobTitle,
+          company: jobCompany,
+          location: jobLocation,
+          salary: jobSalary,
+          contactName: jobContactName,
+          contactEmail: jobContactEmail,
+          contactPhone: jobContactPhone,
+          description: jobDescription,
+          requirements: jobRequirements,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setLocalJobPostings([data.job, ...localJobPostings]);
+        setPostJobSuccess(true);
+        setJobTitle("");
+        setJobCompany("");
+        setJobLocation("");
+        setJobSalary("");
+        setJobDescription("");
+        setJobRequirements("");
+        push({
+          title: "Opportunity Posted",
+          description: "Your internship or job opening is now live for all brothers.",
+          variant: "success",
+        } as any);
+        setTimeout(() => {
+          setShowPostJobModal(false);
+          setPostJobSuccess(false);
+        }, 1500);
+      } else {
+        setPostJobError(data.error || "Failed to submit job posting.");
+      }
+    } catch (err) {
+      setPostJobError("Network error. Please try again.");
+    } finally {
+      setSubmittingJob(false);
     }
   };
 
@@ -771,6 +887,22 @@ export default function BrothersDashboardClient({
             };
           })
         );
+        setAnnouncementList((prev) =>
+          prev.map((a) => {
+            if (!a.poll || a.poll.id !== pollId) return a;
+            const filteredVotes = a.poll.votes.filter((v) => v.brotherId !== brother.id);
+            return {
+              ...a,
+              poll: {
+                ...a.poll,
+                votes: [
+                  ...filteredVotes,
+                  { id: data.vote?.id || "temp", brotherId: brother.id, alumniId: null, optionId },
+                ],
+              },
+            };
+          })
+        );
       } else {
         const err = await res.json();
         push({ title: "Failed to submit vote.", description: err.error || undefined, variant: "destructive" });
@@ -945,6 +1077,58 @@ export default function BrothersDashboardClient({
               {/* Good-standing widget — your engagement score at a glance */}
               {standing && <StandingWidget standing={standing} memberName={brother.name} />}
 
+              {/* Quick Admin Console for officers/admins */}
+              {showAdminConsole && (
+                <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-500/[0.03] to-transparent backdrop-blur-xl p-5 ring-1 ring-amber-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(217,119,6,0.15)] space-y-4 text-left animate-fade-in">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-maroon-900 text-sm leading-none flex items-center gap-2">
+                          Quick Admin Console
+                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[9px] uppercase font-bold tracking-wider py-0.5 px-1.5 hover:bg-amber-100/80">
+                            {brother.position || "Administrator"}
+                          </Badge>
+                        </h3>
+                        <p className="text-[11px] text-maroon-600 mt-1">Direct access shortcuts to administrative chapter management pipelines.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {[
+                      { label: "Manage Recruitment", icon: Users, path: "/admin/rush", desc: "Rush pipelines & bid responses" },
+                      { label: "Chore Wheel Rotate", icon: Settings, path: "/admin/chores", desc: "Rotate chore schedules & grades" },
+                      { label: "Treasury & Budgets", icon: DollarSign, path: "/admin/treasury", desc: "Track chapter accounts & cashflow" },
+                      { label: "Calendar & Events", icon: Calendar, path: "/admin/events", desc: "Add & schedule chapter events" },
+                      { label: "Roster Invites", icon: Plus, path: "/admin/brothers", desc: "Invite new members & updates" },
+                    ].map((btn) => {
+                      const BtnIcon = btn.icon;
+                      return (
+                        <a
+                          key={btn.path}
+                          href={btn.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col text-left p-3.5 rounded-xl border border-amber-200/50 bg-white/70 hover:bg-amber-50/60 hover:border-amber-300 transition-all duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform duration-300">
+                            <BtnIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-maroon-900 leading-tight group-hover:text-amber-800 transition-colors">
+                            {btn.label}
+                          </span>
+                          <span className="text-[10px] text-maroon-500 mt-1 leading-snug">
+                            {btn.desc}
+                          </span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Profile Card & Key Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
@@ -1111,9 +1295,9 @@ export default function BrothersDashboardClient({
                     <MessageSquare className="w-4 h-4 text-maroon-600" />
                     Chapter Announcements
                   </h3>
-                  {announcements.length > 0 ? (
-                    <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1">
-                      {announcements.map((a) => (
+                  {announcementList.length > 0 ? (
+                    <div className="space-y-3.5 max-h-[450px] overflow-y-auto pr-1">
+                      {announcementList.map((a) => (
                         <div
                           key={a.id}
                           onClick={() => setActiveAnnouncement(a)}
@@ -1138,6 +1322,66 @@ export default function BrothersDashboardClient({
                           )}
                           <h4 className="font-bold text-maroon-900 text-sm pr-16">{a.title}</h4>
                           <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{a.body}</p>
+                          
+                          {a.poll && (
+                            <div 
+                              className="mt-3 p-3 rounded-xl bg-white/70 border border-maroon-100/50 space-y-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <p className="text-[11px] font-bold text-maroon-900 flex items-center gap-1.5">
+                                <Vote className="w-3.5 h-3.5 text-maroon-600" />
+                                {a.poll.question}
+                              </p>
+                              <div className="grid grid-cols-1 gap-1.5">
+                                {parsePollOptions(a.poll.options).map((o) => {
+                                  const optionVotes = a.poll!.votes.filter((v) => v.optionId === o.id).length;
+                                  const totalVotes = a.poll!.votes.length;
+                                  const pct = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+                                  const isSelected = a.poll!.votes.some((v) => v.brotherId === brother.id && v.optionId === o.id);
+
+                                  return (
+                                    <button
+                                      key={o.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleVote(a.poll!.id, o.id);
+                                      }}
+                                      disabled={votingOnPollId === a.poll!.id}
+                                      className={`w-full text-left p-2 rounded-lg border text-[11px] transition flex flex-col relative overflow-hidden justify-center min-h-[34px] ${
+                                        isSelected
+                                          ? "border-maroon-800 bg-maroon-50/20"
+                                          : "border-maroon-100/70 hover:border-maroon-300 hover:bg-cream-50/50 bg-white/40"
+                                      }`}
+                                    >
+                                      <div
+                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                                          isSelected ? "bg-maroon-200/20" : "bg-maroon-100/5"
+                                        }`}
+                                        style={{ width: `${pct}%` }}
+                                      ></div>
+
+                                      <div className="flex justify-between items-center z-10 w-full px-1">
+                                        <span className={`flex items-center gap-1 ${
+                                          isSelected ? "text-maroon-950 font-bold" : "text-maroon-800 font-medium"
+                                        }`}>
+                                          {isSelected && <Check className="w-3.5 h-3.5 text-maroon-800 flex-shrink-0" />}
+                                          {o.label}
+                                        </span>
+                                        <span className="font-bold text-maroon-900 font-mono text-[10px]">
+                                          {pct}% ({optionVotes})
+                                        </span>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="text-[9px] text-maroon-400 font-semibold uppercase flex justify-between px-1">
+                                <span>{a.poll.votes.length} votes cast</span>
+                                <span>Anonymous Poll</span>
+                              </div>
+                            </div>
+                          )}
+
                           <div className="flex gap-2 items-center text-[10px] text-maroon-400 mt-3 font-semibold uppercase tracking-wider">
                             <span>By: {a.author?.name || "Chapter Officer"} {a.author?.position ? `(${a.author.position})` : ""}</span>
                             <span>•</span>
@@ -1169,9 +1413,20 @@ export default function BrothersDashboardClient({
                   <h2 className="text-xl font-bold text-maroon-900">Upcoming Chapter Events</h2>
                   <p className="text-xs text-maroon-600">RSVP to chapter meetings, philanthropy, socials, and recruitment.</p>
                 </div>
-                <Badge className="bg-maroon-800 text-cream-50 font-semibold px-3 py-1.5 border-none">
-                  {eventList.length} Scheduled
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {showAdminConsole && (
+                    <Button
+                      onClick={() => window.open("/admin/events", "_blank")}
+                      size="sm"
+                      className="bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-semibold text-xs py-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add / Manage
+                    </Button>
+                  )}
+                  <Badge className="bg-maroon-800 text-cream-50 font-semibold px-3 py-1.5 border-none">
+                    {eventList.length} Scheduled
+                  </Badge>
+                </div>
               </div>
 
               {eventList.length > 0 ? (
@@ -1676,140 +1931,307 @@ export default function BrothersDashboardClient({
           {/* TAB 5: ALUMNI DIRECTORY */}
           {activeTab === "alumni" && (
             <div className="space-y-6 animate-fade-in text-left">
-              <div>
-                <h2 className="text-xl font-bold text-maroon-900">Alumni Directory</h2>
-                <p className="text-xs text-maroon-600">Connect with graduated {terms.membersLower} for career advice, mentorship, and networking.</p>
+              {/* Sub-tabs for Alumni Directory & Careers */}
+              <div className="flex border-b border-maroon-100 mb-6">
+                <button
+                  onClick={() => setAlumniTab("directory")}
+                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
+                    alumniTab === "directory"
+                      ? "border-maroon-800 text-maroon-900"
+                      : "border-transparent text-maroon-500 hover:text-maroon-800"
+                  }`}
+                >
+                  Alumni Directory
+                </button>
+                <button
+                  onClick={() => setAlumniTab("careers")}
+                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
+                    alumniTab === "careers"
+                      ? "border-maroon-800 text-maroon-900"
+                      : "border-transparent text-maroon-500 hover:text-maroon-800"
+                  }`}
+                >
+                  Career Opportunities
+                </button>
               </div>
 
-              {/* Filters Panel */}
-              <div className="bg-white p-4 rounded-2xl border border-maroon-100 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by name, company, city..."
-                    value={alumniSearch}
-                    onChange={(e) => setAlumniSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900 placeholder:text-maroon-400"
-                  />
-                </div>
+              {alumniTab === "directory" ? (
+                <>
+                  <div>
+                    <h2 className="text-xl font-bold text-maroon-900">Alumni Directory</h2>
+                    <p className="text-xs text-maroon-600">Connect with graduated {terms.membersLower} for career advice, mentorship, and networking.</p>
+                  </div>
 
-                <div>
-                  <select
-                    value={alumniYearFilter}
-                    onChange={(e) => setAlumniYearFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
-                  >
-                    <option value="">All Graduation Years</option>
-                    {uniqueGraduationYears.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Filters Panel */}
+                  <div className="bg-white p-4 rounded-2xl border border-maroon-100 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name, company, city..."
+                        value={alumniSearch}
+                        onChange={(e) => setAlumniSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900 placeholder:text-maroon-400"
+                      />
+                    </div>
 
-                <div>
-                  <select
-                    value={alumniClassFilter}
-                    onChange={(e) => setAlumniClassFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
-                  >
-                    <option value="">All Pledge Classes</option>
-                    {uniquePledgeClasses.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                    <div>
+                      <select
+                        value={alumniYearFilter}
+                        onChange={(e) => setAlumniYearFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      >
+                        <option value="">All Graduation Years</option>
+                        {uniqueGraduationYears.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
 
-              {/* Alumni Grid */}
-              {filteredAlumni.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredAlumni.map((a) => (
-                    <div
-                      key={a.id}
-                      className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
-                    >
-                      <div className="space-y-2.5">
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <h3 className="font-bold text-maroon-900 text-base leading-tight">
-                              {a.preferredName ? `${a.fullName} (${a.preferredName})` : a.fullName}
-                            </h3>
-                            <span className="text-[11px] font-semibold text-amber-700 block mt-0.5">
-                              Pledge Class: {a.pledgeClass || "N/A"} • Graduated {a.graduationYear}
-                            </span>
+                    <div>
+                      <select
+                        value={alumniClassFilter}
+                        onChange={(e) => setAlumniClassFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      >
+                        <option value="">All Pledge Classes</option>
+                        {uniquePledgeClasses.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Alumni Grid */}
+                  {filteredAlumni.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredAlumni.map((a) => (
+                        <div
+                          key={a.id}
+                          className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
+                        >
+                          <div className="space-y-2.5">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <h3 className="font-bold text-maroon-900 text-base leading-tight">
+                                  {a.preferredName ? `${a.fullName} (${a.preferredName})` : a.fullName}
+                                </h3>
+                                <span className="text-[11px] font-semibold text-amber-700 block mt-0.5">
+                                  Pledge Class: {a.pledgeClass || "N/A"} • Graduated {a.graduationYear}
+                                </span>
+                              </div>
+                            </div>
+
+                            {a.bio && (
+                              <p className="text-xs text-maroon-600 line-clamp-3 leading-relaxed font-normal italic">
+                                &ldquo;{a.bio}&rdquo;
+                              </p>
+                            )}
+
+                            <div className="space-y-1 text-xs text-maroon-700">
+                              {a.employer && (
+                                <div className="flex items-center gap-1.5">
+                                  <Building className="w-3.5 h-3.5 text-maroon-400" />
+                                  <span className="font-semibold text-maroon-900 truncate">
+                                    {a.jobTitle ? `${a.jobTitle} at ` : ""}{a.employer}
+                                  </span>
+                                </div>
+                              )}
+                              {(a.city || a.state) && (
+                                <div className="flex items-center gap-1.5">
+                                  <Search className="w-3.5 h-3.5 text-maroon-400" style={{ transform: 'rotate(45deg)' }} />
+                                  <span>{a.city || "Unknown"}{a.state ? `, ${a.state}` : ""}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="border-t border-maroon-50 pt-3 flex flex-wrap gap-2 justify-between items-center text-xs">
+                            <div className="flex gap-2">
+                              {a.email && (
+                                <a
+                                  href={`mailto:${a.email}`}
+                                  className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-cream-100 flex items-center justify-center text-maroon-700 border border-maroon-100 transition"
+                                  title="Email Alumnus"
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </a>
+                              )}
+                              {a.phone && (
+                                <a
+                                  href={`tel:${a.phone}`}
+                                  className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-cream-100 flex items-center justify-center text-maroon-700 border border-maroon-100 transition"
+                                  title="Call Alumnus"
+                                >
+                                  <Phone className="w-4 h-4" />
+                                </a>
+                              )}
+                            </div>
+                            {a.linkedinUrl && (
+                              <a
+                                href={a.linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-900 font-bold font-mono tracking-wider uppercase text-[10px]"
+                              >
+                                LinkedIn
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
                           </div>
                         </div>
-
-                        {a.bio && (
-                          <p className="text-xs text-maroon-600 line-clamp-3 leading-relaxed font-normal italic">
-                            &ldquo;{a.bio}&rdquo;
-                          </p>
-                        )}
-
-                        <div className="space-y-1 text-xs text-maroon-700">
-                          {a.employer && (
-                            <div className="flex items-center gap-1.5">
-                              <Building className="w-3.5 h-3.5 text-maroon-400" />
-                              <span className="font-semibold text-maroon-900 truncate">
-                                {a.jobTitle ? `${a.jobTitle} at ` : ""}{a.employer}
-                              </span>
-                            </div>
-                          )}
-                          {(a.city || a.state) && (
-                            <div className="flex items-center gap-1.5">
-                              <Search className="w-3.5 h-3.5 text-maroon-400" style={{ transform: 'rotate(45deg)' }} />
-                              <span>{a.city || "Unknown"}{a.state ? `, ${a.state}` : ""}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="border-t border-maroon-50 pt-3 flex flex-wrap gap-2 justify-between items-center text-xs">
-                        <div className="flex gap-2">
-                          {a.email && (
-                            <a
-                              href={`mailto:${a.email}`}
-                              className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-cream-100 flex items-center justify-center text-maroon-700 border border-maroon-100 transition"
-                              title="Email Alumnus"
-                            >
-                              <Mail className="w-4 h-4" />
-                            </a>
-                          )}
-                          {a.phone && (
-                            <a
-                              href={`tel:${a.phone}`}
-                              className="w-8 h-8 rounded-lg bg-cream-50 hover:bg-cream-100 flex items-center justify-center text-maroon-700 border border-maroon-100 transition"
-                              title="Call Alumnus"
-                            >
-                              <Phone className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                        {a.linkedinUrl && (
-                          <a
-                            href={a.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-900 font-bold font-mono tracking-wider uppercase text-[10px]"
-                          >
-                            LinkedIn
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
+                      <PortalEmpty
+                        icon={Users}
+                        illustration={IllustrationSearch}
+                        title="No alumni match your filters"
+                        sub="Try clearing the search or choosing a different graduation year or pledge class."
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
-                  <PortalEmpty
-                    icon={Users}
-                    illustration={IllustrationSearch}
-                    title="No alumni match your filters"
-                    sub="Try clearing the search or choosing a different graduation year or pledge class."
-                  />
-                </div>
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-maroon-900">Career & Internship Board</h2>
+                      <p className="text-xs text-maroon-600">Browse internships, postgrad jobs, and referrals shared by alumni and active brothers.</p>
+                    </div>
+                    <Button
+                      onClick={() => setShowPostJobModal(true)}
+                      className="bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow"
+                    >
+                      <Plus className="w-4 h-4" /> Post Opportunity
+                    </Button>
+                  </div>
+
+                  {/* Job Board Search */}
+                  <div className="bg-white p-4 rounded-2xl border border-maroon-100 shadow-sm max-w-md">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
+                      <input
+                        type="text"
+                        placeholder="Search jobs by title, company, keyword..."
+                        value={jobSearch}
+                        onChange={(e) => setJobSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900 placeholder:text-maroon-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Careers List */}
+                  {(() => {
+                    const jobs = localJobPostings.filter(j => {
+                      const q = jobSearch.toLowerCase();
+                      return (
+                        j.title.toLowerCase().includes(q) ||
+                        j.company.toLowerCase().includes(q) ||
+                        j.description.toLowerCase().includes(q) ||
+                        (j.location && j.location.toLowerCase().includes(q))
+                      );
+                    });
+
+                    if (jobs.length === 0) {
+                      return (
+                        <div className="bg-white border border-maroon-100 rounded-2xl shadow-sm">
+                          <PortalEmpty
+                            icon={Award}
+                            illustration={IllustrationSearch}
+                            title="No opportunities found"
+                            sub="Be the first to post a job opening or internship to get the ball rolling!"
+                          />
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {jobs.map((j) => {
+                          const isExpanded = expandedJobId === j.id;
+                          const refEmailSubject = `Greekstack Referral: ${j.title}`;
+                          const refEmailBody = `Hi ${j.contactName},\n\nI am an active member in the chapter here at Greekstack. I saw the "${j.title}" opening at "${j.company}" that you shared in the Career portal and would love to get in touch about applying and learning more.\n\nBest,\n${brother.name}`;
+                          const emailHref = `mailto:${j.contactEmail}?subject=${encodeURIComponent(refEmailSubject)}&body=${encodeURIComponent(refEmailBody)}`;
+
+                          return (
+                            <div
+                              key={j.id}
+                              onClick={() => setExpandedJobId(isExpanded ? null : j.id)}
+                              className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 cursor-pointer hover:border-maroon-200 transition-all space-y-4"
+                            >
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="space-y-1">
+                                  <h3 className="font-bold text-maroon-900 text-base leading-snug flex items-center gap-2">
+                                    <Building className="w-4 h-4 text-maroon-500 shrink-0" />
+                                    {j.title}
+                                  </h3>
+                                  <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider">
+                                    {j.company} {j.location ? `• ${j.location}` : ""}
+                                  </p>
+                                </div>
+                                {j.salary && (
+                                  <Badge className="bg-emerald-100 text-emerald-800 font-bold border-none">
+                                    {j.salary}
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <p className={`text-xs text-maroon-700 leading-relaxed ${isExpanded ? "" : "line-clamp-2"}`}>
+                                {j.description}
+                              </p>
+
+                              {isExpanded && (
+                                <div className="border-t border-maroon-50 pt-4 space-y-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                  {j.requirements && (
+                                    <div className="space-y-1">
+                                      <h4 className="text-xs font-bold text-maroon-900 uppercase tracking-wider">Qualifications & Requirements</h4>
+                                      <p className="text-xs text-maroon-700 leading-relaxed">{j.requirements}</p>
+                                    </div>
+                                  )}
+
+                                  <div className="bg-cream-50 p-4 rounded-xl border border-maroon-100/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider">Shared Referrer / Contact</span>
+                                      <p className="text-xs font-bold text-maroon-900">{j.contactName} ({j.postedByRole === "alumni" ? "Alumnus" : "Active Member"})</p>
+                                      <p className="text-[11px] text-maroon-600">Shared by {j.postedByName}</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 sm:justify-end">
+                                      <a
+                                        href={emailHref}
+                                        className="inline-flex items-center gap-1.5 bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold text-xs px-4 py-2 rounded-xl transition shadow"
+                                      >
+                                        <Mail className="w-3.5 h-3.5" /> Email Referrer
+                                      </a>
+                                      {j.contactPhone && (
+                                        <a
+                                          href={`tel:${j.contactPhone}`}
+                                          className="w-8 h-8 rounded-lg bg-cream-100 hover:bg-cream-200 border border-maroon-200 flex items-center justify-center text-maroon-800 transition"
+                                          title="Call Referrer"
+                                        >
+                                          <Phone className="w-4 h-4" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="border-t border-maroon-50/50 pt-2 flex items-center justify-between text-[10px] text-maroon-400 uppercase font-bold tracking-wider">
+                                <span>Posted on {new Date(j.createdAt).toLocaleDateString()}</span>
+                                <span className="flex items-center gap-0.5">
+                                  {isExpanded ? "Collapse info" : "View requirements & apply"} <ChevronDown className={`w-3.5 h-3.5 transition ${isExpanded ? "rotate-180" : ""}`} />
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </>
               )}
             </div>
           )}
@@ -2118,6 +2540,59 @@ export default function BrothersDashboardClient({
                 {activeAnnouncement.body}
               </div>
 
+              {activeAnnouncement.poll && (
+                <div className="p-4 rounded-xl bg-cream-50/50 border border-maroon-100 space-y-3">
+                  <p className="text-xs font-bold text-maroon-950 flex items-center gap-2">
+                    <Vote className="w-4 h-4 text-maroon-700" />
+                    {activeAnnouncement.poll.question}
+                  </p>
+                  <div className="space-y-2">
+                    {parsePollOptions(activeAnnouncement.poll.options).map((o) => {
+                      const optionVotes = activeAnnouncement.poll!.votes.filter((v) => v.optionId === o.id).length;
+                      const totalVotes = activeAnnouncement.poll!.votes.length;
+                      const pct = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+                      const isSelected = activeAnnouncement.poll!.votes.some((v) => v.brotherId === brother.id && v.optionId === o.id);
+
+                      return (
+                        <button
+                          key={o.id}
+                          onClick={() => handleVote(activeAnnouncement.poll!.id, o.id)}
+                          disabled={votingOnPollId === activeAnnouncement.poll!.id}
+                          className={`w-full text-left p-2.5 rounded-lg border text-xs transition flex flex-col relative overflow-hidden justify-center min-h-[40px] ${
+                            isSelected
+                              ? "border-maroon-800 bg-maroon-50/25"
+                              : "border-maroon-100 hover:border-maroon-300 hover:bg-white bg-white/70"
+                          }`}
+                        >
+                          <div
+                            className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                              isSelected ? "bg-maroon-200/25" : "bg-maroon-100/10"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          ></div>
+
+                          <div className="flex justify-between items-center z-10 w-full px-1">
+                            <span className={`flex items-center gap-1.5 ${
+                              isSelected ? "text-maroon-950 font-bold" : "text-maroon-800 font-medium"
+                            }`}>
+                              {isSelected && <Check className="w-4 h-4 text-maroon-800 flex-shrink-0" />}
+                              {o.label}
+                            </span>
+                            <span className="font-bold text-maroon-950 font-mono text-xs">
+                              {pct}% ({optionVotes})
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-maroon-400 font-bold uppercase flex justify-between px-1">
+                    <span>Total votes: {activeAnnouncement.poll.votes.length}</span>
+                    <span>Anonymous Poll</span>
+                  </div>
+                </div>
+              )}
+
               <div className="border-t border-maroon-50 pt-4 mt-6 flex justify-between items-center text-[10px] font-bold text-maroon-400 uppercase tracking-wider">
                 <span>By: {activeAnnouncement.author?.name || "Chapter Officer"} {activeAnnouncement.author?.position ? `(${activeAnnouncement.author.position})` : ""}</span>
                 <span>{new Date(activeAnnouncement.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -2219,6 +2694,177 @@ export default function BrothersDashboardClient({
                   {rsvpLoading === activeRsvpEvent.id ? "Submitting..." : "Save RSVP"}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JOB POSTING MODAL */}
+      {showPostJobModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white max-w-lg w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left animate-in fade-in duration-200">
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                    Post Career Opportunity
+                  </span>
+                  <h3 className="font-extrabold text-maroon-900 text-lg leading-snug">Share Job or Internship</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowPostJobModal(false);
+                    setPostJobError(null);
+                    setPostJobSuccess(false);
+                  }}
+                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-500 hover:text-maroon-900 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {postJobSuccess ? (
+                <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 border border-emerald-250 flex items-center justify-center text-emerald-800">
+                    <Check className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-maroon-900 text-sm">Opportunity Shipped!</h4>
+                  <p className="text-xs text-maroon-600">Your career posting has been shared with all active brothers.</p>
+                </div>
+              ) : (
+                <form onSubmit={handlePostJob} className="space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Opportunity Title*</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Software Engineer Intern"
+                        value={jobTitle}
+                        onChange={(e) => setJobTitle(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Company / Employer*</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Google"
+                        value={jobCompany}
+                        onChange={(e) => setJobCompany(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Location</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. San Francisco, CA"
+                        value={jobLocation}
+                        onChange={(e) => setJobLocation(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Salary / Compensation</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. $45/hr or $90,000/yr"
+                        value={jobSalary}
+                        onChange={(e) => setJobSalary(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-maroon-50 pt-2 grid grid-cols-3 gap-3">
+                    <div className="col-span-1">
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Contact Name*</label>
+                      <input
+                        type="text"
+                        required
+                        value={jobContactName}
+                        onChange={(e) => setJobContactName(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Contact Email*</label>
+                      <input
+                        type="email"
+                        required
+                        value={jobContactEmail}
+                        onChange={(e) => setJobContactEmail(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Contact Phone</label>
+                      <input
+                        type="text"
+                        value={jobContactPhone}
+                        onChange={(e) => setJobContactPhone(e.target.value)}
+                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Description & Referral Steps*</label>
+                    <textarea
+                      required
+                      rows={3}
+                      placeholder="Explain the job duties, how a brother can apply, and if you can submit an internal referral..."
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900 resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Preferred Qualifications (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Junior/Senior standing, CS or Business majors preferred"
+                      value={jobRequirements}
+                      onChange={(e) => setJobRequirements(e.target.value)}
+                      className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900"
+                    />
+                  </div>
+
+                  {postJobError && (
+                    <div className="p-2.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs font-semibold">
+                      {postJobError}
+                    </div>
+                  )}
+
+                  <div className="pt-2 flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setShowPostJobModal(false);
+                        setPostJobError(null);
+                        setPostJobSuccess(false);
+                      }}
+                      className="text-maroon-700 hover:bg-cream-50 text-xs py-1 h-8 rounded-lg"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={submittingJob}
+                      className="bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold px-4 py-1 h-8 rounded-lg text-xs animate-pulse-once"
+                    >
+                      {submittingJob ? "Posting..." : "Share Posting"}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

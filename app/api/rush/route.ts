@@ -5,6 +5,7 @@ import { enrichRushee } from "@/lib/enrich";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { isAdminAuthed } from "@/lib/auth";
+import { getTwilioConfig } from "@/lib/messaging-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,11 +63,9 @@ function buildSmsDisclosureText(cfg: Record<string, string>): string {
  */
 async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: string, orgLabel: string) {
   try {
-    const sid = process.env.TWILIO_ACCOUNT_SID;
-    const token = process.env.TWILIO_AUTH_TOKEN;
-    const from = process.env.TWILIO_PHONE_NUMBER;
+    const { accountSid: sid, authToken: token, phoneNumber: from } = await getTwilioConfig();
     if (!sid || !token || !from) {
-      console.info("[double-opt-in] Twilio env not set; skipping confirmation SMS for", receiptId);
+      console.info("[double-opt-in] Twilio config not set; skipping confirmation SMS for", receiptId);
       return;
     }
     // Org label is the tenant's identity (neutral "The chapter" fallback) — no

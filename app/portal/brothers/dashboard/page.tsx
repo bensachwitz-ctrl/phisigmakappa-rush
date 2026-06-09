@@ -178,6 +178,28 @@ export default async function BrothersDashboardPage() {
       createdAt: true,
       author: {
         select: { name: true, position: true }
+      },
+      pollId: true,
+      poll: {
+        select: {
+          id: true,
+          question: true,
+          options: true,
+          createdById: true,
+          closesAt: true,
+          closedAt: true,
+          audience: true,
+          createdAt: true,
+          updatedAt: true,
+          votes: {
+            select: {
+              id: true,
+              brotherId: true,
+              alumniId: true,
+              optionId: true
+            }
+          }
+        }
       }
     }
   });
@@ -201,6 +223,11 @@ export default async function BrothersDashboardPage() {
       linkedinUrl: true,
       bio: true,
     }
+  });
+
+  // Fetch career opportunities / job postings
+  const jobPostings = await prisma.jobPosting.findMany({
+    orderBy: { createdAt: "desc" }
   });
 
   // Load Stripe dues configs from SiteConfig KV store
@@ -290,6 +317,30 @@ export default async function BrothersDashboardPage() {
   const formattedAnnouncements = announcements.map(a => ({
     ...a,
     createdAt: a.createdAt.toISOString(),
+    poll: a.poll ? {
+      ...a.poll,
+      createdAt: a.poll.createdAt.toISOString(),
+      updatedAt: a.poll.updatedAt.toISOString(),
+      closesAt: a.poll.closesAt ? a.poll.closesAt.toISOString() : null,
+      closedAt: a.poll.closedAt ? a.poll.closedAt.toISOString() : null,
+    } : null
+  }));
+
+  const formattedJobPostings = jobPostings.map(j => ({
+    id: j.id,
+    title: j.title,
+    company: j.company,
+    location: j.location,
+    description: j.description,
+    requirements: j.requirements,
+    salary: j.salary,
+    contactName: j.contactName,
+    contactEmail: j.contactEmail,
+    contactPhone: j.contactPhone,
+    postedById: j.postedById,
+    postedByName: j.postedByName,
+    postedByRole: j.postedByRole,
+    createdAt: j.createdAt.toISOString(),
   }));
 
   return (
@@ -304,6 +355,7 @@ export default async function BrothersDashboardPage() {
       polls={polls}
       announcements={formattedAnnouncements}
       alumniNetwork={alumniNetwork}
+      jobPostings={formattedJobPostings}
       duesConfig={duesConfig}
       standing={standing ? { score: standing.result.score, max: standing.result.max, pct: standing.result.pct, standing: standing.result.standing, breakdown: standing.result.breakdown } : null}
       isAdmin={sess.isAdmin}

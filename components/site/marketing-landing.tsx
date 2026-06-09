@@ -76,6 +76,7 @@ import {
   PreviewWhiteLabel,
   PreviewAnnouncements,
   PreviewAlumni,
+  PreviewTreasury,
 } from "@/components/site/feature-previews";
 
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
@@ -158,13 +159,41 @@ function GreekKey({
    by design). Defined locally here because the shared previews file isn't part of
    this change; it's `function`-declared so it's hoisted for the FEATURES array. */
 function PreviewElections() {
-  // One seat's anonymized result: candidate monogram, vote bar, vote count, and
-  // a "Seated" pill on the auto-installed winner.
-  const race: { glyph: string; tone: "blue" | "sky" | "gold"; pct: number; votes: number; seated?: boolean }[] = [
-    { glyph: "ΑΒ", tone: "blue", pct: 58, votes: 27, seated: true },
-    { glyph: "ΓΔ", tone: "sky", pct: 30, votes: 14 },
-    { glyph: "ΕΖ", tone: "gold", pct: 12, votes: 6 },
+  const [votes, setVotes] = React.useState<number[]>([27, 14, 6]);
+  const [userVote, setUserVote] = React.useState<number | null>(null);
+
+  const initialVotes = [27, 14, 6];
+
+  const handleVote = (index: number) => {
+    setVotes(prev => {
+      const next = [...prev];
+      if (userVote === index) {
+        // Toggle off
+        next[index] = initialVotes[index];
+        setUserVote(null);
+      } else {
+        // Reset others to initial, and add 1 to new selection
+        initialVotes.forEach((val, i) => {
+          next[i] = val + (i === index ? 1 : 0);
+        });
+        setUserVote(index);
+      }
+      return next;
+    });
+  };
+
+  const totalVotes = votes.reduce((sum, v) => sum + v, 0);
+
+  // Determine winner (highest vote count)
+  const maxVotes = Math.max(...votes);
+  const winningIndex = votes.indexOf(maxVotes);
+
+  const candidates: { glyph: string; tone: "blue" | "sky" | "gold" }[] = [
+    { glyph: "ΑΒ", tone: "blue" },
+    { glyph: "ΓΔ", tone: "sky" },
+    { glyph: "ΕΖ", tone: "gold" },
   ];
+
   const toneBar: Record<string, string> = {
     blue: "bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500",
     sky: "bg-gradient-to-r from-sky-500 to-cyan-400",
@@ -175,13 +204,18 @@ function PreviewElections() {
     sky: "from-sky-500/25 to-sky-500/10 text-sky-700 ring-sky-500/25",
     gold: "from-amber-400/30 to-amber-400/10 text-amber-700 ring-amber-400/30",
   };
+
   return (
     <div className="rounded-xl border border-border bg-card p-3.5 shadow-[0_1px_2px_0_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-foreground">President · ballot</span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Closed · 47 ballots
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all duration-300 ${
+          userVote !== null 
+            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
+            : "border-blue-500/20 bg-blue-500/10 text-blue-700"
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${userVote !== null ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`} />
+          {userVote !== null ? `Vote Cast · ${totalVotes} ballots` : `Open · ${totalVotes} ballots`}
         </span>
       </div>
       {/* Anonymity reassurance line — the load-bearing promise of the feature. */}
@@ -189,34 +223,63 @@ function PreviewElections() {
         <IconShieldCheck className="h-3.5 w-3.5 shrink-0 text-blue-700" />
         <span className="text-[10px] font-medium text-blue-800">Secret ballot — votes aren&apos;t linked to voters</span>
       </div>
-      <div className="mt-3 space-y-2">
-        {race.map((r, i) => (
-          <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
-            <span
-              aria-hidden="true"
-              className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-bold ring-1 " + toneAvatar[r.tone]}
+
+      <p className="text-[9px] text-muted-foreground mt-2 italic">💡 Tap a candidate row below to cast a simulated anonymous vote.</p>
+
+      <div className="mt-2.5 space-y-2">
+        {candidates.map((c, i) => {
+          const candidateVotes = votes[i];
+          const pct = totalVotes > 0 ? Math.round((candidateVotes / totalVotes) * 100) : 0;
+          const isWinner = i === winningIndex;
+          const isSelected = userVote === i;
+
+          return (
+            <button
+              key={i}
+              onClick={() => handleVote(i)}
+              className={`w-full flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-all duration-200 active:scale-[0.99] relative overflow-hidden ${
+                isSelected 
+                  ? "border-blue-600 bg-blue-500/5 font-semibold"
+                  : "border-border bg-card hover:border-blue-400"
+              }`}
             >
-              {r.glyph}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                <div className={"h-full rounded-full " + toneBar[r.tone]} style={{ width: `${r.pct}%` }} />
-              </div>
-            </div>
-            <span className="w-7 shrink-0 text-right text-[11px] font-semibold tabular-nums text-foreground">{r.votes}</span>
-            {r.seated ? (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
-                <IconCheck className="h-2.5 w-2.5" />
-                Seated
+              <div 
+                className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                  isSelected ? "bg-blue-500/10" : "bg-secondary/20"
+                }`}
+                style={{ width: `${pct}%` }}
+              />
+
+              <span
+                aria-hidden="true"
+                className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-bold ring-1 transition-transform ${
+                  isSelected ? "scale-105" : ""
+                } ${toneAvatar[c.tone]}`}
+              >
+                {c.glyph}
               </span>
-            ) : (
-              <span className="w-[52px] shrink-0" aria-hidden="true" />
-            )}
-          </div>
-        ))}
+              <div className="relative z-10 min-w-0 flex-1">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div className={`h-full rounded-full transition-all duration-500 ${toneBar[c.tone]}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+              <span className="relative z-10 w-7 shrink-0 text-right text-[11px] font-bold tabular-nums text-foreground">{candidateVotes}</span>
+              {isWinner ? (
+                <span className="relative z-10 inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm transition-all">
+                  <IconCheck className="h-2.5 w-2.5" />
+                  {userVote !== null ? "Winning" : "Seated"}
+                </span>
+              ) : (
+                <span className="w-[52px] shrink-0" aria-hidden="true" />
+              )}
+            </button>
+          );
+        })}
       </div>
       <p className="mt-2.5 text-[10px] leading-relaxed text-muted-foreground">
-        Voting closed → the winner was seated into the President role automatically.
+        {userVote !== null 
+          ? "You cast a vote! Real elections automatically seat the winner into the role upon ballot closure."
+          : "Voting closed → the winner was seated into the President role automatically."}
       </p>
     </div>
   );
@@ -331,7 +394,7 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
       "Reconciles against incoming dues automatically",
       "Clean exports for the next treasurer or nationals",
     ],
-    preview: <PreviewDues />,
+    preview: <PreviewTreasury />,
   },
   {
     icon: IconEvents,
@@ -760,20 +823,20 @@ function SiteNav() {
           />
         </Link>
 
-        {/* Center nav — lives on lg+ ONLY so the long primary CTA + Sign-in never
+        {/* Center nav — lives on xl+ ONLY so the long primary CTA + Sign-in never
             collide with the links at the 1024 breakpoint (where they used to
             wrap). On md-and-below the links move into the sheet menu. The
             min-w-0 + justify-center keep it optically centered without pushing
             the actions off-screen. */}
         <nav
-          className="hidden min-w-0 flex-1 items-center justify-center gap-7 lg:flex xl:gap-9"
+          className="hidden min-w-0 flex-1 items-center justify-center gap-4 xl:flex xl:gap-5 2xl:gap-8 text-[13px] xl:text-sm"
           aria-label="Primary"
         >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="group relative whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group relative whitespace-nowrap font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
               {/* Animated underline that wipes in from the left on hover/focus. */}
@@ -785,35 +848,36 @@ function SiteNav() {
           ))}
         </nav>
 
-        {/* Right actions. On lg+ this sits after the centered nav; below lg the
+        {/* Right actions. On xl+ this sits after the centered nav; below xl the
             nav is gone so this group is pushed to the end with ms-auto. */}
-        <div className="flex shrink-0 items-center gap-2 lg:ms-0 ms-auto">
-          <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex">
-            <Link href="/contact#book">Book a call</Link>
+        <div className="flex shrink-0 items-center gap-2 xl:ms-0 ms-auto">
+          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex text-blue-600 hover:text-blue-800 font-bold">
+            <Link href="/app?demo=true">Interactive Demo</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
             <Link href="/login">Sign in</Link>
           </Button>
-          {/* Primary CTA — standardized verb "Launch your chapter — free" on sm+,
+          {/* Primary CTA — standardized verb "Launch Chapter — Free" on md+,
               compact "Launch — free" on the tightest phones so it never wraps next
               to the hamburger. */}
-          <Magnetic strength={12} innerStrength={4} radius={70} className="hidden sm:inline-flex">
+          <Magnetic strength={12} innerStrength={4} radius={70} className="hidden md:inline-flex">
             <ShimmerBorder rounded="rounded-md">
-              <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
-                <Link href="/onboard" className="group/btn">
-                  Launch your chapter — free
-                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+              <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap px-3.5">
+                <Link href="/onboard" className="group/btn font-bold">
+                  <span className="hidden xl:inline">Launch Chapter — Free</span>
+                  <span className="xl:hidden">Launch Free</span>
+                  <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5 ml-1.5 inline-flex" />
                 </Link>
               </Button>
             </ShimmerBorder>
           </Magnetic>
-          <ShimmerBorder rounded="rounded-md" className="sm:hidden">
+          <ShimmerBorder rounded="rounded-md" className="md:hidden">
             <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
               <Link href="/onboard">Launch — free</Link>
             </Button>
           </ShimmerBorder>
 
-          {/* Hamburger — shown on lg-and-below (everything the nav can't fit
+          {/* Hamburger — shown on xl-and-below (everything the nav can't fit
               lives in the sheet). 44px touch target. */}
           <button
             type="button"
@@ -821,7 +885,7 @@ function SiteNav() {
             aria-label="Open menu"
             aria-expanded={menuOpen}
             aria-haspopup="dialog"
-            className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/70 text-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/70 text-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 xl:hidden"
           >
             <IconMenu className="h-5 w-5" />
           </button>
@@ -945,6 +1009,9 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                 </Link>
               </Button>
+              <Button asChild variant="outline" size="lg" className="w-full text-blue-600 border-blue-500/20 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+                <Link href="/app?demo=true" onClick={onClose}>Interactive Demo</Link>
+              </Button>
               <div className="grid grid-cols-2 gap-2.5">
                 <Button asChild variant="outline" size="lg" className="w-full">
                   <Link href="/login" onClick={onClose}>Sign in</Link>
@@ -1048,7 +1115,10 @@ function Hero() {
                 </Button>
               </ShimmerBorder>
             </Magnetic>
-            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto">
+            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+              <Link href="/app?demo=true">Interactive Demo</Link>
+            </Button>
+            <Button asChild variant="ghost" size="xl" className="w-full sm:w-auto">
               <Link href="#how">See how it works</Link>
             </Button>
           </div>
@@ -1380,8 +1450,13 @@ function Features() {
               key={f.title}
               className={f.wide ? "sm:col-span-2" : ""}
             >
-              <Tilt3DCard max={7} glareColor="rgba(37,99,235,0.22)" className="h-full rounded-3xl">
-                <FeatureCard feature={f} wide={f.wide} onOpen={() => setOpenIdx(i)} />
+              <Tilt3DCard 
+                max={7} 
+                glareColor="rgba(37,99,235,0.22)" 
+                className="h-full rounded-3xl"
+                onClick={() => setOpenIdx(i)}
+              >
+                <FeatureCard feature={f} wide={f.wide} />
               </Tilt3DCard>
             </Reveal3DItem>
           ))}
@@ -1439,11 +1514,9 @@ function Features() {
 function FeatureCard({
   feature,
   wide,
-  onOpen,
 }: {
   feature: FeatureDetail & { wide?: boolean; outcome?: string };
   wide?: boolean;
-  onOpen: () => void;
 }) {
   const { icon, img, title, desc, outcome } = feature;
 
@@ -1497,9 +1570,7 @@ function FeatureCard({
   );
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <div
       aria-haspopup="dialog"
       aria-label={`${title} — see details and an in-app preview`}
       className="group relative flex h-full w-full overflow-hidden rounded-3xl gs-glass p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
@@ -1547,7 +1618,7 @@ function FeatureCard({
           <span className="mt-auto inline-flex pt-6">{seeInside}</span>
         </div>
       )}
-    </button>
+    </div>
   );
 }
 

@@ -142,7 +142,7 @@ export function GreekLetterField({
     <div
       aria-hidden="true"
       className={
-        "pointer-events-none fixed inset-0 z-[14] overflow-hidden " + (className || "")
+        "pointer-events-none fixed inset-0 -z-10 overflow-hidden " + (className || "")
       }
     >
       {letters.map((l, i) => (

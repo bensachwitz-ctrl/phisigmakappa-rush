@@ -8,6 +8,7 @@ import { auditAndNotify, actorFromRequest } from "@/lib/notify";
 import { getSiteConfig } from "@/lib/site-config";
 import { sendEmail } from "@/lib/email";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
+import { getTwilioConfig } from "@/lib/messaging-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,9 +96,7 @@ async function sendInviteEmail(
 }
 
 async function sendSms(to: string, link: string, sender: string, identity: ChapterIdentity) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
+  const { accountSid: sid, authToken: token, phoneNumber: from } = await getTwilioConfig();
   if (!sid || !token || !from) return { sent: false, reason: "no-twilio" };
   const msg = `${sender || identity.chapterAttribution}: create your ${identity.fraternityShort} alumni portal account here (expires in 30 days): ${link}`;
   const auth = Buffer.from(`${sid}:${token}`).toString("base64");

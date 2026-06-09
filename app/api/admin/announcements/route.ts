@@ -14,8 +14,9 @@ const ChannelsRegex = /^(inapp|sms|email)(,(inapp|sms|email))*$/;
 const Schema = z.object({
   title: z.string().min(2).max(160),
   body: z.string().min(2).max(8000),
-  audience: z.enum(["ALL", "BROTHERS", "RUSHES", "EBOARD"]).default("ALL"),
+  audience: z.enum(["ALL", "BROTHERS", "RUSHES", "EBOARD", "ALUMNI"]).default("ALL"),
   pinned: z.boolean().default(false),
+  pollId: z.string().optional().nullable(),
   // ── W4 scheduled-send + multi-channel additions (optional, additive) ────
   scheduledFor: z.string().datetime().optional().nullable(),
   channels: z.string().regex(ChannelsRegex).default("inapp"),
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
       body: parsed.data.body,
       audience: parsed.data.audience,
       pinned: parsed.data.pinned,
+      pollId: parsed.data.pollId || undefined,
       authorId: brotherId || undefined,
       status,
       scheduledFor: scheduledForDate,

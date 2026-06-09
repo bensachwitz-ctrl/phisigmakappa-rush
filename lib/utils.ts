@@ -40,22 +40,22 @@ export const STATUS_STYLES: Record<RushStatus, string> = {
 // chapter; a multi-tenant white-label fork should read this from cfg.
 const SCHEDULE_TZ = "America/New_York";
 
-export function formatDate(d: Date | string) {
+export function formatDate(d: Date | string, timezone = SCHEDULE_TZ) {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
-    timeZone: SCHEDULE_TZ,
+    timeZone: timezone,
   });
 }
 
-export function formatTime(d: Date | string) {
+export function formatTime(d: Date | string, timezone = SCHEDULE_TZ) {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: SCHEDULE_TZ,
+    timeZone: timezone,
     timeZoneName: "short",
   });
 }

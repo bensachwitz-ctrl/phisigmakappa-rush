@@ -45,6 +45,7 @@ type ListRow = {
   phone: string;
   year: string | null;
   major: string | null;
+  hometown: string | null;
   headshotUrl: string | null;
   status: string;
   attendanceCount: number;
@@ -86,6 +87,7 @@ export async function GET() {
       phone: r.phone,
       year: r.year,
       major: r.major,
+      hometown: r.hometown,
       headshotUrl: r.headshotUrl,
       status: r.status,
       attendanceCount: r.attendances.length,

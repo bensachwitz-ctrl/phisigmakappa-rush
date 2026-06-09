@@ -48,6 +48,7 @@ export default async function RusheesPage() {
       phone: r.phone,
       year: r.year,
       major: r.major,
+      hometown: r.hometown,
       headshotUrl: r.headshotUrl,
       status: r.status,
       attendanceCount: r.attendances.length,
@@ -67,16 +68,15 @@ export default async function RusheesPage() {
 
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const identity = chapterIdentityFromCfg(cfg);
+  const initialRushActive = cfg["rush.isActive"] !== "false";
 
   return (
     <main className="container py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">PNM dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Track every prospective new member for {identity.chapterFullName} — filter, bulk-text, and send bids without leaving the page.
-        </p>
-      </div>
-      <RusheesManager initial={initial} />
+      <RusheesManager 
+        initial={initial} 
+        initialRushActive={initialRushActive} 
+        chapterName={identity.chapterFullName} 
+      />
     </main>
   );
 }

@@ -40,7 +40,7 @@ import { avatarSrc } from "@/lib/image-url";
 import {
   Users, Plus, MessageCircle, Search, Loader2, TrendingUp,
   Flame, CalendarCheck, UserX, Send, CheckCircle2, XCircle,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, Key, Car, Clock, ShieldAlert, Calendar,
 } from "lucide-react";
 
 export type RusheeListRow = {
@@ -50,6 +50,7 @@ export type RusheeListRow = {
   phone: string;
   year: string | null;
   major: string | null;
+  hometown: string | null;
   headshotUrl: string | null;
   status: string;
   attendanceCount: number;
@@ -111,7 +112,15 @@ function isHot(r: RusheeListRow): boolean {
   return false;
 }
 
-export function RusheesManager({ initial }: { initial: RusheeListRow[] }) {
+export function RusheesManager({ 
+  initial,
+  initialRushActive = true,
+  chapterName = "the Chapter"
+}: { 
+  initial: RusheeListRow[]; 
+  initialRushActive?: boolean;
+  chapterName?: string;
+}) {
   const { push } = useToast();
   const router = useRouter();
   const [rushes, setRushes] = React.useState<RusheeListRow[]>(initial);
@@ -119,6 +128,153 @@ export function RusheesManager({ initial }: { initial: RusheeListRow[] }) {
   const [query, setQuery] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [bulkOpen, setBulkOpen] = React.useState(false);
+
+  // New Members & Sober Driver Schedule States
+  const [isRushActive, setIsRushActive] = React.useState(initialRushActive);
+  const [updatingSettings, setUpdatingSettings] = React.useState(false);
+  const [activeSubTab, setActiveSubTab] = React.useState<"directory" | "schedule">("directory");
+  const [shifts, setShifts] = React.useState<any[]>([]);
+  const [pledges, setPledges] = React.useState<any[]>([]);
+  const [loadingSchedule, setLoadingSchedule] = React.useState(false);
+
+  const fetchSchedule = React.useCallback(async () => {
+    setLoadingSchedule(true);
+    try {
+      const res = await fetch("/api/admin/sober-schedule");
+      const data = await res.json();
+      if (data.ok) {
+        setShifts(data.shifts);
+        setPledges(data.pledges);
+      }
+    } catch (err) {
+      console.warn("Failed to load schedule", err);
+    } finally {
+      setLoadingSchedule(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!isRushActive) {
+      fetchSchedule();
+    }
+  }, [isRushActive, fetchSchedule]);
+
+  const toggleRushActive = async () => {
+    setUpdatingSettings(true);
+    const nextVal = !isRushActive;
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          updates: {
+            "rush.isActive": nextVal ? "true" : "false"
+          }
+        })
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Failed to update settings");
+      }
+      setIsRushActive(nextVal);
+      push({
+        title: nextVal ? "Rush Season Re-opened" : "Rush Season Completed",
+        description: nextVal 
+          ? "Roster view returned to Recruitment Pipeline." 
+          : "Roster view has converted to New Members & Sober Driver Schedule.",
+        variant: "success"
+      });
+      router.refresh();
+    } catch (err: any) {
+      push({ title: err.message || "Failed to update settings", variant: "destructive" });
+    } finally {
+      setUpdatingSettings(false);
+    }
+  };
+
+  const assignDriver = async (day: string, shiftHours: string, memberId: string) => {
+    try {
+      const res = await fetch("/api/admin/sober-schedule", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ day, shiftHours, memberId }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        push({ title: "Sober driver assigned", variant: "success" });
+        fetchSchedule();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      push({ title: err.message || "Assignment failed", variant: "destructive" });
+    }
+  };
+
+  const removeShift = async (shiftId: string) => {
+    try {
+      const res = await fetch(`/api/admin/sober-schedule?id=${shiftId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        push({ title: "Assignment removed", variant: "success" });
+        fetchSchedule();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      push({ title: err.message || "Removal failed", variant: "destructive" });
+    }
+  };
+
+  // Helper to check if a shift is active "right now" in the user's browser
+  const isShiftActiveNow = (day: string, shiftHours: string): boolean => {
+    const now = new Date();
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const currentDay = days[now.getDay()];
+    const currentHour = now.getHours();
+
+    if (day !== currentDay) return false;
+
+    const parts = shiftHours.split("-");
+    if (parts.length !== 2) return false;
+    const startHour = parseInt(parts[0].split(":")[0], 10);
+    const endHour = parseInt(parts[1].split(":")[0], 10);
+
+    if (startHour > endHour) {
+      return currentHour >= startHour || currentHour < endHour;
+    } else {
+      return currentHour >= startHour && currentHour < endHour;
+    }
+  };
+
+  // Helper to check if a specific member is currently the active sober driver
+  const isMemberActiveDriverNow = (email: string, phone: string): boolean => {
+    // Check shifts if they match any pledge's contact info
+    const activeShifts = shifts.filter(s => isShiftActiveNow(s.day, s.shiftHours));
+    return activeShifts.some(s => s.member?.email === email || s.member?.phone === phone);
+  };
+
+  // Helper to find driver ID for a specific shift
+  const getShiftDriverId = (day: string, shiftHours: string): string => {
+    const shift = shifts.find(s => s.day === day && s.shiftHours === shiftHours);
+    return shift ? shift.memberId : "";
+  };
+
+  const getShiftId = (day: string, shiftHours: string): string => {
+    const shift = shifts.find(s => s.day === day && s.shiftHours === shiftHours);
+    return shift ? shift.id : "";
+  };
+
+  const STANDARD_SHIFTS = [
+    { day: "Thursday", hours: "22:00-00:00", label: "Thursday Night (10pm-12am)" },
+    { day: "Friday", hours: "00:00-02:00", label: "Thursday Late Night (12am-2am)" },
+    { day: "Friday", hours: "22:00-00:00", label: "Friday Night (10pm-12am)" },
+    { day: "Saturday", hours: "00:00-02:00", label: "Friday Late Night (12am-2am)" },
+    { day: "Saturday", hours: "22:00-00:00", label: "Saturday Night (10pm-12am)" },
+    { day: "Sunday", hours: "00:00-02:00", label: "Saturday Late Night (12am-2am)" },
+  ];
 
   // ── Filter + search composition ──────────────────────────────────────────
   const filtered = React.useMemo(() => {
@@ -156,8 +312,81 @@ export function RusheesManager({ initial }: { initial: RusheeListRow[] }) {
     return { total, avgAttendance, conversionRate, dropRate };
   }, [rushes]);
 
+  // Get all accepted new members (either from Rush pipeline status=ACCEPTED or from roster status=PLEDGE)
+  const acceptedNewMembers = React.useMemo(() => {
+    const fromRushes = rushes
+      .filter((r) => r.status === "ACCEPTED")
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        phone: r.phone,
+        major: r.major,
+        year: r.year,
+        hometown: r.hometown,
+        headshotUrl: r.headshotUrl,
+        type: "pnm",
+      }));
+    const fromPledges = pledges.map((p) => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      major: p.major,
+      year: "Freshman", // default
+      hometown: p.hometown,
+      headshotUrl: p.headshotUrl,
+      type: "pledge",
+    }));
+
+    // Merge without duplicates by email
+    const seen = new Set<string>();
+    const merged = [];
+    for (const m of [...fromPledges, ...fromRushes]) {
+      if (m.email && seen.has(m.email.toLowerCase())) continue;
+      if (m.email) seen.add(m.email.toLowerCase());
+      merged.push(m);
+    }
+    return merged;
+  }, [rushes, pledges]);
+
   return (
     <div className="space-y-6">
+      {/* Dynamic Header Block */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-4 border-b border-border gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {isRushActive ? "PNM dashboard" : "New Members & Sober Driver Schedule"}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isRushActive 
+              ? `Track every prospective new member for ${chapterName} — filter, bulk-text, and send bids.`
+              : `Manage associate members and coordinate the weekly sober driver night schedules for ${chapterName}.`
+            }
+          </p>
+        </div>
+        <div>
+          <Button
+            variant={isRushActive ? "destructive" : "outline"}
+            size="sm"
+            onClick={toggleRushActive}
+            disabled={updatingSettings}
+            className="shadow-sm font-bold"
+          >
+            {updatingSettings ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+            ) : isRushActive ? (
+              <XCircle className="h-4 w-4 mr-1.5" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-1.5" />
+            )}
+            {isRushActive ? "End Rush Season" : "Re-open Rush Season"}
+          </Button>
+        </div>
+      </div>
+
+      {isRushActive ? (
+        <>
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
@@ -249,28 +478,216 @@ export function RusheesManager({ initial }: { initial: RusheeListRow[] }) {
         })}
       </div>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
-          <CardContent className="py-12 px-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
-              <Sparkles className="h-6 w-6" />
+      <RusheeTable
+        rows={filtered}
+        onRowClick={(id) => router.push(`/admin/rushees/${id}`)}
+      />
+    </>
+  ) : (
+    <div className="space-y-6">
+          {/* Sub Tab Navigation */}
+          <div className="flex border-b border-border">
+            <button
+              onClick={() => setActiveSubTab("directory")}
+              className={cn(
+                "py-2.5 px-4 text-sm font-semibold border-b-2 transition-all",
+                activeSubTab === "directory"
+                  ? "border-phisig-red text-phisig-red"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" /> New Member Roster ({acceptedNewMembers.length})
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab("schedule")}
+              className={cn(
+                "py-2.5 px-4 text-sm font-semibold border-b-2 transition-all",
+                activeSubTab === "schedule"
+                  ? "border-phisig-red text-phisig-red"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span className="flex items-center gap-1.5">
+                <Car className="w-4 h-4" /> Sober Driving Schedule
+              </span>
+            </button>
+          </div>
+
+          {activeSubTab === "directory" ? (
+            <div className="space-y-4">
+              {acceptedNewMembers.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <UserX className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                    <p className="text-sm font-semibold">No accepted new members found.</p>
+                    <p className="text-xs text-slate-400 mt-1">Once prospective members accept bids, they will show up here.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-border bg-card">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                      <tr>
+                        <th className="text-left py-3 px-4">New Member</th>
+                        <th className="text-left py-3 px-4">Contact Info</th>
+                        <th className="text-left py-3 px-4">Year / Major</th>
+                        <th className="text-left py-3 px-4">Hometown</th>
+                        <th className="text-center py-3 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {acceptedNewMembers.map((m) => {
+                        const onDuty = isMemberActiveDriverNow(m.email || "", m.phone || "");
+                        const handleRowClick = () => {
+                          if (m.type === "pnm") {
+                            router.push(`/admin/rushees/${m.id}`);
+                          } else if (m.type === "pledge") {
+                            const target = rushes.find(
+                              (r) => r.email?.toLowerCase() === m.email?.toLowerCase()
+                            );
+                            if (target) {
+                              router.push(`/admin/rushees/${target.id}`);
+                            } else {
+                              push({
+                                title: "Profile not found",
+                                description: `No recruitment record found matching email: ${m.email}`,
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        };
+                        return (
+                          <tr
+                            key={m.id}
+                            onClick={handleRowClick}
+                            className="cursor-pointer border-t border-border hover:bg-secondary/40 transition-colors"
+                          >
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <Thumb headshotUrl={m.headshotUrl} name={m.name} />
+                                <div>
+                                  <p className="font-bold flex items-center gap-2">
+                                    {m.name}
+                                    {onDuty && (
+                                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md animate-pulse">
+                                        <Key className="w-2.5 h-2.5" /> ON DUTY
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 capitalize">{m.type} Account</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <p className="text-xs font-semibold">{m.phone}</p>
+                              <p className="text-[10px] text-slate-400">{m.email}</p>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <p className="text-xs font-semibold">{m.year}</p>
+                              <p className="text-[10px] text-slate-400">{m.major || "No major"}</p>
+                            </td>
+                            <td className="py-3.5 px-4 text-xs font-semibold text-slate-600">{m.hometown || "—"}</td>
+                            <td className="py-3.5 px-4 text-center">
+                              {onDuty ? (
+                                <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 gap-1 select-none">
+                                  <Car className="w-3 h-3" /> Active Driver
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-100 border select-none">
+                                  Standby
+                                </Badge>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-semibold tracking-tight">
-              {rushes.length === 0 ? "No PNMs yet" : "No PNMs match this filter"}
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              {rushes.length === 0
-                ? 'Add your first PNM with the "Add PNM" button above, or share the public rush page link so freshmen can sign themselves up.'
-                : "Try a different filter or clear the search box."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <RusheeTable
-          rows={filtered}
-          onRowClick={(id) => router.push(`/admin/rushees/${id}`)}
-        />
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <div className="flex gap-2.5 items-start">
+                  <ShieldAlert className="w-5 h-5 text-phisig-red shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Weekly Sober Driving Roster</h5>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
+                      Assign new members/pledges to weekend shifts. Drivers on active shifts will show glowing indicators in the roster directory automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {loadingSchedule ? (
+                <div className="py-12 text-center text-muted-foreground flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-phisig-red" /> Fetching shifts...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {STANDARD_SHIFTS.map((s, idx) => {
+                    const driverId = getShiftDriverId(s.day, s.hours);
+                    const shiftId = getShiftId(s.day, s.hours);
+                    const isActive = isShiftActiveNow(s.day, s.hours);
+                    
+                    return (
+                      <Card key={idx} className={cn(
+                        "relative overflow-hidden transition-all",
+                        isActive ? "border-emerald-500/30 bg-emerald-500/[0.02] shadow-md ring-1 ring-emerald-500/10" : "border-slate-100 hover:border-slate-200"
+                      )}>
+                        {isActive && (
+                          <div className="absolute right-0 top-0 bg-emerald-500 text-white font-bold text-[8px] uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-sm select-none">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Active Now
+                          </div>
+                        )}
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-slate-400" />
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-900 leading-none">{s.label}</h4>
+                              <p className="text-[9px] text-slate-400 mt-1 capitalize">{s.day} Shift</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Assign Driver</Label>
+                            <div className="flex gap-2">
+                              <select
+                                value={driverId}
+                                onChange={(e) => assignDriver(s.day, s.hours, e.target.value)}
+                                className="flex-1 px-3 py-1.5 bg-background border border-input rounded-md text-xs font-medium outline-none focus:ring-1 focus:ring-ring transition"
+                              >
+                                <option value="">Select a new member...</option>
+                                {acceptedNewMembers.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name} ({m.type === "pledge" ? "Pledge" : "Accepted PNM"})
+                                  </option>
+                                ))}
+                              </select>
+                              {driverId && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeShift(shiftId)}
+                                  className="px-2.5 border-dashed border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                >
+                                  Clear
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       <AddPnmDialog
@@ -484,7 +901,7 @@ function AddPnmDialog({
       // Build a list row shape from the create response.
       const created = json.rush as {
         id: string; name: string; email: string; phone: string;
-        year: string | null; major: string | null; headshotUrl: string | null;
+        year: string | null; major: string | null; hometown: string | null; headshotUrl: string | null;
         status: string; createdAt: string;
       };
       onCreated({
@@ -494,6 +911,7 @@ function AddPnmDialog({
         phone: created.phone,
         year: created.year,
         major: created.major,
+        hometown: created.hometown || form.hometown || null,
         headshotUrl: created.headshotUrl,
         status: created.status,
         attendanceCount: 0,

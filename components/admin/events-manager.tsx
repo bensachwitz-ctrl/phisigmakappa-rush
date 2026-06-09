@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 // Event category presets — same six values used by the brother calendar.
 // Color tokens here MUST stay in sync with components/brother/event-calendar.tsx
@@ -66,14 +67,93 @@ const initial = {
   category: "OTHER" as EventCategoryId,
 };
 
+function formatInTimeZone(date: Date, timeZone: string): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone,
+  });
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || "";
+  const year = getPart("year");
+  const month = getPart("month");
+  const day = getPart("day");
+  let hour = getPart("hour");
+  const minute = getPart("minute");
+
+  if (hour === "24") hour = "00";
+
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function parseLocalTimeInTimeZone(localTimeStr: string, timeZone: string): Date {
+  const [datePart, timePart] = localTimeStr.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false, timeZone,
+  });
+
+  const parts = formatter.formatToParts(utcDate);
+  const getPart = (type: string) => Number(parts.find(p => p.type === type)?.value || 0);
+
+  const fYear = getPart("year");
+  const fMonth = getPart("month");
+  const fDay = getPart("day");
+  let fHour = getPart("hour");
+  if (parts.find(p => p.type === "hour")?.value === "24") fHour = 0;
+  const fMinute = getPart("minute");
+
+  const formattedUtcTime = Date.UTC(fYear, fMonth - 1, fDay, fHour, fMinute);
+  const targetUtcTime = Date.UTC(year, month - 1, day, hour, minute);
+
+  const offsetMs = formattedUtcTime - targetUtcTime;
+
+  return new Date(utcDate.getTime() - offsetMs);
+}
+
 export function EventsManager({ initial: initialEvents }: { initial: Event[] }) {
   const { push } = useToast();
+  const { timeZone } = useChapterIdentity();
   const [events, setEvents] = React.useState<Event[]>(initialEvents);
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [form, setForm] = React.useState(initial);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [attendingFor, setAttendingFor] = React.useState<Event | null>(null);
+
+  // ---- Search & Filter State ----
+  const [search, setSearch] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState<string>("ALL");
+  const [privacyFilter, setPrivacyFilter] = React.useState<string>("ALL");
+
+  const filteredEvents = React.useMemo(() => {
+    return events.filter((e) => {
+      const matchesSearch =
+        !search.trim() ||
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        (e.location && e.location.toLowerCase().includes(search.toLowerCase())) ||
+        (e.description && e.description.toLowerCase().includes(search.toLowerCase()));
+      
+      const matchesCategory = categoryFilter === "ALL" || e.category === categoryFilter;
+      
+      const matchesPrivacy =
+        privacyFilter === "ALL" ||
+        (privacyFilter === "PRIVATE" && e.isPrivate) ||
+        (privacyFilter === "PUBLIC" && !e.isPrivate);
+
+      return matchesSearch && matchesCategory && matchesPrivacy;
+    });
+  }, [events, search, categoryFilter, privacyFilter]);
 
   // ---- Confirm dialog (replaces window.confirm) ----
   const [confirmState, setConfirmState] = React.useState<{
@@ -122,14 +202,13 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
 
   function openEdit(e: Event) {
     setEditingId(e.id);
-    const tz = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
     setForm({
       name: e.name,
       description: e.description || "",
       location: e.location || "",
       dressCode: e.dressCode || "",
-      startsAt: tz(new Date(e.startsAt)),
-      endsAt: e.endsAt ? tz(new Date(e.endsAt)) : "",
+      startsAt: formatInTimeZone(new Date(e.startsAt), timeZone),
+      endsAt: e.endsAt ? formatInTimeZone(new Date(e.endsAt), timeZone) : "",
       isPrivate: e.isPrivate,
       category: ((e.category as EventCategoryId) || "OTHER"),
     });
@@ -143,9 +222,15 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     }
     setBusy(true);
     try {
-      // POST handles both create (no id) and edit (id supplied) — preserves
-      // attendance + RSVP rows on edit because we no longer delete-then-recreate.
-      const payload = editingId ? { ...form, id: editingId } : form;
+      const utcStartsAt = parseLocalTimeInTimeZone(form.startsAt, timeZone).toISOString();
+      const utcEndsAt = form.endsAt ? parseLocalTimeInTimeZone(form.endsAt, timeZone).toISOString() : "";
+      
+      const payload = {
+        ...form,
+        startsAt: utcStartsAt,
+        endsAt: utcEndsAt,
+        ...(editingId ? { id: editingId } : {}),
+      };
       const res = await fetch("/api/admin/events", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -231,7 +316,11 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {events.length === 0 ? "No events yet — add events one at a time below." : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
+          {events.length === 0
+            ? "No events yet — add events one at a time below."
+            : search || categoryFilter !== "ALL" || privacyFilter !== "ALL"
+            ? `${filteredEvents.length} of ${events.length} events found`
+            : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
         </p>
         <div className="flex flex-wrap gap-2">
           {events.length > 0 && (
@@ -244,6 +333,43 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
           </Button>
         </div>
       </div>
+
+      {events.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2 bg-secondary/10 p-2.5 rounded-xl border border-border">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search events by name, location, or details..."
+              className="pl-9 h-9 text-xs"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-9 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="ALL">All Categories</option>
+              {EVENT_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={privacyFilter}
+              onChange={(e) => setPrivacyFilter(e.target.value)}
+              className="h-9 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="ALL">All Privacy</option>
+              <option value="PUBLIC">Public Only</option>
+              <option value="PRIVATE">Invite Only</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {events.length === 0 ? (
         <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
@@ -262,19 +388,25 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
             </div>
           </CardContent>
         </Card>
+      ) : filteredEvents.length === 0 ? (
+        <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-secondary/5">
+          No events match your search or filter options.
+        </div>
       ) : (
         <div className="grid gap-3">
-          {events.map((e) => {
+          {filteredEvents.map((e) => {
             const isPast = new Date(e.startsAt).getTime() < Date.now() - 1000 * 60 * 60 * 24;
             const cat = categoryMeta(e.category || "OTHER");
             return (
               <Card key={e.id} className={cn("overflow-hidden", isPast && "opacity-90")}>
                 <CardContent className="p-0">
-                  <div className="grid grid-cols-[6px_88px_1fr_auto] items-stretch">
+                  <div className="grid grid-cols-[6px_1fr] sm:grid-cols-[6px_88px_1fr_auto] items-stretch">
                     {/* Category color stripe — matches the brother-calendar stripe so admins
                         see the same visual cue at-a-glance that brothers do. */}
                     <div className={cn("w-1.5", cat.stripe)} aria-hidden />
-                    <div className={cn("text-white flex flex-col items-center justify-center text-center p-4", cat.stripe)}>
+                    
+                    {/* Date Block: Desktop only */}
+                    <div className={cn("hidden sm:flex text-white flex-col items-center justify-center text-center p-4", cat.stripe)}>
                       <div className="text-[10px] uppercase tracking-[0.18em] opacity-85">
                         {format(new Date(e.startsAt), "MMM")}
                       </div>
@@ -285,33 +417,42 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
                         {format(new Date(e.startsAt), "EEE")}
                       </div>
                     </div>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <h3 className="font-semibold">{e.name}</h3>
-                        <div className="flex flex-wrap gap-1">
-                          <Badge className={cn(cat.tone, "ring-0")}>
-                            {cat.label}
-                          </Badge>
-                          {e.isPrivate ? (
-                            <Badge className="bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200">
-                              <Lock className="h-3 w-3 mr-1" /> Invite only
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
-                              <Globe className="h-3 w-3 mr-1" /> Public
-                            </Badge>
-                          )}
-                          {isPast && (
-                            <Badge className="bg-secondary text-muted-foreground">Past</Badge>
-                          )}
+
+                    <div className="p-4 flex flex-col justify-between">
+                      <div>
+                        {/* Mobile-only Date header */}
+                        <div className="sm:hidden flex items-center gap-1.5 mb-2 text-xs font-semibold text-muted-foreground">
+                          <CalendarDays className="h-3.5 w-3.5" />
+                          <span>{format(new Date(e.startsAt), "EEE, MMM d, yyyy")}</span>
                         </div>
+
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <h3 className="font-semibold">{e.name}</h3>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge className={cn(cat.tone, "ring-0")}>
+                              {cat.label}
+                            </Badge>
+                            {e.isPrivate ? (
+                              <Badge className="bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200">
+                                <Lock className="h-3 w-3 mr-1" /> Invite only
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                                <Globe className="h-3 w-3 mr-1" /> Public
+                              </Badge>
+                            )}
+                            {isPast && (
+                              <Badge className="bg-secondary text-muted-foreground">Past</Badge>
+                            )}
+                          </div>
+                        </div>
+                        {e.description && (
+                          <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">
+                            {e.description}
+                          </p>
+                        )}
                       </div>
-                      {e.description && (
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                          {e.description}
-                        </p>
-                      )}
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5">
                           <CalendarDays className="h-3.5 w-3.5" /> {format(new Date(e.startsAt), "h:mm a")}
                         </span>
@@ -323,25 +464,29 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
                         {e.dressCode && <span>· {e.dressCode}</span>}
                       </div>
                     </div>
-                    <div className="p-3 flex flex-col items-center gap-1.5 justify-center">
+
+                    {/* Actions: Grid-aligned on desktop, stacked/padded block on mobile */}
+                    <div className="col-span-2 sm:col-span-1 p-3 flex flex-row sm:flex-col items-center gap-1.5 justify-end sm:justify-center border-t sm:border-t-0 border-border bg-secondary/10 sm:bg-transparent">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => openEdit(e)}
+                        className="flex-1 sm:flex-none h-8"
                       >
-                        <Edit3 className="h-3.5 w-3.5" /> Edit
+                        <Edit3 className="h-3.5 w-3.5 mr-1" /> Edit
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setAttendingFor(e)}
+                        className="flex-1 sm:flex-none h-8"
                       >
-                        <ClipboardCheck className="h-3.5 w-3.5" /> Attendance
+                        <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Attendance
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive shrink-0 h-8 px-2"
                         onClick={() => remove(e.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -493,7 +638,7 @@ function AttendanceDialog({
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [event?.id]);
+  }, [event]);
 
   async function toggle(rushId: string) {
     const isOn = attended.has(rushId);

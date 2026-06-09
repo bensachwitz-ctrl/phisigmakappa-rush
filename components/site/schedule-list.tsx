@@ -2,8 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, MapPin, Shirt } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/utils";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export async function ScheduleList() {
+  const identity = await getChapterIdentity().catch(() => null);
+  const letters = identity?.greekLettersGlyphs || "ΦΣΚ";
+  const timezone = identity?.timeZone || "America/New_York";
+
   let events: Awaited<ReturnType<typeof prisma.event.findMany>> = [];
   try {
     events = await prisma.event.findMany({
@@ -18,7 +23,7 @@ export async function ScheduleList() {
     return (
       <Card className="relative overflow-hidden border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white">
         <div className="absolute -top-8 -right-8 opacity-10 select-none">
-          <span className="text-9xl font-display font-bold text-phisig-red leading-none">ΦΣΚ</span>
+          <span className="text-9xl font-display font-bold text-phisig-red leading-none">{letters}</span>
         </div>
         <CardContent className="relative py-12 px-6 sm:px-10">
           <div className="max-w-md">
@@ -62,15 +67,15 @@ export async function ScheduleList() {
             <CardContent className="p-0">
               <div className="grid grid-cols-[88px_1fr] sm:grid-cols-[120px_1fr]">
                 <div className="bg-phisig-red text-white flex flex-col items-center justify-center text-center p-4">
-                  {/* Pinned to America/New_York so SSR (UTC) and CSR don't mismatch. */}
+                  {/* Pinned to chapter timezone so SSR (UTC) and CSR don't mismatch. */}
                   <div className="text-[10px] uppercase tracking-[0.18em] opacity-85">
-                    {new Date(e.startsAt).toLocaleDateString("en-US", { month: "short", timeZone: "America/New_York" })}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { month: "short", timeZone: timezone })}
                   </div>
                   <div className="text-3xl sm:text-4xl font-semibold leading-none mt-1">
-                    {new Date(e.startsAt).toLocaleDateString("en-US", { day: "numeric", timeZone: "America/New_York" })}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { day: "numeric", timeZone: timezone })}
                   </div>
                   <div className="text-[11px] mt-1 opacity-85">
-                    {new Date(e.startsAt).toLocaleDateString("en-US", { weekday: "short", timeZone: "America/New_York" })}
+                    {new Date(e.startsAt).toLocaleDateString("en-US", { weekday: "short", timeZone: timezone })}
                   </div>
                 </div>
                 <div className="p-5">
@@ -88,8 +93,8 @@ export async function ScheduleList() {
                   )}
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5" /> {formatTime(e.startsAt)}
-                      {e.endsAt && <> – {formatTime(e.endsAt)}</>}
+                      <CalendarDays className="h-3.5 w-3.5" /> {formatTime(e.startsAt, timezone)}
+                      {e.endsAt && <> – {formatTime(e.endsAt, timezone)}</>}
                     </span>
                     {e.location && (
                       <span className="inline-flex items-center gap-1.5">

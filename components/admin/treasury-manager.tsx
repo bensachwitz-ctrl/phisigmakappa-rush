@@ -366,90 +366,179 @@ export function TreasuryManager({
         ) : lines.length === 0 ? (
           <EmptyBudget period={period} onAdd={openCreate} />
         ) : (
-          <Card className="overflow-hidden gs-card-glow relative">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-5">Line</TableHead>
-                    <TableHead className="text-right">Budgeted</TableHead>
-                    <TableHead className="text-right">Actual</TableHead>
-                    <TableHead className="text-right">Variance</TableHead>
-                    <TableHead className="w-[34%]">Progress</TableHead>
-                    <TableHead className="pr-5 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {grouped.map((g) => (
-                    <React.Fragment key={g.category}>
-                      {/* category subhead row */}
-                      <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                        <TableCell className="pl-5 py-2">
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-phisig-red">
-                            {g.category}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-2 text-right text-xs font-semibold tabular-nums text-muted-foreground">
-                          {fmtCents(g.budgeted)}
-                        </TableCell>
-                        <TableCell className="py-2 text-right text-xs font-semibold tabular-nums text-muted-foreground">
-                          {fmtCents(g.actual)}
-                        </TableCell>
-                        <TableCell className="py-2 text-right">
-                          <VarianceTag cents={g.budgeted - g.actual} small />
-                        </TableCell>
-                        <TableCell className="py-2"><ProgressBar actual={g.actual} budgeted={g.budgeted} /></TableCell>
-                        <TableCell className="py-2" />
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <Card className="overflow-hidden gs-card-glow relative">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="pl-5">Line</TableHead>
+                        <TableHead className="text-right">Budgeted</TableHead>
+                        <TableHead className="text-right">Actual</TableHead>
+                        <TableHead className="text-right">Variance</TableHead>
+                        <TableHead className="w-[34%]">Progress</TableHead>
+                        <TableHead className="pr-5 text-right">Actions</TableHead>
                       </TableRow>
-                      {g.items.map((l) => {
-                        const variance = l.budgetedCents - l.actualCents;
-                        return (
-                          <TableRow key={l.id} className="group">
-                            <TableCell className="pl-5">
-                              <div className="font-medium">{l.label}</div>
-                              {l.notes && (
-                                <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{l.notes}</div>
-                              )}
+                    </TableHeader>
+                    <TableBody>
+                      {grouped.map((g) => (
+                        <React.Fragment key={g.category}>
+                          {/* category subhead row */}
+                          <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                            <TableCell className="pl-5 py-2">
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-phisig-red">
+                                {g.category}
+                              </span>
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">{fmtCents(l.budgetedCents)}</TableCell>
-                            <TableCell className="text-right tabular-nums">{fmtCents(l.actualCents)}</TableCell>
-                            <TableCell className="text-right"><VarianceTag cents={variance} /></TableCell>
-                            <TableCell><ProgressBar actual={l.actualCents} budgeted={l.budgetedCents} /></TableCell>
-                            <TableCell className="pr-5">
-                              <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="ghost" size="icon" className="h-8 w-8"
-                                  onClick={() => openEdit(l)} title="Edit line"
-                                >
-                                  <Edit3 className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost" size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                  onClick={() => setConfirmLine(l)} title="Delete line"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
+                            <TableCell className="py-2 text-right text-xs font-semibold tabular-nums text-muted-foreground">
+                              {fmtCents(g.budgeted)}
                             </TableCell>
+                            <TableCell className="py-2 text-right text-xs font-semibold tabular-nums text-muted-foreground">
+                              {fmtCents(g.actual)}
+                            </TableCell>
+                            <TableCell className="py-2 text-right">
+                              <VarianceTag cents={g.budgeted - g.actual} small />
+                            </TableCell>
+                            <TableCell className="py-2"><ProgressBar actual={g.actual} budgeted={g.budgeted} /></TableCell>
+                            <TableCell className="py-2" />
                           </TableRow>
-                        );
-                      })}
-                    </React.Fragment>
-                  ))}
-                  {/* grand-total footer row */}
-                  <TableRow className="border-t-2 border-border hover:bg-transparent">
-                    <TableCell className="pl-5 font-semibold">Total</TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">{fmtCents(totals.budgeted)}</TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">{fmtCents(totals.actual)}</TableCell>
-                    <TableCell className="text-right"><VarianceTag cents={totals.variance} /></TableCell>
-                    <TableCell><ProgressBar actual={totals.actual} budgeted={totals.budgeted} /></TableCell>
-                    <TableCell className="pr-5" />
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                          {g.items.map((l) => {
+                            const variance = l.budgetedCents - l.actualCents;
+                            return (
+                              <TableRow key={l.id} className="group">
+                                <TableCell className="pl-5">
+                                  <div className="font-medium">{l.label}</div>
+                                  {l.notes && (
+                                    <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{l.notes}</div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right tabular-nums">{fmtCents(l.budgetedCents)}</TableCell>
+                                <TableCell className="text-right tabular-nums">{fmtCents(l.actualCents)}</TableCell>
+                                <TableCell className="text-right"><VarianceTag cents={variance} /></TableCell>
+                                <TableCell><ProgressBar actual={l.actualCents} budgeted={l.budgetedCents} /></TableCell>
+                                <TableCell className="pr-5">
+                                  <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost" size="icon" className="h-8 w-8"
+                                      onClick={() => openEdit(l)} title="Edit line"
+                                    >
+                                      <Edit3 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost" size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                      onClick={() => setConfirmLine(l)} title="Delete line"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </React.Fragment>
+                      ))}
+                      {/* grand-total footer row */}
+                      <TableRow className="border-t-2 border-border hover:bg-transparent">
+                        <TableCell className="pl-5 font-semibold">Total</TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">{fmtCents(totals.budgeted)}</TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">{fmtCents(totals.actual)}</TableCell>
+                        <TableCell className="text-right"><VarianceTag cents={totals.variance} /></TableCell>
+                        <TableCell><ProgressBar actual={totals.actual} budgeted={totals.budgeted} /></TableCell>
+                        <TableCell className="pr-5" />
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Mobile Card-Based View */}
+            <div className="md:hidden space-y-6">
+              {grouped.map((g) => (
+                <div key={g.category} className="space-y-2.5">
+                  <div className="flex items-center justify-between px-2 pt-1">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-phisig-red">
+                      {g.category}
+                    </span>
+                    <div className="text-xs text-muted-foreground flex gap-1">
+                      <span className="font-semibold tabular-nums">{fmtCents(g.actual)}</span>
+                      <span>/</span>
+                      <span className="tabular-nums">{fmtCents(g.budgeted)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {g.items.map((l) => {
+                      const variance = l.budgetedCents - l.actualCents;
+                      return (
+                        <Card key={l.id} className="p-4 space-y-3 relative hover:border-phisig-red/30 transition-colors">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-sm text-foreground truncate">{l.label}</h4>
+                              {l.notes && (
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-normal">{l.notes}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-0.5 shrink-0 -mt-1">
+                              <Button
+                                variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
+                                onClick={() => openEdit(l)} title="Edit line"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost" size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => setConfirmLine(l)} title="Delete line"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-xs border-t border-b border-border py-2 my-1">
+                            <div>
+                              <p className="text-muted-foreground text-[10px] uppercase tracking-wider">Budgeted</p>
+                              <p className="font-semibold tabular-nums mt-0.5">{fmtCents(l.budgetedCents)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-[10px] uppercase tracking-wider">Spent</p>
+                              <p className="font-semibold tabular-nums mt-0.5">{fmtCents(l.actualCents)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-[10px] uppercase tracking-wider">Remaining</p>
+                              <div className="mt-0.5"><VarianceTag cents={variance} small /></div>
+                            </div>
+                          </div>
+
+                          <div className="pt-1">
+                            <ProgressBar actual={l.actualCents} budgeted={l.budgetedCents} />
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Mobile Grand Total Summary */}
+              <Card className="p-4 bg-secondary/35 border-border space-y-3">
+                <div className="flex justify-between items-center text-sm font-semibold">
+                  <span>Grand Total</span>
+                  <div className="text-right">
+                    <p className="tabular-nums">{fmtCents(totals.actual)} / {fmtCents(totals.budgeted)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Remaining: <VarianceTag cents={totals.variance} small />
+                    </p>
+                  </div>
+                </div>
+                <ProgressBar actual={totals.actual} budgeted={totals.budgeted} />
+              </Card>
+            </div>
+          </>
         )}
       </section>
 

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import { EVENT_CATEGORIES } from "@/components/admin/events-manager";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 /**
  * Brother-only month-view calendar grid.
@@ -30,7 +31,7 @@ import { EVENT_CATEGORIES } from "@/components/admin/events-manager";
  * full RSVP card below.
  */
 
-const TZ = "America/New_York";
+const DEFAULT_TZ = "America/New_York";
 
 type RsvpStatus = "GOING" | "NOT_GOING" | "MAYBE";
 
@@ -81,16 +82,11 @@ function categoryLabel(id: string): string {
   return meta?.label ?? "Event";
 }
 
-// ---- Date helpers, all anchored to America/New_York ------------------------
-//
-// Date math here uses a "synthesized local Date" trick: take the original
-// timestamp, ask Intl for the year/month/day in America/New_York, then build
-// a new Date(year, month, day) that we treat as a TZ-naive bucket key. This
-// avoids the SSR/hydration mismatch the card list already paid for.
+// ---- Date helpers, parameterized to custom timezone ------------------------
 
-function partsInTZ(d: Date): { y: number; m: number; d: number } {
+function partsInTZ(d: Date, timezone = DEFAULT_TZ): { y: number; m: number; d: number } {
   const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
+    timeZone: timezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -107,8 +103,8 @@ function partsInTZ(d: Date): { y: number; m: number; d: number } {
   return { y, m, d: day };
 }
 
-function dateKey(d: Date): string {
-  const p = partsInTZ(d);
+function dateKey(d: Date, timezone = DEFAULT_TZ): string {
+  const p = partsInTZ(d, timezone);
   return `${p.y}-${String(p.m).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
 }
 
@@ -125,8 +121,8 @@ function naiveKey(d: Date): string {
   return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function todayInTZ(): Date {
-  const p = partsInTZ(new Date());
+function todayInTZ(timezone = DEFAULT_TZ): Date {
+  const p = partsInTZ(new Date(), timezone);
   return naiveDate(p.y, p.m - 1, p.d);
 }
 
@@ -142,16 +138,17 @@ function addDays(d: Date, n: number): Date {
   return naiveDate(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 
-function monthLabel(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+function monthLabel(d: Date, timezone = DEFAULT_TZ): string {
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: timezone });
 }
 
-function fullDayLabel(d: Date): string {
+function fullDayLabel(d: Date, timezone = DEFAULT_TZ): string {
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: timezone,
   });
 }
 
@@ -178,16 +175,17 @@ export function EventCalendarGrid({
   // matching card in the list below.
   onEventClick?: (eventId: string) => void;
 } = {}) {
+  const { timeZone } = useChapterIdentity();
   const [events, setEvents] = React.useState<CalendarEvent[]>([]);
   const [initialLoading, setInitialLoading] = React.useState(true);
   const [lastUpdated, setLastUpdated] = React.useState<number | null>(null);
   const [now, setNow] = React.useState<number>(() => Date.now());
 
-  const [focused, setFocused] = React.useState<Date>(() => todayInTZ());
+  const [focused, setFocused] = React.useState<Date>(() => todayInTZ(timeZone));
   const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
   const [didCenterOnUpcoming, setDidCenterOnUpcoming] = React.useState(false);
 
-  const today = React.useMemo(() => todayInTZ(), []);
+  const today = React.useMemo(() => todayInTZ(timeZone), [timeZone]);
   const todayKey = React.useMemo(() => naiveKey(today), [today]);
 
   const gridRef = React.useRef<HTMLDivElement | null>(null);
@@ -247,7 +245,7 @@ export function EventCalendarGrid({
     const nowMs = Date.now();
     const upcoming = events.find((e) => new Date(e.startsAt).getTime() >= nowMs);
     if (upcoming) {
-      const p = partsInTZ(new Date(upcoming.startsAt));
+      const p = partsInTZ(new Date(upcoming.startsAt), timeZone);
       const target = naiveDate(p.y, p.m - 1, 1);
       // Only move if the upcoming event's month is different from current.
       if (target.getFullYear() !== focused.getFullYear() || target.getMonth() !== focused.getMonth()) {
@@ -255,13 +253,13 @@ export function EventCalendarGrid({
       }
     }
     setDidCenterOnUpcoming(true);
-  }, [didCenterOnUpcoming, initialLoading, events, focused]);
+  }, [didCenterOnUpcoming, initialLoading, events, focused, timeZone]);
 
   // ---- Bucket events by day key (TZ-aware), once per events change --------
   const eventsByDay = React.useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
     for (const e of events) {
-      const key = dateKey(new Date(e.startsAt));
+      const key = dateKey(new Date(e.startsAt), timeZone);
       const list = map.get(key);
       if (list) list.push(e);
       else map.set(key, [e]);
@@ -273,7 +271,7 @@ export function EventCalendarGrid({
       );
     }
     return map;
-  }, [events]);
+  }, [events, timeZone]);
 
   const cells = React.useMemo(() => buildGrid(focused), [focused]);
 
@@ -394,7 +392,7 @@ export function EventCalendarGrid({
               month via the button's accessible name on click, not on every
               re-render of this heading (which would double-announce). */}
           <h3 className="text-base font-semibold tracking-tight sm:text-lg">
-            {monthLabel(focused)}
+            {monthLabel(focused, timeZone)}
           </h3>
         </div>
 
@@ -433,7 +431,7 @@ export function EventCalendarGrid({
                 data-cell-idx={idx}
                 onClick={() => handleSelectDay(cell)}
                 onKeyDown={(e) => onCellKeyDown(e, idx)}
-                aria-label={ariaForCell(cell, dayEvents)}
+                aria-label={ariaForCell(cell, dayEvents, timeZone)}
                 aria-pressed={isSelected}
                 disabled={!inMonth}
                 className={cn(
@@ -497,7 +495,7 @@ export function EventCalendarGrid({
         <div className="border-t border-border p-3 sm:p-4 animate-spring-in">
           <div className="mb-2 flex items-center justify-between gap-3">
             <h4 className="text-sm font-semibold tracking-tight">
-              {fullDayLabel(selectedDate)}
+              {fullDayLabel(selectedDate, timeZone)}
               <span className="ml-2 text-xs font-normal text-muted-foreground">
                 {selectedEvents.length}{" "}
                 {selectedEvents.length === 1 ? "event" : "events"}
@@ -570,6 +568,7 @@ function DayPanelRow({
   event: CalendarEvent;
   onClick: () => void;
 }) {
+  const { timeZone } = useChapterIdentity();
   const stripe = categoryStripe(event.category);
   const label = categoryLabel(event.category);
   const Icon = CATEGORY_ICON[event.category] ?? CATEGORY_ICON.OTHER;
@@ -604,7 +603,7 @@ function DayPanelRow({
             <Icon className="h-3.5 w-3.5" />
           </span>
           <span className="min-w-[5rem] text-xs font-medium tabular-nums text-muted-foreground">
-            {formatTime(start)}
+            {formatTime(start, timeZone)}
           </span>
           <span className="min-w-0 flex-1 truncate font-medium">{event.name}</span>
           {event.location && (
@@ -698,8 +697,8 @@ const DAY_NAMES = [
   { full: "Sat", short: "S" },
 ];
 
-function ariaForCell(cell: Date, events: CalendarEvent[]): string {
-  const datePart = fullDayLabel(cell);
+function ariaForCell(cell: Date, events: CalendarEvent[], timeZone: string): string {
+  const datePart = fullDayLabel(cell, timeZone);
   if (events.length === 0) return `${datePart}, no events`;
   if (events.length === 1) return `${datePart}, 1 event: ${events[0].name}`;
   const names = events.map((e) => e.name).join(", ");

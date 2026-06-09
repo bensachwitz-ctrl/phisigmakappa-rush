@@ -17,7 +17,7 @@ import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
   CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
-  CreditCard, Sparkles,
+  CreditCard, Sparkles, KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -204,6 +204,37 @@ export function BrothersManager({
         }
       },
     });
+  }
+
+  async function sendPasswordReset(email: string | null, name: string) {
+    if (!email) {
+      push({
+        title: "No email address",
+        description: `Please set an email address for ${name} before sending a reset link.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await fetch("/api/portal/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, role: "brother" }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send reset link");
+      push({
+        title: "Reset link sent",
+        description: `Password reset link has been dispatched to ${email}.`,
+        variant: "success",
+      });
+    } catch (err: any) {
+      push({
+        title: "Error",
+        description: err.message || "Failed to send reset link",
+        variant: "destructive",
+      });
+    }
   }
 
   // Pay-dues flow — POST /api/dues/checkout returns a Stripe-hosted URL
@@ -448,6 +479,11 @@ export function BrothersManager({
                     {(isAdmin || b.id === currentBrotherId) && (
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(b)} title={b.id === currentBrotherId && !isAdmin ? "Edit your profile" : "Edit"}>
                         <Edit3 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => sendPasswordReset(b.email, b.name)} title="Send Password Reset Link">
+                        <KeyRound className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {isAdmin && (

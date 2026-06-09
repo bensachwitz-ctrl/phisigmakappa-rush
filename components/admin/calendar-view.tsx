@@ -7,6 +7,7 @@ import { IconChip } from "@/components/ui/icon-chip";
 import { IconCalendarTool } from "@/components/brand/icons/calendar-tool";
 import { ChevronLeft, ChevronRight, CalendarDays, MapPin, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
 /**
  * Unified calendar item — the normalized shape the server page merges Events +
@@ -74,28 +75,73 @@ const MONTH_NAMES = [
 const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // ── Pure date helpers (local-time, no external libs) ─────────────────────────
-/** Local Y-M-D key, e.g. "2026-6-4" — collapses a Date to its calendar day. */
-function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+function getPartsInTimeZone(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false, timeZone,
+  });
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) => Number(parts.find(p => p.type === type)?.value || 0);
+
+  const year = getPart("year");
+  const month = getPart("month") - 1; // 0-indexed month
+  const day = getPart("day");
+  let hour = getPart("hour");
+  if (parts.find(p => p.type === "hour")?.value === "24") hour = 0;
+  const minute = getPart("minute");
+
+  return { year, month, day, hour, minute };
 }
+
+function dayKey(d: Date, timeZone: string): string {
+  const { year, month, day } = getPartsInTimeZone(d, timeZone);
+  return `${year}-${month}-${day}`;
+}
+
 function startOfMonth(year: number, month: number): Date {
   return new Date(year, month, 1, 0, 0, 0, 0);
 }
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+
+function startOfDayInTimeZone(d: Date, timeZone: string): Date {
+  const { year, month, day } = getPartsInTimeZone(d, timeZone);
+  const utcDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false, timeZone,
+  });
+  const parts = formatter.formatToParts(utcDate);
+  const getPart = (type: string) => Number(parts.find(p => p.type === type)?.value || 0);
+
+  const fYear = getPart("year");
+  const fMonth = getPart("month");
+  const fDay = getPart("day");
+  let fHour = getPart("hour");
+  if (parts.find(p => p.type === "hour")?.value === "24") fHour = 0;
+  const fMinute = getPart("minute");
+
+  const formattedUtcTime = Date.UTC(fYear, fMonth - 1, fDay, fHour, fMinute);
+  const targetUtcTime = Date.UTC(year, month, day, 0, 0);
+
+  const offsetMs = formattedUtcTime - targetUtcTime;
+  return new Date(utcDate.getTime() - offsetMs);
 }
+
 function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
-  // JS Date normalizes overflow/underflow (month -1 → Dec prev year, 12 → Jan next year).
   const d = new Date(year, month + delta, 1);
   return { year: d.getFullYear(), month: d.getMonth() };
 }
-function timeLabel(iso: string): string {
+
+function timeLabel(iso: string, timeZone: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone });
 }
-function fullDayLabel(d: Date): string {
-  return d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+function fullDayLabel(d: Date, timeZone: string): string {
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone });
 }
 
 /**
@@ -118,6 +164,7 @@ function buildMonthGrid(year: number, month: number): Date[] {
 
 export function CalendarView({ items }: { items: CalendarItem[] }) {
   const router = useRouter();
+  const { timeZone } = useChapterIdentity();
 
   // Guard against bad ISO strings up front so every downstream consumer is safe.
   const validItems = React.useMemo(
@@ -134,14 +181,15 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
   React.useEffect(() => {
     const now = new Date();
     setToday(now);
-    setView({ year: now.getFullYear(), month: now.getMonth() });
-  }, []);
+    const parts = getPartsInTimeZone(now, timeZone);
+    setView({ year: parts.year, month: parts.month });
+  }, [timeZone]);
 
   // Bucket every item by its local day key for O(1) cell lookups.
   const itemsByDay = React.useMemo(() => {
     const map = new Map<string, CalendarItem[]>();
     for (const it of validItems) {
-      const k = dayKey(new Date(it.date));
+      const k = dayKey(new Date(it.date), timeZone);
       const arr = map.get(k);
       if (arr) arr.push(it);
       else map.set(k, [it]);
@@ -151,12 +199,12 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
       arr.sort((a, b) => +new Date(a.date) - +new Date(b.date));
     }
     return map;
-  }, [validItems]);
+  }, [validItems, timeZone]);
 
   // Upcoming agenda: today (00:00) forward, grouped by day, soonest first.
   const agenda = React.useMemo(() => {
     if (!today) return [] as { key: string; date: Date; items: CalendarItem[] }[];
-    const floor = startOfDay(today).getTime();
+    const floor = startOfDayInTimeZone(today, timeZone).getTime();
     const upcoming = validItems
       .filter((it) => +new Date(it.date) >= floor)
       .sort((a, b) => +new Date(a.date) - +new Date(b.date));
@@ -164,28 +212,31 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
     const index = new Map<string, number>();
     for (const it of upcoming) {
       const d = new Date(it.date);
-      const k = dayKey(d);
+      const k = dayKey(d, timeZone);
       if (!index.has(k)) {
         index.set(k, groups.length);
-        groups.push({ key: k, date: startOfDay(d), items: [it] });
+        groups.push({ key: k, date: startOfDayInTimeZone(d, timeZone), items: [it] });
       } else {
         groups[index.get(k)!].items.push(it);
       }
     }
     return groups;
-  }, [validItems, today]);
+  }, [validItems, today, timeZone]);
 
   const grid = React.useMemo(
     () => (view ? buildMonthGrid(view.year, view.month) : []),
     [view]
   );
-  const todayKey = today ? dayKey(today) : "";
+  const todayKey = today ? dayKey(today, timeZone) : "";
 
   function go(delta: number) {
     setView((v) => (v ? addMonths(v.year, v.month, delta) : v));
   }
   function goToday() {
-    if (today) setView({ year: today.getFullYear(), month: today.getMonth() });
+    if (today) {
+      const parts = getPartsInTimeZone(today, timeZone);
+      setView({ year: parts.year, month: parts.month });
+    }
   }
   function openItem(it: CalendarItem) {
     router.push(it.href);
@@ -194,9 +245,9 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
   const monthHasItems = React.useMemo(() => {
     if (!view) return false;
     return grid.some(
-      (d) => d.getMonth() === view.month && (itemsByDay.get(dayKey(d))?.length ?? 0) > 0
+      (d) => d.getMonth() === view.month && (itemsByDay.get(dayKey(d, timeZone))?.length ?? 0) > 0
     );
-  }, [grid, view, itemsByDay]);
+  }, [grid, view, itemsByDay, timeZone]);
 
   // ── Loading state (pre-mount, before `today` resolves) ──────────────────────
   if (!view || !today) {
@@ -215,8 +266,9 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
   }
 
   const monthTitle = `${MONTH_NAMES[view.month]} ${view.year}`;
+  const currentMonthParts = today ? getPartsInTimeZone(today, timeZone) : null;
   const isCurrentMonth =
-    today.getFullYear() === view.year && today.getMonth() === view.month;
+    !!(currentMonthParts && currentMonthParts.year === view.year && currentMonthParts.month === view.month);
 
   return (
     <main className="container py-8 space-y-6">
@@ -289,7 +341,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
           <div className="grid grid-cols-7 gap-1.5">
             {grid.map((d) => {
               const inMonth = d.getMonth() === view.month;
-              const k = dayKey(d);
+              const k = dayKey(d, timeZone);
               const dayItems = itemsByDay.get(k) ?? [];
               const isToday = k === todayKey;
               const MAX_CHIPS = 3;
@@ -314,7 +366,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                           ? "font-medium text-foreground"
                           : "text-muted-foreground/60"
                       )}
-                      aria-label={isToday ? `${fullDayLabel(d)} (today)` : undefined}
+                      aria-label={isToday ? `${fullDayLabel(d, timeZone)} (today)` : undefined}
                     >
                       {d.getDate()}
                     </span>
@@ -323,12 +375,12 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                     {shown.map((it) => {
                       const meta = SOURCE_META[it.source];
                       return (
-                        <button
+                         <button
                           key={it.id}
                           type="button"
                           onClick={() => openItem(it)}
                           title={`${meta.label}: ${it.title}${it.location ? ` · ${it.location}` : ""}`}
-                          aria-label={`${meta.label}: ${it.title}, ${timeLabel(it.date)}${
+                          aria-label={`${meta.label}: ${it.title}, ${timeLabel(it.date, timeZone)}${
                             it.location ? `, at ${it.location}` : ""
                           }. Opens ${it.href}`}
                           className={cn(
@@ -401,11 +453,11 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                 <li key={group.key} className="rounded-2xl border bg-card/60 p-3 sm:p-4">
                   <div className="mb-2 flex items-baseline gap-2">
                     <h3 className="text-sm font-semibold">
-                      {isToday ? "Today" : fullDayLabel(group.date)}
+                      {isToday ? "Today" : fullDayLabel(group.date, timeZone)}
                     </h3>
                     {isToday && (
                       <span className="rounded-full bg-phisig-red/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-phisig-red ring-1 ring-phisig-red/20">
-                        {fullDayLabel(group.date)}
+                        {fullDayLabel(group.date, timeZone)}
                       </span>
                     )}
                   </div>
@@ -417,7 +469,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                           <button
                             type="button"
                             onClick={() => openItem(it)}
-                            aria-label={`${meta.label}: ${it.title}, ${timeLabel(it.date)}${
+                            aria-label={`${meta.label}: ${it.title}, ${timeLabel(it.date, timeZone)}${
                               it.location ? `, at ${it.location}` : ""
                             }. Opens ${it.href}`}
                             className={cn(
@@ -445,7 +497,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                                 <span className="inline-flex items-center gap-1 tabular-nums">
                                   <CalendarDays className="h-3 w-3" aria-hidden="true" />
-                                  {timeLabel(it.date)}
+                                  {timeLabel(it.date, timeZone)}
                                 </span>
                                 {it.location && (
                                   <span className="inline-flex items-center gap-1">

@@ -45,8 +45,7 @@ export function getSiteUrl(): string {
  * Result rounded UP to the next cent to avoid under-collection.
  */
 export function applyPassThrough(baseCents: number): number {
-  const STRIPE_FIXED_CENTS = 30;
   const STRIPE_RATE = 0.029;
-  const total = (baseCents + STRIPE_FIXED_CENTS) / (1 - STRIPE_RATE);
+  const total = baseCents / (1 - STRIPE_RATE);
   return Math.ceil(total);
 }

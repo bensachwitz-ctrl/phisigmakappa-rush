@@ -306,6 +306,7 @@ model Brother {
   // ── W5 alumni + calendar relations ───────────────────────────────────────
   alumniProfile      AlumniProfile?
   googleCalendarLink GoogleCalendarLink?
+  soberShifts        SoberDriverShift[]
 }
 
 // DuesPayment — payment-history ledger for chapter dues. R43 SIMPLE shape:
@@ -411,6 +412,8 @@ model Announcement {
 
   author       Brother?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
   readReceipts AnnouncementRead[]
+  pollId       String?
+  poll         Poll?              @relation(fields: [pollId], references: [id], onDelete: SetNull)
 
   @@index([scheduledFor])
   @@index([status])
@@ -720,6 +723,7 @@ model Poll {
 
   createdBy Brother    @relation("createdBy", fields: [createdById], references: [id], onDelete: Cascade)
   votes     PollVote[]
+  announcements Announcement[]
 
   @@index([createdAt])
   @@index([closedAt])
@@ -1161,3 +1165,37 @@ model Tenant {
 
   @@index([stripeCustomerId])
 }
+
+model JobPosting {
+  id           String   @id @default(cuid())
+  title        String
+  company      String
+  location     String?
+  description  String
+  requirements String?
+  salary       String?
+  contactEmail String
+  contactPhone String?
+  contactName  String
+  postedById   String
+  postedByName String
+  postedByRole String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([postedById])
+}
+
+model SoberDriverShift {
+  id         String   @id @default(cuid())
+  day        String   // e.g. "Thursday" | "Friday" | "Saturday"
+  shiftHours String   // e.g. "22:00-00:00" | "00:00-02:00"
+  memberId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  member     Brother  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+

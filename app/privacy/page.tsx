@@ -523,20 +523,33 @@ function PSubProcessor({ name, role }: { name: string; role: string }) {
 // ── Apex-only Greekstack chrome (shared shape with app/terms/page.tsx) ────
 function ApexHeader() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)]">
+      {/* Lit bottom seam */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent"
+      />
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
           <GreekstackWordmark
             size="md"
-            markClassName="h-8 w-8 transition-transform duration-300 group-hover:rotate-[-6deg] group-hover:scale-105"
+            markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
-        <Link
-          href="/onboard"
-          className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
-        >
-          Get started
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/app?demo=true"
+            className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Interactive Demo
+          </Link>
+          <Link
+            href="/onboard"
+            className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
+          >
+            Get started
+          </Link>
+        </div>
       </div>
     </header>
   );

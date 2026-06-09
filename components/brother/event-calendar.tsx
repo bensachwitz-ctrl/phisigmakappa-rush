@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
+import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
   CalendarDays,
   MapPin,
@@ -198,6 +199,7 @@ function EventCard({
   onOpenDetails?: () => void;
 }) {
   const { push } = useToast();
+  const { timeZone } = useChapterIdentity();
   const cat = styleFor(event.category);
   const start = new Date(event.startsAt);
   const isPast = start.getTime() < Date.now() - 1000 * 60 * 60 * 24;
@@ -345,7 +347,7 @@ function EventCard({
           <div className="flex-1 min-w-0 p-4 sm:p-5">
             {/* Header row: date block + title block */}
             <div className="flex items-start gap-4">
-              <DateBlock date={start} stripe={cat.stripe} />
+              <DateBlock date={start} stripe={cat.stripe} timeZone={timeZone} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge className={cat.badge}>{cat.label}</Badge>
@@ -381,7 +383,7 @@ function EventCard({
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays className="h-3.5 w-3.5" />
-                    {formatDate(start)} · {formatTime(start)}
+                    {formatDate(start, timeZone)} · {formatTime(start, timeZone)}
                   </span>
                   {event.location && (
                     <span className="inline-flex items-center gap-1.5">
@@ -549,12 +551,12 @@ function EventCard({
   );
 }
 
-function DateBlock({ date, stripe }: { date: Date; stripe: string }) {
-  // Pin to America/New_York so SSR and the client agree on the day number.
+function DateBlock({ date, stripe, timeZone }: { date: Date; stripe: string; timeZone: string }) {
+  // Pin to chapter timezone so SSR and the client agree on the day number.
   // The Intl.DateTimeFormat usage matches lib/utils.ts formatDate().
-  const month = date.toLocaleDateString("en-US", { month: "short", timeZone: "America/New_York" });
-  const day = date.toLocaleDateString("en-US", { day: "numeric", timeZone: "America/New_York" });
-  const weekday = date.toLocaleDateString("en-US", { weekday: "short", timeZone: "America/New_York" });
+  const month = date.toLocaleDateString("en-US", { month: "short", timeZone });
+  const day = date.toLocaleDateString("en-US", { day: "numeric", timeZone });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short", timeZone });
   return (
     <div
       className={cn(

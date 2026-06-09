@@ -266,155 +266,180 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
           </CardContent>
         </Card>
       ) : (
-        <form onSubmit={handleBook} className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+        <form onSubmit={handleBook} className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start">
           {/* Left panel: Event Type Selection */}
           <div className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-maroon-800 px-1">1. Choose Meeting</h2>
-            <div className="flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
-              {EVENT_TYPES.map((type) => (
-                <button
-                  key={type.name}
-                  type="button"
-                  onClick={() => setSelectedType(type.name)}
-                  className={cn(
-                    "w-full text-left p-4 rounded-xl border transition-all text-xs flex flex-col gap-1 shadow-sm shrink-0 lg:shrink min-w-[200px] lg:min-w-0",
-                    selectedType === type.name
-                      ? "bg-maroon-800 text-cream-50 border-transparent scale-[1.01]"
-                      : "bg-white text-maroon-900 border-maroon-100/60 hover:border-maroon-200"
-                  )}
-                >
-                  <span className="font-bold text-sm">{type.name}</span>
-                  <span className={cn("text-xs leading-relaxed", selectedType === type.name ? "text-cream-200/90" : "text-muted-foreground")}>
-                    {type.desc}
-                  </span>
-                </button>
-              ))}
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-maroon-800 px-1 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-maroon-600 animate-pulse" />
+              1. Choose Meeting
+            </h2>
+            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
+              {EVENT_TYPES.map((type) => {
+                const isActive = selectedType === type.name;
+                return (
+                  <button
+                    key={type.name}
+                    type="button"
+                    onClick={() => setSelectedType(type.name)}
+                    className={cn(
+                      "w-full text-left p-4 rounded-2xl border transition-all duration-300 flex flex-col gap-1.5 shadow-sm shrink-0 lg:shrink min-w-[240px] lg:min-w-0 hover:-translate-y-0.5 relative overflow-hidden",
+                      isActive
+                        ? "bg-gradient-to-br from-maroon-800 to-maroon-900 text-cream-50 border-transparent shadow-md shadow-maroon-900/20 scale-[1.02]"
+                        : "bg-white text-maroon-950 border-maroon-100/60 hover:border-maroon-300 hover:shadow-md hover:shadow-maroon-900/5"
+                    )}
+                  >
+                    {/* Active left indicator strip */}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
+                        isActive ? "bg-amber-400" : "bg-transparent"
+                      )}
+                    />
+                    <span className="font-extrabold text-sm tracking-tight leading-none">
+                      {type.name}
+                    </span>
+                    <span className={cn(
+                      "text-xs leading-relaxed transition-colors duration-300",
+                      isActive ? "text-cream-200/90" : "text-muted-foreground"
+                    )}>
+                      {type.desc}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Right panel: Date & Details Form */}
-          <Card className="border-maroon-100 bg-white shadow-lg rounded-2xl overflow-hidden">
-            <CardContent className="p-6 sm:p-8 space-y-6">
+          <Card className="border border-maroon-100/80 bg-white shadow-xl rounded-2xl overflow-hidden transition-all duration-300">
+            <CardContent className="p-6 sm:p-8 space-y-8">
               {/* Date selection grid */}
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-maroon-800 flex items-center gap-1.5">
-                  <CalendarDays className="w-4 h-4 text-maroon-600" />
+              <div className="space-y-4">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-maroon-800 flex items-center gap-1.5">
+                  <CalendarDays className="w-4.5 h-4.5 text-maroon-600" />
                   2. Select Date
                 </h2>
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                  {dates.map((d) => (
-                    <button
-                      key={d.iso}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDate(d.iso);
-                        setSelectedTime(""); // Reset time on date change
-                      }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-lg border transition-all min-h-[56px]",
-                        selectedDate === d.iso
-                          ? "bg-maroon-700 text-cream-50 border-transparent font-semibold"
-                          : "bg-cream-50 text-maroon-900 border-maroon-100/40 hover:border-maroon-200"
-                      )}
-                    >
-                      <span className="text-[10px] uppercase font-bold tracking-wider">{d.dayName}</span>
-                      <span className="text-xl font-extrabold my-0.5">{d.dayNum}</span>
-                      <span className="text-[10px] uppercase opacity-75">{d.month}</span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
+                  {dates.map((d) => {
+                    const isActive = selectedDate === d.iso;
+                    return (
+                      <button
+                        key={d.iso}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDate(d.iso);
+                          setSelectedTime(""); // Reset time on date change
+                        }}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3.5 rounded-xl border transition-all duration-300 min-h-[68px] hover:-translate-y-0.5",
+                          isActive
+                            ? "bg-gradient-to-b from-maroon-750 to-maroon-850 text-cream-50 border-transparent font-bold scale-[1.05] shadow-lg shadow-maroon-800/15 ring-2 ring-maroon-600/30"
+                            : "bg-cream-50/70 text-maroon-950 border-maroon-100/40 hover:bg-cream-100/60 hover:border-maroon-200"
+                        )}
+                      >
+                        <span className="text-[9px] uppercase font-bold tracking-widest opacity-80">{d.dayName}</span>
+                        <span className="text-2xl font-black my-0.5 tracking-tight">{d.dayNum}</span>
+                        <span className="text-[9px] uppercase font-bold opacity-75">{d.month}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Time selection grid */}
               {selectedDate && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-top-3 duration-200">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-maroon-800 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-maroon-600" />
+                <div className="space-y-4 pt-6 border-t border-maroon-50 animate-in fade-in slide-in-from-top-3 duration-200">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-maroon-800 flex items-center gap-1.5">
+                    <Clock className="w-4.5 h-4.5 text-maroon-600" />
                     3. Select Time
                   </h2>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    {TIME_SLOTS.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setSelectedTime(t)}
-                        className={cn(
-                          "py-2.5 rounded-lg border text-xs font-semibold transition-all min-h-[44px]",
-                          selectedTime === t
-                            ? "bg-maroon-700 text-cream-50 border-transparent"
-                            : "bg-white text-maroon-800 border-maroon-100/60 hover:border-maroon-200"
-                        )}
-                      >
-                        {t}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+                    {TIME_SLOTS.map((t) => {
+                      const isActive = selectedTime === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSelectedTime(t)}
+                          className={cn(
+                            "py-3 rounded-xl border text-xs font-bold transition-all duration-300 min-h-[46px] hover:-translate-y-0.5 flex items-center justify-center gap-1.5",
+                            isActive
+                              ? "bg-gradient-to-b from-maroon-700 to-maroon-800 text-cream-50 border-transparent shadow-md shadow-maroon-800/10 scale-[1.03]"
+                              : "bg-white text-maroon-800 border-maroon-100/60 hover:border-maroon-300 hover:shadow-sm"
+                          )}
+                        >
+                          <Clock className={cn("w-3.5 h-3.5", isActive ? "text-cream-200" : "text-muted-foreground")} />
+                          {t}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {/* Contact and details form */}
               {selectedDate && selectedTime && (
-                <div className="space-y-4 pt-4 border-t border-maroon-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-maroon-800 flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-maroon-600" />
+                <div className="space-y-5 pt-6 border-t border-maroon-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-maroon-800 flex items-center gap-1.5">
+                    <User className="w-4.5 h-4.5 text-maroon-600" />
                     4. Your Details
                   </h2>
                   
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sched-name" className="text-xs font-bold text-maroon-900">Your Full Name</Label>
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="sched-name" className="text-xs font-bold text-maroon-900 tracking-wider">Your Full Name</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/85" />
                         <Input
                           id="sched-name"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Alex Smith"
-                          className="pl-9 border-maroon-100 focus-visible:ring-maroon-700"
+                          className="pl-9.5 border-maroon-100 focus-visible:ring-maroon-700 rounded-xl focus:border-maroon-500 shadow-sm"
                           required
                         />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sched-email" className="text-xs font-bold text-maroon-900">Your Email Address</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="sched-email" className="text-xs font-bold text-maroon-900 tracking-wider">Your Email Address</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/85" />
                         <Input
                           id="sched-email"
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="alex.smith@example.com"
-                          className="pl-9 border-maroon-100 focus-visible:ring-maroon-700"
+                          className="pl-9.5 border-maroon-100 focus-visible:ring-maroon-700 rounded-xl focus:border-maroon-500 shadow-sm"
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sched-location" className="text-xs font-bold text-maroon-900">Meeting Location (e.g. Online, Chapter House, Coffee Shop)</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="sched-location" className="text-xs font-bold text-maroon-900 tracking-wider">Meeting Location</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/85" />
                       <Input
                         id="sched-location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="Chapter House — 1525 College St"
-                        className="pl-9 border-maroon-100 focus-visible:ring-maroon-700"
+                        className="pl-9.5 border-maroon-100 focus-visible:ring-maroon-700 rounded-xl focus:border-maroon-500 shadow-sm"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sched-notes" className="text-xs font-bold text-maroon-900">Meeting Notes / Agenda (optional)</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="sched-notes" className="text-xs font-bold text-maroon-900 tracking-wider">Meeting Notes / Agenda (optional)</Label>
                     <Textarea
                       id="sched-notes"
                       rows={3}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Let us know what you want to discuss, or list any questions you have."
-                      className="border-maroon-100 focus-visible:ring-maroon-700"
+                      className="border-maroon-100 focus-visible:ring-maroon-700 rounded-xl focus:border-maroon-500 shadow-sm"
                     />
                   </div>
 
@@ -422,7 +447,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
                     <Button
                       type="submit"
                       disabled={busy}
-                      className="w-full sm:w-auto bg-maroon-800 hover:bg-maroon-900 text-cream-50 font-bold px-6 py-5 rounded-xl shadow-lg shadow-maroon-800/10"
+                      className="w-full sm:w-auto bg-gradient-to-r from-maroon-800 to-maroon-900 hover:from-maroon-750 hover:to-maroon-850 hover:shadow-lg hover:shadow-maroon-800/20 text-cream-50 font-bold px-6 py-5 rounded-xl transition-all duration-300 shadow-md shadow-maroon-900/10 active:scale-[0.98]"
                     >
                       {busy ? (
                         <>

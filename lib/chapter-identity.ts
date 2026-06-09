@@ -85,6 +85,7 @@ export type ChapterIdentity = {
   tagline: string;              // "#DamnProud"
   appShortTitle: string;        // "Phi Sig USC"
   fraternityLetters: string;    // "ΦΣΚ"
+  timeZone: string;             // "America/New_York"
 
   // Derived (single source of truth for the four most-templated combos):
   chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
@@ -121,6 +122,7 @@ export const APEX_IDENTITY: ChapterIdentity = {
   tagline: "",
   appShortTitle: "Greekstack",
   fraternityLetters: "GS",
+  timeZone: "America/New_York",
   chapterFullName: "Greekstack",
   chapterAttribution: "Greekstack",
   pageTitle: "Greekstack",
@@ -173,6 +175,7 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const tagline = cfg["chapter.tagline"] || "";
   const appShortTitle = cfg["chapter.appShortTitle"] || fraternityShort;
   const fraternityLetters = cfg["chapter.fraternityLetters"] || "";
+  const timeZone = cfg["chapter.timezone"] || "America/New_York";
 
   const chapterFullName = [fraternityName, greekLetters].filter(Boolean).join(" ");
   return {
@@ -183,6 +186,7 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     nationalName, nationalHqUrl,
     cardinalPrinciples, tagline, appShortTitle,
     fraternityLetters,
+    timeZone,
     chapterFullName,
     chapterAttribution: [fraternityShort, schoolShort].filter(Boolean).join(" "),
     pageTitle: [chapterFullName, schoolShort ? `Rush at ${schoolShort}` : ""].filter(Boolean).join(" — "),
