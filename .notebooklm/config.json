@@ -1,0 +1,16 @@
+﻿{
+    "project":  "greek-stack",
+    "embeddingModel":  "nomic-embed-text",
+    "chatModel":  "qwen2.5-coder:7b",
+    "ollamaEndpoint":  "http://localhost:11434",
+    "sources":  {
+                    "code":  "C:/Users/Bensa/working code/projects/greek-stack",
+                    "notes":  "C:/Users/Bensa/My-Obsidean-Brain/04-Projects"
+                },
+    "tools":  {
+                  "graphify":  "C:/Users/Bensa/working code/oss/graphify",
+                  "openNotebook":  "C:/Users/Bensa/working code/oss/open-notebook",
+                  "notebooklmPy":  "C:/Users/Bensa/working code/oss/notebooklm-py"
+              },
+    "note":  "Local NotebookLM context for this project. \\ — embeddings + chat run on host Ollama."
+}
