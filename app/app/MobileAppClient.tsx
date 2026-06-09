@@ -219,7 +219,9 @@ function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
     dues: {
       config: {
         enabled: true,
-        amountCents: 150000,
+        // Per-member chapter dues for the semester (a believable sample amount —
+        // NOT the Greekstack platform price). Chapters set their own number in Admin.
+        amountCents: 45000,
         year: "2026-fall",
         label: "Active Brother Dues",
         stripePublishableKey: "pk_test_1234",
@@ -1411,7 +1413,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         if (!prev) return prev;
         const newPayment = {
           id: `demo-pay-${Date.now()}`,
-          amountCents: prev.dues?.config?.amountCents || 150000,
+          amountCents: prev.dues?.config?.amountCents || 45000,
           year: prev.dues?.config?.year || "2026-fall",
           status: "PAID",
           method: "STRIPE",

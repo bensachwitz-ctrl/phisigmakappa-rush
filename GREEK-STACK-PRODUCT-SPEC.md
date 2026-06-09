@@ -26,6 +26,11 @@ Build via `nextjs-roleaware-portal` + `multitenant-saas-platform` (tenant-scoped
 ## Each chapter's site = a complete, tailored management system
 Every generated site is customized to that chapter (colors/letters/logo/photos/text/links via the builder) AND ships the FULL toolset working seamlessly: roster · events (+calendar/RSVP) · announcements (+notifications) · rush/recruitment pipeline · dues/finances (Stripe) · documents/e-sign · study/GPA · polls · exports. **Easy to set up** (few-clicks wizard), **easy to maintain** (admin dashboard), **easy to use** (clean member UX). Tools per `GREEK-STACK-RESOURCE-MAP.md`.
 
+## Demo + booking + instant tailored-site generation (user 2026-06-09)
+- **Interactive, on-brand demo** — the landing demo must feel like the REAL product the chapter receives: a LIVE, interactive preview of a tailored chapter site (sample org letters/colors), clickable tabs (Feed/Events/Rush/Dues/Network) with "what this does" callouts per surface. Not a static mockup — it previews exactly what they'll get.
+- **Seamless booking** — landing → "Launch your chapter" → a few-clicks flow (chapter name → org/school → plan → payment) with zero friction; Back-to-website + Sign-in always available.
+- **Instant tailored-site generation** — on signup/launch, **INSTANTLY** provision + theme the chapter's site (their org letters, colors, sensible defaults) so it's live and usable immediately — redirect the new admin straight into their ready, branded system (no waiting, no manual setup to start). Multitenant provision + default theming run synchronously on signup.
+
 ## Build loop (design → implement → review → improve) — run until market-ready
 1. **Design** — architecture/approach (resource map + council plan + a focused design pass).
 2. **Implement** — SEQUENTIAL waves, ONE node agent per repo at a time (fork-bomb guard): multitenant+auth+scopes → site-builder + per-chapter theming/uploads → billing (pricing above) → integrations (events/comms/docs/search/AI) → companion iOS app.
