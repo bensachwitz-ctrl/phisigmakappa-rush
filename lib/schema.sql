@@ -1119,3 +1119,52 @@ ALTER TABLE "ElectionCandidate" ADD CONSTRAINT "ElectionCandidate_seatId_fkey" F
 ALTER TABLE "ElectionBallot" ADD CONSTRAINT "ElectionBallot_seatId_fkey" FOREIGN KEY ("seatId") REFERENCES "ElectionSeat"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ElectionBallot" ADD CONSTRAINT "ElectionBallot_candidateId_fkey" FOREIGN KEY ("candidateId") REFERENCES "ElectionCandidate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- ── Alumni/brother career board (JobPosting) ────────────────────────────────
+-- Backs the career/job board on the alumni + brother portals and the mobile
+-- API (app/api/.../career/*). Was missing from the per-tenant DDL, so a
+-- freshly-provisioned chapter would 500 the moment a member opened the board.
+-- CreateTable
+CREATE TABLE "JobPosting" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "company" TEXT NOT NULL,
+    "location" TEXT,
+    "description" TEXT NOT NULL,
+    "requirements" TEXT,
+    "salary" TEXT,
+    "contactEmail" TEXT NOT NULL,
+    "contactPhone" TEXT,
+    "contactName" TEXT NOT NULL,
+    "postedById" TEXT NOT NULL,
+    "postedByName" TEXT NOT NULL,
+    "postedByRole" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "JobPosting_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "JobPosting_postedById_idx" ON "JobPosting"("postedById");
+
+-- ── Sober-driver schedule (SoberDriverShift) ────────────────────────────────
+-- Backs the admin risk-management sober-driver schedule
+-- (app/api/admin/sober-schedule). Was missing from the per-tenant DDL.
+-- CreateTable
+CREATE TABLE "SoberDriverShift" (
+    "id" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
+    "shiftHours" TEXT NOT NULL,
+    "memberId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SoberDriverShift_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "SoberDriverShift_memberId_idx" ON "SoberDriverShift"("memberId");
+
+-- AddForeignKey
+ALTER TABLE "SoberDriverShift" ADD CONSTRAINT "SoberDriverShift_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Brother"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
