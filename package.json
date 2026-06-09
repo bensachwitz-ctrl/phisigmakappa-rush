@@ -5,7 +5,7 @@
   "description": "Phi Sigma Kappa @ University of South Carolina — Rush Management Platform",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss --skip-generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -13,6 +13,7 @@
     "test:node": "node --test \"lib/**/*.test.ts\"",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.mjs"
   },
   "dependencies": {

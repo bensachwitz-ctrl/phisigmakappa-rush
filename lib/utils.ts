@@ -31,14 +31,21 @@ export const STATUS_STYLES: Record<RushStatus, string> = {
   DECLINED: "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200",
 };
 
-// Pin every server-side render to America/New_York. The chapter is at USC
-// (Columbia, SC) so all event times are local to the East Coast, but Vercel's
-// Node runtime is UTC. Without timeZone the SSR HTML rendered "midnight" for a
-// 7 PM ET event, then hydration replaced it with the user's local time —
-// causing both a hydration mismatch and a misleading initial paint for
-// non-Eastern visitors. Pinning to America/New_York is correct for this
-// chapter; a multi-tenant white-label fork should read this from cfg.
-const SCHEDULE_TZ = "America/New_York";
+// Default timezone for server-side date/time rendering. Vercel's Node runtime
+// is UTC, so without an explicit timeZone the SSR HTML renders "midnight" for a
+// 7 PM event and then hydration swaps in the viewer's local time — a hydration
+// mismatch plus a misleading first paint.
+//
+// WHITE-LABEL: this is now the LAST-RESORT fallback only. The per-chapter
+// timezone lives in SiteConfig under "chapter.timezone" (see DEFAULTS) and is
+// surfaced as `ChapterIdentity.timeZone`; server callers that have cfg/identity
+// loaded pass it through the `timezone` arg below, so each tenant's events
+// render in THEIR local zone. A single-tenant deploy can also pin the fallback
+// at build time via NEXT_PUBLIC_CHAPTER_TIMEZONE (inlined into the client
+// bundle, so it's safe in the shared client utils) without touching code. We
+// only hardcode "America/New_York" as the final default when neither is set.
+const SCHEDULE_TZ =
+  process.env.NEXT_PUBLIC_CHAPTER_TIMEZONE || "America/New_York";
 
 export function formatDate(d: Date | string, timezone = SCHEDULE_TZ) {
   const date = typeof d === "string" ? new Date(d) : d;

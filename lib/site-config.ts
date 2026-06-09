@@ -33,6 +33,12 @@ export const DEFAULTS = {
   // Max 12 chars — iOS home-screen launcher caption.
   "chapter.appShortTitle": "",
   "chapter.fraternityLetters": "",
+  // IANA timezone for this chapter — drives every server-rendered event
+  // date/time (lib/utils formatDate/formatTime) and the broadcast SMS
+  // quiet-hours gate. Defaults to US Eastern; a chapter in another timezone
+  // sets e.g. "America/Chicago" / "America/Los_Angeles" in /admin/settings so
+  // event times and the 8am–9pm TCPA quiet-hours window are correct locally.
+  "chapter.timezone": "America/New_York",
 
   // Hero photo collage tiles. Slugs must point at IG posts whose og:image
   // resolves to the actual chapter photo, not Instagram's branding asset.
@@ -277,6 +283,14 @@ export const DEFAULTS = {
   "dues.passThroughFee": "false",         // if true, add 2.9% + 30¢ to brother's total
   "dues.label": "Chapter dues — Fall 2026",
   "calendar.calDiyUrl": "",
+
+  // ── ANALYTICS (Plausible — privacy-friendly, cookieless) ──────────────
+  // OPTIONAL + INERT by default. Set this to the domain registered in your
+  // Plausible dashboard (e.g. "phisig.greekstack.app") and app/layout.tsx
+  // injects the lightweight, cookieless Plausible script — no cookie banner
+  // required. Left BLANK (the default) → no script, no tracking, byte-identical
+  // output. The rush chair sets this per chapter in /admin/settings.
+  "analytics.plausibleDomain": "",
 
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",

@@ -21,6 +21,13 @@ const ROUTE = "/api/cron/cleanup";
  *      "who-changed-what" window has passed and the row is no longer
  *      useful for the disputes the log exists to settle.
  *
+ *   3. BrotherInvite → prune DEAD invites (COMPLETED / EXPIRED / REVOKED, or
+ *      any invite whose expiresAt has already passed) once they're older than
+ *      30 days. The single-use onboarding token is long-consumed by then;
+ *      keeping spent/expired rows around just bloats the table and leaves a
+ *      stale phishing surface. Live PENDING invites still inside their window
+ *      are NEVER touched.
+ *
  * Multi-tenant fan-out: RushSubmitLog + AuditLog live in EACH chapter's
  * schema, not `public`. Vercel hits this deployment with no subdomain, so the
  * Host-header `prisma` proxy would resolve to the empty `public` schema and
@@ -67,15 +74,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
-  const rushLogCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const auditCutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  const now = Date.now();
+  const rushLogCutoff = new Date(now - 24 * 60 * 60 * 1000);
+  const auditCutoff = new Date(now - 365 * 24 * 60 * 60 * 1000);
+  const inviteCutoff = new Date(now - 30 * 24 * 60 * 60 * 1000);
+  const nowDate = new Date(now);
 
-  // Fan the two pruning passes out across every active chapter's schema.
+  // Fan the three pruning passes out across every active chapter's schema.
   // Each tenant is isolated; within a tenant each pass has its own try/catch
-  // so one bad table can't block the other from pruning.
+  // so one bad table can't block the others from pruning.
   const perTenant = await forEachTenant(async (db) => {
     let rushLogPruned = 0;
     let auditPruned = 0;
+    let invitePruned = 0;
     const errors: string[] = [];
 
     try {
@@ -96,24 +107,44 @@ export async function GET(req: Request) {
       errors.push(`auditLog: ${err?.message || "failed"}`);
     }
 
-    return { rushLogPruned, auditPruned, errors };
+    try {
+      // Dead = a terminal status OR already past its expiry — AND older than
+      // 30 days. Live PENDING invites still inside their window stay put.
+      const result = await db.brotherInvite.deleteMany({
+        where: {
+          createdAt: { lt: inviteCutoff },
+          OR: [
+            { status: { in: ["COMPLETED", "EXPIRED", "REVOKED"] } },
+            { expiresAt: { lt: nowDate } },
+          ],
+        },
+      });
+      invitePruned = result.count;
+    } catch (err: any) {
+      errors.push(`brotherInvite: ${err?.message || "failed"}`);
+    }
+
+    return { rushLogPruned, auditPruned, invitePruned, errors };
   });
 
   // Aggregate deleted counts across chapters + collect every error (tenant-
   // level from forEachTenant, plus per-pass from inside the callback).
   let rushLogPruned = 0;
   let auditPruned = 0;
+  let invitePruned = 0;
   const errors: string[] = [];
   const tenants = perTenant.map((t) => {
     if (t.ok && t.result) {
       rushLogPruned += t.result.rushLogPruned;
       auditPruned += t.result.auditPruned;
+      invitePruned += t.result.invitePruned;
       for (const e of t.result.errors) errors.push(`${t.tenant}/${e}`);
       return {
         tenant: t.tenant,
         ok: t.result.errors.length === 0,
         rushLogPruned: t.result.rushLogPruned,
         auditPruned: t.result.auditPruned,
+        invitePruned: t.result.invitePruned,
         ...(t.result.errors.length > 0 ? { errors: t.result.errors } : {}),
       };
     }
@@ -128,6 +159,7 @@ export async function GET(req: Request) {
     route: ROUTE,
     rushLogPruned,
     auditPruned,
+    invitePruned,
     tenantCount: tenants.length,
     errorCount: errors.length,
     ...(errors.length > 0 ? { errors } : {}),
@@ -142,6 +174,8 @@ export async function GET(req: Request) {
     rushLogCutoff: rushLogCutoff.toISOString(),
     auditPruned,
     auditCutoff: auditCutoff.toISOString(),
+    invitePruned,
+    inviteCutoff: inviteCutoff.toISOString(),
     tenantCount: tenants.length,
     tenants,
     ...(errors.length > 0 ? { errors } : {}),

@@ -53,12 +53,13 @@ import {
   CheckCircle2,
   Download,
   Wand2,
-  ExternalLink,
   RefreshCw,
   Sparkles,
   Copy,
 } from "lucide-react";
 import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
+import { EmptyState } from "@/components/admin/empty-state";
+import { IllustrationRoster } from "@/components/brand/illustrations";
 import {
   RUSH_STATUSES,
   STATUS_LABELS,
@@ -565,7 +566,16 @@ export function Roster({
         ))}
       </div>
 
-      {/* Table */}
+      {/* Table — or a full empty state when no PNMs have registered yet. */}
+      {rushes.length === 0 ? (
+        <EmptyState
+          illustration={IllustrationRoster}
+          icon={User}
+          title="No PNMs yet."
+          description="Share your public homepage and the rush interest form will populate this roster automatically as students sign up."
+          primaryAction={{ label: "View public homepage", href: "/" }}
+        />
+      ) : (
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
@@ -592,27 +602,7 @@ export function Roster({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                  {rushes.length === 0 ? (
-                    <div className="max-w-sm mx-auto">
-                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red mb-3" aria-hidden="true">
-                        <User className="h-5 w-5" />
-                      </span>
-                      <p className="text-sm font-semibold text-foreground">No PNMs yet.</p>
-                      <p className="mt-1 text-xs leading-relaxed">
-                        Share your public homepage and the rush interest form will populate this roster automatically as kids sign up.
-                      </p>
-                      <a
-                        href="/"
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-phisig-red text-white px-3 py-1.5 text-xs font-medium hover:bg-phisig-red-dark transition-colors"
-                      >
-                        View public homepage <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                      </a>
-                    </div>
-                  ) : (
-                    <span className="text-sm">No matches for your filters. Try a different search or clear the quick view above.</span>
-                  )}
+                  <span className="text-sm">No matches for your filters. Try a different search or clear the quick view above.</span>
                 </TableCell>
               </TableRow>
             ) : (
@@ -698,6 +688,7 @@ export function Roster({
           </TableBody>
         </Table>
       </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Showing {filtered.length} of {rushes.length} · Click a row for full profile

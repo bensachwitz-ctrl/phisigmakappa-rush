@@ -96,6 +96,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // PRODUCTION FAIL-CLOSED GUARD — mirrors the secret-guard pattern in
+    // lib/auth.ts (getSecret). In production we REFUSE to operate when
+    // ADMIN_PASSWORD is missing OR still equals the historical default
+    // ("DamnProud"). Shipping the well-known default to prod would let anyone
+    // log in as chapter admin with a guessable password. We disable the SHARED
+    // login path entirely (per-chapter DB admins still work via the branch
+    // below) rather than 500 the whole route, so a chapter that relies on DB
+    // admins isn't taken down by an unset shared credential.
+    const DEFAULT_ADMIN_PASSWORD = "DamnProud";
+    const isProd =
+      process.env.NODE_ENV === "production" ||
+      process.env.VERCEL_ENV === "production";
+    const rawAdminPass = process.env.ADMIN_PASSWORD;
+    const sharedDisabledInProd =
+      isProd && (!rawAdminPass || rawAdminPass === DEFAULT_ADMIN_PASSWORD);
+
     // Shared-credential login requires ADMIN_PASSWORD to be EXPLICITLY set — no
     // hardcoded fallback. The old "DamnProud" default meant every chapter whose
     // operator hadn't set the env var accepted a well-known password as admin.
@@ -103,7 +119,8 @@ export async function POST(req: Request) {
     // (brother.role=ADMIN with a passwordHash) can log in. Username keeps a
     // non-secret default so existing logins don't break.
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
-    const expectedPass = process.env.ADMIN_PASSWORD;
+    // In production, the default/empty password NEVER enables the shared path.
+    const expectedPass = sharedDisabledInProd ? undefined : rawAdminPass;
     const sharedConfigured = !!expectedPass;
 
     const sharedUserOk =

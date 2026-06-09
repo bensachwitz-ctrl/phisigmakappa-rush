@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
@@ -309,6 +310,27 @@ function safeHex(input: string | undefined, fallback: string): string {
 }
 
 /**
+ * Validate an analytics domain (Plausible `data-domain`). Accepts a bare
+ * hostname — letters/digits/hyphens in each label, dot-separated, optional
+ * port. Strips a pasted scheme/path so "https://x.com/" → "x.com". Returns ""
+ * for anything that isn't hostname-shaped, so a malformed or hostile cfg value
+ * never reaches the rendered <Script> attributes (defense-in-depth: the value
+ * is admin-set, but it lands in HTML).
+ */
+function safeDomain(input: string | undefined): string {
+  if (!input) return "";
+  let s = input.trim();
+  // Drop a pasted scheme + any path/query the admin may have copied in.
+  s = s.replace(/^https?:\/\//i, "").replace(/\/.*$/, "").trim();
+  if (!s) return "";
+  // hostname[:port] — each dot-separated label is alphanumeric + internal hyphens.
+  if (/^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:\d{2,5})?$/.test(s)) {
+    return s;
+  }
+  return "";
+}
+
+/**
  * Convert a validated hex color (#RGB or #RRGGBB) to a space-separated HSL
  * triple ("351 76% 42%") for the shadcn-style `--primary` / `--ring` tokens.
  *
@@ -375,6 +397,14 @@ export default async function RootLayout({
   const brandPrimaryHsl = hexToHslTriple(brandPrimary);
   const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};--primary:${brandPrimaryHsl};--ring:${brandPrimaryHsl};}`;
 
+  // OPTIONAL Plausible analytics — INERT by default. Only renders the
+  // (cookieless, <1KB) script when the chapter has set a domain in
+  // /admin/settings → "analytics.plausibleDomain". safeDomain() rejects
+  // anything that isn't a bare hostname so a malformed/hostile cfg value can't
+  // inject into the data-domain attribute or the script src. Empty/invalid →
+  // no <Script>, no network call, output identical to before.
+  const plausibleDomain = safeDomain(cfg["analytics.plausibleDomain"]);
+
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy. siteUrl
   // resolves from the live request host (never the hardcoded Phi Sig reference
@@ -435,6 +465,16 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://scontent.cdninstagram.com" />
         <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
+        {/* OPTIONAL cookieless analytics — only when a chapter configured a
+            Plausible domain. Inert (not rendered) by default. */}
+        {plausibleDomain && (
+          <Script
+            defer
+            data-domain={plausibleDomain}
+            src="https://plausible.io/js/script.js"
+            strategy="afterInteractive"
+          />
+        )}
       </head>
       <body>
         <a href="#main-content" className="skip-to-content">

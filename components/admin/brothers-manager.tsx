@@ -14,6 +14,8 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import { AddMembersWizard } from "@/components/admin/add-members-wizard";
+import { EmptyState } from "@/components/admin/empty-state";
+import { IllustrationRoster } from "@/components/brand/illustrations";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
   CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
@@ -354,38 +356,25 @@ export function BrothersManager({
       {isAdmin && <PendingInvites />}
 
       {filtered.length === 0 ? (
-        <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
-          <CardContent className="py-12 px-6 text-center">
-            {list.length === 0 ? (
-              <div className="max-w-sm mx-auto">
-                <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red text-white mb-4 shadow-md shadow-phisig-red/20" aria-hidden="true">
-                  <Users className="h-6 w-6" />
-                </span>
-                <h3 className="text-base font-semibold tracking-tight">Brotherhood directory is empty.</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-                  Send an invite link so each brother sets their own password and fills out their year, major, headshot, and pledge class.
-                  {isAdmin ? " Or add a brother manually if they need to be on the roster before they fully onboard." : ""}
-                </p>
-                {isAdmin && (
-                  <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
-                    <Button onClick={() => setInviteOpen(true)}>
-                      <Send className="h-4 w-4" /> Invite first brother
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={openCreate}
-                      className="text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      or add manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
+        list.length === 0 ? (
+          <EmptyState
+            illustration={IllustrationRoster}
+            icon={Users}
+            title="Brotherhood directory is empty."
+            description={
+              "Send an invite link so each brother sets their own password and fills out their year, major, headshot, and pledge class." +
+              (isAdmin ? " Or add a brother manually if they need to be on the roster before they fully onboard." : "")
+            }
+            primaryAction={isAdmin ? { label: "Invite first brother", onClick: () => setInviteOpen(true) } : undefined}
+            secondaryAction={isAdmin ? { label: "or add manually", onClick: openCreate } : undefined}
+          />
+        ) : (
+          <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
+            <CardContent className="py-12 px-6 text-center">
               <p className="text-sm text-muted-foreground">No brothers match "{query}". Try a different search.</p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.slice(0, visibleCount).map((b) => (

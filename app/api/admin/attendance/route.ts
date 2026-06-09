@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,8 +27,26 @@ export async function POST(req: Request) {
   }
   const { eventId, rushId, attended } = parsed.data;
 
+  // Resolve names once so the audit row reads "Marked Alex Kim present at
+  // Cookout" rather than opaque cuids. Best-effort — a lookup miss just
+  // falls back to the id, and audit() itself never throws.
+  const [rush, event] = await Promise.all([
+    prisma.rush.findUnique({ where: { id: rushId }, select: { name: true } }).catch(() => null),
+    prisma.event.findUnique({ where: { id: eventId }, select: { name: true } }).catch(() => null),
+  ]);
+  const rushName = rush?.name || rushId;
+  const eventName = event?.name || eventId;
+
   if (!attended) {
     await prisma.attendance.deleteMany({ where: { eventId, rushId } });
+    await audit({
+      action: "ATTENDANCE_MARKED",
+      subjectType: "Rush",
+      subjectId: rushId,
+      subjectName: rushName,
+      details: `Cleared attendance — ${eventName}`,
+      req,
+    });
     return NextResponse.json({ ok: true, attended: false });
   }
 
@@ -35,6 +54,14 @@ export async function POST(req: Request) {
     where: { rushId_eventId: { rushId, eventId } },
     update: { attended: true },
     create: { rushId, eventId, attended: true },
+  });
+  await audit({
+    action: "ATTENDANCE_MARKED",
+    subjectType: "Rush",
+    subjectId: rushId,
+    subjectName: rushName,
+    details: `Marked present — ${eventName}`,
+    req,
   });
   return NextResponse.json({ ok: true, attended: true });
 }

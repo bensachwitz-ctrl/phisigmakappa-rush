@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 import { sendEmail } from "@/lib/email";
@@ -149,6 +150,18 @@ export async function POST(req: Request) {
     delivery = { channel: "sms", ...r };
   }
 
+  // Audit the issued invite so the e-board can answer "who invited this
+  // person, and how?" later. Subject = the recipient (name/email/phone),
+  // details = the delivery channel + outcome.
+  await audit({
+    action: "INVITE_SENT",
+    subjectType: "BrotherInvite",
+    subjectId: invite.id,
+    subjectName: prefillName || email || phone || "(link invite)",
+    details: `${delivery.channel} · ${delivery.sent ? "sent" : delivery.reason}`,
+    req,
+  });
+
   return NextResponse.json({ ok: true, invite, link, delivery });
 }
 
@@ -158,6 +171,18 @@ export async function DELETE(req: Request) {
   const body = await req.json().catch(() => ({}));
   const id = body?.id;
   if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });
-  await prisma.brotherInvite.update({ where: { id }, data: { status: "REVOKED" } });
+  const updated = await prisma.brotherInvite.update({ where: { id }, data: { status: "REVOKED" } });
+
+  // Audit the revocation — a single-use onboarding link is a security-relevant
+  // object, so killing one should leave a trail. Subject = the recipient the
+  // invite was for (name/email/phone), resolved from the row we just updated.
+  await audit({
+    action: "INVITE_REVOKED",
+    subjectType: "BrotherInvite",
+    subjectId: id,
+    subjectName: updated.prefillName || updated.email || updated.phone || "(link invite)",
+    req,
+  });
+
   return NextResponse.json({ ok: true });
 }

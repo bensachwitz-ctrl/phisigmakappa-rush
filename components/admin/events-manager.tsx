@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
+import { EmptyState } from "@/components/admin/empty-state";
+import { IllustrationCalendar } from "@/components/brand/illustrations";
 import {
   CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
   ClipboardCheck, Users, Search, Sparkles, Edit3, Globe,
@@ -372,22 +374,15 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       )}
 
       {events.length === 0 ? (
-        <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
-          <CardContent className="py-12 px-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-semibold tracking-tight">No events yet</h3>
-            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              Click <span className="font-medium text-foreground">"Add event"</span> to schedule the chapter's first event. Choose a category (Rush, Date, Brotherhood, Chapter, Social) — each shows up color-coded on the brother calendar. Toggle <span className="font-medium text-foreground">Invite-only</span> to hide it from the public website while keeping it visible to logged-in brothers.
-            </p>
-            <div className="mt-5 flex items-center justify-center">
-              <Button onClick={openCreate} size="sm">
-                <Plus className="h-3.5 w-3.5" /> Add event
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={IllustrationCalendar}
+          icon={Sparkles}
+          title="No events yet"
+          description={
+            "Add the chapter's first event. Pick a category (Rush, Date, Brotherhood, Chapter, Social) — each shows up color-coded on the brother calendar. Toggle Invite-only to hide it from the public website while keeping it visible to logged-in brothers."
+          }
+          primaryAction={{ label: "Add event", onClick: openCreate }}
+        />
       ) : filteredEvents.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-secondary/5">
           No events match your search or filter options.
