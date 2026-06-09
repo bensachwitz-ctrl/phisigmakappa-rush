@@ -89,11 +89,13 @@ function currentTenant(): string {
   }
 }
 
-/** Per-tenant portal signing key = HMAC(rootSecret, "gs-portal-tenant:<tenant>"). */
-function tenantSecret(): string {
+/** Per-tenant portal signing key = HMAC(rootSecret, "gs-portal-tenant:<tenant>").
+ *  Pass an explicit tenant for apex-hosted contexts (e.g. /api/mobile/*) where the
+ *  Host header is the apex and currentTenant() would wrongly resolve to "_apex". */
+function tenantSecret(tenant?: string): string {
   return crypto
     .createHmac("sha256", getSecret())
-    .update(`gs-portal-tenant:${currentTenant()}`)
+    .update(`gs-portal-tenant:${tenant ?? currentTenant() ?? "_apex"}`)
     .digest("hex");
 }
 
@@ -115,7 +117,24 @@ function timingSafeEqualHex(a: string, b: string): boolean {
  * of additional dependency surface.
  */
 export function signPortalToken(userId: string, role: PortalRole): string {
-  const secret = tenantSecret();
+  return signPortalTokenForTenant(userId, role, currentTenant());
+}
+
+/**
+ * Tenant-EXPLICIT token signing for contexts where the tenant cannot be derived
+ * from the Host header — chiefly the apex-hosted /api/mobile/* routes. The native
+ * app sends the chapter `subdomain`; binding the HMAC to THAT subdomain means a
+ * token minted for chapter A only verifies when subdomain="A" is presented, so it
+ * can never read chapter B's data (presenting "B" derives B's secret, against which
+ * A's signature fails). Without this every mobile token used the apex secret — the
+ * P0 cross-tenant takeover hole.
+ */
+export function signPortalTokenForTenant(
+  userId: string,
+  role: PortalRole,
+  tenant: string
+): string {
+  const secret = tenantSecret(tenant);
   const ts = Date.now().toString();
   const payload = `${userId}.${role}.${ts}`;
   return `${payload}.${sign(payload, secret)}`;
@@ -130,6 +149,19 @@ export function signPortalToken(userId: string, role: PortalRole): string {
 export function verifyPortalToken(
   token: string | undefined | null
 ): { userId: string; role: PortalRole } | null {
+  return verifyPortalTokenForTenant(token, currentTenant());
+}
+
+/**
+ * Tenant-EXPLICIT verification — see signPortalTokenForTenant. The apex-hosted
+ * /api/mobile/* routes pass the request's `subdomain`, so a token only verifies
+ * for the chapter it was minted for (presenting any other subdomain derives a
+ * different secret and the signature fails) — no cross-tenant reuse.
+ */
+export function verifyPortalTokenForTenant(
+  token: string | undefined | null,
+  tenant: string
+): { userId: string; role: PortalRole } | null {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 4) return null;
@@ -138,7 +170,7 @@ export function verifyPortalToken(
   if (role !== "brother" && role !== "alumni" && role !== "pnm") return null;
   let expected: string;
   try {
-    expected = sign(`${userId}.${role}.${ts}`, tenantSecret());
+    expected = sign(`${userId}.${role}.${ts}`, tenantSecret(tenant));
   } catch {
     return null;
   }

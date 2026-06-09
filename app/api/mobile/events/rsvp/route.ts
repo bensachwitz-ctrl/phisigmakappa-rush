@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getTenantClient, centralDb } from "@/lib/prisma";
-import { verifyPortalToken } from "@/lib/portal-auth";
+import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -41,18 +40,15 @@ export async function POST(req: Request) {
 
   // 2. Extract and verify portal token
   const authHeader = req.headers.get("authorization");
-  let token = "";
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.substring(7);
-  } else {
-    token = cookies().get("phisig_portal")?.value || "";
-  }
+  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "";
 
   if (!token) {
     return NextResponse.json({ error: "Authentication token is required." }, { status: 401 });
   }
 
-  const sess = verifyPortalToken(token);
+  // Tenant-bound verification: a token only verifies for the chapter it was minted
+  // for, so it can't RSVP into another chapter's events.
+  const sess = verifyPortalTokenForTenant(token, subdomain);
   if (!sess || sess.role !== "brother") {
     return NextResponse.json({ error: "Unauthorized. Brothers only." }, { status: 401 });
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { centralDb, getTenantClient } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
-import { signPortalToken, setPortalCookie } from "@/lib/portal-auth";
+import { signPortalTokenForTenant } from "@/lib/portal-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,20 +42,32 @@ export async function POST(req: Request) {
   // 2. Get the tenant client
   const db = getTenantClient(subdomain);
 
-  let portalUser = null;
-  let brotherId = null;
+  let portalUser: any = null;
+  let brotherId: any = null;
+  let authenticated = false; // fail-closed: only a SUCCESSFUL password verify flips this true
 
   try {
     if (role === "brother") {
-      // Look up portal user
       portalUser = await db.portalUser.findFirst({
         where: { email, role: "brother" },
       });
 
-      brotherId = portalUser?.brotherId;
-
-      // Fallback to Brother record if portal user not provisioned yet
-      if (!portalUser) {
+      if (portalUser) {
+        // Existing portal user → REQUIRE a matching password. (Previously a failed
+        // verifyPassword fell through and still minted a token — an auth bypass.)
+        if (portalUser.passwordHash && verifyPassword(password, portalUser.passwordHash)) {
+          authenticated = true;
+          brotherId = portalUser.brotherId ?? null;
+          await db.portalUser.update({
+            where: { id: portalUser.id },
+            data: { lastLoginAt: new Date() },
+          });
+        } else {
+          portalUser = null; // bad password → fall through to 401 below
+        }
+      } else {
+        // First login: provision a portal user from a Brother record ONLY if the
+        // password matches that brother's hash.
         const brother = await db.brother.findFirst({
           where: {
             email: { equals: email, mode: "insensitive" },
@@ -74,12 +86,8 @@ export async function POST(req: Request) {
             },
           });
           brotherId = brother.id;
+          authenticated = true;
         }
-      } else if (portalUser.passwordHash && verifyPassword(password, portalUser.passwordHash)) {
-        await db.portalUser.update({
-          where: { id: portalUser.id },
-          data: { lastLoginAt: new Date() },
-        });
       }
     } else {
       // Alumni login
@@ -87,26 +95,34 @@ export async function POST(req: Request) {
         where: { email, role: "alumni" },
       });
 
-      if (portalUser && portalUser.passwordHash && verifyPassword(password, portalUser.passwordHash)) {
-        await db.portalUser.update({
-          where: { id: portalUser.id },
-          data: { lastLoginAt: new Date() },
-        });
+      if (portalUser) {
+        if (portalUser.passwordHash && verifyPassword(password, portalUser.passwordHash)) {
+          authenticated = true;
+          await db.portalUser.update({
+            where: { id: portalUser.id },
+            data: { lastLoginAt: new Date() },
+          });
+        } else {
+          portalUser = null; // bad password → 401 below
+        }
       }
     }
   } catch (err: any) {
-    return NextResponse.json({ error: `Database error: ${err.message}` }, { status: 500 });
+    console.error("[mobile/auth] DB error:", err);
+    return NextResponse.json(
+      { error: "Unable to sign in right now. Please try again." },
+      { status: 500 }
+    );
   }
 
-  if (!portalUser) {
+  if (!authenticated || !portalUser) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  // Generate mobile portal token (signed in apex context)
-  const token = signPortalToken(portalUser.id, role);
-
-  // Set the portal cookie
-  setPortalCookie(portalUser.id, role);
+  // Tenant-bound token: signed with the chapter's per-tenant secret so it only
+  // verifies when this same `subdomain` is presented — never reusable on another
+  // chapter. The native app stores + sends this as a Bearer token (no apex cookie).
+  const token = signPortalTokenForTenant(portalUser.id, role, subdomain);
 
   return NextResponse.json({
     ok: true,
