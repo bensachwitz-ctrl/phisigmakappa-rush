@@ -416,7 +416,7 @@ export async function POST(req: Request) {
       const brandHex = (primaryColor || "").trim();
       const adminFirst = (adminName || "").trim().split(" ")[0] || "there";
       // Plan-aware billing copy matching the LIVE model exactly: Monthly (first
-      // month free, then $50/mo + $150 per rush cycle), Annual ($800/year incl.
+      // month free, then $50/mo + $200 per rush cycle), Annual ($800/year incl.
       // all rush fees), or Custom. Legacy semester/dues_percentage values (no
       // longer offered) fall through to the Monthly copy.
       const planLabel =
@@ -424,19 +424,19 @@ export async function POST(req: Request) {
           ? "Annual plan ($800/year, includes all rush fees)"
           : normalizedPlan === "custom"
           ? "Custom plan"
-          : "Monthly plan ($50/mo + $150/rush cycle, first month free)";
+          : "Monthly plan ($50/mo + $200/rush cycle, first month free)";
       const billingLineHtml =
         normalizedPlan === "yearly"
           ? `You're on the <strong>Annual plan — $800/year</strong>, which includes every rush-cycle fee. Full access to every feature, no card required to launch.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
-          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's <strong>$50/mo + $150 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`;
+          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`;
       const billingLineText =
         normalizedPlan === "yearly"
           ? "You're on the Annual plan — $800/year, includes all rush fees. No card required to launch."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
-          : "Your first month is free — then $50/mo + $150 per rush cycle (or $800/year, which includes all rush fees). No card required to launch.";
+          : "Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). No card required to launch.";
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
         <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>
@@ -501,7 +501,7 @@ export async function POST(req: Request) {
           ? "Annual ($800/year, includes all rush fees)"
           : normalizedPlan === "custom"
           ? "Custom"
-          : "Monthly ($50/mo + $150/rush cycle, first month free)";
+          : "Monthly ($50/mo + $200/rush cycle, first month free)";
       const igHandle = (instagramHandle || "").trim();
       const schoolIg = (schoolInstagramHandle || "").trim();
       const igDisplay =

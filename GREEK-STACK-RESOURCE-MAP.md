@@ -30,6 +30,8 @@ Every collected resource mapped to a chapter-management-SaaS feature. The build 
 - OSS **mautic** + **listmonk** → chapter email (announcements, onboarding, renewals, drips).
 - Skill **react-email** → branded email templates.
 - **Twilio** (MCP + skills) → SMS comms (TCPA-compliant per Greek Stack memory). **Novu** → in-app/push notifications (events + announcements).
+- **textbee** (`working code\oss\textbee`, self-hosted SMS gateway) → **automatic SMS for rush + brothers** — recruitment texts, event/announcement reminders; the $0 self-hosted SMS path (TCPA-gated). Primary SMS for Greek Stack.
+- **cal.diy** (self-hosted Cal.com) → events + booking on each chapter site: schedule rush events/meetings, send booking details, ICS add-to-calendar.
 
 ## 7. Events + calendar
 - Skill **calcom-scheduling** → events/scheduling; ICS "add to calendar" on every event; reminders.

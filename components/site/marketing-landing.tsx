@@ -597,7 +597,7 @@ const TRUST_BAND: { img: string; label: string }[] = [
    TWO simple, honest ways to pay for the SAME full platform — kept deliberately
    minimal so the choice is fluid (fewer options = easier decision):
      1. PLATFORM — the lead is FIRST MONTH FREE. After that you pick how you pay:
-        • Monthly: $50/month + $150 per rush cycle, OR
+        • Monthly: $50/month + $200 per rush cycle, OR
         • Yearly:  $800/year — all rush fees included (the better value; this is
           the recommended/featured card and wears the shimmer ring + ribbon).
      2. CUSTOM — need something tailored? Talk to Ben about a custom build +
@@ -651,7 +651,7 @@ const PLANS: Plan[] = [
       monthly: {
         price: "$50",
         cadence: "/month",
-        note: "+ $150 per rush cycle",
+        note: "+ $200 each rush cycle",
       },
       yearly: {
         price: "$800",
@@ -711,7 +711,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "First month free, then $50/mo + $150 per rush cycle — or $800/year (rush fees included). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect. Need something tailored? Talk to Ben about a custom build and pricing.",
+    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect. Need something tailored? Talk to Ben about a custom build and pricing.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -731,7 +731,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I have to pay anything to start?",
-    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that it's $50/mo + $150 per rush cycle, or $800/year with rush fees included.",
+    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that it's $50/mo + $200 per rush cycle, or $800/year with rush fees included.",
   },
 ];
 
@@ -804,32 +804,38 @@ function SiteNav() {
       />
       <div
         className={
-          // gap-4+ between the wordmark and the nav so the lockup never crowds the
-          // links; min-w-0 lets the center nav shrink gracefully before anything
-          // would wrap (it collapses into the sheet well before that point).
-          "container flex items-center gap-4 transition-all duration-300 " +
+          // THREE-COLUMN GRID (auto · 1fr · auto): the brand and the right-side
+          // actions take exactly the space they need (auto), and the center nav
+          // lives in the flexible middle column. Because each region owns its own
+          // grid track, the brand and the actions can NEVER overlap each other or
+          // the links — the middle column simply shrinks, and the inline nav is
+          // hidden well before it would ever crowd a neighbour. This replaces the
+          // old single flex row that clipped the CTA in the ~1280–1320px band.
+          "container grid grid-cols-[auto_1fr_auto] items-center gap-3 transition-all duration-300 " +
           (scrolled ? "h-14" : "h-16")
         }
       >
-        {/* Brand lockup — never shrinks. */}
+        {/* Brand lockup — col 1, never shrinks. */}
         <Link href="/" className="group flex shrink-0 items-center" aria-label="Greekstack home">
           {/* The "Keystone Stack" wordmark lockup — mark + "Greek"(ink)/"stack"
               (gradient), so the name itself encodes the brand split. The mark
-              tilts on hover for a touch of life. A separate agent owns the mark;
-              we only lay it out. */}
+              tilts on hover for a touch of life. */}
           <GreekstackWordmark
             size="md"
             markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
 
-        {/* Center nav — lives on xl+ ONLY so the long primary CTA + Sign-in never
-            collide with the links at the 1024 breakpoint (where they used to
-            wrap). On md-and-below the links move into the sheet menu. The
-            min-w-0 + justify-center keep it optically centered without pushing
-            the actions off-screen. */}
+        {/* Center nav — col 2 (the flexible middle track). Renders inline from xl
+            (≥1280px) where the brand (~150px) + the six links (~700px) + the full
+            actions cluster (~360px) measure ~1210px and fit the 1280 container with
+            room to spare — so common 1366/1440 laptops keep the full desktop nav
+            instead of dropping to a hamburger. The three-column grid means the
+            tracks can never overlap regardless of width; below xl the links simply
+            collapse into the sheet menu. justify-center keeps it optically centered;
+            min-w-0 lets the track shrink without forcing horizontal scroll. */}
         <nav
-          className="hidden min-w-0 flex-1 items-center justify-center gap-4 xl:flex xl:gap-5 2xl:gap-8 text-[13px] xl:text-sm"
+          className="hidden min-w-0 items-center justify-center gap-5 xl:flex xl:gap-6 2xl:gap-7 text-sm"
           aria-label="Primary"
         >
           {NAV_LINKS.map((l) => (
@@ -848,24 +854,25 @@ function SiteNav() {
           ))}
         </nav>
 
-        {/* Right actions. On xl+ this sits after the centered nav; below xl the
-            nav is gone so this group is pushed to the end with ms-auto. */}
-        <div className="flex shrink-0 items-center gap-2 xl:ms-0 ms-auto">
-          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex text-blue-600 hover:text-blue-800 font-bold">
-            <Link href="/app?demo=true">Interactive Demo</Link>
+        {/* Right actions — col 3, never shrinks, always flush right. The compact
+            "Demo" + "Sign in" text links show from lg up (they take little room);
+            the primary CTA + hamburger are always present so there's a clear path
+            to launch + to the full menu at every width. */}
+        <div className="col-start-3 flex shrink-0 items-center justify-end gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex text-blue-600 hover:text-blue-800 font-bold">
+            <Link href="/app?demo=true">Demo</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex">
             <Link href="/login">Sign in</Link>
           </Button>
-          {/* Primary CTA — standardized verb "Launch Chapter — Free" on md+,
-              compact "Launch — free" on the tightest phones so it never wraps next
-              to the hamburger. */}
+          {/* Primary CTA — full label on md+, compact "Launch — free" on the
+              tightest phones so it never wraps beside the hamburger. */}
           <Magnetic strength={12} innerStrength={4} radius={70} className="hidden md:inline-flex">
             <ShimmerBorder rounded="rounded-md">
               <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap px-3.5">
                 <Link href="/onboard" className="group/btn font-bold">
-                  <span className="hidden xl:inline">Launch Chapter — Free</span>
-                  <span className="xl:hidden">Launch Free</span>
+                  <span className="hidden lg:inline">Launch chapter — free</span>
+                  <span className="lg:hidden">Launch free</span>
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5 ml-1.5 inline-flex" />
                 </Link>
               </Button>
@@ -877,8 +884,9 @@ function SiteNav() {
             </Button>
           </ShimmerBorder>
 
-          {/* Hamburger — shown on xl-and-below (everything the nav can't fit
-              lives in the sheet). 44px touch target. */}
+          {/* Hamburger — shown below xl (everything the inline nav can't fit lives
+              in the sheet: the section links, plus Demo + Sign in on the tighter
+              widths). 40px touch target. */}
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -944,7 +952,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
       {open && (
         <motion.div
           key="mobile-nav"
-          className="fixed inset-0 z-[90] lg:hidden"
+          className="fixed inset-0 z-[90] xl:hidden"
           initial={reduce ? false : { opacity: 0 }}
           animate={reduce ? {} : { opacity: 1 }}
           exit={reduce ? {} : { opacity: 0 }}
@@ -1139,7 +1147,7 @@ function Hero() {
               (the old duplicate links were folded into this single CTA).
               Anchored, crawlable, AA-contrast. */}
           <p className="mt-3 text-sm text-foreground/80 animate-slide-up [animation-delay:400ms]">
-            First month free, then $50/mo + $150 per rush cycle —{" "}
+            First month free, then $50/mo + $200 per rush cycle —{" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               see pricing
             </Link>
@@ -2091,7 +2099,7 @@ function Pricing() {
             <span className="gs-gradient-text">First month free.</span> Then pick what fits.
           </h2>
           <p className="mt-4 text-pretty text-base text-foreground/80">
-            Start free for a month, then keep it simple: $50/month + $150 per rush cycle, or go
+            Start free for a month, then keep it simple: $50/month + $200 per rush cycle, or go
             yearly at $800 with every rush fee included. Same product, same support, every feature —
             unlimited members, no per-seat math.
           </p>
@@ -2247,7 +2255,7 @@ function PlanCard({ plan }: { plan: Plan }) {
       {/* Then how you pay — a clean monthly-vs-yearly choice. Two stacked rows so
           it's instantly obvious which is the better deal: the yearly row is
           accented (gold "Best value" badge) and folds the rush fees in, while the
-          monthly row spells out the $50 + $150-per-rush math. Static + legible —
+          monthly row spells out the $50 + $200-per-rush math. Static + legible —
           no toggle state to fumble, so the comparison reads at a glance. */}
       {plan.billing && (
         <div className="relative mt-4">

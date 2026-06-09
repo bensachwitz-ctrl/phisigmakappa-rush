@@ -144,7 +144,7 @@ export default function OnboardWizard() {
   const [heroTagline, setHeroTagline] = React.useState("");
 
   // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
-  //   "monthly" — Base, FIRST MONTH FREE, then $50/mo + $150 per rush cycle
+  //   "monthly" — Base, FIRST MONTH FREE, then $50/mo + $200 per rush cycle
   //   "yearly"  — Annual, $800/year, INCLUDES all rush-cycle fees (best value)
   //   "custom"  — Custom build (a "talk to Ben" path → the book-a-call/Cal link)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
@@ -1213,10 +1213,10 @@ type PlanId = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
    "dues_percentage" are kept only for round-trip safety on already-persisted
    values and map to the closest current label. */
 const PLAN_SUMMARY: Record<PlanId, string> = {
-  monthly: "Monthly — first month free, then $50/mo + $150 per rush cycle",
+  monthly: "Monthly — first month free, then $50/mo + $200 per rush cycle",
   yearly: "Annual — $800/year (includes all rush fees)",
-  semester: "Monthly — first month free, then $50/mo + $150 per rush cycle",
-  dues_percentage: "Monthly — first month free, then $50/mo + $150 per rush cycle",
+  semester: "Monthly — first month free, then $50/mo + $200 per rush cycle",
+  dues_percentage: "Monthly — first month free, then $50/mo + $200 per rush cycle",
   custom: "Custom — tailored quote",
 };
 
@@ -1235,7 +1235,7 @@ function customBuildHref(): string {
 
 /**
  * PRICING STEP — choose how the chapter pays Greekstack. The model is simple:
- *   • Monthly — first month free, then $50/mo + $150 per rush cycle
+ *   • Monthly — first month free, then $50/mo + $200 per rush cycle
  *   • Annual  — $800/year, which INCLUDES every rush-cycle fee (best value)
  * presented as two big radio cards, plus a link out to a "Custom" build that
  * opens a conversation with Ben (the Cal.com book-a-call link when configured,
@@ -1281,14 +1281,14 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
             <>
               <span className="text-3xl font-extrabold text-white">$50</span>
               <span className="text-sm font-semibold text-slate-400">/mo</span>
-              <span className="text-sm font-semibold text-slate-400"> + $150 / rush cycle</span>
+              <span className="text-sm font-semibold text-slate-400"> + $200 / rush cycle</span>
             </>
           }
           highlight="First month free"
           features={[
             "Everything included — recruitment, dues, events, roster, compliance",
             "$50/month after your free first month — cancel anytime, no contract",
-            "$150 per rush cycle",
+            "$200 each rush cycle",
             "Stripe processing at cost (no platform markup)",
           ]}
         />
@@ -1309,7 +1309,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
           highlight="Includes all rush fees"
           features={[
             "Everything in Monthly — every feature, no limits",
-            "All rush-cycle fees included — no $150 per cycle",
+            "All rush-cycle fees included — no $200 per cycle",
             "Best value — save vs. paying monthly + rush cycles",
             "Stripe processing at cost (no platform markup)",
           ]}

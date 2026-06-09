@@ -146,6 +146,42 @@ const DEMO_TENANTS: Tenant[] = [
   { id: "demo-beta", subdomain: "beta", name: "Beta Theta Pi", school: "University of South Carolina", isActive: true, brandId: "beta" },
 ];
 
+/**
+ * Per-tab explainer copy for the interactive demo tour. As a visitor taps
+ * through the bottom tabs, a small dismissible callout surfaces inside the phone
+ * describing exactly what that tool does for a real chapter — so the demo isn't
+ * just a pretty mockup, it teaches the product feature-by-feature.
+ */
+const DEMO_CALLOUTS: Record<
+  "feed" | "events" | "rush" | "dues" | "directory" | "settings",
+  { title: string; body: string }
+> = {
+  feed: {
+    title: "Chapter feed",
+    body: "Officers broadcast announcements here — pinned when it matters. Every member sees the latest chapter news on their dashboard instead of digging through a group chat.",
+  },
+  events: {
+    title: "Events & calendar",
+    body: "Meetings, socials, and service events with RSVP and one-tap roster check-in. Members add any event to their personal Google / iCloud calendar in a tap.",
+  },
+  rush: {
+    title: "Recruitment pipeline",
+    body: "Run your whole rush from one board: QR check-in builds the PNM list, brothers vote anonymously, and rushees get TCPA-compliant texts — no spreadsheet, no five group chats.",
+  },
+  dues: {
+    title: "Dues & payments",
+    body: "Members pay by card via Stripe; money lands straight in your chapter's account and the ledger reconciles itself. Payment plans and reminders run on their own.",
+  },
+  directory: {
+    title: "Roster & alumni network",
+    body: "A searchable directory of actives and alumni by class year — plus gated alumni onboarding and Stripe giving flows that turn graduated brothers into a recurring base.",
+  },
+  settings: {
+    title: "Your profile",
+    body: "Each member manages their own profile, privacy, and notifications. Officers get role-scoped access so everyone sees exactly their job — nothing more.",
+  },
+};
+
 function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
   return {
     chapter: {
@@ -846,6 +882,20 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const [annPinned, setAnnPinned] = useState(false);
   const [postAnnSuccess, setPostAnnSuccess] = useState(false);
   const [jobCrossPost, setJobCrossPost] = useState(true);
+
+  // ── Interactive demo callouts ────────────────────────────────────────────
+  // In demo mode we float a small, dismissible "tour" text-box inside the phone
+  // that explains the feature on the tab the visitor is currently viewing. It
+  // re-appears (with fresh copy) whenever they switch tabs, so exploring the app
+  // teaches them what each tool does. A separate "dismissed entirely" flag lets a
+  // visitor turn the tour off for the rest of the session.
+  const [calloutVisible, setCalloutVisible] = useState(true);
+  const [calloutDismissed, setCalloutDismissed] = useState(false);
+  // Re-show the per-tab callout each time the active tab changes (unless the
+  // visitor turned the tour off). Keyed on activeTab so each tab gets its tip.
+  useEffect(() => {
+    if (!calloutDismissed) setCalloutVisible(true);
+  }, [activeTab, calloutDismissed]);
 
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [editPhone, setEditPhone] = useState("");
@@ -1783,7 +1833,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                     <span className="text-2xl font-black text-white">$50</span>
                     <span className="text-xs text-slate-400">/ month</span>
                   </div>
-                  <p className="text-[10px] text-amber-400 font-semibold">+ $150 per rush cycle</p>
+                  <p className="text-[10px] text-amber-400 font-semibold">+ $200 each rush cycle</p>
                 </div>
                 <ul className="text-xs text-slate-300 space-y-2 flex-1">
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" /> First month 100% free</li>
@@ -4158,6 +4208,56 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                         Save & Sync Profile
                       </button>
                     </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Interactive demo callout — a small, dismissible text-box that
+                  explains the tool on the current tab. Only in demo mode; floats
+                  just above the bottom tab bar so it points at the nav the visitor
+                  is exploring. Re-appears with fresh copy on every tab switch
+                  until the visitor turns the tour off. */}
+              {isDemo && calloutVisible && !calloutDismissed && DEMO_CALLOUTS[activeTab] && (
+                <div className="absolute inset-x-3 bottom-[4.75rem] z-[60] animate-spring-in">
+                  <div className="relative rounded-2xl border border-slate-200 bg-white/95 backdrop-blur p-3 pr-9 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.45)]">
+                    {/* little pointer down toward the tab bar */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute -bottom-1.5 left-8 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white/95"
+                    />
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                        style={{ backgroundColor: selectedBrand.primaryColor }}
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
+                          {DEMO_CALLOUTS[activeTab].title}
+                          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                            What this does
+                          </span>
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-600">
+                          {DEMO_CALLOUTS[activeTab].body}
+                        </p>
+                        <button
+                          onClick={() => setCalloutDismissed(true)}
+                          className="mt-2 text-[10px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                        >
+                          Turn off tips
+                        </button>
+                      </div>
+                    </div>
+                    {/* dismiss just this one (it returns on the next tab) */}
+                    <button
+                      onClick={() => setCalloutVisible(false)}
+                      aria-label="Dismiss tip"
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               )}
