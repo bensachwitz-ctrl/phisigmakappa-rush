@@ -226,11 +226,22 @@
   100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
 }
 
+@keyframes spotlight-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-float { animation: float 4s ease-in-out infinite; }
 .animate-glow { animation: glow 3s ease-in-out infinite; }
 .animate-slide-up { animation: slide-up 0.6s ease-out both; }
 .animate-scale-in { animation: scale-in 0.4s ease-out both; }
 .animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+/* Snappy, slightly-overshooting entrance for the demo feature spotlights —
+   the design-motion house curve. Reduced-motion users get an instant show. */
+.animate-spotlight-in { animation: spotlight-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-spotlight-in { animation: none; }
+}
 
 /* Stagger helpers */
 .stagger > * { opacity: 0; animation: slide-up 0.6s ease-out both; }

@@ -41,7 +41,16 @@ import {
   ArrowLeft,
   XCircle,
   Key,
-  Car
+  Car,
+  Vote,
+  Wallet,
+  PieChart,
+  QrCode,
+  Gift,
+  Palette,
+  ShieldCheck,
+  TrendingUp,
+  CalendarPlus
 } from "lucide-react";
 
 interface Tenant {
@@ -228,6 +237,67 @@ function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
       },
       payments: [],
       isPaid: false,
+    },
+    // ── Officer Elections (secret ballot) ────────────────────────────────────
+    // One OPEN election with two contested seats. Ballots are anonymous: the demo
+    // tracks only WHETHER the viewer has voted per seat and aggregate tallies — no
+    // per-voter record, mirroring the real secret-ballot model.
+    election: {
+      id: "el-2026",
+      title: "2026 Executive Board Election",
+      status: "OPEN",
+      closesAt: new Date(Date.now() + 3 * 86400000).toISOString(),
+      totalEligible: 42,
+      ballotsCast: 27,
+      seats: [
+        {
+          id: "seat-pres",
+          title: "President",
+          candidates: [
+            { id: "c1", name: "Alex Mercer", year: "Senior", votes: 14, blurb: "Current VP · ran fall rush to a record class" },
+            { id: "c2", name: "Daniel Cho", year: "Junior", votes: 9, blurb: "Treasurer · rebuilt the chapter budget" },
+          ],
+        },
+        {
+          id: "seat-treas",
+          title: "Treasurer",
+          candidates: [
+            { id: "c3", name: "Marcus Webb", year: "Junior", votes: 11, blurb: "Finance major · dues reconciliation lead" },
+            { id: "c4", name: "Ethan Park", year: "Sophomore", votes: 12, blurb: "Built the philanthropy donation drive" },
+          ],
+        },
+      ],
+    },
+    // ── Treasury / budgets ───────────────────────────────────────────────────
+    treasury: {
+      balanceCents: 1284750,
+      duesCollectedCents: 1890000,
+      duesOutstandingCents: 360000,
+      budget: [
+        { id: "b1", category: "Recruitment", plannedCents: 450000, spentCents: 318000 },
+        { id: "b2", category: "Philanthropy", plannedCents: 300000, spentCents: 142500 },
+        { id: "b3", category: "Socials", plannedCents: 520000, spentCents: 489000 },
+        { id: "b4", category: "Operations", plannedCents: 280000, spentCents: 201400 },
+        { id: "b5", category: "Formals", plannedCents: 600000, spentCents: 0 },
+      ],
+      ledger: [
+        { id: "t1", label: "Spring dues batch (Stripe)", amountCents: 412000, kind: "in", date: new Date(Date.now() - 2 * 86400000).toISOString() },
+        { id: "t2", label: "Homecoming tailgate catering", amountCents: -86400, kind: "out", date: new Date(Date.now() - 5 * 86400000).toISOString() },
+        { id: "t3", label: "Recruitment t-shirts", amountCents: -129900, kind: "out", date: new Date(Date.now() - 9 * 86400000).toISOString() },
+        { id: "t4", label: "Alumni donation — J. Holloway '12", amountCents: 50000, kind: "in", date: new Date(Date.now() - 12 * 86400000).toISOString() },
+      ],
+    },
+    // ── Alumni giving ────────────────────────────────────────────────────────
+    giving: {
+      campaign: "2026 Chapter House Renovation Fund",
+      goalCents: 5000000,
+      raisedCents: 3120000,
+      donorCount: 84,
+      recent: [
+        { id: "g1", name: "James Holloway '12", amountCents: 50000 },
+        { id: "g2", name: "Sarah Kim '15", amountCents: 25000 },
+        { id: "g3", name: "Anonymous", amountCents: 100000 },
+      ],
     },
     announcements: [
       {
@@ -886,6 +956,102 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const [postAnnSuccess, setPostAnnSuccess] = useState(false);
   const [jobCrossPost, setJobCrossPost] = useState(true);
 
+  // ── New interactive demo surfaces (Elections · Treasury · Giving · QR · Theme)
+  // A modal "spotlight" surface lets the demo showcase every feature without
+  // overloading the 5-slot bottom nav. Each is fully stateful (votes mutate
+  // tallies, the QR check-in adds a PNM, donations move the campaign meter).
+  const [spotlight, setSpotlight] = useState<
+    null | "elections" | "treasury" | "giving" | "qr" | "theme"
+  >(null);
+  // Secret-ballot local state: which candidate the viewer chose per seat (never
+  // sent anywhere — anonymity is the whole point). Tallies live in dashboardData.
+  const [myBallot, setMyBallot] = useState<Record<string, string>>({});
+  const [donationCents, setDonationCents] = useState<number>(2500);
+  const [donationDone, setDonationDone] = useState(false);
+  // QR check-in: a tiny new-PNM form that drops the rushee straight into the
+  // pipeline so the funnel updates live, mirroring the real public check-in page.
+  const [qrName, setQrName] = useState("");
+  const [qrMajor, setQrMajor] = useState("");
+  const [qrYear, setQrYear] = useState("Freshman");
+  const [qrCheckedIn, setQrCheckedIn] = useState<string[]>([]);
+
+  // Cast a secret ballot for one seat: record the viewer's local choice and bump
+  // that candidate's tally + the chapter ballot count. Idempotent per seat.
+  const castBallot = (seatId: string, candidateId: string) => {
+    if (myBallot[seatId]) return;
+    setMyBallot((prev) => ({ ...prev, [seatId]: candidateId }));
+    setDashboardData((prev: any) => {
+      if (!prev?.election) return prev;
+      const firstVote = Object.keys(myBallot).length === 0;
+      return {
+        ...prev,
+        election: {
+          ...prev.election,
+          ballotsCast: prev.election.ballotsCast + (firstVote ? 1 : 0),
+          seats: prev.election.seats.map((s: any) =>
+            s.id !== seatId
+              ? s
+              : {
+                  ...s,
+                  candidates: s.candidates.map((c: any) =>
+                    c.id === candidateId ? { ...c, votes: c.votes + 1 } : c
+                  ),
+                }
+          ),
+        },
+      };
+    });
+    showToast("Anonymous ballot recorded — your choice is never linked to you.", "success");
+  };
+
+  // Add a donation to the live campaign meter.
+  const handleDonate = () => {
+    setDashboardData((prev: any) => {
+      if (!prev?.giving) return prev;
+      return {
+        ...prev,
+        giving: {
+          ...prev.giving,
+          raisedCents: prev.giving.raisedCents + donationCents,
+          donorCount: prev.giving.donorCount + 1,
+          recent: [
+            { id: `g-${Date.now()}`, name: `${prev.profile?.name || "You"} (just now)`, amountCents: donationCents },
+            ...prev.giving.recent,
+          ].slice(0, 5),
+        },
+      };
+    });
+    setDonationDone(true);
+    showToast(`Thank you! $${(donationCents / 100).toFixed(2)} donated via Stripe.`, "success");
+    setTimeout(() => setDonationDone(false), 2500);
+  };
+
+  // QR check-in → save a brand-new PNM into the recruitment pipeline live.
+  const handleQrCheckIn = () => {
+    if (!qrName.trim()) return;
+    const id = `pnm-${Date.now()}`;
+    const newPnm = {
+      id,
+      name: qrName.trim(),
+      major: qrMajor.trim() || "Undeclared",
+      year: qrYear,
+      hometown: "—",
+      phone: "(803) 555-0100",
+      status: "ACTIVE",
+      attendanceCount: 1,
+      votesAverage: 0,
+      votesCount: 0,
+    };
+    setDashboardData((prev: any) => ({
+      ...prev,
+      pnms: [newPnm, ...(prev?.pnms || [])],
+    }));
+    setQrCheckedIn((prev) => [qrName.trim(), ...prev]);
+    setQrName("");
+    setQrMajor("");
+    showToast(`${newPnm.name} checked in — added to the rush board.`, "success");
+  };
+
   // ── Interactive demo callouts ────────────────────────────────────────────
   // In demo mode we float a small, dismissible "tour" text-box inside the phone
   // that explains the feature on the tab the visitor is currently viewing. It
@@ -1150,6 +1316,45 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setRosterSearch("");
     setRushSearch("");
     setSelectedPnm(null);
+  };
+
+  // Add-to-calendar: build a real RFC-5545 .ics file in the browser and trigger a
+  // download so the member can drop the event straight into Google / iCloud /
+  // Outlook — exactly what the live app does (no server round-trip needed).
+  const handleAddToCalendar = (e: any) => {
+    const dt = (iso: string) =>
+      new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const start = dt(e.startsAt);
+    const end = dt(e.endsAt || new Date(new Date(e.startsAt).getTime() + 2 * 3600000).toISOString());
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Greekstack//Demo//EN",
+      "BEGIN:VEVENT",
+      `UID:${e.id}@greekstack.demo`,
+      `DTSTAMP:${dt(new Date().toISOString())}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${(e.name || "Chapter Event").replace(/\n/g, " ")}`,
+      `LOCATION:${(e.location || "").replace(/\n/g, " ")}`,
+      `DESCRIPTION:${(e.description || "").replace(/\n/g, " ")}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    try {
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(e.name || "event").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      /* download is best-effort in the demo */
+    }
+    showToast("Added to your calendar — opens in Google / iCloud / Outlook.", "success");
   };
 
   const handleRsvp = async (eventId: string, status: "GOING" | "MAYBE" | "NOT_GOING") => {
@@ -2506,6 +2711,39 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                           )}
                         </div>
 
+                        {/* Quick tools — launchers for every other feature so the demo
+                            showcases the WHOLE product, not just the 5 nav tabs. Each
+                            opens a fully-interactive spotlight surface. */}
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-2">
+                            <Sparkles className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
+                          </h3>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "elections" as const, label: "Elections", sub: "Secret ballot", Icon: Vote, show: role === "brother" },
+                              { id: "treasury" as const, label: "Treasury", sub: "Budgets", Icon: PieChart, show: role === "brother" },
+                              { id: "qr" as const, label: "QR check-in", sub: "Rush", Icon: QrCode, show: role === "brother" },
+                              { id: "giving" as const, label: "Give", sub: "Donations", Icon: Gift, show: true },
+                              { id: "theme" as const, label: "Branding", sub: "White-label", Icon: Palette, show: role === "brother" },
+                            ].filter((t) => t.show).map(({ id, label, sub, Icon }) => (
+                              <button
+                                key={id}
+                                onClick={() => { setSpotlight(id); if (id === "giving") setDonationDone(false); }}
+                                className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col items-center gap-1 text-center transition active:scale-[0.97] hover:border-slate-200"
+                              >
+                                <span
+                                  className="w-8 h-8 rounded-xl flex items-center justify-center border"
+                                  style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '18', color: selectedBrand.primaryColor }}
+                                >
+                                  <Icon className="w-4 h-4" />
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-800 leading-tight">{label}</span>
+                                <span className="text-[7px] text-slate-400 uppercase tracking-wider leading-none">{sub}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         {/* Merged Timeline Feed */}
                         <div className="space-y-3">
                           <div className="flex items-center justify-between px-1">
@@ -2720,6 +2958,15 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                                     </button>
                                   </div>
                                 )}
+
+                                {/* Add to calendar — available to everyone (alumni see events too) */}
+                                <button
+                                  onClick={() => handleAddToCalendar(e)}
+                                  className="w-full mt-1 py-1.5 rounded-lg text-[10px] font-bold border transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                                  style={{ color: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor + '30', backgroundColor: selectedBrand.primaryColor + '0a' }}
+                                >
+                                  <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
+                                </button>
                               </div>
                             );
                           })
@@ -4222,6 +4469,320 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                         Save & Sync Profile
                       </button>
                     </form>
+                  </div>
+                </div>
+              )}
+
+              {/* ════════════════════════════════════════════════════════════════
+                  FEATURE SPOTLIGHT — full interactive surfaces for every remaining
+                  feature (Elections · Treasury · QR check-in · Giving · Branding).
+                  Slides up over the content area; each mutates real local state so
+                  the demo proves the WHOLE product works, with a "what this does"
+                  callout at the top of each. ═══════════════════════════════════ */}
+              {spotlight && (
+                <div className="absolute inset-0 z-[80] flex flex-col animate-spotlight-in bg-slate-50">
+                  {/* Spotlight header */}
+                  <div className="shrink-0 px-4 pt-3 pb-2.5 bg-white border-b border-slate-100 flex items-center gap-2.5">
+                    <button
+                      onClick={() => setSpotlight(null)}
+                      className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition shrink-0"
+                      aria-label="Back"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                        {spotlight === "elections" && "Officer Elections"}
+                        {spotlight === "treasury" && "Treasury & Budgets"}
+                        {spotlight === "qr" && "Rush QR Check-in"}
+                        {spotlight === "giving" && "Alumni Giving"}
+                        {spotlight === "theme" && "White-label Branding"}
+                      </h3>
+                      <p className="text-[9px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
+                    </div>
+                  </div>
+
+                  {/* "What this does" callout */}
+                  <div className="shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2 text-[10px] leading-relaxed border"
+                    style={{ backgroundColor: selectedBrand.primaryColor + '0a', borderColor: selectedBrand.primaryColor + '22', color: '#334155' }}>
+                    <span className="font-bold" style={{ color: selectedBrand.primaryColor }}>What this does · </span>
+                    {spotlight === "elections" && "Run secret-ballot officer elections in-app. Every active gets one anonymous vote per seat; the platform tallies live and auto-seats the winners when voting closes."}
+                    {spotlight === "treasury" && "Your treasurer's back office: chapter balance, dues collected vs. outstanding, a line-item budget that tracks spend in real time, and a reconciled ledger."}
+                    {spotlight === "qr" && "Generate a QR for any rush event. A PNM scans it and either checks in or fills a quick form — they drop straight into your recruitment pipeline. Try it below."}
+                    {spotlight === "giving" && "Turn graduated brothers into a recurring base. Run branded campaigns with a live goal meter; donations clear through Stripe straight to your chapter."}
+                    {spotlight === "theme" && "Your letters, colors, and crest — the entire platform re-skins to your chapter in seconds. Tap a brand to watch every surface change live."}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto px-3 pb-4 pt-1.5 space-y-3 text-left">
+                    {/* ── ELECTIONS ─────────────────────────────────────────── */}
+                    {spotlight === "elections" && dashboardData?.election && (
+                      <>
+                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex items-center justify-between">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900">{dashboardData.election.title}</h4>
+                            <p className="text-[9px] text-slate-500 mt-0.5 flex items-center gap-1">
+                              <span className="inline-flex items-center gap-1 text-emerald-600 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Voting open</span>
+                              · closes in 3 days
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-base font-black text-slate-900">{dashboardData.election.ballotsCast}/{dashboardData.election.totalEligible}</span>
+                            <p className="text-[8px] text-slate-400 uppercase tracking-wider">Ballots cast</p>
+                          </div>
+                        </div>
+
+                        {dashboardData.election.seats.map((seat: any) => {
+                          const voted = !!myBallot[seat.id];
+                          const total = seat.candidates.reduce((s: number, c: any) => s + c.votes, 0) || 1;
+                          return (
+                            <div key={seat.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                  <Crown className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> {seat.title}
+                                </h5>
+                                {voted && <span className="text-[8px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Check className="w-2.5 h-2.5" /> Voted</span>}
+                              </div>
+                              {seat.candidates.map((c: any) => {
+                                const pct = Math.round((c.votes / total) * 100);
+                                const mine = myBallot[seat.id] === c.id;
+                                return (
+                                  <button
+                                    key={c.id}
+                                    disabled={voted}
+                                    onClick={() => castBallot(seat.id, c.id)}
+                                    className={`w-full text-left rounded-xl border p-2.5 transition relative overflow-hidden ${
+                                      mine ? "border-2" : "border-slate-100 hover:border-slate-200"
+                                    } ${voted ? "cursor-default" : "active:scale-[0.99]"}`}
+                                    style={mine ? { borderColor: selectedBrand.primaryColor } : {}}
+                                  >
+                                    {voted && (
+                                      <span className="absolute inset-y-0 left-0 opacity-[0.08]" style={{ width: `${pct}%`, backgroundColor: selectedBrand.primaryColor }} />
+                                    )}
+                                    <div className="relative flex items-center justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <p className="text-[11px] font-bold text-slate-900">{c.name} <span className="text-[8px] font-medium text-slate-400">· {c.year}</span></p>
+                                        <p className="text-[8px] text-slate-500 truncate">{c.blurb}</p>
+                                      </div>
+                                      {voted ? (
+                                        <span className="text-[11px] font-black text-slate-900 shrink-0">{pct}%</span>
+                                      ) : (
+                                        <span className="text-[8px] font-bold uppercase shrink-0" style={{ color: selectedBrand.primaryColor }}>Vote</span>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                              {!voted && <p className="text-[8px] text-slate-400 text-center pt-0.5">Your ballot is anonymous — tap a candidate to cast it.</p>}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* ── TREASURY ──────────────────────────────────────────── */}
+                    {spotlight === "treasury" && dashboardData?.treasury && (
+                      <>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: "Balance", cents: dashboardData.treasury.balanceCents, color: "text-slate-900" },
+                            { label: "Collected", cents: dashboardData.treasury.duesCollectedCents, color: "text-emerald-600" },
+                            { label: "Outstanding", cents: dashboardData.treasury.duesOutstandingCents, color: "text-amber-600" },
+                          ].map((s) => (
+                            <div key={s.label} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-2.5 text-center">
+                              <p className={`text-[13px] font-black ${s.color}`}>${(s.cents / 100).toLocaleString()}</p>
+                              <p className="text-[7px] text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <PieChart className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Semester budget
+                          </h5>
+                          {dashboardData.treasury.budget.map((b: any) => {
+                            const pct = Math.min(100, Math.round((b.spentCents / b.plannedCents) * 100));
+                            const over = b.spentCents > b.plannedCents;
+                            return (
+                              <div key={b.id} className="space-y-1">
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className="font-semibold text-slate-700">{b.category}</span>
+                                  <span className="text-slate-500">${(b.spentCents / 100).toLocaleString()} <span className="text-slate-300">/ ${(b.plannedCents / 100).toLocaleString()}</span></span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: over ? "#dc2626" : selectedBrand.primaryColor }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Wallet className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Recent ledger
+                          </h5>
+                          {dashboardData.treasury.ledger.map((t: any) => (
+                            <div key={t.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-semibold text-slate-800 truncate">{t.label}</p>
+                                <p className="text-[8px] text-slate-400">{new Date(t.date).toLocaleDateString([], { month: "short", day: "numeric" })}</p>
+                              </div>
+                              <span className={`text-[11px] font-bold shrink-0 ${t.kind === "in" ? "text-emerald-600" : "text-slate-700"}`}>
+                                {t.kind === "in" ? "+" : "−"}${Math.abs(t.amountCents / 100).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* ── QR RUSH CHECK-IN ──────────────────────────────────── */}
+                    {spotlight === "qr" && (
+                      <>
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center gap-2">
+                          <div className="p-3 rounded-2xl border-2 border-dashed" style={{ borderColor: selectedBrand.primaryColor + '40' }}>
+                            <QrCode className="w-20 h-20" style={{ color: selectedBrand.primaryColor }} strokeWidth={1.25} />
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-relaxed">PNMs scan this at <span className="font-bold text-slate-700">Fall Info Session</span> to check in. New faces fill the form below.</p>
+                        </div>
+
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">New PNM check-in</h5>
+                          <input value={qrName} onChange={(e) => setQrName(e.target.value)} placeholder="Full name"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs text-slate-900 focus:border-slate-300" />
+                          <input value={qrMajor} onChange={(e) => setQrMajor(e.target.value)} placeholder="Major"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs text-slate-900 focus:border-slate-300" />
+                          <select value={qrYear} onChange={(e) => setQrYear(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs text-slate-900 focus:border-slate-300">
+                            {["Freshman", "Sophomore", "Junior", "Senior", "Transfer"].map((y) => <option key={y}>{y}</option>)}
+                          </select>
+                          <button
+                            onClick={handleQrCheckIn}
+                            disabled={!qrName.trim()}
+                            className="w-full py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-1.5"
+                            style={{ backgroundColor: selectedBrand.primaryColor }}
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Check in to pipeline
+                          </button>
+                        </div>
+
+                        {qrCheckedIn.length > 0 && (
+                          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
+                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
+                            {qrCheckedIn.map((n, i) => (
+                              <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[8px] text-slate-400">→ added to rush board</span></p>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* ── ALUMNI GIVING ─────────────────────────────────────── */}
+                    {spotlight === "giving" && dashboardData?.giving && (() => {
+                      const g = dashboardData.giving;
+                      const pct = Math.min(100, Math.round((g.raisedCents / g.goalCents) * 100));
+                      return (
+                        <>
+                          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Heart className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
+                              <h4 className="text-xs font-bold text-slate-900">{g.campaign}</h4>
+                            </div>
+                            <div>
+                              <div className="flex items-end justify-between mb-1">
+                                <span className="text-lg font-black text-slate-900">${(g.raisedCents / 100).toLocaleString()}</span>
+                                <span className="text-[10px] text-slate-500">of ${(g.goalCents / 100).toLocaleString()} · {pct}%</span>
+                              </div>
+                              <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: selectedBrand.primaryColor }} />
+                              </div>
+                              <p className="text-[9px] text-slate-400 mt-1.5">{g.donorCount} donors</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
+                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Give now</h5>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[2500, 5000, 10000, 25000].map((amt) => (
+                                <button key={amt} onClick={() => setDonationCents(amt)}
+                                  className={`py-2 rounded-lg text-[11px] font-bold border transition ${donationCents === amt ? "text-white" : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300"}`}
+                                  style={donationCents === amt ? { backgroundColor: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor } : {}}>
+                                  ${amt / 100}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              onClick={handleDonate}
+                              className="w-full py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-[0.98] flex items-center justify-center gap-1.5"
+                              style={{ backgroundColor: donationDone ? "#059669" : selectedBrand.primaryColor }}
+                            >
+                              {donationDone ? <><Check className="w-4 h-4" /> Thank you!</> : <><Gift className="w-4 h-4" /> Donate ${(donationCents / 100).toFixed(0)} via Stripe</>}
+                            </button>
+                          </div>
+
+                          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
+                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Recent gifts</h5>
+                            {g.recent.map((d: any) => (
+                              <div key={d.id} className="flex items-center justify-between py-1 border-b border-slate-50 last:border-0">
+                                <span className="text-[11px] text-slate-700">{d.name}</span>
+                                <span className="text-[11px] font-bold text-emerald-600">+${(d.amountCents / 100).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
+
+                    {/* ── WHITE-LABEL BRANDING ──────────────────────────────── */}
+                    {spotlight === "theme" && (
+                      <>
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 text-center space-y-3">
+                          <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg transition-colors duration-300"
+                            style={{ backgroundColor: selectedBrand.primaryColor }}>
+                            {selectedBrand.letters}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">{selectedBrand.name}</h4>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-wider mt-0.5">{selectedTenant?.subdomain || "yourchapter"}.greekstack.app</p>
+                          </div>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full border border-slate-200" style={{ backgroundColor: selectedBrand.primaryColor }} />
+                            <span className="text-[9px] font-mono text-slate-500">{selectedBrand.primaryColor}</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                            <Palette className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand — watch it re-skin
+                          </h5>
+                          <div className="grid grid-cols-2 gap-2">
+                            {tenants.slice(0, 6).map((t) => {
+                              const b = FRATERNITY_BRANDS.find((x) => x.id === t.brandId) || FRATERNITY_BRANDS[0];
+                              const active = selectedTenant?.id === t.id;
+                              return (
+                                <button
+                                  key={t.id}
+                                  onClick={() => {
+                                    if (active) return;
+                                    handleSelectTenant(t);
+                                    setSpotlight(null);
+                                    showToast(`Re-skinned to ${b.name} — every surface updated.`, "success");
+                                  }}
+                                  className={`p-2.5 rounded-xl border flex items-center gap-2 transition active:scale-[0.98] ${active ? "border-2" : "border-slate-100 hover:border-slate-200"}`}
+                                  style={active ? { borderColor: b.primaryColor } : {}}
+                                >
+                                  <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0" style={{ backgroundColor: b.primaryColor }}>{b.letters}</span>
+                                  <span className="text-[10px] font-bold text-slate-800 truncate text-left">{b.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[9px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-2">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            Every page, email, and member portal re-skins instantly — no rebuild, no developer.
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
