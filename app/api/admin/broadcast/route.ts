@@ -5,10 +5,10 @@ import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
-import { getResendConfig, getTwilioConfig } from "@/lib/messaging-config";
 import { filterOptedOut, isWithinQuietHours } from "@/lib/tcpa";
 import { renderEmail } from "@/lib/email-template";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email";
+import { sendBulkSms, type SmsRecipient } from "@/lib/sms";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,29 +23,6 @@ const Schema = z.object({
   // 8am-9pm recipient-local window per CTIA / TCPA recommended practice.
   forceQuietHours: z.boolean().optional(),
 });
-
-function normalizePhone(p: string) {
-  const d = p.replace(/\D/g, "");
-  if (d.length === 10) return `+1${d}`;
-  if (d.length === 11 && d.startsWith("1")) return `+${d}`;
-  return p.startsWith("+") ? p : `+${d}`;
-}
-
-async function twilioSend(
-  creds: { sid: string; token: string; from: string },
-  to: string,
-  msg: string,
-) {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${creds.sid}/Messages.json`;
-  const auth = Buffer.from(`${creds.sid}:${creds.token}`).toString("base64");
-  const form = new URLSearchParams({ From: creds.from, To: to, Body: msg });
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: form.toString(),
-  });
-  return { ok: res.ok };
-}
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
@@ -103,59 +80,52 @@ export async function POST(req: Request) {
   // values, so an existing deploy renders identically.
   const identity = await getChapterIdentity();
 
-  // Email
+  // Email — sent via lib/email (listmonk transactional → Resend → mock). The
+  // provider is chosen inside sendEmail(); when neither is configured it returns
+  // provider:"mock" and we flag mockMode so the UI shows "logged, no send creds".
   if (channel === "EMAIL" || channel === "BOTH") {
-    // Per-tenant Resend creds (SiteConfig) with env fallback. apiKey is null
-    // when this chapter hasn't configured Resend (or env is the placeholder).
-    const { apiKey, fromEmail: fromAddr } = await getResendConfig();
-    const fromHeader = `${identity.chapterAttribution} <${fromAddr}>`;
     const brandHex = cfg["brand.primaryHex"] || "";
     const emailSubject = subject || `${identity.chapterAttribution} — Chapter Update`;
-    if (!apiKey) {
-      mockMode = true;
-    } else {
-      const resend = new Resend(apiKey);
-      // HTML-escape the admin-typed message before HTML-interpolating into the
-      // email body. Admin-only field, but defense-in-depth — a malicious admin
-      // shouldn't be able to ship arbitrary HTML (cloaked links, tracking
-      // pixels) to members/rushees via the chapter's verified Resend domain.
-      const safeBody = msg
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;")
-        .replace(/\n/g, "<br/>");
-      // Branded wrapper: masthead in the chapter's brand color + a footer with
-      // the chapter name, a neutral platform line, and a CAN-SPAM unsubscribe
-      // line (the bare <p>${msg}</p> had no branding/footer/unsubscribe).
-      const html = renderEmail({
-        brandHex,
-        chapterName: identity.chapterAttribution,
-        chapterSubline: identity.schoolName || undefined,
-        heading: emailSubject,
-        bodyHtml: `<div>${safeBody}</div>`,
-        unsubscribe: true,
-        unsubscribeText:
-          "You received this as a member of this chapter. Reply STOP to opt out of broadcast messages.",
+    // HTML-escape the admin-typed message before HTML-interpolating into the
+    // email body. Admin-only field, but defense-in-depth — a malicious admin
+    // shouldn't be able to ship arbitrary HTML (cloaked links, tracking pixels)
+    // to members/rushees via the chapter's verified sender domain.
+    const safeBody = msg
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+      .replace(/\n/g, "<br/>");
+    // Branded wrapper: masthead in the chapter's brand color + a footer with
+    // the chapter name, a neutral platform line, and a CAN-SPAM unsubscribe line.
+    const html = renderEmail({
+      brandHex,
+      chapterName: identity.chapterAttribution,
+      chapterSubline: identity.schoolName || undefined,
+      heading: emailSubject,
+      bodyHtml: `<div>${safeBody}</div>`,
+      unsubscribe: true,
+      unsubscribeText:
+        "You received this as a member of this chapter. Reply STOP to opt out of broadcast messages.",
+    });
+    for (const r of recipients) {
+      if (!r.email) continue;
+      const res = await sendEmail({
+        to: r.email,
+        subject: emailSubject,
+        html,
+        text: msg,
       });
-      for (const r of recipients) {
-        if (!r.email) continue;
-        try {
-          await resend.emails.send({
-            from: fromHeader,
-            to: r.email,
-            subject: emailSubject,
-            text: msg,
-            html,
-          });
-          sentEmail++;
-        } catch { /* skip */ }
-      }
+      if (res.ok && res.provider === "mock") mockMode = true;
+      else if (res.ok) sentEmail++;
     }
   }
 
-  // SMS
+  // SMS — dispatched via lib/sms (textbee → Twilio → mock), with the TCPA
+  // quiet-hours + opt-in guards applied inside the helper. The rushee STOP/
+  // opt-out filter (RushConsent) is applied HERE first since it requires a DB
+  // lookup against the consent table.
   let optedOutSms = 0;
   if (channel === "SMS" || channel === "BOTH") {
     // Candidate SMS recipients = anyone with a phone.
@@ -169,17 +139,19 @@ export async function POST(req: Request) {
     const smsTargets = smsRecipients.filter((r) => r.rushId === null || allowedRushIds.has(r.rushId));
     optedOutSms = smsRecipients.length - smsTargets.length;
 
-    // Per-tenant Twilio creds (SiteConfig) with env fallback; null when this
-    // chapter hasn't configured Twilio → preserve mock-mode signalling.
-    const twilio = await getTwilioConfig();
-    if (!twilio.accountSid || !twilio.authToken || !twilio.phoneNumber) {
-      if (smsTargets.length) mockMode = true;
-    } else {
-      const creds = { sid: twilio.accountSid, token: twilio.authToken, from: twilio.phoneNumber };
-      for (const r of smsTargets) {
-        const result = await twilioSend(creds, normalizePhone(r.phone!), msg);
-        if (result.ok) sentSms++;
-      }
+    if (smsTargets.length) {
+      // The quiet-hours gate was already enforced above (425) for the whole
+      // request; pass force:true here so the helper doesn't double-block after
+      // the admin explicitly passed forceQuietHours. Per-member opt-in is left
+      // undefined (allowed) — chapter brothers are an established relationship;
+      // rushee opt-out is enforced via the RushConsent filter above.
+      const smsTargetList: SmsRecipient[] = smsTargets.map((r) => ({
+        phone: r.phone!,
+        name: r.name,
+      }));
+      const result = await sendBulkSms(smsTargetList, msg, { force: true });
+      sentSms += result.sent;
+      if (result.provider === "mock" && smsTargets.length) mockMode = true;
     }
   }
 

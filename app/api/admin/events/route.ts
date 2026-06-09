@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { pushEventToCalDiy } from "@/lib/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,7 +96,17 @@ export async function POST(req: Request) {
       details: `${created.category} · ${new Date(created.startsAt).toLocaleDateString()}${created.isPrivate ? " · private" : ""}`,
       req,
     });
-    return NextResponse.json({ ok: true, event: created });
+
+    // Optional cal.diy booking push for public (bookable) events — e.g. rush
+    // meetings. Degrades gracefully: when cal.diy isn't configured this no-ops
+    // and event creation is unaffected. Never blocks the response on a booking
+    // failure; we surface the result so the UI can show a "booking link" toast.
+    let calDiy: Awaited<ReturnType<typeof pushEventToCalDiy>> | null = null;
+    if (!created.isPrivate) {
+      calDiy = await pushEventToCalDiy(created).catch(() => null);
+    }
+
+    return NextResponse.json({ ok: true, event: created, calDiy });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });

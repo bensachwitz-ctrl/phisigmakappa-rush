@@ -13,6 +13,7 @@ import {
   CreditCard,
   Settings,
   LogOut,
+  LogIn,
   ChevronRight,
   ChevronDown,
   Pin,
@@ -1688,11 +1689,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           >
             Website
           </button>
+          {/* Sign in — a real chapter member taps here to log into their live
+              account (this screen is the demo). */}
           <button
-            onClick={() => { setShowBookingModal(true); setBookingSubmitted(false); }}
-            className="px-2.5 py-1.5 text-[10px] font-semibold bg-blue-500/20 border border-blue-500/30 hover:bg-blue-500/30 text-blue-400 rounded-lg transition"
+            onClick={() => window.location.href = "/login"}
+            className="px-2.5 py-1.5 text-[10px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
           >
-            Book Call
+            Sign in
           </button>
           <button
             onClick={() => setShowPricingModal(true)}
@@ -1923,7 +1926,16 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Website
           </button>
-          
+
+          {/* Sign in — sends a real chapter member to the live login (this view is
+              a demo; existing brothers/alumni log into their actual chapter here). */}
+          <button
+            onClick={() => window.location.href = "/login"}
+            className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
+          >
+            <LogIn className="w-3.5 h-3.5" /> Sign in
+          </button>
+
           <button
             onClick={() => { setShowBookingModal(true); setBookingSubmitted(false); }}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
