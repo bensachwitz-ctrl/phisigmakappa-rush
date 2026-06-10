@@ -3,7 +3,7 @@
 Goal: incorporate every relevant skill, OSS tool, and proven feature from Ben's other
 projects into the white-label Greek-life SaaS so it's the most complete chapter platform.
 Code: `C:\Users\Bensa\working code\projects\greek-stack` (Next14/Prisma/Neon, schema-per-tenant
-multitenant — see vault [[multitenant-saas-platform]]). Live: greeklifesystems.vercel.app.
+multitenant — see vault [[multitenant-saas-platform]]). Live: greekstack.vercel.app.
 **Local-only branch (master, ce4ef18). No deploy without approval.**
 
 ## Incorporate (skill / OSS → feature)

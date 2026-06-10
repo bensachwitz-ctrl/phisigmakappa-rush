@@ -18,7 +18,7 @@ const config: CapacitorConfig = {
   webDir: 'mobile-shell', // minimal bundled shell (splash + boot) — see GS-MOBILE-APP.md
   server: {
     // The member-facing mobile client (sign in → your chapter, same data as web).
-    url: 'https://greeklifesystems.vercel.app/app',
+    url: 'https://greekstack.vercel.app/app',
     cleartext: false,
   },
   ios: {

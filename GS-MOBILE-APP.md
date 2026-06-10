@@ -7,7 +7,7 @@ viewable in-browser via the web Sign-in button.
 ## Architecture (matches DailyTool/BCG Capacitor pattern)
 - **Capacitor** wraps the responsive mobile client at `app/app/MobileAppClient.tsx` (route `/app`).
 - `capacitor.config.ts`: `appId com.greekstack.app`, `appName "Greek Stack"`.
-- **Now (v1):** `server.url` → `https://greeklifesystems.vercel.app/app` (loads the hosted responsive client) + native shell (push, splash, status bar). Fast path; works the moment GS is deployed to Vercel.
+- **Now (v1):** `server.url` → `https://greekstack.vercel.app/app` (loads the hosted responsive client) + native shell (push, splash, status bar). Fast path; works the moment GS is deployed to Vercel.
 - ⚠️ **Apple Guideline 4.2/4.7** — a pure webview wrapper risks rejection. We qualify by adding native value: **push notifications** (events/announcements), **native sign-in + biometric unlock**, **universal/deep links** into a chapter, **offline cache** of the last view.
 - **Long-term (v2, preferred):** bundle a **static export of the `/app` mobile SPA** into the binary (set `webDir` to that export, drop `server.url`) so the primary UI ships natively — fully App-Store-safe. The `/app` client already talks to the GS API, so it's a clean extraction.
 

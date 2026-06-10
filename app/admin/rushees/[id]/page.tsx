@@ -83,7 +83,7 @@ export default async function RusheeDetailPage({
     })),
   };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://phisigmakappa.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://greekstack.vercel.app";
 
   return <RusheeDetail initial={data} siteUrl={siteUrl} />;
 }

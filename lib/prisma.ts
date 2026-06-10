@@ -15,18 +15,23 @@ if (!globalForPrisma.prismaClients) {
 
 /**
  * Extracts and sanitizes the subdomain from a hostname.
+ *
+ * The CANONICAL apex is `greekstack.vercel.app`. The `greeklifesystems*` hosts
+ * are LEGACY apex aliases kept so an old-domain request still resolves to the
+ * platform apex (never a chapter) — do not remove them; doing so would make the
+ * old host resolve to a bogus `greeklifesystems` tenant schema.
  */
 export function getSubdomain(host: string | null): string | null {
   if (!host) return null;
-  
+
   const hostWithoutPort = host.split(":")[0].toLowerCase();
   if (
     hostWithoutPort === "localhost" ||
     hostWithoutPort === "greekstack" ||
     hostWithoutPort === "greekstack.vercel.app" ||
-    hostWithoutPort === "greeklifesystems" ||
-    hostWithoutPort === "greeklifesystems.vercel.app" ||
-    hostWithoutPort === "greek-life-systems.vercel.app" ||
+    hostWithoutPort === "greeklifesystems" || // legacy apex alias
+    hostWithoutPort === "greeklifesystems.vercel.app" || // legacy apex alias
+    hostWithoutPort === "greek-life-systems.vercel.app" || // legacy apex alias
     hostWithoutPort === "www"
   ) {
     return null;
