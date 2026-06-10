@@ -11,6 +11,7 @@ import {
   type MotionStyle,
 } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useFinePointer } from "@/hooks/use-fine-pointer";
 
 /**
  * Tilt3DCard — a card that rotates in 3D tracking the cursor's position over
@@ -20,8 +21,10 @@ import { cn } from "@/lib/utils";
  * Reduced-motion-safe: when prefers-reduced-motion is set, it renders a plain
  * static container (no listeners, no transform, no glare).
  *
- * Touch-safe: pointer tracking is gated to fine pointers via pointermove on a
- * device that reports hover; touch taps never trigger a stuck tilt.
+ * Phone-safe: the entire 3D layer (perspective context, rotateX/rotateY,
+ * glare) is DESKTOP-ONLY (fine hovering pointer). On phones/touch it renders a
+ * flat static container — no 3D, matching the owner's "no 3D on phone" ask and
+ * avoiding the broken-tilt feel on a device that can't hover.
  */
 export function Tilt3DCard({
   children,
@@ -44,6 +47,7 @@ export function Tilt3DCard({
   onClick?: () => void;
 }) {
   const reduce = useReducedMotion();
+  const finePointer = useFinePointer();
   const ref = React.useRef<HTMLDivElement>(null);
 
   // -0.5 → 0.5 normalized pointer position over the card.
@@ -90,7 +94,8 @@ export function Tilt3DCard({
     py.set(0);
   }, [hovering, px, py]);
 
-  if (reduce) {
+  // No reduced motion AND no fine pointer ⇒ flat, static card (phones/touch).
+  if (reduce || !finePointer) {
     return <div className={cn(onClick && "cursor-pointer", className)} onClick={onClick}>{children}</div>;
   }
 

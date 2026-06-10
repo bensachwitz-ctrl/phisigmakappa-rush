@@ -10,6 +10,7 @@ import {
   type MotionStyle,
 } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useFinePointer } from "@/hooks/use-fine-pointer";
 
 /**
  * Parallax / ScrollFloat — wraps children and translates (and optionally
@@ -19,6 +20,11 @@ import { cn } from "@/lib/utils";
  * Reduced-motion-safe: renders a plain static wrapper when the user prefers
  * reduced motion. Performance-safe: only transform/opacity, spring-smoothed,
  * and offscreen elements simply sit at their resting transform.
+ *
+ * Phone-safe: scroll-driven parallax is DESKTOP-ONLY (fine hovering pointer).
+ * On phones it renders a static wrapper — depth shifts that depend on a steady
+ * scroll feel janky on touch momentum-scroll and read as "broken" on mobile,
+ * so we drop them entirely there.
  */
 export function Parallax({
   children,
@@ -57,6 +63,7 @@ export function Parallax({
   "aria-hidden"?: boolean | "true" | "false";
 }) {
   const reduce = useReducedMotion();
+  const finePointer = useFinePointer();
   const ref = React.useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: ref, offset });
@@ -75,7 +82,8 @@ export function Parallax({
 
   const MotionTag = Tag === "span" ? motion.span : motion.div;
 
-  if (reduce) {
+  // Reduced motion OR phone/touch ⇒ static wrapper (no scroll parallax).
+  if (reduce || !finePointer) {
     const StaticTag = Tag === "span" ? "span" : "div";
     return (
       <StaticTag ref={ref as any} className={className} {...rest}>

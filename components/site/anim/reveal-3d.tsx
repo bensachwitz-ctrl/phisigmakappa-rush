@@ -8,18 +8,32 @@ import {
   type Variants,
 } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useFinePointer } from "@/hooks/use-fine-pointer";
 
 /* Spring-flavoured easing from the design-motion principles:
    cubic-bezier(0.16, 1, 0.3, 1) — a confident, slightly-overshooting entrance. */
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const itemVariants: Variants = {
+/* Desktop variant includes the subtle rotateX "settle" (a 3D tip-up). On phones
+   we keep the clean fade + translate but drop the 3D rotateX/perspective — the
+   owner's "no 3D on phone" ask. Both variants share the same easing + timing so
+   the entrance still feels premium on mobile, just flat. */
+const itemVariants3D: Variants = {
   hidden: { opacity: 0, y: 26, rotateX: -8, transformPerspective: 800 },
   show: {
     opacity: 1,
     y: 0,
     rotateX: 0,
     transformPerspective: 800,
+    transition: { duration: 0.7, ease: EASE_OUT_EXPO },
+  },
+};
+
+const itemVariantsFlat: Variants = {
+  hidden: { opacity: 0, y: 26 },
+  show: {
+    opacity: 1,
+    y: 0,
     transition: { duration: 0.7, ease: EASE_OUT_EXPO },
   },
 };
@@ -58,6 +72,7 @@ export function Reveal3D({
   as?: "div" | "section" | "ul" | "li";
 }) {
   const reduce = useReducedMotion();
+  const finePointer = useFinePointer();
   const ref = React.useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once, amount });
   // Safety net — never leave content stuck at opacity:0 if the IntersectionObserver
@@ -108,23 +123,35 @@ export function Reveal3D({
     );
   }
 
-  // Single element reveal.
+  // Single element reveal. Desktop tips up in 3D (rotateX); phone fades + lifts
+  // flat (no 3D) per the "no 3D on phone" ask.
   return (
     <MotionTag
       ref={ref as any}
       className={cn("will-change-transform", className)}
       initial="hidden"
       animate={visible ? "show" : "hidden"}
-      variants={{
-        hidden: { opacity: 0, y, rotateX: -8, transformPerspective: 800 },
-        show: {
-          opacity: 1,
-          y: 0,
-          rotateX: 0,
-          transformPerspective: 800,
-          transition: { duration: 0.7, ease: EASE_OUT_EXPO, delay },
-        },
-      }}
+      variants={
+        finePointer
+          ? {
+              hidden: { opacity: 0, y, rotateX: -8, transformPerspective: 800 },
+              show: {
+                opacity: 1,
+                y: 0,
+                rotateX: 0,
+                transformPerspective: 800,
+                transition: { duration: 0.7, ease: EASE_OUT_EXPO, delay },
+              },
+            }
+          : {
+              hidden: { opacity: 0, y },
+              show: {
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.7, ease: EASE_OUT_EXPO, delay },
+              },
+            }
+      }
     >
       {children}
     </MotionTag>
@@ -145,6 +172,7 @@ export function Reveal3DItem({
   as?: "div" | "li";
 }) {
   const reduce = useReducedMotion();
+  const finePointer = useFinePointer();
   const MotionTag = Tag === "li" ? motion.li : motion.div;
 
   if (reduce) {
@@ -153,7 +181,10 @@ export function Reveal3DItem({
   }
 
   return (
-    <MotionTag className={cn("will-change-transform", className)} variants={itemVariants}>
+    <MotionTag
+      className={cn("will-change-transform", className)}
+      variants={finePointer ? itemVariants3D : itemVariantsFlat}
+    >
       {children}
     </MotionTag>
   );

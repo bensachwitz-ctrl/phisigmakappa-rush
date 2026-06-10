@@ -68,6 +68,7 @@ import {
   type FraternityBrand,
 } from "./_demo/mock-data";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
 import { WebGLBackground } from "./_demo/WebGLBackground";
 import type { DemoContext } from "./_demo/context";
 import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
@@ -135,7 +136,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   // Forgot password mobile states
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  // 3D Perspective Tilt & Glare States
+  // 3D Perspective Tilt & Glare States — these power the DESKTOP showcase device
+  // frame ONLY. On a phone the demo is the full-bleed real mobile app with ZERO
+  // 3D (no tilt, no glare, no perspective). isDesktopShowcase gates every 3D
+  // effect to the lg+ layout that actually renders the chassis.
+  const isDesktopShowcase = useIsDesktopViewport();
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50 });
@@ -154,6 +159,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   });
 
   const handlePhoneMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Phone: no 3D. Bail before touching any tilt/glare state on small viewports.
+    if (!isDesktopShowcase) return;
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -172,10 +179,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   };
 
   const handlePhoneMouseEnter = () => {
+    if (!isDesktopShowcase) return;
     setIsHoveringPhone(true);
   };
 
   const handlePhoneMouseLeave = () => {
+    if (!isDesktopShowcase) return;
     setIsHoveringPhone(false);
     setRotateX(0);
     setRotateY(0);
@@ -1386,8 +1395,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         className="opacity-[0.55] [&_*]:!opacity-[var(--go,0.12)]"
       />
 
-      {/* 3D WebGL Plexus Background */}
-      <WebGLBackground />
+      {/* 3D WebGL Plexus Background — DESKTOP-ONLY. The component already self-
+          gates off under 640px, but we additionally only MOUNT it on the lg+
+          showcase layout so phones never even allocate the <canvas> (zero 3D on
+          phone, by construction). The flat brand wash + GreekLetterField above
+          stays as the clean mobile background. */}
+      {isDesktopShowcase && <WebGLBackground />}
 
       {/* Mobile-Friendly Sticky Top Header (Shown under lg viewports) */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-950/80 backdrop-blur-md border-b border-white/10 px-4 flex items-center justify-between z-[150] select-none">
@@ -1566,7 +1579,10 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           On lg+ we keep the tilting showcase device frame. */}
       <div
         className="relative z-10 flex shrink-0 select-none items-center justify-center w-full max-w-none flex-1 lg:max-w-md lg:flex-none"
-        style={{ perspective: "1000px" }}
+        // Perspective context is DESKTOP-ONLY — on a phone there is no 3D, so we
+        // don't even establish a perspective (avoids a stray GPU 3D layer that
+        // can subtly misrender the full-bleed app).
+        style={isDesktopShowcase ? { perspective: "1000px" } : undefined}
       >
         {/* Physical side buttons — lg+ only (the showcase device). */}
         <div className="hidden lg:block absolute -left-[11px] top-[140px] w-[3px] h-[40px] bg-slate-800 rounded-l-md" />
@@ -1578,13 +1594,22 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           onMouseEnter={handlePhoneMouseEnter}
           onMouseLeave={handlePhoneMouseLeave}
           className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white rounded-none border-0 lg:h-[820px] lg:rounded-[48px] lg:border-[12px] lg:border-slate-800"
-          style={{
-            transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${isHoveringPhone ? 1.015 : 1})`,
-            boxShadow: isHoveringPhone
-              ? `${-rotateY * 3.5}px ${rotateX * 3.5 + 24}px 55px -10px rgba(0,0,0,0.9)`
-              : '0 20px 50px -10px rgba(0,0,0,0.55)',
-            transition: isHoveringPhone ? 'transform 0.05s ease-out, box-shadow 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
-          }}
+          // Phone (full-bleed real app): NO inline transform/shadow at all — the
+          // app fills the device edge-to-edge, flat. Desktop showcase: cursor-
+          // tracked 3D tilt + dynamic glare shadow on the chassis.
+          style={
+            isDesktopShowcase
+              ? {
+                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${isHoveringPhone ? 1.015 : 1})`,
+                  boxShadow: isHoveringPhone
+                    ? `${-rotateY * 3.5}px ${rotateX * 3.5 + 24}px 55px -10px rgba(0,0,0,0.9)`
+                    : '0 20px 50px -10px rgba(0,0,0,0.55)',
+                  transition: isHoveringPhone
+                    ? 'transform 0.05s ease-out, box-shadow 0.05s ease-out'
+                    : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
+                }
+              : undefined
+          }
         >
           {/* Glass reflection glare — lg+ only (the device showcase). */}
           <div
