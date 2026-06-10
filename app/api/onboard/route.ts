@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { centralDb } from "@/lib/prisma";
+import { ensureTenantRegistry } from "@/lib/tenant-bootstrap";
 import { hashPassword } from "@/lib/password";
 import { setBrotherCookie } from "@/lib/auth";
 import { logger, errorSink } from "@/lib/logger";
@@ -118,15 +119,13 @@ export async function POST(req: Request) {
   let schemaCreated = false;
 
   try {
-    // 0. Self-bootstrap the central registry table so a fresh deploy never 500s
+    // 0. Ensure the central registry table exists so a fresh deploy never 500s
     //    on the first signup (the public schema may lack public."Tenant" if
-    //    `prisma db push` was never run against it). Idempotent + cheap.
-    await centralDb.$executeRawUnsafe(
-      `CREATE TABLE IF NOT EXISTS public."Tenant" ("id" TEXT NOT NULL, "subdomain" TEXT NOT NULL, "domain" TEXT, "name" TEXT, "school" TEXT, "isActive" BOOLEAN NOT NULL DEFAULT true, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Tenant_pkey" PRIMARY KEY ("id"));`,
-    );
-    await centralDb.$executeRawUnsafe(
-      `CREATE UNIQUE INDEX IF NOT EXISTS "Tenant_subdomain_key" ON public."Tenant"("subdomain");`,
-    );
+    //    `prisma db push` was never run against it). The DDL is hoisted into
+    //    lib/tenant-bootstrap.ts and PROCESS-MEMOIZED there — it runs at most
+    //    once per server instance, NOT on every signup as the inline version
+    //    did. Still idempotent, so a cold instance self-heals on first signup.
+    await ensureTenantRegistry();
 
     // 1. Reserve the subdomain via the central registry (uniqueness).
     const existingTenant = await centralDb.tenant.findUnique({ where: { subdomain } });

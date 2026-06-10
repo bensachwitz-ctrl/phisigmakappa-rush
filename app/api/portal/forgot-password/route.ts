@@ -5,9 +5,16 @@ import { sendEmail } from "@/lib/email";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
+import { rateLimit, recordRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Per-IP + per-account throttle on reset requests: ~10 / hour. Without it, this
+// open endpoint can be used to (a) hammer the mail provider / flood a victim's
+// inbox with reset emails, and (b) churn the magicToken on a known account
+// indefinitely. The same reusable in-memory limiter the portal logins use.
+const RESET_REQUEST_LIMIT = { limit: 10, windowMs: 60 * 60 * 1000 };
 
 function baseUrl(req: Request) {
   return process.env.SITE_URL || `${new URL(req.url).origin}`;
@@ -31,6 +38,26 @@ export async function POST(req: Request) {
   if (role !== "brother" && role !== "alumni") {
     return NextResponse.json({ error: "Invalid portal role." }, { status: 400 });
   }
+
+  // Per-IP + per-account rate limit. We key BOTH on the source IP (blocks a
+  // single host spraying many addresses) AND on the target account (blocks
+  // distributed inbox-flooding / token-churn against one victim). Either bucket
+  // tripping → 429. Recorded unconditionally on every request (success or not)
+  // so the count reflects real send pressure, not just failures.
+  const ip = clientIpFromRequest(req);
+  const ipKey = `portal-forgot:ip:${ip}`;
+  const acctKey = `portal-forgot:acct:${role}:${email}`;
+  const ipRl = rateLimit(ipKey, RESET_REQUEST_LIMIT);
+  const acctRl = rateLimit(acctKey, RESET_REQUEST_LIMIT);
+  if (!ipRl.ok || !acctRl.ok) {
+    const retryAfter = Math.max(ipRl.retryAfterSec, acctRl.retryAfterSec);
+    return NextResponse.json(
+      { error: "Too many reset requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+  recordRateLimit(ipKey, RESET_REQUEST_LIMIT);
+  recordRateLimit(acctKey, RESET_REQUEST_LIMIT);
 
   // Find PortalUser
   const portalUser = await prisma.portalUser.findFirst({
