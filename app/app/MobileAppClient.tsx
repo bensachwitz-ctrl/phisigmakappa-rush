@@ -1324,7 +1324,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
   return (
     <div
-      className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center gap-8 overflow-hidden p-4 pt-20 pb-6 font-sans text-slate-200 md:p-8 lg:flex-row"
+      className="relative flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-14 font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
       style={{
         // Deep brand-tinted radial wash → near-black, so the shell reads as the
         // chapter's world. Transitions smoothly when the chapter changes.
@@ -1516,48 +1516,52 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         </div>
       </div>
 
-      {/* Phone chassis & screen simulator wrapper */}
-      <div 
-        className="relative transition-all select-none z-10 flex items-center justify-center shrink-0 w-full max-w-[310px] sm:max-w-[340px] md:max-w-md"
+      {/* Phone chassis & screen simulator wrapper.
+          On <lg the demo is FULL-BLEED (no chassis, fills the viewport below the
+          sticky mobile header) so it reads as a real app, not a phone-in-a-phone.
+          On lg+ we keep the tilting showcase device frame. */}
+      <div
+        className="relative z-10 flex shrink-0 select-none items-center justify-center w-full max-w-none flex-1 lg:max-w-md lg:flex-none"
         style={{ perspective: "1000px" }}
       >
-        {/* Physical side buttons sticking out behind the chassis */}
-        <div className="hidden sm:block absolute -left-[8px] lg:-left-[11px] top-[120px] lg:top-[140px] w-[2px] lg:w-[3px] h-[30px] lg:h-[40px] bg-slate-800 rounded-l-md" />
-        <div className="hidden sm:block absolute -left-[8px] lg:-left-[11px] top-[160px] lg:top-[190px] w-[2px] lg:w-[3px] h-[30px] lg:h-[40px] bg-slate-800 rounded-l-md" />
-        <div className="hidden sm:block absolute -right-[8px] lg:-right-[11px] top-[140px] lg:top-[160px] w-[2px] lg:w-[3px] h-[45px] lg:h-[60px] bg-slate-800 rounded-r-md" />
+        {/* Physical side buttons — lg+ only (the showcase device). */}
+        <div className="hidden lg:block absolute -left-[11px] top-[140px] w-[3px] h-[40px] bg-slate-800 rounded-l-md" />
+        <div className="hidden lg:block absolute -left-[11px] top-[190px] w-[3px] h-[40px] bg-slate-800 rounded-l-md" />
+        <div className="hidden lg:block absolute -right-[11px] top-[160px] w-[3px] h-[60px] bg-slate-800 rounded-r-md" />
 
         <div
           onMouseMove={handlePhoneMouseMove}
           onMouseEnter={handlePhoneMouseEnter}
           onMouseLeave={handlePhoneMouseLeave}
-          className="w-full h-[580px] sm:h-[640px] lg:h-[820px] rounded-[36px] lg:rounded-[48px] border-[6px] sm:border-[8px] lg:border-[12px] border-slate-800 bg-white overflow-hidden relative flex flex-col transition-all duration-100 ease-out z-10"
+          className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white rounded-none border-0 lg:h-[820px] lg:rounded-[48px] lg:border-[12px] lg:border-slate-800"
           style={{
             transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${isHoveringPhone ? 1.015 : 1})`,
-            boxShadow: isHoveringPhone 
-              ? `${-rotateY * 3.5}px ${rotateX * 3.5 + 24}px 55px -10px rgba(0,0,0,0.9)` 
-              : '0 20px 50px -10px rgba(0,0,0,0.85)',
+            boxShadow: isHoveringPhone
+              ? `${-rotateY * 3.5}px ${rotateX * 3.5 + 24}px 55px -10px rgba(0,0,0,0.9)`
+              : '0 20px 50px -10px rgba(0,0,0,0.55)',
             transition: isHoveringPhone ? 'transform 0.05s ease-out, box-shadow 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
-          {/* Glass reflection glare */}
-          <div 
-            className="absolute inset-0 pointer-events-none z-50 mix-blend-overlay transition-opacity duration-300"
+          {/* Glass reflection glare — lg+ only (the device showcase). */}
+          <div
+            className="absolute inset-0 pointer-events-none z-50 mix-blend-overlay transition-opacity duration-300 hidden lg:block"
             style={{
               opacity: isHoveringPhone ? 0.35 : 0.08,
               background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 65%)`,
             }}
           />
 
-          {/* Mini dynamic island notch / camera bar on mobile, full sized on desktop */}
-          <div className="absolute top-1.5 lg:top-2.5 left-1/2 -translate-x-1/2 w-20 lg:w-32 h-3.5 lg:h-6 rounded-full bg-black z-50 flex items-center justify-between px-2 lg:px-3 text-[8px] lg:text-[10px] text-slate-500">
-            <span className="font-semibold text-slate-400 select-none hidden sm:inline">9:41</span>
+          {/* Dynamic island notch + iOS status bar — lg+ device showcase only. */}
+          <div className="hidden lg:flex absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 rounded-full bg-black z-50 items-center justify-between px-3 text-[10px] text-slate-500">
+            <span className="font-semibold text-slate-400 select-none">9:41</span>
             <div className="flex items-center gap-1">
-              <div className="w-1.5 lg:w-2.5 h-1.5 lg:h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             </div>
           </div>
 
-          {/* Top iOS Status Bar Area */}
-          <div className="h-4 lg:h-10 shrink-0 bg-white" />
+          {/* Top iOS Status Bar Area — lg+ only; on mobile the real OS status bar
+              + our sticky header already cap the screen. */}
+          <div className="hidden lg:block h-10 shrink-0 bg-white" />
 
         {/* Client Viewport */}
         <div className="flex-1 flex flex-col overflow-hidden relative text-slate-900 bg-slate-50">
@@ -1832,8 +1836,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
         </div>
 
-        {/* Home Screen bar for mobile device shell */}
-        <div className="hidden md:block h-6 shrink-0 bg-white relative">
+        {/* Home Screen bar — lg+ device showcase only. */}
+        <div className="hidden lg:block h-6 shrink-0 bg-white relative">
           <div className="w-32 h-1 rounded-full bg-slate-300 absolute bottom-1.5 left-1/2 -translate-x-1/2" />
         </div>
       </div>
