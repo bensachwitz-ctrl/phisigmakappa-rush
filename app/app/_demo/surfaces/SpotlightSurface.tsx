@@ -71,7 +71,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           <div>
                             <h4 className="text-xs font-bold text-slate-900">{dashboardData.election.title}</h4>
                             <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                              <span className="inline-flex items-center gap-1 text-emerald-600 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Voting open</span>
+                              <span className="inline-flex items-center gap-1 text-emerald-600 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Voting open</span>
                               · closes in 3 days
                             </p>
                           </div>

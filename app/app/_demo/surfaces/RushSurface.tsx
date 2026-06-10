@@ -258,7 +258,7 @@ export function renderRushTab(ctx: DemoContext) {
                                         <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                           {p.name}
                                           {p.isDriverNow && (
-                                            <span className="inline-flex items-center gap-0.5 bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-bold px-1 rounded animate-pulse">
+                                            <span className="inline-flex items-center gap-0.5 bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-bold px-1 rounded">
                                               <Key className="w-2 h-2" /> DRIVING
                                             </span>
                                           )}
@@ -270,7 +270,7 @@ export function renderRushTab(ctx: DemoContext) {
                                     </div>
                                     <div className="shrink-0">
                                       {p.isDriverNow ? (
-                                        <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 animate-bounce">
+                                        <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                                           <Car className="w-3.5 h-3.5" />
                                         </div>
                                       ) : (
@@ -306,7 +306,7 @@ export function renderRushTab(ctx: DemoContext) {
                                         <Clock className="w-3.5 h-3.5 text-slate-400" /> {s.label}
                                       </span>
                                       {isCurrentShift && (
-                                        <span className="text-[11px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full select-none animate-pulse">Active Now</span>
+                                        <span className="text-[11px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full select-none">Active Now</span>
                                       )}
                                     </div>
                                     <select

@@ -81,23 +81,27 @@ const TIERS: Tier[] = [
   { count: 14, sizeMin: 12, sizeRange: 8, durMin: 32, durRange: 16, opMin: 0.09, opRange: 0.06, dyAmp: 36 },
 ];
 
-/** A calmer multiplier set applied when `calm` is requested (the demo): a bit
- *  slower drift + softer opacity so the chapter shell is easy to read/interact —
- *  but still unmistakably letters traveling across the screen. */
-const CALM = { durMul: 1.35, opMul: 0.8, dyMul: 1 } as const;
+/** Damping presets. `calm` (chapter sites / onboard): slightly slower + softer,
+ *  still clearly traveling. `whisper` (the interactive DEMO shell): much slower
+ *  + much fainter — the demo is for INTERACTING, so its ambient motion budget is
+ *  a fraction of the marketing site's (owner round-5: "moves too much"). */
+type Damping = { durMul: number; opMul: number; dyMul: number };
+const DAMPING: Record<"none" | "calm" | "whisper", Damping> = {
+  none: { durMul: 1, opMul: 1, dyMul: 1 },
+  calm: { durMul: 1.35, opMul: 0.8, dyMul: 1 },
+  whisper: { durMul: 2.3, opMul: 0.5, dyMul: 0.65 },
+};
 
 /** Total letters at full density (sum of tier counts). */
 const DEFAULT_TOTAL = TIERS.reduce((n, t) => n + t.count, 0); // 44
 
-function buildLetters(glyphs: string[], seed: number, total: number, calm: boolean): Letter[] {
+function buildLetters(glyphs: string[], seed: number, total: number, damping: Damping): Letter[] {
   const rng = makeRng(seed);
   const out: Letter[] = [];
   // Scale each tier's count to honor a caller-supplied density while keeping the
   // near/mid/far proportions intact (≥1 per tier so depth never collapses).
   const scale = total / DEFAULT_TOTAL;
-  const durMul = calm ? CALM.durMul : 1;
-  const opMul = calm ? CALM.opMul : 1;
-  const dyMul = calm ? CALM.dyMul : 1;
+  const { durMul, opMul, dyMul } = damping;
 
   for (const tier of TIERS) {
     const n = Math.max(1, Math.round(tier.count * scale));
@@ -139,6 +143,7 @@ export function GreekLetterField({
   color,
   position = "fixed",
   calm = false,
+  whisper = false,
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];
@@ -154,13 +159,16 @@ export function GreekLetterField({
    *  `absolute` (pinned to the nearest positioned ancestor — used inside the
    *  demo's brand-themed shell so the field stays within the demo container). */
   position?: "fixed" | "absolute";
-  /** Even slower drift + softer opacity — used inside the demo so the chapter
-   *  shell stays calm + easy to read/interact with. */
+  /** Slightly slower drift + softer opacity — chapter sites / onboard. */
   calm?: boolean;
+  /** MUCH slower + fainter — the interactive demo shell, where the visitor is
+   *  reading and tapping and ambient motion must never compete. Wins over calm. */
+  whisper?: boolean;
 }) {
+  const damping = DAMPING[whisper ? "whisper" : calm ? "calm" : "none"];
   const letters = React.useMemo(
-    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count, calm),
-    [glyphs, seed, count, calm],
+    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count, damping),
+    [glyphs, seed, count, damping],
   );
 
   return (

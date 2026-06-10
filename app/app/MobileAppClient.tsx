@@ -69,7 +69,6 @@ import {
 } from "./_demo/mock-data";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
 import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
-import { WebGLBackground } from "./_demo/WebGLBackground";
 import type { DemoContext } from "./_demo/context";
 import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
 import { renderLogin } from "./_demo/surfaces/LoginSurface";
@@ -158,37 +157,14 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     "Saturday-00": "pnm4", // David Smith (Saturday 12am-2am)
   });
 
-  const handlePhoneMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Phone: no 3D. Bail before touching any tilt/glare state on small viewports.
-    if (!isDesktopShowcase) return;
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const maxTilt = 8;
-    const rX = ((centerY - y) / centerY) * maxTilt;
-    const rY = ((x - centerX) / centerX) * maxTilt;
-    setRotateX(rX);
-    setRotateY(rY);
-    setGlarePosition({
-      x: (x / rect.width) * 100,
-      y: (y / rect.height) * 100
-    });
-  };
-
-  const handlePhoneMouseEnter = () => {
-    if (!isDesktopShowcase) return;
-    setIsHoveringPhone(true);
-  };
-
-  const handlePhoneMouseLeave = () => {
-    if (!isDesktopShowcase) return;
-    setIsHoveringPhone(false);
-    setRotateX(0);
-    setRotateY(0);
-  };
+  // Owner round-5 ("the demo moves too much — people need to INTERACT with it"):
+  // the cursor-tracked 3D tilt + moving glare made the phone — the very surface
+  // the visitor is reading and tapping — shift under the pointer. All three
+  // handlers are now inert no-ops (kept so the demo ctx contract is unchanged);
+  // the chassis renders flat with a static shadow + static glare.
+  const handlePhoneMouseMove = (_e: React.MouseEvent<HTMLDivElement>) => {};
+  const handlePhoneMouseEnter = () => {};
+  const handlePhoneMouseLeave = () => {};
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState(false);
@@ -1427,24 +1403,24 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
       {/* Chapter-colored Greek-letter field drifting behind EVERYTHING — the
           signature "picking a chapter transforms the room" effect. Tinted to the
-          brand primary, scoped to this container (absolute), reduced-motion-safe
-          via the field's own CSS. */}
+          brand primary, scoped to this container (absolute). WHISPER damping
+          (owner round-5: the demo is for INTERACTING — its ambient motion budget
+          is a fraction of the landing's): much slower, much fainter, fewer
+          letters. Reduced-motion-safe via the field's own CSS. */}
       <GreekLetterField
         glyphs={brandGlyphs}
         color={brandPrimary}
         position="absolute"
-        calm
-        count={34}
+        whisper
+        count={24}
         seed={0x51ed270b}
         className="opacity-[0.7]"
       />
 
-      {/* 3D WebGL Plexus Background — DESKTOP-ONLY. The component already self-
-          gates off under 640px, but we additionally only MOUNT it on the lg+
-          showcase layout so phones never even allocate the <canvas> (zero 3D on
-          phone, by construction). The flat brand wash + GreekLetterField above
-          stays as the clean mobile background. */}
-      {isDesktopShowcase && <WebGLBackground />}
+      {/* The 3D WebGL plexus that used to render behind the lg+ showcase was
+          REMOVED (owner round-5: the demo "moves too much"). The calm brand
+          wash + whisper letter field + static chapter-identity backdrop carry
+          the atmosphere with zero continuous canvas animation. */}
 
       {/* Mobile-Friendly Sticky Top Header (Shown under lg viewports) */}
       {/* Fixed top chrome. h-14 content height + an env(safe-area-inset-top) pad
@@ -1638,33 +1614,24 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         <div className="hidden lg:block absolute -right-[11px] top-[160px] w-[3px] h-[60px] bg-slate-800 rounded-r-md" />
 
         <div
-          onMouseMove={handlePhoneMouseMove}
-          onMouseEnter={handlePhoneMouseEnter}
-          onMouseLeave={handlePhoneMouseLeave}
           className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white rounded-none border-0 lg:h-[820px] lg:rounded-[48px] lg:border-[12px] lg:border-slate-800"
-          // Phone (full-bleed real app): NO inline transform/shadow at all — the
-          // app fills the device edge-to-edge, flat. Desktop showcase: cursor-
-          // tracked 3D tilt + dynamic glare shadow on the chassis.
+          // Phone (full-bleed real app): NO inline shadow at all. Desktop
+          // showcase: a STATIC grounding shadow — the old cursor-tracked tilt
+          // and dynamic glare moved the surface people interact with (owner
+          // round-5), so the chassis is now perfectly still.
           style={
             isDesktopShowcase
-              ? {
-                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${isHoveringPhone ? 1.015 : 1})`,
-                  boxShadow: isHoveringPhone
-                    ? `${-rotateY * 3.5}px ${rotateX * 3.5 + 24}px 55px -10px rgba(0,0,0,0.9)`
-                    : '0 20px 50px -10px rgba(0,0,0,0.55)',
-                  transition: isHoveringPhone
-                    ? 'transform 0.05s ease-out, box-shadow 0.05s ease-out'
-                    : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
-                }
+              ? { boxShadow: '0 20px 50px -10px rgba(0,0,0,0.55)' }
               : undefined
           }
         >
-          {/* Glass reflection glare — lg+ only (the device showcase). */}
+          {/* Static glass sheen — lg+ only. Fixed position + opacity (no cursor
+              tracking) so the screen never shimmers while someone is reading. */}
           <div
-            className="absolute inset-0 pointer-events-none z-50 mix-blend-overlay transition-opacity duration-300 hidden lg:block"
+            className="absolute inset-0 pointer-events-none z-50 mix-blend-overlay hidden lg:block"
             style={{
-              opacity: isHoveringPhone ? 0.35 : 0.08,
-              background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 65%)`,
+              opacity: 0.08,
+              background: 'radial-gradient(circle at 30% 12%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 65%)',
             }}
           />
 
@@ -1672,7 +1639,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           <div className="hidden lg:flex absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 rounded-full bg-black z-50 items-center justify-between px-3 text-[12px] text-slate-500">
             <span className="font-semibold text-slate-400 select-none">9:41</span>
             <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              {/* Static status dot — no pulse; the demo keeps ambient motion near zero. */}
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             </div>
           </div>
 
@@ -1748,10 +1716,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                     aria-label="Account settings"
                     className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                    </span>
+                    {/* Static "online" dot — the ping ripple was a persistent
+                        attention-grabber in the chrome (owner: demo moves too much). */}
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       {viewRole === "exec" ? "Officer" : role === "brother" ? "Member" : "Alumnus"}
                     </span>
