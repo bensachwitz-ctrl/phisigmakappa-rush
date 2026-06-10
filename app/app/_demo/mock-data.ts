@@ -210,6 +210,24 @@ const GREEK_NAME_TO_GLYPH: Record<string, string> = {
   tau: "Τ", upsilon: "Υ", phi: "Φ", chi: "Χ", psi: "Ψ", omega: "Ω",
 };
 
+/** Reverse map (glyph → spelled-out name), derived once from the table above. */
+const GREEK_GLYPH_TO_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(GREEK_NAME_TO_GLYPH).map(([name, glyph]) => [
+    glyph,
+    name.charAt(0).toUpperCase() + name.slice(1),
+  ]),
+);
+
+/** Derive the demo persona's pledge-class label from the CHOSEN org so the
+ *  welcome card never reads as a different organization's name (it used to be
+ *  hard-coded "Alpha Chi" — which reads as Alpha Chi Omega — no matter which
+ *  chapter the visitor picked). e.g. ΦΣΚ → "Phi Class", ΣΧ → "Sigma Class". */
+export function pledgeClassFromBrand(brand: Pick<FraternityBrand, "letters">): string {
+  const first = glyphsFromBrand(brand.letters)[0];
+  const name = first ? GREEK_GLYPH_TO_NAME[first] : undefined;
+  return name ? `${name} Class` : "Founding Class";
+}
+
 /** Normalize a free-text letters field ("Kappa Delta" OR "ΚΔ") to a glyph string
  *  ("ΚΔ"). Real glyphs already present are kept; spelled-out names are mapped. */
 export function normalizeLetters(input: string): string {
@@ -299,6 +317,9 @@ export const DEMO_CALLOUTS: Record<
 };
 
 export function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
+  // Persona pledge class follows the CHOSEN org (ΦΣΚ → "Phi Class") so the
+  // welcome card always reads as the selected chapter, never another org.
+  const personaPledgeClass = pledgeClassFromBrand(brand);
   return {
     chapter: {
       subdomain: tenant.subdomain,
@@ -314,7 +335,7 @@ export function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
       year: "Senior",
       major: "Computer Science",
       position: "President",
-      pledgeClass: "Alpha Chi",
+      pledgeClass: personaPledgeClass,
       hometown: "Charleston, SC",
       gradYear: "2026",
       status: "ACTIVE",
@@ -459,7 +480,7 @@ export function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
           year: "Senior",
           major: "Computer Science",
           position: "President",
-          pledgeClass: "Alpha Chi",
+          pledgeClass: personaPledgeClass,
           headshotUrl: null,
           status: "ACTIVE",
         },
