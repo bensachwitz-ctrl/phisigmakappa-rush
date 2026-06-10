@@ -2722,6 +2722,7 @@ const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[
     links: [
       { href: "#proof", label: "Why Greekstack" },
       { href: "/contact", label: "Contact" },
+      { href: "/support", label: "Support" },
       { href: "/contact#book", label: "Book a call" },
       { href: "/login", label: "Sign in" },
     ],

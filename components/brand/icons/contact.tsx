@@ -186,3 +186,32 @@ export function IconLock({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** Lifebuoy — a ring buoy with an accent hub + four spokes (support / help). */
+export function IconLifebuoy({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      {/* accent: the buoy ring */}
+      <circle cx="12" cy="12" r="9" fill={accent} opacity={0.14} stroke="none" />
+      <circle cx="12" cy="12" r="9" />
+      {/* inner ring — the swimmer's grip */}
+      <circle cx="12" cy="12" r="3.6" />
+      {/* four rope spokes joining hub to ring */}
+      <path d="M4.6 7.4l4.2 2.9M19.4 7.4l-4.2 2.9M4.6 16.6l4.2-2.9M19.4 16.6l-4.2-2.9" />
+    </IconBase>
+  );
+}
+
+/** Book — an open help guide/manual with an accent page + a center spine (FAQ / docs). */
+export function IconBook({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      {/* accent: the left page fill */}
+      <path d="M12 6.5C10.4 5.4 8 5 6 5a16 16 0 0 0-2 .2V18c.7-.1 1.4-.2 2-.2 2 0 4.4.4 6 1.5V6.5Z" fill={accent} opacity={0.16} stroke="none" />
+      {/* both pages of the open book */}
+      <path d="M12 6.5C10.4 5.4 8 5 6 5a16 16 0 0 0-2 .2V18c.7-.1 1.4-.2 2-.2 2 0 4.4.4 6 1.5 1.6-1.1 4-1.5 6-1.5.6 0 1.3.1 2 .2V5.2A16 16 0 0 0 18 5c-2 0-4.4.4-6 1.5Z" />
+      {/* center spine — the live "open guide" cue */}
+      <path d="M12 6.5v12.3" />
+    </IconBase>
+  );
+}

@@ -316,6 +316,9 @@ function ApexFooter() {
             />
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="Footer">
+            <Link href="/support" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Support
+            </Link>
             <Link href="/privacy" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
               Privacy
             </Link>
