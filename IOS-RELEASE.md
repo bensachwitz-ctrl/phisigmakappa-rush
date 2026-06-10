@@ -121,27 +121,49 @@ Artifacts (the `.ipa`, build logs, dSYMs) are attached to the Codemagic build.
 
 ---
 
-## Universal links (optional, enables `https://…/app?chapter=` deep links)
+## Universal links (enables `https://…/app?chapter=` deep links)
 
 The app declares `applinks:greekstack.com` etc. in `App.entitlements`. To make
-tapping a chapter link open the app (instead of Safari), publish an
-**apple-app-site-association** (AASA) file at the domain root, served as
-`application/json` with **no** `.json` extension:
+tapping a chapter link open the app (instead of Safari), iOS fetches an
+**apple-app-site-association** (AASA) file over HTTPS at the domain root, served
+as `application/json` with **no** `.json` extension.
 
-`https://greekstack.com/.well-known/apple-app-site-association`
+**✅ This file is now committed** at `public/.well-known/apple-app-site-association`
+and served as `application/json` (the content-type is forced in `next.config.js`
+→ `headers()`, since the extension-less file would otherwise be served as
+octet-stream and rejected by iOS). After a deploy it is reachable at:
+
+`https://greekstack.vercel.app/.well-known/apple-app-site-association`
+(and at `https://greekstack.com/...` once the custom domain is pointed at Vercel —
+all three hosts in `App.entitlements` resolve to the same Vercel deployment).
+
 ```json
 {
   "applinks": {
     "apps": [],
     "details": [
-      { "appID": "<TEAMID>.com.greekstack.app", "paths": ["/app", "/app/*"] }
+      { "appID": "<TEAMID>.com.greekstack.app", "paths": ["/app/*", "/r/*", "/public/*"] }
     ]
   }
 }
 ```
-Until this is published, universal links simply fall back to opening in the
-browser — the app still ships and works fine. Push-notification deep links use
-the `greekstack://` custom scheme and need no AASA.
+
+> ⚠️ **OWNER ACTION — replace `<TEAMID>`.** The committed file ships with a
+> `<TEAMID>` placeholder. Before universal links work, edit
+> `public/.well-known/apple-app-site-association` and replace `<TEAMID>` with your
+> **Apple Developer Team ID** (a 10-character string like `A1B2C3D4E5`, found in
+> Apple Developer portal → Membership, or App Store Connect). The full `appID` is
+> then `TEAMID.com.greekstack.app`. Commit + redeploy. The 1-hour `Cache-Control`
+> on the file means the change propagates quickly. You can verify with
+> `curl -sI https://greekstack.vercel.app/.well-known/apple-app-site-association`
+> (expect `content-type: application/json`) and
+> [Apple's AASA validator](https://app-site-association.cdn-apple.com/a/v1/greekstack.vercel.app).
+
+The `paths` cover the member app surface (`/app/*`) plus the short-link (`/r/*`)
+and public (`/public/*`) namespaces reserved for future deep links. Until the
+TEAMID is filled in, universal links simply fall back to opening in the browser —
+the app still ships and works fine. Push-notification deep links use the
+`greekstack://` custom scheme and need no AASA.
 
 ---
 
