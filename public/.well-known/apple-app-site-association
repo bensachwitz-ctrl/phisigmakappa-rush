@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "<TEAMID>.com.greekstack.app",
+        "appID": "QFC852BYB6.com.greekstack.app",
         "paths": [
           "/app/*",
           "/r/*",

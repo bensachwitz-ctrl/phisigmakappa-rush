@@ -87,12 +87,20 @@ You do this once. Three buckets: (A) Apple Developer / App Store Connect,
 
 ### C. Push notifications (APNs)
 
-1. Developer portal → Keys → create an **APNs Auth Key (.p8)**. Download it.
-2. App Store Connect → your app → (or Users & Access → Keys) upload/register the
-   APNs key so the backend can send pushes. Note the **Key ID** + **Team ID**.
+1. ✅ **DONE (2026-06-10)** — an APNs Auth Key exists: **Key ID `Q58634GVP5`**
+   (name "claude", APNs enabled, Team-scoped), downloaded to
+   `C:\Users\Bensa\.keys\apple\AuthKey_Q58634GVP5.p8` (local only — never
+   commit). **Team ID `QFC852BYB6`.**
+   ⚠️ The key's APNs Environment is currently **Sandbox-only** in the portal —
+   edit the key (Certificates → Keys → claude) to allow Production before
+   sending production pushes.
+2. The same team-scoped .p8 works for every app on the team (BCG today, GS
+   later) — no per-app registration needed; the `apns-topic` header selects
+   the app.
 3. Set the backend env vars (wherever GS server runs — Vercel) so
    `/api/mobile/push/register` tokens can actually be pushed:
-   - `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY` (the `.p8` contents),
+   - `APNS_KEY_ID=Q58634GVP5`, `APNS_TEAM_ID=QFC852BYB6`,
+     `APNS_PRIVATE_KEY` (the `.p8` contents — paste from the local file),
      `APNS_TOPIC=com.greekstack.app`.
    > The device-token capture + tenant-bound storage is already built
    > (`app/api/mobile/push/register/route.ts`, stored per-tenant in `SiteConfig`).
@@ -142,26 +150,25 @@ all three hosts in `App.entitlements` resolve to the same Vercel deployment).
   "applinks": {
     "apps": [],
     "details": [
-      { "appID": "<TEAMID>.com.greekstack.app", "paths": ["/app/*", "/r/*", "/public/*"] }
+      { "appID": "QFC852BYB6.com.greekstack.app", "paths": ["/app/*", "/r/*", "/public/*"] }
     ]
   }
 }
 ```
 
-> ⚠️ **OWNER ACTION — replace `<TEAMID>`.** The committed file ships with a
-> `<TEAMID>` placeholder. Before universal links work, edit
-> `public/.well-known/apple-app-site-association` and replace `<TEAMID>` with your
-> **Apple Developer Team ID** (a 10-character string like `A1B2C3D4E5`, found in
-> Apple Developer portal → Membership, or App Store Connect). The full `appID` is
-> then `TEAMID.com.greekstack.app`. Commit + redeploy. The 1-hour `Cache-Control`
-> on the file means the change propagates quickly. You can verify with
+> ✅ **DONE (2026-06-10):** the `<TEAMID>` placeholder has been replaced with the
+> real **Apple Developer Team ID `QFC852BYB6`** (read from Apple Developer portal
+> → Membership, account BENJAMIN FRANCIS SACHWITZ). The full `appID` is
+> `QFC852BYB6.com.greekstack.app`. Takes effect on the next deploy. The 1-hour
+> `Cache-Control` on the file means the change propagates quickly. You can verify
+> with
 > `curl -sI https://greekstack.vercel.app/.well-known/apple-app-site-association`
 > (expect `content-type: application/json`) and
 > [Apple's AASA validator](https://app-site-association.cdn-apple.com/a/v1/greekstack.vercel.app).
 
 The `paths` cover the member app surface (`/app/*`) plus the short-link (`/r/*`)
 and public (`/public/*`) namespaces reserved for future deep links. Until the
-TEAMID is filled in, universal links simply fall back to opening in the browser —
+file is deployed, universal links simply fall back to opening in the browser —
 the app still ships and works fine. Push-notification deep links use the
 `greekstack://` custom scheme and need no AASA.
 
