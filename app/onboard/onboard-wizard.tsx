@@ -91,6 +91,9 @@ export default function OnboardWizard() {
   const [busy, setBusy] = React.useState(false);
   const [launched, setLaunched] = React.useState(false);
   const [liveUrl, setLiveUrl] = React.useState("");
+  // Inline launch-failure message (non-subdomain errors) so the finish line shows
+  // a recoverable card with Retry + Talk-to-Ben, not just a transient toast.
+  const [launchError, setLaunchError] = React.useState<string | null>(null);
   // Heading of the active step — focused on each transition so keyboard/screen-
   // reader users land on the new step's title instead of being stranded.
   const headingRef = React.useRef<HTMLHeadingElement>(null);
@@ -173,6 +176,10 @@ export default function OnboardWizard() {
   const [adminName, setAdminName] = React.useState("");
   const [adminEmail, setAdminEmail] = React.useState("");
   const [adminPassword, setAdminPassword] = React.useState("");
+  // Reveal toggle for the admin password — a 44px eye button so a founder can
+  // confirm a long password on a phone before launching (a mistyped password
+  // here locks the only admin out of the chapter they just created).
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -429,6 +436,7 @@ export default function OnboardWizard() {
 
   async function handleLaunch() {
     setBusy(true);
+    setLaunchError(null);
     try {
       const res = await fetch("/api/onboard", {
         method: "POST",
@@ -517,7 +525,12 @@ export default function OnboardWizard() {
         router.refresh();
       }
     } catch (err: any) {
-      push({ title: "Launch Failed", description: err.message || "Something went wrong.", variant: "destructive" });
+      const message = err.message || "Something went wrong.";
+      // Surface BOTH a toast (immediate) AND a persistent inline card on the
+      // Launch step so the founder always has a clear recovery path at the finish
+      // line — not a toast that vanishes before they can act on it.
+      push({ title: "Launch Failed", description: message, variant: "destructive" });
+      setLaunchError(message);
       setBusy(false);
     }
   }
@@ -616,24 +629,26 @@ export default function OnboardWizard() {
             </span>
           </p>
           <p className="text-[11px] font-semibold tabular-nums text-slate-400">
-            {Math.round((stepIndex / (STEPS.length - 1)) * 100)}%
+            {Math.round(((stepIndex + 1) / STEPS.length) * 100)}%
           </p>
         </div>
 
         {/* Animated fill track — eases to the % complete as steps advance. A soft
-            sheen rides the leading edge for a touch of life. */}
+            sheen rides the leading edge for a touch of life. Progress is honest-
+            but-encouraging: the OPENING step already reads ~25% (1 of 4 done),
+            not a deflating 0%, and the final step completes at 100%. */}
         <div
           className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
           role="progressbar"
           aria-label="Setup progress"
           aria-valuemin={0}
-          aria-valuemax={STEPS.length - 1}
-          aria-valuenow={stepIndex}
+          aria-valuemax={STEPS.length}
+          aria-valuenow={stepIndex + 1}
         >
           <motion.div
             className="relative h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
             initial={false}
-            animate={{ width: `${(stepIndex / (STEPS.length - 1)) * 100}%` }}
+            animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
             transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
           >
             <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(251,191,36,0.6)]" aria-hidden="true" />
@@ -999,10 +1014,10 @@ export default function OnboardWizard() {
                       <div className="space-y-3">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Recruitment contact &amp; social</p>
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <WField label="Recruitment email" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" />
-                          <WField label="Recruitment phone" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" />
-                          <WField label="Instagram handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" />
-                          <WField label="Instagram URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" />
+                          <WField label="Recruitment email" value={rushEmail} onChange={setRushEmail} placeholder="rush@yourchapter.com" type="email" inputMode="email" autoComplete="email" autoCapitalize="off" />
+                          <WField label="Recruitment phone" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" type="tel" inputMode="tel" autoComplete="tel" />
+                          <WField label="Instagram handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" autoCapitalize="off" />
+                          <WField label="Instagram URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" type="url" inputMode="url" autoCapitalize="off" />
                           <WField label="Chapter house address" value={address} onChange={setAddress} placeholder="1525 College Street" />
                           <WField label="City, state & ZIP" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
                         </div>
@@ -1027,29 +1042,47 @@ export default function OnboardWizard() {
                   <div className="sm:col-span-2">
                     <WField label="Administrator Full Name" value={adminName} onChange={setAdminName} placeholder="Your full name" error={errors.adminName} required />
                   </div>
-                  <WField label="Admin Login Email" value={adminEmail} onChange={setAdminEmail} placeholder="admin@yourchapter.com" error={errors.adminEmail} required />
+                  <WField label="Admin Login Email" value={adminEmail} onChange={setAdminEmail} placeholder="admin@yourchapter.com" error={errors.adminEmail} required type="email" inputMode="email" autoComplete="email" autoCapitalize="off" />
                   <div>
                     <FieldLabel htmlFor="admin-pw" required>Admin Password</FieldLabel>
                     <div className="relative">
                       <IconSecurity className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <Input
                         id="admin-pw"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="••••••••"
+                        autoComplete="new-password"
                         className={cn(
-                          "border-white/10 bg-white/5 pl-9 text-white transition-colors placeholder:text-slate-500 hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-sky-400/60",
+                          "border-white/10 bg-white/5 pl-9 pr-16 text-white transition-colors placeholder:text-slate-500 hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-sky-400/60",
                           errors.adminPassword && "border-rose-400/60 hover:border-rose-400/60 focus-visible:ring-rose-400/50"
                         )}
                         aria-invalid={errors.adminPassword ? true : undefined}
+                        aria-describedby="admin-pw-strength"
                         required
                       />
+                      {/* 44px reveal toggle so a founder can confirm a long
+                          password before launch. aria-pressed announces state. */}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((s) => !s)}
+                        aria-pressed={showPassword}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-1 top-1/2 inline-flex h-9 min-w-[44px] -translate-y-1/2 items-center justify-center rounded-md px-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
                     </div>
+                    {/* Live strength meter — a 4-segment bar + label so the founder
+                        gets a positive nudge toward a strong password rather than a
+                        bare "min 8" rule. Pure visual aid; the server still enforces
+                        the 8-char floor. */}
+                    <PasswordStrength id="admin-pw-strength" password={adminPassword} />
                     {errors.adminPassword ? (
                       <FieldError>{errors.adminPassword}</FieldError>
                     ) : (
-                      <p className="mt-1.5 text-xs text-slate-400">Minimum 8 characters.</p>
+                      <p className="mt-1 text-xs text-slate-400">Minimum 8 characters.</p>
                     )}
                   </div>
                 </div>
@@ -1061,6 +1094,44 @@ export default function OnboardWizard() {
 
               {step === "launch" && (
                 <div className="space-y-4">
+                  {/* Inline launch-failure recovery card (non-subdomain errors —
+                      a subdomain collision is handled separately by bouncing back
+                      to the chapter step). Persists until the next attempt so the
+                      founder can read it, retry, or reach out — never a dead end. */}
+                  {launchError && (
+                    <div
+                      role="alert"
+                      className="animate-soft-enter rounded-2xl border border-rose-400/30 bg-gradient-to-br from-rose-500/[0.12] to-transparent p-4"
+                    >
+                      <p className="flex items-center gap-2 text-sm font-bold text-rose-100">
+                        <IconClose className="h-4 w-4" aria-hidden="true" /> Launch didn&apos;t go through
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-rose-100/80">{launchError}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-rose-100/70">
+                        Your answers are still here — give it another try, or have Ben launch it with you.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleLaunch}
+                          disabled={busy}
+                          className="bg-gradient-to-r from-blue-600 to-sky-500 text-white press"
+                        >
+                          {busy ? "Retrying…" : "Retry launch"}
+                        </Button>
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="press border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                        >
+                          <a href="/contact#book">Talk to Ben</a>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Celebratory "ready" banner — a soft emerald→sky glass card with
                       a gentle breathing rocket badge to mark the finish line. */}
                   <div className="relative overflow-hidden rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/[0.12] via-sky-500/[0.06] to-transparent p-4">
@@ -1675,6 +1746,7 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 
 function WField({
   label, value, onChange, placeholder, error, invalid, required, hint, glyphInsert, inputRef,
+  type, inputMode, autoComplete, autoCapitalize,
 }: {
   label: string;
   value: string;
@@ -1694,6 +1766,14 @@ function WField({
   // field into view after a server-side validation failure (e.g. the Launch
   // step bouncing a "subdomain already taken" 400 back to this field).
   inputRef?: React.Ref<HTMLInputElement>;
+  // Mobile-keyboard + autofill ergonomics: an email field should pop the @-
+  // keyboard and offer autofill, a phone field the numeric pad, a URL field the
+  // URL keyboard — so the funnel feels effortless on a phone (where most signups
+  // happen). Defaults keep the original text behavior for every other field.
+  type?: React.HTMLInputTypeAttribute;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  autoComplete?: string;
+  autoCapitalize?: string;
 }) {
   const id = React.useId();
   const showInvalid = Boolean(error) || Boolean(invalid);
@@ -1703,6 +1783,10 @@ function WField({
       <Input
         id={id}
         ref={inputRef}
+        type={type}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        autoCapitalize={autoCapitalize}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -1714,6 +1798,56 @@ function WField({
       />
       {error ? <FieldError>{error}</FieldError> : hint ? <div className="mt-1.5 text-xs text-slate-400">{hint}</div> : null}
       {glyphInsert ? <GreekLetterInserter onInsert={glyphInsert} /> : null}
+    </div>
+  );
+}
+
+// Lightweight password-strength meter — a 0–4 score from length + character
+// variety, rendered as a 4-segment bar with a label. Reassures the founder their
+// admin password is solid before they launch; the server still enforces the
+// hard 8-char minimum independently. `aria-live` announces the tier on change.
+function PasswordStrength({ id, password }: { id?: string; password: string }) {
+  const score = React.useMemo(() => {
+    if (!password) return 0;
+    let s = 0;
+    if (password.length >= 8) s++;
+    if (password.length >= 12) s++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) s++;
+    if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) s++;
+    return Math.min(s, 4);
+  }, [password]);
+  if (!password) return null;
+  const labels = ["Too short", "Weak", "Fair", "Good", "Strong"];
+  const colors = [
+    "bg-rose-500",
+    "bg-rose-400",
+    "bg-amber-400",
+    "bg-sky-400",
+    "bg-emerald-400",
+  ];
+  const textColor = [
+    "text-rose-300",
+    "text-rose-300",
+    "text-amber-300",
+    "text-sky-300",
+    "text-emerald-300",
+  ][score];
+  return (
+    <div id={id} className="mt-2" aria-live="polite">
+      <div className="flex gap-1.5" aria-hidden="true">
+        {[0, 1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors duration-300",
+              i < score ? colors[score] : "bg-white/10"
+            )}
+          />
+        ))}
+      </div>
+      <p className={cn("mt-1 text-[11px] font-medium", textColor)}>
+        Password strength: {labels[score]}
+      </p>
     </div>
   );
 }

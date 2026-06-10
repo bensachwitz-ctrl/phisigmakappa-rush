@@ -32,16 +32,6 @@ export function SuccessState({
 
   const name = [fraternityName.trim(), greekLetters.trim()].filter(Boolean).join(" ") || "Your chapter";
 
-  // Day-one resilience: the parent auto-redirects after a short beat, but if that
-  // navigation is slow (or the freshly provisioned host is briefly unreachable)
-  // the admin should never be stranded on a perpetual spinner. Reveal a manual
-  // "Go to my dashboard" link a few seconds in so they always have an escape.
-  const [showManual, setShowManual] = React.useState(false);
-  React.useEffect(() => {
-    const t = setTimeout(() => setShowManual(true), 4000);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <div className="animate-soft-enter py-6 text-center">
       {/* Bespoke celebration illustration — a laurel-wreathed success medallion
@@ -79,27 +69,27 @@ export function SuccessState({
         <span className="truncate font-mono text-sm text-slate-200">{host}</span>
       </div>
 
-      <p className="mt-6 inline-flex items-center gap-2 text-xs font-medium text-slate-400">
+      {/* Manual go-to-dashboard action — ALWAYS present (not gated on a timer) so a
+          slow auto-redirect or a briefly-unreachable fresh host never strands the
+          new admin on a spinner. The auto-redirect (owned by the parent) still
+          fires; this is the guaranteed escape hatch right at the finish line. */}
+      {url && (
+        <a
+          href={url}
+          className="group mx-auto mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 ring-1 ring-emerald-300/30 transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+        >
+          Open my dashboard
+          <IconExternal className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </a>
+      )}
+
+      <p className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-slate-400">
         <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" />
           <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
-        Redirecting to your dashboard…
+        Taking you there automatically…
       </p>
-
-      {/* Manual fallback — appears a few seconds in so a slow/unreachable
-          auto-redirect never strands the new admin on a spinner. */}
-      {showManual && url && (
-        <div className="mt-4 animate-soft-enter text-xs text-slate-400">
-          Not redirected automatically?{" "}
-          <a
-            href={url}
-            className="font-semibold text-emerald-300 underline-offset-2 hover:underline"
-          >
-            Go to my dashboard
-          </a>
-        </div>
-      )}
     </div>
   );
 }
