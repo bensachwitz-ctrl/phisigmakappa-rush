@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { EventsManager } from "@/components/admin/events-manager";
 import { AddEventButton } from "@/components/admin/add-event-button";
 import { BrotherEventsSection } from "@/components/brother/brother-events-section";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { IconEvents } from "@/components/brand/icons";
 import { getCurrentSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -29,21 +31,20 @@ export default async function AdminEventsPage() {
 
   return (
     <main className="container py-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Events</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isAdmin
-              ? "Public events show on the rush page. Private events are invite-only."
-              : "RSVP for upcoming chapter events."}
-          </p>
-        </div>
-        {/* Page-header "+ Add event" — lives at the top of the events page
-            for admins so they can drop a new event without scrolling past the
-            brother calendar. Triggers the EventsManager dialog via a custom
-            DOM event. */}
-        {isAdmin && <AddEventButton />}
-      </div>
+      {/* Page-header "+ Add event" — lives at the top of the events page
+          for admins so they can drop a new event without scrolling past the
+          brother calendar. Triggers the EventsManager dialog via a custom
+          DOM event. */}
+      <AdminPageHeader
+        icon={IconEvents}
+        title="Events"
+        subtitle={
+          isAdmin
+            ? "Public events show on the rush page. Private events are invite-only."
+            : "RSVP for upcoming chapter events."
+        }
+        action={isAdmin ? <AddEventButton /> : undefined}
+      />
 
       {isBrother && (
         <section aria-labelledby="brother-calendar-heading" className="mb-10">

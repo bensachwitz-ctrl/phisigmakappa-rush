@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { Megaphone } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { AnnouncementsManager } from "@/components/admin/announcements-manager";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -31,12 +33,11 @@ export default async function AnnouncementsPage() {
 
   return (
     <main className="container py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Post chapter-wide updates. Pin urgent ones to the top. Use Broadcast to text/email all brothers.
-        </p>
-      </div>
+      <AdminPageHeader
+        icon={Megaphone}
+        title="Announcements"
+        subtitle="Post chapter-wide updates. Pin urgent ones to the top. Use Broadcast to text/email all members."
+      />
       <AnnouncementsManager initial={serializable as any} />
     </main>
   );
