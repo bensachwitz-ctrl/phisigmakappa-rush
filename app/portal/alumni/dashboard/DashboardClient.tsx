@@ -893,7 +893,7 @@ export default function DashboardClient({
                                       }`}
                                     >
                                       <div
-                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                                           isSelected ? "bg-maroon-200/20" : "bg-maroon-100/5"
                                         }`}
                                         style={{ width: `${pct}%` }}

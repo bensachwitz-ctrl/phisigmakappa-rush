@@ -244,7 +244,7 @@ function PreviewElections() {
               }`}
             >
               <div 
-                className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                   isSelected ? "bg-blue-500/10" : "bg-secondary/20"
                 }`}
                 style={{ width: `${pct}%` }}

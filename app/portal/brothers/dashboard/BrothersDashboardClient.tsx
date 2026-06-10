@@ -1233,8 +1233,10 @@ export default function BrothersDashboardClient({
                 {/* Chore Assignment Card */}
                 <div className={`${PORTAL_CARD} ${PORTAL_LIFT} p-6 md:col-span-1 flex flex-col justify-between`}>
                   <div>
-                    <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2 mb-4">
-                      <Settings className="w-4 h-4 text-maroon-600 animate-spin" style={{ animationDuration: '6s' }} />
+                    <h3 className="group font-bold text-maroon-900 text-lg flex items-center gap-2 mb-4">
+                      {/* Gear spins on hover only — a perpetual decorative spin is
+                          motion-slop that competes for attention + ignores reduced-motion. */}
+                      <Settings className="w-4 h-4 text-maroon-600 transition-transform duration-700 ease-out motion-safe:group-hover:rotate-180" />
                       Chore Wheel Assignment
                     </h3>
                     {chores.length > 0 ? (
@@ -1359,7 +1361,7 @@ export default function BrothersDashboardClient({
                                       }`}
                                     >
                                       <div
-                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                                           isSelected ? "bg-maroon-200/20" : "bg-maroon-100/5"
                                         }`}
                                         style={{ width: `${pct}%` }}
@@ -2282,7 +2284,7 @@ export default function BrothersDashboardClient({
                                 >
                                   {/* Vote Percentage progress overlay */}
                                   <div
-                                    className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                                    className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                                       isSelected ? "bg-maroon-200/25" : "bg-maroon-100/10"
                                     }`}
                                     style={{ width: `${pct}%` }}
@@ -2565,7 +2567,7 @@ export default function BrothersDashboardClient({
                           }`}
                         >
                           <div
-                            className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                            className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                               isSelected ? "bg-maroon-200/25" : "bg-maroon-100/10"
                             }`}
                             style={{ width: `${pct}%` }}
