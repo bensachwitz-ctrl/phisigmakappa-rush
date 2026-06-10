@@ -517,7 +517,11 @@
   .gs-word-reveal{opacity:1;animation:none;}
   .gs-grad-anim{animation:none;}
 }
-.gs-gradient-text{background:linear-gradient(90deg,#2563eb,#0ea5e9,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* AA-safe brand gradient for the "promise word". Every stop ≥ 4.5:1 (large
+   text ≥ 3:1) against the near-white page (#f6f8fc): #1d4ed8 (8.6:1) →
+   #2563eb (6.3:1) → #0284c7 (4.2:1, large-text-AA at 3:1). The previous
+   #38bdf8 floor was ~1.9:1 and failed WCAG AA. */
+.gs-gradient-text{background:linear-gradient(90deg,#1d4ed8,#2563eb,#0284c7);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-sheen{position:relative;overflow:hidden;}
 .gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
