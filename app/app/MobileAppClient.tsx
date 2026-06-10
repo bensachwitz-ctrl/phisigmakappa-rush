@@ -1359,23 +1359,27 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {/* Website — icon-only on the narrowest phones, labeled from sm+. */}
           <button
             onClick={() => window.location.href = "/"}
-            className="px-2.5 py-1.5 text-[12px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
+            aria-label="Back to website"
+            className="press flex h-9 items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 text-[12px] font-semibold text-white transition hover:bg-white/10"
           >
-            Website
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline sm:inline">Website</span>
           </button>
           {/* Sign in — a real chapter member taps here to log into their live
               account (this screen is the demo). */}
           <button
             onClick={() => window.location.href = "/login"}
-            className="px-2.5 py-1.5 text-[12px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
+            className="press hidden h-9 items-center rounded-lg border border-white/10 bg-white/5 px-2.5 text-[12px] font-semibold text-white transition hover:bg-white/10 xs:flex"
           >
             Sign in
           </button>
           <button
             onClick={() => setShowPricingModal(true)}
-            className="px-2.5 py-1.5 text-[12px] font-bold text-slate-950 bg-gradient-to-r from-blue-400 to-sky-400 hover:opacity-90 rounded-lg transition"
+            className="press h-9 rounded-lg px-3 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
+            style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})` }}
           >
             Launch
           </button>
