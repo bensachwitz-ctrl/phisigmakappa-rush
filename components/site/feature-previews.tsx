@@ -3,6 +3,41 @@
 import * as React from "react";
 import { IconCheck, IconSpark } from "@/components/brand/icons";
 
+/**
+ * IconTapCue — a tiny bespoke "try this" pointer-tap glyph that prefixes the
+ * interactive demo hints, replacing the generic 💡 lightbulb emoji (AI-slop).
+ * Single-stroke, inherits currentColor, sits on the brand-blue hint text so the
+ * cue reads as one deliberate family with the rest of the icon system.
+ */
+function IconTapCue({ className = "h-3 w-3" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M9 11V6a2 2 0 0 1 4 0v5" />
+      <path d="M13 11V8.5a1.8 1.8 0 0 1 3.6 0V12" />
+      <path d="M16.6 11.5a1.8 1.8 0 0 1 3.4.9v3.1a5 5 0 0 1-5 5h-2.2a4 4 0 0 1-2.9-1.2l-3.6-3.7a1.8 1.8 0 0 1 2.6-2.5L9.6 14" />
+    </svg>
+  );
+}
+
+/** A hint row: the tap cue + interactive instruction, in brand blue. */
+function DemoHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-3 flex items-center gap-1.5 text-[10px] font-medium italic text-blue-600/90">
+      <IconTapCue className="h-3 w-3 shrink-0 not-italic" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
 function IconVote({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg
@@ -119,7 +154,7 @@ export function PreviewRecruitment() {
   return (
     <Panel className="ring-1 ring-blue-500/10">
       <MiniHeader title="Rush Pipeline" badge="Funnel Simulator" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Tap any PNM avatar card to advance them through the stages.</p>
+      <DemoHint>Tap any PNM avatar card to advance them through the stages.</DemoHint>
       <div className="grid grid-cols-3 gap-2">
         {cols.map((col) => (
           <div key={col.name} className="rounded-lg border border-border bg-secondary/30 p-2">
@@ -198,7 +233,7 @@ export function PreviewDues() {
   return (
     <Panel className="ring-1 ring-emerald-500/10">
       <MiniHeader title="Dues Collection" badge={`${pct}% Collected`} />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Click "Due" status tags to reconcile payments via Stripe instantly.</p>
+      <DemoHint>Click "Due" status tags to reconcile payments via Stripe instantly.</DemoHint>
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-xl border border-border bg-secondary/30 p-2.5">
           <span className="block text-[9px] uppercase font-bold text-muted-foreground">Collected</span>
@@ -266,7 +301,7 @@ export function PreviewEvents() {
   return (
     <Panel className="ring-1 ring-blue-500/10">
       <MiniHeader title="Weekly Chapter Schedule" badge="Sync Active" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Toggle RSVP status on events to simulate active member headcounts.</p>
+      <DemoHint>Toggle RSVP status on events to simulate active member headcounts.</DemoHint>
       <div className="grid grid-cols-7 gap-1">
         {days.map((d, i) => (
           <div
@@ -381,7 +416,7 @@ export function PreviewWhiteLabel() {
   return (
     <Panel className="ring-1 ring-blue-500/10">
       <MiniHeader title="White-Label Branding" badge="Theme Editor" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Try customization: select color swatches or type customized Greek letters below.</p>
+      <DemoHint>Try customization: select color swatches or type customized Greek letters below.</DemoHint>
       <div className="grid grid-cols-[1fr_1.1fr] gap-3">
         <div className="space-y-3">
           <div>
@@ -485,7 +520,7 @@ export function PreviewAnnouncements() {
   return (
     <Panel className="ring-1 ring-blue-500/10">
       <MiniHeader title="Chapter Announcements" badge="Interactive Feed" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Test inline surveys directly inside notices in the timelines.</p>
+      <DemoHint>Test inline surveys directly inside notices in the timelines.</DemoHint>
       
       <div className="space-y-3">
         <div className="p-3.5 rounded-xl border border-border bg-card shadow-sm space-y-3 text-left">
@@ -580,7 +615,7 @@ export function PreviewAlumni() {
   return (
     <Panel className="ring-1 ring-amber-500/10">
       <MiniHeader title="Alumni Relations" badge="Directory Active" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Click the "Donate" action to simulate an online alumni giving micro-transaction.</p>
+      <DemoHint>Click the "Donate" action to simulate an online alumni giving micro-transaction.</DemoHint>
       
       <div className="rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/10 to-amber-400/[0.02] p-3 mb-3">
         <div className="flex justify-between items-start">
@@ -666,7 +701,7 @@ export function PreviewTreasury() {
   return (
     <Panel className="ring-1 ring-blue-500/10">
       <MiniHeader title="Treasury Control" badge="Budget Ledger" />
-      <p className="text-[10px] text-muted-foreground mb-3 italic">💡 Tap "+ Expense" to simulate a dynamic social billing invoice.</p>
+      <DemoHint>Tap "+ Expense" to simulate a dynamic social billing invoice.</DemoHint>
       
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-xl border border-border bg-secondary/30 p-2.5">

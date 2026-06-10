@@ -143,6 +143,28 @@ function GreekKey({
   );
 }
 
+/* Bespoke "tap to try" pointer cue — replaces the generic 💡 emoji that prefixed
+   the interactive demo hint. Single-stroke, inherits currentColor (brand blue),
+   one deliberate family with the rest of the icon system. */
+function IconCursorTap({ className = "h-3 w-3" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M9 11V6a2 2 0 0 1 4 0v5" />
+      <path d="M13 11V8.5a1.8 1.8 0 0 1 3.6 0V12" />
+      <path d="M16.6 11.5a1.8 1.8 0 0 1 3.4.9v3.1a5 5 0 0 1-5 5h-2.2a4 4 0 0 1-2.9-1.2l-3.6-3.7a1.8 1.8 0 0 1 2.6-2.5L9.6 14" />
+    </svg>
+  );
+}
+
 /* In-app preview mockup for the Officer Elections feature. Built from divs in the
    exact visual language of components/site/feature-previews.tsx (royal-blue / sky
    / gold, never purple; every pixel a div so it stays crisp and adds no network
@@ -217,7 +239,7 @@ function PreviewElections() {
         <span className="text-[10px] font-medium text-blue-800">Secret ballot — votes aren&apos;t linked to voters</span>
       </div>
 
-      <p className="text-[9px] text-muted-foreground mt-2 italic">💡 Tap a candidate row below to cast a simulated anonymous vote.</p>
+      <p className="mt-2 flex items-center gap-1.5 text-[9px] font-medium italic text-blue-600/90"><IconCursorTap className="h-3 w-3 shrink-0 not-italic" /><span>Tap a candidate row below to cast a simulated anonymous vote.</span></p>
 
       <div className="mt-2.5 space-y-2">
         {candidates.map((c, i) => {
