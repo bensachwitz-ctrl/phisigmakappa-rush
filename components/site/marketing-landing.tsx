@@ -1065,7 +1065,7 @@ function Hero() {
               brand-gradient accent word continuously panning. No pill, per owner
               request ("just bold letters with a nice reveal"). SSR-safe (text is in
               the markup) + reduced-motion-safe (see globals.css). */}
-          <p className="flex flex-wrap items-center justify-center gap-x-[0.5em] gap-y-1 text-base font-extrabold uppercase leading-none tracking-[0.2em] text-slate-900 sm:text-lg">
+          <p className="flex flex-wrap items-center justify-center gap-x-[0.5em] gap-y-1 text-sm font-extrabold uppercase leading-none tracking-[0.14em] text-slate-900 xs:text-base sm:text-lg sm:tracking-[0.2em]">
             {["The", "white-label", "Greek-life", "platform"].map((w, i) => (
               <span
                 key={w}
@@ -1084,7 +1084,7 @@ function Hero() {
               with a typewriter line layered on top that cycles the value props
               then settles. The static line below the gradient phrase carries
               the meaning even if JS never runs. */}
-          <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.06] tracking-tight animate-slide-up [animation-delay:120ms] sm:text-6xl">
+          <h1 className="gs-hero-h1 mt-6 text-balance font-bold tracking-tight animate-slide-up [animation-delay:120ms]">
             <span className="block">
               <TypewriterCycle
                 phrases={HERO_PHRASES}
@@ -1105,10 +1105,14 @@ function Hero() {
             letters and colors, live the same day.
           </p>
 
+          {/* The two CTAs share ONE size system: both size="xl" (h-14) and both
+              sm:min-w-[16rem] so they render at the EXACT same height AND width on
+              desktop (the primary's ShimmerBorder ring is an inset:0 overlay — it
+              adds no layout size). Stacked full-width on mobile. */}
           <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
             <Magnetic className="w-full sm:w-auto">
               <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
+                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[16rem]">
                   <Link href="/onboard" className="group/btn">
                     Launch your chapter — free
                     <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -1116,7 +1120,7 @@ function Hero() {
                 </Button>
               </ShimmerBorder>
             </Magnetic>
-            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto sm:min-w-[16rem] border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
               <Link href="/app?demo=true">Interactive Demo</Link>
             </Button>
           </div>

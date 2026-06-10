@@ -522,6 +522,15 @@
    #2563eb (6.3:1) → #0284c7 (4.2:1, large-text-AA at 3:1). The previous
    #38bdf8 floor was ~1.9:1 and failed WCAG AA. */
 .gs-gradient-text{background:linear-gradient(90deg,#1d4ed8,#2563eb,#0284c7);-webkit-background-clip:text;background-clip:text;color:transparent;}
+/* Fluid hero headline — scales SMOOTHLY from phones to desktop instead of
+   stepping from text-4xl → text-6xl at the 640px breakpoint (the old step left
+   an awkward band where the long typed phrase clipped off the right edge). The
+   clamp floor (1.9rem) is small enough that even "Collect dues, automatically."
+   fits a 320px viewport; the ceiling (3.75rem) matches the prior sm:text-6xl on
+   desktop. Words can break so a single long token never forces horizontal
+   overflow. Pairs with overflow-wrap below. */
+.gs-hero-h1{font-size:clamp(1.9rem,7.2vw,3.75rem);line-height:1.06;}
+.gs-hero-h1,.gs-hero-h1 *{overflow-wrap:break-word;word-break:break-word;}
 .gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-sheen{position:relative;overflow:hidden;}
 .gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
