@@ -12,14 +12,17 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-sm hover:bg-phisig-red-dark active:scale-[0.98]",
+        // Every pressable variant gets tactile press feedback (active:scale ~0.98
+        // — Emil Kowalski's scale-on-press) so taps "give" under the finger; the
+        // micro-lift on outline hover matches the filled variants' language.
         outline:
-          "border border-border bg-background hover:bg-secondary",
-        ghost: "hover:bg-secondary",
+          "border border-border bg-background hover:border-blue-500/40 hover:bg-secondary hover:-translate-y-px active:translate-y-0 active:scale-[0.98]",
+        ghost: "hover:bg-secondary active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98]",
         gradient:
           "bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 hover:shadow-xl hover:shadow-phisig-red/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
         // CUSTOM premium platform button — royal-blue → sky vertical gradient

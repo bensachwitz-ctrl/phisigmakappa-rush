@@ -1026,7 +1026,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   key={l.href}
                   href={l.href}
                   onClick={onClose}
-                  className="group flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                  className="group flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary active:scale-[0.99] active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                 >
                   {l.label}
                   <IconArrowRight className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -1042,7 +1042,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="w-full text-blue-600 border-blue-500/20 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
-                <Link href="/app?demo=true" onClick={onClose}>Interactive Demo</Link>
+                <Link href="/app?demo=true&pick=1" onClick={onClose}>See the demo as your chapter</Link>
               </Button>
               <div className="grid grid-cols-2 gap-2.5">
                 <Button asChild variant="outline" size="lg" className="w-full">
@@ -1745,9 +1745,21 @@ function FeatureCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       aria-haspopup="dialog"
       aria-label={`${title} — see details and an in-app preview`}
-      className="group relative flex h-full w-full overflow-hidden rounded-3xl gs-glass p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
+      // Keyboard path: Enter/Space synthesize a click, which bubbles up to the
+      // wrapping <Tilt3DCard onClick> — so the modal opens without a mouse.
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.currentTarget.click();
+        }
+      }}
+      // active:scale gives the tap a tactile "give" — the only press feedback
+      // touch users get, since the 3D tilt layer is desktop-only.
+      className="group relative flex h-full w-full overflow-hidden rounded-3xl gs-glass p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
     >
       {/* Thin gradient top-edge that lights up on hover (blue→sky→gold). */}
       <div
@@ -2595,7 +2607,7 @@ function Faq() {
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       onClick={() => setOpen((cur) => (cur === i ? -1 : i))}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold tracking-tight text-foreground transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:px-6 sm:text-base"
+                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold tracking-tight text-foreground transition-colors hover:bg-blue-500/[0.04] hover:text-blue-700 active:bg-blue-500/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:px-6 sm:text-base"
                     >
                       <span>{item.q}</span>
                       <span
