@@ -481,15 +481,18 @@ export default async function ChapterLandingPage({
             <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
               {cfg["hero.subline"]}
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            {/* Equal-width CTA pair (owner round-5): stacked (<md) both fill
+                the same max-w-[22rem] column; in a row (md+) the w-fit grid +
+                auto-cols-fr sizes BOTH columns to the wider button. */}
+            <div className="mt-7 grid w-full max-w-[22rem] grid-cols-1 items-center gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
               {/* Primary rush CTA — magnetic pull toward the cursor, now ringed
                   by a slow CHAPTER-brand shimmer (BrandShimmer) that blooms on
                   hover so the conversion action glows. The real <Link> stays
                   focusable/navigable inside; both magnetism and the shimmer spin
                   are inert for keyboard + reduced-motion users. */}
-              <Magnetic strength={16} innerStrength={5}>
-                <BrandShimmer className="rounded-full">
-                  <Button asChild variant="gradient" size="xl" className="group cta-shine press">
+              <Magnetic strength={16} innerStrength={5} className="w-full">
+                <BrandShimmer className="w-full rounded-full">
+                  <Button asChild variant="gradient" size="xl" className="group cta-shine press w-full">
                     <Link href={cfg["hero.cta.href"] || "#register"}>
                       {cfg["hero.cta.label"] || "Get on the interest list"}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
@@ -497,8 +500,8 @@ export default async function ChapterLandingPage({
                   </Button>
                 </BrandShimmer>
               </Magnetic>
-              <Magnetic strength={10} innerStrength={3}>
-                <Button asChild variant="outline" size="xl" className="press bg-white/70 backdrop-blur">
+              <Magnetic strength={10} innerStrength={3} className="w-full">
+                <Button asChild variant="outline" size="xl" className="press w-full bg-white/70 backdrop-blur">
                   <Link href="#about">About the chapter</Link>
                 </Button>
               </Magnetic>
@@ -1369,18 +1372,19 @@ export default async function ChapterLandingPage({
             <p className="mt-3 text-white/95 max-w-md text-base sm:text-lg leading-relaxed">
               Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            {/* Equal-width CTA pair — same grid system as the hero pair. */}
+            <div className="mt-8 grid w-full max-w-[22rem] grid-cols-1 gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
               {/* Primary final CTA — magnetic. Real <Link> inside stays intact. */}
-              <Magnetic strength={18} innerStrength={5}>
-                <Button asChild size="xl" variant="secondary" className="group cta-shine press">
+              <Magnetic strength={18} innerStrength={5} className="w-full">
+                <Button asChild size="xl" variant="secondary" className="group cta-shine press w-full">
                   <Link href={cfg["hero.cta.href"] || "#register"}>
                     Sign me up
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                   </Link>
                 </Button>
               </Magnetic>
-              <Magnetic strength={10} innerStrength={3}>
-                <Button asChild size="xl" variant="outline" className="border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
+              <Magnetic strength={10} innerStrength={3} className="w-full">
+                <Button asChild size="xl" variant="outline" className="w-full border-white/40 text-white bg-white/5 hover:bg-white/15 hover:text-white press">
                   <Link href={cleanUrl(cfg["contact.instagramUrl"])} target="_blank">
                     <Instagram className="h-4 w-4" aria-hidden="true" /> Follow us
                   </Link>

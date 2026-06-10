@@ -103,13 +103,13 @@ export function BidResponseForm({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+    <div className="mx-auto grid w-full max-w-[22rem] grid-cols-1 gap-3 sm:w-fit sm:max-w-none sm:grid-flow-col sm:auto-cols-fr">
       <Button
         type="button"
         size="lg"
         onClick={() => respond("ACCEPTED")}
         disabled={busy !== null}
-        className="press flex-1 sm:flex-none sm:min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white"
+        className="press w-full bg-emerald-600 hover:bg-emerald-700 text-white"
       >
         {busy === "ACCEPTED"
           ? <><Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> Accepting…</>
@@ -121,7 +121,7 @@ export function BidResponseForm({
         variant="outline"
         onClick={() => setDeclineMode(true)}
         disabled={busy !== null}
-        className="press flex-1 sm:flex-none sm:min-w-[200px]"
+        className="press w-full"
       >
         <XCircle className="h-5 w-5" aria-hidden="true" /> Decline
       </Button>

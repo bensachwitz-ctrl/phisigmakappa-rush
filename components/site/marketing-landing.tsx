@@ -1136,14 +1136,16 @@ function Hero() {
             letters and colors, live the same day.
           </p>
 
-          {/* The two CTAs share ONE size system: both size="xl" (h-14) and both
-              sm:min-w-[19rem] so they render at the EXACT same height AND width on
-              desktop (the primary's ShimmerBorder ring is an inset:0 overlay — it
-              adds no layout size). Stacked full-width on mobile. */}
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
-            <Magnetic className="w-full sm:w-auto">
-              <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[19rem]">
+          {/* The two CTAs render at IDENTICAL width at EVERY viewport (owner
+              round-5): stacked (<md) both fill the same max-w-[22rem] column;
+              in a row (md+) the grid is w-fit with auto-cols-fr, so both
+              columns resolve to the width of the WIDER button — min-width
+              alone let the longer label stretch one of the pair. Both are
+              size="xl" (h-14) so heights match too. */}
+          <div className="mx-auto mt-10 grid w-full max-w-[22rem] grid-cols-1 gap-3 animate-slide-up [animation-delay:280ms] md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
+            <Magnetic className="w-full">
+              <ShimmerBorder rounded="rounded-xl" className="w-full">
+                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
                   <Link href="/onboard" className="group/btn">
                     Launch your chapter — free
                     <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -1154,7 +1156,7 @@ function Hero() {
             {/* Value-forward demo CTA: says what the visitor GETS (the app as
                 their chapter), and deep-links straight to the chooser so the
                 reskin moment is literally one click from arrival. */}
-            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto sm:min-w-[19rem] border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+            <Button asChild variant="outline" size="xl" className="w-full border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
               <Link href="/app?demo=true&pick=1">See the demo as your chapter</Link>
             </Button>
           </div>
@@ -1533,10 +1535,10 @@ function DemoShowcase() {
 
         {/* The two paths out of this beat: TRY it (primary — deep-links straight
             to the demo's chapter chooser) or LAUNCH it (quiet secondary). */}
-        <Reveal delay={120} className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Magnetic className="w-full sm:w-auto">
-            <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-              <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full sm:w-auto">
+        <Reveal delay={120} className="mx-auto mt-10 grid w-full max-w-[22rem] grid-cols-1 gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
+          <Magnetic className="w-full">
+            <ShimmerBorder rounded="rounded-xl" className="w-full">
+              <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full">
                 <Link href="/app?demo=true&pick=1" className="group/btn">
                   Try it with your chapter — free demo
                   <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -1544,7 +1546,7 @@ function DemoShowcase() {
               </Button>
             </ShimmerBorder>
           </Magnetic>
-          <Button asChild variant="outline" size="lg" className="w-full border-blue-500/30 font-semibold text-blue-700 hover:bg-blue-50/50 hover:text-blue-800 sm:w-auto">
+          <Button asChild variant="outline" size="lg" className="w-full border-blue-500/30 font-semibold text-blue-700 hover:bg-blue-50/50 hover:text-blue-800">
             <Link href="/onboard">Skip ahead — launch for real</Link>
           </Button>
         </Reveal>
@@ -2359,14 +2361,14 @@ function Pricing() {
             {" "}(2.9% + 30&cent;) with <span className="font-semibold text-foreground">zero Greekstack markup</span>{" "}
             on dues or donations. Not sure which model fits? Talk it through with the owner.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+          <div className="mx-auto mt-6 grid w-full max-w-[22rem] grid-cols-1 gap-3 sm:w-fit sm:max-w-none sm:grid-flow-col sm:auto-cols-fr">
+            <Button asChild variant="outline" size="lg" className="w-full">
               <Link href="/contact" className="group/btn">
                 <IconTalkToSales className="h-5 w-5 text-blue-700" />
                 Talk to sales
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button asChild variant="outline" size="lg" className="w-full">
               <Link href="/contact#book" className="group/btn">
                 <IconBookCall className="h-5 w-5 text-blue-700" />
                 Book a 15-min call
@@ -2806,10 +2808,12 @@ function FinalCta() {
               Spin up a fully-branded recruitment and management site the same day. No setup fee, no
               developer, cancel anytime.
             </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Magnetic strength={22} className="w-full sm:w-auto">
-                <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[19rem]">
+            {/* Equal-width CTA pair — same grid system as the hero pair: both
+                buttons share one rendered width at every viewport. */}
+            <div className="mx-auto mt-9 grid w-full max-w-[22rem] grid-cols-1 gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
+              <Magnetic strength={22} className="w-full">
+                <ShimmerBorder rounded="rounded-xl" className="w-full">
+                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
                     <Link href="/onboard" className="group/btn">
                       Launch your chapter — free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -2817,7 +2821,7 @@ function FinalCta() {
                   </Button>
                 </ShimmerBorder>
               </Magnetic>
-              <Button asChild variant="glass" size="xl" className="w-full sm:w-auto sm:min-w-[19rem]">
+              <Button asChild variant="glass" size="xl" className="w-full">
                 <Link href="/contact#book" className="group/btn">
                   <IconBookCall className="h-5 w-5" />
                   Book a call

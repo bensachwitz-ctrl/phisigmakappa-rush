@@ -253,8 +253,10 @@ export function FeatureDetailModal({
                   ))}
                 </ul>
 
-                <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
-                  <Button asChild variant="platform" size="lg" className="gs-sheen w-full sm:w-auto">
+                {/* Equal-width CTA pair: stacked both fill the column; in a row
+                    the w-fit grid + auto-cols-fr sizes both to the wider one. */}
+                <div className="mt-7 grid w-full grid-cols-1 gap-2.5 sm:w-fit sm:grid-flow-col sm:auto-cols-fr">
+                  <Button asChild variant="platform" size="lg" className="gs-sheen w-full">
                     <Link href="/onboard" className="group/btn">
                       Start free
                       <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
@@ -263,7 +265,7 @@ export function FeatureDetailModal({
                   {/* The preview beside this is a mockup — the demo is the real
                       thing, so the secondary path goes there (fewest clicks from
                       "interested in this feature" to "using this feature"). */}
-                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                  <Button asChild variant="outline" size="lg" className="w-full">
                     <Link href="/app?demo=true">Try it live in the demo</Link>
                   </Button>
                 </div>
