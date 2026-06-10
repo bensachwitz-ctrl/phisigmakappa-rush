@@ -1402,7 +1402,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
   return (
     <div
-      className="relative flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-14 font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
+      className="relative flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-[calc(3.5rem+env(safe-area-inset-top))] font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
       style={{
         // Deep brand-tinted radial wash → near-black, so the shell reads as the
         // chapter's world. Transitions smoothly when the chapter changes.
@@ -1433,7 +1433,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       {isDesktopShowcase && <WebGLBackground />}
 
       {/* Mobile-Friendly Sticky Top Header (Shown under lg viewports) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-950/80 backdrop-blur-md border-b border-white/10 px-4 flex items-center justify-between z-[150] select-none">
+      {/* Fixed top chrome. h-14 content height + an env(safe-area-inset-top) pad
+          so on a notched iPhone in the native shell (contentInset: never) the bar
+          clears the status bar / Dynamic Island instead of rendering under it.
+          box-content keeps the 3.5rem content height exact above the inset. */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 box-content pt-[env(safe-area-inset-top)] bg-slate-950/80 backdrop-blur-md border-b border-white/10 px-4 flex items-center justify-between z-[150] select-none">
         <div className="flex items-center gap-2">
           <img src="/brand/greekstack-mark.png?v=2" className="w-8 h-8 rounded-lg object-contain shadow-md" alt="Greekstack Logo" />
           <div>

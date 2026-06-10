@@ -334,6 +334,46 @@
   transform: scale(0.97);
 }
 
+/* ── Native WebView polish (Greek Stack iOS Capacitor shell) ──────────────────
+   Makes the hosted /app feel like a native app inside the WKWebView instead of a
+   web page. Scoped to TOUCH devices (@media pointer: coarse) so desktop mouse
+   users are unaffected — and to mobile Safari it's an upgrade too, not a regression.
+   • Kill the grey tap-flash Chromium/WebKit paints on every touch.
+   • Stop iOS from auto-inflating text on rotate.
+   • Suppress the long-press text/callout/selection menu on non-text controls
+     (buttons, nav, cards) — text inputs + content stay selectable below.
+   • Contain overscroll so a rubber-band at the top doesn't bounce the whole shell. */
+@media (pointer: coarse) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  button,
+  a,
+  [role="button"],
+  .press {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Keep real content + form fields selectable/editable. */
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  p,
+  li,
+  span.selectable {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 /* Bounce-on-arrive — small overshoot on entry. Use for sticky CTA that
    slides in after scroll, success cards, and toast confirmations. */
 @keyframes spring-in {
