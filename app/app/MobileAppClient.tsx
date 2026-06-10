@@ -465,6 +465,14 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       setRole("brother");
       setIsDemo(true);
       setDashboardData(getMockDemoData(demoTenant, brand));
+      // ?pick=1 — the landing page's "see YOUR chapter" deep link: open the
+      // chapter chooser overlay immediately over the running demo, so the very
+      // first thing the visitor does is make the app theirs (one action from
+      // arrival → reskin moment). Dismissible via the chooser's Close button.
+      if (params.get("pick") === "1") {
+        setChooserMode("pick");
+        setShowChapterChooser(true);
+      }
       setLoading(false);
       return;
     }

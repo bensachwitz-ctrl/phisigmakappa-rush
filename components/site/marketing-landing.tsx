@@ -1151,8 +1151,11 @@ function Hero() {
                 </Button>
               </ShimmerBorder>
             </Magnetic>
+            {/* Value-forward demo CTA: says what the visitor GETS (the app as
+                their chapter), and deep-links straight to the chooser so the
+                reskin moment is literally one click from arrival. */}
             <Button asChild variant="outline" size="xl" className="w-full sm:w-auto sm:min-w-[19rem] border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
-              <Link href="/app?demo=true">Interactive Demo</Link>
+              <Link href="/app?demo=true&pick=1">See the demo as your chapter</Link>
             </Button>
           </div>
 
@@ -1278,7 +1281,37 @@ function Hero() {
           />
           <Parallax translateY={36} className="[perspective:1200px]">
             <Tilt3DCard max={7} glareColor="rgba(37,99,235,0.30)" className="rounded-2xl">
-              <ProductPreview />
+              {/* The mockup IS a door: the whole panel links into the live demo
+                  (it contains no interactive elements of its own, so wrapping it
+                  is safe). A persistent "Live demo" chip marks it as clickable
+                  on touch, and a hover/focus pill invites the click on desktop. */}
+              <Link
+                href="/app?demo=true"
+                aria-label="Open the interactive demo"
+                className="group/preview relative block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2"
+              >
+                <ProductPreview />
+                {/* Always-visible affordance chip (touch devices get no hover). */}
+                <span
+                  aria-hidden="true"
+                  className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,0.55)] ring-1 ring-white/30 sm:right-5 sm:top-5"
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-white/80 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+                  </span>
+                  Live demo
+                </span>
+                {/* Desktop hover/focus invitation — materializes centered. */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-center rounded-2xl bg-blue-950/0 transition-colors duration-300 group-hover/preview:bg-blue-950/[0.06] group-focus-visible/preview:bg-blue-950/[0.06] sm:flex"
+                >
+                  <span className="translate-y-1.5 scale-95 rounded-full bg-white/95 px-5 py-2.5 text-sm font-bold text-blue-700 opacity-0 shadow-[0_18px_40px_-12px_rgba(15,23,42,0.35)] ring-1 ring-blue-500/20 backdrop-blur transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/preview:translate-y-0 group-hover/preview:scale-100 group-hover/preview:opacity-100 group-focus-visible/preview:translate-y-0 group-focus-visible/preview:scale-100 group-focus-visible/preview:opacity-100 motion-reduce:transition-none">
+                    Open the interactive demo &rarr;
+                  </span>
+                </span>
+              </Link>
             </Tilt3DCard>
           </Parallax>
         </Reveal>

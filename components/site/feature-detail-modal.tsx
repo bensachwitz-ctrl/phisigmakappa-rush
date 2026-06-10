@@ -260,10 +260,20 @@ export function FeatureDetailModal({
                       <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                     </Link>
                   </Button>
+                  {/* The preview beside this is a mockup — the demo is the real
+                      thing, so the secondary path goes there (fewest clicks from
+                      "interested in this feature" to "using this feature"). */}
                   <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                    <Link href="/contact">Ask a question</Link>
+                    <Link href="/app?demo=true">Try it live in the demo</Link>
                   </Button>
                 </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Questions instead?{" "}
+                  <Link href="/contact" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+                    Ask the founder
+                  </Link>
+                  .
+                </p>
               </div>
 
               {/* Right: the in-app preview screenshot on a tinted depth panel */}
