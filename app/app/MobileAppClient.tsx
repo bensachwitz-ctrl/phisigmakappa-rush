@@ -79,6 +79,7 @@ import { renderDuesTab } from "./_demo/surfaces/DuesSurface";
 import { renderDirectoryTab } from "./_demo/surfaces/DirectorySurface";
 import { renderSettingsTab } from "./_demo/surfaces/SettingsSurface";
 import { renderSpotlight } from "./_demo/surfaces/SpotlightSurface";
+import { renderExec } from "./_demo/surfaces/ExecSurface";
 import { renderBookingModal } from "./_demo/modals/BookingModal";
 import { renderPricingModal } from "./_demo/modals/PricingModal";
 import { renderToast } from "./_demo/modals/Toast";
@@ -1300,6 +1301,27 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const brandDeep = darkenHex(brandPrimary, 0.62);
   const brandGlyphs = glyphsFromBrand(selectedBrand.letters);
 
+  // ── Per-role bottom nav (feature 3) ──────────────────────────────────────
+  // Member and Officer share the 5 nav SLOTS (so the active-pill geometry is
+  // stable) but show different icons/labels + route to different content.
+  type TabId = "feed" | "events" | "rush" | "dues" | "directory" | "settings";
+  const memberNav: { id: TabId; icon: any; label: string }[] = [
+    { id: "feed", icon: Bell, label: "Feed" },
+    { id: "events", icon: Calendar, label: "Events" },
+    { id: "rush", icon: Users, label: isRushActive ? "Rush" : "Pledges" },
+    { id: "dues", icon: role === "brother" ? DollarSign : Heart, label: role === "brother" ? "Dues" : "Giving" },
+    { id: "directory", icon: Globe, label: "Network" },
+  ];
+  const execNav: { id: TabId; icon: any; label: string }[] = [
+    { id: "feed", icon: Users, label: "Roster" },
+    { id: "events", icon: Bell, label: "Announce" },
+    { id: "rush", icon: TrendingUp, label: "Rush" },
+    { id: "dues", icon: DollarSign, label: "Dues" },
+    { id: "directory", icon: ShieldCheck, label: "Console" },
+  ];
+  const navItems = viewRole === "exec" ? execNav : memberNav;
+  const activeNavIndex = Math.max(0, navItems.findIndex((n) => n.id === activeTab));
+
   return (
     <div
       className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center gap-8 overflow-hidden p-4 pt-20 pb-6 font-sans text-slate-200 md:p-8 lg:flex-row"
@@ -1620,6 +1642,32 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                 </div>
               </div>
 
+              {/* Role-view toggle (feature 3) — always reachable inside the phone
+                  (the desktop sidebar toggle is hidden on mobile). Flips the whole
+                  experience between the member app and the officer console. */}
+              <div className="relative grid shrink-0 grid-cols-2 gap-1 border-b border-slate-100 bg-white px-3 pb-2.5 pt-2">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-2 left-3 w-[calc(50%-0.875rem)] rounded-xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none"
+                  style={{
+                    background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})`,
+                    transform: viewRole === "exec" ? "translateX(calc(100% + 0.25rem))" : "translateX(0)",
+                  }}
+                />
+                <button
+                  onClick={() => { setViewRole("member"); setActiveTab("feed"); }}
+                  className={`press relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${viewRole === "member" ? "text-white" : "text-slate-500"}`}
+                >
+                  <User className="h-4 w-4" /> Member
+                </button>
+                <button
+                  onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
+                  className={`press relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${viewRole === "exec" ? "text-white" : "text-slate-500"}`}
+                >
+                  <Crown className="h-4 w-4" /> Officer
+                </button>
+              </div>
+
               {/* Main Scrollable Viewport */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
@@ -1639,8 +1687,21 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       Return to Login
                     </button>
                   </div>
+                ) : viewRole === "exec" ? (
+                  /* ── OFFICER / EXEC EXPERIENCE (feature 3) ─────────────────
+                     The same 5 nav slots become officer tools; each routes to a
+                     live, interactive admin surface. Keyed on activeTab so tab
+                     swaps cross-fade like the member view. */
+                  <div key={`exec-${activeTab}`} className="animate-spotlight-in">
+                    {activeTab === "feed" && renderExec(ctx, "roster")}
+                    {activeTab === "events" && renderExec(ctx, "announce")}
+                    {activeTab === "rush" && renderExec(ctx, "rush")}
+                    {activeTab === "dues" && renderExec(ctx, "dues")}
+                    {activeTab === "directory" && renderExec(ctx, "settings")}
+                    {activeTab === "settings" && renderSettingsTab(ctx)}
+                  </div>
                 ) : (
-                  <>
+                  <div key={`member-${activeTab}`} className="animate-spotlight-in">
                     {/* A. FEED TAB (Combined News + Job Listings) */}
                     {activeTab === "feed" && renderFeedTab(ctx)}
 
@@ -1658,7 +1719,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
                     {/* F. SETTINGS TAB */}
                     {activeTab === "settings" && renderSettingsTab(ctx)}
-                  </>
+                  </div>
                 )}
 
               </div>
@@ -1688,7 +1749,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                   just above the bottom tab bar so it points at the nav the visitor
                   is exploring. Re-appears with fresh copy on every tab switch
                   until the visitor turns the tour off. */}
-              {isDemo && calloutVisible && !calloutDismissed && DEMO_CALLOUTS[activeTab] && (
+              {isDemo && viewRole === "member" && calloutVisible && !calloutDismissed && DEMO_CALLOUTS[activeTab] && (
                 <div className="absolute inset-x-3 bottom-[4.75rem] z-[60] animate-spring-in">
                   <div className="relative rounded-2xl border border-slate-200 bg-white/95 backdrop-blur p-3 pr-9 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.45)]">
                     {/* little pointer down toward the tab bar */}
@@ -1733,61 +1794,37 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                 </div>
               )}
 
-              {/* Persistent Bottom Tab Bar Navigation */}
-              <div className="h-16 shrink-0 bg-white border-t border-slate-100 flex items-center justify-around px-2 pb-1.5 shadow-lg relative z-10">
-                <button
-                  onClick={() => setActiveTab("feed")}
-                  className="flex flex-col items-center gap-0.5 py-1 px-1 transition-all flex-1 rounded-2xl max-w-[64px]"
-                  style={activeTab === "feed" ? { color: selectedBrand.primaryColor, backgroundColor: selectedBrand.primaryColor + '0d' } : { color: "#94A3B8" }}
-                >
-                  <Bell className="w-5 h-5 shrink-0" />
-                  <span className="text-[9px] font-bold">Feed</span>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("events")}
-                  className="flex flex-col items-center gap-0.5 py-1 px-1 transition-all flex-1 rounded-2xl max-w-[64px]"
-                  style={activeTab === "events" ? { color: selectedBrand.primaryColor, backgroundColor: selectedBrand.primaryColor + '0d' } : { color: "#94A3B8" }}
-                >
-                  <Calendar className="w-5 h-5 shrink-0" />
-                  <span className="text-[9px] font-bold">Events</span>
-                </button>
-
-                  <button
-                    onClick={() => setActiveTab("rush")}
-                    className="flex flex-col items-center gap-0.5 py-1 px-1 transition-all flex-1 rounded-2xl max-w-[64px]"
-                    style={activeTab === "rush" ? { color: selectedBrand.primaryColor, backgroundColor: selectedBrand.primaryColor + '0d' } : { color: "#94A3B8" }}
-                  >
-                    <Users className="w-5 h-5 shrink-0" />
-                    <span className="text-[9px] font-bold">{isRushActive ? "Rush" : "Pledges"}</span>
-                  </button>
-                
-                <button
-                  onClick={() => setActiveTab("dues")}
-                  className="flex flex-col items-center gap-0.5 py-1 px-1 transition-all flex-1 rounded-2xl max-w-[64px]"
-                  style={activeTab === "dues" ? { color: selectedBrand.primaryColor, backgroundColor: selectedBrand.primaryColor + '0d' } : { color: "#94A3B8" }}
-                >
-                  {role === "brother" ? (
-                    <>
-                      <DollarSign className="w-5 h-5 shrink-0" />
-                      <span className="text-[9px] font-bold">Dues</span>
-                    </>
-                  ) : (
-                    <>
-                      <Heart className="w-5 h-5 shrink-0" />
-                      <span className="text-[9px] font-bold">Giving</span>
-                    </>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("directory")}
-                  className="flex flex-col items-center gap-0.5 py-1 px-1 transition-all flex-1 rounded-2xl max-w-[64px]"
-                  style={activeTab === "directory" ? { color: selectedBrand.primaryColor, backgroundColor: selectedBrand.primaryColor + '0d' } : { color: "#94A3B8" }}
-                >
-                  <Globe className="w-5 h-5 shrink-0" />
-                  <span className="text-[9px] font-bold">Network</span>
-                </button>
+              {/* Persistent Bottom Tab Bar Navigation — data-driven per role,
+                  with a spring active-pill that slides between slots + ≥44px
+                  touch targets + safe-area padding for the full-bleed mobile shell. */}
+              <div className="relative z-10 grid shrink-0 grid-cols-5 items-stretch border-t border-slate-100 bg-white px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)]">
+                {/* Sliding brand active-pill behind the icons. */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-1.5 top-1.5 rounded-2xl transition-transform duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
+                  style={{
+                    width: "calc(20% - 0.5rem)",
+                    left: "0.25rem",
+                    transform: `translateX(calc(${activeNavIndex} * (100% + 0.5rem)))`,
+                    backgroundColor: brandPrimary + "14",
+                  }}
+                />
+                {navItems.map((n) => {
+                  const Icon = n.icon;
+                  const active = activeTab === n.id;
+                  return (
+                    <button
+                      key={n.id}
+                      onClick={() => setActiveTab(n.id)}
+                      aria-current={active ? "page" : undefined}
+                      className="press relative z-10 flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-2xl transition-colors"
+                      style={{ color: active ? brandPrimary : "#94A3B8" }}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" strokeWidth={active ? 2.4 : 2} />
+                      <span className="text-[11px] font-bold leading-none">{n.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
             </div>
