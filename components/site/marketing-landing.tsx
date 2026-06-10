@@ -333,12 +333,17 @@ function PreviewElections() {
    light); the glass surfaces keep AA text contrast.
 ──────────────────────────────────────────────────────────────────────── */
 
+/* Ordered to MATCH the page's scroll order (how → features → proof → pricing →
+   faq) so the nav doubles as a table of contents for the narrative. The
+   interactive-demo path is NOT an inline link here because it already owns a
+   permanent, bolder slot in the header actions (the "Demo" button) — six links
+   is also the measured max that fits the xl inline band without crowding. */
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
   { href: "#how", label: "How it works" },
+  { href: "#features", label: "Features" },
+  { href: "#proof", label: "Why Greekstack" },
   { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
-  { href: "#proof", label: "Why Greekstack" },
   // Real route (not an in-page anchor) — SiteNav/SiteFooter render every entry
   // through next/link, which handles "/"-prefixed hrefs and "#" anchors alike.
   { href: "/contact", label: "Contact" },
@@ -589,23 +594,20 @@ const HERO_SETTLE = "Run your whole chapter.";
    of TRUE platform claims a buyer actually cares about. Each is a real, defensible
    statement (Stripe payouts, tenant isolation, compliance, no per-seat pricing,
    the councils served). */
+/* The old static four-tile TrustBar repeated these same claims a second time
+   directly under this band (Stripe ↔ Stripe, tenant isolation ↔ tenant
+   isolation, TCPA ↔ TCPA) — two stacked trust bands answering the same
+   question. It was removed and its ONE unique claim (custom subdomain) was
+   folded in here, so the page spends that scroll beat showing the product
+   instead (see <DemoShowcase>). */
 const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
   { icon: IconPayout, label: "Stripe-powered payouts" },
   { icon: IconSecurity, label: "Tenant-isolated data" },
   { icon: IconShieldCheck, label: "TCPA / A2P 10DLC compliant" },
   { icon: IconUnlimited, label: "Unlimited members — never per-seat" },
+  { icon: IconSubdomain, label: "Custom subdomain per chapter" },
   { icon: IconMembers, label: "Fraternities & sororities" },
   { icon: IconRoles, label: "IFC · Panhellenic · NPHC" },
-];
-
-/* Trust band tiles — the four load-bearing trust claims shown beneath the hero,
-   now rendered with the bespoke glassy Greek-life icon tiles (custom character)
-   instead of generic line-icon chips. */
-const TRUST_BAND: { img: string; label: string }[] = [
-  { img: "feat-branding", label: "Custom subdomain per chapter" },
-  { img: "feat-portal", label: "Isolated, secure tenant data" },
-  { img: "feat-dues", label: "Stripe dues & payouts built in" },
-  { img: "gl-gavel", label: "TCPA-compliant SMS & audit trail" },
 ];
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
@@ -764,16 +766,23 @@ export default function MarketingLandingPage() {
       <GreekLetterField />
       <ScrollProgressBar />
       <SiteNav />
+      {/* NARRATIVE ORDER — each scroll beat answers the next natural question:
+          Hero ("what is this?") → GlyphMarquee ("can I trust it?") →
+          DemoShowcase ("show me — as MY chapter") → HowItWorks ("how do I get
+          it?") → Features ("what's included?") → BeforeAfter ("why switch?") →
+          Proof ("who's behind it / what do I get?") → Pricing ("what does it
+          cost?") → Faq (last objections) → FinalCta (close). The interactive
+          demo + launch paths recur tastefully at the end of every major beat. */}
       <main id="main" className="relative z-10">
         <Hero />
         <GlyphMarquee />
-        <TrustBar />
+        <DemoShowcase />
+        <HowItWorks />
         <Features />
         <BeforeAfter />
-        <HowItWorks />
+        <Proof />
         <Pricing />
         <Faq />
-        <Proof />
         <FinalCta />
       </main>
       <SiteFooter />
@@ -1277,8 +1286,8 @@ function Hero() {
         {/* Bouncing scroll cue. */}
         <div className="mt-12 flex justify-center animate-slide-up [animation-delay:480ms]">
           <Link
-            href="#features"
-            aria-label="Scroll to features"
+            href="#demo"
+            aria-label="Scroll to the live demo showcase"
             className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-blue-600"
           >
             <span className="uppercase tracking-[0.18em]">Scroll</span>
@@ -1455,29 +1464,63 @@ function GlyphMarquee() {
   );
 }
 
-/* ─────────────────────────── Trust bar ─────────────────────────── */
-
-function TrustBar() {
+/* ─────────────────── Demo showcase — "see it as YOUR chapter" ───────────────────
+   The page's second beat: right after the hook, SHOW the product re-skinning
+   itself live (the auto-cycling BrandItDemo), then hand the visitor the keys —
+   one primary CTA into the interactive demo (deep-linked straight to the
+   chapter chooser so "see YOUR chapter" is literally the first thing they do)
+   and a quiet launch link for the already-convinced. Extracted from the old
+   HowItWorks placement where it sat below the fold of its own section. */
+function DemoShowcase() {
   return (
-    <section className="border-b border-border bg-secondary/30" aria-label="Highlights">
+    <section id="demo" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-24">
+      {/* Faint masked grid band — the shared section-depth language. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
       <div className="container">
-        <Reveal3D
-          stagger={0.1}
-          className="grid grid-cols-2 gap-x-6 gap-y-5 py-8 text-center md:grid-cols-4"
-        >
-          {TRUST_BAND.map((b) => (
-            <Reveal3DItem key={b.label} className="group flex flex-col items-center gap-2.5">
-              {/* Bespoke glassy Greek-life tile — replaces the old generic
-                  line-icon chip so the trust band carries custom character. */}
-              <GlyphTile
-                name={b.img}
-                size="md"
-                className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
-              />
-              <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
-            </Reveal3DItem>
-          ))}
-        </Reveal3D>
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            <GlyphTile name="feat-branding" size="xs" />
+            See it before you sign anything
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Watch it become <span className="gs-gradient-text">your chapter</span>
+          </h2>
+          <p className="mt-4 text-pretty text-foreground/80">
+            Pick your school and letters and the entire platform re-skins to your colors —
+            here&apos;s that moment on loop. Then open the real demo and do it yourself.
+          </p>
+        </Reveal>
+
+        <Reveal delay={80} className="mx-auto mt-10 max-w-5xl">
+          <BrandItDemo />
+        </Reveal>
+
+        {/* The two paths out of this beat: TRY it (primary — deep-links straight
+            to the demo's chapter chooser) or LAUNCH it (quiet secondary). */}
+        <Reveal delay={120} className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Magnetic className="w-full sm:w-auto">
+            <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
+              <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full sm:w-auto">
+                <Link href="/app?demo=true&pick=1" className="group/btn">
+                  Try it with your chapter — free demo
+                  <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                </Link>
+              </Button>
+            </ShimmerBorder>
+          </Magnetic>
+          <Button asChild variant="outline" size="lg" className="w-full border-blue-500/30 font-semibold text-blue-700 hover:bg-blue-50/50 hover:text-blue-800 sm:w-auto">
+            <Link href="/onboard">Skip ahead — launch for real</Link>
+          </Button>
+        </Reveal>
+        <Reveal delay={160} className="mt-4 text-center">
+          <p className="text-xs text-muted-foreground">
+            No sign-up, no email — the demo opens on the chapter picker so the first thing you see
+            is <span className="font-semibold text-foreground/80">your</span> letters.
+          </p>
+        </Reveal>
       </div>
     </section>
   );
@@ -1588,6 +1631,19 @@ function Features() {
               </div>
             ))}
           </div>
+        </Reveal>
+
+        {/* Beat-closing path: reading about features is one thing — every one of
+            them is live in the demo, so hand the visitor the door. Quiet text
+            link (the section's cards are already busy), launch stays implicit. */}
+        <Reveal delay={120} className="mt-10 text-center">
+          <Link
+            href="/app?demo=true"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
+          >
+            Every feature above is live in the interactive demo — try them
+            <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </Link>
         </Reveal>
       </div>
 
@@ -1862,6 +1918,26 @@ function BeforeAfter() {
             </ShimmerBorder>
           </Reveal>
         </div>
+
+        {/* Beat-closing path: the comparison just made the case — offer the
+            switch while it's fresh, with the demo as the no-commitment out. */}
+        <Reveal delay={140} className="mt-12 flex flex-col items-center justify-center gap-3">
+          <Magnetic>
+            <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
+              <Link href="/onboard">
+                Make the switch — first month free
+                <IconArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+          </Magnetic>
+          <Link
+            href="/app?demo=true"
+            className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
+          >
+            Or poke around the demo first
+            <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </Link>
+        </Reveal>
       </div>
     </section>
   );
@@ -1887,8 +1963,9 @@ function HowItWorks() {
         </Reveal>
 
         {/* Selling point: pick your school + letters and the whole site themes
-            itself instantly. Sits right above the live demo so the claim and the
-            proof read as one beat. */}
+            itself instantly. (The live BrandItDemo that used to prove this here
+            now stars one beat earlier in <DemoShowcase> — this card carries the
+            claim forward into the steps without repeating the demo.) */}
         <Reveal delay={60} className="mx-auto mt-12 max-w-3xl">
           <div className="flex flex-col items-center gap-4 rounded-2xl gs-glass px-6 py-5 text-center sm:flex-row sm:text-left">
             <IconChip icon={IconSchoolPicker} tone="platform" size="lg" />
@@ -1906,14 +1983,7 @@ function HowItWorks() {
           </div>
         </Reveal>
 
-        {/* The "instant, branded site" promise, made visual: as this scrolls
-            into view a chapter name + colors type in and a live preview card
-            re-skins to match in real time. */}
-        <Reveal delay={80} className="mx-auto mt-6 max-w-5xl">
-          <BrandItDemo />
-        </Reveal>
-
-        <div className="relative mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="relative mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
           {/* connector line on desktop — a soft gradient rail behind the steps
               with a slow highlight travelling along it so it feels alive.
               Decorative: aria-hidden + pointer-events-none. Scoped keyframe so
@@ -1948,7 +2018,7 @@ function HowItWorks() {
           ))}
         </div>
 
-        <Reveal delay={120} className="mt-12 flex justify-center">
+        <Reveal delay={120} className="mt-12 flex flex-col items-center justify-center gap-3">
           <Magnetic>
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
@@ -1957,6 +2027,14 @@ function HowItWorks() {
               </Link>
             </Button>
           </Magnetic>
+          {/* The demo path stays one tap away at the end of every beat. */}
+          <Link
+            href="/app?demo=true"
+            className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
+          >
+            Not ready? Walk through the interactive demo first
+            <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </Link>
         </Reveal>
       </div>
     </section>
@@ -2250,6 +2328,17 @@ function Pricing() {
               </Link>
             </Button>
           </div>
+          {/* Price anxiety's antidote: try before any commitment. */}
+          <p className="mt-5 text-sm text-muted-foreground">
+            Want to see what the money buys first?{" "}
+            <Link
+              href="/app?demo=true"
+              className="font-semibold text-blue-700 underline-offset-4 hover:underline"
+            >
+              Explore the full app in the demo
+            </Link>{" "}
+            — no sign-up.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -2611,7 +2700,7 @@ function Proof() {
             <figcaption className="mt-5 text-sm text-foreground/80">
               <span className="font-semibold text-foreground">Greekstack</span> · Founder &amp; chapter alum
             </figcaption>
-            <div className="mt-7 flex justify-center">
+            <div className="mt-7 flex flex-col items-center justify-center gap-3">
               <Magnetic>
                 <Button asChild variant="platform" size="lg" className="gs-sheen">
                   <Link href="/contact" className="group/btn">
@@ -2621,6 +2710,14 @@ function Proof() {
                   </Link>
                 </Button>
               </Magnetic>
+              {/* "Earn it, don't claim it" — the demo IS the proof, keep it one tap away. */}
+              <Link
+                href="/app?demo=true"
+                className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
+              >
+                Or judge the product yourself — open the demo
+                <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </Link>
             </div>
           </figure>
         </Reveal>
@@ -2711,8 +2808,9 @@ const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[
   {
     heading: "Product",
     links: [
-      { href: "#features", label: "Features" },
+      { href: "/app?demo=true", label: "Interactive demo" },
       { href: "#how", label: "How it works" },
+      { href: "#features", label: "Features" },
       { href: "#pricing", label: "Pricing" },
       { href: "#faq", label: "FAQ" },
     ],
