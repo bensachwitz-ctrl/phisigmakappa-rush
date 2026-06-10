@@ -157,9 +157,20 @@ export async function POST(req: Request) {
     }
     let sqlContent = fs.readFileSync(sqlFilePath, "utf8");
     if (sqlContent.startsWith("﻿")) sqlContent = sqlContent.slice(1);
+    // STRIP full-line `--` comments BEFORE splitting on `;`. Doing it in this
+    // order is load-bearing: a comment line may itself contain a semicolon
+    // (e.g. "-- ...additive columns; idempotent so a re-run..."). If we split on
+    // `;` first, the text AFTER that semicolon ("idempotent so a") no longer
+    // starts with `--`, survives the per-line comment filter, and gets prepended
+    // to the next statement as raw SQL — producing a "syntax error at or near
+    // 'idempotent'" that would break EVERY signup. Removing comment lines from
+    // the source first makes the splitter robust to any `;` inside a comment.
     const statements = sqlContent
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n")
       .split(";")
-      .map((s) => s.split("\n").filter((line) => !line.trim().startsWith("--")).join("\n").trim())
+      .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
     const baseUri = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || "";

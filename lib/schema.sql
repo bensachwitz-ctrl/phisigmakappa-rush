@@ -1037,7 +1037,7 @@ ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_rushId_fkey" FOREIGN KEY (
 -- AddForeignKey
 ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_alumniId_fkey" FOREIGN KEY ("alumniId") REFERENCES "AlumniProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AlterTable (Member Directory tool — additive Brother columns; idempotent so a
+-- AlterTable (Member Directory tool — additive Brother columns, idempotent so a
 -- re-run against a tenant schema created by an older copy of this DDL adds the
 -- new columns without error and never duplicates them).
 ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "hometown" TEXT;
