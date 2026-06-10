@@ -1145,7 +1145,7 @@ function Hero() {
           <div className="mx-auto mt-10 grid w-full max-w-[22rem] grid-cols-1 gap-3 animate-slide-up [animation-delay:280ms] md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
             <Magnetic className="w-full">
               <ShimmerBorder rounded="rounded-xl" className="w-full">
-                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
+                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full max-[400px]:px-5">
                   <Link href="/onboard" className="group/btn">
                     Launch your chapter — free
                     <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -1156,7 +1156,7 @@ function Hero() {
             {/* Value-forward demo CTA: says what the visitor GETS (the app as
                 their chapter), and deep-links straight to the chooser so the
                 reskin moment is literally one click from arrival. */}
-            <Button asChild variant="outline" size="xl" className="w-full border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+            <Button asChild variant="outline" size="xl" className="w-full max-[400px]:px-5 border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
               <Link href="/app?demo=true&pick=1">See the demo as your chapter</Link>
             </Button>
           </div>
@@ -1508,7 +1508,7 @@ function GlyphMarquee() {
    HowItWorks placement where it sat below the fold of its own section. */
 function DemoShowcase() {
   return (
-    <section id="demo" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-24">
+    <section id="demo" className="relative scroll-mt-20 overflow-hidden py-12 sm:py-24">
       {/* Faint masked grid band — the shared section-depth language. */}
       <div
         aria-hidden="true"
@@ -1540,7 +1540,7 @@ function DemoShowcase() {
             <ShimmerBorder rounded="rounded-xl" className="w-full">
               <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full">
                 <Link href="/app?demo=true&pick=1" className="group/btn">
-                  Try it with your chapter — free demo
+                  Try it with your chapter<span className="hidden min-[480px]:inline"> — free demo</span>
                   <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                 </Link>
               </Button>
@@ -1571,7 +1571,7 @@ function Features() {
   const active = openIdx == null ? null : FEATURES[openIdx];
 
   return (
-    <section id="features" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+    <section id="features" className="relative scroll-mt-20 overflow-hidden py-12 sm:py-28">
       {/* Faint masked grid band for depth behind the feature cards. Decorative
           only, fades at the edges so it never competes with the content. */}
       <div
@@ -1837,7 +1837,7 @@ function BeforeAfter() {
   return (
     <section
       aria-label="Before and after Greekstack"
-      className="relative scroll-mt-20 overflow-hidden border-t border-border py-20 sm:py-28"
+      className="relative scroll-mt-20 overflow-hidden border-t border-border py-12 sm:py-28"
     >
       {/* Faint masked grid band — matches the Features/Pricing/Proof depth so the
           page reads as one system. Decorative, fades at the edges. */}
@@ -1994,7 +1994,7 @@ function BeforeAfter() {
 
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
+    <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-12 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -2280,7 +2280,7 @@ function BrandItDemo() {
 
 function Pricing() {
   return (
-    <section id="pricing" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+    <section id="pricing" className="relative scroll-mt-20 overflow-hidden py-12 sm:py-28">
       {/* Faint masked grid band for quiet depth behind the plan card — matches
           the Features/Proof treatment so the page reads as one system. */}
       <div
@@ -2573,7 +2573,7 @@ function Faq() {
   const [open, setOpen] = React.useState<number>(-1);
 
   return (
-    <section id="faq" className="scroll-mt-20 border-y border-border bg-secondary/30 py-20 sm:py-28">
+    <section id="faq" className="scroll-mt-20 border-y border-border bg-secondary/30 py-12 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -2674,7 +2674,7 @@ function Faq() {
 
 function Proof() {
   return (
-    <section id="proof" className="relative scroll-mt-20 overflow-hidden py-20 sm:py-28">
+    <section id="proof" className="relative scroll-mt-20 overflow-hidden py-12 sm:py-28">
       {/* Faint masked grid band behind the stat tiles for quiet depth. */}
       <div
         aria-hidden="true"
@@ -2795,7 +2795,7 @@ function FinalCta() {
           {/* Faint grain + drifting orbs inside the panel for tactile depth. */}
           <Grain opacity={0.05} />
           <FloatingOrbs blur={80} />
-          <Reveal className="relative z-10 px-6 py-16 text-center sm:px-12 sm:py-20">
+          <Reveal className="relative z-10 px-6 py-12 text-center sm:px-12 sm:py-20">
             <div className="mx-auto mb-5 flex justify-center">
               <span className="animate-float">
                 <IconChip icon={IconLaunch} tone="platform" size="lg" />
@@ -2813,7 +2813,7 @@ function FinalCta() {
             <div className="mx-auto mt-9 grid w-full max-w-[22rem] grid-cols-1 gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">
               <Magnetic strength={22} className="w-full">
                 <ShimmerBorder rounded="rounded-xl" className="w-full">
-                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full">
+                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full max-[400px]:px-5">
                     <Link href="/onboard" className="group/btn">
                       Launch your chapter — free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -2821,7 +2821,7 @@ function FinalCta() {
                   </Button>
                 </ShimmerBorder>
               </Magnetic>
-              <Button asChild variant="glass" size="xl" className="w-full">
+              <Button asChild variant="glass" size="xl" className="w-full max-[400px]:px-5">
                 <Link href="/contact#book" className="group/btn">
                   <IconBookCall className="h-5 w-5" />
                   Book a call
