@@ -58,13 +58,19 @@ import {
   DEMO_TENANTS,
   DEMO_CALLOUTS,
   getMockDemoData,
+  brandSecondary,
+  glyphsFromBrand,
+  darkenHex,
+  makeCustomBrand,
+  normalizeLetters,
   type Tenant,
   type MobileAppClientProps,
   type FraternityBrand,
 } from "./_demo/mock-data";
+import { GreekLetterField } from "@/components/site/greek-letter-field";
 import { WebGLBackground } from "./_demo/WebGLBackground";
 import type { DemoContext } from "./_demo/context";
-import { renderChapterPicker } from "./_demo/surfaces/ChapterPickerSurface";
+import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
 import { renderLogin } from "./_demo/surfaces/LoginSurface";
 import { renderFeedTab } from "./_demo/surfaces/FeedSurface";
 import { renderEventsTab } from "./_demo/surfaces/EventsSurface";
@@ -96,6 +102,25 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isDemo, setIsDemo] = useState(false);
+
+  // ── Owner-requested demo controls ────────────────────────────────────────
+  // viewRole flips the WHOLE dashboard between the member experience ("member"
+  // = active brother: feed/events/dues/directory) and the officer experience
+  // ("exec" = roster mgmt, dues mgmt, rush pipeline, announcements, settings).
+  // Distinct from `role` (brother vs alumni) which selects member vs alumni
+  // data; viewRole layers an officer lens on top of the brother experience.
+  const [viewRole, setViewRole] = useState<"member" | "exec">("member");
+  // When true, the chapter chooser overlay is shown so the visitor can pick a
+  // different org (or build a custom one) WITHOUT signing out of the demo.
+  const [showChapterChooser, setShowChapterChooser] = useState(false);
+  // Custom-chapter builder form (the "enter ANY org" path). Lives in the
+  // orchestrator so the stateless chooser surface can read/write it via ctx.
+  const [chooserMode, setChooserMode] = useState<"pick" | "create">("pick");
+  const [customName, setCustomName] = useState("");
+  const [customLetters, setCustomLetters] = useState("");
+  const [customSchool, setCustomSchool] = useState("");
+  const [customPrimary, setCustomPrimary] = useState("#512888");
+  const [customSecondary, setCustomSecondary] = useState("#C9A227");
 
   // Demo Side Panel Modals & States
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -504,6 +529,67 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       setUser(null);
       setError(null);
     }
+  };
+
+  // ── Apply a chosen brand to the live demo without a full re-login ─────────
+  // Powers the in-app chapter chooser (feature 1): pick a preset OR build a
+  // custom org, and the ENTIRE demo re-skins to it instantly. Builds a demo
+  // tenant around the brand, re-seeds the mock data, and closes the chooser.
+  const applyBrandToDemo = (brand: FraternityBrand, opts?: { name?: string; school?: string }) => {
+    const name = opts?.name || brand.name;
+    const school = opts?.school || "University of South Carolina";
+    const sub = (name || brand.id).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 18) || "chapter";
+    const tenant: Tenant = {
+      id: `demo-${sub}`,
+      subdomain: sub,
+      name,
+      school,
+      isActive: true,
+      brandId: brand.id,
+    };
+    const demoUser = {
+      id: "demo-user-id",
+      email: `alex.mercer@${sub}.edu`,
+      role: "brother",
+      brotherId: "demo-brother-id",
+      subdomain: sub,
+      chapterName: name,
+      schoolName: school,
+    };
+    setSelectedTenant(tenant);
+    setSelectedBrand(brand);
+    setToken("demo-token-12345");
+    setUser(demoUser);
+    setRole("brother");
+    setIsDemo(true);
+    setDashboardData(getMockDemoData(tenant, brand));
+    setLoading(false);
+    setActiveTab("feed");
+    setShowChapterChooser(false);
+    try {
+      localStorage.setItem("gs_mobile_token", "demo-token-12345");
+      localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
+      localStorage.setItem("gs_mobile_tenant", JSON.stringify(tenant));
+      localStorage.setItem("gs_mobile_brand", JSON.stringify(brand));
+    } catch {
+      /* localStorage best-effort in the demo */
+    }
+  };
+
+  // Build + apply a brand-new custom chapter from the chooser's "create" form.
+  const applyCustomChapter = () => {
+    const letters = normalizeLetters(customLetters) || "ΦΣΚ";
+    const brand = makeCustomBrand({
+      name: customName,
+      letters,
+      primaryColor: customPrimary,
+      secondaryColor: customSecondary,
+    });
+    applyBrandToDemo(brand, {
+      name: customName.trim() || "Your Chapter",
+      school: customSchool.trim() || "Your University",
+    });
+    showToast(`${brand.name} is live — the whole app just re-skinned.`, "success");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -1154,6 +1240,10 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     tenants, selectedTenant, setSelectedTenant, selectedBrand, setSelectedBrand,
     searchQuery, setSearchQuery, role, setRole, email, setEmail, password, setPassword,
     token, setToken, user, setUser, isDemo, setIsDemo,
+    viewRole, setViewRole, showChapterChooser, setShowChapterChooser, applyBrandToDemo,
+    chooserMode, setChooserMode, customName, setCustomName, customLetters, setCustomLetters,
+    customSchool, setCustomSchool, customPrimary, setCustomPrimary, customSecondary, setCustomSecondary,
+    applyCustomChapter,
     showPricingModal, setShowPricingModal, showBookingModal, setShowBookingModal,
     bookingDate, setBookingDate, bookingTime, setBookingTime, bookingName, setBookingName,
     bookingEmail, setBookingEmail, bookingSubmitted, setBookingSubmitted,
@@ -1200,9 +1290,40 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     handleSendMobileResetLink,
   };
 
+  // ── Full-screen chapter theming (feature 2) ──────────────────────────────
+  // The entire demo shell shifts to the chosen chapter's colors, with their
+  // Greek letters drifting behind everything. Derived once per render from the
+  // selected brand so picking a chapter dramatically, visibly transforms the
+  // whole experience.
+  const brandPrimary = selectedBrand.primaryColor;
+  const brandSecond = brandSecondary(selectedBrand);
+  const brandDeep = darkenHex(brandPrimary, 0.62);
+  const brandGlyphs = glyphsFromBrand(selectedBrand.letters);
+
   return (
-    <div className="min-h-screen w-full bg-slate-900 flex flex-col lg:flex-row items-center justify-center gap-8 p-4 pt-20 pb-6 md:p-8 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-slate-950 font-sans text-slate-200 relative">
-      
+    <div
+      className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center gap-8 overflow-hidden p-4 pt-20 pb-6 font-sans text-slate-200 md:p-8 lg:flex-row"
+      style={{
+        // Deep brand-tinted radial wash → near-black, so the shell reads as the
+        // chapter's world. Transitions smoothly when the chapter changes.
+        background: `radial-gradient(ellipse at 75% 0%, ${brandPrimary}33, transparent 55%), radial-gradient(ellipse at 15% 90%, ${brandSecond}1f, transparent 50%), linear-gradient(160deg, ${brandDeep}, #060810 60%, #04060d)`,
+        transition: "background 0.9s cubic-bezier(0.16,1,0.3,1)",
+      }}
+    >
+
+      {/* Chapter-colored Greek-letter field drifting behind EVERYTHING — the
+          signature "picking a chapter transforms the room" effect. Tinted to the
+          brand primary, scoped to this container (absolute), reduced-motion-safe
+          via the field's own CSS. */}
+      <GreekLetterField
+        glyphs={brandGlyphs}
+        color={brandPrimary}
+        position="absolute"
+        count={52}
+        seed={0x51ed270b}
+        className="opacity-[0.55] [&_*]:!opacity-[var(--go,0.12)]"
+      />
+
       {/* 3D WebGL Plexus Background */}
       <WebGLBackground />
 
@@ -1248,9 +1369,16 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         }
       `}} />
 
-      {/* Decorative background orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-blue-800/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
+      {/* Decorative background orbs — brand-tinted so they reinforce the chosen
+          chapter's color rather than fighting it. */}
+      <div
+        className="pointer-events-none absolute left-1/4 top-1/4 h-96 w-96 rounded-full blur-[110px] transition-colors duration-700"
+        style={{ backgroundColor: brandPrimary + "22" }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full blur-[130px] transition-colors duration-700"
+        style={{ backgroundColor: brandSecond + "1a" }}
+      />
 
       {/* Interactive Booking Modal */}
       {showBookingModal && renderBookingModal(ctx)}
@@ -1276,17 +1404,58 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         </div>
 
         <div className="border-t border-white/10 pt-5 space-y-4">
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Active Chapter</span>
-            <div className="text-xs font-semibold text-slate-200 bg-white/5 border border-white/5 px-3 py-2 rounded-xl">
-              {selectedBrand.letters} • {selectedBrand.name}
-            </div>
+          <div className="space-y-1.5">
+            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Active Chapter</span>
+            <button
+              onClick={() => { setChooserMode("pick"); setShowChapterChooser(true); }}
+              disabled={!token}
+              className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.08] disabled:opacity-50"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[12px] font-bold text-white shadow-sm"
+                  style={{ background: `linear-gradient(140deg, ${brandPrimary}, ${brandSecond})` }}
+                >
+                  {selectedBrand.letters}
+                </span>
+                <span className="truncate text-[13px] font-semibold text-slate-200">{selectedBrand.name}</span>
+              </span>
+              <Palette className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-white" />
+            </button>
           </div>
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Role View</span>
-            <div className="text-xs font-semibold text-slate-200 bg-white/5 border border-white/5 px-3 py-2 rounded-xl capitalize">
-              {role === "brother" ? "Active Brother" : "Alumnus Profile"}
+
+          {/* Role View toggle — Member ⇄ Officer (feature 3) */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Role View</span>
+            <div className="relative grid grid-cols-2 rounded-xl border border-white/10 bg-white/5 p-1">
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{
+                  background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})`,
+                  transform: viewRole === "exec" ? "translateX(calc(100% + 0.5rem))" : "translateX(0)",
+                }}
+              />
+              <button
+                onClick={() => { setViewRole("member"); setActiveTab("feed"); }}
+                disabled={!token}
+                className={`relative z-10 min-h-[36px] rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${viewRole === "member" ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
+              >
+                Member
+              </button>
+              <button
+                onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
+                disabled={!token}
+                className={`relative z-10 min-h-[36px] rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${viewRole === "exec" ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
+              >
+                Officer
+              </button>
             </div>
+            <p className="px-0.5 text-[11px] leading-snug text-slate-500">
+              {viewRole === "exec"
+                ? "Admin tools: roster, dues mgmt, rush pipeline, announcements."
+                : "Member experience: feed, events, dues, directory."}
+            </p>
           </div>
         </div>
 
@@ -1383,8 +1552,16 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           {/* Custom Add Member Overlay Modal (President Console) */}
           {showAddMemberModal && renderAddMemberModal(ctx)}
           
-          {/* 1. Onboarding Chapter Selection */}
-          {!selectedTenant && renderChapterPicker(ctx)}
+          {/* 1. Onboarding Chapter Selection (pick OR build any chapter) */}
+          {!selectedTenant && renderChapterChooser(ctx)}
+
+          {/* In-app chapter switcher overlay — re-skins the live demo without a
+              sign-out. Slides up over the running app. */}
+          {selectedTenant && token && showChapterChooser && (
+            <div className="absolute inset-0 z-[80] flex flex-col bg-white animate-spotlight-in">
+              {renderChapterChooser(ctx, { overlay: true })}
+            </div>
+          )}
 
           {/* 2. Login Page */}
           {selectedTenant && !token && renderLogin(ctx)}
@@ -1394,40 +1571,50 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
               
               {/* App Status Header */}
-              <div className="px-5 py-3.5 bg-white border-b border-slate-100 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div 
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border font-bold text-xs shrink-0 select-none"
-                    style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+                {/* Tap the brand lockup to swap/build a chapter live */}
+                <button
+                  onClick={() => { setChooserMode("pick"); setShowChapterChooser(true); }}
+                  className="press group flex min-w-0 items-center gap-2.5 rounded-xl py-1 pr-2 text-left transition hover:bg-slate-50"
+                  aria-label="Switch chapter"
+                >
+                  <div
+                    className="flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-xl border text-[13px] font-bold shadow-inner"
+                    style={{
+                      background: `linear-gradient(140deg, ${selectedBrand.primaryColor}14, ${brandSecond}14)`,
+                      borderColor: selectedBrand.primaryColor + "26",
+                      color: selectedBrand.primaryColor,
+                    }}
                   >
                     {selectedBrand.letters}
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[150px]">
-                      {dashboardData?.chapter?.name || selectedTenant.name}
+                  <div className="min-w-0">
+                    <h3 className="flex items-center gap-1 truncate text-[13px] font-bold leading-tight text-slate-900">
+                      <span className="truncate max-w-[140px]">{dashboardData?.chapter?.name || selectedTenant.name}</span>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:text-slate-600" />
                     </h3>
-                    <span className="text-[9px] text-slate-500 block truncate max-w-[150px]">
+                    <span className="block max-w-[160px] truncate text-[11px] text-slate-500">
                       {dashboardData?.chapter?.schoolName || selectedTenant.school}
                     </span>
                   </div>
-                </div>
+                </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {isDemo && (
-                    <span className="text-[8px] font-black text-amber-700 uppercase bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shadow-sm">
-                      DEMO VIEW
+                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+                      Demo
                     </span>
                   )}
                   <button
                     onClick={() => setActiveTab("settings")}
-                    className="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md transition text-slate-700 hover:text-slate-900"
+                    className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     </span>
-                    <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">
-                      {role === "brother" ? "BROTHER" : "ALUMNUS"}
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                      {viewRole === "exec" ? "Officer" : role === "brother" ? "Member" : "Alumnus"}
                     </span>
                   </button>
                 </div>

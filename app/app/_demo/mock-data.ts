@@ -201,6 +201,31 @@ export const BRAND_PALETTE: string[] = [
   "#831843", "#9D174D", "#1F2937", "#0F172A", // maroon / ink
 ];
 
+/** Map of spelled-out Greek letter names → glyphs, so a founder can type either
+ *  "Kappa Delta" or "ΚΔ" in the chooser and get the right drifting letters. */
+const GREEK_NAME_TO_GLYPH: Record<string, string> = {
+  alpha: "Α", beta: "Β", gamma: "Γ", delta: "Δ", epsilon: "Ε", zeta: "Ζ",
+  eta: "Η", theta: "Θ", iota: "Ι", kappa: "Κ", lambda: "Λ", mu: "Μ",
+  nu: "Ν", xi: "Ξ", omicron: "Ο", pi: "Π", rho: "Ρ", sigma: "Σ",
+  tau: "Τ", upsilon: "Υ", phi: "Φ", chi: "Χ", psi: "Ψ", omega: "Ω",
+};
+
+/** Normalize a free-text letters field ("Kappa Delta" OR "ΚΔ") to a glyph string
+ *  ("ΚΔ"). Real glyphs already present are kept; spelled-out names are mapped. */
+export function normalizeLetters(input: string): string {
+  const raw = (input || "").trim();
+  if (!raw) return "";
+  // Already glyphs? Keep just the Greek chars.
+  const existing = raw.match(/[Ͱ-Ͽἀ-῿]/g);
+  if (existing && existing.length) return existing.join("");
+  // Spelled out — map each word.
+  return raw
+    .split(/[\s,·.]+/)
+    .map((w) => GREEK_NAME_TO_GLYPH[w.toLowerCase()])
+    .filter(Boolean)
+    .join("");
+}
+
 /** Build a fully-formed FraternityBrand from raw founder input (chooser flow). */
 export function makeCustomBrand(input: {
   name: string;

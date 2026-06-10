@@ -1,0 +1,339 @@
+import React from "react";
+import { Search, ChevronRight, AlertCircle, Sparkles, Palette, ArrowRight, Wand2 } from "lucide-react";
+import {
+  FRATERNITY_BRANDS,
+  BRAND_PALETTE,
+  brandSecondary,
+  glyphsFromBrand,
+  makeCustomBrand,
+  normalizeLetters,
+} from "../mock-data";
+import type { DemoContext } from "../context";
+
+/**
+ * ChapterChooser — the spectacular "choose ANY chapter" surface (feature 1).
+ *
+ * Two modes:
+ *   • Pick   — a brand-swatched grid of preset orgs (and any live DB chapters).
+ *   • Create — enter ANY org: Greek letters + name + primary/secondary color
+ *              (palette + raw hex) + school, with a LIVE preview card that
+ *              re-brands as you type. Tapping "Launch this chapter" re-skins the
+ *              ENTIRE demo to it instantly.
+ *
+ * Renders both as the initial onboarding picker (no tenant yet) and as a
+ * re-openable overlay over the running demo (so a visitor can swap chapters
+ * without signing out). Stateless: all form state lives in `ctx`.
+ */
+export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolean }) {
+  const {
+    filteredChapters,
+    handleSelectTenant,
+    searchQuery,
+    setSearchQuery,
+    chooserMode,
+    setChooserMode,
+    customName,
+    setCustomName,
+    customLetters,
+    setCustomLetters,
+    customSchool,
+    setCustomSchool,
+    customPrimary,
+    setCustomPrimary,
+    customSecondary,
+    setCustomSecondary,
+    applyCustomChapter,
+    applyBrandToDemo,
+    setShowChapterChooser,
+  } = ctx;
+
+  const overlay = opts?.overlay;
+
+  // Live preview brand built from the in-flight create form.
+  const previewLetters = normalizeLetters(customLetters) || "ΦΣΚ";
+  const previewBrand = makeCustomBrand({
+    name: customName,
+    letters: previewLetters,
+    primaryColor: customPrimary,
+    secondaryColor: customSecondary,
+  });
+  const previewGlyphs = glyphsFromBrand(previewBrand.letters);
+
+  // When used as an overlay, picking a preset must re-skin live (applyBrandToDemo)
+  // rather than route through the login flow.
+  const choosePreset = (brand: typeof FRATERNITY_BRANDS[number], name: string, school: string) => {
+    if (overlay) applyBrandToDemo(brand, { name, school });
+  };
+
+  return (
+    <div className="gs-chooser-scope flex flex-1 flex-col overflow-hidden bg-white text-left">
+      {/* Header */}
+      <div className="relative shrink-0 overflow-hidden px-6 pt-6 pb-5">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-90"
+          style={{
+            background: `radial-gradient(120% 90% at 80% -10%, ${customPrimary}1f, transparent 60%)`,
+          }}
+        />
+        <div className="relative flex items-center justify-between">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider"
+            style={{ backgroundColor: customPrimary + "12", borderColor: customPrimary + "2a", color: customPrimary }}
+          >
+            <Sparkles className="h-3.5 w-3.5" /> {overlay ? "Switch Chapter" : "Choose Chapter"}
+          </span>
+          {overlay && (
+            <button
+              onClick={() => setShowChapterChooser(false)}
+              className="press min-h-[36px] rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+            >
+              Close
+            </button>
+          )}
+        </div>
+        <h1 className="relative mt-3 text-[20px] font-extrabold tracking-tight text-slate-900">
+          {overlay ? "Make it your chapter" : "Pick or build any chapter"}
+        </h1>
+        <p className="relative mt-1 text-[13px] leading-snug text-slate-500">
+          Choose a preset or create your own — letters, colors, and name. The
+          whole app re-skins to it instantly.
+        </p>
+
+        {/* Mode toggle — segmented control with a sliding active pill */}
+        <div className="relative mt-4 grid grid-cols-2 rounded-2xl border border-slate-200 bg-slate-100 p-1">
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-xl bg-white shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{ transform: chooserMode === "create" ? "translateX(calc(100% + 0.5rem))" : "translateX(0)" }}
+          />
+          <button
+            onClick={() => setChooserMode("pick")}
+            className={`relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${
+              chooserMode === "pick" ? "text-slate-900" : "text-slate-500"
+            }`}
+          >
+            <Search className="h-4 w-4" /> Pick one
+          </button>
+          <button
+            onClick={() => setChooserMode("create")}
+            className={`relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${
+              chooserMode === "create" ? "text-slate-900" : "text-slate-500"
+            }`}
+          >
+            <Wand2 className="h-4 w-4" /> Create yours
+          </button>
+        </div>
+      </div>
+
+      {/* ── PICK MODE ─────────────────────────────────────────────────────── */}
+      {chooserMode === "pick" && (
+        <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6">
+          <div className="relative mb-3 shrink-0">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search chapter or school..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+            />
+          </div>
+
+          <div className="-mr-1 flex-1 space-y-2 overflow-y-auto pr-1">
+            {filteredChapters.length > 0 ? (
+              filteredChapters.map((t) => {
+                const br = FRATERNITY_BRANDS.find((b) => b.id === t.brandId) || FRATERNITY_BRANDS[0];
+                const isDemoItem = t.id.startsWith("demo-");
+                const sec = brandSecondary(br);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => (overlay ? choosePreset(br, t.name || br.name, t.school || "University of South Carolina") : handleSelectTenant(t))}
+                    className="press group flex w-full min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-[15px] font-bold shadow-inner"
+                        style={{
+                          background: `linear-gradient(140deg, ${br.primaryColor}14, ${sec}14)`,
+                          borderColor: br.primaryColor + "26",
+                          color: br.primaryColor,
+                        }}
+                      >
+                        {br.letters}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="truncate text-[14px] font-bold text-slate-800 transition-colors group-hover:text-slate-900">
+                            {t.name}
+                          </h4>
+                          {isDemoItem && (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 ring-1 ring-amber-100">
+                              Demo
+                            </span>
+                          )}
+                        </div>
+                        <span className="block truncate text-[12px] text-slate-500">
+                          {t.school || "Greekstack Chapter"}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                  </button>
+                );
+              })
+            ) : (
+              <div className="py-12 text-center text-slate-400">
+                <AlertCircle className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                <p className="text-[13px]">No chapters match. Try “Create yours”.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── CREATE MODE ───────────────────────────────────────────────────── */}
+      {chooserMode === "create" && (
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 pb-6">
+          {/* Live preview card — re-brands as you type */}
+          <div
+            className="relative overflow-hidden rounded-2xl border p-4 transition-colors"
+            style={{
+              borderColor: customPrimary + "33",
+              background: `linear-gradient(150deg, ${customPrimary}10, ${customSecondary}0d)`,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[19px] font-extrabold text-white shadow-md"
+                style={{ background: `linear-gradient(140deg, ${customPrimary}, ${customSecondary})` }}
+              >
+                {previewLetters}
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Live preview</span>
+                <h3 className="truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
+                <p className="truncate text-[12px] text-slate-500">{customSchool.trim() || "Your University"}</p>
+              </div>
+            </div>
+            {/* drifting preview glyphs */}
+            <div className="pointer-events-none absolute -right-2 -top-2 select-none text-[64px] font-serif font-black leading-none opacity-[0.06]" style={{ color: customPrimary }}>
+              {previewGlyphs[0]}
+            </div>
+          </div>
+
+          <Field label="Chapter name">
+            <input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="e.g. Kappa Delta — Beta Chapter"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+            />
+          </Field>
+
+          <Field label="Greek letters" hint="Type names (“Kappa Delta”) or glyphs (“ΚΔ”).">
+            <input
+              value={customLetters}
+              onChange={(e) => setCustomLetters(e.target.value)}
+              placeholder="Kappa Delta"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+            />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {["Φ", "Σ", "Κ", "Α", "Δ", "Θ", "Π", "Ω", "Χ", "Λ"].map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setCustomLetters((customLetters || "") + g)}
+                  className="press flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-[15px] font-serif font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="School / university">
+            <input
+              value={customSchool}
+              onChange={(e) => setCustomSchool(e.target.value)}
+              placeholder="University of South Carolina"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+            />
+          </Field>
+
+          <ColorField label="Primary color" value={customPrimary} onChange={setCustomPrimary} />
+          <ColorField label="Secondary color" value={customSecondary} onChange={setCustomSecondary} />
+
+          <button
+            onClick={applyCustomChapter}
+            className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
+            style={{ background: `linear-gradient(135deg, ${customPrimary}, ${customSecondary})` }}
+          >
+            <Palette className="h-4 w-4" /> Launch this chapter <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</label>
+        {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-2">
+        <label
+          className="relative h-11 w-12 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-[1.04]"
+          style={{ backgroundColor: value }}
+        >
+          <input
+            type="color"
+            value={/^#([0-9a-fA-F]{6})$/.test(value) ? value : "#512888"}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 cursor-pointer opacity-0"
+            aria-label={`${label} picker`}
+          />
+        </label>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#512888"
+          className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400"
+        />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {BRAND_PALETTE.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => onChange(c)}
+            aria-label={`Use ${c}`}
+            className={`h-7 w-7 rounded-lg border shadow-sm transition hover:scale-110 ${
+              value.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-slate-900" : "border-black/10"
+            }`}
+            style={{ backgroundColor: c }}
+          />
+        ))}
+      </div>
+    </Field>
+  );
+}

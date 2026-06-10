@@ -24,6 +24,28 @@ export interface DemoContext {
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   role: "brother" | "alumni";
   setRole: React.Dispatch<React.SetStateAction<"brother" | "alumni">>;
+  // Officer lens over the member experience (member = active brother;
+  // exec = officer/admin tools). Distinct from `role` (brother vs alumni).
+  viewRole: "member" | "exec";
+  setViewRole: React.Dispatch<React.SetStateAction<"member" | "exec">>;
+  // In-app chapter chooser overlay (pick/create any org and re-skin live).
+  showChapterChooser: boolean;
+  setShowChapterChooser: React.Dispatch<React.SetStateAction<boolean>>;
+  applyBrandToDemo: (brand: FraternityBrand, opts?: { name?: string; school?: string }) => void;
+  // Custom-chapter builder ("enter ANY org") form state + apply handler.
+  chooserMode: "pick" | "create";
+  setChooserMode: React.Dispatch<React.SetStateAction<"pick" | "create">>;
+  customName: string;
+  setCustomName: React.Dispatch<React.SetStateAction<string>>;
+  customLetters: string;
+  setCustomLetters: React.Dispatch<React.SetStateAction<string>>;
+  customSchool: string;
+  setCustomSchool: React.Dispatch<React.SetStateAction<string>>;
+  customPrimary: string;
+  setCustomPrimary: React.Dispatch<React.SetStateAction<string>>;
+  customSecondary: string;
+  setCustomSecondary: React.Dispatch<React.SetStateAction<string>>;
+  applyCustomChapter: () => void;
   email: string;
   setEmail: React.Dispatch<React.SetStateAction<string>>;
   password: string;
