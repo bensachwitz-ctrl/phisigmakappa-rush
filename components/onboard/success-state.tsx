@@ -32,6 +32,16 @@ export function SuccessState({
 
   const name = [fraternityName.trim(), greekLetters.trim()].filter(Boolean).join(" ") || "Your chapter";
 
+  // Day-one resilience: the parent auto-redirects after a short beat, but if that
+  // navigation is slow (or the freshly provisioned host is briefly unreachable)
+  // the admin should never be stranded on a perpetual spinner. Reveal a manual
+  // "Go to my dashboard" link a few seconds in so they always have an escape.
+  const [showManual, setShowManual] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setShowManual(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="animate-soft-enter py-6 text-center">
       {/* Bespoke celebration illustration — a laurel-wreathed success medallion
@@ -76,6 +86,20 @@ export function SuccessState({
         </svg>
         Redirecting to your dashboard…
       </p>
+
+      {/* Manual fallback — appears a few seconds in so a slow/unreachable
+          auto-redirect never strands the new admin on a spinner. */}
+      {showManual && url && (
+        <div className="mt-4 animate-soft-enter text-xs text-slate-400">
+          Not redirected automatically?{" "}
+          <a
+            href={url}
+            className="font-semibold text-emerald-300 underline-offset-2 hover:underline"
+          >
+            Go to my dashboard
+          </a>
+        </div>
+      )}
     </div>
   );
 }
