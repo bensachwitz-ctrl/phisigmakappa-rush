@@ -267,7 +267,11 @@ export async function POST(req: Request) {
       "chapter.schoolShort": (schoolShort || "").trim(),
       "chapter.charterYear": (charterYear || "").trim(),
       "chapter.foundingYear": (foundingYear || "").trim(),
-      "chapter.fraternityLetters": (fraternityLetters || "ΦΣΚ").trim(),
+      // White-label: never default to a specific org's letters (the old "ΦΣΚ"
+      // fallback rained Phi Sig's glyphs over the hero of any chapter that didn't
+      // supply its own). Fall back to the chapter's national-org letters derived
+      // from the wizard, else empty (the hero then shows the brand-tinted Crest).
+      "chapter.fraternityLetters": (fraternityLetters || greekLettersGlyphs || "").trim(),
       "brand.primaryHex": (primaryColor || "#C8102E").trim(),
       "brand.primaryDarkHex": (darkColor || "#A20D26").trim(),
       "brand.primarySoftHex": (softColor || "#FCEFF1").trim(),
@@ -323,6 +327,10 @@ export async function POST(req: Request) {
       // this the site is subject to takedown (messaged in the welcome email). The
       // auto-takedown cron is intentionally NOT built — this is the stored value.
       "billing.paymentDeadline": paymentDeadlineIso,
+      // Recruitment-term label (e.g. "Fall '26") drives every season/year string
+      // on the public site. Seeded present-and-default so a fresh tenant edits one
+      // field in /admin/settings instead of hunting hardcoded literals.
+      "rush.termLabel": "Fall '26",
       "chapter.onboarded": "true",
     };
 

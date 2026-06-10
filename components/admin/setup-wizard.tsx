@@ -139,7 +139,8 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <WField label="Organization name (full)" id="chapter.fraternityName" values={values} set={set} placeholder="Phi Sigma Kappa" />
               <WField label="Organization short" id="chapter.fraternityShort" values={values} set={set} placeholder="Phi Sig" />
               <WField label="Greek letters (chapter)" id="chapter.greekLetters" values={values} set={set} placeholder="Gamma Triton" />
-              <WField label="Greek glyphs" id="chapter.greekLettersGlyphs" values={values} set={set} placeholder="ΓΤ" />
+              <WField label="Org letters (glyphs)" id="chapter.fraternityLetters" values={values} set={set} placeholder="ΦΣΚ" />
+              <WField label="Chapter glyphs" id="chapter.greekLettersGlyphs" values={values} set={set} placeholder="ΓΤ" />
               <WField label="School / university" id="chapter.schoolName" values={values} set={set} placeholder="University of South Carolina" />
               <WField label="School short" id="chapter.schoolShort" values={values} set={set} placeholder="USC" />
               <WField label="School URL" id="chapter.schoolUrl" values={values} set={set} placeholder="https://sc.edu" />
@@ -179,6 +180,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               />
               <WField label="Cardinal principles / motto" id="chapter.cardinalPrinciples" values={values} set={set} placeholder="Brotherhood, Scholarship, Character" full />
               <WField label="Tagline / hashtag" id="chapter.tagline" values={values} set={set} placeholder="#DamnProud" />
+              <WField label="Recruitment term label" id="rush.termLabel" values={values} set={set} placeholder="Fall '26" />
               <WField label="iOS launcher caption (≤12 chars)" id="chapter.appShortTitle" values={values} set={set} placeholder="Phi Sig USC" maxLength={12} />
             </div>
           )}
@@ -324,13 +326,13 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
 const STEP_KEYS: Record<StepId, string[]> = {
   identity: [
     "chapter.fraternityName", "chapter.fraternityShort",
-    "chapter.greekLetters", "chapter.greekLettersGlyphs",
+    "chapter.greekLetters", "chapter.greekLettersGlyphs", "chapter.fraternityLetters",
     "chapter.schoolName", "chapter.schoolShort", "chapter.schoolUrl",
     "chapter.nationalHqUrl",
     "chapter.charterYear", "chapter.foundingYear",
     "chapter.orgType", "chapter.timezone",
     "chapter.cardinalPrinciples", "chapter.tagline",
-    "chapter.appShortTitle",
+    "chapter.appShortTitle", "rush.termLabel",
   ],
   brand: ["brand.logoUrl", "brand.primaryHex", "brand.primaryDarkHex", "brand.primarySoftHex"],
   contact: [

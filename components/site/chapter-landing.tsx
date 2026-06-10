@@ -65,7 +65,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const identity = chapterIdentityFromCfg(cfg);
-  const summary = `${cfg["stats.brothers"]} brothers · ${cfg["stats.gpa"]} GPA · ${cfg["philanthropy.raisedTotal"]} raised for ${cfg["philanthropy.beneficiaryShort"]}.`;
+  const summary = `${cfg["stats.brothers"]} ${identity.terms.membersLower} · ${cfg["stats.gpa"]} GPA · ${cfg["philanthropy.raisedTotal"]} raised for ${cfg["philanthropy.beneficiaryShort"]}.`;
   // Google truncates SERP descriptions around 155–160 chars. Keeping the meta
   // description under that ceiling prevents the trailing "we'll text you when
   // the schedule drops" from showing as "...". The longer pitch lives in the
@@ -115,45 +115,57 @@ type RecentRow = { tag: string; title: string; icon: string };
 function valuesDefault(terms: ChapterTerms): ValueRow[] {
   return [
     { icon: "Users", title: terms.collective, body: "Lifelong friendships built on mutual respect and showing up for each other." },
-    { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
+    { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-Greek average." },
     { icon: "Heart", title: "Character", body: `We measure ${terms.membersLower} by what they do — service, integrity, and courage in conviction.` },
   ];
 }
 
-const TIMELINE_DEFAULT: TimelineRow[] = [
-  { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
-  { week: "Week 2", title: "Closed events", body: "Invite-only smaller events. Spend more time with individual brothers and start to feel out the fit." },
-  { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
-];
+// Term-aware so a sorority shows "sisterhood events / individual sisters" and a
+// pro/co-ed org shows "membership events / individual members". A fraternity
+// (default terms) renders the exact original copy verbatim.
+function timelineDefault(terms: ChapterTerms): TimelineRow[] {
+  return [
+    { week: "Week 1", title: "Open events", body: `Cookouts, ${terms.collective.toLowerCase()} events, low-pressure hangs at the house. Show up — no commitment, no application.` },
+    { week: "Week 2", title: "Closed events", body: `Invite-only smaller events. Spend more time with individual ${terms.membersLower} and start to feel out the fit.` },
+    { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
+  ];
+}
 
 // Generic, chapter-agnostic fallbacks. These render ONLY if a chapter hasn't
 // supplied its own faq.json / highlights.json / recent.json — so a fresh tenant
 // (e.g. Clemson) never sees another chapter's school, philanthropy, or tagline.
 // The rush chair fills in the real, chapter-specific copy via /admin/settings.
-const FAQ_DEFAULT: FaqRow[] = [
-  { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a brotherhood, we want to meet you." },
-  { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
-  { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
-  { q: "Is there hazing?", a: "Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ." },
-  { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
-  { q: "Can I rush if I'm already in another organization?", a: "Yes — our brothers are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it." },
-];
+// Term-aware: a fresh sorority renders "sisterhood/sisters" with zero edits.
+function faqDefault(terms: ChapterTerms): FaqRow[] {
+  return [
+    { q: "Do I need to be a freshman?", a: `Nope. We recruit freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a ${terms.collective.toLowerCase()}, we want to meet you.` },
+    { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
+    { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
+    { q: "Is there hazing?", a: `Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around ${terms.collective.toLowerCase()}, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ.` },
+    { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
+    { q: "Can I join if I'm already in another organization?", a: `Yes — our ${terms.membersLower} are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it.` },
+  ];
+}
 
-const HIGHLIGHTS_DEFAULT: HighlightRow[] = [
-  { icon: "HandHeart", label: "Year-round philanthropy" },
-  { icon: "Trophy", label: "Signature fundraisers" },
-  { icon: "Building2", label: "On-campus chapter house" },
-  { icon: "GraduationCap", label: "Above-average chapter GPA" },
-  { icon: "Flame", label: "Brotherhood events year-round" },
-  { icon: "Star", label: "Active alumni network" },
-];
+function highlightsDefault(terms: ChapterTerms): HighlightRow[] {
+  return [
+    { icon: "HandHeart", label: "Year-round philanthropy" },
+    { icon: "Trophy", label: "Signature fundraisers" },
+    { icon: "Building2", label: "On-campus chapter house" },
+    { icon: "GraduationCap", label: "Above-average chapter GPA" },
+    { icon: "Flame", label: `${terms.collective} events year-round` },
+    { icon: "Star", label: "Active alumni network" },
+  ];
+}
 
-const RECENT_DEFAULT: RecentRow[] = [
-  { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
-  { tag: "Brotherhood", title: "Brotherhood events before finals", icon: "Trophy" },
-  { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
-  { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
-];
+function recentDefault(terms: ChapterTerms): RecentRow[] {
+  return [
+    { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
+    { tag: terms.collective, title: `${terms.collective} events before finals`, icon: "Trophy" },
+    { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
+    { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
+  ];
+}
 
 // Parse a stat value string like "3.45", "60+", "$25k+" into the bits CountUp needs.
 function parseStat(raw: string): { num: number; prefix?: string; suffix?: string; decimals?: number } {
@@ -219,6 +231,14 @@ export default async function ChapterLandingPage({
   const boothParam = searchParams?.booth;
   const booth = (Array.isArray(boothParam) ? boothParam[0] : boothParam) === "1";
 
+  // Rush-term label — the season/year strings (e.g. "Fall '26") were hardcoded
+  // across the hero, booth, schedule, and CTA, so a Spring-2027 chapter showed a
+  // stale "Fall '26". Drive every season mention from a single cfg key (set in
+  // the setup wizard). `termLabelShort` is the compact form ("Fall '26");
+  // `termLabelLong` defaults to the org-appropriate verb + the short label.
+  const termLabelShort = cfg["rush.termLabel"] || "Fall '26";
+  const termLabelLong = cfg["rush.termLabelLong"] || `${terms.recruit} ${termLabelShort}`;
+
   // Booth mode = single-purpose tablet kiosk. Render only the rush form.
   // No hero, no marketing sections, no Instagram feed, no footer chrome — every
   // pixel below the form is a distraction at a 30-second walk-up on bumpy 4G.
@@ -231,7 +251,7 @@ export default async function ChapterLandingPage({
               <SectionEyebrow icon={IconSparkle}>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
             </div>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
-              Add yourself to the Fall&nbsp;&apos;26 rush list.
+              Add yourself to the {termLabelShort} {terms.recruit.toLowerCase()} list.
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Three quick fields. We&apos;ll text you when the schedule drops.
@@ -258,8 +278,8 @@ export default async function ChapterLandingPage({
     sub?: string;
   };
   const stats: StatRow[] = [
-    { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || "Active brothers", icon: Users, sub: cfg["stats.brothers.sub"] || undefined },
-    { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: GraduationCap, sub: cfg["stats.gpa.sub"] || "Above the all-fraternity average" },
+    { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || `Active ${terms.membersLower}`, icon: Users, sub: cfg["stats.brothers.sub"] || undefined },
+    { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: GraduationCap, sub: cfg["stats.gpa.sub"] || "Above the all-Greek average" },
     { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: ShieldCheck, sub: cfg["stats.years.sub"] || `Founded ${identity.foundingYear}` },
     { ...parseStat(cfg["stats.charity"]), label: cfg["stats.charity.label"] || "Raised for charity", icon: HandHeart, sub: cfg["stats.charity.sub"] || cfg["philanthropy.beneficiaryShort"] },
   ];
@@ -273,10 +293,10 @@ export default async function ChapterLandingPage({
 
   // Admin-editable repeater arrays — parsed JSON with safe fallbacks
   const VALUES = parseJsonArray<ValueRow>(cfg["values.json"], valuesDefault(identity.terms));
-  const TIMELINE = parseJsonArray<TimelineRow>(cfg["timeline.json"], TIMELINE_DEFAULT);
-  const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT);
-  const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
-  const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT);
+  const TIMELINE = parseJsonArray<TimelineRow>(cfg["timeline.json"], timelineDefault(identity.terms));
+  const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], faqDefault(identity.terms));
+  const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], highlightsDefault(identity.terms));
+  const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], recentDefault(identity.terms));
   // White-label Instagram feed — driven entirely by the chapter's own
   // `feed.json` repeater. Default is EMPTY, so a fresh tenant renders the
   // branded Crest empty-state, never another chapter's real posts.
@@ -335,7 +355,10 @@ export default async function ChapterLandingPage({
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
         {/* Soft top vignette so the nav reads cleanly over the aurora wash */}
         <div className="absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/70 to-transparent" aria-hidden />
-        <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
+        <FloatingSymbols
+          greekLettersGlyphs={identity.greekLettersGlyphs}
+          fraternityLetters={identity.fraternityLetters}
+        />
         {/* Drifting brand-colored orbs for an "alive" depth layer behind the
             hero copy. Tinted to THIS chapter's brand (never platform indigo);
             decorative (aria-hidden + pointer-events-none) and reduced-motion
@@ -363,20 +386,24 @@ export default async function ChapterLandingPage({
         >
           <span />
         </Parallax>
-        <div className="absolute right-[8%] top-[10%] -z-10 hidden md:block animate-float [animation-delay:1s] opacity-[0.22] select-none pointer-events-none filter drop-shadow-[0_20px_50px_hsl(var(--primary)/0.25)]">
-          {/* 3D Glassmorphic Shield floating in the hero section */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/3d-shield.png"
-            alt=""
-            width={360}
-            height={360}
-            loading="lazy"
-            decoding="async"
-            className="h-[360px] w-auto object-contain animate-orbit-slow"
-            style={{ animationDuration: '45s' }}
-            aria-hidden="true"
-          />
+        {/* Floating hero shield — the chapter's OWN brand-tinted Crest (SVG,
+            recolors per-tenant via --brand-primary), not a static Phi-Sig-red
+            PNG. Given a glassmorphic 3D treatment: a frosted brand-glow disc
+            behind it, a soft orbit drift, and a deep brand drop-shadow so it
+            reads as a premium 3D mark hovering in the hero for ANY chapter. */}
+        <div className="absolute right-[7%] top-[9%] -z-10 hidden md:block animate-float [animation-delay:1s] select-none pointer-events-none">
+          <div className="relative h-[360px] w-[360px] animate-orbit-slow" style={{ animationDuration: "45s" }}>
+            {/* Frosted brand-glow halo behind the shield */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-[8%] rounded-[42%] bg-[radial-gradient(circle_at_35%_30%,hsl(var(--primary)/0.32),hsl(var(--primary)/0.10)_55%,transparent_72%)] blur-2xl"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-[14%] rounded-[40%] border border-white/40 bg-white/30 backdrop-blur-md shadow-[0_30px_70px_-20px_hsl(var(--primary)/0.45)]"
+            />
+            <Crest className="absolute inset-[18%] h-[64%] w-[64%] drop-shadow-[0_18px_40px_hsl(var(--primary)/0.40)]" />
+          </div>
         </div>
 
         <div className="container section-y">
@@ -620,7 +647,7 @@ export default async function ChapterLandingPage({
             </h2>
             <p className="mt-3 text-muted-foreground text-base sm:text-lg">
               No spam, no ceremony — about 60 seconds. We'll text the second the
-              Fall '26 schedule drops.
+              {" "}{termLabelShort} schedule drops.
             </p>
             {/* Trust signals — frosted glass chips (the section's aurora frosts
                 through them) with custom brand check icons. They lift on hover
@@ -762,14 +789,14 @@ export default async function ChapterLandingPage({
         <div className="container">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={IconCalendarStar}>Fall &apos;26 calendar</SectionEyebrow>
+            <SectionEyebrow icon={IconCalendarStar}>{termLabelShort} calendar</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
             </h2>
           </div>
           <div className="space-y-4 max-w-xl">
             <p className="text-muted-foreground">
-              Full Fall &apos;26 rush schedule drops in August. Get on the interest list above —
+              Full {termLabelShort} {terms.recruit.toLowerCase()} schedule drops in August. Get on the interest list above —
               we&apos;ll text everyone the second it&apos;s live. Private events go out by invitation only.
             </p>
             {/* Hide calendar-subscribe CTAs while the rush schedule hasn't
@@ -1006,9 +1033,11 @@ export default async function ChapterLandingPage({
               {[
                 "Top-tier academic support and mentorship",
                 `Year-round philanthropy with ${cfg["philanthropy.beneficiary"]}`,
-                "Strong alumni network across the Southeast",
+                // Region-neutral by default so no tenant claims a geography it
+                // doesn't have; a chapter can override with its real footprint.
+                cfg["about.alumniLine"] || "Strong, engaged alumni network",
                 `${terms.collective} that lasts well beyond graduation`,
-              ].map((p) => (
+              ].filter(Boolean).map((p) => (
                 <li key={p} className="flex items-start gap-3 text-sm">
                   <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
                   <span>{p}</span>
@@ -1039,13 +1068,30 @@ export default async function ChapterLandingPage({
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-phisig-red font-semibold">Heritage</p>
+                {/* Headline heritage claim is GATED: only assert "one of the
+                    oldest" when the org is genuinely old (founded before 1950)
+                    OR the chapter supplied its own line. Otherwise lead with a
+                    safe, true statement so no tenant ships a false-age claim. */}
                 <p className="mt-1 text-sm font-semibold leading-snug">
-                  One of the oldest Greek letter societies in the country.
+                  {cfg["about.heritageLine"] ||
+                    (identity.foundingYear && Number(identity.foundingYear) < 1950
+                      ? "One of the oldest Greek letter societies in the country."
+                      : `Proud heritage, carried forward at ${identity.schoolName || "our campus"}.`)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  {identity.fraternityName} was founded at {identity.foundingLocation} in {identity.foundingYear}.
-                  {" "}{identity.greekLetters} has carried the chapter forward at {identity.schoolName} since {identity.charterYear}.
-                </p>
+                {(identity.foundingLocation || identity.foundingYear) && (
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {[
+                      identity.foundingYear
+                        ? `${identity.fraternityName} was founded${identity.foundingLocation ? ` at ${identity.foundingLocation}` : ""} in ${identity.foundingYear}.`
+                        : "",
+                      identity.greekLetters && identity.schoolName && identity.charterYear
+                        ? `${identity.greekLetters} has carried the chapter forward at ${identity.schoolName} since ${identity.charterYear}.`
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1278,7 +1324,7 @@ export default async function ChapterLandingPage({
           />
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> Fall Rush 2026
+              <Sparkles className="h-3 w-3" aria-hidden="true" /> {termLabelLong}
             </span>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Get on the interest list.

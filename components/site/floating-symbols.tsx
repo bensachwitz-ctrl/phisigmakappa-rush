@@ -15,23 +15,37 @@ interface FloatingSymbol {
   rotate: number; // degrees
 }
 
-export function FloatingSymbols({ greekLettersGlyphs = "ΓΤ" }: { greekLettersGlyphs?: string }) {
+export function FloatingSymbols({
+  greekLettersGlyphs = "",
+  fraternityLetters = "",
+}: {
+  /** The chapter's chapter-designation glyphs, e.g. "ΓΤ" (Gamma Triton). */
+  greekLettersGlyphs?: string;
+  /** The chapter's national-org letters, e.g. "ΦΣΚ" / "ΚΔ". */
+  fraternityLetters?: string;
+}) {
   const [symbols, setSymbols] = useState<FloatingSymbol[]>([]);
 
   useEffect(() => {
-    // Compile characters
-    const alphabet = ["Φ", "Σ", "Κ"];
-    if (greekLettersGlyphs) {
-      for (const char of greekLettersGlyphs) {
+    // Build the alphabet PURELY from THIS chapter's letters — never a hardcoded
+    // ΦΣΚ base (which rained Phi Sig's glyphs over a Kappa Delta hero). Combine
+    // the national letters + the chapter designation, de-duped. If a chapter has
+    // no letters configured, the alphabet is empty and we render Crest-only.
+    const alphabet: string[] = [];
+    for (const source of [fraternityLetters, greekLettersGlyphs]) {
+      for (const char of source || "") {
         if (char.trim() && !alphabet.includes(char)) {
           alphabet.push(char);
         }
       }
     }
+    const hasLetters = alphabet.length > 0;
 
     const items: FloatingSymbol[] = [];
     for (let i = 0; i < 20; i++) {
-      const type = Math.random() > 0.35 ? "text" : "crest";
+      // With no letters configured, every floating item is a brand-tinted Crest
+      // (no foreign glyphs); otherwise keep the ~65% letters / 35% crest mix.
+      const type = hasLetters ? (Math.random() > 0.35 ? "text" : "crest") : "crest";
       items.push({
         id: i,
         type,
@@ -45,7 +59,7 @@ export function FloatingSymbols({ greekLettersGlyphs = "ΓΤ" }: { greekLettersG
       });
     }
     setSymbols(items);
-  }, [greekLettersGlyphs]);
+  }, [greekLettersGlyphs, fraternityLetters]);
 
   if (symbols.length === 0) return null;
 

@@ -204,52 +204,21 @@ export const DEFAULTS = {
   // falls back to a built-in default. Lets the rush chair add/edit/remove items
   // without a code deploy. Edited via /admin/settings repeater UIs.
 
-  // Timeline cards: [{ week, title, body }]
-  "timeline.json": JSON.stringify([
-    { week: "Week 1", title: "Open events", body: "Cookouts, brotherhood events, low-pressure hangs at the house. Show up — no commitment, no application." },
-    { week: "Week 2", title: "Closed events", body: "Invite-only smaller events. Spend more time with individual brothers and start to feel out the fit." },
-    { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
-  ]),
-
-  // FAQ accordion items: [{ q, a }]
-  // Chapter-agnostic defaults — the rush chair replaces these with their own
-  // school/chapter specifics via /admin/settings. A fresh tenant must never see
-  // another chapter's school name or national org here.
-  "faq.json": JSON.stringify([
-    { q: "Do I need to be a freshman?", a: "Nope. We rush freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a brotherhood, we want to meet you." },
-    { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
-    { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
-    { q: "Is there hazing?", a: "Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around brotherhood, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ." },
-    { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
-    { q: "Can I rush if I'm already in another organization?", a: "Yes — our brothers are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it." },
-  ]),
-
-  // Three Cardinal Principles cards: [{ icon, title, body }]
-  "values.json": JSON.stringify([
-    { icon: "Users", title: "Brotherhood", body: "Lifelong friendships built on mutual respect and showing up for each other." },
-    { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-fraternity average." },
-    { icon: "Heart", title: "Character", body: "We measure men by what they do — service, integrity, and courage in conviction." },
-  ]),
-
-  // Highlights ribbon: [{ icon, label }]
-  // Chapter-agnostic defaults — replaced per chapter via /admin/settings.
-  "highlights.json": JSON.stringify([
-    { icon: "HandHeart", label: "Year-round philanthropy" },
-    { icon: "Trophy", label: "Signature fundraisers" },
-    { icon: "Building2", label: "On-campus chapter house" },
-    { icon: "GraduationCap", label: "Above-average chapter GPA" },
-    { icon: "Flame", label: "Brotherhood events year-round" },
-    { icon: "Star", label: "Active alumni network" },
-  ]),
-
-  // Recent activity strip: [{ tag, title, icon }]
-  // Chapter-agnostic defaults — replaced per chapter via /admin/settings.
-  "recent.json": JSON.stringify([
-    { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
-    { tag: "Brotherhood", title: "Brotherhood events before finals", icon: "Trophy" },
-    { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
-    { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
-  ]),
+  // Timeline / FAQ / Values / Highlights / Recent content arrays.
+  // WHITE-LABEL: these default to EMPTY ("[]") so the per-chapter site renderer
+  // (components/site/chapter-landing.tsx) falls through to its TERM-AWARE
+  // defaults (timelineDefault/faqDefault/valuesDefault/… keyed off the chapter's
+  // orgType). A fraternity (the default orgType) gets the exact original copy
+  // verbatim; a sorority renders "sisterhood/sisters" and a pro/co-ed org
+  // "membership/members" with zero manual edits — no gendered literal is ever
+  // seeded into a tenant's DB. The rush chair can still override any array with
+  // their own chapter-specific copy via /admin/settings. (Same pattern feed.json
+  // already uses to avoid leaking another chapter's content.)
+  "timeline.json": JSON.stringify([]),
+  "faq.json": JSON.stringify([]),
+  "values.json": JSON.stringify([]),
+  "highlights.json": JSON.stringify([]),
+  "recent.json": JSON.stringify([]),
 
   // Instagram feed grid: [{ slug, caption, tag, objectPosition }]
   // WHITE-LABEL: defaults to an EMPTY array so a fresh tenant NEVER ships
@@ -267,20 +236,34 @@ export const DEFAULTS = {
   // section can also be hidden entirely via show.testimonial. (The avatar-
   // initials helper falls back to "A. Mitchell" only for the monogram glyph
   // when author is blank — no real name is rendered.)
-  "testimonial.quote": "Joining this brotherhood wasn't a four-year decision — it was a lifelong one. The friends I met during rush are the same guys standing next to me at every milestone.",
+  "testimonial.quote": "Joining this chapter wasn't a four-year decision — it was a lifelong one. The friends I met during recruitment are the same people standing next to me at every milestone.",
   "testimonial.author": "",
   "testimonial.classYear": "",
   "testimonial.attribution": "",
 
-  // About-section history paragraph. WHITE-LABEL: chapter-agnostic copy that
-  // names NO specific fraternity/chapter/school (those render from the cfg
-  // identity keys elsewhere on the page). The rush chair replaces this with
-  // their own chapter's founding story via /admin/settings.
-  "about.history": "Our fraternity was founded on three cardinal principles: Brotherhood, Scholarship, and Character. The chapter has built campus leaders around those same principles for generations — leaders in the classroom, in the community, and beyond.",
+  // About-section history paragraph. WHITE-LABEL: chapter-agnostic + ORG-NEUTRAL
+  // copy that names NO specific fraternity/sorority/chapter/school AND no gendered
+  // term (those render from the cfg identity + term layer elsewhere on the page).
+  // The rush chair replaces this with their own chapter's founding story.
+  "about.history": "Our organization was founded on three cardinal principles: community, scholarship, and character. The chapter has built campus leaders around those same principles for generations — leaders in the classroom, in the community, and beyond.",
 
   // Anti-hazing block body (the long paragraph under the Zero-Tolerance heading).
-  // WHITE-LABEL: chapter-agnostic — names no specific national org or chapter.
-  "antiHazing.body": "Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around brotherhood, leadership, and chapter history — never humiliation, intimidation, or harm.",
+  // WHITE-LABEL: chapter-agnostic + org-neutral — names no national org, chapter,
+  // or gendered term.
+  "antiHazing.body": "Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history — never humiliation, intimidation, or harm.",
+
+  // Recruitment-term label — drives every season/year string on the public site
+  // (hero, schedule, CTA). Single source so a Spring-2027 chapter edits one field
+  // instead of hunting hardcoded "Fall '26" literals. `Long` defaults to the
+  // org-appropriate verb + the short label inside the renderer when left blank.
+  "rush.termLabel": "Fall '26",
+  "rush.termLabelLong": "",
+
+  // About-section bullets that were geography/heritage claims. Left BLANK so the
+  // renderer uses a region-neutral fallback; a chapter can assert its real
+  // alumni footprint / heritage line here without shipping a false claim.
+  "about.alumniLine": "",
+  "about.heritageLine": "",
 
   // ── DUES COLLECTION (Stripe Checkout — R43-A) ─────────────────────
   // Optional white-label payment acceptance. All four prereqs must be
