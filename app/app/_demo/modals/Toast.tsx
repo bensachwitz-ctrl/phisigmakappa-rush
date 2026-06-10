@@ -29,7 +29,7 @@ export function renderToast(ctx: DemoContext) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-bold text-slate-900 leading-tight">System Notification</p>
-                  <p className="text-[10px] text-slate-500 truncate leading-snug mt-0.5">{toast.message}</p>
+                  <p className="text-[12px] text-slate-500 truncate leading-snug mt-0.5">{toast.message}</p>
                 </div>
               </div>
             </div>

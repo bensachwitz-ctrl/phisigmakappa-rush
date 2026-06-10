@@ -30,19 +30,19 @@ export function renderRushTab(ctx: DemoContext) {
                           <div className="grid grid-cols-3 gap-2 text-center shrink-0">
                             <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
                               <span className="text-[18px] font-black text-slate-900">{dashboardData?.pnms?.length || 0}</span>
-                              <p className="text-[9px] text-slate-500 font-semibold uppercase mt-0.5">Total PNMs</p>
+                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Total PNMs</p>
                             </div>
                             <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
                               <span className="text-[18px] font-black text-slate-900">
                                 {dashboardData?.pnms?.filter((p: any) => p.status === "BID_EXTENDED").length || 0}
                               </span>
-                              <p className="text-[9px] text-slate-500 font-semibold uppercase mt-0.5">Bids Sent</p>
+                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Bids Sent</p>
                             </div>
                             <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
                               <span className="text-[18px] font-black text-slate-900">
                                 {dashboardData?.pnms?.filter((p: any) => p.attendanceCount > 0).length || 0}
                               </span>
-                              <p className="text-[9px] text-slate-500 font-semibold uppercase mt-0.5">Attended</p>
+                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Attended</p>
                             </div>
                           </div>
 
@@ -66,7 +66,7 @@ export function renderRushTab(ctx: DemoContext) {
                                   setIsRushActive(false);
                                   showToast("Rush Season ended. Portal converted to New Members & Sober Driver Schedule.", "success");
                                 }}
-                                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black flex items-center justify-center gap-1 transition shadow-sm"
+                                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[12px] font-black flex items-center justify-center gap-1 transition shadow-sm"
                               >
                                 <XCircle className="w-3.5 h-3.5 text-red-400" /> Close Rush Season
                               </button>
@@ -78,7 +78,7 @@ export function renderRushTab(ctx: DemoContext) {
                                 <button
                                   key={f}
                                   onClick={() => setRushFilter(f)}
-                                  className={`px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider rounded-lg border transition ${
+                                  className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg border transition ${
                                     rushFilter === f
                                       ? "bg-slate-900 border-slate-900 text-white"
                                       : "bg-white border-slate-100 text-slate-500 hover:text-slate-900"
@@ -125,10 +125,10 @@ export function renderRushTab(ctx: DemoContext) {
                                       <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                         {p.name}
                                         {p.status === "BID_EXTENDED" && (
-                                          <span className="text-[7px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1 py-0.5 rounded">Bid Sent</span>
+                                          <span className="text-[11px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1 py-0.5 rounded">Bid Sent</span>
                                         )}
                                       </h5>
-                                      <span className="text-[9px] text-slate-500 block truncate">
+                                      <span className="text-[11px] text-slate-500 block truncate">
                                         {p.year} • {p.major || "No Major Specified"} • {p.hometown}
                                       </span>
                                     </div>
@@ -136,10 +136,10 @@ export function renderRushTab(ctx: DemoContext) {
 
                                   <div className="flex items-center gap-2 shrink-0">
                                     <div className="text-right">
-                                      <span className="text-[10px] font-bold text-slate-800">
+                                      <span className="text-[12px] font-bold text-slate-800">
                                         {p.votesAverage > 0 ? `+${p.votesAverage}` : p.votesAverage}
                                       </span>
-                                      <span className="text-[8px] text-slate-400 block">{p.votesCount} votes</span>
+                                      <span className="text-[11px] text-slate-400 block">{p.votesCount} votes</span>
                                     </div>
                                     <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition" />
                                   </div>
@@ -154,14 +154,14 @@ export function renderRushTab(ctx: DemoContext) {
                           <div className="flex items-center justify-between bg-white p-3 border border-slate-100 rounded-2xl shadow-sm shrink-0">
                             <div>
                               <h4 className="text-xs font-bold text-slate-900">New Members Portal</h4>
-                              <p className="text-[8px] text-slate-400 mt-0.5">Active Pledges & Sober Drivers</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">Active Pledges & Sober Drivers</p>
                             </div>
                             <button
                               onClick={() => {
                                 setIsRushActive(true);
                                 showToast("Rush season re-opened.", "info");
                               }}
-                              className="px-2.5 py-1 text-[8px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                              className="px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
                             >
                               Re-open Rush
                             </button>
@@ -170,10 +170,10 @@ export function renderRushTab(ctx: DemoContext) {
                           {/* Time Simulator block */}
                           <div className="p-3 bg-slate-950 text-slate-200 rounded-2xl border border-white/5 space-y-2 shadow-inner shrink-0">
                             <div className="flex items-center justify-between">
-                              <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                                 <Clock className="w-3 h-3 text-emerald-400" /> Time Simulator
                               </span>
-                              <span className="text-[10px] font-black text-white bg-white/10 px-2 py-0.5 rounded">
+                              <span className="text-[12px] font-black text-white bg-white/10 px-2 py-0.5 rounded">
                                 {simulatedDay} @ {simulatedHour === 22 ? "10:00 PM" : simulatedHour === 23 ? "11:00 PM" : simulatedHour === 0 ? "12:00 AM" : "1:00 AM"}
                               </span>
                             </div>
@@ -182,7 +182,7 @@ export function renderRushTab(ctx: DemoContext) {
                                 <button
                                   key={day}
                                   onClick={() => setSimulatedDay(day)}
-                                  className={`flex-1 py-1 text-[8px] font-bold rounded transition ${
+                                  className={`flex-1 py-1 text-[11px] font-bold rounded transition ${
                                     simulatedDay === day ? "bg-blue-500 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
                                   }`}
                                 >
@@ -195,7 +195,7 @@ export function renderRushTab(ctx: DemoContext) {
                                 <button
                                   key={hour}
                                   onClick={() => setSimulatedHour(hour)}
-                                  className={`flex-1 py-1 text-[8px] font-bold rounded transition ${
+                                  className={`flex-1 py-1 text-[11px] font-bold rounded transition ${
                                     simulatedHour === hour ? "bg-emerald-500 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
                                   }`}
                                 >
@@ -209,7 +209,7 @@ export function renderRushTab(ctx: DemoContext) {
                           <div className="flex border-b border-slate-100 shrink-0">
                             <button
                               onClick={() => setActiveSubTab("directory")}
-                              className={`flex-1 pb-1.5 text-[10px] font-bold border-b-2 text-center transition-all ${
+                              className={`flex-1 pb-1.5 text-[12px] font-bold border-b-2 text-center transition-all ${
                                 activeSubTab === "directory" ? "border-slate-900 text-slate-900" : "border-transparent text-slate-400"
                               }`}
                             >
@@ -217,7 +217,7 @@ export function renderRushTab(ctx: DemoContext) {
                             </button>
                             <button
                               onClick={() => setActiveSubTab("schedule")}
-                              className={`flex-1 pb-1.5 text-[10px] font-bold border-b-2 text-center transition-all ${
+                              className={`flex-1 pb-1.5 text-[12px] font-bold border-b-2 text-center transition-all ${
                                 activeSubTab === "schedule" ? "border-slate-900 text-slate-900" : "border-transparent text-slate-400"
                               }`}
                             >
@@ -258,12 +258,12 @@ export function renderRushTab(ctx: DemoContext) {
                                         <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                           {p.name}
                                           {p.isDriverNow && (
-                                            <span className="inline-flex items-center gap-0.5 bg-amber-100 text-amber-900 border border-amber-200 text-[6px] font-bold px-1 rounded animate-pulse">
+                                            <span className="inline-flex items-center gap-0.5 bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-bold px-1 rounded animate-pulse">
                                               <Key className="w-2 h-2" /> DRIVING
                                             </span>
                                           )}
                                         </h5>
-                                        <span className="text-[9px] text-slate-500 block truncate">
+                                        <span className="text-[11px] text-slate-500 block truncate">
                                           {p.phone} • {p.major || "Freshman"}
                                         </span>
                                       </div>
@@ -274,7 +274,7 @@ export function renderRushTab(ctx: DemoContext) {
                                           <Car className="w-3.5 h-3.5" />
                                         </div>
                                       ) : (
-                                        <span className="text-[8px] font-bold text-slate-400 block">Standby</span>
+                                        <span className="text-[11px] font-bold text-slate-400 block">Standby</span>
                                       )}
                                     </div>
                                   </div>
@@ -302,11 +302,11 @@ export function renderRushTab(ctx: DemoContext) {
                                     isCurrentShift ? "border-emerald-400 bg-emerald-500/[0.01]" : "border-slate-100"
                                   }`}>
                                     <div className="flex justify-between items-center mb-1.5">
-                                      <span className="text-[9px] font-bold text-slate-800 flex items-center gap-1">
+                                      <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
                                         <Clock className="w-3.5 h-3.5 text-slate-400" /> {s.label}
                                       </span>
                                       {isCurrentShift && (
-                                        <span className="text-[6px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full select-none animate-pulse">Active Now</span>
+                                        <span className="text-[11px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full select-none animate-pulse">Active Now</span>
                                       )}
                                     </div>
                                     <select
@@ -315,7 +315,7 @@ export function renderRushTab(ctx: DemoContext) {
                                         setSoberAssignments((prev) => ({ ...prev, [s.key]: e.target.value }));
                                         showToast("Sober driver assignment updated.", "success");
                                       }}
-                                      className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] outline-none font-medium text-slate-800"
+                                      className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] outline-none font-medium text-slate-800"
                                     >
                                       <option value="">Select a sober driver...</option>
                                       {(dashboardData?.pnms || []).map((p: any) => (

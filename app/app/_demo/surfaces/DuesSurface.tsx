@@ -25,13 +25,13 @@ export function renderDuesTab(ctx: DemoContext) {
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                                <span className="text-[12px] text-slate-500 uppercase tracking-widest font-bold">
                                   {dashboardData?.dues?.config?.label || "Active Chapter Dues"}
                                 </span>
                                 <h2 className="text-2xl font-black text-slate-900">
                                   ${((dashboardData?.dues?.config?.amountCents || 0) / 100).toLocaleString([], { minimumFractionDigits: 2 })}
                                 </h2>
-                                <span className="text-[10px] text-slate-400 block">
+                                <span className="text-[12px] text-slate-400 block">
                                   Period: {dashboardData?.dues?.config?.year || "Active Semester"}
                                 </span>
                               </div>
@@ -71,13 +71,13 @@ export function renderDuesTab(ctx: DemoContext) {
                                   <div key={p.id} className="p-3.5 bg-white rounded-xl border border-slate-100 flex items-center justify-between text-xs shadow-sm">
                                     <div>
                                       <p className="font-bold text-slate-900">Dues Assessment: {p.year}</p>
-                                      <span className="text-[9px] text-slate-400">
+                                      <span className="text-[11px] text-slate-400">
                                         Channel: {p.method} • {new Date(p.createdAt).toLocaleDateString()}
                                       </span>
                                     </div>
                                     <div className="text-right">
                                       <p className="font-bold text-slate-900">${(p.amountCents / 100).toFixed(2)}</p>
-                                      <span className={`text-[9px] font-bold uppercase ${
+                                      <span className={`text-[11px] font-bold uppercase ${
                                         p.status === "PAID" ? "text-emerald-600" : "text-amber-600"
                                       }`}>
                                         {p.status}
@@ -104,7 +104,7 @@ export function renderDuesTab(ctx: DemoContext) {
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Alumni Giving Portal</span>
+                                <span className="text-[12px] text-slate-500 uppercase tracking-widest font-bold">Alumni Giving Portal</span>
                                 <h3 className="text-sm font-bold text-slate-900">Support local scholarship funds</h3>
                                 <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed mt-1">
                                   Contributions settle directly to the local chapter connected Stripe account for housing and recruitment.
@@ -132,7 +132,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   <div key={d.id} className="p-3.5 bg-white rounded-xl border border-slate-100 flex items-center justify-between text-xs shadow-sm">
                                     <div>
                                       <p className="font-bold text-slate-900">{d.campaign || "General Fund"}</p>
-                                      <span className="text-[9px] text-slate-400">
+                                      <span className="text-[11px] text-slate-400">
                                         {new Date(d.recordedAt).toLocaleDateString()}
                                       </span>
                                     </div>

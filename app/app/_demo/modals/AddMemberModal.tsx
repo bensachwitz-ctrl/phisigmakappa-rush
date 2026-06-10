@@ -36,7 +36,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                 
                 <form onSubmit={handleAddMobileMember} className="space-y-3">
                   <div>
-                    <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Full Name</label>
+                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Full Name</label>
                     <input
                       type="text"
                       required
@@ -48,7 +48,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
                   
                   <div>
-                    <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
+                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       required
@@ -60,7 +60,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
 
                   <div>
-                    <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
+                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
                     <input
                       type="text"
                       value={newMemberPhone}
@@ -71,12 +71,12 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
 
                   <div>
-                    <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Chapter Roster Role</label>
+                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Chapter Roster Role</label>
                     <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                       <button
                         type="button"
                         onClick={() => setNewMemberRole("actives")}
-                        className={`flex-1 py-1 text-[10px] font-semibold rounded transition ${
+                        className={`flex-1 py-1 text-[12px] font-semibold rounded transition ${
                           newMemberRole === "actives" ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500"
                         }`}
                       >
@@ -85,7 +85,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                       <button
                         type="button"
                         onClick={() => setNewMemberRole("alumni")}
-                        className={`flex-1 py-1 text-[10px] font-semibold rounded transition ${
+                        className={`flex-1 py-1 text-[12px] font-semibold rounded transition ${
                           newMemberRole === "alumni" ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500"
                         }`}
                       >
@@ -96,7 +96,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
 
                   {newMemberRole === "actives" ? (
                     <div>
-                      <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Officer Position (Optional)</label>
+                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Officer Position (Optional)</label>
                       <input
                         type="text"
                         value={newMemberPosition}
@@ -107,7 +107,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Graduation Year</label>
+                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Graduation Year</label>
                       <input
                         type="number"
                         value={newMemberGradYear}

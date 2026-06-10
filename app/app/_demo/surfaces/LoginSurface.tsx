@@ -39,7 +39,7 @@ export function renderLogin(ctx: DemoContext) {
 
               <div className="text-center mb-6">
                 <span 
-                  className="text-[10px] font-bold tracking-widest uppercase border px-2.5 py-1 rounded-full"
+                  className="text-[12px] font-bold tracking-widest uppercase border px-2.5 py-1 rounded-full"
                   style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                 >
                   {selectedBrand.letters} USC CHAPTER
@@ -96,7 +96,7 @@ export function renderLogin(ctx: DemoContext) {
                     placeholder="••••••••"
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs text-slate-900 transition brand-focus"
                   />
-                  <div className="flex justify-between items-center text-[10px] pt-1.5 px-0.5">
+                  <div className="flex justify-between items-center text-[12px] pt-1.5 px-0.5">
                     <span></span>
                     <button
                       type="button"

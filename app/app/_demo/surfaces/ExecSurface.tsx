@@ -221,7 +221,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
               <div className="flex items-start justify-between gap-2">
                 <h4 className="text-[14px] font-bold leading-snug text-slate-900">{a.title}</h4>
                 {a.pinned && (
-                  <span className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ backgroundColor: primary + "14", color: primary }}>
+                  <span className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold" style={{ backgroundColor: primary + "14", color: primary }}>
                     <Pin className="h-3 w-3" /> Pinned
                   </span>
                 )}

@@ -168,7 +168,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                             {t.name}
                           </h4>
                           {isDemoItem && (
-                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 ring-1 ring-amber-100">
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[12px] font-bold text-amber-600 ring-1 ring-amber-100">
                               Demo
                             </span>
                           )}
@@ -211,7 +211,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                 {previewLetters}
               </div>
               <div className="min-w-0">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Live preview</span>
+                <span className="block text-[12px] font-bold uppercase tracking-wider text-slate-500">Live preview</span>
                 <h3 className="truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
                 <p className="truncate text-[12px] text-slate-500">{customSchool.trim() || "Your University"}</p>
               </div>

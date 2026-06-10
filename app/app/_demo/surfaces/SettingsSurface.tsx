@@ -32,18 +32,18 @@ export function renderSettingsTab(ctx: DemoContext) {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-slate-900">{dashboardData?.profile?.name}</h4>
-                            <p className="text-[10px] text-slate-500">{dashboardData?.profile?.email}</p>
+                            <p className="text-[12px] text-slate-500">{dashboardData?.profile?.email}</p>
                           </div>
                           <div className="flex items-center gap-2 pt-1">
                             <span 
-                              className="text-[9px] px-2.5 py-0.5 rounded border font-semibold uppercase tracking-wider"
+                              className="text-[11px] px-2.5 py-0.5 rounded border font-semibold uppercase tracking-wider"
                               style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                             >
                               {role} Account
                             </span>
                             <button
                               onClick={() => setShowEditProfileModal(true)}
-                              className="text-[9px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded border border-slate-200 transition"
+                              className="text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded border border-slate-200 transition"
                             >
                               Edit Profile
                             </button>
@@ -92,7 +92,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                               </div>
                               <button
                                 onClick={() => setShowAddMemberModal(true)}
-                                className="text-[9px] font-bold text-white px-2.5 py-1 rounded-lg transition active:scale-95"
+                                className="text-[11px] font-bold text-white px-2.5 py-1 rounded-lg transition active:scale-95"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
                                 + Add Member
@@ -102,12 +102,12 @@ export function renderSettingsTab(ctx: DemoContext) {
                             <div className="space-y-3 max-h-[180px] overflow-y-auto pr-1">
                               {/* Actives */}
                               <div className="space-y-1.5">
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Actives ({dashboardData?.roster?.actives?.length || 0})</span>
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Actives ({dashboardData?.roster?.actives?.length || 0})</span>
                                 {(dashboardData?.roster?.actives || []).map((b: any) => (
-                                  <div key={b.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                                  <div key={b.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">
                                       <p className="font-bold text-slate-900 truncate">{b.name}</p>
-                                      <p className="text-[8px] text-slate-505 truncate">{b.email || "No email"}</p>
+                                      <p className="text-[11px] text-slate-505 truncate">{b.email || "No email"}</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       <button
@@ -133,12 +133,12 @@ export function renderSettingsTab(ctx: DemoContext) {
                               
                               {/* Alumni */}
                               <div className="space-y-1.5 pt-1">
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Alumni ({dashboardData?.roster?.alumni?.length || 0})</span>
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Alumni ({dashboardData?.roster?.alumni?.length || 0})</span>
                                 {(dashboardData?.roster?.alumni || []).map((al: any) => (
-                                  <div key={al.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[10px]">
+                                  <div key={al.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">
                                       <p className="font-bold text-slate-900 truncate">{al.name}</p>
-                                      <p className="text-[8px] text-slate-505 truncate">{al.email || "No email"}</p>
+                                      <p className="text-[11px] text-slate-505 truncate">{al.email || "No email"}</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       <button

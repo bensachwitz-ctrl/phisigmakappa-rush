@@ -63,7 +63,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                       <form onSubmit={handlePostJob} className="space-y-3.5 pb-8">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Job / Internship Title</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Job / Internship Title</label>
                             <input
                               type="text"
                               required
@@ -74,7 +74,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Company Name</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Company Name</label>
                             <input
                               type="text"
                               required
@@ -88,7 +88,7 @@ export function renderPostJobModal(ctx: DemoContext) {
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location</label>
                             <input
                               type="text"
                               value={jobLocation}
@@ -98,7 +98,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Salary (Optional)</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Salary (Optional)</label>
                             <input
                               type="text"
                               value={jobSalary}
@@ -110,11 +110,11 @@ export function renderPostJobModal(ctx: DemoContext) {
                         </div>
 
                         <div className="border-t border-slate-100 pt-3 space-y-3">
-                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Contact & Referral Info</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Contact & Referral Info</span>
                           
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Referral Contact Name</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Referral Contact Name</label>
                               <input
                                 type="text"
                                 required
@@ -125,7 +125,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Contact Phone</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Contact Phone</label>
                               <input
                                 type="text"
                                 value={jobContactPhone}
@@ -137,7 +137,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                           </div>
 
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Contact Email (for Applications)</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Contact Email (for Applications)</label>
                             <input
                               type="email"
                               required
@@ -150,7 +150,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                         </div>
 
                         <div className="border-t border-slate-100 pt-3">
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Description</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Description</label>
                           <textarea
                             required
                             rows={2}
@@ -162,7 +162,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                         </div>
 
                         <div>
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Preferred Qualifications</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Preferred Qualifications</label>
                           <input
                             type="text"
                             value={jobRequirements}
@@ -180,13 +180,13 @@ export function renderPostJobModal(ctx: DemoContext) {
                             onChange={(e) => setJobCrossPost(e.target.checked)}
                             className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
                           />
-                          <label htmlFor="jobCrossPost" className="text-[10px] text-slate-600 font-bold select-none cursor-pointer">
+                          <label htmlFor="jobCrossPost" className="text-[12px] text-slate-600 font-bold select-none cursor-pointer">
                             Cross-post teaser directly to Announcements feed
                           </label>
                         </div>
 
                         {postJobError && (
-                          <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-1.5 text-[10px] text-red-600 leading-normal">
+                          <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-1.5 text-[12px] text-red-600 leading-normal">
                             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <span>{postJobError}</span>
                           </div>

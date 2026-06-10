@@ -24,7 +24,7 @@ export function renderBookingModal(ctx: DemoContext) {
               <X className="w-4 h-4" />
             </button>
             <div className="space-y-1.5 border-b border-white/10 pb-3">
-              <div className="inline-flex items-center gap-1.5 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
                 <Calendar className="w-3.5 h-3.5" /> Book walkthrough
               </div>
               <h3 className="text-lg font-bold text-white leading-tight">Schedule a Call with Ben</h3>
@@ -51,7 +51,7 @@ export function renderBookingModal(ctx: DemoContext) {
               <form onSubmit={(e) => { e.preventDefault(); setBookingSubmitted(true); }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Date</label>
+                    <label className="block text-[12px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Date</label>
                     <input
                       type="date"
                       required
@@ -61,7 +61,7 @@ export function renderBookingModal(ctx: DemoContext) {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Time</label>
+                    <label className="block text-[12px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Time</label>
                     <input
                       type="time"
                       required
@@ -74,7 +74,7 @@ export function renderBookingModal(ctx: DemoContext) {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Your Name</label>
+                    <label className="block text-[12px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Your Name</label>
                     <input
                       type="text"
                       required
@@ -85,7 +85,7 @@ export function renderBookingModal(ctx: DemoContext) {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
+                    <label className="block text-[12px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       required

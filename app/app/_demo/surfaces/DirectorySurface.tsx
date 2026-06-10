@@ -21,7 +21,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
                           <button
                             onClick={() => { setRosterTab("actives"); setRosterSearch(""); }}
-                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition ${
+                            className={`flex-1 py-1.5 text-[12px] font-bold rounded-lg transition ${
                               rosterTab === "actives"
                                 ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                                : "text-slate-500 hover:text-slate-950"
@@ -31,7 +31,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                           </button>
                           <button
                             onClick={() => { setRosterTab("alumni"); setRosterSearch(""); }}
-                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition ${
+                            className={`flex-1 py-1.5 text-[12px] font-bold rounded-lg transition ${
                               rosterTab === "alumni"
                                 ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                                 : "text-slate-500 hover:text-slate-950"
@@ -41,7 +41,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                           </button>
                           <button
                             onClick={() => { setRosterTab("careers"); setRosterSearch(""); }}
-                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition ${
+                            className={`flex-1 py-1.5 text-[12px] font-bold rounded-lg transition ${
                               rosterTab === "careers"
                                 ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                                 : "text-slate-500 hover:text-slate-950"
@@ -103,7 +103,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                     </div>
                                     <div className="min-w-0">
                                       <h5 className="text-xs font-bold text-slate-900 truncate">{b.name}</h5>
-                                      <span className="text-[9px] text-slate-500 truncate block">
+                                      <span className="text-[11px] text-slate-500 truncate block">
                                         {b.position || `${b.year || "Undergrad"}`} • {b.pledgeClass || "Brother"}
                                       </span>
                                     </div>
@@ -165,7 +165,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                       </div>
                                       <div className="min-w-0">
                                         <h5 className="text-xs font-bold text-slate-900 truncate">{al.name}</h5>
-                                        <span className="text-[9px] text-slate-500 block uppercase tracking-wider">
+                                        <span className="text-[11px] text-slate-500 block uppercase tracking-wider">
                                           Class of {al.graduationYear} • {al.pledgeClass || "Alum"}
                                         </span>
                                       </div>
@@ -192,7 +192,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                   </div>
 
                                   {al.jobTitle && (
-                                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-xl text-[10px] text-slate-700">
+                                    <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-xl text-[12px] text-slate-700">
                                       <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                       <span className="font-semibold text-slate-800 truncate max-w-[240px]">
                                         {al.jobTitle} at {al.employer || "Private Company"}
@@ -249,39 +249,39 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                             <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                             <span className="text-xs font-bold text-slate-900 leading-tight">{j.title}</span>
                                           </div>
-                                          <span className="text-[10px] text-slate-500 mt-1 block">
+                                          <span className="text-[12px] text-slate-500 mt-1 block">
                                             {j.company} • {j.location || "Remote"}
                                           </span>
                                         </div>
 
                                         {j.salary && (
-                                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded shrink-0">
+                                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded shrink-0">
                                             {j.salary}
                                           </span>
                                         )}
                                       </div>
 
-                                      <p className={`text-[10px] text-slate-600 leading-relaxed ${isExpanded ? "" : "line-clamp-2"}`}>
+                                      <p className={`text-[12px] text-slate-600 leading-relaxed ${isExpanded ? "" : "line-clamp-2"}`}>
                                         {j.description}
                                       </p>
 
                                       {isExpanded && (
-                                        <div className="pt-3 border-t border-slate-100 space-y-3 text-[10px] text-slate-500 transition-all" onClick={(e) => e.stopPropagation()}>
+                                        <div className="pt-3 border-t border-slate-100 space-y-3 text-[12px] text-slate-500 transition-all" onClick={(e) => e.stopPropagation()}>
                                           {j.requirements && (
                                             <div>
-                                              <span className="font-bold text-slate-800 uppercase text-[8px] block mb-0.5">Requirements</span>
+                                              <span className="font-bold text-slate-800 uppercase text-[11px] block mb-0.5">Requirements</span>
                                               <p className="leading-relaxed">{j.requirements}</p>
                                             </div>
                                           )}
 
                                           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
-                                            <span className="font-bold text-slate-500 uppercase text-[8px] block">Referral Referral Contacts</span>
+                                            <span className="font-bold text-slate-500 uppercase text-[11px] block">Referral Referral Contacts</span>
                                             <p className="text-slate-800 font-semibold text-xs">{j.contactName} ({j.postedByRole === "alumni" ? "Alumnus" : "Brother"})</p>
                                             
                                             <div className="flex gap-2 pt-1.5">
                                               <a
                                                 href={`mailto:${j.contactEmail}?subject=Greekstack Career: ${j.title}`}
-                                                className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[9px] font-bold text-center text-slate-800 flex items-center justify-center gap-1 transition shadow-sm"
+                                                className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-center text-slate-800 flex items-center justify-center gap-1 transition shadow-sm"
                                               >
                                                 <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
                                               </a>
@@ -298,7 +298,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                         </div>
                                       )}
 
-                                      <div className="flex items-center justify-between text-[9px] text-slate-400 pt-1 border-t border-slate-50">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-50">
                                         <span>Shared by {j.postedByName}</span>
                                         <span className="flex items-center gap-0.5">
                                           {isExpanded ? "Collapse Details" : "View Details"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />

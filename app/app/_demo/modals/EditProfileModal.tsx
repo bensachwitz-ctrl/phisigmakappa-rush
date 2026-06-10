@@ -49,7 +49,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                     <form onSubmit={handleSaveProfile} className="space-y-3.5 pb-8">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
                           <input
                             type="text"
                             required
@@ -60,7 +60,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Hometown</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Hometown</label>
                           <input
                             type="text"
                             required
@@ -75,7 +75,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                       {role === "brother" ? (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Year</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Year</label>
                             <input
                               type="text"
                               required
@@ -86,7 +86,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Academic Major</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Academic Major</label>
                             <input
                               type="text"
                               required
@@ -101,7 +101,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                         <div className="space-y-3.5">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Current Employer</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Current Employer</label>
                               <input
                                 type="text"
                                 required
@@ -112,7 +112,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Job Title</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Job Title</label>
                               <input
                                 type="text"
                                 required
@@ -126,7 +126,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
 
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">City</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">City</label>
                               <input
                                 type="text"
                                 required
@@ -137,7 +137,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">State</label>
+                              <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">State</label>
                               <input
                                 type="text"
                                 required
@@ -150,7 +150,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                           </div>
 
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">LinkedIn URL</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">LinkedIn URL</label>
                             <input
                               type="text"
                               value={editLinkedIn}
@@ -161,7 +161,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                           </div>
 
                           <div>
-                            <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Professional Bio / Mentorship Note</label>
+                            <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Professional Bio / Mentorship Note</label>
                             <textarea
                               rows={2}
                               value={editBio}

@@ -26,7 +26,7 @@ export function renderFeedTab(ctx: DemoContext) {
                           <h2 className="text-lg font-bold text-slate-900 mt-0.5">
                             {dashboardData?.profile?.name || "Member"}
                           </h2>
-                          <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1.5">
+                          <p className="text-[12px] text-slate-500 mt-1 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedBrand.primaryColor }} />
                             {role === "brother" 
                               ? `${dashboardData?.profile?.position || "Active Member"} • ${dashboardData?.profile?.pledgeClass || "Brother"}` 
@@ -37,11 +37,11 @@ export function renderFeedTab(ctx: DemoContext) {
                           {role === "brother" && dashboardData?.standing && (
                             <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
                               <div>
-                                <span className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold">Chapter Standing</span>
+                                <span className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Chapter Standing</span>
                                 <div className="text-xs font-bold text-emerald-600 mt-0.5">{dashboardData.standing.standing}</div>
                               </div>
                               <div className="text-right">
-                                <span className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold">Financials</span>
+                                <span className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Financials</span>
                                 <div className={`text-xs font-bold mt-0.5 ${dashboardData.profile?.duesPaid ? "text-emerald-600" : "text-amber-600 font-bold"}`}>
                                   {dashboardData.profile?.duesPaid ? "Paid" : "Unpaid"}
                                 </div>
@@ -76,8 +76,8 @@ export function renderFeedTab(ctx: DemoContext) {
                                 >
                                   <Icon className="w-4 h-4" />
                                 </span>
-                                <span className="text-[9px] font-bold text-slate-800 leading-tight">{label}</span>
-                                <span className="text-[7px] text-slate-400 uppercase tracking-wider leading-none">{sub}</span>
+                                <span className="text-[11px] font-bold text-slate-800 leading-tight">{label}</span>
+                                <span className="text-[11px] text-slate-400 uppercase tracking-wider leading-none">{sub}</span>
                               </button>
                             ))}
                           </div>
@@ -92,7 +92,7 @@ export function renderFeedTab(ctx: DemoContext) {
                             {role === "brother" && (
                               <button
                                 onClick={() => setShowPostAnnModal(true)}
-                                className="px-2.5 py-1 text-[9px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
+                                className="px-2.5 py-1 text-[11px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
                                 <Sparkles className="w-2.5 h-2.5" /> Post News
@@ -120,12 +120,12 @@ export function renderFeedTab(ctx: DemoContext) {
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-1.5 flex-wrap">
                                         {isCareer ? (
-                                          <span className="inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded">
+                                          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded">
                                             <Briefcase className="w-2.5 h-2.5" /> Career Post
                                           </span>
                                         ) : (
                                           item.pinned && (
-                                            <span className="inline-flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded">
+                                            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded">
                                               <Pin className="w-2.5 h-2.5" /> Pinned
                                             </span>
                                           )
@@ -134,11 +134,11 @@ export function renderFeedTab(ctx: DemoContext) {
                                           {isCareer ? item.title : item.title}
                                         </h4>
                                       </div>
-                                      <span className="text-[9px] text-slate-400 block">
+                                      <span className="text-[11px] text-slate-400 block">
                                         Posted by {item.postedByName || item.authorName} ({item.postedByRole || item.authorRole})
                                       </span>
                                     </div>
-                                    <span className="text-[9px] text-slate-400 shrink-0">
+                                    <span className="text-[11px] text-slate-400 shrink-0">
                                       {new Date(item.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
                                     </span>
                                   </div>
@@ -151,26 +151,26 @@ export function renderFeedTab(ctx: DemoContext) {
 
                                   {/* Expanded Career Details in Feed */}
                                   {isCareer && isExpanded && (
-                                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 text-[10px] text-slate-500" onClick={(e) => e.stopPropagation()}>
+                                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 text-[12px] text-slate-500" onClick={(e) => e.stopPropagation()}>
                                       {item.requirements && (
                                         <div>
-                                          <span className="font-bold text-slate-800 uppercase text-[8px] block mb-0.5">Qualifications</span>
+                                          <span className="font-bold text-slate-800 uppercase text-[11px] block mb-0.5">Qualifications</span>
                                           <p>{item.requirements}</p>
                                         </div>
                                       )}
-                                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                      <div className="grid grid-cols-2 gap-2 text-[12px]">
                                         <div><strong>Company:</strong> {item.company}</div>
                                         {item.salary && <div><strong>Salary:</strong> {item.salary}</div>}
                                         {item.location && <div className="col-span-2"><strong>Location:</strong> {item.location}</div>}
                                       </div>
                                       
                                       <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
-                                        <span className="font-bold text-slate-600 uppercase text-[8px] block">Referral Contacts</span>
+                                        <span className="font-bold text-slate-600 uppercase text-[11px] block">Referral Contacts</span>
                                         <p className="text-slate-800 font-medium text-xs">{item.contactName}</p>
                                         <div className="flex gap-2 pt-1.5">
                                           <a
                                             href={`mailto:${item.contactEmail}?subject=Referral Inquiry: ${item.title}`}
-                                            className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg text-[9px] font-bold text-center flex items-center justify-center gap-1 transition"
+                                            className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition"
                                           >
                                             <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
                                           </a>
@@ -187,7 +187,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                     </div>
                                   )}
 
-                                  <div className="flex items-center justify-end text-[9px] text-slate-400 mt-2">
+                                  <div className="flex items-center justify-end text-[11px] text-slate-400 mt-2">
                                     <span className="flex items-center gap-0.5">
                                       {isExpanded ? "Collapse" : "Expand"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                     </span>

@@ -31,7 +31,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <span 
-                                      className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border"
+                                      className="text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border"
                                       style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '15', color: selectedBrand.primaryColor }}
                                     >
                                       {e.category}
@@ -40,7 +40,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                   </div>
                                   
                                   <div className="text-center bg-slate-50 border border-slate-100 rounded-lg p-1.5 min-w-[44px]">
-                                    <div className="text-[8px] uppercase font-bold" style={{ color: selectedBrand.primaryColor }}>
+                                    <div className="text-[11px] uppercase font-bold" style={{ color: selectedBrand.primaryColor }}>
                                       {starts.toLocaleDateString([], { month: "short" })}
                                     </div>
                                     <div className="text-xs font-bold text-slate-900">
@@ -49,11 +49,11 @@ export function renderEventsTab(ctx: DemoContext) {
                                   </div>
                                 </div>
 
-                                <p className="text-[10px] text-slate-600 leading-normal line-clamp-2">
+                                <p className="text-[12px] text-slate-600 leading-normal line-clamp-2">
                                   {e.description || "No description provided."}
                                 </p>
 
-                                <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-[10px] text-slate-500 border-t border-slate-50 pt-2">
+                                <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-[12px] text-slate-500 border-t border-slate-50 pt-2">
                                   {e.location && (
                                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3 shrink-0" /> {e.location}</span>
                                   )}
@@ -71,7 +71,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "GOING")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
                                         isGoing
                                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                           : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
@@ -82,7 +82,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "MAYBE")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
                                         isMaybe
                                           ? "bg-amber-50 text-amber-700 border border-amber-200"
                                           : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
@@ -93,7 +93,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "NOT_GOING")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
                                         isNotGoing
                                           ? "bg-red-50 text-red-700 border border-red-200"
                                           : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
@@ -107,7 +107,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                 {/* Add to calendar — available to everyone (alumni see events too) */}
                                 <button
                                   onClick={() => handleAddToCalendar(e)}
-                                  className="w-full mt-1 py-1.5 rounded-lg text-[10px] font-bold border transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                                  className="w-full mt-1 py-1.5 rounded-lg text-[12px] font-bold border transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
                                   style={{ color: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor + '30', backgroundColor: selectedBrand.primaryColor + '0a' }}
                                 >
                                   <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar

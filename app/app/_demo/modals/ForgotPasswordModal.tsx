@@ -33,15 +33,15 @@ export function renderForgotPasswordModal(ctx: DemoContext) {
                       <Check className="w-5 h-5" />
                     </div>
                     <h5 className="font-bold text-slate-900 text-xs">Reset Link Dispatched!</h5>
-                    <p className="text-[10px] text-slate-500">Check your email for instructions to choose a new password.</p>
+                    <p className="text-[12px] text-slate-500">Check your email for instructions to choose a new password.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleMobileForgotSubmit} className="space-y-3">
-                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                    <p className="text-[12px] text-slate-500 leading-relaxed">
                       Enter your email address below. We'll send you a link to reset your account password.
                     </p>
                     <div>
-                      <label className="block text-[9px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
+                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
                       <input
                         type="email"
                         required

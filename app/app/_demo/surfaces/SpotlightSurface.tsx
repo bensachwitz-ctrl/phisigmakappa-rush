@@ -48,12 +48,12 @@ export function renderSpotlight(ctx: DemoContext) {
                         {spotlight === "giving" && "Alumni Giving"}
                         {spotlight === "theme" && "White-label Branding"}
                       </h3>
-                      <p className="text-[9px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
+                      <p className="text-[11px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
                     </div>
                   </div>
 
                   {/* "What this does" callout */}
-                  <div className="shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2 text-[10px] leading-relaxed border"
+                  <div className="shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
                     style={{ backgroundColor: selectedBrand.primaryColor + '0a', borderColor: selectedBrand.primaryColor + '22', color: '#334155' }}>
                     <span className="font-bold" style={{ color: selectedBrand.primaryColor }}>What this does · </span>
                     {spotlight === "elections" && "Run secret-ballot officer elections in-app. Every active gets one anonymous vote per seat; the platform tallies live and auto-seats the winners when voting closes."}
@@ -70,14 +70,14 @@ export function renderSpotlight(ctx: DemoContext) {
                         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex items-center justify-between">
                           <div>
                             <h4 className="text-xs font-bold text-slate-900">{dashboardData.election.title}</h4>
-                            <p className="text-[9px] text-slate-500 mt-0.5 flex items-center gap-1">
+                            <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
                               <span className="inline-flex items-center gap-1 text-emerald-600 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Voting open</span>
                               · closes in 3 days
                             </p>
                           </div>
                           <div className="text-right">
                             <span className="text-base font-black text-slate-900">{dashboardData.election.ballotsCast}/{dashboardData.election.totalEligible}</span>
-                            <p className="text-[8px] text-slate-400 uppercase tracking-wider">Ballots cast</p>
+                            <p className="text-[11px] text-slate-400 uppercase tracking-wider">Ballots cast</p>
                           </div>
                         </div>
 
@@ -90,7 +90,7 @@ export function renderSpotlight(ctx: DemoContext) {
                                 <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                   <Crown className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> {seat.title}
                                 </h5>
-                                {voted && <span className="text-[8px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Check className="w-2.5 h-2.5" /> Voted</span>}
+                                {voted && <span className="text-[11px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Check className="w-2.5 h-2.5" /> Voted</span>}
                               </div>
                               {seat.candidates.map((c: any) => {
                                 const pct = Math.round((c.votes / total) * 100);
@@ -110,19 +110,19 @@ export function renderSpotlight(ctx: DemoContext) {
                                     )}
                                     <div className="relative flex items-center justify-between gap-2">
                                       <div className="min-w-0">
-                                        <p className="text-[11px] font-bold text-slate-900">{c.name} <span className="text-[8px] font-medium text-slate-400">· {c.year}</span></p>
-                                        <p className="text-[8px] text-slate-500 truncate">{c.blurb}</p>
+                                        <p className="text-[11px] font-bold text-slate-900">{c.name} <span className="text-[11px] font-medium text-slate-400">· {c.year}</span></p>
+                                        <p className="text-[11px] text-slate-500 truncate">{c.blurb}</p>
                                       </div>
                                       {voted ? (
                                         <span className="text-[11px] font-black text-slate-900 shrink-0">{pct}%</span>
                                       ) : (
-                                        <span className="text-[8px] font-bold uppercase shrink-0" style={{ color: selectedBrand.primaryColor }}>Vote</span>
+                                        <span className="text-[11px] font-bold uppercase shrink-0" style={{ color: selectedBrand.primaryColor }}>Vote</span>
                                       )}
                                     </div>
                                   </button>
                                 );
                               })}
-                              {!voted && <p className="text-[8px] text-slate-400 text-center pt-0.5">Your ballot is anonymous — tap a candidate to cast it.</p>}
+                              {!voted && <p className="text-[11px] text-slate-400 text-center pt-0.5">Your ballot is anonymous — tap a candidate to cast it.</p>}
                             </div>
                           );
                         })}
@@ -140,13 +140,13 @@ export function renderSpotlight(ctx: DemoContext) {
                           ].map((s) => (
                             <div key={s.label} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-2.5 text-center">
                               <p className={`text-[13px] font-black ${s.color}`}>${(s.cents / 100).toLocaleString()}</p>
-                              <p className="text-[7px] text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</p>
+                              <p className="text-[11px] text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</p>
                             </div>
                           ))}
                         </div>
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                             <PieChart className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Semester budget
                           </h5>
                           {dashboardData.treasury.budget.map((b: any) => {
@@ -154,7 +154,7 @@ export function renderSpotlight(ctx: DemoContext) {
                             const over = b.spentCents > b.plannedCents;
                             return (
                               <div key={b.id} className="space-y-1">
-                                <div className="flex items-center justify-between text-[10px]">
+                                <div className="flex items-center justify-between text-[12px]">
                                   <span className="font-semibold text-slate-700">{b.category}</span>
                                   <span className="text-slate-500">${(b.spentCents / 100).toLocaleString()} <span className="text-slate-300">/ ${(b.plannedCents / 100).toLocaleString()}</span></span>
                                 </div>
@@ -167,14 +167,14 @@ export function renderSpotlight(ctx: DemoContext) {
                         </div>
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                             <Wallet className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Recent ledger
                           </h5>
                           {dashboardData.treasury.ledger.map((t: any) => (
                             <div key={t.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
                               <div className="min-w-0">
-                                <p className="text-[10px] font-semibold text-slate-800 truncate">{t.label}</p>
-                                <p className="text-[8px] text-slate-400">{new Date(t.date).toLocaleDateString([], { month: "short", day: "numeric" })}</p>
+                                <p className="text-[12px] font-semibold text-slate-800 truncate">{t.label}</p>
+                                <p className="text-[11px] text-slate-400">{new Date(t.date).toLocaleDateString([], { month: "short", day: "numeric" })}</p>
                               </div>
                               <span className={`text-[11px] font-bold shrink-0 ${t.kind === "in" ? "text-emerald-600" : "text-slate-700"}`}>
                                 {t.kind === "in" ? "+" : "−"}${Math.abs(t.amountCents / 100).toLocaleString()}
@@ -192,11 +192,11 @@ export function renderSpotlight(ctx: DemoContext) {
                           <div className="p-3 rounded-2xl border-2 border-dashed" style={{ borderColor: selectedBrand.primaryColor + '40' }}>
                             <QrCode className="w-20 h-20" style={{ color: selectedBrand.primaryColor }} strokeWidth={1.25} />
                           </div>
-                          <p className="text-[10px] text-slate-500 leading-relaxed">PNMs scan this at <span className="font-bold text-slate-700">Fall Info Session</span> to check in. New faces fill the form below.</p>
+                          <p className="text-[12px] text-slate-500 leading-relaxed">PNMs scan this at <span className="font-bold text-slate-700">Fall Info Session</span> to check in. New faces fill the form below.</p>
                         </div>
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">New PNM check-in</h5>
+                          <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500">New PNM check-in</h5>
                           <input value={qrName} onChange={(e) => setQrName(e.target.value)} placeholder="Full name"
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs text-slate-900 focus:border-slate-300" />
                           <input value={qrMajor} onChange={(e) => setQrMajor(e.target.value)} placeholder="Major"
@@ -217,9 +217,9 @@ export function renderSpotlight(ctx: DemoContext) {
 
                         {qrCheckedIn.length > 0 && (
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
-                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
+                            <h5 className="text-[12px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
                             {qrCheckedIn.map((n, i) => (
-                              <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[8px] text-slate-400">→ added to rush board</span></p>
+                              <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[11px] text-slate-400">→ added to rush board</span></p>
                             ))}
                           </div>
                         )}
@@ -240,17 +240,17 @@ export function renderSpotlight(ctx: DemoContext) {
                             <div>
                               <div className="flex items-end justify-between mb-1">
                                 <span className="text-lg font-black text-slate-900">${(g.raisedCents / 100).toLocaleString()}</span>
-                                <span className="text-[10px] text-slate-500">of ${(g.goalCents / 100).toLocaleString()} · {pct}%</span>
+                                <span className="text-[12px] text-slate-500">of ${(g.goalCents / 100).toLocaleString()} · {pct}%</span>
                               </div>
                               <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: selectedBrand.primaryColor }} />
                               </div>
-                              <p className="text-[9px] text-slate-400 mt-1.5">{g.donorCount} donors</p>
+                              <p className="text-[11px] text-slate-400 mt-1.5">{g.donorCount} donors</p>
                             </div>
                           </div>
 
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
-                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Give now</h5>
+                            <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500">Give now</h5>
                             <div className="grid grid-cols-4 gap-1.5">
                               {[2500, 5000, 10000, 25000].map((amt) => (
                                 <button key={amt} onClick={() => setDonationCents(amt)}
@@ -270,7 +270,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           </div>
 
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
-                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Recent gifts</h5>
+                            <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500">Recent gifts</h5>
                             {g.recent.map((d: any) => (
                               <div key={d.id} className="flex items-center justify-between py-1 border-b border-slate-50 last:border-0">
                                 <span className="text-[11px] text-slate-700">{d.name}</span>
@@ -292,16 +292,16 @@ export function renderSpotlight(ctx: DemoContext) {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-slate-900">{selectedBrand.name}</h4>
-                            <p className="text-[9px] text-slate-400 uppercase tracking-wider mt-0.5">{selectedTenant?.subdomain || "yourchapter"}.greekstack.app</p>
+                            <p className="text-[11px] text-slate-400 uppercase tracking-wider mt-0.5">{selectedTenant?.subdomain || "yourchapter"}.greekstack.app</p>
                           </div>
                           <div className="flex items-center justify-center gap-1.5">
                             <span className="w-5 h-5 rounded-full border border-slate-200" style={{ backgroundColor: selectedBrand.primaryColor }} />
-                            <span className="text-[9px] font-mono text-slate-500">{selectedBrand.primaryColor}</span>
+                            <span className="text-[11px] font-mono text-slate-500">{selectedBrand.primaryColor}</span>
                           </div>
                         </div>
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                             <Palette className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand — watch it re-skin
                           </h5>
                           <div className="grid grid-cols-2 gap-2">
@@ -320,13 +320,13 @@ export function renderSpotlight(ctx: DemoContext) {
                                   className={`p-2.5 rounded-xl border flex items-center gap-2 transition active:scale-[0.98] ${active ? "border-2" : "border-slate-100 hover:border-slate-200"}`}
                                   style={active ? { borderColor: b.primaryColor } : {}}
                                 >
-                                  <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0" style={{ backgroundColor: b.primaryColor }}>{b.letters}</span>
-                                  <span className="text-[10px] font-bold text-slate-800 truncate text-left">{b.name}</span>
+                                  <span className="w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-black text-white shrink-0" style={{ backgroundColor: b.primaryColor }}>{b.letters}</span>
+                                  <span className="text-[12px] font-bold text-slate-800 truncate text-left">{b.name}</span>
                                 </button>
                               );
                             })}
                           </div>
-                          <div className="flex items-center gap-1.5 text-[9px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-2">
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-2">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             Every page, email, and member portal re-skins instantly — no rebuild, no developer.
                           </div>

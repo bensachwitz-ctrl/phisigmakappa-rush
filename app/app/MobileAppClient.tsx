@@ -1355,13 +1355,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           <img src="/brand/greekstack-mark.png?v=2" className="w-8 h-8 rounded-lg object-contain shadow-md" alt="Greekstack Logo" />
           <div>
             <span className="text-xs font-bold text-white tracking-wider uppercase block leading-none">Greekstack App</span>
-            <span className="text-[8px] text-slate-400 mt-0.5 block">{selectedBrand.letters} • {role === "brother" ? "Active" : "Alumnus"}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">{selectedBrand.letters} • {role === "brother" ? "Active" : "Alumnus"}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => window.location.href = "/"}
-            className="px-2.5 py-1.5 text-[10px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
+            className="px-2.5 py-1.5 text-[12px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
           >
             Website
           </button>
@@ -1369,13 +1369,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
               account (this screen is the demo). */}
           <button
             onClick={() => window.location.href = "/login"}
-            className="px-2.5 py-1.5 text-[10px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
+            className="px-2.5 py-1.5 text-[12px] font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition"
           >
             Sign in
           </button>
           <button
             onClick={() => setShowPricingModal(true)}
-            className="px-2.5 py-1.5 text-[10px] font-bold text-slate-950 bg-gradient-to-r from-blue-400 to-sky-400 hover:opacity-90 rounded-lg transition"
+            className="px-2.5 py-1.5 text-[12px] font-bold text-slate-950 bg-gradient-to-r from-blue-400 to-sky-400 hover:opacity-90 rounded-lg transition"
           >
             Launch
           </button>
@@ -1414,7 +1414,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           <div className="flex items-center gap-3">
             <img src="/brand/greekstack-mark.png?v=2" className="w-10 h-10 rounded-xl object-contain shadow-md" alt="Greekstack Logo" />
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5" /> Interactive Demo
               </div>
               <h2 className="text-xl font-bold text-white tracking-tight mt-1.5">Greekstack App</h2>
@@ -1552,7 +1552,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           />
 
           {/* Dynamic island notch + iOS status bar — lg+ device showcase only. */}
-          <div className="hidden lg:flex absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 rounded-full bg-black z-50 items-center justify-between px-3 text-[10px] text-slate-500">
+          <div className="hidden lg:flex absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 rounded-full bg-black z-50 items-center justify-between px-3 text-[12px] text-slate-500">
             <span className="font-semibold text-slate-400 select-none">9:41</span>
             <div className="flex items-center gap-1">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -1627,7 +1627,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
                 <div className="flex items-center gap-1.5">
                   {isDemo && (
-                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[12px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
                       Demo
                     </span>
                   )}
@@ -1639,7 +1639,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-slate-600">
                       {viewRole === "exec" ? "Officer" : role === "brother" ? "Member" : "Alumnus"}
                     </span>
                   </button>
@@ -1771,7 +1771,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       <div className="min-w-0">
                         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
                           {DEMO_CALLOUTS[activeTab].title}
-                          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                             What this does
                           </span>
                         </p>
@@ -1780,7 +1780,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                         </p>
                         <button
                           onClick={() => setCalloutDismissed(true)}
-                          className="mt-2 text-[10px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                          className="mt-2 text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
                         >
                           Turn off tips
                         </button>

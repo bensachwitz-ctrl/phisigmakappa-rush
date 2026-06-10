@@ -43,7 +43,7 @@ export function renderPostAnnModal(ctx: DemoContext) {
                     ) : (
                       <form onSubmit={handlePostAnnouncement} className="space-y-4 pb-6">
                         <div>
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Announcement Title</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Announcement Title</label>
                           <input
                             type="text"
                             required
@@ -55,7 +55,7 @@ export function renderPostAnnModal(ctx: DemoContext) {
                         </div>
 
                         <div>
-                          <label className="block text-[9px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Announcement Body</label>
+                          <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Announcement Body</label>
                           <textarea
                             required
                             rows={4}
@@ -74,7 +74,7 @@ export function renderPostAnnModal(ctx: DemoContext) {
                             onChange={(e) => setAnnPinned(e.target.checked)}
                             className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
                           />
-                          <label htmlFor="annPinned" className="text-[10px] text-slate-600 font-bold select-none cursor-pointer">
+                          <label htmlFor="annPinned" className="text-[12px] text-slate-600 font-bold select-none cursor-pointer">
                             Pin to the top of the feed (Mandatory View)
                           </label>
                         </div>

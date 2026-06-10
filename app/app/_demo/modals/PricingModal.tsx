@@ -13,7 +13,7 @@ export function renderPricingModal(ctx: DemoContext) {
               <X className="w-4 h-4" />
             </button>
             <div className="space-y-1.5 border-b border-white/10 pb-3">
-              <div className="inline-flex items-center gap-1.5 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
                 <img src="/brand/greekstack-mark.png?v=2" className="w-3.5 h-3.5 object-contain" alt="" /> Launch Greekstack App
               </div>
               <h3 className="text-xl font-bold text-white leading-tight">Choose Your Chapter Plan</h3>
@@ -24,12 +24,12 @@ export function renderPricingModal(ctx: DemoContext) {
               {/* Monthly Plan */}
               <div className="border border-white/10 rounded-2xl p-5 bg-white/[0.02] flex flex-col space-y-4 hover:border-white/20 transition">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Platform Monthly</span>
+                  <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Platform Monthly</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-black text-white">$50</span>
                     <span className="text-xs text-slate-400">/ month</span>
                   </div>
-                  <p className="text-[10px] text-amber-400 font-semibold">+ $200 each rush cycle</p>
+                  <p className="text-[12px] text-amber-400 font-semibold">+ $200 each rush cycle</p>
                 </div>
                 <ul className="text-xs text-slate-300 space-y-2 flex-1">
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" /> First month 100% free</li>
@@ -46,16 +46,16 @@ export function renderPricingModal(ctx: DemoContext) {
 
               {/* Yearly Plan (Featured) */}
               <div className="border border-sky-500/30 rounded-2xl p-5 bg-sky-500/[0.03] flex flex-col space-y-4 hover:border-sky-500/40 transition relative overflow-hidden">
-                <div className="absolute right-0 top-0 bg-sky-500 text-slate-950 font-black text-[9px] uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md">
+                <div className="absolute right-0 top-0 bg-sky-500 text-slate-950 font-black text-[11px] uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md">
                   Best Value
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Platform Yearly</span>
+                  <span className="text-[12px] font-bold text-sky-400 uppercase tracking-wider">Platform Yearly</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-black text-white">$800</span>
                     <span className="text-xs text-slate-400">/ year</span>
                   </div>
-                  <p className="text-[10px] text-emerald-400 font-semibold">All rush fees included</p>
+                  <p className="text-[12px] text-emerald-400 font-semibold">All rush fees included</p>
                 </div>
                 <ul className="text-xs text-slate-300 space-y-2 flex-1">
                   <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-sky-400" /> Save $100+ annually</li>
@@ -71,7 +71,7 @@ export function renderPricingModal(ctx: DemoContext) {
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-500 text-center leading-relaxed pt-2 border-t border-white/10">
+            <p className="text-[12px] text-slate-500 text-center leading-relaxed pt-2 border-t border-white/10">
               * Dues are processed securely via Stripe. Stripe standard card transaction rates (2.9% + 30¢) apply with no platform markup.
             </p>
           </div>
