@@ -24,6 +24,9 @@ export interface FraternityBrand {
   letters: string;
   primaryColor: string;
   primaryHover: string;
+  /** Secondary / accent brand color — used for gradients + the themed shell.
+   *  Optional for back-compat; derived when absent via `brandSecondary()`. */
+  secondaryColor?: string;
   textColor: string;
   accentBg: string;
   accentBorder: string;
@@ -37,6 +40,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΦΣΚ",
     primaryColor: "#C8102E", // Cardinal Red
     primaryHover: "#A00D24",
+    secondaryColor: "#C0A062", // Silver/Gold
     textColor: "text-red-600",
     accentBg: "bg-red-50",
     accentBorder: "border-red-100",
@@ -48,6 +52,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΣΧ",
     primaryColor: "#0056B3", // Blue
     primaryHover: "#003F85",
+    secondaryColor: "#B89A2E", // Old Gold
     textColor: "text-blue-600",
     accentBg: "bg-blue-50",
     accentBorder: "border-blue-100",
@@ -59,6 +64,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΚΣ",
     primaryColor: "#00875A", // Emerald Green
     primaryHover: "#006644",
+    secondaryColor: "#C81E2E", // Scarlet
     textColor: "text-emerald-600",
     accentBg: "bg-emerald-50",
     accentBorder: "border-emerald-100",
@@ -70,6 +76,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΑΤΩ",
     primaryColor: "#0077C8", // Azure Blue
     primaryHover: "#005994",
+    secondaryColor: "#D4AF37", // Old Gold
     textColor: "text-sky-600",
     accentBg: "bg-sky-50",
     accentBorder: "border-sky-100",
@@ -81,6 +88,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΣΑΕ",
     primaryColor: "#512888", // Royal Purple
     primaryHover: "#3E1F68",
+    secondaryColor: "#C9A227", // Old Gold
     textColor: "text-purple-600",
     accentBg: "bg-purple-50",
     accentBorder: "border-purple-100",
@@ -92,12 +100,133 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     letters: "ΒΘΠ",
     primaryColor: "#1A82E2", // Sky Blue
     primaryHover: "#1267B7",
+    secondaryColor: "#C8102E", // Crimson
     textColor: "text-sky-500",
     accentBg: "bg-sky-50",
     accentBorder: "border-sky-100",
     crestEmoji: "🐉"
   }
 ];
+
+// ── Brand color utilities ──────────────────────────────────────────────────
+// Shared helpers so the demo can build a fully-themed brand from arbitrary
+// founder input (the "choose ANY chapter" chooser) and so every surface can
+// read a guaranteed secondary color for gradients + the themed shell.
+
+/** Resolve a brand's secondary/accent color, deriving a complementary tone when
+ *  the brand didn't specify one. Always returns a valid #rrggbb. */
+export function brandSecondary(b: Pick<FraternityBrand, "primaryColor" | "secondaryColor">): string {
+  if (b.secondaryColor && /^#([0-9a-fA-F]{6})$/.test(b.secondaryColor)) return b.secondaryColor;
+  return shiftHue(b.primaryColor, 28, 0.92);
+}
+
+/** Split a chapter's Greek-letter string into individual glyphs for the drifting
+ *  letter field — keeps only real Greek letters, de-duplicating is intentionally
+ *  avoided so "ΦΣΚ" rains all three. Falls back to a generic set when empty. */
+export function glyphsFromBrand(letters: string | undefined): string[] {
+  const greek = (letters || "").match(/[Ͱ-Ͽἀ-῿]/g) || [];
+  return greek.length ? greek : ["Φ", "Σ", "Κ"];
+}
+
+/** Darken a hex color toward black by `amt` (0–1) — used to derive a hover tone
+ *  and the deep end of the themed-shell gradient. */
+export function darkenHex(hex: string, amt = 0.18): string {
+  const { r, g, b } = hexToRgb(hex);
+  const f = 1 - clamp01(amt);
+  return rgbToHex(Math.round(r * f), Math.round(g * f), Math.round(b * f));
+}
+
+/** Rotate a color's hue and scale its value — a cheap way to derive a pleasing
+ *  secondary from a single picked primary. */
+function shiftHue(hex: string, deg: number, valueScale: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  const [h, s, v] = rgbToHsv(r, g, b);
+  const [nr, ng, nb] = hsvToRgb((h + deg) % 360, Math.min(1, s * 1.05), Math.min(1, v * valueScale));
+  return rgbToHex(nr, ng, nb);
+}
+
+function clamp01(n: number) { return Math.max(0, Math.min(1, n)); }
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const m = /^#?([0-9a-fA-F]{6})$/.exec((hex || "").trim());
+  if (!m) return { r: 99, g: 102, b: 241 }; // indigo-500 fallback
+  const int = parseInt(m[1], 16);
+  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const c = (n: number) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+  return `#${c(r)}${c(g)}${c(b)}`;
+}
+
+function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const s = max === 0 ? 0 : d / max;
+  return [h, s, max];
+}
+
+function hsvToRgb(h: number, s: number, v: number): [number, number, number] {
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+}
+
+/** A curated swatch palette for the custom-chapter color pickers — strong,
+ *  legible, on-brand-for-Greek-orgs hues a founder can tap instead of fiddling
+ *  with a raw hex field. */
+export const BRAND_PALETTE: string[] = [
+  "#C8102E", "#A00D24", "#E03C31", "#F25C05", // reds / orange
+  "#B8860B", "#D4AF37", "#C9A227", "#8A6D00", // golds
+  "#00875A", "#0F7B6C", "#0E7490", "#155E75", // greens / teal
+  "#0056B3", "#1A82E2", "#0077C8", "#1D4ED8", // blues
+  "#512888", "#6D28D9", "#7C3AED", "#9333EA", // purples
+  "#831843", "#9D174D", "#1F2937", "#0F172A", // maroon / ink
+];
+
+/** Build a fully-formed FraternityBrand from raw founder input (chooser flow). */
+export function makeCustomBrand(input: {
+  name: string;
+  letters: string;
+  primaryColor: string;
+  secondaryColor?: string;
+}): FraternityBrand {
+  const primary = /^#([0-9a-fA-F]{6})$/.test(input.primaryColor.trim()) ? input.primaryColor.trim() : "#6366F1";
+  return {
+    id: "custom",
+    name: input.name.trim() || "Your Chapter",
+    letters: (input.letters.trim() || "ΦΣΚ"),
+    primaryColor: primary,
+    primaryHover: darkenHex(primary, 0.16),
+    secondaryColor: input.secondaryColor && /^#([0-9a-fA-F]{6})$/.test(input.secondaryColor.trim())
+      ? input.secondaryColor.trim()
+      : brandSecondary({ primaryColor: primary }),
+    // The Tailwind utility colors below are only used as soft fallbacks in a few
+    // surfaces; the inline brand-color styles drive the actual theming, so a
+    // neutral slate set is safe for a custom brand.
+    textColor: "text-slate-700",
+    accentBg: "bg-slate-50",
+    accentBorder: "border-slate-100",
+    crestEmoji: "🏛️",
+  };
+}
 
 export const DEMO_TENANTS: Tenant[] = [
   { id: "demo-psk", subdomain: "psk", name: "Phi Sigma Kappa", school: "University of South Carolina", isActive: true, brandId: "phi-sig" },

@@ -125,6 +125,8 @@ export function GreekLetterField({
   count = DEFAULT_TOTAL,
   seed = 0x51ed270b,
   className,
+  color,
+  position = "fixed",
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];
@@ -132,6 +134,14 @@ export function GreekLetterField({
   count?: number;
   seed?: number;
   className?: string;
+  /** Tint the drifting letters (e.g. a chapter's primary brand color). Defaults
+   *  to the neutral slate ink used on the marketing site. Letters inherit
+   *  `currentColor` so this paints the whole field in one go. */
+  color?: string;
+  /** `fixed` (viewport-pinned, default — used by the marketing site) or
+   *  `absolute` (pinned to the nearest positioned ancestor — used inside the
+   *  demo's brand-themed shell so the field stays within the demo container). */
+  position?: "fixed" | "absolute";
 }) {
   const letters = React.useMemo(
     () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count),
@@ -142,13 +152,18 @@ export function GreekLetterField({
     <div
       aria-hidden="true"
       className={
-        "pointer-events-none fixed inset-0 -z-10 overflow-hidden " + (className || "")
+        `pointer-events-none ${position} inset-0 -z-10 overflow-hidden ` +
+        // Only fall back to the default slate ink when no brand color is supplied,
+        // so a chapter-tinted field paints purely from `currentColor`.
+        (color ? "" : "text-slate-700 ") +
+        (className || "")
       }
+      style={color ? { color } : undefined}
     >
       {letters.map((l, i) => (
         <span
           key={i}
-          className="gs-greek-letter absolute select-none font-serif font-semibold text-slate-700"
+          className="gs-greek-letter absolute select-none font-serif font-semibold"
           style={
             {
               left: `${l.left}%`,
