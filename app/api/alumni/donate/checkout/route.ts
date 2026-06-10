@@ -233,6 +233,11 @@ export async function POST(req: Request) {
       tenant: getSubdomain(headers().get("host")) || null,
       outcome: "donation_checkout_create_failed",
     });
-    return NextResponse.json({ ok: false, error: err?.message || "Payment service error" }, { status: 500 });
+    // Real error already captured server-side via errorSink above; never echo
+    // the raw message (may carry Stripe/DB internals) back to the public caller.
+    return NextResponse.json(
+      { ok: false, error: "We couldn't start the payment. Please try again." },
+      { status: 500 },
+    );
   }
 }

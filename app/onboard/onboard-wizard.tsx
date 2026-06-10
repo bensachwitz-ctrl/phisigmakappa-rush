@@ -293,10 +293,19 @@ export default function OnboardWizard() {
     } else if (currentStep === "admin") {
       if (!adminName.trim()) e.adminName = "Required";
       if (!adminEmail.trim()) e.adminEmail = "Required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail.trim()))
+        e.adminEmail = "Enter a valid email";
       if (!adminPassword.trim()) e.adminPassword = "Required";
       if (Object.keys(e).length) {
         setErrors(e);
-        push({ title: "A few details needed", description: "Admin name, email, and password are required.", variant: "destructive" });
+        const emailInvalid = e.adminEmail === "Enter a valid email";
+        push({
+          title: emailInvalid ? "Check the admin email" : "A few details needed",
+          description: emailInvalid
+            ? "That admin email doesn't look right — this is the login and where the welcome email goes."
+            : "Admin name, email, and password are required.",
+          variant: "destructive",
+        });
         return false;
       }
       if (adminPassword.length < 8) {

@@ -124,7 +124,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, event });
   } catch (err: any) {
+    // Logged server-side for debugging; never echo the raw message (may carry
+    // DB/email-provider internals) back to the public caller.
     console.error("Booking error:", err);
-    return NextResponse.json({ ok: false, error: err?.message || "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "We couldn't complete your booking. Please try again." },
+      { status: 500 },
+    );
   }
 }

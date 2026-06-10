@@ -108,6 +108,17 @@ export async function POST(req: Request) {
   if (!fraternityName || !greekLetters || !adminName || !adminEmail || !adminPassword) {
     return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
   }
+  // Validate the admin email format. This address becomes the admin's login AND
+  // the destination for the welcome email + every future reset — a malformed
+  // value would create an unrecoverable account and bounce all chapter email.
+  // Conservative single-@ check (no spaces, a dot in the domain); we never want
+  // to provision a tenant whose only admin can't sign in.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(adminEmail).trim())) {
+    return NextResponse.json(
+      { ok: false, error: "Please enter a valid admin email address." },
+      { status: 400 },
+    );
+  }
   if (String(adminPassword).length < 8) {
     return NextResponse.json({ ok: false, error: "Admin password must be at least 8 characters" }, { status: 400 });
   }
