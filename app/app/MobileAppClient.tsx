@@ -530,6 +530,22 @@ export function WebGLBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // PERF + a11y: this is a continuous O(n²) plexus render over 90 particles on
+    // every animation frame. It must NEVER run when:
+    //   (1) the user prefers reduced motion (skip it entirely), or
+    //   (2) the document/tab is hidden, or
+    //   (3) the canvas is scrolled offscreen.
+    // We honor (1) by bailing before any GL setup, and (2)+(3) by pausing the
+    // requestAnimationFrame loop (rather than burning CPU/GPU in the background).
+    const reduceMotionQuery =
+      typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : null;
+    if (reduceMotionQuery?.matches) {
+      // Reduced motion: render nothing and do not allocate any GL resources.
+      return;
+    }
+
     const gl = canvas.getContext("webgl");
     if (!gl) return;
 
@@ -679,7 +695,12 @@ export function WebGLBackground() {
     };
     window.addEventListener("mousemove", handleMouseMoveGlobal);
 
-    let animationFrameId: number;
+    let animationFrameId: number | null = null;
+    // running: whether the loop is currently scheduling frames.
+    // visible / onScreen: the two gates that decide whether it SHOULD run.
+    let running = false;
+    let visible = typeof document === "undefined" || !document.hidden;
+    let onScreen = true;
 
     function render() {
       if (!canvas || !gl) return;
@@ -790,11 +811,60 @@ export function WebGLBackground() {
       animationFrameId = requestAnimationFrame(render);
     }
 
-    render();
+    function start() {
+      if (running) return;
+      running = true;
+      animationFrameId = requestAnimationFrame(render);
+    }
+    function stop() {
+      running = false;
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+    // Run only while BOTH gates are satisfied (visible tab AND on-screen canvas).
+    function sync() {
+      if (visible && onScreen) start();
+      else stop();
+    }
+
+    // Gate 2: pause when the tab/document is hidden.
+    const handleVisibility = () => {
+      visible = !document.hidden;
+      sync();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    // Gate 3: pause when the canvas is scrolled offscreen. Falls back to
+    // always-on if IntersectionObserver is unavailable.
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          onScreen = entries.some((e) => e.isIntersecting);
+          sync();
+        },
+        { threshold: 0 },
+      );
+      observer.observe(canvas);
+    }
+
+    // Reduced-motion can flip on at runtime — if it does, tear the loop down.
+    const handleReduceMotionChange = () => {
+      if (reduceMotionQuery?.matches) stop();
+      else sync();
+    };
+    reduceMotionQuery?.addEventListener?.("change", handleReduceMotionChange);
+
+    sync();
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMoveGlobal);
-      cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      reduceMotionQuery?.removeEventListener?.("change", handleReduceMotionChange);
+      observer?.disconnect();
+      stop();
       gl.deleteBuffer(positionBuffer);
       gl.deleteBuffer(colorBuffer);
       gl.deleteBuffer(linePosBuffer);

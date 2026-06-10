@@ -1,5 +1,5 @@
 import { listActiveTenants } from "@/lib/prisma";
-import MobileAppClient from "./MobileAppClient";
+import DemoLoader from "./DemoLoader";
 
 export const dynamic = "force-dynamic";
 
@@ -15,5 +15,5 @@ export default async function MobileAppPage() {
     isActive: t.isActive,
   }));
 
-  return <MobileAppClient initialTenants={formattedTenants} />;
+  return <DemoLoader initialTenants={formattedTenants} />;
 }
