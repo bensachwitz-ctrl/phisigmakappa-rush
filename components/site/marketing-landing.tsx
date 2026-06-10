@@ -1128,13 +1128,13 @@ function Hero() {
           </p>
 
           {/* The two CTAs share ONE size system: both size="xl" (h-14) and both
-              sm:min-w-[16rem] so they render at the EXACT same height AND width on
+              sm:min-w-[19rem] so they render at the EXACT same height AND width on
               desktop (the primary's ShimmerBorder ring is an inset:0 overlay — it
               adds no layout size). Stacked full-width on mobile. */}
           <div className="mt-10 flex flex-col items-center justify-center gap-3 animate-slide-up [animation-delay:280ms] sm:flex-row">
             <Magnetic className="w-full sm:w-auto">
               <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[16rem]">
+                <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[19rem]">
                   <Link href="/onboard" className="group/btn">
                     Launch your chapter — free
                     <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -1142,7 +1142,7 @@ function Hero() {
                 </Button>
               </ShimmerBorder>
             </Magnetic>
-            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto sm:min-w-[16rem] border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
+            <Button asChild variant="outline" size="xl" className="w-full sm:w-auto sm:min-w-[19rem] border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
               <Link href="/app?demo=true">Interactive Demo</Link>
             </Button>
           </div>
@@ -2667,7 +2667,7 @@ function FinalCta() {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Magnetic strength={22} className="w-full sm:w-auto">
                 <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[16rem]">
+                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[19rem]">
                     <Link href="/onboard" className="group/btn">
                       Launch your chapter — free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -2675,7 +2675,7 @@ function FinalCta() {
                   </Button>
                 </ShimmerBorder>
               </Magnetic>
-              <Button asChild variant="glass" size="xl" className="w-full sm:w-auto sm:min-w-[16rem]">
+              <Button asChild variant="glass" size="xl" className="w-full sm:w-auto sm:min-w-[19rem]">
                 <Link href="/contact#book" className="group/btn">
                   <IconBookCall className="h-5 w-5" />
                   Book a call
