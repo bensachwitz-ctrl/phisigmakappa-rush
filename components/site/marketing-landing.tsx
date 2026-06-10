@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useInView } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
@@ -1126,9 +1126,19 @@ function Hero() {
             <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-blue-500/30 text-blue-600 hover:bg-blue-50/50 hover:text-blue-700 font-semibold">
               <Link href="/app?demo=true">Interactive Demo</Link>
             </Button>
-            <Button asChild variant="ghost" size="xl" className="w-full sm:w-auto">
-              <Link href="#how">See how it works</Link>
-            </Button>
+          </div>
+
+          {/* Tertiary action demoted to a quiet text link so the page has exactly
+              two real CTAs of distinct weight (filled primary + outline secondary)
+              rather than three competing buttons. */}
+          <div className="mt-4 flex justify-center animate-slide-up [animation-delay:320ms]">
+            <Link
+              href="#how"
+              className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
+            >
+              See how it works
+              <IconChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+            </Link>
           </div>
 
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
@@ -1153,6 +1163,34 @@ function Hero() {
             </Link>
             .
           </p>
+
+          {/* Credibility band — animated proof at the decision point (right under
+              the CTA), not 1,400px down the page. A glass bar on the house curve
+              with three countable stats so a skeptic sees the value before they
+              scroll past. Counters ramp on view; reduced-motion shows finals. */}
+          <Reveal delay={120} className="mx-auto mt-7 w-fit max-w-full animate-slide-up [animation-delay:440ms]">
+            <dl className="flex flex-wrap items-stretch justify-center divide-x divide-border/70 overflow-hidden rounded-2xl gs-glass px-1.5 py-1.5">
+              {[
+                { value: 8, suffix: "", label: "tools in one site" },
+                { value: 0, prefix: "$", label: "to get started" },
+                { value: 30, suffix: "s", label: "to go live" },
+              ].map((s) => (
+                <div key={s.label} className="flex min-w-[7.5rem] flex-col items-center px-4 py-2 sm:px-6">
+                  <dt className="sr-only">{s.label}</dt>
+                  <AnimatedCounter
+                    value={s.value}
+                    prefix={s.prefix}
+                    suffix={s.suffix}
+                    duration={1.3}
+                    className="bg-gradient-to-br from-blue-700 to-sky-500 bg-clip-text text-2xl font-extrabold tabular-nums leading-none text-transparent sm:text-3xl"
+                  />
+                  <dd className="mt-1.5 text-center text-[11px] font-medium leading-tight text-muted-foreground">
+                    {s.label}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
 
           {/* "What happens when you launch" — a compact reassurance strip that
               lowers the activation-energy of the primary CTA above it: a skeptic
@@ -1234,7 +1272,12 @@ function Hero() {
 }
 
 /* A generic, platform-branded product preview. Deliberately uses placeholder
-   names and the Greekstack palette — it never shows a real chapter. */
+   names and the Greekstack palette — it never shows a real chapter.
+
+   The KPI tiles count up and the pipeline bar grows from 0 → 62% when the
+   mockup scrolls into view (house easing, reduced-motion-safe via the shared
+   <AnimatedCounter> primitive + an inView-gated width transition). This makes
+   the hero "screenshot" read as a live product the moment a visitor sees it. */
 function ProductPreview() {
   const nav = [
     { icon: IconDashboard, label: "Overview", active: true },
@@ -1243,12 +1286,26 @@ function ProductPreview() {
     { icon: IconEvents, label: "Events" },
     { icon: IconShieldCheck, label: "Risk & safety" },
   ];
-  const tiles = [
-    { label: "Active rushees", value: "62", tone: "text-foreground" },
-    { label: "Bids extended", value: "28", tone: "text-foreground" },
-    { label: "Dues collected", value: "$18.4k", tone: "text-emerald-600" },
-    { label: "Members", value: "147", tone: "text-foreground" },
+  // Each tile carries the countable parts so <AnimatedCounter> can ramp them.
+  const tiles: {
+    label: string;
+    value: number;
+    prefix?: string;
+    suffix?: string;
+    decimals?: number;
+    tone: string;
+  }[] = [
+    { label: "Active rushees", value: 62, tone: "text-foreground" },
+    { label: "Bids extended", value: 28, tone: "text-foreground" },
+    { label: "Dues collected", value: 18.4, prefix: "$", suffix: "k", decimals: 1, tone: "text-emerald-600" },
+    { label: "Members", value: 147, tone: "text-foreground" },
   ];
+
+  // Drive the funnel-bar grow-in: 0 → 62% once the panel is in view.
+  const reduce = useReducedMotion();
+  const barRef = React.useRef<HTMLDivElement>(null);
+  const barInView = useInView(barRef, { once: true, amount: 0.6 });
+  const filled = reduce || barInView;
 
   return (
     // Frosted-glass outer frame on a deep layered ambient shadow so the mockup
@@ -1313,21 +1370,28 @@ function ProductPreview() {
                   <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
                     {t.label}
                   </span>
-                  <span className={"mt-1 block text-2xl font-bold " + t.tone}>{t.value}</span>
+                  <AnimatedCounter
+                    value={t.value}
+                    prefix={t.prefix}
+                    suffix={t.suffix}
+                    decimals={t.decimals}
+                    duration={1.4}
+                    className={"mt-1 block text-2xl font-bold tabular-nums " + t.tone}
+                  />
                 </div>
               ))}
             </div>
 
-            {/* Funnel bar */}
-            <div className="rounded-xl border border-border bg-secondary/20 p-4">
+            {/* Funnel bar — grows from 0 → 62% on scroll-into-view. */}
+            <div ref={barRef} className="rounded-xl border border-border bg-secondary/20 p-4">
               <div className="mb-2.5 flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="font-medium text-foreground">Pipeline conversion</span>
                 <span>62 of 184 PNMs</span>
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500"
-                  style={{ width: "62%" }}
+                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 motion-safe:transition-[width] motion-safe:duration-[1400ms] motion-safe:ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  style={{ width: filled ? "62%" : "0%" }}
                 />
               </div>
             </div>
