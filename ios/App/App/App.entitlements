@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push notifications (events + announcements). The matching App ID /
+	     provisioning profile in the Apple Developer portal must have the Push
+	     Notifications capability enabled, and an APNs Auth Key (.p8) uploaded to
+	     App Store Connect, for delivery to work. "production" is correct for both
+	     TestFlight and the App Store (Apple maps TestFlight to the prod APNs env). -->
+	<key>aps-environment</key>
+	<string>production</string>
+
+	<!-- Universal links: tapping https://greekstack.com/app?chapter=… (or the
+	     vercel host) opens the app straight into that chapter instead of Safari.
+	     Requires an apple-app-site-association file served at the domain root
+	     (see IOS-RELEASE.md). applinks is inert until that file is published, so
+	     it is safe to ship now. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:greekstack.com</string>
+		<string>applinks:www.greekstack.com</string>
+		<string>applinks:greekstack.vercel.app</string>
+	</array>
+</dict>
+</plist>

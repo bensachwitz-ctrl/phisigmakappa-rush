@@ -1,0 +1,18 @@
+# Keep iOS / native source files LF so the macOS (Codemagic) build toolchain and
+# Xcode parse them correctly regardless of the committing platform (Windows here).
+*.swift            text eol=lf
+*.plist            text eol=lf
+*.pbxproj          text eol=lf -merge=union
+*.entitlements     text eol=lf
+*.storyboard       text eol=lf
+*.xcconfig         text eol=lf
+*.xcscheme         text eol=lf
+Package.swift      text eol=lf
+
+# Binary assets — never normalize.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.p12  binary
+*.mobileprovision binary

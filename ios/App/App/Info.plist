@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Greek Stack</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- ── Greek Stack: privacy usage strings ─────────────────────────────────
+	     The hosted /app client uses the camera for the live rush/event QR
+	     check-in scanner and the photo library for member profile photos.
+	     iOS rejects a build that triggers these prompts without a usage string,
+	     even if the feature is web-driven inside the WKWebView. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Greek Stack uses the camera to scan rush and event QR codes so you can check members and guests in.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Greek Stack lets you choose a photo from your library for your chapter profile.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Greek Stack can save chapter event flyers and QR codes to your photo library.</string>
+
+	<!-- ── Deep links: custom URL scheme greekstack:// ────────────────────────
+	     Universal (https) links into a chapter are handled via the Associated
+	     Domains entitlement (App.entitlements); this custom scheme is the
+	     fallback used by push-notification deep links (data.deepLink). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.greekstack.app</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>greekstack</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- ── Background modes: remote push (events + announcements) ──────────── -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- ── App Transport Security ─────────────────────────────────────────────
+	     We only ever load https origins (greekstack.vercel.app / *.greekstack.com),
+	     so leave ATS fully on (no arbitrary-loads exception). -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+
+	<!-- Status bar: light text on the dark navy chrome; CSS owns safe areas.
+	     UIViewControllerBasedStatusBarAppearance is already declared above. -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+</dict>
+</plist>
