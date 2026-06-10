@@ -28,21 +28,21 @@ export function renderRushTab(ctx: DemoContext) {
                         <div className="space-y-3 flex flex-col flex-1 overflow-hidden text-left">
                           {/* Rush Statistics */}
                           <div className="grid grid-cols-3 gap-2 text-center shrink-0">
-                            <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                              <span className="text-[18px] font-black text-slate-900">{dashboardData?.pnms?.length || 0}</span>
-                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Total PNMs</p>
+                            <div className="gs-glass rounded-2xl p-2.5">
+                              <span className="text-[22px] font-extrabold" style={{ color: selectedBrand.primaryColor }}>{dashboardData?.pnms?.length || 0}</span>
+                              <p className="mt-0.5 text-[11px] font-semibold uppercase text-slate-500">Total PNMs</p>
                             </div>
-                            <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                              <span className="text-[18px] font-black text-slate-900">
+                            <div className="gs-glass rounded-2xl p-2.5">
+                              <span className="text-[22px] font-extrabold" style={{ color: selectedBrand.primaryColor }}>
                                 {dashboardData?.pnms?.filter((p: any) => p.status === "BID_EXTENDED").length || 0}
                               </span>
-                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Bids Sent</p>
+                              <p className="mt-0.5 text-[11px] font-semibold uppercase text-slate-500">Bids Sent</p>
                             </div>
-                            <div className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                              <span className="text-[18px] font-black text-slate-900">
+                            <div className="gs-glass rounded-2xl p-2.5">
+                              <span className="text-[22px] font-extrabold" style={{ color: selectedBrand.primaryColor }}>
                                 {dashboardData?.pnms?.filter((p: any) => p.attendanceCount > 0).length || 0}
                               </span>
-                              <p className="text-[11px] text-slate-500 font-semibold uppercase mt-0.5">Attended</p>
+                              <p className="mt-0.5 text-[11px] font-semibold uppercase text-slate-500">Attended</p>
                             </div>
                           </div>
 
@@ -78,10 +78,10 @@ export function renderRushTab(ctx: DemoContext) {
                                 <button
                                   key={f}
                                   onClick={() => setRushFilter(f)}
-                                  className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg border transition ${
+                                  className={`press min-h-[36px] shrink-0 whitespace-nowrap rounded-lg border px-3 text-[11px] font-bold uppercase tracking-wider transition ${
                                     rushFilter === f
-                                      ? "bg-slate-900 border-slate-900 text-white"
-                                      : "bg-white border-slate-100 text-slate-500 hover:text-slate-900"
+                                      ? "border-slate-900 bg-slate-900 text-white"
+                                      : "border-slate-100 bg-white text-slate-500 hover:text-slate-900"
                                   }`}
                                 >
                                   {f.replace("_", " ")}
@@ -91,7 +91,7 @@ export function renderRushTab(ctx: DemoContext) {
                           </div>
 
                           {/* PNM list stream */}
-                          <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[320px] pr-1">
+                          <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
                             {(() => {
                               const list = (dashboardData?.pnms || []).filter((p: any) => {
                                 const q = rushSearch.toLowerCase();
@@ -112,7 +112,7 @@ export function renderRushTab(ctx: DemoContext) {
                                 <button
                                   key={p.id}
                                   onClick={() => setSelectedPnm(p)}
-                                  className="w-full p-3 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition flex items-center justify-between gap-3 text-left shadow-sm group"
+                                  className="press gs-glass group flex w-full min-h-[60px] items-center justify-between gap-3 rounded-2xl p-3 text-left transition hover:-translate-y-0.5"
                                 >
                                   <div className="flex items-center gap-2.5 min-w-0">
                                     <div 
@@ -226,7 +226,7 @@ export function renderRushTab(ctx: DemoContext) {
                           </div>
 
                           {activeSubTab === "directory" ? (
-                            <div className="space-y-2 flex-1 overflow-y-auto max-h-[220px] pr-1">
+                            <div className="space-y-2 flex-1 overflow-y-auto pr-1">
                               {/* New Member List */}
                               {(() => {
                                 // Filter mock accepted pledges
@@ -282,7 +282,7 @@ export function renderRushTab(ctx: DemoContext) {
                               })()}
                             </div>
                           ) : (
-                            <div className="space-y-2 flex-1 overflow-y-auto max-h-[220px] pr-1">
+                            <div className="space-y-2 flex-1 overflow-y-auto pr-1">
                               {/* Sober Driver Schedule Assignment List */}
                               {[
                                 { key: "Friday-22", label: "Friday Late Night (10pm-12am)" },

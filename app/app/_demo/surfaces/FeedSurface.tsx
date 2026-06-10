@@ -18,12 +18,12 @@ export function renderFeedTab(ctx: DemoContext) {
   return (
                       <div className="space-y-4">
                         {/* Welcome widget */}
-                        <div 
+                        <div
                           className="border p-4 rounded-3xl relative overflow-hidden"
                           style={{ background: `linear-gradient(to right, ${selectedBrand.primaryColor}12, ${selectedBrand.primaryColor}06, #ffffff)`, borderColor: `${selectedBrand.primaryColor}20` }}
                         >
-                          <h4 className="text-xs font-semibold text-slate-500">Welcome Back,</h4>
-                          <h2 className="text-lg font-bold text-slate-900 mt-0.5">
+                          <h4 className="text-[12px] font-semibold text-slate-500">Welcome Back,</h4>
+                          <h2 className="mt-0.5 text-[20px] font-extrabold tracking-tight text-slate-900">
                             {dashboardData?.profile?.name || "Member"}
                           </h2>
                           <p className="text-[12px] text-slate-500 mt-1 flex items-center gap-1.5">
@@ -68,16 +68,16 @@ export function renderFeedTab(ctx: DemoContext) {
                               <button
                                 key={id}
                                 onClick={() => { setSpotlight(id); if (id === "giving") setDonationDone(false); }}
-                                className="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col items-center gap-1 text-center transition active:scale-[0.97] hover:border-slate-200"
+                                className="press gs-glass flex min-h-[80px] flex-col items-center gap-1 rounded-2xl p-2.5 text-center transition hover:-translate-y-0.5"
                               >
                                 <span
-                                  className="w-8 h-8 rounded-xl flex items-center justify-center border"
-                                  style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '18', color: selectedBrand.primaryColor }}
+                                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
+                                  style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                                 >
-                                  <Icon className="w-4 h-4" />
+                                  <Icon className="h-4 w-4" />
                                 </span>
-                                <span className="text-[11px] font-bold text-slate-800 leading-tight">{label}</span>
-                                <span className="text-[11px] text-slate-400 uppercase tracking-wider leading-none">{sub}</span>
+                                <span className="text-[12px] font-bold leading-tight text-slate-800">{label}</span>
+                                <span className="text-[11px] uppercase leading-none tracking-wider text-slate-400">{sub}</span>
                               </button>
                             ))}
                           </div>
@@ -109,11 +109,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                 <div
                                   key={item.id}
                                   onClick={() => setExpandedAnnouncementId(isExpanded ? null : item.id)}
-                                  className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white shadow-sm ${
-                                    item.pinned
-                                      ? "border-amber-200"
-                                      : "border-slate-100 hover:border-slate-200"
-                                  }`}
+                                  className="gs-glass cursor-pointer rounded-2xl p-4 transition-all hover:-translate-y-0.5"
                                   style={item.pinned ? { borderLeft: `4px solid ${selectedBrand.primaryColor}` } : {}}
                                 >
                                   <div className="flex items-start justify-between gap-3">
