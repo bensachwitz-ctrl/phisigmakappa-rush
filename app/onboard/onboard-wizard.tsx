@@ -105,6 +105,24 @@ export default function OnboardWizard() {
   // Inline, per-field validation hints layered on top of the toast errors so
   // the user sees exactly which input needs attention without losing the toast.
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  // Root of the wizard card — scoped query target for focus-first-invalid.
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  // After a failed validation, land the user ON the first offending field:
+  // scroll it to center and focus it. Without this, on a phone the required
+  // fields can sit below the fold and Continue reads as a silent no-op (the
+  // inline errors + toast render out of view). Double-rAF waits for the error
+  // state to paint aria-invalid before querying.
+  function focusFirstInvalid() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = panelRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+        if (!el) return;
+        el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+        el.focus({ preventScroll: true });
+      });
+    });
+  }
 
   // Identity State — start EMPTY so a new chapter never publishes Phi Sig's
   // real identity by skimming the form. Placeholders show the reference values
@@ -299,6 +317,7 @@ export default function OnboardWizard() {
       if (Object.keys(e).length) {
         setErrors(e);
         push({ title: "A few details needed", description: "Organization name, chapter Greek letters, school, and a subdomain are required.", variant: "destructive" });
+        focusFirstInvalid();
         return false;
       }
     } else if (currentStep === "admin") {
@@ -317,11 +336,13 @@ export default function OnboardWizard() {
             : "Admin name, email, and password are required.",
           variant: "destructive",
         });
+        focusFirstInvalid();
         return false;
       }
       if (adminPassword.length < 8) {
         setErrors({ adminPassword: "Must be at least 8 characters" });
         push({ title: "Password too short", description: "Password must be at least 8 characters.", variant: "destructive" });
+        focusFirstInvalid();
         return false;
       }
     }
@@ -349,6 +370,13 @@ export default function OnboardWizard() {
         description: "Please choose a different subdomain before continuing.",
         variant: "destructive",
       });
+      // Land the user straight on the field to fix (it may be above the fold).
+      const el = subdomainRef.current;
+      if (el) {
+        el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+        el.focus({ preventScroll: true });
+        el.select?.();
+      }
       return;
     }
     if (stepIndex < STEPS.length - 1) {
@@ -773,7 +801,7 @@ export default function OnboardWizard() {
           {/* Cursor-tracking glow for fine-pointer devices only (no-op on touch /
               reduced-motion). Sits behind the content; the panel clips it. */}
           <Spotlight size={520} color="rgba(37,99,235,0.16)" edgeColor="rgba(56,189,248,0.10)" />
-          <div className="relative space-y-6 p-6 sm:p-8">
+          <div ref={panelRef} className="relative space-y-6 p-6 sm:p-8">
             <div className="flex items-start gap-3">
               {/* Active-step chip — gold-accented to match the rail's active state. */}
               <GsChip icon={StepIcon} tone="platform" size="lg" className="shrink-0 ring-amber-300/30 [--gs-accent:#fbbf24]" />
