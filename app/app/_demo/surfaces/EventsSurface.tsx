@@ -27,7 +27,7 @@ export function renderEventsTab(ctx: DemoContext) {
                             const starts = new Date(e.startsAt);
                             
                             return (
-                              <div key={e.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-3 text-left">
+                              <div key={e.id} className="gs-glass space-y-3 rounded-2xl p-4 text-left transition-all hover:-translate-y-0.5">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <span 
@@ -67,39 +67,39 @@ export function renderEventsTab(ctx: DemoContext) {
                                 </div>
 
                                 {role === "brother" && (
-                                  <div className="pt-2 flex items-center gap-2">
+                                  <div className="flex items-center gap-2 pt-2">
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "GOING")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`press flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-bold transition ${
                                         isGoing
-                                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                          : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
+                                          ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                                          : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isGoing && <Check className="w-3 h-3" />} Going
+                                      {isGoing && <Check className="h-3 w-3" />} Going
                                     </button>
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "MAYBE")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`press flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-bold transition ${
                                         isMaybe
-                                          ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                          : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
+                                          ? "border border-amber-200 bg-amber-50 text-amber-700"
+                                          : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isMaybe && <Check className="w-3 h-3" />} Maybe
+                                      {isMaybe && <Check className="h-3 w-3" />} Maybe
                                     </button>
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
                                       onClick={() => handleRsvp(e.id, "NOT_GOING")}
-                                      className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 ${
+                                      className={`press flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-bold transition ${
                                         isNotGoing
-                                          ? "bg-red-50 text-red-700 border border-red-200"
-                                          : "bg-slate-50 text-slate-600 border border-slate-100 hover:text-slate-900"
+                                          ? "border border-red-200 bg-red-50 text-red-700"
+                                          : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isNotGoing && <Check className="w-3 h-3" />} Decline
+                                      {isNotGoing && <Check className="h-3 w-3" />} Decline
                                     </button>
                                   </div>
                                 )}
@@ -107,10 +107,10 @@ export function renderEventsTab(ctx: DemoContext) {
                                 {/* Add to calendar — available to everyone (alumni see events too) */}
                                 <button
                                   onClick={() => handleAddToCalendar(e)}
-                                  className="w-full mt-1 py-1.5 rounded-lg text-[12px] font-bold border transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                                  className="press mt-1 flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-lg border text-[12px] font-bold transition"
                                   style={{ color: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor + '30', backgroundColor: selectedBrand.primaryColor + '0a' }}
                                 >
-                                  <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
+                                  <CalendarPlus className="h-3.5 w-3.5" /> Add to calendar
                                 </button>
                               </div>
                             );

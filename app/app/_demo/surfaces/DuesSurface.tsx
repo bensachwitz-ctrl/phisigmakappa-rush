@@ -16,7 +16,7 @@ export function renderDuesTab(ctx: DemoContext) {
                         {role === "brother" ? (
                           <>
                             {/* Dues dashboard */}
-                            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm text-center space-y-4">
+                            <div className="gs-glass rounded-3xl p-5 text-center space-y-4">
                               <div 
                                 className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center border"
                                 style={{ backgroundColor: selectedBrand.primaryColor + '12', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
@@ -52,10 +52,10 @@ export function renderDuesTab(ctx: DemoContext) {
                                 <button
                                   type="button"
                                   onClick={isDemo ? handleSimulateStripePay : () => showToast("Initiating checkout session via Stripe Connect...", "info")}
-                                  className="w-full py-3 text-white rounded-2xl text-xs font-bold shadow-md transition active:scale-[0.98]"
+                                  className="press flex min-h-[48px] w-full items-center justify-center gap-1.5 rounded-2xl text-[13px] font-bold text-white shadow-lg transition active:scale-[0.99]"
                                   style={{ backgroundColor: selectedBrand.primaryColor }}
                                 >
-                                  <CreditCard className="w-4 h-4 mr-1 inline" /> Pay Online w/ Stripe
+                                  <CreditCard className="h-4 w-4" /> Pay Online w/ Stripe
                                 </button>
                               )}
                             </div>
@@ -95,7 +95,7 @@ export function renderDuesTab(ctx: DemoContext) {
                         ) : (
                           <>
                             {/* Alumni donation panel */}
-                            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm text-center space-y-4">
+                            <div className="gs-glass rounded-3xl p-5 text-center space-y-4">
                               <div 
                                 className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center border"
                                 style={{ backgroundColor: selectedBrand.primaryColor + '12', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
@@ -114,7 +114,7 @@ export function renderDuesTab(ctx: DemoContext) {
                               <button
                                 type="button"
                                 onClick={() => showToast("Initiating donation campaign session...", "info")}
-                                className="w-full py-3 text-white rounded-2xl text-xs font-bold shadow-md transition active:scale-[0.98]"
+                                className="press flex min-h-[48px] w-full items-center justify-center rounded-2xl text-[13px] font-bold text-white shadow-lg transition active:scale-[0.99]"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
                                 Secure Donation via Stripe
