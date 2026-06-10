@@ -20,11 +20,11 @@ export function renderToast(ctx: DemoContext) {
                   }}
                 >
                   {toast.type === "success" ? (
-                    <Check className="w-4.5 h-4.5" />
+                    <Check className="w-4 h-4" />
                   ) : toast.type === "error" ? (
-                    <X className="w-4.5 h-4.5" />
+                    <X className="w-4 h-4" />
                   ) : (
-                    <Info className="w-4.5 h-4.5" />
+                    <Info className="w-4 h-4" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

@@ -20,34 +20,32 @@ export function renderSettingsTab(ctx: DemoContext) {
   // this guard only restores the type narrowing the enclosing block provided.
   if (!selectedTenant) return null;
   return (
-                      <div className="space-y-4 text-left">
-                        {/* User Card */}
-                        {/* User Card */}
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center text-center space-y-2 shadow-sm">
-                          <div 
-                            className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-lg text-white border-2"
+                      <div className="space-y-3 text-left">
+                        {/* User Card — compact: avatar + identity on one row, role
+                            chip + edit action inline. */}
+                        <div className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center gap-3 shadow-sm">
+                          <div
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[15px] font-bold text-white border-2"
                             style={{ backgroundColor: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor + '50' }}
                           >
                             {dashboardData?.profile?.name?.split(" ").map((n: string) => n[0]).join("").substring(0, 2) || "U"}
                           </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-900">{dashboardData?.profile?.name}</h4>
-                            <p className="text-[12px] text-slate-500">{dashboardData?.profile?.email}</p>
-                          </div>
-                          <div className="flex items-center gap-2 pt-1">
-                            <span 
-                              className="text-[11px] px-2.5 py-0.5 rounded border font-semibold uppercase tracking-wider"
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-[14px] font-bold text-slate-900 truncate">{dashboardData?.profile?.name}</h4>
+                            <p className="text-[11px] text-slate-500 truncate">{dashboardData?.profile?.email}</p>
+                            <span
+                              className="mt-1 inline-block text-[11px] px-2 py-0 rounded border font-semibold uppercase tracking-wider"
                               style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                             >
-                              {role} Account
+                              {role} account
                             </span>
-                            <button
-                              onClick={() => setShowEditProfileModal(true)}
-                              className="text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded border border-slate-200 transition"
-                            >
-                              Edit Profile
-                            </button>
                           </div>
+                          <button
+                            onClick={() => setShowEditProfileModal(true)}
+                            className="press shrink-0 self-start text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-200 transition"
+                          >
+                            Edit
+                          </button>
                         </div>
 
                         {/* Roster details list */}
@@ -107,7 +105,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                   <div key={b.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">
                                       <p className="font-bold text-slate-900 truncate">{b.name}</p>
-                                      <p className="text-[11px] text-slate-505 truncate">{b.email || "No email"}</p>
+                                      <p className="text-[11px] text-slate-500 truncate">{b.email || "No email"}</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       <button
@@ -120,7 +118,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                       {b.id !== "demo-brother-id" && (
                                         <button
                                           onClick={() => handleRemoveMobileMember(b.id, b.name, "actives")}
-                                          className="p-1.5 hover:bg-red-50 text-red-505 rounded-lg transition"
+                                          className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition"
                                           title="Remove Member"
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
@@ -138,7 +136,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                   <div key={al.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">
                                       <p className="font-bold text-slate-900 truncate">{al.name}</p>
-                                      <p className="text-[11px] text-slate-505 truncate">{al.email || "No email"}</p>
+                                      <p className="text-[11px] text-slate-500 truncate">{al.email || "No email"}</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       <button
@@ -150,7 +148,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                       </button>
                                       <button
                                         onClick={() => handleRemoveMobileMember(al.id, al.name, "alumni")}
-                                        className="p-1.5 hover:bg-red-50 text-red-505 rounded-lg transition"
+                                        className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition"
                                         title="Remove Member"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />

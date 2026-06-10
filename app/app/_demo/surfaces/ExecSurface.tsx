@@ -33,16 +33,16 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
   if (!d) return null;
 
   const SectionHead = ({ icon: Icon, title, sub }: { icon: any; title: string; sub: string }) => (
-    <div className="mb-3 flex items-center gap-2.5">
+    <div className="mb-2 flex items-center gap-2.5">
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
         style={{ background: `linear-gradient(140deg, ${primary}, ${second})` }}
       >
-        <Icon className="h-4.5 w-4.5" />
+        <Icon className="h-4 w-4" />
       </span>
       <div>
-        <h3 className="text-[17px] font-extrabold leading-tight text-slate-900">{title}</h3>
-        <p className="text-[12px] text-slate-500">{sub}</p>
+        <h3 className="text-[15px] font-extrabold leading-tight text-slate-900">{title}</h3>
+        <p className="text-[11px] text-slate-500 leading-tight">{sub}</p>
       </div>
     </div>
   );
@@ -52,7 +52,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const actives = d.roster?.actives || [];
     const alumni = d.roster?.alumni || [];
     return (
-      <div className="space-y-4 text-left">
+      <div className="space-y-3 text-left">
         <SectionHead icon={Users} title="Roster" sub="Manage your chapter's members" />
 
         <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const total = collected + outstanding;
     const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
     return (
-      <div className="space-y-4 text-left">
+      <div className="space-y-3 text-left">
         <SectionHead icon={DollarSign} title="Dues management" sub="Track collection across the chapter" />
 
         <div
@@ -155,7 +155,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const bids = pnms.filter((p: any) => p.status === "BID_EXTENDED").length;
     const active = pnms.filter((p: any) => p.status === "ACTIVE").length;
     return (
-      <div className="space-y-4 text-left">
+      <div className="space-y-3 text-left">
         <SectionHead icon={TrendingUp} title="Recruitment pipeline" sub="Manage rush from one board" />
 
         <div className="grid grid-cols-3 gap-2.5">
@@ -203,7 +203,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
   if (tab === "announce") {
     const anns = d.announcements || [];
     return (
-      <div className="space-y-4 text-left">
+      <div className="space-y-3 text-left">
         <SectionHead icon={Megaphone} title="Announcements" sub="Broadcast to the whole chapter" />
 
         <button
@@ -243,7 +243,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     { id: "theme", icon: Palette, label: "White-label branding", sub: "Your letters & colors" },
   ];
   return (
-    <div className="space-y-4 text-left">
+    <div className="space-y-3 text-left">
       <SectionHead icon={ShieldCheck} title="Officer console" sub="Role-scoped admin tools" />
       <div className="space-y-2">
         {tools.map((t) => (
@@ -257,7 +257,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
                 style={{ background: `linear-gradient(140deg, ${primary}, ${second})` }}
               >
-                <t.icon className="h-4.5 w-4.5" />
+                <t.icon className="h-4 w-4" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[14px] font-bold text-slate-900">{t.label}</span>

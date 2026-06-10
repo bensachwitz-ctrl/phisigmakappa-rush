@@ -15,8 +15,8 @@ export function renderDirectoryTab(ctx: DemoContext) {
     setShowPostJobModal,
   } = ctx;
   return (
-                      <div className="space-y-3 flex-1 flex flex-col overflow-hidden text-left">
-                        
+                      <div className="space-y-2.5 flex-1 flex flex-col overflow-hidden text-left">
+
                         {/* Directory Switcher tabs */}
                         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
                           <button
@@ -69,8 +69,10 @@ export function renderDirectoryTab(ctx: DemoContext) {
                           />
                         </div>
 
-                        {/* Directory list area */}
-                        <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
+                        {/* Directory list area — fills the available height and
+                            scrolls within the surface (no fixed max-h that fights
+                            the full-bleed mobile viewport). */}
+                        <div className="space-y-2 flex-1 overflow-y-auto pr-1">
                           
                           {/* 1. Actives View */}
                           {rosterTab === "actives" && (
@@ -93,9 +95,9 @@ export function renderDirectoryTab(ctx: DemoContext) {
                               }
 
                               return list.map((b: any) => (
-                                <div key={b.id} className="p-3 bg-white rounded-2xl border border-slate-100 flex items-center justify-between gap-3 shadow-sm">
+                                <div key={b.id} className="p-2.5 bg-white rounded-xl border border-slate-100 flex items-center justify-between gap-3 shadow-sm">
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <div 
+                                    <div
                                       className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none border"
                                       style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '15', color: selectedBrand.primaryColor }}
                                     >
@@ -154,7 +156,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                               }
 
                               return list.map((al: any) => (
-                                <div key={al.id} className="p-3.5 bg-white rounded-2xl border border-slate-100 space-y-2.5 shadow-sm">
+                                <div key={al.id} className="p-2.5 bg-white rounded-xl border border-slate-100 space-y-2 shadow-sm">
                                   <div className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-2.5 min-w-0">
                                       <div 
@@ -210,10 +212,10 @@ export function renderDirectoryTab(ctx: DemoContext) {
                               {/* Post Opp Button */}
                               <button
                                 onClick={() => setShowPostJobModal(true)}
-                                className="w-full py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                                className="press flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl text-xs font-bold text-white shadow-md transition active:scale-[0.98]"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
-                                <Briefcase className="w-3.5 h-3.5" /> Post Job / Internship Opening
+                                <Briefcase className="w-3.5 h-3.5" /> Post job / internship
                               </button>
 
                               {/* Careers List */}
@@ -241,7 +243,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                     <div
                                       key={j.id}
                                       onClick={() => setExpandedJobId(isExpanded ? null : j.id)}
-                                      className="p-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 transition shadow-sm cursor-pointer space-y-3"
+                                      className="p-3 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition shadow-sm cursor-pointer space-y-2.5"
                                     >
                                       <div className="flex items-start justify-between gap-3">
                                         <div>
@@ -275,7 +277,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                           )}
 
                                           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
-                                            <span className="font-bold text-slate-500 uppercase text-[11px] block">Referral Referral Contacts</span>
+                                            <span className="font-bold text-slate-500 uppercase text-[11px] block">Referral contact</span>
                                             <p className="text-slate-800 font-semibold text-xs">{j.contactName} ({j.postedByRole === "alumni" ? "Alumnus" : "Brother"})</p>
                                             
                                             <div className="flex gap-2 pt-1.5">
