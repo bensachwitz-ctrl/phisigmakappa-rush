@@ -60,8 +60,14 @@ Codemagic auto-detects the tag and runs, on a Mac Mini M2:
 6. Imports the iOS Distribution cert + provisioning profile, archives, exports the IPA
 7. Uploads to App Store Connect → **TestFlight Internal Testing**
 
-> `npx cap add ios` / `cap sync` run on the **Mac/CI**, never on Windows. The generated
-> `ios/` (and `android/`) folders are gitignored — Codemagic regenerates them each build.
+> **UPDATE (2026-06-10):** the `ios/App` Xcode project is now **committed** to the repo
+> (Info.plist, app icon + splash, `App.entitlements`, URL scheme, signing settings) so
+> the build is deterministic and the native config is reviewed in git rather than patched
+> blind on every CI run. Only the transient/regenerated bits stay gitignored (`App/public`,
+> `capacitor.config.json`, `config.xml`, `build/`, the cordova-plugins shim). `cap sync`
+> runs on the Mac/CI to resolve the plugin Swift packages (Capacitor 8 = SPM, no CocoaPods).
+> `cap add ios` is only a fallback if the committed project is ever missing.
+> See **`IOS-RELEASE.md`** (owner runbook) + **`ios/AppStore/`** (submission kit).
 
 ### One-time Codemagic setup (owner)
 Create the secret env-var group **`greekstack_ios`** (Codemagic UI → greek-stack →
@@ -78,13 +84,18 @@ to App Store Connect, for push to function. App icon/splash use the Greek Stack 
 ## Status (2026-06-10) — READY TO TAG FOR TESTFLIGHT
 - [x] `capacitor.config.ts` correct (`com.greekstack.app` / "Greek Stack" / `server.url` → `.../app`); StatusBar + SplashScreen plugins; safe-area handling; `allowNavigation` for GS origins. Stale v6 `mobile/` scaffold removed.
 - [x] Capacitor deps declared in `package.json` (core/cli/ios/app/push-notifications/preferences/splash-screen/status-bar/haptics).
+- [x] **Native `ios/App` Xcode project generated + COMMITTED** (`npx cap add ios` + `cap sync`, Capacitor 8 / SPM): Info.plist (bundle id, usage strings, `greekstack://` scheme, remote-notification bg mode, ATS-on), `App.entitlements` (aps-environment + associated-domains), AppDelegate APNs callbacks, brand app icon (1024, no-alpha) + splash (2732), iPhone-only, entitlements wired in pbxproj. `.gitattributes` keeps native source LF.
 - [x] **Push-notification wiring** (events/announcements) + tenant-bound `/api/mobile/push/register` endpoint.
 - [x] **Native session persistence + biometric unlock** (Capacitor Preferences + optional Face/Touch ID).
 - [x] **Deep / universal links** into a chapter.
 - [x] **Offline cache** of the last view.
-- [x] `codemagic.yaml` — iOS → TestFlight pipeline (valid YAML, `v*` trigger).
-- [x] Web app unchanged: `npx tsc --noEmit` clean + `npx next build` green; native code inert on web.
-- [ ] (owner, one-time) populate the `greekstack_ios` secret group + enable Push on the App ID/profile + upload the APNs `.p8`.
+- [x] **Haptics** (selection on tab change, impact on sign-in, success/error on toast) + status-bar re-assert — all inert on web.
+- [x] **Web↔mobile cohesion**: notch-safe top bar (`env(safe-area-inset-top)`) + bottom nav (`env(safe-area-inset-bottom)`), native WebView polish (`@media (pointer: coarse)`: no tap-flash, no long-press callout, contained overscroll), ≥44px tap targets, full-bleed phone shell.
+- [x] `codemagic.yaml` — iOS → TestFlight pipeline (valid YAML, `v*` trigger), uses the committed `ios/` project.
+- [x] **`IOS-RELEASE.md`** (exact owner setup + how to cut a release) + **`ios/AppStore/`** (LISTING / SCREENSHOT-PLAN / SUBMISSION-CHECKLIST).
+- [x] Web app unchanged: `npx tsc --noEmit` clean + `npx next build` green; native code inert on web; `npx cap sync` clean.
+- [ ] (owner, one-time) populate the `greekstack_ios` secret group + enable Push on the App ID/profile + upload the APNs `.p8` (see `IOS-RELEASE.md`).
+- [ ] (owner) wire the actual APNs *send* server-side (token capture/storage is done) + publish the AASA file for universal links + create `/support` + `/privacy` marketing pages.
 - [ ] (v2) static export of `/app` → bundle into the binary (drop `server.url`).
 
 Pairs with: `GREEK-STACK-PRODUCT-SPEC.md` (companion-app section) · `GREEK-STACK-RESOURCE-MAP.md` · Mobbin skills (mobile UX) · `OSS-USAGE-MAP` (Capacitor / mobile design).
