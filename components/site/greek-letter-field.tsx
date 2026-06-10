@@ -10,9 +10,9 @@
  * texture; pointer-events-none + aria-hidden so it never touches the UI.
  *
  * Travel: each letter starts at a scattered position INCLUDING off-screen edges
- * and crosses to the far side via a large horizontal `--dx` (with a small
- * vertical `--dy` wobble), so it appears to enter → cross → exit. Most go
- * left→right; a minority go right→left for variety.
+ * and crosses to the far side via a large horizontal `--dx` plus a randomized
+ * vertical `--dy` (in vh) — so every letter follows its own random diagonal,
+ * entering → crossing → exiting. Most go left→right; a minority right→left.
  *
  * Determinism: layout generated once with a seeded PRNG (not Math.random) so SSR
  * === CSR (no hydration mismatch). Motion is pure transform/opacity (GPU), linear
@@ -65,25 +65,26 @@ type Tier = {
   durRange: number;
   opMin: number;
   opRange: number;
-  /** vertical wobble amplitude (px) over the journey */
+  /** vertical travel amplitude (vh) over the journey — the random path angle */
   dyAmp: number;
 };
 
 const TIERS: Tier[] = [
-  // NEAR — large, most visible. Durations are LONG (slow, calm drift) so the
-  // field reads as a serene texture, never a busy/distracting swarm. Opacity
-  // tuned to clearly read as drifting letters on the marketing bg while staying
-  // well under card text.
-  { count: 11, sizeMin: 30, sizeRange: 18, durMin: 34, durRange: 18, opMin: 0.15, opRange: 0.07, dyAmp: 44 },
-  // MID — medium size / opacity, slower still
-  { count: 14, sizeMin: 17, sizeRange: 12, durMin: 50, durRange: 22, opMin: 0.10, opRange: 0.05, dyAmp: 64 },
-  // FAR — small, very slow, faint (the deep backdrop layer)
-  { count: 14, sizeMin: 10, sizeRange: 7, durMin: 74, durRange: 32, opMin: 0.05, opRange: 0.04, dyAmp: 86 },
+  // NEAR — large, most visible, and FAST enough that the traversal clearly
+  // reads as letters drifting across the screen (owner feedback: the field
+  // must visibly travel, not sit as a near-static texture). Opacity tuned to
+  // clearly read on the marketing bg while staying well under card text.
+  { count: 11, sizeMin: 32, sizeRange: 20, durMin: 14, durRange: 10, opMin: 0.20, opRange: 0.08, dyAmp: 20 },
+  // MID — medium size / opacity, slower
+  { count: 14, sizeMin: 18, sizeRange: 13, durMin: 22, durRange: 12, opMin: 0.13, opRange: 0.06, dyAmp: 28 },
+  // FAR — small, slowest, faint (the deep backdrop layer) — still visibly moving
+  { count: 14, sizeMin: 11, sizeRange: 8, durMin: 32, durRange: 16, opMin: 0.07, opRange: 0.05, dyAmp: 36 },
 ];
 
-/** A calmer multiplier set applied when `calm` is requested (the demo): even
- *  slower drift + softer opacity so the chapter shell is easy to read/interact. */
-const CALM = { durMul: 1.4, opMul: 0.7, dyMul: 0.7 } as const;
+/** A calmer multiplier set applied when `calm` is requested (the demo): a bit
+ *  slower drift + softer opacity so the chapter shell is easy to read/interact —
+ *  but still unmistakably letters traveling across the screen. */
+const CALM = { durMul: 1.35, opMul: 0.8, dyMul: 1 } as const;
 
 /** Total letters at full density (sum of tier counts). */
 const DEFAULT_TOTAL = TIERS.reduce((n, t) => n + t.count, 0); // 44
@@ -118,9 +119,9 @@ function buildLetters(glyphs: string[], seed: number, total: number, calm: boole
         top: Math.round((-6 + rng() * 112) * 10) / 10, // vary vertical position, -6%..106%
         size: tier.sizeMin + Math.round(rng() * tier.sizeRange),
         dur: Math.round((tier.durMin + rng() * tier.durRange) * durMul), // random speeds within tier
-        delay: -Math.round(rng() * 80), // widely staggered → no synchronized "pop"
+        delay: -Math.round(rng() * 48), // widely staggered → no synchronized "pop"
         dx: Math.round(dx),
-        dy: Math.round((rng() - 0.5) * 2 * tier.dyAmp * dyMul), // gentle vertical wobble
+        dy: Math.round((rng() - 0.5) * 2 * tier.dyAmp * dyMul), // randomized path angle (vh of vertical travel)
         rot: Math.round((rng() - 0.5) * 12),
         op: Math.round((tier.opMin + rng() * tier.opRange) * opMul * 1000) / 1000,
       });
@@ -185,7 +186,7 @@ export function GreekLetterField({
               fontSize: `${l.size}px`,
               lineHeight: 1,
               ["--dx" as string]: `${l.dx}vw`,
-              ["--dy" as string]: `${l.dy}px`,
+              ["--dy" as string]: `${l.dy}vh`,
               ["--gr" as string]: `${l.rot}deg`,
               ["--go" as string]: `${l.op}`,
               ["--dur" as string]: `${l.dur}s`,
