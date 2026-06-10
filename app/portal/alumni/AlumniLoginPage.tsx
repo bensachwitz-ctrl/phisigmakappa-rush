@@ -13,6 +13,7 @@ export default function AlumniLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -117,29 +118,33 @@ export default function AlumniLoginPage() {
                 </p>
 
                 {forgotError && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">
+                  <div role="alert" aria-live="assertive" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">
                     {forgotError}
                   </div>
                 )}
 
                 {forgotSuccess && (
-                  <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs text-center font-medium">
+                  <div role="status" aria-live="polite" className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs text-center font-medium">
                     {forgotSuccess}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                  <label htmlFor="alum-forgot-email" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
                     Email Address
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                     <input
+                      id="alum-forgot-email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="off"
                       required
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="alumnus@example.com"
+                      placeholder="you@example.com"
                       className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
                     />
                   </div>
@@ -170,23 +175,27 @@ export default function AlumniLoginPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">
+                  <div role="alert" aria-live="assertive" className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">
                     {error}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
+                  <label htmlFor="alum-email" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
                     Email Address
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                     <input
+                      id="alum-email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="off"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="brother@example.com"
+                      placeholder="you@example.com"
                       className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
                     />
                   </div>
@@ -194,7 +203,7 @@ export default function AlumniLoginPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-maroon-900">
+                    <label htmlFor="alum-password" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900">
                       Password
                     </label>
                     <button
@@ -208,20 +217,31 @@ export default function AlumniLoginPage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
                     <input
-                      type="password"
+                      id="alum-password"
+                      type={showPw ? "text" : "password"}
+                      autoComplete="current-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
+                      className="w-full pl-10 pr-16 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-sm text-maroon-900"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((s) => !s)}
+                      aria-pressed={showPw}
+                      aria-label={showPw ? "Hide password" : "Show password"}
+                      className="absolute right-1.5 top-1/2 inline-flex h-9 min-w-[44px] -translate-y-1/2 items-center justify-center rounded-md px-2 text-[11px] font-semibold text-maroon-600 hover:bg-maroon-50 hover:text-maroon-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 transition"
+                    >
+                      {showPw ? "Hide" : "Show"}
+                    </button>
                   </div>
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-sm font-semibold transition"
+                  className="w-full min-h-[44px] bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-sm font-semibold transition"
                 >
                   {loading ? (
                     <span>Signing In...</span>
