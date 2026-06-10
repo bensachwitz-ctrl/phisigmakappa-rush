@@ -27,6 +27,7 @@ import * as React from "react";
 import Link from "next/link";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { BrandGlyph } from "@/components/site/brand-glyph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -574,7 +575,7 @@ function PortalCard({
       >
         <Check className="h-3 w-3" />
       </span>
-      {/* Bespoke glassy icon tile (falls back to the lucide chip if no image). */}
+      {/* Bespoke brand glyph tile (falls back to the lucide chip if no glyph). */}
       {img ? (
         <span className="relative">
           {/* warm brand glow behind the tile */}
@@ -585,15 +586,10 @@ function PortalCard({
               active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
             )}
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`/brand/gen/${img}.png`}
-            alt=""
-            width={256}
-            height={256}
-            decoding="async"
-            loading="lazy"
-            className="relative h-12 w-12 rounded-2xl object-contain transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+          <BrandGlyph
+            name={img}
+            size="md"
+            className="relative transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
           />
         </span>
       ) : (
@@ -663,18 +659,9 @@ function NewChapterCta() {
   return (
     <div className="flex w-full flex-col items-center gap-3 rounded-2xl border border-border bg-background/60 px-5 py-4 text-center sm:flex-row sm:justify-between sm:text-left">
       <div className="flex items-center gap-3">
-        {/* Bespoke glassy "trophy" tile — a premium, on-brand anchor for the
+        {/* Bespoke "trophy" brand glyph — a premium, on-brand anchor for the
             "launch your own chapter" invite (replaces the generic sparkle). */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/gen/gl-trophy.png"
-          alt=""
-          width={256}
-          height={256}
-          decoding="async"
-          loading="lazy"
-          className="h-10 w-10 shrink-0 rounded-2xl object-contain"
-        />
+        <BrandGlyph name="trophy" size="md" className="shrink-0" />
         <div>
           <p className="text-sm font-semibold text-foreground">
             New chapter? Launch your own site.

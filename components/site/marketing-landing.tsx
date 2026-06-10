@@ -10,6 +10,7 @@ import { IconChip } from "@/components/ui/icon-chip";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { Reveal } from "@/components/site/reveal";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { BrandGlyph } from "@/components/site/brand-glyph";
 import {
   TypewriterCycle,
   Tilt3DCard,
@@ -91,32 +92,26 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
    glass tile never double-ups on a glass chip, and it inherits the shared hover
    lift/tilt when placed inside a `group`. Decorative → alt="". `size` matches the
    IconChip footprints it replaces (sm≈32 / md≈44 / lg≈56) so swaps stay aligned. */
+/**
+ * GlyphTile — now a thin alias over the bespoke <BrandGlyph> SVG icon system.
+ * Previously it rendered AI-generated `/brand/gen/<name>.png` rasters that baked
+ * a dark navy box behind the art (the "black box" artifact) and read as generic.
+ * BrandGlyph draws clean, single-family line-art in the brand gradient on a
+ * transparent frosted tile — no box possible, crisp at any size, deliberate.
+ * Call-sites keep passing the same concept names (e.g. "feat-events").
+ */
 function GlyphTile({
   name,
   size = "md",
   className = "",
 }: {
-  /** File stem under /brand/gen, e.g. "gl-letters" or "feat-events". */
+  /** Concept key, e.g. "gl-letters" / "feat-events" (legacy stems still work). */
   name: string;
   /** xs≈24 (inline eyebrow) · sm≈36 · md≈44 · lg≈56 — matches IconChip footprints. */
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }) {
-  const dim = { xs: "h-6 w-6", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[size];
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`/brand/gen/${name}.png`}
-      alt=""
-      width={256}
-      height={256}
-      decoding="async"
-      loading="lazy"
-      className={
-        "shrink-0 rounded-2xl object-contain " + dim + (className ? " " + className : "")
-      }
-    />
-  );
+  return <BrandGlyph name={name} size={size} className={className} />;
 }
 
 /* ── Greek-key (meander) divider ──────────────────────────────────────────────
@@ -1607,22 +1602,16 @@ function FeatureCard({
     </p>
   ) : null;
 
-  // Feature icon — the bespoke pre-rendered tile (a self-contained frosted-glass
-  // app-icon) stands ALONE: no IconChip background wrapper, so it never double-
-  // ups a glass-tile-on-a-glass-chip. Rendered at ~60px (within the brief's
-  // 56–64px window) and inheriting the same hover lift/tilt the chip had so the
-  // card's micro-interaction is preserved. Falls back to the SVG-in-chip only if
-  // a feature has no image. Shared by both card layouts.
+  // Feature icon — the bespoke <BrandGlyph> tile (a self-contained frosted brand
+  // icon) stands ALONE: no IconChip wrapper, so it never double-ups a tile on a
+  // chip. Inherits the same hover lift/tilt the chip had so the card's micro-
+  // interaction is preserved. Falls back to the SVG-in-chip only if a feature
+  // has no glyph. Shared by both card layouts.
   const featureIcon = img ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`/brand/gen/${img}.png`}
-      alt=""
-      width={256}
-      height={256}
-      decoding="async"
-      loading="lazy"
-      className="h-[60px] w-[60px] shrink-0 rounded-2xl object-contain transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+    <BrandGlyph
+      name={img}
+      size="lg"
+      className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
     />
   ) : (
     <IconChip

@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
+import { BrandGlyph } from "@/components/site/brand-glyph";
 import { IconClose, IconCheck, IconArrowRight, type IconProps } from "@/components/brand/icons";
 
 /** Custom Greekstack icon component type. */
@@ -222,18 +223,9 @@ export function FeatureDetailModal({
               <div className="p-6 sm:p-8">
                 <div className="flex items-center gap-3">
                   {feature.img ? (
-                    // The bespoke tile is already a finished glass app-icon — it
-                    // stands alone (no IconChip wrapper) so it doesn't double up.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`/brand/gen/${feature.img}.png`}
-                      alt=""
-                      width={256}
-                      height={256}
-                      decoding="async"
-                      loading="lazy"
-                      className="h-14 w-14 shrink-0 rounded-2xl object-contain"
-                    />
+                    // The bespoke BrandGlyph tile is already a finished brand
+                    // app-icon — it stands alone (no IconChip wrapper).
+                    <BrandGlyph name={feature.img} size="lg" />
                   ) : (
                     Icon && <IconChip icon={Icon} tone="platform" size="lg" />
                   )}
