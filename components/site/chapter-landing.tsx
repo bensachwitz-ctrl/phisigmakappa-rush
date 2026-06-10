@@ -6,6 +6,7 @@ import { ScheduleList } from "@/components/site/schedule-list";
 import { Seal, Crest } from "@/components/brand/wordmark";
 import { Scene } from "@/components/brand/scene";
 import { InstagramFeed, type FeedPost } from "@/components/site/instagram-feed";
+import { SmartImage, AvatarImage } from "@/components/site/smart-image";
 import { StickyCTA } from "@/components/site/sticky-cta";
 import { Reveal } from "@/components/site/reveal";
 import {
@@ -960,13 +961,15 @@ export default async function ChapterLandingPage({
                 rel="noreferrer noopener"
                 className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl shadow-phisig-red/10 block"
               >
-                <img
+                <SmartImage
                   src={imageSrc(cfg["spotlight.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
                   alt={`${terms.member} of the Month — ${cfg["spotlight.name"]}`}
                   width={640}
                   height={800}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
+                  fallbackLabel={`${terms.member} of the Month`}
+                  crestClassName="h-20 w-20"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
                 <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
@@ -1013,20 +1016,16 @@ export default async function ChapterLandingPage({
               <Reveal3DItem key={m.name} className="h-full">
                 <Tilt3DCard max={9} glareColor={BRAND_TILT_GLOW} className="h-full rounded-2xl">
                   <div className="group relative h-full rounded-2xl border border-border bg-card p-5 overflow-hidden transition-colors hover:border-phisig-red/30">
-                    {m.headshotUrl ? (
-                      <img
-                        src={avatarSrc(m.headshotUrl, 112)}
-                        alt={`${m.name}, ${m.role}`}
-                        width={56}
-                        height={56}
-                        loading="lazy"
-                        className="h-14 w-14 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card shadow-md shadow-phisig-red/20"
-                      />
-                    ) : (
-                      <div className="h-14 w-14 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-base font-semibold shadow-md shadow-phisig-red/20">
-                        {m.name.split(" ").map((s) => s[0]).join("")}
-                      </div>
-                    )}
+                    <AvatarImage
+                      src={m.headshotUrl ? avatarSrc(m.headshotUrl, 112) : ""}
+                      alt={`${m.name}, ${m.role}`}
+                      initials={m.name.split(" ").map((s) => s[0]).join("")}
+                      width={56}
+                      height={56}
+                      loading="lazy"
+                      className="h-14 w-14 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card shadow-md shadow-phisig-red/20"
+                      fallbackClassName="h-14 w-14 rounded-full text-base shadow-md shadow-phisig-red/20 ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card"
+                    />
                     <div className="mt-4">
                       <p className="text-[10px] uppercase tracking-[0.18em] text-phisig-red font-semibold">
                         {m.role}
@@ -1165,14 +1164,16 @@ export default async function ChapterLandingPage({
                 rel="noreferrer noopener"
                 className="aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl block relative"
               >
-                <img
+                <SmartImage
                   src={imageSrc(cfg["about.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
-                  alt={cfg["about.caption"]}
+                  alt={cfg["about.caption"] || `${identity.greekLetters} chapter life`}
                   width={640}
                   height={800}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ objectPosition: cfg["about.objectPosition"] || "50% 50%" }}
+                  fallbackLabel={cfg["about.caption"] || "Chapter life"}
+                  crestClassName="h-20 w-20"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
                 <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
@@ -1556,11 +1557,13 @@ function PostTile({
       aria-label={`View ${caption} on Instagram`}
       className={`group relative rounded-2xl overflow-hidden border border-border lift block ${className ?? ""}`}
     >
-      {/* Fallback layer — cardinal gradient with chapter crest, visible until image loads */}
+      {/* Fallback layer — cardinal gradient with chapter crest, visible until the
+          image loads. <SmartImage> ALSO renders this exact tile if the src is
+          empty or 404s, so a missing photo never shows a broken-image glyph. */}
       <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
         <Crest className="h-20 w-20 text-white/25" aria-hidden="true" />
       </div>
-      <img
+      <SmartImage
         src={imgSrc}
         // Responsive srcset — phones get a 480-width WebP, tablets 960, 4K
         // displays 1600. Photo proxy honors ?w= and snaps to ALLOWED_WIDTHS;
@@ -1575,6 +1578,8 @@ function PostTile({
         fetchPriority={priority ? "high" : "auto"}
         decoding={priority ? "sync" : "async"}
         className={`relative z-10 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${priority ? "animate-ken-burns-in" : ""}`}
+        fallbackLabel={caption}
+        crestClassName="h-20 w-20"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
       <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">

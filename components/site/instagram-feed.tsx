@@ -3,6 +3,7 @@
 import { Instagram, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Crest } from "@/components/brand/wordmark";
+import { SmartImage } from "@/components/site/smart-image";
 import { cn } from "@/lib/utils";
 
 // A single feed tile. Driven by the per-chapter `feed.json` repeater in
@@ -116,7 +117,7 @@ export function InstagramFeed({
               : "aspect-square"
           )}
         >
-          <img
+          <SmartImage
             src={imgFor(p.slug, 640)}
             srcSet={srcSetFor(p.slug, [320, 480, 640, 960])}
             sizes={i === 0 ? "(min-width: 1024px) 480px, 50vw" : "(min-width: 1024px) 240px, 33vw"}
@@ -129,6 +130,7 @@ export function InstagramFeed({
             decoding="async"
             className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             style={{ objectPosition: p.objectPosition || DEFAULT_OBJECT_POSITION }}
+            fallbackLabel={p.tag}
           />
           {/* Two-way gradient overlay so caption + IG badge both stay legible
               regardless of where the photo's bright/dark areas land. */}
@@ -185,7 +187,7 @@ export function InstagramStrip({
                 aria-label={`Open ${p.caption} on Instagram`}
                 className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-secondary lift"
               >
-                <img
+                <SmartImage
                   src={imgFor(p.slug, 320)}
                   srcSet={srcSetFor(p.slug, [320, 480, 640])}
                   sizes="(min-width: 640px) 25vw, 50vw"
@@ -195,6 +197,7 @@ export function InstagramStrip({
                   loading="lazy"
                   className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   style={{ objectPosition: p.objectPosition || DEFAULT_OBJECT_POSITION }}
+                  crestClassName="h-12 w-12"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </Link>
