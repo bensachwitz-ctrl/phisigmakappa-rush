@@ -59,15 +59,19 @@ export async function GET() {
       theme_color: themeColor,
       orientation: "portrait-primary",
       icons: [
+        // Next App Router serves app/icon.png + app/apple-icon.png at the
+        // .png paths (a bare "/icon" / "/apple-icon" 404s), and both source
+        // files are 512×512 — so reference the real URLs + true sizes. A wrong
+        // path/size makes Android/iOS reject the icon on "Add to Home Screen".
         {
-          src: "/icon",
-          sizes: "192x192",
+          src: "/icon.png",
+          sizes: "512x512",
           type: "image/png",
           purpose: "any",
         },
         {
-          src: "/apple-icon",
-          sizes: "180x180",
+          src: "/apple-icon.png",
+          sizes: "512x512",
           type: "image/png",
           purpose: "any",
         },
