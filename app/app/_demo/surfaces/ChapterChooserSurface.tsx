@@ -91,12 +91,12 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             </button>
           )}
         </div>
-        <h1 className="relative mt-3 text-[20px] font-extrabold tracking-tight text-slate-900">
-          {overlay ? "Make it your chapter" : "Pick or build any chapter"}
+        <h1 className="relative mt-3 text-[22px] font-extrabold tracking-tight text-slate-900">
+          {overlay ? "Make it your chapter" : "See it as your chapter"}
         </h1>
         <p className="relative mt-1 text-[13px] leading-snug text-slate-500">
-          Choose a preset or create your own — letters, colors, and name. The
-          whole app re-skins to it instantly.
+          Pick your school's chapter or build your own — letters, colors, name.
+          <span className="font-semibold text-slate-700"> The entire app instantly re-skins to YOUR chapter</span> so you can see exactly how it's tailored to you.
         </p>
 
         {/* Mode toggle — segmented control with a sliding active pill */}
@@ -127,12 +127,49 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
 
       {/* ── PICK MODE ─────────────────────────────────────────────────────── */}
       {chooserMode === "pick" && (
-        <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6">
-          <div className="relative mb-3 shrink-0">
+        <div className="flex flex-1 flex-col overflow-hidden px-5 pb-5">
+          {/* Big, tappable brand swatches — the front-and-center "pick your org"
+              moment. Tapping any one re-skins the WHOLE app to that brand's
+              letters + colors instantly. */}
+          <div className="mb-3 shrink-0">
+            <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Tap your organization
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              {FRATERNITY_BRANDS.map((b) => {
+                const sec = brandSecondary(b);
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => {
+                      if (overlay) {
+                        applyBrandToDemo(b, { name: b.name, school: "University of South Carolina" });
+                      } else {
+                        const t = filteredChapters.find((c) => c.brandId === b.id && c.id.startsWith("demo-"));
+                        if (t) handleSelectTenant(t);
+                        else applyBrandToDemo(b, { name: b.name, school: "University of South Carolina" });
+                      }
+                    }}
+                    className="press group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <span
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-[16px] font-extrabold text-white shadow-sm"
+                      style={{ background: `linear-gradient(140deg, ${b.primaryColor}, ${sec})` }}
+                    >
+                      {b.letters}
+                    </span>
+                    <span className="line-clamp-2 text-[11px] font-bold leading-tight text-slate-700">{b.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="relative mb-2.5 shrink-0">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search chapter or school..."
+              placeholder="Or search any chapter or school..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
@@ -211,8 +248,10 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                 {previewLetters}
               </div>
               <div className="min-w-0">
-                <span className="block text-[12px] font-bold uppercase tracking-wider text-slate-500">Live preview</span>
-                <h3 className="truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: customPrimary }}>
+                  <Sparkles className="h-3 w-3" /> Tailored for you
+                </span>
+                <h3 className="mt-0.5 truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
                 <p className="truncate text-[12px] text-slate-500">{customSchool.trim() || "Your University"}</p>
               </div>
             </div>

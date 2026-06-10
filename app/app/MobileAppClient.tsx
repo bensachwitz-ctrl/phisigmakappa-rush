@@ -1666,49 +1666,45 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
               
               {/* App Status Header */}
-              <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-3 py-2.5">
                 {/* Tap the brand lockup to swap/build a chapter live */}
                 <button
                   onClick={() => { setChooserMode("pick"); setShowChapterChooser(true); }}
                   className="press group flex min-w-0 items-center gap-2.5 rounded-xl py-1 pr-2 text-left transition hover:bg-slate-50"
-                  aria-label="Switch chapter"
+                  aria-label="Switch or customize chapter"
                 >
                   <div
-                    className="flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-xl border text-[13px] font-bold shadow-inner"
-                    style={{
-                      background: `linear-gradient(140deg, ${selectedBrand.primaryColor}14, ${brandSecond}14)`,
-                      borderColor: selectedBrand.primaryColor + "26",
-                      color: selectedBrand.primaryColor,
-                    }}
+                    className="flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-xl text-[13px] font-bold text-white shadow-sm transition-colors duration-500"
+                    style={{ background: `linear-gradient(140deg, ${brandPrimary}, ${brandSecond})` }}
                   >
                     {selectedBrand.letters}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="flex items-center gap-1 truncate text-[13px] font-bold leading-tight text-slate-900">
-                      <span className="truncate max-w-[140px]">{dashboardData?.chapter?.name || selectedTenant.name}</span>
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:text-slate-600" />
+                    <h3 className="truncate text-[13px] font-bold leading-tight text-slate-900">
+                      <span className="truncate">{dashboardData?.chapter?.name || selectedTenant.name}</span>
                     </h3>
-                    <span className="block max-w-[160px] truncate text-[11px] text-slate-500">
-                      {dashboardData?.chapter?.schoolName || selectedTenant.school}
+                    <span className="flex items-center gap-1 text-[11px] font-semibold leading-tight" style={{ color: brandPrimary }}>
+                      <Palette className="h-3 w-3 shrink-0" /> Tap to change chapter
                     </span>
                   </div>
                 </button>
 
                 <div className="flex items-center gap-1.5">
                   {isDemo && (
-                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[12px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
                       Demo
                     </span>
                   )}
                   <button
                     onClick={() => setActiveTab("settings")}
+                    aria-label="Account settings"
                     className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     </span>
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-slate-600">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       {viewRole === "exec" ? "Officer" : role === "brother" ? "Member" : "Alumnus"}
                     </span>
                   </button>
