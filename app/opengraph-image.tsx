@@ -10,7 +10,7 @@ import { getSubdomain } from "@/lib/prisma";
 // it renders generic Greekstack branding instead of any one chapter.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const alt = "Greekstack — chapter rush, brotherhood & TCPA-compliant comms";
+export const alt = "Greekstack — chapter recruitment, member management & TCPA-compliant comms";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -42,14 +42,15 @@ export default async function Image() {
   const gpa = cfg["stats.gpa"] || "";
   const founded = id.foundingYear ? `Founded ${id.foundingYear}` : "";
   const stats = [
-    brothers && `${brothers} brothers`,
+    brothers && `${brothers} ${id.terms.membersLower}`,
     gpa && `${gpa} GPA`,
     founded,
   ].filter(Boolean) as string[];
   const url = (
     process.env.NEXT_PUBLIC_SITE_URL || `https://${host || "greekstack.vercel.app"}`
   ).replace(/^https?:\/\//, "");
-  const headline = `Rush ${id.fraternityShort} at ${id.schoolShort}.`;
+  // Org-appropriate verb (Rush for a fraternity, Recruitment otherwise).
+  const headline = `${id.terms.recruit} ${id.fraternityShort} at ${id.schoolShort}.`;
 
   return new ImageResponse(
     (

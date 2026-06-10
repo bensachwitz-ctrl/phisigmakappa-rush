@@ -28,7 +28,10 @@ export const DEFAULTS = {
   "chapter.foundingLocation": "",
   "chapter.nationalName": "",
   "chapter.nationalHqUrl": "",
-  "chapter.cardinalPrinciples": "Brotherhood, Scholarship, Character",
+  // BLANK so the renderer uses the TERM-AWARE default from chapter-identity.ts
+  // (Brotherhood/Sisterhood/Membership + Scholarship + Character) keyed off the
+  // chapter's orgType — never a fixed "Brotherhood" for a sorority.
+  "chapter.cardinalPrinciples": "",
   "chapter.tagline": "",
   // Max 12 chars — iOS home-screen launcher caption.
   "chapter.appShortTitle": "",
@@ -52,7 +55,9 @@ export const DEFAULTS = {
   "hero.tile1.icon": "HandHeart",
 
   "hero.tile2.slug": "",
-  "hero.tile2.caption": "Brotherhood",
+  // BLANK so the renderer swaps in the term collective (Brotherhood/Sisterhood/
+  // Membership) keyed off orgType — never a fixed "Brotherhood".
+  "hero.tile2.caption": "",
   "hero.tile2.icon": "HandHeart",
 
   "hero.tile3.slug": "",
@@ -99,7 +104,10 @@ export const DEFAULTS = {
   // Hero tagline. WHITE-LABEL: chapter-agnostic — no school/chapter name
   // baked in, so a fresh tenant never shows "USC · Gamma Triton". The rush
   // chair personalizes this per chapter via /admin/settings.
-  "hero.eyebrow": "Fall Rush 2026",
+  // BLANK so the renderer falls back to the TERM-AWARE label (e.g. "Recruitment
+  // Fall '26" for a sorority, "Rush Fall '26" for a fraternity), driven by the
+  // rush.termLabel + orgType — never a fixed "Fall Rush 2026".
+  "hero.eyebrow": "",
   "hero.subline":
     "Drop your number and we'll text you the date and location of every rush event the moment it's confirmed. No spam — about 6–8 messages across the whole rush cycle, then we're done.",
 
@@ -108,11 +116,14 @@ export const DEFAULTS = {
   // Labels are also admin-editable so the chair can re-purpose a stat slot
   // (e.g. swap "Years strong" for a chapter-specific number).
   "stats.brothers": "60+",
-  "stats.brothers.label": "Active brothers",
+  // BLANK so the renderer uses the TERM-AWARE "Active brothers/sisters/members"
+  // label keyed off orgType (a sorority shows "Active sisters", not "brothers").
+  "stats.brothers.label": "",
   "stats.brothers.sub": "",
   "stats.gpa": "3.45",
   "stats.gpa.label": "Chapter GPA",
-  "stats.gpa.sub": "Above the all-fraternity average",
+  // Org-neutral ("all-Greek" covers fraternities AND sororities).
+  "stats.gpa.sub": "Above the all-Greek average",
   // The "years" slot leads with chapter age. WHITE-LABEL: label + sub are
   // chapter-agnostic; sub defaults EMPTY so no other chapter inherits Phi
   // Sig's "Gamma Triton chartered 1975" line. Each chapter sets its own.
@@ -129,9 +140,11 @@ export const DEFAULTS = {
   // Page renders as: "<lead> <tail> <highlight>." — final period added by
   // the JSX template, so don't end any of these three with a period or you
   // get a double-period bug at the seam.
-  // WHITE-LABEL: chapter-agnostic default headline (no "Phi Sig" / "USC").
-  "hero.h1.lead": "Rush starts",
-  "hero.h1.tail": "Fall '26",
+  // WHITE-LABEL: chapter-agnostic. BLANK lead/tail so the renderer falls back to
+  // the TERM-AWARE + season-aware headline ("Recruitment starts" / "Fall '26"),
+  // never a fixed "Rush". A chapter that types its own headline keeps it verbatim.
+  "hero.h1.lead": "",
+  "hero.h1.tail": "",
   "hero.h1.highlight": "this fall",
   "hero.cta.label": "Drop my number",
   "hero.cta.href": "#register",

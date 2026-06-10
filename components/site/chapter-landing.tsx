@@ -334,9 +334,16 @@ export default async function ChapterLandingPage({
   const heroHighlightPhrases = [
     `Meet the ${terms.membersLower}`,
     "Find your people",
-    "Rush starts soon",
+    `${terms.recruit} starts soon`,
     heroHighlight,
   ];
+  // Hero eyebrow + headline lead/tail fall back to TERM-AWARE strings so a fresh
+  // tenant's hero re-genders/re-seasons (a sorority shows "Recruitment Fall '26"
+  // and "Recruitment starts", not "Fall Rush 2026" / "Rush starts"). A chapter
+  // that set its own hero copy in /admin/settings keeps it verbatim.
+  const heroEyebrow = cfg["hero.eyebrow"] || termLabelLong;
+  const heroLead = cfg["hero.h1.lead"] || `${terms.recruit} starts`;
+  const heroTail = cfg["hero.h1.tail"] || termLabelShort;
 
   return (
     <main id="main-content" className="min-h-screen bg-background">
@@ -412,7 +419,7 @@ export default async function ChapterLandingPage({
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm animate-heartbeat">
                 <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
-                {cfg["hero.eyebrow"]}
+                {heroEyebrow}
               </span>
               <RushCountdown
                 startsAt={nextEvent ? nextEvent.startsAt.toISOString() : null}
@@ -422,8 +429,8 @@ export default async function ChapterLandingPage({
               />
             </div>
             <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] [text-wrap:balance]">
-              {cfg["hero.h1.lead"]}{" "}<br className="hidden sm:block" />
-              {cfg["hero.h1.tail"]}{" "}
+              {heroLead}{" "}<br className="hidden sm:block" />
+              {heroTail}{" "}
               <span className="relative inline-block text-phisig-red">
                 {/* Kinetic highlight: types through rush value-props then settles
                     on the real highlight word. SSR/first-paint = the real word
@@ -507,7 +514,7 @@ export default async function ChapterLandingPage({
                   />
                   <PostTile
                     slug={cfg["hero.tile2.slug"]}
-                    caption={cfg["hero.tile2.caption"]}
+                    caption={cfg["hero.tile2.caption"] || terms.collective}
                     icon={iconFor(cfg["hero.tile2.icon"])}
                     className="aspect-square"
                   />
@@ -603,7 +610,7 @@ export default async function ChapterLandingPage({
             <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Three principles
           </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
-            {cfg["chapter.cardinalPrinciples"].split(/,\s*/).join(". ")}.
+            {identity.cardinalPrinciples.split(/,\s*/).join(". ")}.
           </h2>
         </Reveal3D>
         {/* Staggered 3D reveal as the grid scrolls in; each card is a
@@ -1362,6 +1369,7 @@ export default async function ChapterLandingPage({
       <MobileBottomNav
         rushPhone={cfg["contact.rushPhone"]}
         rushEmail={cfg["contact.rushEmail"]}
+        memberLabel={terms.members}
       />
       {/* Spacer so the bottom nav doesn't overlap the footer copyright on
           mobile. The 80px (4rem + safe-area) matches MobileBottomNav height. */}

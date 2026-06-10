@@ -36,7 +36,7 @@ export async function GET() {
     name = "Greekstack — chapter rush & roster platform";
     shortName = "Greekstack";
     description =
-      "Greekstack is the white-label platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications.";
+      "Greekstack is the white-label platform for Greek-letter chapter recruitment, member management, and TCPA-compliant communications.";
     themeColor = "#0F172A";
   } else {
     const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));

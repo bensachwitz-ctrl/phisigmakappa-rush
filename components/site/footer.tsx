@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
 export async function PublicFooter() {
   const cfg = await getSiteConfig();
+  // Term-aware identity so the motto fallback re-genders per orgType.
+  const identity = chapterIdentityFromCfg(cfg);
   // White-label fallbacks: any unset chapter-identity field falls back to a
   // NEUTRAL placeholder (never a specific reference chapter), so the footer
   // reads correctly on a fresh deploy / the apex before /admin/setup has run.
@@ -13,7 +16,7 @@ export async function PublicFooter() {
   const greekLetters = cfg["chapter.greekLetters"] || "";
   const schoolName = cfg["chapter.schoolName"] || "";
   const foundingYear = cfg["chapter.foundingYear"] || "";
-  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
+  const cardinalPrinciples = identity.cardinalPrinciples;
   const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
   // The bundled /brand/phisigmakappa-letters.jpg is the ΦΣΚ national wordmark —
   // correct ONLY for a Phi Sig chapter. On any other chapter it would brand the

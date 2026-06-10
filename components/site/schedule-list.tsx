@@ -6,8 +6,16 @@ import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export async function ScheduleList() {
   const identity = await getChapterIdentity().catch(() => null);
-  const letters = identity?.greekLettersGlyphs || "ΦΣΚ";
+  // Watermark letters from the chapter's own glyphs — never a hardcoded "ΦΣΚ"
+  // (that watermarked Phi Sig's letters over every tenant's empty schedule).
+  const letters =
+    identity?.greekLettersGlyphs || identity?.fraternityLetters || "";
   const timezone = identity?.timeZone || "America/New_York";
+  // Member-noun vocabulary so the placeholder event chips read correctly for the
+  // org (a sorority shows "Meet the Sisters cookout", not "Brothers").
+  const terms = identity?.terms;
+  const memberWord = terms?.members || "Members";
+  const collective = terms?.collective || "Chapter";
 
   let events: Awaited<ReturnType<typeof prisma.event.findMany>> = [];
   try {
@@ -31,7 +39,7 @@ export async function ScheduleList() {
               <CalendarDays className="h-3 w-3" /> Coming in August
             </span>
             <h3 className="mt-3 text-xl sm:text-2xl font-semibold tracking-tight">
-              Fall '26 schedule drops mid-August.
+              {identity?.terms.recruit || "Recruitment"} schedule drops mid-August.
             </h3>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
               We're locking in dates with the chapter house, the e-board, and our partner venues.
@@ -40,9 +48,9 @@ export async function ScheduleList() {
             </p>
             <ul className="mt-5 grid sm:grid-cols-2 gap-2 text-xs">
               {[
-                "Meet the Brothers cookout",
-                "Williams-Brice dry tailgate",
-                "Brotherhood paintball",
+                `Meet the ${memberWord} cookout`,
+                "Dry tailgate",
+                `${collective} paintball`,
                 "Service dinner fundraiser",
                 "Formal dinner (invite-only)",
                 "Bid Night",

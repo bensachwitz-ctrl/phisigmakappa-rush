@@ -18,7 +18,7 @@ const GREEKSTACK = {
   title: "Greekstack — chapter rush, roster & TCPA-compliant comms",
   short: "Greekstack",
   description:
-    "Greekstack is the white-label platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications.",
+    "Greekstack is the white-label platform for Greek-letter chapter recruitment, member management, and TCPA-compliant communications.",
   themeColor: "#0F172A",
 };
 
@@ -201,7 +201,12 @@ function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
   const charterYear = cfg["chapter.charterYear"] || "";
   const foundingYear = cfg["chapter.foundingYear"] || "";
   const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
-  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
+  // Term-aware identity: motto fallback (Sisterhood/Membership/…) AND member-noun
+  // vocabulary so the JSON-LD description re-genders per orgType, never fixed
+  // "fraternity / brotherhood".
+  const ldIdentity = chapterIdentityFromCfg(cfg);
+  const cardinalPrinciples = ldIdentity.cardinalPrinciples;
+  const terms = ldIdentity.terms;
   const rushEmail = cfg["contact.rushEmail"] || "";
   const advisorEmail = cfg["contact.advisorEmail"] || "";
   const igUrl = cfg["contact.instagramUrl"] || "";
@@ -251,7 +256,7 @@ function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
     url: siteUrl,
     logo: `${siteUrl}/icon`,
     image: `${siteUrl}/opengraph-image`,
-    description: `${chapterFullName} chapter${descSchool} — fraternity rush, philanthropy, brotherhood, and ${cardinalPrinciples}${descSince}.`,
+    description: `${chapterFullName} chapter${descSchool} — ${terms.recruit.toLowerCase()}, philanthropy, ${terms.collective.toLowerCase()}, and ${cardinalPrinciples}${descSince}.`,
     parentOrganization,
     sameAs: [igUrl, nationalHqUrl].filter(Boolean),
     contactPoint,

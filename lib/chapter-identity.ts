@@ -173,7 +173,11 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
   const foundingLocation = cfg["chapter.foundingLocation"] || "";
   const nationalName = cfg["chapter.nationalName"] || fraternityName;
   const nationalHqUrl = cfg["chapter.nationalHqUrl"] || "";
-  const cardinalPrinciples = cfg["chapter.cardinalPrinciples"] || "Brotherhood, Scholarship, Character";
+  // Default motto is TERM-AWARE so a sorority reads "Sisterhood, Scholarship,
+  // Character" and a pro/co-ed org "Membership, Scholarship, Character" with no
+  // manual edit; a fraternity (default terms) keeps the exact original wording.
+  const cardinalPrinciples =
+    cfg["chapter.cardinalPrinciples"] || `${terms.collective}, Scholarship, Character`;
   const tagline = cfg["chapter.tagline"] || "";
   const appShortTitle = cfg["chapter.appShortTitle"] || fraternityShort;
   const fraternityLetters = cfg["chapter.fraternityLetters"] || "";
@@ -195,7 +199,7 @@ function fromCfg(cfg: Record<string, string>): ChapterIdentity {
     logoUrl,
     chapterFullName,
     chapterAttribution: [fraternityShort, schoolShort].filter(Boolean).join(" "),
-    pageTitle: [chapterFullName, schoolShort ? `Rush at ${schoolShort}` : ""].filter(Boolean).join(" — "),
+    pageTitle: [chapterFullName, schoolShort ? `${terms.recruit} at ${schoolShort}` : ""].filter(Boolean).join(" — "),
     ogAlt: schoolShort ? `${fraternityName} @ ${schoolShort}` : fraternityName,
   };
 }

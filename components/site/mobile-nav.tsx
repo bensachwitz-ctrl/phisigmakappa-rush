@@ -23,9 +23,12 @@ import { cn } from "@/lib/utils";
 export function MobileBottomNav({
   rushPhone,
   rushEmail,
+  memberLabel = "Members",
 }: {
   rushPhone?: string;
   rushEmail?: string;
+  /** Org-appropriate member-login label (Brothers / Sisters / Members). */
+  memberLabel?: string;
 }) {
   const callHref = rushPhone
     ? `tel:${rushPhone.replace(/[^\d+]/g, "")}`
@@ -51,7 +54,7 @@ export function MobileBottomNav({
         <BottomTab href="#register" icon={Sparkles} label="Register" emphasis />
         <BottomTab href="/schedule" icon={Calendar} label="Schedule" />
         <BottomTab href={callHref} icon={Phone} label="Call" />
-        <BottomTab href="/admin/login" icon={ShieldCheck} label="Brothers" />
+        <BottomTab href="/admin/login" icon={ShieldCheck} label={memberLabel} />
       </div>
     </nav>
   );
