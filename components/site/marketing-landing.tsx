@@ -2645,7 +2645,7 @@ function FinalCta() {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Magnetic strength={22} className="w-full sm:w-auto">
                 <ShimmerBorder rounded="rounded-xl" className="w-full sm:w-auto">
-                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto">
+                  <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full sm:w-auto sm:min-w-[16rem]">
                     <Link href="/onboard" className="group/btn">
                       Launch your chapter — free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
@@ -2653,7 +2653,7 @@ function FinalCta() {
                   </Button>
                 </ShimmerBorder>
               </Magnetic>
-              <Button asChild variant="glass" size="xl" className="w-full sm:w-auto">
+              <Button asChild variant="glass" size="xl" className="w-full sm:w-auto sm:min-w-[16rem]">
                 <Link href="/contact#book" className="group/btn">
                   <IconBookCall className="h-5 w-5" />
                   Book a call
