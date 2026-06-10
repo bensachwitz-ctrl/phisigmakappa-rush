@@ -374,6 +374,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   // visitor turn the tour off for the rest of the session.
   const [calloutVisible, setCalloutVisible] = useState(true);
   const [calloutDismissed, setCalloutDismissed] = useState(false);
+  // One-time Officer-console welcome (shows the first time the visitor flips
+  // the role toggle to Officer; doubles as the demo's conversion beat).
+  const [execTipSeen, setExecTipSeen] = useState(false);
   // Re-show the per-tab callout each time the active tab changes (unless the
   // visitor turned the tour off). Keyed on activeTab so each tab gets its tip.
   useEffect(() => {
@@ -626,6 +629,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setLoading(false);
     setActiveTab("feed");
     setShowChapterChooser(false);
+    // Celebrate the reskin — THE demo moment. Toast + success haptic (native
+    // shell) so picking your chapter lands as an event, not a silent swap.
+    showToast(`${brand.letters} ${name} is live — the whole app just became yours.`, "success");
     try {
       localStorage.setItem("gs_mobile_token", "demo-token-12345");
       localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
@@ -1887,17 +1893,102 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                         <p className="mt-1 text-[11px] leading-snug text-slate-600">
                           {DEMO_CALLOUTS[activeTab].body}
                         </p>
-                        <button
-                          onClick={() => setCalloutDismissed(true)}
-                          className="mt-2 text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
-                        >
-                          Turn off tips
-                        </button>
+                        {/* Guided next step — turns the passive tips into a tour:
+                            each callout offers the next tab in the journey, and
+                            the final beat hands off to the Officer view. */}
+                        {(() => {
+                          const TOUR_ORDER = ["feed", "rush", "dues", "events", "directory"] as const;
+                          const i = TOUR_ORDER.indexOf(activeTab as (typeof TOUR_ORDER)[number]);
+                          const next = i >= 0 && i < TOUR_ORDER.length - 1 ? TOUR_ORDER[i + 1] : null;
+                          const nextLabel = next ? memberNav.find((n) => n.id === next)?.label : null;
+                          return (
+                            <div className="mt-2 flex items-center gap-3">
+                              {next && nextLabel ? (
+                                <button
+                                  onClick={() => setActiveTab(next)}
+                                  className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
+                                  style={{ backgroundColor: selectedBrand.primaryColor }}
+                                >
+                                  Next: {nextLabel} <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
+                                  className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
+                                  style={{ backgroundColor: selectedBrand.primaryColor }}
+                                >
+                                  <Crown className="h-3.5 w-3.5" /> Try the Officer view
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setCalloutDismissed(true)}
+                                className="text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                              >
+                                Turn off tips
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                     {/* dismiss just this one (it returns on the next tab) */}
                     <button
                       onClick={() => setCalloutVisible(false)}
+                      aria-label="Dismiss tip"
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* One-time Officer-console welcome — fires the first time the
+                  visitor flips to Officer (usually via the tour's hand-off).
+                  Explains what changed AND carries the demo's conversion beat:
+                  by this point they've seen the whole member app, so 'launch'
+                  is the natural next step. */}
+              {isDemo && viewRole === "exec" && !execTipSeen && !calloutDismissed && (
+                <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-[45] animate-spring-in lg:absolute lg:inset-x-3 lg:bottom-[4.75rem] lg:z-[60]">
+                  <div className="relative rounded-2xl border border-slate-200 bg-white/95 backdrop-blur p-3 pr-9 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.45)]">
+                    <span
+                      aria-hidden="true"
+                      className="absolute -bottom-1.5 left-8 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white/95"
+                    />
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                        style={{ backgroundColor: selectedBrand.primaryColor }}
+                      >
+                        <Crown className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
+                          You&apos;re in the Officer console
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-600">
+                          Same five tabs, now admin tools — roster, announcements, the rush pipeline,
+                          dues management, and chapter settings. Flip back to Member any time.
+                        </p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <button
+                            onClick={() => { setExecTipSeen(true); setShowPricingModal(true); }}
+                            className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
+                            style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})` }}
+                          >
+                            <Sparkles className="h-3.5 w-3.5" /> Launch your chapter — free
+                          </button>
+                          <button
+                            onClick={() => setExecTipSeen(true)}
+                            className="text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                          >
+                            Keep exploring
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setExecTipSeen(true)}
                       aria-label="Dismiss tip"
                       className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                     >
