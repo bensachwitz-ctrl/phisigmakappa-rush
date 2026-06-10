@@ -377,6 +377,22 @@ export default async function ChapterLandingPage({
         count={30}
         seed={0x3a7c91d5}
       />
+      {/* Ambient chapter-identity layer — a huge, faint SCHOOL wordmark and the
+          chapter's brand-tinted crest watermark behind the page content, on the
+          same -z-10 plane as the letter field (above the -z-20 base, below all
+          sections/cards). Static + decorative; the hero's own opaque layers
+          cover it up top, so it reads through the open mid-page sections. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 select-none overflow-hidden">
+        {(identity.schoolName || identity.schoolShort) && (
+          <p className="absolute inset-x-0 top-[26%] px-4 text-center font-serif text-[clamp(3rem,9vw,7.5rem)] font-black uppercase leading-[0.95] tracking-tight text-[hsl(var(--primary))] opacity-[0.05]">
+            {identity.schoolName || identity.schoolShort}
+          </p>
+        )}
+        <Crest
+          className="absolute -bottom-20 -right-14 h-[42vh] w-[42vh] rotate-[-8deg] text-[hsl(var(--primary))] opacity-[0.05]"
+          aria-hidden="true"
+        />
+      </div>
       {/* Brand-tinted scroll-progress bar pinned at the very top of the page.
           Tracks whole-document scroll; aria-hidden, transform-only. */}
       <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />

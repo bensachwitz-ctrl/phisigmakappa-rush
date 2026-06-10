@@ -68,6 +68,7 @@ import {
   type FraternityBrand,
 } from "./_demo/mock-data";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { ChapterIdentityBackdrop } from "./_demo/ChapterIdentityBackdrop";
 import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
 import type { DemoContext } from "./_demo/context";
 import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
@@ -1400,6 +1401,20 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         transition: "background 0.9s cubic-bezier(0.16,1,0.3,1)",
       }}
     >
+
+      {/* Chapter IDENTITY in the room itself — huge faint school wordmark +
+          letter monogram + crest watermark behind everything, tinted to the
+          chapter's colors. Re-keyed per tenant so a reskin cross-fades the
+          whole backdrop to the new school/crest along with the letter field
+          (the "tailored to YOU" moment). Static — zero continuous motion. */}
+      <ChapterIdentityBackdrop
+        key={selectedTenant ? `${selectedTenant.id}-${selectedBrand.id}` : "none"}
+        school={selectedTenant?.school}
+        letters={selectedBrand.letters}
+        crestEmoji={selectedBrand.crestEmoji}
+        primary={brandPrimary}
+        secondary={brandSecond}
+      />
 
       {/* Chapter-colored Greek-letter field drifting behind EVERYTHING — the
           signature "picking a chapter transforms the room" effect. Tinted to the

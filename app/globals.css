@@ -540,6 +540,12 @@
   100%{transform:translate3d(calc(var(--dx,0px) * 0.5),calc(var(--dy,0px) * 0.5),0) rotate(var(--gr,0deg));opacity:0;}
 }
 .gs-greek-letter{animation:gs-greek-drift var(--dur,30s) linear var(--delay,0s) infinite;}
+/* Gentle opacity-only entrance for the chapter-identity backdrop (demo +
+   chapter sites) — used when the demo re-skins so the new school wordmark /
+   crest cross-fade in calmly. Collapses under prefers-reduced-motion via the
+   global animation kill-switch (final state = fully shown). */
+@keyframes gs-fade-in{from{opacity:0;}to{opacity:1;}}
+.gs-fade-in{animation:gs-fade-in 0.9s ease-out both;}
 /* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */
 @keyframes gs-tagline-sheen{0%,55%{transform:translateX(-130%);}100%{transform:translateX(130%);}}
 .gs-tagline-sheen{animation:gs-tagline-sheen 5.5s ease-in-out infinite;}
