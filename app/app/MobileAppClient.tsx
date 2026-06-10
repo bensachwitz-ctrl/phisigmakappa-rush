@@ -476,6 +476,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         const data = await res.json();
         if (res.ok && data.ok) {
           setDashboardData(data);
+          // Native shell only (no-op on web): snapshot the last good view so the
+          // app can show the chapter offline on the next cold launch.
+          try {
+            void window.GreekStackNative?.cacheLastView?.(data);
+          } catch {
+            /* ignore */
+          }
         } else {
           setError(data.error || "Failed to load chapter data.");
           if (res.status === 401) {
@@ -483,7 +490,19 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           }
         }
       } catch (err) {
-        setError("Network error. Please try again.");
+        // Native shell only: fall back to the cached last view when offline so
+        // the member still sees their chapter instead of a dead error screen.
+        let recovered = false;
+        try {
+          const cached = await window.GreekStackNative?.readLastView?.();
+          if (cached?.data) {
+            setDashboardData(cached.data);
+            recovered = true;
+          }
+        } catch {
+          /* ignore — web has no cache */
+        }
+        if (!recovered) setError("Network error. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -645,12 +664,27 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       if (res.ok && data.ok) {
         setToken(data.token);
         setUser(data.user);
-        
+
         localStorage.setItem("gs_mobile_token", data.token);
         localStorage.setItem("gs_mobile_user", JSON.stringify(data.user));
         localStorage.setItem("gs_mobile_tenant", JSON.stringify(selectedTenant));
         localStorage.setItem("gs_mobile_brand", JSON.stringify(selectedBrand));
-        
+
+        // Native shell only (no-ops on web): persist the session on-device for
+        // biometric unlock next launch, then register this device for push so
+        // events/announcements can notify the member. window.GreekStackNative is
+        // published by <NativeBridge/> and self-guards via Capacitor.isNativePlatform().
+        try {
+          await window.GreekStackNative?.saveSession?.({
+            token: data.token,
+            user: data.user,
+            subdomain: selectedTenant.subdomain,
+          });
+          window.GreekStackNative?.onSignedIn?.();
+        } catch {
+          /* native-only; ignore on web */
+        }
+
         setEmail("");
         setPassword("");
       } else {
@@ -665,6 +699,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
   const handleSignOut = () => {
     localStorage.clear();
+    // Native shell only (no-op on web): drop the on-device session too.
+    try {
+      void window.GreekStackNative?.clearSession?.();
+    } catch {
+      /* ignore */
+    }
     setToken(null);
     setUser(null);
     setSelectedTenant(null);

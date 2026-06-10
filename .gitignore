@@ -52,4 +52,4 @@ scratch/
 # capacitor — native projects are generated on CI by `npx cap add ios`
 /ios
 /android
-mobile/
+/mobile/

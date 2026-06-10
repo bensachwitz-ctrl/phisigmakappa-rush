@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ComponentProps } from "react";
 import type MobileAppClientType from "./MobileAppClient";
+import NativeBridge from "./NativeBridge";
 
 // Lazy/dynamic boundary for the flagship interactive demo.
 //
@@ -43,5 +44,12 @@ const MobileAppClient = dynamic(() => import("./MobileAppClient"), {
 export default function DemoLoader(
   props: ComponentProps<typeof MobileAppClientType>,
 ) {
-  return <MobileAppClient {...props} />;
+  return (
+    <>
+      {/* Native (Capacitor) value layer — push, biometric session, deep links,
+          offline cache. Renders nothing and is fully inert on web. */}
+      <NativeBridge />
+      <MobileAppClient {...props} />
+    </>
+  );
 }

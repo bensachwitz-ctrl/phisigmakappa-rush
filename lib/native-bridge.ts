@@ -1,0 +1,408 @@
+// lib/native-bridge.ts — the Greek Stack native (Capacitor) value layer.
+//
+// WHY THIS EXISTS (Apple Guideline 4.2 / 4.7):
+// The iOS app loads the hosted responsive /app client through a native shell
+// (server.url in capacitor.config.ts). A *pure* webview wrapper risks App Store
+// rejection, so this module adds the native value Apple wants:
+//   1. Push notifications  (events + announcements)
+//   2. Native sign-in + biometric unlock (session persists on-device, Face/Touch ID)
+//   3. Deep links / universal links into a specific chapter
+//   4. Offline cache of the last view (graceful when the network drops)
+//
+// HARD DESIGN RULE — INERT ON WEB:
+// The web app (greekstack.vercel.app) must be byte-for-byte unchanged by this
+// code. We therefore NEVER statically `import "@capacitor/*"` (those packages
+// are not installed in the web build and would break `next build`). Instead we
+// reach the plugins through the runtime global the native shell injects on
+// `window.Capacitor`. On web that global is absent, every function early-returns,
+// and nothing here ever runs. This is the same "guard to native, access at
+// runtime" pattern used by the DailyTool / Bar Crawl Golf companions.
+//
+// All exports are safe to call unconditionally from a React effect — they
+// self-guard and never throw into the caller.
+
+// ── Minimal runtime shapes (no @capacitor/* type imports on purpose) ─────────
+type PluginListener = { remove: () => void | Promise<void> };
+
+interface CapacitorGlobal {
+  isNativePlatform?: () => boolean;
+  getPlatform?: () => string;
+  Plugins?: Record<string, any>;
+}
+
+const STORAGE_KEYS = {
+  session: 'gs.session', // { token, user, subdomain } JSON
+  biometric: 'gs.biometric.enabled', // "1" when the member opted into Face/Touch ID
+  lastView: 'gs.lastView', // offline snapshot of the last rendered chapter data
+} as const;
+
+// ── Platform detection ───────────────────────────────────────────────────────
+
+/** The injected Capacitor runtime, or undefined on web / during SSR. */
+function cap(): CapacitorGlobal | undefined {
+  if (typeof window === 'undefined') return undefined;
+  return (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
+}
+
+/**
+ * True ONLY inside the native iOS/Android shell. Every native feature below
+ * gates on this; on the web it is always false so the whole module is inert.
+ */
+export function isNative(): boolean {
+  const c = cap();
+  try {
+    return !!c && typeof c.isNativePlatform === 'function' && c.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
+
+/** Grab a named Capacitor plugin from the runtime, or null if unavailable. */
+function plugin<T = any>(name: string): T | null {
+  const c = cap();
+  if (!c || !c.Plugins) return null;
+  const p = c.Plugins[name];
+  return (p as T) ?? null;
+}
+
+// ── 1. Push notifications (events + announcements) ───────────────────────────
+
+export interface PushRegistration {
+  /** The reusable subdomain+token context used to POST the device token. */
+  registerToServer: (ctx: { subdomain: string; token: string }) => Promise<void>;
+}
+
+/**
+ * Register the device for push (events + announcements) and forward the APNs
+ * token to our backend, scoped to the signed-in chapter. No-op on web.
+ *
+ * `getAuth` lets the caller supply the current member session lazily (it may not
+ * exist yet at first mount); we only POST the device token once we have both an
+ * APNs token AND an authenticated chapter session.
+ *
+ * Returns a teardown function that removes the listeners (or a no-op on web).
+ */
+export async function initPushNotifications(
+  getAuth: () => { subdomain: string; token: string } | null,
+): Promise<() => void> {
+  if (!isNative()) return () => {};
+  const Push = plugin('PushNotifications');
+  if (!Push) return () => {};
+
+  const listeners: PluginListener[] = [];
+  let lastDeviceToken: string | null = null;
+
+  const flushToServer = async () => {
+    const auth = getAuth();
+    if (!auth || !lastDeviceToken) return;
+    try {
+      await fetch('/api/mobile/push/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({
+          subdomain: auth.subdomain,
+          deviceToken: lastDeviceToken,
+          platform: cap()?.getPlatform?.() ?? 'ios',
+        }),
+      });
+    } catch {
+      // Telemetry/registration failure must never surface to the member.
+    }
+  };
+
+  try {
+    // Ask for permission, then register with APNs only if granted.
+    const perm = await Push.requestPermissions?.();
+    if (perm?.receive === 'granted') {
+      await Push.register?.();
+    }
+
+    listeners.push(
+      await Push.addListener?.('registration', (t: { value: string }) => {
+        lastDeviceToken = t?.value ?? null;
+        void flushToServer();
+      }),
+    );
+
+    // Errors are swallowed (no permission, simulator, etc.) — we just don't push.
+    listeners.push(
+      await Push.addListener?.('registrationError', () => {
+        lastDeviceToken = null;
+      }),
+    );
+
+    // Tapping a notification (events/announcements) deep-links into the app.
+    listeners.push(
+      await Push.addListener?.(
+        'pushNotificationActionPerformed',
+        (action: { notification?: { data?: Record<string, string> } }) => {
+          const data = action?.notification?.data;
+          if (data?.deepLink) navigateToDeepLink(data.deepLink);
+        },
+      ),
+    );
+  } catch {
+    // Any plugin error → behave like web (push simply unavailable).
+  }
+
+  // Expose a way for the caller to re-flush once the member finishes signing in.
+  pendingPushFlush = flushToServer;
+
+  return () => {
+    pendingPushFlush = null;
+    for (const l of listeners) {
+      try {
+        void l?.remove?.();
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+}
+
+/** Set by initPushNotifications so a post-login session can trigger token upload. */
+let pendingPushFlush: (() => Promise<void>) | null = null;
+
+/** Call after a successful sign-in so the device token is associated server-side. */
+export function onSessionEstablished(): void {
+  if (pendingPushFlush) void pendingPushFlush();
+}
+
+// ── 2. Native session persistence + biometric unlock ─────────────────────────
+
+export interface NativeSession {
+  token: string;
+  user: unknown;
+  subdomain: string;
+}
+
+/** Read a Capacitor Preference value, or null. No-op (null) on web. */
+async function prefGet(key: string): Promise<string | null> {
+  if (!isNative()) return null;
+  const Pref = plugin('Preferences');
+  if (!Pref) return null;
+  try {
+    const r = await Pref.get?.({ key });
+    return r?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Write a Capacitor Preference value. No-op on web. */
+async function prefSet(key: string, value: string): Promise<void> {
+  if (!isNative()) return;
+  const Pref = plugin('Preferences');
+  if (!Pref) return;
+  try {
+    await Pref.set?.({ key, value });
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Remove a Capacitor Preference value. No-op on web. */
+async function prefRemove(key: string): Promise<void> {
+  if (!isNative()) return;
+  const Pref = plugin('Preferences');
+  if (!Pref) return;
+  try {
+    await Pref.remove?.({ key });
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Persist the member session on-device so the app opens straight into their
+ * chapter next launch (no re-typing creds). No-op on web — the web app keeps
+ * using its HttpOnly cookie exactly as before.
+ */
+export async function saveSession(session: NativeSession): Promise<void> {
+  if (!isNative()) return;
+  await prefSet(STORAGE_KEYS.session, JSON.stringify(session));
+}
+
+/** Restore the on-device session (after an optional biometric gate). null on web. */
+export async function restoreSession(): Promise<NativeSession | null> {
+  if (!isNative()) return null;
+  const raw = await prefGet(STORAGE_KEYS.session);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as NativeSession;
+  } catch {
+    return null;
+  }
+}
+
+/** Clear the on-device session (sign-out). No-op on web. */
+export async function clearSession(): Promise<void> {
+  if (!isNative()) return;
+  await prefRemove(STORAGE_KEYS.session);
+}
+
+/** Whether the member has turned on Face/Touch ID unlock. false on web. */
+export async function isBiometricEnabled(): Promise<boolean> {
+  if (!isNative()) return false;
+  return (await prefGet(STORAGE_KEYS.biometric)) === '1';
+}
+
+/** Toggle the biometric-unlock preference. No-op on web. */
+export async function setBiometricEnabled(enabled: boolean): Promise<void> {
+  if (!isNative()) return;
+  await prefSet(STORAGE_KEYS.biometric, enabled ? '1' : '0');
+}
+
+/**
+ * Gate restoring the session behind a biometric (Face/Touch ID) check when the
+ * member has opted in. Uses the community NativeBiometric plugin if present;
+ * if it isn't bundled, we fail OPEN to the stored session (still better than
+ * forcing re-login) — the biometric is an unlock convenience, not the auth
+ * boundary (the tenant-bound Bearer token is). No-op (null) on web.
+ */
+export async function unlockWithBiometricIfEnabled(): Promise<NativeSession | null> {
+  if (!isNative()) return null;
+  const session = await restoreSession();
+  if (!session) return null;
+  if (!(await isBiometricEnabled())) return session;
+
+  const Bio = plugin('NativeBiometric');
+  if (!Bio) return session; // plugin not bundled → don't lock the member out
+  try {
+    const available = await Bio.isAvailable?.();
+    if (!available?.isAvailable) return session;
+    await Bio.verifyIdentity?.({
+      reason: 'Unlock Greek Stack',
+      title: 'Greek Stack',
+      subtitle: 'Verify to open your chapter',
+    });
+    return session; // verifyIdentity resolves only on success
+  } catch {
+    return null; // failed/cancelled biometric → require manual sign-in
+  }
+}
+
+// ── 3. Deep links / universal links into a chapter ───────────────────────────
+
+/** Parse a Greek Stack deep link into a chapter subdomain + in-app path. */
+export function parseDeepLink(
+  url: string,
+): { subdomain: string | null; path: string } | null {
+  try {
+    const u = new URL(url);
+    // Custom scheme: greekstack://chapter/<subdomain>[/path]
+    if (u.protocol === 'greekstack:') {
+      const segs = u.pathname.replace(/^\/+/, '').split('/').filter(Boolean);
+      const host = u.hostname; // e.g. "chapter"
+      if (host === 'chapter' && segs[0]) {
+        return { subdomain: segs[0], path: '/' + segs.slice(1).join('/') };
+      }
+      return { subdomain: null, path: '/' + segs.join('/') };
+    }
+    // Universal link: https://greekstack.vercel.app/app?chapter=<subdomain>
+    // or a per-chapter subdomain host (<subdomain>.greekstack.com).
+    const chapterParam = u.searchParams.get('chapter');
+    if (chapterParam) return { subdomain: chapterParam, path: u.pathname || '/app' };
+    const hostParts = u.hostname.split('.');
+    if (hostParts.length >= 3 && !u.hostname.startsWith('www.')) {
+      return { subdomain: hostParts[0], path: u.pathname || '/app' };
+    }
+    return { subdomain: null, path: u.pathname || '/app' };
+  } catch {
+    return null;
+  }
+}
+
+/** Navigate the webview to a parsed deep link (chapter pre-selected via query). */
+export function navigateToDeepLink(url: string): void {
+  if (typeof window === 'undefined') return;
+  const parsed = parseDeepLink(url);
+  if (!parsed) return;
+  const target = parsed.subdomain
+    ? `/app?chapter=${encodeURIComponent(parsed.subdomain)}`
+    : parsed.path || '/app';
+  try {
+    window.location.assign(target);
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Listen for deep links (universal links / custom scheme) opened while the app
+ * is running and route them into the right chapter. Returns a teardown fn.
+ * No-op on web.
+ */
+export async function initDeepLinks(): Promise<() => void> {
+  if (!isNative()) return () => {};
+  const App = plugin('App');
+  if (!App) return () => {};
+  let listener: PluginListener | null = null;
+  try {
+    listener = await App.addListener?.('appUrlOpen', (event: { url: string }) => {
+      if (event?.url) navigateToDeepLink(event.url);
+    });
+  } catch {
+    /* ignore */
+  }
+  return () => {
+    try {
+      void listener?.remove?.();
+    } catch {
+      /* ignore */
+    }
+  };
+}
+
+// ── 4. Offline cache of the last view ────────────────────────────────────────
+
+/**
+ * Persist a snapshot of the last successfully rendered chapter data so the app
+ * can show *something* when launched offline. No-op on web. Stored payload is
+ * size-bounded so a huge roster never bloats device storage.
+ */
+export async function cacheLastView(snapshot: unknown): Promise<void> {
+  if (!isNative()) return;
+  try {
+    const json = JSON.stringify({ at: Date.now(), data: snapshot });
+    // Bound to ~256KB; skip oversized payloads rather than risk a write failure.
+    if (json.length > 256_000) return;
+    await prefSet(STORAGE_KEYS.lastView, json);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Read the cached last-view snapshot (for offline boot). null on web. */
+export async function readLastView<T = unknown>(): Promise<{ at: number; data: T } | null> {
+  if (!isNative()) return null;
+  const raw = await prefGet(STORAGE_KEYS.lastView);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as { at: number; data: T };
+  } catch {
+    return null;
+  }
+}
+
+/** True when the device currently has no network (for offline-fallback UX). */
+export function isOffline(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.onLine === false;
+}
+
+// ── Splash / status bar polish (native chrome) ───────────────────────────────
+
+/** Hide the native splash once the web client has booted. No-op on web. */
+export async function hideSplash(): Promise<void> {
+  if (!isNative()) return;
+  const Splash = plugin('SplashScreen');
+  try {
+    await Splash?.hide?.();
+  } catch {
+    /* ignore */
+  }
+}
