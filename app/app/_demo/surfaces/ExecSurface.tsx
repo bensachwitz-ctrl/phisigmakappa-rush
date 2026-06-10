@@ -1,8 +1,7 @@
 import React from "react";
 import {
   Users, UserPlus, Trash2, KeyRound, DollarSign, TrendingUp, Vote, Wallet,
-  Gift, Palette, QrCode, Megaphone, Pin, ShieldCheck, ArrowRight, CheckCircle2,
-  AlertCircle, ChevronRight,
+  Gift, Palette, QrCode, Megaphone, Pin, ShieldCheck, ArrowRight, ChevronRight,
 } from "lucide-react";
 import { brandSecondary } from "../mock-data";
 import type { DemoContext } from "../context";
