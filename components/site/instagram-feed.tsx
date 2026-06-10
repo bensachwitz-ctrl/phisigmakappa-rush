@@ -2,49 +2,106 @@
 
 import { Instagram, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { Crest } from "@/components/brand/wordmark";
 import { cn } from "@/lib/utils";
 
-// Real post slugs pulled live from instagram.com/phisig_usc.
-// Sorted newest-first; image proxy at /api/photo/[slug] fetches the og:image
-// from each post on demand and edge-caches the result.
-//
-// `objectPosition` is per-post crop control. Default is "center 60%" (subjects
-// in action photos usually live in the lower 2/3 — center-center crops too
-// much sky on outdoor shots). Override per post if a specific image still
-// lands wrong (faces high, action high, vertical hero shots).
-const POSTS: { slug: string; caption: string; tag: string; objectPosition?: string }[] = [
-  { slug: "DUyvfpokpy6", caption: "Polar Plunge raised $700 for Special Olympics SC", tag: "Philanthropy", objectPosition: "center 65%" },
-  { slug: "DXHwOJCkUbi", caption: "Annual paintball at Trigger Tyme", tag: "Brotherhood", objectPosition: "center 80%" },
-  { slug: "DRxIVRXkYCn", caption: "No Shave November — $1,600 raised for Movember (men's health & mental-health awareness)", tag: "Philanthropy", objectPosition: "center 80%" },
-  { slug: "DWmioxGCaBG", caption: "Chapter formal — third-party vendor, sober transportation", tag: "Formals", objectPosition: "center 50%" },
-  { slug: "DU80cXJidhH", caption: "Dry fundraiser dinner — donations to the Leukemia & Lymphoma Society", tag: "Service" },
-  { slug: "DUBvmpfktF3", caption: "Above-average chapter GPA", tag: "Scholarship" },
-  { slug: "DXzzTaFjSyj", caption: "Brother of the Month spotlight", tag: "Leadership", objectPosition: "center 40%" },
-  { slug: "DW9-fTTibRF", caption: "Welcome to our newest brothers", tag: "New members", objectPosition: "center 45%" },
-  { slug: "DT0irEWEdT-", caption: "Chapter celebration", tag: "Brotherhood" },
-  { slug: "DSXMOLhERFH", caption: "Fall Rush 2026 — sign up", tag: "Rush" },
-  { slug: "DSGFt3REoty", caption: "Brother of the Month spotlight", tag: "Leadership", objectPosition: "center 40%" },
-  // Removed slug DRzyoVciZCh ("Chapter leadership") — its og:image was scraping as
-  // the generic Instagram app icon, not the actual post photo. If/when the chapter
-  // posts a real leadership photo, add a fresh slug back here.
-];
+// A single feed tile. Driven by the per-chapter `feed.json` repeater in
+// SiteConfig — NEVER hardcoded — so no tenant ever ships another chapter's real
+// Instagram posts. `slug` is an IG post code (proxied via /api/photo/[slug]) or
+// a full image URL; `objectPosition` is per-post crop control (defaults to
+// "center 60%": subjects in action photos usually live in the lower 2/3, so a
+// dead-center crop tends to keep too much sky on outdoor shots).
+export type FeedPost = {
+  slug: string;
+  caption: string;
+  tag: string;
+  objectPosition?: string;
+};
 
 const DEFAULT_OBJECT_POSITION = "center 60%";
 
+// Resolve a post's image source: a full http(s) URL renders as-is; a bare slug
+// goes through the /api/photo proxy with a responsive ?w= set.
+function isUrl(slug: string) {
+  return /^https?:\/\//.test(slug);
+}
+function imgFor(slug: string, w: number) {
+  return isUrl(slug) ? slug : `/api/photo/${slug}?w=${w}`;
+}
+function srcSetFor(slug: string, widths: number[]) {
+  if (isUrl(slug)) return undefined;
+  return widths.map((w) => `/api/photo/${slug}?w=${w} ${w}w`).join(", ");
+}
+function hrefFor(slug: string, fallbackUrl: string) {
+  return isUrl(slug) ? slug : `https://www.instagram.com/p/${slug}/`;
+}
+
+// White-label empty state — when a chapter hasn't wired its own feed yet we
+// render the designed cardinal-gradient Crest tile (brand-tinted via the
+// --phisig-red CSS var, so it recolors per tenant) instead of leaking another
+// chapter's photos. Mirrors the PostTile fallback used in the hero collage.
+function CrestFallbackTile({
+  className,
+  label = "Chapter life",
+}: {
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "group relative rounded-2xl overflow-hidden border border-border lift block",
+        className
+      )}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
+        <Crest className="h-16 w-16 text-white/25" aria-hidden="true" />
+      </div>
+      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+        <Instagram className="h-3 w-3" aria-hidden="true" /> {label}
+      </span>
+    </div>
+  );
+}
+
 export function InstagramFeed({
+  posts = [],
+  handle,
+  handleUrl,
   count = 9,
   className,
 }: {
+  /** Per-chapter feed tiles from the `feed.json` SiteConfig repeater. */
+  posts?: FeedPost[];
+  /** Chapter IG handle (e.g. "@kappadelta_clemson") from cfg. */
+  handle?: string;
+  /** Chapter IG profile URL from cfg. */
+  handleUrl?: string;
   count?: number;
   className?: string;
 }) {
-  const posts = POSTS.slice(0, count);
+  const visible = posts.slice(0, count);
+
+  // No posts configured for this tenant → branded Crest empty-state grid so the
+  // section still reads as designed (never another chapter's photos, never a
+  // broken /api/photo//404). The fallback fills the same 2×2 feature footprint.
+  if (visible.length === 0) {
+    return (
+      <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 stagger", className)}>
+        <CrestFallbackTile className="aspect-[4/5] sm:col-span-2 sm:row-span-2 sm:aspect-auto sm:min-h-[480px]" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <CrestFallbackTile key={i} className="aspect-square" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 stagger", className)}>
-      {posts.map((p, i) => (
+      {visible.map((p, i) => (
         <Link
-          key={p.slug}
-          href={`https://www.instagram.com/p/${p.slug}/`}
+          key={`${p.slug}-${i}`}
+          href={hrefFor(p.slug, handleUrl || "")}
           target="_blank"
           rel="noreferrer noopener"
           aria-label={`Open ${p.caption} on Instagram`}
@@ -60,15 +117,14 @@ export function InstagramFeed({
           )}
         >
           <img
-            src={`/api/photo/${p.slug}?w=640`}
-            srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w, /api/photo/${p.slug}?w=960 960w`}
+            src={imgFor(p.slug, 640)}
+            srcSet={srcSetFor(p.slug, [320, 480, 640, 960])}
             sizes={i === 0 ? "(min-width: 1024px) 480px, 50vw" : "(min-width: 1024px) 240px, 33vw"}
             alt={`Chapter life — ${p.caption}`}
             width={520}
             height={i === 0 ? 650 : 520}
             // The IG feed is ~3 viewports below the fold, so every tile is
-            // eligible for lazy-loading. Only the hero PostTile in app/page.tsx
-            // gets loading=eager + fetchpriority=high (LCP candidate).
+            // eligible for lazy-loading.
             loading="lazy"
             decoding="async"
             className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -78,10 +134,12 @@ export function InstagramFeed({
               regardless of where the photo's bright/dark areas land. */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70 pointer-events-none" aria-hidden />
 
-          {/* Top-right Instagram badge */}
-          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
-            <Instagram className="h-3 w-3" /> @phisig_usc
-          </span>
+          {/* Top-right Instagram badge — chapter handle from cfg (white-label). */}
+          {handle && (
+            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+              <Instagram className="h-3 w-3" /> {handle}
+            </span>
+          )}
 
           {/* Bottom caption */}
           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 pointer-events-none">
@@ -101,46 +159,60 @@ export function InstagramFeed({
   );
 }
 
-export function InstagramStrip() {
-  const posts = POSTS.slice(0, 4);
+export function InstagramStrip({
+  posts = [],
+  handle,
+  handleUrl,
+}: {
+  posts?: FeedPost[];
+  handle?: string;
+  handleUrl?: string;
+}) {
+  const visible = posts.slice(0, 4);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {posts.map((p) => (
+        {visible.length === 0
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <CrestFallbackTile key={i} className="aspect-square" />
+            ))
+          : visible.map((p, i) => (
+              <Link
+                key={`${p.slug}-${i}`}
+                href={hrefFor(p.slug, handleUrl || "")}
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label={`Open ${p.caption} on Instagram`}
+                className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-secondary lift"
+              >
+                <img
+                  src={imgFor(p.slug, 320)}
+                  srcSet={srcSetFor(p.slug, [320, 480, 640])}
+                  sizes="(min-width: 640px) 25vw, 50vw"
+                  alt={`Chapter life — ${p.caption}`}
+                  width={320}
+                  height={320}
+                  loading="lazy"
+                  className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ objectPosition: p.objectPosition || DEFAULT_OBJECT_POSITION }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </Link>
+            ))}
+      </div>
+      {handle && handleUrl && (
+        <div className="text-center">
           <Link
-            key={p.slug}
-            href={`https://www.instagram.com/p/${p.slug}/`}
+            href={handleUrl}
             target="_blank"
             rel="noreferrer noopener"
-            aria-label={`Open ${p.caption} on Instagram`}
-            className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-secondary lift"
+            className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
           >
-            <img
-              src={`/api/photo/${p.slug}?w=320`}
-              srcSet={`/api/photo/${p.slug}?w=320 320w, /api/photo/${p.slug}?w=480 480w, /api/photo/${p.slug}?w=640 640w`}
-              sizes="(min-width: 640px) 25vw, 50vw"
-              alt={`Chapter life — ${p.caption}`}
-              width={320}
-              height={320}
-              loading="lazy"
-              className="photo-grade absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              style={{ objectPosition: p.objectPosition || DEFAULT_OBJECT_POSITION }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <Instagram className="h-4 w-4" /> See more on {handle}
+            <ExternalLink className="h-3 w-3" />
           </Link>
-        ))}
-      </div>
-      <div className="text-center">
-        <Link
-          href="https://www.instagram.com/phisig_usc/"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
-        >
-          <Instagram className="h-4 w-4" /> See more on @phisig_usc
-          <ExternalLink className="h-3 w-3" />
-        </Link>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

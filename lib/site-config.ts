@@ -251,6 +251,15 @@ export const DEFAULTS = {
     { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
   ]),
 
+  // Instagram feed grid: [{ slug, caption, tag, objectPosition }]
+  // WHITE-LABEL: defaults to an EMPTY array so a fresh tenant NEVER ships
+  // another chapter's real Instagram posts. With no entries the InstagramFeed
+  // renders the branded cardinal-red Crest empty-state, and show.instagramFeed
+  // defaults to "false" so net-new tenants don't surface an empty section at
+  // all. The rush chair adds their own chapter's post codes (IG slugs) or image
+  // URLs per chapter via /admin/settings, then flips show.instagramFeed on.
+  "feed.json": JSON.stringify([]),
+
   // Testimonial. WHITE-LABEL: defaults EMPTY so a fresh tenant never publishes
   // Phi Sig's real alum quote/name. A chapter-agnostic quote is used as the
   // fallback copy (names no fraternity/chapter); author/year/attribution stay
@@ -304,7 +313,11 @@ export const DEFAULTS = {
   "show.statsStrip": "true",
   "show.highlightsBanner": "true",
   "show.values": "true",
-  "show.instagramFeed": "true",
+  // WHITE-LABEL: default OFF for net-new tenants — the Instagram feed only
+  // makes sense once a chapter has wired its own feed.json posts. A tenant
+  // turns this on in /admin/settings after adding their posts. (The canonical
+  // Phi Sig deployment sets this "true" in its DB.)
+  "show.instagramFeed": "false",
   "show.timeline": "true",
   "show.testimonial": "true",
   "show.spotlight": "true",

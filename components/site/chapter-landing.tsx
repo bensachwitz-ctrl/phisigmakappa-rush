@@ -5,7 +5,7 @@ import { RushForm } from "@/components/site/rush-form";
 import { ScheduleList } from "@/components/site/schedule-list";
 import { Seal, Crest } from "@/components/brand/wordmark";
 import { Scene } from "@/components/brand/scene";
-import { InstagramFeed } from "@/components/site/instagram-feed";
+import { InstagramFeed, type FeedPost } from "@/components/site/instagram-feed";
 import { StickyCTA } from "@/components/site/sticky-cta";
 import { Reveal } from "@/components/site/reveal";
 import {
@@ -277,6 +277,10 @@ export default async function ChapterLandingPage({
   const FAQ = parseJsonArray<FaqRow>(cfg["faq.json"], FAQ_DEFAULT);
   const HIGHLIGHTS = parseJsonArray<HighlightRow>(cfg["highlights.json"], HIGHLIGHTS_DEFAULT);
   const RECENT = parseJsonArray<RecentRow>(cfg["recent.json"], RECENT_DEFAULT);
+  // White-label Instagram feed — driven entirely by the chapter's own
+  // `feed.json` repeater. Default is EMPTY, so a fresh tenant renders the
+  // branded Crest empty-state, never another chapter's real posts.
+  const FEED = parseJsonArray<FeedPost>(cfg["feed.json"], []);
 
   // Next public rush event for the live countdown chip in the hero.
   // Best-effort — if the DB read fails or the schedule is empty, the
@@ -664,7 +668,12 @@ export default async function ChapterLandingPage({
             <span className="text-phisig-red font-medium">{identity.tagline}</span>
           </p>
         </Reveal3D>
-        <InstagramFeed count={9} />
+        <InstagramFeed
+          count={9}
+          posts={FEED}
+          handle={cfg["contact.instagramHandle"] || undefined}
+          handleUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined}
+        />
 
         {/* Recent activity strip — staggered 3D reveal + cursor-tracked tilt. */}
         <Reveal3D stagger={0.08} className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

@@ -689,6 +689,34 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         />
       </Section>
 
+      {/* INSTAGRAM FEED grid */}
+      <Section
+        title="Instagram feed"
+        eyebrow="Photo grid in the “A year in the life” section"
+        icon={Activity}
+      >
+        <p className="mb-3 text-sm text-muted-foreground">
+          Add your chapter&apos;s own posts here — each row is one tile. Paste an
+          Instagram post code (the part after <code>/p/</code> in the post URL)
+          or a full image URL. Leave this empty and the section shows a branded
+          crest placeholder instead. Turn the section on under{" "}
+          <strong>Section visibility → Instagram feed</strong> once you&apos;ve
+          added posts.
+        </p>
+        <JsonArrayEditor
+          value={values["feed.json"]}
+          onChange={(v) => set("feed.json", v)}
+          fields={[
+            { key: "slug", label: "Post code or image URL", placeholder: "DUyvfpokpy6 or https://…" },
+            { key: "caption", label: "Caption", placeholder: "Polar Plunge raised $700…" },
+            { key: "tag", label: "Tag", placeholder: "Philanthropy" },
+            { key: "objectPosition", label: "Crop (optional)", placeholder: "center 60%" },
+          ]}
+          newRow={{ slug: "", caption: "", tag: "", objectPosition: "" }}
+          rowLabel={(r) => `${r.tag || "(no tag)"} — ${r.caption || "no caption"}`}
+        />
+      </Section>
+
       {/* RECENT activity strip */}
       <Section title="Recent activity strip" eyebrow="4 cards under the Instagram feed" icon={Activity}>
         <JsonArrayEditor
