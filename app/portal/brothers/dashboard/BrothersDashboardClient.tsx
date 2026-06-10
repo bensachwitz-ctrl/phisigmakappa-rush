@@ -22,7 +22,6 @@ import {
   ShieldAlert,
   ChevronRight,
   Plus,
-  X,
   Lock,
   Upload,
   ExternalLink,
@@ -38,6 +37,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { PublicFooter } from "@/components/site/footer";
 import { useToast } from "@/components/ui/toast";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
@@ -2517,23 +2522,18 @@ export default function BrothersDashboardClient({
       <PublicFooter />
 
       {/* ANNOUNCEMENT DETAILS POPUP MODAL */}
-      {activeAnnouncement && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-xl w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left">
+      <Dialog open={!!activeAnnouncement} onOpenChange={(o) => !o && setActiveAnnouncement(null)}>
+        {activeAnnouncement && (
+          <DialogContent className="max-w-xl gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
-                    {activeAnnouncement.pinned ? "Pinned Announcement" : "Chapter Notice"}
-                  </span>
-                  <h3 className="font-extrabold text-maroon-900 text-lg leading-snug">{activeAnnouncement.title}</h3>
-                </div>
-                <button
-                  onClick={() => setActiveAnnouncement(null)}
-                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-500 hover:text-maroon-900 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="pr-8">
+                <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                  {activeAnnouncement.pinned ? "Pinned Announcement" : "Chapter Notice"}
+                </span>
+                <DialogTitle className="font-extrabold text-maroon-900 text-lg leading-snug">{activeAnnouncement.title}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Announcement details{activeAnnouncement.author?.name ? ` from ${activeAnnouncement.author.name}` : ""}.
+                </DialogDescription>
               </div>
 
               <div className="text-xs text-maroon-700 leading-relaxed font-normal space-y-2 whitespace-pre-wrap">
@@ -2598,31 +2598,31 @@ export default function BrothersDashboardClient({
                 <span>{new Date(activeAnnouncement.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* RSVP EDIT MODAL */}
-      {activeRsvpEvent && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left">
+      <Dialog
+        open={!!activeRsvpEvent}
+        onOpenChange={(o) => {
+          if (!o) {
+            setActiveRsvpEvent(null);
+            setRsvpNote("");
+          }
+        }}
+      >
+        {activeRsvpEvent && (
+          <DialogContent className="max-w-md gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
-                    Submit Response
-                  </span>
-                  <h3 className="font-bold text-maroon-900 text-base leading-snug">{activeRsvpEvent.name}</h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setActiveRsvpEvent(null);
-                    setRsvpNote("");
-                  }}
-                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-500 hover:text-maroon-900 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="pr-8">
+                <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                  Submit Response
+                </span>
+                <DialogTitle className="font-bold text-maroon-900 text-base leading-snug">{activeRsvpEvent.name}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Submit or update your RSVP and an optional note for this event.
+                </DialogDescription>
               </div>
 
               <div className="space-y-4">
@@ -2695,32 +2695,32 @@ export default function BrothersDashboardClient({
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* JOB POSTING MODAL */}
-      {showPostJobModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-lg w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left animate-in fade-in duration-200">
+      <Dialog
+        open={showPostJobModal}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowPostJobModal(false);
+            setPostJobError(null);
+            setPostJobSuccess(false);
+          }
+        }}
+      >
+        {showPostJobModal && (
+          <DialogContent className="max-h-[88vh] max-w-lg gap-0 overflow-y-auto rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
-                    Post Career Opportunity
-                  </span>
-                  <h3 className="font-extrabold text-maroon-900 text-lg leading-snug">Share Job or Internship</h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPostJobModal(false);
-                    setPostJobError(null);
-                    setPostJobSuccess(false);
-                  }}
-                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-500 hover:text-maroon-900 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="pr-8">
+                <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                  Post Career Opportunity
+                </span>
+                <DialogTitle className="font-extrabold text-maroon-900 text-lg leading-snug">Share Job or Internship</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Share a job or internship opportunity with all active brothers.
+                </DialogDescription>
               </div>
 
               {postJobSuccess ? (
@@ -2866,9 +2866,9 @@ export default function BrothersDashboardClient({
                 </form>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
     </div>
   );
