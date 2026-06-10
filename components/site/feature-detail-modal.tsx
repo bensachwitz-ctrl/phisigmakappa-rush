@@ -21,11 +21,10 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
 export type FeatureDetail = {
   icon: GsIcon;
   /**
-   * Bespoke pre-rendered feature tile served from /brand/gen/<img>.png — a
-   * self-contained frosted-glass app-icon. When present it REPLACES the SVG
-   * `icon` glyph + its chip wrapper everywhere this feature renders (the grid
-   * card and this modal's header), since the image is already a finished tile.
-   * `icon` is kept on the type for back-compat / non-image surfaces.
+   * Bespoke <BrandGlyph> concept key (e.g. "feat-events") — a transparent,
+   * single-family frosted SVG app-icon. When present it REPLACES the SVG `icon`
+   * glyph + its chip wrapper everywhere this feature renders (the grid card and
+   * this modal's header). `icon` is kept on the type for back-compat surfaces.
    */
   img?: string;
   title: string;

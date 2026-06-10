@@ -84,14 +84,12 @@ import {
 type GsIcon = (props: IconProps) => React.JSX.Element;
 
 /* ── Bespoke glassy icon TILE (the new custom character) ──────────────────────
-   Renders one of the pre-rendered 256px frosted-glass blue→gold app-icon tiles
-   from /public/brand/gen as a small rounded image — the SAME visual language as
-   the feature-card icons (see FeatureCard's `featureIcon`). Using these where the
-   page was previously a generic line-icon (or had none) is what gives the page
-   custom Greek-life character. It stands ALONE (no IconChip glass wrapper) so a
-   glass tile never double-ups on a glass chip, and it inherits the shared hover
-   lift/tilt when placed inside a `group`. Decorative → alt="". `size` matches the
-   IconChip footprints it replaces (sm≈32 / md≈44 / lg≈56) so swaps stay aligned. */
+   Renders one of the bespoke single-family <BrandGlyph> SVG app-icons — the SAME
+   visual language as the feature-card icons. Transparent by construction (no
+   baked dark box), crisp at any size. It stands ALONE (no IconChip glass wrapper)
+   so a glass tile never double-ups on a glass chip, and it inherits the shared
+   hover lift/tilt when placed inside a `group`. Decorative → aria-hidden. `size`
+   matches the IconChip footprints it replaces (sm≈32 / md≈44 / lg≈56). */
 /**
  * GlyphTile — now a thin alias over the bespoke <BrandGlyph> SVG icon system.
  * Previously it rendered AI-generated `/brand/gen/<name>.png` rasters that baked

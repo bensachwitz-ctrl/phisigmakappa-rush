@@ -538,7 +538,7 @@ function PortalCard({
   active: boolean;
   onSelect: () => void;
   icon: LucideIcon;
-  /** File stem under /brand/gen for the bespoke glassy tile, e.g. "gl-brotherhood". */
+  /** <BrandGlyph> concept key for the bespoke glassy tile, e.g. "gl-brotherhood". */
   img?: string;
   title: string;
   line: string;
