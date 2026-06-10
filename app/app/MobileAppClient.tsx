@@ -1772,8 +1772,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
               </div>
 
               {/* Main Scrollable Viewport — compact mobile density (p-3) so cards
-                  fit more on screen; a touch roomier on the lg+ showcase. */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-3 lg:p-4">
+                  fit more on screen; a touch roomier on the lg+ showcase. At <lg
+                  the bottom padding clears the FIXED tab bar (+ safe area). */}
+              <div className="flex-1 overflow-y-auto p-3 pb-[calc(4.75rem+env(safe-area-inset-bottom))] space-y-3 lg:p-4 lg:pb-4">
                 
                 {loading ? (
                   <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
@@ -1854,7 +1855,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                   is exploring. Re-appears with fresh copy on every tab switch
                   until the visitor turns the tour off. */}
               {isDemo && viewRole === "member" && calloutVisible && !calloutDismissed && DEMO_CALLOUTS[activeTab] && (
-                <div className="absolute inset-x-3 bottom-[4.75rem] z-[60] animate-spring-in">
+                <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-[45] animate-spring-in lg:absolute lg:inset-x-3 lg:bottom-[4.75rem] lg:z-[60]">
                   <div className="relative rounded-2xl border border-slate-200 bg-white/95 backdrop-blur p-3 pr-9 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.45)]">
                     {/* little pointer down toward the tab bar */}
                     <span
@@ -1900,8 +1901,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
               {/* Persistent Bottom Tab Bar Navigation — data-driven per role,
                   with a spring active-pill that slides between slots + ≥44px
-                  touch targets + safe-area padding for the full-bleed mobile shell. */}
-              <div className="relative z-10 grid shrink-0 grid-cols-5 items-stretch border-t border-slate-100 bg-white px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)]">
+                  touch targets + safe-area padding for the full-bleed mobile shell.
+                  At <lg the full-bleed document can grow taller than the viewport
+                  (min-h chains don't bound the inner flex column), so the bar is
+                  FIXED to the real viewport bottom — always visible at scrollY=0.
+                  On the lg+ phone-frame showcase it stays in-flow (relative). */}
+              <div className="fixed bottom-0 left-0 right-0 z-[40] grid grid-cols-5 items-stretch border-t border-slate-100 bg-white px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-10 lg:shrink-0">
                 {/* Sliding brand active-pill behind the icons. */}
                 <span
                   aria-hidden="true"
