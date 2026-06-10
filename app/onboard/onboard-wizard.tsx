@@ -95,6 +95,10 @@ export default function OnboardWizard() {
   // reader users land on the new step's title instead of being stranded.
   const headingRef = React.useRef<HTMLHeadingElement>(null);
   const firstRender = React.useRef(true);
+  // Handle on the subdomain <input> so a server-side "already taken" verdict at
+  // the final Launch step can bounce the user back to the chapter step and land
+  // their cursor directly on the field to fix — never a dead-end toast.
+  const subdomainRef = React.useRef<HTMLInputElement>(null);
   // Inline, per-field validation hints layered on top of the toast errors so
   // the user sees exactly which input needs attention without losing the toast.
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -465,7 +469,38 @@ export default function OnboardWizard() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Onboarding failed");
+        const message: string = data.error || "Onboarding failed";
+        // A subdomain collision/format rejection is the one failure the user can
+        // fix in-place — recover them onto the exact field instead of stranding
+        // them on the Launch step with a dead-end toast. Match on the server's
+        // subdomain error copy (taken / invalid / reserved).
+        if (/subdomain/i.test(message)) {
+          const taken = /taken/i.test(message);
+          setSubStatus(taken ? "taken" : "invalid");
+          setErrors((prev) => ({ ...prev, subdomain: message }));
+          setBusy(false);
+          // Re-open the chapter step (where the subdomain field lives) with a
+          // backward slide, then focus + scroll the field on the next frame.
+          setDir(-1);
+          setStep("chapter");
+          push({
+            title: taken ? "That subdomain is taken" : "Check your subdomain",
+            description: `${message} You're back on the chapter step — pick another name and relaunch.`,
+            variant: "destructive",
+          });
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const el = subdomainRef.current;
+              if (el) {
+                el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+                el.focus({ preventScroll: true });
+                el.select?.();
+              }
+            });
+          });
+          return;
+        }
+        throw new Error(message);
       }
 
       push({ title: "Setup Complete", description: "Your site has been successfully initialized!", variant: "success" });
@@ -844,6 +879,7 @@ export default function OnboardWizard() {
                         value={subdomain}
                         onChange={setSubdomain}
                         placeholder="phisig-usc"
+                        inputRef={subdomainRef}
                         error={errors.subdomain}
                         // Tint the input border to match a resolved blocking
                         // status (taken/reserved/invalid) without hiding the live
@@ -1638,7 +1674,7 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 }
 
 function WField({
-  label, value, onChange, placeholder, error, invalid, required, hint, glyphInsert,
+  label, value, onChange, placeholder, error, invalid, required, hint, glyphInsert, inputRef,
 }: {
   label: string;
   value: string;
@@ -1654,6 +1690,10 @@ function WField({
   // When provided, renders a click-to-build Greek-letter inserter under the
   // field that appends glyphs (for the glyph/abbreviation fields).
   glyphInsert?: (glyph: string) => void;
+  // Optional handle on the underlying <input> so a parent can focus/scroll the
+  // field into view after a server-side validation failure (e.g. the Launch
+  // step bouncing a "subdomain already taken" 400 back to this field).
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   const id = React.useId();
   const showInvalid = Boolean(error) || Boolean(invalid);
@@ -1662,6 +1702,7 @@ function WField({
       <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>
       <Input
         id={id}
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
