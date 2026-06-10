@@ -22,7 +22,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
     setShowAddMemberModal,
   } = ctx;
   return (
-            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm z-[110] flex items-center justify-center p-6" onClick={() => setShowAddMemberModal(false)}>
+            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-6 backdrop-blur-sm lg:absolute" onClick={() => setShowAddMemberModal(false)}>
               <div className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in text-left max-h-[85%] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-1.5">

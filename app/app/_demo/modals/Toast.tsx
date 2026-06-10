@@ -10,7 +10,7 @@ export function renderToast(ctx: DemoContext) {
   // only restores the type narrowing the inline conditional provided.
   if (!toast) return null;
   return (
-            <div className="absolute top-4 left-4 right-4 z-[100] animate-spring-in pointer-events-none">
+            <div className="fixed left-4 right-4 top-[calc(4.5rem+env(safe-area-inset-top))] z-[100] animate-spring-in pointer-events-none lg:absolute lg:top-4">
               <div className="bg-white/95 backdrop-blur border border-slate-200/80 rounded-2xl shadow-xl p-3 flex items-center gap-3">
                 <div 
                   className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0"

@@ -1687,7 +1687,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           {/* In-app chapter switcher overlay — re-skins the live demo without a
               sign-out. Slides up over the running app. */}
           {selectedTenant && token && showChapterChooser && (
-            <div className="absolute inset-0 z-[80] flex flex-col bg-white animate-spotlight-in">
+            <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[80] flex flex-col bg-white animate-spotlight-in lg:absolute lg:inset-0">
               {renderChapterChooser(ctx, { overlay: true })}
             </div>
           )}

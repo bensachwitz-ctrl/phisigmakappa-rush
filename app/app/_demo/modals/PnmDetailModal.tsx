@@ -16,7 +16,7 @@ export function renderPnmDetail(ctx: DemoContext) {
     setSelectedPnm,
   } = ctx;
   return (
-                <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex flex-col justify-end text-left" onClick={() => setSelectedPnm(null)}>
+                <div className="fixed inset-0 z-50 flex flex-col justify-end bg-slate-950/70 text-left backdrop-blur-sm lg:absolute" onClick={() => setSelectedPnm(null)}>
                   <div className="bg-white rounded-t-[32px] border-t border-slate-200 max-h-[85%] overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                     
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">

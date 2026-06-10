@@ -30,7 +30,7 @@ export function renderSpotlight(ctx: DemoContext) {
     tenants,
   } = ctx;
   return (
-                <div className="absolute inset-0 z-[80] flex flex-col animate-spotlight-in bg-slate-50">
+                <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[80] flex flex-col animate-spotlight-in bg-slate-50 lg:absolute lg:inset-0">
                   {/* Spotlight header */}
                   <div className="shrink-0 px-4 pt-3 pb-2.5 bg-white border-b border-slate-100 flex items-center gap-2.5">
                     <button
