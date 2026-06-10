@@ -62,6 +62,17 @@ const nextConfig = {
       { source: '/favicon.ico', destination: '/icon' },
     ];
   },
+  // The marketing landing presents pricing as an on-page section (#pricing),
+  // reached via in-page anchors in the nav/footer. But "/pricing" is an obvious
+  // URL a prospect (or an App Store listing) may type directly, and it 404'd —
+  // so map it to the pricing section of the homepage instead of dead-ending.
+  // Temporary (307) so the canonical pricing URL stays the homepage anchor and
+  // a real /pricing route can be added later without an entrenched 308 cache.
+  async redirects() {
+    return [
+      { source: '/pricing', destination: '/#pricing', permanent: false },
+    ];
+  },
   // Security + privacy headers applied to every route. Vercel adds HSTS in
   // front of this in production, but we set the others ourselves.
   async headers() {

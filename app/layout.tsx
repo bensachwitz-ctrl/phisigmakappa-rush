@@ -90,6 +90,11 @@ export async function generateMetadata(): Promise<Metadata> {
       twitter: { card: "summary_large_image", title: GREEKSTACK.title, description: GREEKSTACK.description },
       robots: { index: true, follow: true },
       appleWebApp: { capable: true, title: GREEKSTACK.short, statusBarStyle: "black-translucent" },
+      // Modern cross-browser equivalent of apple-mobile-web-app-capable.
+      // Chrome/Android deprecated reading the apple-prefixed tag and warn in the
+      // console unless this standard form is also present; iOS still needs the
+      // apple- one (emitted by appleWebApp above), so we ship both.
+      other: { "mobile-web-app-capable": "yes" },
     };
   }
 
@@ -134,6 +139,10 @@ export async function generateMetadata(): Promise<Metadata> {
       // status bar instead of leaving a stark white strip above the nav.
       statusBarStyle: "black-translucent",
     },
+    // Modern cross-browser equivalent of apple-mobile-web-app-capable (see the
+    // apex branch above) — silences the Chrome/Android deprecation warning while
+    // iOS keeps the apple- tag.
+    other: { "mobile-web-app-capable": "yes" },
   };
 }
 

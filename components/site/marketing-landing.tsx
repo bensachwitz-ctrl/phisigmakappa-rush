@@ -901,14 +901,14 @@ function SiteNav() {
 
           {/* Hamburger — shown below xl (everything the inline nav can't fit lives
               in the sheet: the section links, plus Demo + Sign in on the tighter
-              widths). 40px touch target. */}
+              widths). 44px touch target (WCAG 2.5.5 / Apple HIG minimum). */}
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
             aria-expanded={menuOpen}
             aria-haspopup="dialog"
-            className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card/70 text-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 xl:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-card/70 text-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 xl:hidden"
           >
             <IconMenu className="h-5 w-5" />
           </button>
@@ -1005,7 +1005,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 type="button"
                 onClick={onClose}
                 aria-label="Close menu"
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
               >
                 <IconClose className="h-5 w-5" />
               </button>
