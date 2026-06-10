@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -600,13 +601,23 @@ export default function OnboardWizard() {
             BOTH words read clearly against the dark/colored background. */}
         <div className="flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 shadow-lg shadow-blue-950/30 backdrop-blur-md">
-            <span className="inline-flex items-center gap-2">
-              <GreekstackLogo title="Greekstack" className="h-7 w-7" />
+            {/* The lockup is a LINK home — the wizard previously had no path
+                back to the marketing site (a dead-end for anyone who arrived
+                early). Same wordmark-as-home pattern as every other page. */}
+            <Link
+              href="/"
+              aria-label="Greekstack home"
+              className="group inline-flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
+            >
+              <GreekstackLogo
+                title="Greekstack"
+                className="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+              />
               <span className="text-base font-bold leading-none tracking-[-0.02em]">
                 <span className="text-white">Greek</span>
                 <span className="gs-gradient-text">stack</span>
               </span>
-            </span>
+            </Link>
             <span className="ml-1 hidden h-3.5 w-px bg-white/15 sm:inline-block" aria-hidden="true" />
             <span className="hidden items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 sm:inline-flex">
               <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Setup

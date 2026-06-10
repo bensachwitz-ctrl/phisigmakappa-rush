@@ -451,7 +451,7 @@ function ApexHeader() {
             href="/app?demo=true"
             className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
           >
-            Interactive Demo
+            Interactive demo
           </Link>
           <Link
             href="/onboard"
