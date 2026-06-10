@@ -21,11 +21,12 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { IllustrationCalendar } from "@/components/brand/illustrations";
 import {
   CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
-  ClipboardCheck, Users, Search, Sparkles, Edit3, Globe,
+  ClipboardCheck, Users, Search, Sparkles, Edit3, Globe, QrCode,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import { EventQrDialog } from "@/components/admin/event-qr-dialog";
 
 // Event category presets — same six values used by the brother calendar.
 // Color tokens here MUST stay in sync with components/brother/event-calendar.tsx
@@ -132,6 +133,8 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
   const [form, setForm] = React.useState(initial);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [attendingFor, setAttendingFor] = React.useState<Event | null>(null);
+  // Which event's QR check-in dialog is open (rush-cycle feature 2).
+  const [qrFor, setQrFor] = React.useState<Event | null>(null);
 
   // ---- Search & Filter State ----
   const [search, setSearch] = React.useState("");
@@ -478,6 +481,19 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
                       >
                         <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Attendance
                       </Button>
+                      {/* QR check-in — for rush + public events (where PNMs show
+                          up and check themselves in at the door). Private
+                          brotherhood/chapter events don't need a public QR. */}
+                      {(e.category === "RUSH" || !e.isPrivate) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQrFor(e)}
+                          className="flex-1 sm:flex-none h-8"
+                        >
+                          <QrCode className="h-3.5 w-3.5 mr-1" /> QR
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -579,6 +595,15 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       <AttendanceDialog
         event={attendingFor}
         onClose={() => setAttendingFor(null)}
+      />
+
+      {/* Rush check-in QR (rush-cycle feature 2) — generates the per-event code
+          on first open and shows a scannable QR + public check-in link. */}
+      <EventQrDialog
+        eventId={qrFor?.id || ""}
+        eventName={qrFor?.name || ""}
+        open={!!qrFor}
+        onOpenChange={(v) => !v && setQrFor(null)}
       />
 
       {/* ---------- Confirm Dialog (replaces window.confirm) ---------- */}
