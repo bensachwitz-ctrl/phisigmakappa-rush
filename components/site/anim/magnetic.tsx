@@ -87,7 +87,11 @@ export function Magnetic({
       style={{ x: sx, y: sy } as MotionStyle}
       className={cn("relative inline-flex will-change-transform", className)}
     >
-      <motion.div style={{ x: ix, y: iy } as MotionStyle} className="inline-flex">
+      {/* w-full so a stretched Magnetic (equal-width CTA pairs) passes its
+          width down — inline-flex alone shrank to content and silently broke
+          the w-full chain between wrapper and child button. Harmless when the
+          wrapper is natural-width (100% of shrink-to-fit = the same width). */}
+      <motion.div style={{ x: ix, y: iy } as MotionStyle} className="inline-flex w-full">
         {children}
       </motion.div>
     </motion.div>
