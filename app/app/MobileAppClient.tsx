@@ -1390,9 +1390,10 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         glyphs={brandGlyphs}
         color={brandPrimary}
         position="absolute"
-        count={52}
+        calm
+        count={34}
         seed={0x51ed270b}
-        className="opacity-[0.55] [&_*]:!opacity-[var(--go,0.12)]"
+        className="opacity-[0.5]"
       />
 
       {/* 3D WebGL Plexus Background — DESKTOP-ONLY. The component already self-

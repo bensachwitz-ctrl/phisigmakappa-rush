@@ -70,23 +70,33 @@ type Tier = {
 };
 
 const TIERS: Tier[] = [
-  // NEAR — large, fast, most visible (capped at ~0.22 so card text stays readable)
-  { count: 12, sizeMin: 28, sizeRange: 18, durMin: 16, durRange: 12, opMin: 0.14, opRange: 0.08, dyAmp: 60 },
-  // MID — medium size / opacity / speed
-  { count: 16, sizeMin: 16, sizeRange: 12, durMin: 26, durRange: 16, opMin: 0.09, opRange: 0.05, dyAmp: 90 },
-  // FAR — small, slow, faint (the deep backdrop layer)
-  { count: 16, sizeMin: 9, sizeRange: 7, durMin: 42, durRange: 26, opMin: 0.04, opRange: 0.04, dyAmp: 120 },
+  // NEAR — large, most visible. Durations are LONG (slow, calm drift) so the
+  // field reads as a serene texture, never a busy/distracting swarm. Opacity
+  // tuned to clearly read as drifting letters on the marketing bg while staying
+  // well under card text.
+  { count: 11, sizeMin: 30, sizeRange: 18, durMin: 34, durRange: 18, opMin: 0.15, opRange: 0.07, dyAmp: 44 },
+  // MID — medium size / opacity, slower still
+  { count: 14, sizeMin: 17, sizeRange: 12, durMin: 50, durRange: 22, opMin: 0.10, opRange: 0.05, dyAmp: 64 },
+  // FAR — small, very slow, faint (the deep backdrop layer)
+  { count: 14, sizeMin: 10, sizeRange: 7, durMin: 74, durRange: 32, opMin: 0.05, opRange: 0.04, dyAmp: 86 },
 ];
+
+/** A calmer multiplier set applied when `calm` is requested (the demo): even
+ *  slower drift + softer opacity so the chapter shell is easy to read/interact. */
+const CALM = { durMul: 1.4, opMul: 0.7, dyMul: 0.7 } as const;
 
 /** Total letters at full density (sum of tier counts). */
 const DEFAULT_TOTAL = TIERS.reduce((n, t) => n + t.count, 0); // 44
 
-function buildLetters(glyphs: string[], seed: number, total: number): Letter[] {
+function buildLetters(glyphs: string[], seed: number, total: number, calm: boolean): Letter[] {
   const rng = makeRng(seed);
   const out: Letter[] = [];
   // Scale each tier's count to honor a caller-supplied density while keeping the
   // near/mid/far proportions intact (≥1 per tier so depth never collapses).
   const scale = total / DEFAULT_TOTAL;
+  const durMul = calm ? CALM.durMul : 1;
+  const opMul = calm ? CALM.opMul : 1;
+  const dyMul = calm ? CALM.dyMul : 1;
 
   for (const tier of TIERS) {
     const n = Math.max(1, Math.round(tier.count * scale));
@@ -107,12 +117,12 @@ function buildLetters(glyphs: string[], seed: number, total: number): Letter[] {
         left,
         top: Math.round((-6 + rng() * 112) * 10) / 10, // vary vertical position, -6%..106%
         size: tier.sizeMin + Math.round(rng() * tier.sizeRange),
-        dur: tier.durMin + Math.round(rng() * tier.durRange), // random speeds within tier
-        delay: -Math.round(rng() * 60), // widely staggered → no synchronized "pop"
+        dur: Math.round((tier.durMin + rng() * tier.durRange) * durMul), // random speeds within tier
+        delay: -Math.round(rng() * 80), // widely staggered → no synchronized "pop"
         dx: Math.round(dx),
-        dy: Math.round((rng() - 0.5) * 2 * tier.dyAmp), // gentle vertical wobble
-        rot: Math.round((rng() - 0.5) * 16),
-        op: Math.round((tier.opMin + rng() * tier.opRange) * 1000) / 1000,
+        dy: Math.round((rng() - 0.5) * 2 * tier.dyAmp * dyMul), // gentle vertical wobble
+        rot: Math.round((rng() - 0.5) * 12),
+        op: Math.round((tier.opMin + rng() * tier.opRange) * opMul * 1000) / 1000,
       });
     }
   }
@@ -127,6 +137,7 @@ export function GreekLetterField({
   className,
   color,
   position = "fixed",
+  calm = false,
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];
@@ -142,10 +153,13 @@ export function GreekLetterField({
    *  `absolute` (pinned to the nearest positioned ancestor — used inside the
    *  demo's brand-themed shell so the field stays within the demo container). */
   position?: "fixed" | "absolute";
+  /** Even slower drift + softer opacity — used inside the demo so the chapter
+   *  shell stays calm + easy to read/interact with. */
+  calm?: boolean;
 }) {
   const letters = React.useMemo(
-    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count),
-    [glyphs, seed, count],
+    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count, calm),
+    [glyphs, seed, count, calm],
   );
 
   return (

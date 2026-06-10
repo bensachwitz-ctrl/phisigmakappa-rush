@@ -482,11 +482,11 @@
 @keyframes aurora-a { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(6%,10%) scale(1.18);} 66%{transform:translate(-5%,5%) scale(0.92);} }
 @keyframes aurora-b { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-9%,7%) scale(1.22);} }
 @keyframes aurora-c { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(6%,-8%) scale(1.12);} }
-.animate-aurora-a{animation:aurora-a 20s ease-in-out infinite;}
-.animate-aurora-b{animation:aurora-b 24s ease-in-out infinite;}
-.animate-aurora-c{animation:aurora-c 28s ease-in-out infinite;}
+.animate-aurora-a{animation:aurora-a 32s ease-in-out infinite;}
+.animate-aurora-b{animation:aurora-b 38s ease-in-out infinite;}
+.animate-aurora-c{animation:aurora-c 44s ease-in-out infinite;}
 @keyframes grid-pan{from{background-position:0 0;}to{background-position:42px 42px;}}
-.animate-grid-pan{animation:grid-pan 8s linear infinite;}
+.animate-grid-pan{animation:grid-pan 14s linear infinite;}
 @keyframes sheen{to{transform:translateX(200%);}}
 /* Cross-screen Greek-letter background field — each letter travels horizontally
    from one side toward the other (large --dx in vw, small --dy wobble), centered

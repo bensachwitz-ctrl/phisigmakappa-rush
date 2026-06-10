@@ -53,6 +53,7 @@ import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress, cn } from "@/lib/uti
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
+import { GreekLetterField } from "@/components/site/greek-letter-field";
 
 export const dynamic = "force-dynamic";
 
@@ -345,8 +346,36 @@ export default async function ChapterLandingPage({
   const heroLead = cfg["hero.h1.lead"] || `${terms.recruit} starts`;
   const heroTail = cfg["hero.h1.tail"] || termLabelShort;
 
+  // Chapter glyph set for the page-wide drifting letter field — THIS chapter's
+  // own letters (e.g. "ΦΣΚ" + "ΓΤ"), de-duped. Falls back to a tasteful Greek
+  // sampler if a tenant hasn't set any, so the field always reads as "their
+  // letters" drifting behind the whole site (tinted to their brand --primary).
+  const chapterGlyphs = Array.from(
+    new Set(
+      `${identity.fraternityLetters || ""}${identity.greekLettersGlyphs || ""}`
+        .split("")
+        .filter((c) => c.trim()),
+    ),
+  );
+  const fieldGlyphs = chapterGlyphs.length ? chapterGlyphs : undefined;
+
   return (
-    <main id="main-content" className="min-h-screen bg-background">
+    <main id="main-content" className="relative min-h-screen overflow-x-clip">
+      {/* Furthest-back opaque page wash (fixed, -z-20) — replaces the old opaque
+          `bg-background` on <main> so the drifting letter field (-z-10) reads
+          BEHIND the content but ABOVE this base. */}
+      <div aria-hidden="true" className="fixed inset-0 -z-20 bg-background" />
+      {/* Page-wide drifting Greek-letter field — THIS chapter's own letters,
+          tinted to their brand --primary, behind ALL content (fixed, -z-10).
+          Calm drift so it reads as a serene brand texture, never distracting.
+          The hero keeps its own denser FloatingSymbols layer on top of this. */}
+      <GreekLetterField
+        glyphs={fieldGlyphs}
+        color="hsl(var(--primary))"
+        calm
+        count={30}
+        seed={0x3a7c91d5}
+      />
       {/* Brand-tinted scroll-progress bar pinned at the very top of the page.
           Tracks whole-document scroll; aria-hidden, transform-only. */}
       <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
