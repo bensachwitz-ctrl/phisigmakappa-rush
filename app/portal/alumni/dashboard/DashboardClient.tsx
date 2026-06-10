@@ -25,7 +25,6 @@ import {
   type LucideIcon,
   Plus,
   Award,
-  X,
   MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -2006,14 +2005,17 @@ export default function DashboardClient({
         </div>
       </div>
 
-      {/* VOUCH MODAL */}
-      {vouchingPnm && (
-        <div className="fixed inset-0 bg-maroon-950/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-maroon-100 w-full sm:max-w-md p-6 shadow-xl space-y-4">
-            <div>
-              <h3 className="text-lg font-bold text-maroon-900">Vouch for {vouchingPnm.name}</h3>
-              <p className="text-xs text-maroon-600">Provide a note explaining how you know this candidate and why they are a good fit.</p>
-            </div>
+      {/* VOUCH MODAL — Radix Dialog: role=dialog + aria-modal, Esc to close,
+          focus trap + restore, body scroll-lock, backdrop-click dismiss. */}
+      <Dialog open={!!vouchingPnm} onOpenChange={(o) => !o && !submittingVouch && setVouchingPnm(null)}>
+        {vouchingPnm && (
+          <DialogContent className="w-full sm:max-w-md gap-0 rounded-2xl border-maroon-100 bg-white p-6 text-left space-y-4">
+            <DialogHeader className="space-y-1 text-left">
+              <DialogTitle className="text-lg font-bold text-maroon-900">Vouch for {vouchingPnm.name}</DialogTitle>
+              <DialogDescription className="text-xs text-maroon-600">
+                Provide a note explaining how you know this candidate and why they are a good fit.
+              </DialogDescription>
+            </DialogHeader>
 
             <textarea
               value={vouchNote}
@@ -2043,33 +2045,34 @@ export default function DashboardClient({
                 {submittingVouch ? "Saving..." : "Save Vouch"}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
-      {/* JOB POSTING MODAL */}
-      {showPostJobModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-lg w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left animate-in fade-in duration-200">
+      {/* JOB POSTING MODAL — Radix Dialog: role=dialog + aria-modal, Esc to
+          close, focus trap + restore, scroll-lock, backdrop dismiss. */}
+      <Dialog
+        open={showPostJobModal}
+        onOpenChange={(o) => {
+          if (!o && !submittingJob) {
+            setShowPostJobModal(false);
+            setPostJobError(null);
+            setPostJobSuccess(false);
+          }
+        }}
+      >
+        {showPostJobModal && (
+          <DialogContent className="max-w-lg w-full gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
-                    Post Career Opportunity
-                  </span>
-                  <h3 className="font-extrabold text-maroon-900 text-lg leading-snug">Share Job or Internship</h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPostJobModal(false);
-                    setPostJobError(null);
-                    setPostJobSuccess(false);
-                  }}
-                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-500 hover:text-maroon-900 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <DialogHeader className="text-left">
+                <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                  Post Career Opportunity
+                </span>
+                <DialogTitle className="font-extrabold text-maroon-900 text-lg leading-snug">Share Job or Internship</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Share a job or internship opportunity with the chapter.
+                </DialogDescription>
+              </DialogHeader>
 
               {postJobSuccess ? (
                 <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
@@ -2214,9 +2217,9 @@ export default function DashboardClient({
                 </form>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* CONFIRM DIALOG (replaces window.confirm) */}
       <Dialog open={!!confirmState} onOpenChange={(o) => !confirmBusy && !o && setConfirmState(null)}>
@@ -2250,25 +2253,20 @@ export default function DashboardClient({
         </DialogContent>
       </Dialog>
 
-      {/* ANNOUNCEMENT DETAILS POPUP MODAL */}
-      {activeAnnouncement && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-xl w-full rounded-2xl border border-maroon-100 shadow-xl overflow-hidden animate-fade-in text-left">
+      {/* ANNOUNCEMENT DETAILS POPUP MODAL — Radix Dialog: role=dialog +
+          aria-modal, Esc to close, focus trap + restore, scroll-lock, backdrop
+          dismiss (Radix renders its own accessible close affordance). */}
+      <Dialog open={!!activeAnnouncement} onOpenChange={(o) => !o && setActiveAnnouncement(null)}>
+        {activeAnnouncement && (
+          <DialogContent className="max-w-xl w-full gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
-                    {activeAnnouncement.pinned ? "Pinned Announcement" : "Chapter Notice"}
-                  </span>
-                  <h3 className="font-extrabold text-maroon-900 text-lg leading-snug">{activeAnnouncement.title}</h3>
-                </div>
-                <button
-                  onClick={() => setActiveAnnouncement(null)}
-                  className="p-1 rounded-lg hover:bg-cream-50 text-maroon-50 hover:text-maroon-900 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <DialogHeader className="text-left pr-8">
+                <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
+                  {activeAnnouncement.pinned ? "Pinned Announcement" : "Chapter Notice"}
+                </span>
+                <DialogTitle className="font-extrabold text-maroon-900 text-lg leading-snug">{activeAnnouncement.title}</DialogTitle>
+                <DialogDescription className="sr-only">Announcement details and any attached poll.</DialogDescription>
+              </DialogHeader>
 
               <div className="text-xs text-maroon-700 leading-relaxed font-normal space-y-2 whitespace-pre-wrap">
                 {activeAnnouncement.body}
@@ -2299,7 +2297,7 @@ export default function DashboardClient({
                           }`}
                         >
                           <div
-                            className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-550 ${
+                            className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
                               isSelected ? "bg-maroon-200/25" : "bg-maroon-100/10"
                             }`}
                             style={{ width: `${pct}%` }}
@@ -2332,9 +2330,9 @@ export default function DashboardClient({
                 <span>{new Date(activeAnnouncement.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       <PublicFooter />
     </div>
