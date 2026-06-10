@@ -242,6 +242,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
   const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
     setToast({ message, type });
+    // Native shell only (no-op on web): fire a matching notification haptic so a
+    // success/error reads in the hand, not just the eye.
+    try {
+      window.GreekStackNative?.hapticNotify?.(type === "error" ? "error" : "success");
+    } catch {
+      /* ignore — web has no haptics */
+    }
   };
   useEffect(() => {
     if (toast) {
@@ -372,6 +379,22 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   useEffect(() => {
     if (!calloutDismissed) setCalloutVisible(true);
   }, [activeTab, calloutDismissed]);
+
+  // Native shell only (no-op on web): a selection tick when the member switches
+  // bottom-nav tabs, so the app feels native in-hand. Skips the very first mount
+  // (no tick on initial render).
+  const didMountTabHaptic = React.useRef(false);
+  useEffect(() => {
+    if (!didMountTabHaptic.current) {
+      didMountTabHaptic.current = true;
+      return;
+    }
+    try {
+      window.GreekStackNative?.hapticSelection?.();
+    } catch {
+      /* ignore — web has no haptics */
+    }
+  }, [activeTab]);
 
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [editPhone, setEditPhone] = useState("");
@@ -627,6 +650,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
     setAuthLoading(true);
     setError(null);
+    // Native shell only (no-op on web): a light tap confirms the primary action.
+    try {
+      window.GreekStackNative?.hapticImpact?.("light");
+    } catch {
+      /* ignore */
+    }
 
     if (isDemo) {
       setTimeout(() => {

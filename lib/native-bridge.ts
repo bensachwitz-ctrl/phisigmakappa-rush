@@ -394,6 +394,67 @@ export function isOffline(): boolean {
   return navigator.onLine === false;
 }
 
+// ── 5. Haptics (native tactile feedback) ─────────────────────────────────────
+//
+// Adds the small tap/selection feedback an iOS user expects from a native app
+// (tab switches, primary actions, success/error toasts). All no-ops on web, so
+// the existing /app client can call these unconditionally. We map our intents
+// onto the @capacitor/haptics API the native shell injects.
+
+type HapticStyle = 'light' | 'medium' | 'heavy';
+type HapticNotify = 'success' | 'warning' | 'error';
+
+/** Light/medium/heavy impact (e.g. button press). No-op on web. */
+export function hapticImpact(style: HapticStyle = 'light'): void {
+  if (!isNative()) return;
+  const H = plugin('Haptics');
+  if (!H) return;
+  try {
+    // ImpactStyle enum values are the capitalized strings ('Light'|'Medium'|'Heavy').
+    const map: Record<HapticStyle, string> = {
+      light: 'Light',
+      medium: 'Medium',
+      heavy: 'Heavy',
+    };
+    void H.impact?.({ style: map[style] });
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Selection tick (e.g. switching tabs / segmented controls). No-op on web. */
+export function hapticSelection(): void {
+  if (!isNative()) return;
+  const H = plugin('Haptics');
+  if (!H) return;
+  try {
+    // selectionStart()/selectionChanged()/selectionEnd() — a single changed tick
+    // is the right feel for a discrete tab tap.
+    void H.selectionStart?.();
+    void H.selectionChanged?.();
+    void H.selectionEnd?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Notification haptic for success/warning/error outcomes. No-op on web. */
+export function hapticNotify(type: HapticNotify = 'success'): void {
+  if (!isNative()) return;
+  const H = plugin('Haptics');
+  if (!H) return;
+  try {
+    const map: Record<HapticNotify, string> = {
+      success: 'Success',
+      warning: 'Warning',
+      error: 'Error',
+    };
+    void H.notification?.({ type: map[type] });
+  } catch {
+    /* ignore */
+  }
+}
+
 // ── Splash / status bar polish (native chrome) ───────────────────────────────
 
 /** Hide the native splash once the web client has booted. No-op on web. */
@@ -402,6 +463,24 @@ export async function hideSplash(): Promise<void> {
   const Splash = plugin('SplashScreen');
   try {
     await Splash?.hide?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Apply the dark-chrome status bar (light text) once native. The plugin config
+ * in capacitor.config.ts sets the initial style; this re-asserts it after the
+ * web client boots so a route that fiddled with the bar can't leave it wrong.
+ * No-op on web.
+ */
+export async function applyStatusBarStyle(): Promise<void> {
+  if (!isNative()) return;
+  const Bar = plugin('StatusBar');
+  if (!Bar) return;
+  try {
+    // Style.Dark => light text/icons (correct on the navy chrome).
+    await Bar.setStyle?.({ style: 'DARK' });
   } catch {
     /* ignore */
   }

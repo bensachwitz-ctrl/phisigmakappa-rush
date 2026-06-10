@@ -13,6 +13,10 @@ import {
   cacheLastView,
   readLastView,
   hideSplash,
+  applyStatusBarStyle,
+  hapticImpact,
+  hapticSelection,
+  hapticNotify,
   navigateToDeepLink,
   type NativeSession,
 } from "@/lib/native-bridge";
@@ -41,6 +45,10 @@ declare global {
       onSignedIn: () => void;
       cacheLastView: (snapshot: unknown) => Promise<void>;
       readLastView: () => Promise<{ at: number; data: unknown } | null>;
+      // Haptics — tactile feedback the client fires on taps/actions. No-ops on web.
+      hapticImpact: (style?: "light" | "medium" | "heavy") => void;
+      hapticSelection: () => void;
+      hapticNotify: (type?: "success" | "warning" | "error") => void;
       restoredSession?: NativeSession | null;
     };
   }
@@ -57,6 +65,9 @@ export default function NativeBridge() {
       onSignedIn: onSessionEstablished,
       cacheLastView,
       readLastView,
+      hapticImpact,
+      hapticSelection,
+      hapticNotify,
       restoredSession: null,
     };
 
@@ -110,7 +121,14 @@ export default function NativeBridge() {
         /* ignore */
       }
 
-      // 5) Drop the native splash now that the client is interactive.
+      // 5) Re-assert the dark-chrome status bar (light text on navy).
+      try {
+        await applyStatusBarStyle();
+      } catch {
+        /* ignore */
+      }
+
+      // 6) Drop the native splash now that the client is interactive.
       try {
         await hideSplash();
       } catch {
