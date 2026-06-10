@@ -1,0 +1,294 @@
+# Codemagic CI/CD — Greek Stack companion iOS app → TestFlight.
+#
+# Mirrors the proven DailyTool / Bar Crawl Golf pipeline. Greek Stack differs in
+# ONE way: it is a hosted Next.js SSR app, so the companion does NOT bundle a
+# static export — capacitor.config.ts points server.url at
+# https://greekstack.vercel.app/app and the native shell loads that. The build
+# here therefore just generates the iOS project from the bundled boot shell
+# (webDir: mobile-shell), signs it, archives it, and ships to TestFlight.
+#
+# Codemagic auto-detects this file at the repo root once the greek-stack GitHub
+# repo is connected. It defines one workflow that, on a `v*` git tag:
+#   1. Spins up a Mac Mini M2 runner
+#   2. npm ci  (installs @capacitor/* from package.json on the Mac)
+#   3. npx cap add ios   (generates ios/App/* from webDir: mobile-shell)
+#   4. npx cap sync ios  (installs native plugin pods: push, preferences, etc.)
+#   5. Sets MARKETING_VERSION from the tag (v1.2.3 → 1.2.3) + a monotonic build #
+#   6. Patches Info.plist (push entitlement note) + iPhone-only device family
+#   7. Imports the iOS Distribution cert (.p12) + provisioning profile
+#   8. Archives + exports the IPA with manual signing
+#   9. Uploads to App Store Connect → TestFlight Internal Testing
+#
+# Trigger: a git tag matching `v*` (e.g. `v1.0.0`). NO auto-deploy of the web app.
+#
+# REQUIRED Codemagic environment variable group `greekstack_ios` (Codemagic UI →
+# greek-stack → Environment variables → Add group). All marked Secret:
+#
+#   APP_STORE_CONNECT_KEY_IDENTIFIER   — ASC API key ID, 10 chars (e.g. ANZ67ZGPGR)
+#   APP_STORE_CONNECT_ISSUER_ID        — ASC API issuer UUID
+#   APP_STORE_CONNECT_PRIVATE_KEY_B64  — base64 of AuthKey_<KEYID>.p8
+#   IOS_DIST_P12_BASE64                — base64 of the iOS Distribution cert .p12
+#   IOS_DIST_P12_PASSWORD              — password for the .p12
+#   IOS_PROFILE_BASE64                 — base64 of the App Store .mobileprovision
+#   IOS_PROFILE_NAME                   — profile Name (e.g. "Greek Stack App Store")
+#   IOS_PROFILE_UUID                   — profile UUID
+#
+# The provisioning profile + App ID (com.greekstack.app) must have the Push
+# Notifications capability enabled in the Apple Developer portal, and an APNs
+# Auth Key (.p8) uploaded to App Store Connect, for push to function in TestFlight.
+
+workflows:
+  ios-testflight:
+    name: Greek Stack iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      groups:
+        - greekstack_ios
+      vars:
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.greekstack.app"
+      # Capacitor 8 (per @capacitor/cli 8.3.1 in package.json) requires Node >= 22.
+      node: 22
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+      cancel_previous_builds: true
+
+    integrations:
+      app_store_connect: codemagic
+
+    scripts:
+      - name: Install npm deps
+        script: |
+          npm ci
+
+      - name: "Add iOS platform (generate ios/App from webDir: mobile-shell)"
+        # The companion loads server.url at runtime, so there is no static export
+        # to build — `cap add ios` scaffolds the native project around the bundled
+        # boot shell. Idempotent: skip if the project already exists.
+        script: |
+          if [ ! -d ios/App/App.xcodeproj ]; then
+            npx cap add ios
+          fi
+
+      - name: Capacitor sync iOS (install plugin pods)
+        # Installs the native pods for @capacitor/push-notifications,
+        # @capacitor/preferences, @capacitor/app, splash-screen, status-bar, etc.
+        script: |
+          npx cap sync ios
+
+      - name: Set MARKETING_VERSION from tag + monotonic build number
+        # MARKETING_VERSION (CFBundleShortVersionString) comes from the v* tag
+        # that triggered the build: v1.2.3 → 1.2.3. CURRENT_PROJECT_VERSION
+        # (CFBundleVersion) uses Codemagic's monotonic counter (+100 offset so
+        # it never collides with any hand-set numbers already in ASC history).
+        # App Store Connect rejects a duplicate (short version + build) pair.
+        script: |
+          PBX="ios/App/App.xcodeproj/project.pbxproj"
+          # Derive marketing version from the tag, stripping a leading "v".
+          if [ -n "$CM_TAG" ]; then
+            MARKETING_VERSION="${CM_TAG#v}"
+          else
+            MARKETING_VERSION=$(node -p "require('./package.json').version")
+          fi
+          if [ -n "$CM_BUILD_NUMBER" ]; then
+            BUILD_NUMBER=$((CM_BUILD_NUMBER + 100))
+          else
+            BUILD_NUMBER=$(date +%s)
+          fi
+          echo "Setting MARKETING_VERSION=$MARKETING_VERSION CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+          if [ -f "$PBX" ]; then
+            # iPhone-only so ASC doesn't require iPad screenshots.
+            sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2"/TARGETED_DEVICE_FAMILY = 1/g' "$PBX"
+            sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $MARKETING_VERSION;/g" "$PBX"
+            sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" "$PBX"
+          fi
+
+      - name: Patch pbxproj for Manual signing on Release config
+        # `cap add ios` defaults to Automatic signing + "iPhone Developer" on
+        # Release — wrong for App Store archives. Flip Release to Manual +
+        # iPhone Distribution so xcodebuild honors PROVISIONING_PROFILE_SPECIFIER.
+        script: |
+          PBX="ios/App/App.xcodeproj/project.pbxproj"
+          if [ -f "$PBX" ]; then
+            perl -i -p0e 's{(/\* Release \*/.*?CODE_SIGN_STYLE = )Automatic;}{$1Manual;}s' "$PBX"
+            perl -i -p0e 's{(/\* Release \*/.*?CODE_SIGN_IDENTITY = )"iPhone Developer";}{$1"iPhone Distribution";}s' "$PBX"
+            grep -c 'CODE_SIGN_STYLE = Manual' "$PBX" \
+              | xargs -I{} echo "project.pbxproj: {} Manual signing references after patch"
+          fi
+
+      - name: Add Push Notifications entitlement
+        # Greek Stack registers for push (events/announcements), so the binary
+        # needs the aps-environment entitlement. cap add ios doesn't add it.
+        script: |
+          ENT="ios/App/App/App.entitlements"
+          if [ -f "$ENT" ]; then
+            /usr/libexec/PlistBuddy -c "Add :aps-environment string production" "$ENT" 2>/dev/null \
+              || /usr/libexec/PlistBuddy -c "Set :aps-environment production" "$ENT"
+          else
+            cat > "$ENT" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>aps-environment</key>
+            <string>production</string>
+          </dict>
+          </plist>
+          PLIST
+          fi
+          echo "--- App.entitlements ---"
+          cat "$ENT"
+
+      - name: Import iOS Distribution cert + install provisioning profile
+        script: |
+          set -e
+
+          # Validate required secrets.
+          for var in IOS_DIST_P12_BASE64 IOS_DIST_P12_PASSWORD \
+                     IOS_PROFILE_BASE64 IOS_PROFILE_NAME IOS_PROFILE_UUID \
+                     APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_ISSUER_ID \
+                     APP_STORE_CONNECT_PRIVATE_KEY_B64; do
+            eval "val=\${$var}"
+            if [ -z "$val" ]; then
+              echo "::error::Missing required env var: $var (add to greekstack_ios group)"
+              exit 1
+            fi
+          done
+
+          # 1. Decode the .p12.
+          P12_PATH=$(mktemp -t dist.XXXXXX.p12)
+          echo "$IOS_DIST_P12_BASE64" | base64 --decode > "$P12_PATH"
+
+          # 2. Temp keychain, import cert, set default.
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          KEYCHAIN_PATH="$HOME/Library/Keychains/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$P12_PATH" \
+            -P "$IOS_DIST_P12_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" \
+            "$HOME/Library/Keychains/login.keychain-db"
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+          echo "--- Codesigning identities ---"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          # 3. Install the existing provisioning profile.
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          PROFILE_FILE="$PROFILES_DIR/$IOS_PROFILE_UUID.mobileprovision"
+          echo "$IOS_PROFILE_BASE64" | base64 --decode > "$PROFILE_FILE"
+          PROFILE_PLIST=$(security cms -D -i "$PROFILE_FILE")
+          /usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<<"$PROFILE_PLIST"
+          /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<<"$PROFILE_PLIST"
+
+          # 4. Decode the App Store Connect API key for the upload step.
+          mkdir -p "$HOME/private_keys"
+          API_KEY_FILE="$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY_B64" | base64 --decode > "$API_KEY_FILE"
+          chmod 600 "$API_KEY_FILE"
+          head -1 "$API_KEY_FILE" \
+            | grep -E "^-----BEGIN (PRIVATE|EC PRIVATE) KEY-----$" \
+            || { echo "::error::API key file header check failed"; exit 1; }
+
+      - name: Archive + Export IPA (manual signing)
+        script: |
+          set -e
+
+          API_KEY_FILE="$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
+
+          TEAM_ID=$(security find-identity -v -p codesigning \
+            | grep -m1 "iPhone Distribution" \
+            | sed -E 's/.*\(([A-Z0-9]+)\).*/\1/')
+          if [ -z "$TEAM_ID" ]; then
+            echo "::error::Could not extract Team ID from keychain identity"
+            security find-identity -v -p codesigning
+            exit 1
+          fi
+          echo "Team ID: $TEAM_ID"
+
+          ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive"
+          IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
+          mkdir -p "$IPA_DIR"
+
+          xcodebuild \
+            -workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_FILE" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_NAME" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            archive
+
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '  <key>method</key><string>app-store</string>' \
+            "  <key>teamID</key><string>$TEAM_ID</string>" \
+            '  <key>uploadSymbols</key><true/>' \
+            '  <key>uploadBitcode</key><false/>' \
+            '  <key>compileBitcode</key><false/>' \
+            '  <key>signingStyle</key><string>manual</string>' \
+            '  <key>provisioningProfiles</key>' \
+            '  <dict>' \
+            "    <key>$BUNDLE_ID</key><string>$IOS_PROFILE_NAME</string>" \
+            '  </dict>' \
+            '</dict>' \
+            '</plist>' \
+            > /tmp/ExportOptions.plist
+          echo "--- ExportOptions.plist ---"
+          cat /tmp/ExportOptions.plist
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath "$IPA_DIR" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_FILE" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+
+          ls -la "$IPA_DIR"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      email:
+        recipients:
+          - bensachwitz@gmail.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        # Submit to TestFlight Internal Testing automatically. Apple takes
+        # ~15 min to process the build before it appears for testers.
+        submit_to_testflight: true
