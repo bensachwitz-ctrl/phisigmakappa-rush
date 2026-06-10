@@ -278,9 +278,13 @@ export function BrandGlyph({
 export function BrandGlyphIcon({
   name,
   className,
+  style,
 }: {
   name: BrandGlyphName | string;
   className?: string;
+  /** Inline style — e.g. `{ color }` to tint the glyph the chapter brand color
+   *  (the SVG strokes inherit currentColor). */
+  style?: React.CSSProperties;
 }) {
   const key = normalize(name);
   return (
@@ -293,6 +297,7 @@ export function BrandGlyphIcon({
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      style={style}
     >
       {PATHS[key]}
     </svg>

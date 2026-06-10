@@ -1,5 +1,6 @@
 import React from "react";
-import { Bell, ChevronDown, Pin, Sparkles, Mail, Phone, Briefcase, Vote, PieChart, QrCode, Gift, Palette } from "lucide-react";
+import { ChevronDown, Pin, Mail, Phone, Briefcase, Vote, PieChart, QrCode, Gift, Palette } from "lucide-react";
+import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import type { DemoContext } from "../context";
 
 export function renderFeedTab(ctx: DemoContext) {
@@ -66,7 +67,7 @@ export function renderFeedTab(ctx: DemoContext) {
                             opens a fully-interactive spotlight surface. */}
                         <div>
                           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-1.5">
-                            <Sparkles className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
+                            <BrandGlyphIcon name="letters" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
                           </h3>
                           <div className="grid grid-cols-4 gap-1.5">
                             {[
@@ -97,7 +98,7 @@ export function renderFeedTab(ctx: DemoContext) {
                         <div className="space-y-2">
                           <div className="flex items-center justify-between px-1">
                             <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                              <Bell className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> News & opportunities
+                              <BrandGlyphIcon name="announcements" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> News & opportunities
                             </h3>
                             {role === "brother" && (
                               <button
@@ -105,7 +106,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                 className="px-2 py-0.5 text-[11px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
-                                <Sparkles className="w-2.5 h-2.5" /> Post
+                                <BrandGlyphIcon name="announcements" className="w-2.5 h-2.5" /> Post
                               </button>
                             )}
                           </div>

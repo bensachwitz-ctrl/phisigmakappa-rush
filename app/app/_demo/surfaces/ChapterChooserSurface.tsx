@@ -1,5 +1,6 @@
 import React from "react";
-import { Search, ChevronRight, AlertCircle, Sparkles, Palette, ArrowRight, Wand2 } from "lucide-react";
+import { Search, ChevronRight, AlertCircle, Palette, ArrowRight, Wand2 } from "lucide-react";
+import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import {
   FRATERNITY_BRANDS,
   BRAND_PALETTE,
@@ -80,7 +81,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider"
             style={{ backgroundColor: customPrimary + "12", borderColor: customPrimary + "2a", color: customPrimary }}
           >
-            <Sparkles className="h-3.5 w-3.5" /> {overlay ? "Switch Chapter" : "Choose Chapter"}
+            <BrandGlyphIcon name="branding" className="h-3.5 w-3.5" /> {overlay ? "Switch Chapter" : "Choose Chapter"}
           </span>
           {overlay && (
             <button
@@ -249,7 +250,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               </div>
               <div className="min-w-0">
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: customPrimary }}>
-                  <Sparkles className="h-3 w-3" /> Tailored for you
+                  <BrandGlyphIcon name="branding" className="h-3 w-3" /> Tailored for you
                 </span>
                 <h3 className="mt-0.5 truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
                 <p className="truncate text-[12px] text-slate-500">{customSchool.trim() || "Your University"}</p>

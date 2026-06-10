@@ -1,5 +1,6 @@
 import React from "react";
-import { Bell, Pin, Check, X } from "lucide-react";
+import { Pin, Check, X } from "lucide-react";
+import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import type { DemoContext } from "../context";
 
 export function renderPostAnnModal(ctx: DemoContext) {
@@ -20,7 +21,7 @@ export function renderPostAnnModal(ctx: DemoContext) {
                   <div className="bg-white rounded-t-[32px] border-t border-slate-200 max-h-[85%] overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
-                        <Bell className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
+                        <BrandGlyphIcon name="announcements" className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
                         <h4 className="text-sm font-bold text-slate-955">Publish Announcement</h4>
                       </div>
                       <button
