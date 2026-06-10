@@ -1741,8 +1741,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                 </button>
               </div>
 
-              {/* Main Scrollable Viewport */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Main Scrollable Viewport — compact mobile density (p-3) so cards
+                  fit more on screen; a touch roomier on the lg+ showcase. */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 lg:p-4">
                 
                 {loading ? (
                   <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">

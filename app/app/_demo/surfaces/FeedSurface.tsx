@@ -16,36 +16,47 @@ export function renderFeedTab(ctx: DemoContext) {
     spotlight,
   } = ctx;
   return (
-                      <div className="space-y-4">
-                        {/* Welcome widget */}
+                      <div className="space-y-3">
+                        {/* Welcome widget — compact: avatar + name on one row, with
+                            standing/financials as inline chips instead of a tall block. */}
                         <div
-                          className="border p-4 rounded-3xl relative overflow-hidden"
+                          className="border p-3 rounded-2xl relative overflow-hidden"
                           style={{ background: `linear-gradient(to right, ${selectedBrand.primaryColor}12, ${selectedBrand.primaryColor}06, #ffffff)`, borderColor: `${selectedBrand.primaryColor}20` }}
                         >
-                          <h4 className="text-[12px] font-semibold text-slate-500">Welcome Back,</h4>
-                          <h2 className="mt-0.5 text-[20px] font-extrabold tracking-tight text-slate-900">
-                            {dashboardData?.profile?.name || "Member"}
-                          </h2>
-                          <p className="text-[12px] text-slate-500 mt-1 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedBrand.primaryColor }} />
-                            {role === "brother" 
-                              ? `${dashboardData?.profile?.position || "Active Member"} • ${dashboardData?.profile?.pledgeClass || "Brother"}` 
-                              : `Class of ${dashboardData?.profile?.graduationYear || "Alumnus"}`
-                            }
-                          </p>
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="flex h-10 w-10 shrink-0 select-none items-center justify-center rounded-xl text-[13px] font-bold text-white shadow-sm"
+                              style={{ backgroundColor: selectedBrand.primaryColor }}
+                            >
+                              {(dashboardData?.profile?.name || "M").split(" ").map((n: string) => n[0]).join("").substring(0, 2)}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-[11px] font-semibold leading-none text-slate-500">Welcome back</h4>
+                              <h2 className="mt-0.5 truncate text-[16px] font-extrabold leading-tight tracking-tight text-slate-900">
+                                {dashboardData?.profile?.name || "Member"}
+                              </h2>
+                              <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                                {role === "brother"
+                                  ? `${dashboardData?.profile?.position || "Active Member"} • ${dashboardData?.profile?.pledgeClass || "Brother"}`
+                                  : `Class of ${dashboardData?.profile?.graduationYear || "Alumnus"}`}
+                              </p>
+                            </div>
+                          </div>
 
                           {role === "brother" && dashboardData?.standing && (
-                            <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-                              <div>
-                                <span className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Chapter Standing</span>
-                                <div className="text-xs font-bold text-emerald-600 mt-0.5">{dashboardData.standing.standing}</div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Financials</span>
-                                <div className={`text-xs font-bold mt-0.5 ${dashboardData.profile?.duesPaid ? "text-emerald-600" : "text-amber-600 font-bold"}`}>
-                                  {dashboardData.profile?.duesPaid ? "Paid" : "Unpaid"}
-                                </div>
-                              </div>
+                            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {dashboardData.standing.standing}
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold ring-1 ${
+                                  dashboardData.profile?.duesPaid
+                                    ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                    : "bg-amber-50 text-amber-700 ring-amber-100"
+                                }`}
+                              >
+                                Dues {dashboardData.profile?.duesPaid ? "Paid" : "Unpaid"}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -54,48 +65,47 @@ export function renderFeedTab(ctx: DemoContext) {
                             showcases the WHOLE product, not just the 5 nav tabs. Each
                             opens a fully-interactive spotlight surface. */}
                         <div>
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-2">
-                            <Sparkles className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
+                          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-1.5">
+                            <Sparkles className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
                           </h3>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-4 gap-1.5">
                             {[
-                              { id: "elections" as const, label: "Elections", sub: "Secret ballot", Icon: Vote, show: role === "brother" },
-                              { id: "treasury" as const, label: "Treasury", sub: "Budgets", Icon: PieChart, show: role === "brother" },
-                              { id: "qr" as const, label: "QR check-in", sub: "Rush", Icon: QrCode, show: role === "brother" },
-                              { id: "giving" as const, label: "Give", sub: "Donations", Icon: Gift, show: true },
-                              { id: "theme" as const, label: "Branding", sub: "White-label", Icon: Palette, show: role === "brother" },
-                            ].filter((t) => t.show).map(({ id, label, sub, Icon }) => (
+                              { id: "elections" as const, label: "Elections", Icon: Vote, show: role === "brother" },
+                              { id: "treasury" as const, label: "Treasury", Icon: PieChart, show: role === "brother" },
+                              { id: "qr" as const, label: "Check-in", Icon: QrCode, show: role === "brother" },
+                              { id: "giving" as const, label: "Give", Icon: Gift, show: true },
+                              { id: "theme" as const, label: "Branding", Icon: Palette, show: role === "brother" },
+                            ].filter((t) => t.show).map(({ id, label, Icon }) => (
                               <button
                                 key={id}
                                 onClick={() => { setSpotlight(id); if (id === "giving") setDonationDone(false); }}
-                                className="press gs-glass flex min-h-[80px] flex-col items-center gap-1 rounded-2xl p-2.5 text-center transition hover:-translate-y-0.5"
+                                className="press gs-glass flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5"
                               >
                                 <span
-                                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
                                   style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                                 >
                                   <Icon className="h-4 w-4" />
                                 </span>
-                                <span className="text-[12px] font-bold leading-tight text-slate-800">{label}</span>
-                                <span className="text-[11px] uppercase leading-none tracking-wider text-slate-400">{sub}</span>
+                                <span className="text-[11px] font-bold leading-tight text-slate-700">{label}</span>
                               </button>
                             ))}
                           </div>
                         </div>
 
                         {/* Merged Timeline Feed */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex items-center justify-between px-1">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                              <Bell className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> News & Opportunity Feed
+                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                              <Bell className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> News & opportunities
                             </h3>
                             {role === "brother" && (
                               <button
                                 onClick={() => setShowPostAnnModal(true)}
-                                className="px-2.5 py-1 text-[11px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
+                                className="px-2 py-0.5 text-[11px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
-                                <Sparkles className="w-2.5 h-2.5" /> Post News
+                                <Sparkles className="w-2.5 h-2.5" /> Post
                               </button>
                             )}
                           </div>
@@ -104,34 +114,34 @@ export function renderFeedTab(ctx: DemoContext) {
                             combinedFeed.map((item: any) => {
                               const isExpanded = expandedAnnouncementId === item.id;
                               const isCareer = item.feedType === "career";
-                              
+
                               return (
                                 <div
                                   key={item.id}
                                   onClick={() => setExpandedAnnouncementId(isExpanded ? null : item.id)}
-                                  className="gs-glass cursor-pointer rounded-2xl p-4 transition-all hover:-translate-y-0.5"
-                                  style={item.pinned ? { borderLeft: `4px solid ${selectedBrand.primaryColor}` } : {}}
+                                  className="gs-glass cursor-pointer rounded-xl p-3 transition-all hover:-translate-y-0.5"
+                                  style={item.pinned ? { borderLeft: `3px solid ${selectedBrand.primaryColor}` } : {}}
                                 >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="space-y-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
                                       <div className="flex items-center gap-1.5 flex-wrap">
                                         {isCareer ? (
-                                          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded">
-                                            <Briefcase className="w-2.5 h-2.5" /> Career Post
+                                          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0 rounded">
+                                            <Briefcase className="w-2.5 h-2.5" /> Career
                                           </span>
                                         ) : (
                                           item.pinned && (
-                                            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded">
+                                            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0 rounded">
                                               <Pin className="w-2.5 h-2.5" /> Pinned
                                             </span>
                                           )
                                         )}
-                                        <h4 className="text-xs font-bold text-slate-900">
-                                          {isCareer ? item.title : item.title}
+                                        <h4 className="text-[13px] font-bold leading-tight text-slate-900">
+                                          {item.title}
                                         </h4>
                                       </div>
-                                      <span className="text-[11px] text-slate-400 block">
-                                        Posted by {item.postedByName || item.authorName} ({item.postedByRole || item.authorRole})
+                                      <span className="mt-0.5 block text-[11px] text-slate-400">
+                                        {item.postedByName || item.authorName} · {item.postedByRole || item.authorRole}
                                       </span>
                                     </div>
                                     <span className="text-[11px] text-slate-400 shrink-0">
@@ -139,7 +149,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                     </span>
                                   </div>
 
-                                  <div className={`text-[11px] text-slate-600 mt-2.5 leading-relaxed ${
+                                  <div className={`text-[12px] text-slate-600 mt-1.5 leading-snug ${
                                     isExpanded ? "" : "line-clamp-2"
                                   }`}>
                                     {item.description || item.body}
@@ -183,9 +193,9 @@ export function renderFeedTab(ctx: DemoContext) {
                                     </div>
                                   )}
 
-                                  <div className="flex items-center justify-end text-[11px] text-slate-400 mt-2">
+                                  <div className="flex items-center justify-end text-[11px] text-slate-400 mt-1">
                                     <span className="flex items-center gap-0.5">
-                                      {isExpanded ? "Collapse" : "Expand"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                      {isExpanded ? "Less" : "More"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                     </span>
                                   </div>
                                 </div>
