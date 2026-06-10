@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { getSubdomain } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { AnimatedBackground } from "@/components/ui/animated-background";
+import { GreekLetterField } from "@/components/site/greek-letter-field";
 import OnboardWizard from "./onboard-wizard";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,11 @@ export default async function OnboardPage() {
       tone="platform"
       className="min-h-screen bg-slate-950 text-slate-100"
     >
+      {/* Drifting Greek-letter field behind the wizard — light-blue tint so the
+          letters read on the dark aurora wash. Shares the -z-10 plane with the
+          aurora layer (paints above it in tree order, below the wizard cards);
+          static-but-visible under prefers-reduced-motion via the field's CSS. */}
+      <GreekLetterField position="absolute" color="#93c5fd" count={26} calm />
       <main className="flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-6xl">
           <OnboardWizard />
