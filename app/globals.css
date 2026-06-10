@@ -79,6 +79,12 @@
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    /* Clip horizontal overhang from decorative 3D-tilt / will-change cards and
+       offscreen ambient orbs so they never produce a phantom horizontal
+       scrollbar at any breakpoint. `clip` (not `hidden`) is sticky-safe — it
+       does not create a scroll container, so `position: sticky` headers/rails
+       keep working. Vertical scrolling is unaffected. */
+    overflow-x: clip;
   }
   /* H1 ships heavier than H2 so the size+weight pair gives unambiguous
      hierarchy even at small breakpoints where the size diff alone is
