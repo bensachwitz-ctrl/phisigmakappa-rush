@@ -79,6 +79,83 @@ export function normalizePlan(plan: string | null | undefined): PlatformPlan {
   return "monthly";
 }
 
+// ── Brand identity for invoices / receipts / statements ──────────────────────
+// Greek Stack is the BILLING ENTITY the chapter pays (the customer is always the
+// chapter). These strings make every Stripe-issued invoice, hosted invoice page,
+// and card statement read as a professional "Greek Stack" charge. The account-
+// level logo + legal business name still come from the Stripe Dashboard (the
+// restricted API key can't set those — see STRIPE-BRANDING-TODO.md); these
+// session-level fields are everything the API CAN brand and are applied on every
+// checkout flow for consistency.
+export const GREEKSTACK_BRAND_NAME = "Greek Stack";
+export const GREEKSTACK_SITE = "greekstack.vercel.app";
+export const GREEKSTACK_SITE_URL = "https://greekstack.vercel.app";
+export const GREEKSTACK_SUPPORT_EMAIL = "bensachwitz@gmail.com";
+
+/**
+ * Footer line shown on every Greek Stack-issued invoice (PDF + hosted page).
+ * Carries the brand, the site, and a support contact so a treasurer who opens
+ * the invoice months later knows exactly who charged them and where to get help.
+ */
+export function platformInvoiceFooter(): string {
+  return `Greek Stack · ${GREEKSTACK_SITE_URL} · Questions? ${GREEKSTACK_SUPPORT_EMAIL}`;
+}
+
+/**
+ * `invoice_settings` for a SUBSCRIPTION checkout — issues the invoice from the
+ * platform's own Stripe account ("self") so the account-level Greek Stack
+ * branding (logo + business name set in the Dashboard) is applied, and stamps
+ * the branded footer. Safe to spread into `subscription_data`.
+ */
+export function platformSubscriptionInvoiceSettings(): NonNullable<
+  Stripe.Checkout.SessionCreateParams["subscription_data"]
+>["invoice_settings"] {
+  return {
+    issuer: { type: "self" },
+  };
+}
+
+/**
+ * `invoice_creation` block for a PAYMENT-mode checkout (one-off charges like the
+ * member dues flow). Enables a real Stripe invoice for the payment, branded with
+ * the Greek Stack footer + a human description. `descriptionText` lets the caller
+ * pass a per-charge line (e.g. "Chapter dues — Spring '26"); falls back to a
+ * generic Greek Stack line.
+ */
+export function platformInvoiceCreation(
+  descriptionText?: string,
+): NonNullable<Stripe.Checkout.SessionCreateParams["invoice_creation"]> {
+  return {
+    enabled: true,
+    invoice_data: {
+      description: (descriptionText || "Paid via Greek Stack").trim(),
+      footer: platformInvoiceFooter(),
+    },
+  };
+}
+
+/**
+ * The human-readable description Stripe stamps onto the SUBSCRIPTION'S invoices
+ * (shown on the invoice PDF + hosted page). Reads "Greek Stack platform
+ * subscription — <Chapter>" so the chapter sees a professional, self-identifying
+ * line item. `chapterName` is the chapter's display name (the customer);
+ * fall back to a generic line when unknown.
+ */
+export function platformSubscriptionDescription(
+  plan: string | null | undefined,
+  chapterName?: string | null,
+): string {
+  const who = (chapterName || "").trim();
+  const base = `Greek Stack platform subscription`;
+  const planWord =
+    normalizePlan(plan) === "yearly"
+      ? " (annual)"
+      : normalizePlan(plan) === "semester"
+        ? " (semester)"
+        : " (monthly)";
+  return who ? `${base}${planWord} — ${who}` : `${base}${planWord}`;
+}
+
 // ── Per-plan price + presentation ────────────────────────────────────────────
 
 export const PLATFORM_PLAN_CURRENCY = "usd";
@@ -304,22 +381,55 @@ export function rushCycleBillable(plan: string | null | undefined): boolean {
  * trial. The semester plan never trials. `neverSubscribed` gates the trial so a
  * chapter that already trialed/canceled doesn't get a fresh free month on
  * re-subscribe.
+ *
+ * INVOICE BRANDING: also stamps a professional Greek Stack `description` (shown
+ * on every invoice for this subscription) naming the chapter, and issues the
+ * invoice from the platform's own account ("self") so the Dashboard-set Greek
+ * Stack logo + business name appear. `chapterName` is the chapter's display name
+ * (the customer); omitted → a generic Greek Stack line.
  */
 export function platformSubscriptionData(args: {
   plan: SubscriptionPlan;
   subdomain: string;
   neverSubscribed: boolean;
+  chapterName?: string | null;
 }): NonNullable<Stripe.Checkout.SessionCreateParams["subscription_data"]> {
-  const { plan, subdomain, neverSubscribed } = args;
+  const { plan, subdomain, neverSubscribed, chapterName } = args;
   const data: NonNullable<
     Stripe.Checkout.SessionCreateParams["subscription_data"]
   > = {
     metadata: { subdomain, plan },
+    description: platformSubscriptionDescription(plan, chapterName),
+    invoice_settings: platformSubscriptionInvoiceSettings(),
   };
   if (plan === "monthly" && neverSubscribed) {
     data.trial_period_days = PLATFORM_TRIAL_DAYS;
   }
   return data;
+}
+
+/**
+ * Custom fields for a platform-billing Checkout — a single "Chapter name" text
+ * field pre-filled with the chapter's display name. It surfaces the chapter on
+ * the Checkout page (so a treasurer paying on behalf of the chapter sees exactly
+ * which chapter they're paying for) and lands on the resulting payment/invoice
+ * for the chapter's own records. Read-only intent: pre-filled, optional.
+ */
+export function platformCheckoutCustomFields(
+  chapterName?: string | null,
+): NonNullable<Stripe.Checkout.SessionCreateParams["custom_fields"]> {
+  const who = (chapterName || "").trim();
+  return [
+    {
+      key: "chapter",
+      label: { type: "custom", custom: "Chapter" },
+      type: "text",
+      optional: true,
+      ...(who
+        ? { text: { default_value: who.slice(0, 255) } }
+        : {}),
+    },
+  ];
 }
 
 /**

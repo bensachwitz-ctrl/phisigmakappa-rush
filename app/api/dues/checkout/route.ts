@@ -96,6 +96,12 @@ export async function POST(req: Request) {
   const passThrough = cfg["dues.passThroughFee"] === "true";
   const totalCents = passThrough ? applyPassThrough(baseAmount) : baseAmount;
   const label = cfg["dues.label"] || "Chapter dues";
+  // Chapter display name for a professional, self-identifying invoice line +
+  // statement descriptor. Falls back to a generic label when unset so a fresh
+  // chapter never ships an empty invoice description.
+  const chapterName =
+    (cfg["chapter.fraternityName"] || "").trim() ||
+    (cfg["chapter.fraternityShort"] || "").trim();
 
   // Already paid? Short-circuit.
   const existing = await prisma.duesPayment.findFirst({
@@ -174,6 +180,14 @@ export async function POST(req: Request) {
     },
   };
 
+  // A human-readable charge description shown on the PaymentIntent + receipt +
+  // (when issued) the invoice. Reads as the chapter's dues with Greek Stack
+  // credited. Statement-descriptor suffix is what the member sees on their card
+  // statement (≤22 chars total with the account prefix; suffix kept short).
+  const duesPiDescription = chapterName
+    ? `${label} — ${chapterName} (${year})`
+    : `${label} (${year})`;
+
   // PLATFORM PLAN — the chapter's OWN subscription model TO Greekstack, read from
   // the central registry (public."Tenant"), NOT the tenant SiteConfig. Only the
   // "dues_percentage" plan layers a Greekstack share onto the dues Connect fee
@@ -201,6 +215,8 @@ export async function POST(req: Request) {
     const destination = getConnectAccountId(cfg);
     const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
       transfer_data: { destination },
+      // Branded charge description carried to the connected account's receipt.
+      description: duesPiDescription,
     };
     // Optional admin-configured platform application fee. Applied when an admin
     // set a positive dues.platformFeePct; otherwise 0 (legacy default).
@@ -219,6 +235,28 @@ export async function POST(req: Request) {
       if (fee > 0) piData.application_fee_amount = fee;
     }
     sessionParams.payment_intent_data = piData;
+    // NOTE: we deliberately do NOT enable invoice_creation on destination charges
+    // — the connected chapter account owns its own receipts/invoices, and mixing
+    // a platform-issued invoice with a destination transfer muddies the chapter's
+    // books. The PaymentIntent description above + Stripe's emailed card receipt
+    // are the member-facing record in that mode.
+  } else {
+    // PLATFORM-COLLECT (default): issue a real, professional Stripe invoice (PDF +
+    // hosted page) so the member gets a proper receipt that reads as the chapter's
+    // dues with a tasteful "Powered by Greek Stack" footer — and stamp a branded
+    // charge description + a short card-statement suffix.
+    sessionParams.payment_intent_data = {
+      description: duesPiDescription,
+      statement_descriptor_suffix: "DUES",
+    };
+    sessionParams.invoice_creation = {
+      enabled: true,
+      invoice_data: {
+        description: duesPiDescription,
+        footer: "Powered by Greek Stack · greekstack.vercel.app",
+        metadata: { brotherId: brother.id, duesYear: year },
+      },
+    };
   }
 
   // Stamp the platform plan + intro-fee state into the Checkout metadata so the

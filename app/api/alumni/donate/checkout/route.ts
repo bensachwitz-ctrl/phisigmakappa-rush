@@ -205,10 +205,17 @@ export async function POST(req: Request) {
     // sessionParams is left unchanged and the platform collects (exact legacy
     // behavior). An optional platform fee comes from dues.platformFeePct only
     // when an admin set a positive value (default: no fee).
+    const donationChapter =
+      (cfg["chapter.fraternityShort"] || cfg["chapter.fraternityName"] || "").trim();
+    const donationDescription = donationChapter
+      ? `Donation to ${donationChapter} — ${campaign}`
+      : `Chapter donation — ${campaign}`;
+
     if (isConnectChargesReady(cfg)) {
       const destination = getConnectAccountId(cfg);
       const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
         transfer_data: { destination },
+        description: donationDescription,
       };
       const feePct = parseFloat(cfg["dues.platformFeePct"] || "0");
       if (Number.isFinite(feePct) && feePct > 0) {
@@ -216,6 +223,21 @@ export async function POST(req: Request) {
         if (fee > 0) piData.application_fee_amount = fee;
       }
       sessionParams.payment_intent_data = piData;
+    } else {
+      // PLATFORM-COLLECT: issue a branded receipt invoice + charge description so
+      // the donor gets a professional record, with Greek Stack credited politely.
+      sessionParams.payment_intent_data = {
+        description: donationDescription,
+        statement_descriptor_suffix: "DONATION",
+      };
+      sessionParams.invoice_creation = {
+        enabled: true,
+        invoice_data: {
+          description: donationDescription,
+          footer: "Powered by Greek Stack · greekstack.vercel.app",
+          metadata: { alumniId, campaign },
+        },
+      };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

@@ -11,6 +11,7 @@ import {
   normalizePlan,
   platformLineItem,
   platformSubscriptionData,
+  platformCheckoutCustomFields,
   getOrCreatePlatformCustomer,
   billingReturnOrigin,
 } from "@/lib/platform-billing";
@@ -173,6 +174,10 @@ export async function POST(req: Request) {
       .catch(() => {});
   }
 
+  // The chapter's display name is the Stripe customer — surfaced on the invoice
+  // and pre-filled into the Checkout "Chapter" custom field.
+  const chapterName = tenant?.name ?? subdomain;
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     customer: customerId,
@@ -184,7 +189,15 @@ export async function POST(req: Request) {
     // resulting subscription/invoice back to THIS chapter's registry row; plan is
     // a label. Stamp both on the session AND the subscription so either resolves.
     metadata: { subdomain, plan },
-    subscription_data: platformSubscriptionData({ plan, subdomain, neverSubscribed }),
+    // Professional Greek Stack invoice: chapter-named description + self-issued
+    // invoice (Dashboard logo/business name) + branded footer on every renewal.
+    subscription_data: platformSubscriptionData({ plan, subdomain, neverSubscribed, chapterName }),
+    // Show + record which chapter is paying (pre-filled, optional).
+    custom_fields: platformCheckoutCustomFields(chapterName),
+    // Let the payer correct the billing name/address; keeps the customer record
+    // (the chapter) clean and accurate on the invoice.
+    customer_update: { name: "auto", address: "auto" },
+    billing_address_collection: "auto",
   };
 
   let session: Stripe.Checkout.Session;

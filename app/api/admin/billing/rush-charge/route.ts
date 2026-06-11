@@ -8,6 +8,8 @@ import {
   normalizePlan,
   rushCycleBillable,
   platformRushChargeLineItem,
+  platformCheckoutCustomFields,
+  platformSubscriptionInvoiceSettings,
   getOrCreatePlatformCustomer,
   billingReturnOrigin,
   PLATFORM_RUSH_CYCLE_PRICE_CENTS,
@@ -124,6 +126,11 @@ export async function POST(req: Request) {
 
   const origin = billingReturnOrigin(host);
 
+  const chapterName = tenant?.name ?? subdomain;
+  const rushDescription = chapterName
+    ? `Greek Stack rush cycle (each semester) — ${chapterName}`
+    : "Greek Stack rush cycle (each semester)";
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "subscription",
     customer: customerId,
@@ -134,7 +141,15 @@ export async function POST(req: Request) {
     // the main $50/mo platform subscription — the webhook SKIPS rush_cycle
     // objects so they never overwrite the chapter's plan/status mirror.
     metadata: { subdomain, kind: "rush_cycle" },
-    subscription_data: { metadata: { subdomain, kind: "rush_cycle" } },
+    // Branded, chapter-named invoice for the rush-cycle subscription.
+    subscription_data: {
+      metadata: { subdomain, kind: "rush_cycle" },
+      description: rushDescription,
+      invoice_settings: platformSubscriptionInvoiceSettings(),
+    },
+    custom_fields: platformCheckoutCustomFields(chapterName),
+    customer_update: { name: "auto", address: "auto" },
+    billing_address_collection: "auto",
   };
 
   let session: Stripe.Checkout.Session;
