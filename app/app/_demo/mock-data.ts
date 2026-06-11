@@ -120,12 +120,17 @@ export function brandSecondary(b: Pick<FraternityBrand, "primaryColor" | "second
   return shiftHue(b.primaryColor, 28, 0.92);
 }
 
-/** Split a chapter's Greek-letter string into individual glyphs for the drifting
- *  letter field — keeps only real Greek letters, de-duplicating is intentionally
- *  avoided so "ΦΣΚ" rains all three. Falls back to a generic set when empty. */
+/** Split a chapter's Greek-letter string into glyphs for the drifting letter
+ *  field: every individual letter PLUS the chapter's joined monogram (owner
+ *  round-8: single Greek letters and the frat's letters drift TOGETHER — "Φ",
+ *  "Σ", "Κ" and "ΦΣΚ" all cross the screen). De-duplicating singles is
+ *  intentionally avoided so "ΦΣΚ" rains all three. Falls back to a generic
+ *  set when empty. NOTE: index 0 is always a single letter
+ *  (pledgeClassFromBrand depends on it). */
 export function glyphsFromBrand(letters: string | undefined): string[] {
   const greek = (letters || "").match(/[Ͱ-Ͽἀ-῿]/g) || [];
-  return greek.length ? greek : ["Φ", "Σ", "Κ"];
+  if (!greek.length) return ["Φ", "Σ", "Κ", "ΦΣΚ"];
+  return greek.length > 1 ? [...greek, greek.join("")] : greek;
 }
 
 /** Darken a hex color toward black by `amt` (0–1) — used to derive a hover tone

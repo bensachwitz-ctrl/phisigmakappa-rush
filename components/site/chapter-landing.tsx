@@ -349,16 +349,26 @@ export default async function ChapterLandingPage({
   const heroTail = cfg["hero.h1.tail"] || termLabelShort;
 
   // Chapter glyph set for the page-wide drifting letter field — THIS chapter's
-  // own letters (e.g. "ΦΣΚ" + "ΓΤ"), de-duped. Falls back to a tasteful Greek
-  // sampler if a tenant hasn't set any, so the field always reads as "their
-  // letters" drifting behind the whole site (tinted to their brand --primary).
-  const chapterGlyphs = Array.from(
+  // own single letters PLUS their joined monograms (owner round-8: letters and
+  // Greek letters drift TOGETHER per frat — "Φ", "Σ", "Κ" and "ΦΣΚ"/"ΓΤ" all
+  // cross the screen). Falls back to a tasteful Greek sampler if a tenant
+  // hasn't set any, so the field always reads as "their letters" drifting
+  // behind the whole site (tinted to their brand --primary).
+  const singleGlyphs = Array.from(
     new Set(
       `${identity.fraternityLetters || ""}${identity.greekLettersGlyphs || ""}`
         .split("")
         .filter((c) => c.trim()),
     ),
   );
+  const monogramGlyphs = Array.from(
+    new Set(
+      [identity.fraternityLetters, identity.greekLettersGlyphs]
+        .map((s) => (s || "").trim())
+        .filter((s) => s.length > 1),
+    ),
+  );
+  const chapterGlyphs = [...singleGlyphs, ...monogramGlyphs];
   const fieldGlyphs = chapterGlyphs.length ? chapterGlyphs : undefined;
 
   return (
