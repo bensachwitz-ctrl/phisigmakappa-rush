@@ -2461,7 +2461,7 @@ function PlanCard({ plan }: { plan: Plan }) {
       </div>
       <div className="relative mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.07] px-3 py-1.5 text-[13px] font-medium text-blue-800">
         {plan.billing ? (
-          <IconFreeTag className="h-4 w-4 text-blue-700" accent="#f59e0b" />
+          <IconFreeTag className="h-4 w-4 text-blue-700" accent="#0ea5e9" />
         ) : (
           <IconCheckCircle className="h-4 w-4 text-blue-600" />
         )}
@@ -2494,7 +2494,7 @@ function PlanCard({ plan }: { plan: Plan }) {
               </span>
             </div>
             {/* Yearly — the better-value option, accented. */}
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-500/40 bg-gradient-to-r from-blue-500/[0.10] to-amber-400/[0.10] px-3.5 py-2.5 ring-1 ring-blue-500/15">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-500/40 bg-gradient-to-r from-blue-500/[0.10] to-sky-400/[0.12] px-3.5 py-2.5 ring-1 ring-blue-500/15">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-bold tracking-tight text-foreground">
                   {plan.billing.yearly.price}
@@ -2822,7 +2822,15 @@ function FinalCta() {
                   </Button>
                 </ShimmerBorder>
               </Magnetic>
-              <Button asChild variant="glass" size="xl" className="w-full max-[400px]:px-5">
+              {/* Crisp white/blue glass — explicit fill so the translucent
+                  button can never pick up an off-brand tint from whatever
+                  drifts behind it (owner round-9: it read cream/beige). */}
+              <Button
+                asChild
+                variant="glass"
+                size="xl"
+                className="w-full max-[400px]:px-5 border-blue-200/80 bg-white/70 font-semibold text-blue-800 hover:border-blue-300/80 hover:bg-white/85 hover:text-blue-900"
+              >
                 <Link href="/contact#book" className="group/btn">
                   <IconBookCall className="h-5 w-5" />
                   Book a call

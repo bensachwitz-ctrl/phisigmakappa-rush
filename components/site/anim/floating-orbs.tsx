@@ -24,12 +24,15 @@ const DEFAULT_ORB_LAYOUT: Omit<Orb, "bg">[] = [
   { className: "left-[28%] bottom-[-12rem] h-[30rem] w-[30rem]", amp: 30, dur: 19, delay: 0.6 },
 ];
 
-/* The Greekstack platform palette (royal blue → sky → gold). Used when no
-   `colors` prop is supplied, so marketing-landing renders in brand colors. */
+/* The Greekstack platform palette (royal blue → sky → navy). Used when no
+   `colors` prop is supplied, so marketing-landing renders in brand colors.
+   Owner round-9: the old gold third orb washed nearby glass surfaces (the
+   final-CTA secondary button) a murky cream/beige — the ambient ramp is now
+   strictly white/blue/navy; gold lives only in thin accent lines. */
 const DEFAULT_ORB_COLORS = [
   "rgba(37,99,235,0.55)",
   "rgba(56,189,248,0.42)",
-  "rgba(245,158,11,0.38)",
+  "rgba(30,64,175,0.40)",
 ];
 
 /* The soft-edged radial used for each orb: focal point + transparent fade stop.

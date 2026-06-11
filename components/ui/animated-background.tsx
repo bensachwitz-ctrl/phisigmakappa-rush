@@ -10,7 +10,7 @@ type Tone = "platform" | "brand";
  * is auto-disabled under prefers-reduced-motion (see globals.css). Decorative,
  * so the layer is aria-hidden + pointer-events-none.
  *
- * tone="platform" → Greekstack royal blue / sky / gold (apex marketing + signup).
+ * tone="platform" → Greekstack royal blue / sky / navy (apex marketing + signup).
  * tone="brand"    → the current chapter's primary color (per-tenant heroes).
  */
 export function AnimatedBackground({
@@ -31,7 +31,7 @@ export function AnimatedBackground({
           "bg-[hsl(var(--primary)/0.28)]",
           "bg-[hsl(var(--primary)/0.20)]",
         ]
-      : ["bg-[#2563eb]/40", "bg-[#38bdf8]/30", "bg-[#f59e0b]/25"];
+      : ["bg-[#2563eb]/40", "bg-[#38bdf8]/30", "bg-[#1e40af]/25"];
 
   const showAurora = variant === "aurora" || variant === "aurora-grid";
   const showGrid = variant === "grid" || variant === "aurora-grid";
