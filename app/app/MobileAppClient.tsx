@@ -1464,16 +1464,16 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         }}
       />
 
-      {/* Chapter IDENTITY in the room itself — huge faint school wordmark +
-          letter monogram + crest watermark behind everything, tinted to the
-          chapter's colors. Re-keyed per tenant so a reskin cross-fades the
-          whole backdrop to the new school/crest along with the letter field
-          (the "tailored to YOU" moment). Static — zero continuous motion. */}
+      {/* Chapter IDENTITY in the room itself — drifting school wordmark up
+          top, letter monogram low-left, and the school name rendered BIG in
+          the bottom-right corner, all tinted to the chapter's colors.
+          Re-keyed per tenant so a reskin cross-fades the whole backdrop to
+          the new school along with the letter field (the "tailored to YOU"
+          moment). Static — zero continuous motion. */}
       <ChapterIdentityBackdrop
         key={selectedTenant ? `${selectedTenant.id}-${selectedBrand.id}` : "none"}
         school={selectedTenant?.school}
         letters={selectedBrand.letters}
-        crestEmoji={selectedBrand.crestEmoji}
         primary={brandPrimary}
         secondary={brandSecond}
       />

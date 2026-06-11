@@ -22,13 +22,11 @@ import React from "react";
 export function ChapterIdentityBackdrop({
   school,
   letters,
-  crestEmoji,
   primary,
   secondary,
 }: {
   school?: string | null;
   letters?: string | null;
-  crestEmoji?: string | null;
   primary: string;
   secondary: string;
 }) {
@@ -68,10 +66,18 @@ export function ChapterIdentityBackdrop({
           {letters}
         </p>
       ) : null}
-      {/* Crest watermark — low-right, gently tilted. */}
-      {crestEmoji ? (
-        <p className="absolute -bottom-[4%] -right-[2%] rotate-[-8deg] text-[clamp(9rem,30vh,19rem)] leading-none opacity-[0.08]">
-          {crestEmoji}
+      {/* School wordmark BIG — bottom-right corner (owner round-9: the old
+          murky shield-emoji watermark was unreadable slop; the school NAME,
+          rendered huge and chapter-tinted like a stadium wall, is the
+          identity moment). Right-anchored so a long name crops cleanly off
+          the left edge — the tail of the name always stays legible in the
+          corner. Swaps with the rest of the backdrop on reskin (re-keyed). */}
+      {school ? (
+        <p
+          className="absolute -bottom-[1%] right-[-0.25%] whitespace-nowrap text-right font-serif text-[clamp(3.25rem,15vh,8.5rem)] font-black uppercase leading-[0.82] tracking-tight"
+          style={{ color: inkPrimary, opacity: 0.15 }}
+        >
+          {school}
         </p>
       ) : null}
     </div>

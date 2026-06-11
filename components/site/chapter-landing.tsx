@@ -407,10 +407,16 @@ export default async function ChapterLandingPage({
             </p>
           </div>
         )}
-        <Crest
-          className="absolute -bottom-20 -right-14 h-[42vh] w-[42vh] rotate-[-8deg] text-[hsl(var(--primary))] opacity-[0.05]"
-          aria-hidden="true"
-        />
+        {/* School name BIG — bottom-right corner (owner round-9: the old
+            murky corner-crest watermark was unreadable; the school's own
+            name, huge and brand-tinted like a stadium wall, is the identity
+            moment). Right-anchored so a long name crops cleanly off the left
+            edge; swaps per-tenant on reskin like everything else here. */}
+        {(identity.schoolShort || identity.schoolName) && (
+          <p className="absolute -bottom-[1vh] right-[-0.25vw] whitespace-nowrap text-right font-serif text-[clamp(3.5rem,16vh,9.5rem)] font-black uppercase leading-[0.82] tracking-tight text-[hsl(var(--primary))] opacity-[0.07]">
+            {identity.schoolShort || identity.schoolName}
+          </p>
+        )}
       </div>
       {/* CONTENT layer (z-2) — everything below paints ABOVE the z-1 letter
           field + identity watermarks, so letters drift over the page color but
