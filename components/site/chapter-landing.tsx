@@ -388,11 +388,11 @@ export default async function ChapterLandingPage({
         count={30}
         seed={0x3a7c91d5}
       />
-      {/* Ambient chapter-identity layer — the SCHOOL wordmark and the
-          chapter's brand-tinted crest watermark, on the same z-1 plane as the
-          letter field (above the z-0 base, below the z-2 content). The hero's
-          own opaque layers cover it up top, so it reads through the open
-          mid-page sections. */}
+      {/* Ambient chapter-identity layer — the SCHOOL wordmark drifting across
+          the top and the school name rendered big in the bottom-right corner,
+          on the same z-1 plane as the letter field (above the z-0 base, below
+          the z-2 content). The hero's own opaque layers cover it up top, so it
+          reads through the open mid-page sections. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[1] select-none overflow-hidden">
         {/* School wordmark — smaller + drifting across the page (owner
             round-8), so the school identity is plainly visible in the open
