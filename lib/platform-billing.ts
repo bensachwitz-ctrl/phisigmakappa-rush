@@ -14,8 +14,9 @@ import { centralDb } from "@/lib/prisma";
  *
  * SELF-SERVE pricing methods + contact-driven plans (Tenant.plan):
  *   • "monthly"          — Stripe subscription $50/mo, 30-DAY FREE TRIAL (first
- *                          month free). interval=month. PLUS $200 per rush cycle
- *                          (one-time, via platformRushChargeLineItem()).
+ *                          month free). interval=month. PLUS the $200 rush cycle
+ *                          billed EACH SEMESTER (recurring every 6 months, via
+ *                          platformRushChargeLineItem()).
  *   • "yearly"           — Stripe subscription $800/yr (interval=year). No trial.
  *                          ALL rush-cycle fees included (the "best value" plan).
  *   • "semester"         — LEGACY. $250 billed every 6 months. No trial. Hidden in
@@ -99,10 +100,14 @@ export const PLATFORM_YEARLY_PRICE_CENTS = 80000; // $800.00 / yr
 export const PLATFORM_YEARLY_INTERVAL = "year";
 export const PLATFORM_YEARLY_INTERVAL_COUNT = 1;
 
-/** RUSH-CYCLE add-on — a one-time $200 charge per rush cycle, billed ONLY to
- *  MONTHLY chapters (yearly includes rush). Mint via platformRushChargeLineItem()
- *  in a one-time (mode:"payment") Checkout, or invoice the customer directly. */
-export const PLATFORM_RUSH_CYCLE_PRICE_CENTS = 20000; // $200.00 / rush cycle
+/** RUSH-CYCLE add-on — $200 billed EACH SEMESTER (a recurring subscription on a
+ *  6-month interval), billed ONLY to MONTHLY chapters (yearly includes rush).
+ *  Mint via platformRushChargeLineItem() in a subscription (mode:"subscription")
+ *  Checkout. It is a SEPARATE subscription from the $50/mo platform plan, tagged
+ *  metadata.kind="rush_cycle" so the platform webhook never confuses the two. */
+export const PLATFORM_RUSH_CYCLE_PRICE_CENTS = 20000; // $200.00 / semester (every 6 months)
+export const PLATFORM_RUSH_INTERVAL = "month";
+export const PLATFORM_RUSH_INTERVAL_COUNT = 6; // each semester
 
 // ── Dues Connect application-fee percentages (dues_percentage plan only) ──────
 // Greekstack's cut of each member's dues charge, taken as the Stripe Connect
@@ -258,10 +263,12 @@ export function platformLineItem(
 }
 
 /**
- * One-time Checkout line item for the $200 rush-cycle add-on (use with
- * mode:"payment"). Billed to MONTHLY chapters per rush cycle; YEARLY chapters
- * include rush, so callers must NOT mint this for them (guard with
- * rushCycleBillable). Prefers STRIPE_PLATFORM_RUSH_PRICE_ID, else inline.
+ * RECURRING Checkout line item for the $200-each-semester rush add-on (use with
+ * mode:"subscription" — Stripe bills it every 6 months). Billed to MONTHLY
+ * chapters; YEARLY chapters include rush, so callers must NOT mint this for them
+ * (guard with rushCycleBillable). Prefers STRIPE_PLATFORM_RUSH_PRICE_ID (must be
+ * a RECURRING every-6-months Price — lookup_key greekstack_rush_semester), else
+ * inline price_data with the same cadence.
  */
 export function platformRushChargeLineItem(): CheckoutLineItem {
   const rushPriceId = (process.env.STRIPE_PLATFORM_RUSH_PRICE_ID || "").trim();
@@ -270,10 +277,15 @@ export function platformRushChargeLineItem(): CheckoutLineItem {
     quantity: 1,
     price_data: {
       currency: PLATFORM_PLAN_CURRENCY,
+      recurring: {
+        interval: PLATFORM_RUSH_INTERVAL,
+        interval_count: PLATFORM_RUSH_INTERVAL_COUNT,
+      },
       unit_amount: PLATFORM_RUSH_CYCLE_PRICE_CENTS,
       product_data: {
         name: "Greekstack — Rush Cycle",
-        description: "One rush / recruitment cycle on the monthly plan.",
+        description:
+          "Rush / recruitment on the monthly plan — $200 each semester (billed every 6 months).",
       },
     },
   };

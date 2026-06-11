@@ -105,7 +105,8 @@ export function BillingManager(props: {
   const isDuesPct = activePlan === "dues_percentage";
   const isCustom = activePlan === "custom";
   const isSubscription = activePlan === "monthly" || activePlan === "yearly" || activePlan === "semester";
-  // Monthly chapters owe the $200 per-rush-cycle add-on; yearly includes rush.
+  // Monthly chapters owe the $200-each-semester rush add-on (a recurring
+  // subscription billed every 6 months); yearly includes rush.
   const rushBillable = activePlan === "monthly";
 
   const [submitting, setSubmitting] = React.useState<"checkout" | "portal" | "rush-charge" | null>(null);
@@ -360,7 +361,8 @@ export function BillingManager(props: {
             </>
           )}
 
-          {/* Per-rush-cycle $200 add-on — monthly chapters only (yearly includes rush). */}
+          {/* Rush add-on — $200 each semester (recurring, billed every 6 months).
+              Monthly chapters only (yearly includes rush). */}
           {rushBillable && stripeConfigured && (
             <Button
               onClick={() => go("rush-charge")}
@@ -373,7 +375,8 @@ export function BillingManager(props: {
                 </>
               ) : (
                 <>
-                  Pay for a rush cycle — $200 <ArrowRight className="h-4 w-4" />
+                  Rush cycle — $200 each semester (billed every 6 months){" "}
+                  <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </Button>

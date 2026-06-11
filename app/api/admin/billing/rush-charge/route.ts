@@ -22,13 +22,19 @@ const ROUTE = "/api/admin/billing/rush-charge";
 /**
  * POST /api/admin/billing/rush-charge
  *
- * Admin-only. Creates a one-time (`mode:"payment"`) Stripe Checkout Session for
- * the $200 rush-cycle add-on. This is the per-rush-cycle fee the storefront
- * advertises on top of the $50/mo MONTHLY plan.
+ * Admin-only. Creates a RECURRING (`mode:"subscription"`) Stripe Checkout
+ * Session for the $200 rush-cycle add-on — billed EACH SEMESTER (every 6
+ * months). This is the rush fee the storefront advertises on top of the $50/mo
+ * MONTHLY plan. It is minted as a SEPARATE subscription (not an item on the
+ * $50/mo one) tagged metadata.kind="rush_cycle", so the platform webhook can
+ * keep it from ever overwriting the chapter's main plan mirror, and the chapter
+ * can cancel rush independently in the billing portal.
  *
  * Only billable to MONTHLY chapters — YEARLY includes all rush cycles, and the
  * non-subscription plans (dues_percentage / custom) are handled out-of-band — so
- * those get a graceful 400 with the right explanation. Stripe-unconfigured → 503.
+ * those get a graceful 400 with the right explanation. A chapter with a LIVE
+ * rush subscription already gets a graceful 400 (no double-billing).
+ * Stripe-unconfigured → 503.
  */
 export async function POST(req: Request) {
   if (!isAdminRole()) {
@@ -88,18 +94,47 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Could not start the charge. Try again." }, { status: 502 });
   }
 
+  // One LIVE rush subscription per chapter — if it's already running, the next
+  // semester bills automatically, so a second Checkout would double-charge.
+  // Best-effort: a failed list never blocks the happy path.
+  try {
+    const subs = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 100,
+    });
+    const live = subs.data.find(
+      (s) =>
+        (s.metadata?.kind || "") === "rush_cycle" &&
+        ["active", "trialing", "past_due", "unpaid"].includes(s.status),
+    );
+    if (live) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Your rush-cycle subscription is already active — it renews each semester (every 6 months) automatically. Use Manage billing to view or cancel it.",
+        },
+        { status: 400 },
+      );
+    }
+  } catch (err: any) {
+    errorSink(err, { route: ROUTE, tenant: subdomain, outcome: "rush_dup_check_failed" });
+  }
+
   const origin = billingReturnOrigin(host);
 
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
-    mode: "payment",
+    mode: "subscription",
     customer: customerId,
     line_items: [platformRushChargeLineItem()],
     success_url: `${origin}/admin/billing?rush=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/admin/billing`,
-    // kind lets the platform webhook tell a rush-cycle payment apart from the
-    // recurring subscription invoices when labeling/recording the charge.
+    // kind lets the platform webhook tell the rush-cycle subscription apart from
+    // the main $50/mo platform subscription — the webhook SKIPS rush_cycle
+    // objects so they never overwrite the chapter's plan/status mirror.
     metadata: { subdomain, kind: "rush_cycle" },
-    payment_intent_data: { metadata: { subdomain, kind: "rush_cycle" } },
+    subscription_data: { metadata: { subdomain, kind: "rush_cycle" } },
   };
 
   let session: Stripe.Checkout.Session;

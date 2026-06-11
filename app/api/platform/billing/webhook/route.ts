@@ -155,10 +155,27 @@ function trialEndDate(sub: Stripe.Subscription): Date | null {
   return new Date(t * 1000);
 }
 
+/** True for the SEPARATE $200-each-semester rush subscription (and its checkout
+ *  session / invoices). Rush objects carry metadata.kind="rush_cycle" — they
+ *  must NEVER overwrite the chapter's MAIN platform-plan mirror
+ *  (stripeSubscriptionId / subscriptionStatus / trialEndsAt / plan). */
+function isRushCycle(metadata: Stripe.Metadata | null | undefined): boolean {
+  return ((metadata?.kind as string) || "") === "rush_cycle";
+}
+
 async function handleSubscriptionEvent(
   _stripe: Stripe,
   sub: Stripe.Subscription,
 ): Promise<void> {
+  // RUSH-CYCLE GUARD — the rush add-on is its own subscription; skip the mirror.
+  if (isRushCycle(sub.metadata)) {
+    logger.info("platform.billing.rush_subscription_event_skipped", {
+      route: ROUTE,
+      subscriptionId: sub.id,
+    });
+    return;
+  }
+
   const metaSub = (sub.metadata?.subdomain || "").trim() || null;
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id || null;
   const subdomain = await resolveSubdomain(metaSub, customerId);
@@ -199,6 +216,22 @@ async function handleInvoiceEvent(
   invoice: Stripe.Invoice,
   kind: "paid" | "payment_failed",
 ): Promise<void> {
+  // RUSH-CYCLE GUARD — invoices for the separate rush subscription must not flip
+  // the chapter's MAIN subscriptionStatus mirror. Newer API versions surface the
+  // subscription's metadata on invoice.subscription_details; the retrieve-based
+  // check below covers older shapes.
+  const invoiceSubMeta = (invoice as any).subscription_details?.metadata as
+    | Stripe.Metadata
+    | undefined;
+  if (isRushCycle(invoice.metadata) || isRushCycle(invoiceSubMeta)) {
+    logger.info("platform.billing.rush_invoice_event_skipped", {
+      route: ROUTE,
+      invoiceId: invoice.id,
+      kind,
+    });
+    return;
+  }
+
   const metaSub = (invoice.metadata?.subdomain || "").trim() || null;
   const customerId =
     typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id || null;
@@ -222,6 +255,16 @@ async function handleInvoiceEvent(
   if (subId) {
     try {
       const sub = await stripe.subscriptions.retrieve(subId);
+      // RUSH-CYCLE GUARD (retrieve-based) — a rush invoice resolved here must
+      // not mirror the rush subscription's state onto the main plan columns.
+      if (isRushCycle(sub.metadata)) {
+        logger.info("platform.billing.rush_invoice_event_skipped", {
+          route: ROUTE,
+          invoiceId: invoice.id,
+          kind,
+        });
+        return;
+      }
       status = narrowStatus(sub.status);
       trialEndsAt = trialEndDate(sub);
       stripeSubscriptionId = sub.id;
@@ -259,6 +302,16 @@ async function handleCheckoutCompleted(
 ): Promise<void> {
   // Only platform-subscription checkouts are relevant here.
   if (session.mode !== "subscription") return;
+
+  // RUSH-CYCLE GUARD — the rush add-on checkout is also mode:"subscription" now,
+  // but it must not stamp its subscription id/status over the main plan mirror.
+  if (isRushCycle(session.metadata)) {
+    logger.info("platform.billing.rush_checkout_skipped", {
+      route: ROUTE,
+      sessionId: session.id,
+    });
+    return;
+  }
 
   const metaSub = (session.metadata?.subdomain || "").trim() || null;
   const customerId =
