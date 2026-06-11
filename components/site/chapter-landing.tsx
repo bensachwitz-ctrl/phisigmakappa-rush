@@ -395,10 +395,18 @@ export default async function ChapterLandingPage({
           own opaque layers cover it up top, so it reads through the open
           mid-page sections. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[1] select-none overflow-hidden">
+        {/* School wordmark — smaller + drifting across the page (owner
+            round-8), so the school identity is plainly visible in the open
+            bands between sections instead of one huge blocked watermark. */}
         {(identity.schoolName || identity.schoolShort) && (
-          <p className="absolute inset-x-0 top-[26%] px-4 text-center font-serif text-[clamp(3rem,9vw,7.5rem)] font-black uppercase leading-[0.95] tracking-tight text-[hsl(var(--primary))] opacity-[0.05]">
-            {identity.schoolName || identity.schoolShort}
-          </p>
+          <div className="absolute inset-x-0 top-[26%] flex justify-center px-4">
+            <p
+              className="gs-school-drift whitespace-nowrap font-serif text-[clamp(1.5rem,4vw,3rem)] font-black uppercase leading-none tracking-tight text-[hsl(var(--primary))]"
+              style={{ ["--gso" as string]: 0.12 }}
+            >
+              {identity.schoolName || identity.schoolShort}
+            </p>
+          </div>
         )}
         <Crest
           className="absolute -bottom-20 -right-14 h-[42vh] w-[42vh] rotate-[-8deg] text-[hsl(var(--primary))] opacity-[0.05]"

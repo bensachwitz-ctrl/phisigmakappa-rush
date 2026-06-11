@@ -546,6 +546,22 @@
    global animation kill-switch (final state = fully shown). */
 @keyframes gs-fade-in{from{opacity:0;}to{opacity:1;}}
 .gs-fade-in{animation:gs-fade-in 0.9s ease-out both;}
+/* SCHOOL wordmark drift (owner round-8): the chapter's school identity is
+   SMALLER and travels slowly across the screen instead of sitting as a huge
+   static (and easily blocked) watermark. Transform/opacity only (GPU). The
+   negative default delay starts it mid-cross so it's visible immediately.
+   --gso = resting opacity · --gs-school-dur = loop time. */
+@keyframes gs-school-drift{
+  0%{transform:translate3d(-58vw,0,0);opacity:0;}
+  8%{opacity:var(--gso,0.18);}
+  92%{opacity:var(--gso,0.18);}
+  100%{transform:translate3d(58vw,0,0);opacity:0;}
+}
+.gs-school-drift{animation:gs-school-drift var(--gs-school-dur,84s) linear var(--gs-school-delay,-34s) infinite;will-change:transform,opacity;}
+@media (prefers-reduced-motion: reduce){
+  /* Frozen but still plainly visible — centered, at resting opacity. */
+  .gs-school-drift{animation:none !important;opacity:var(--gso,0.18);transform:none;}
+}
 /* Slow shimmer sweep for the hero tagline pill (subtle, periodic). */
 @keyframes gs-tagline-sheen{0%,55%{transform:translateX(-130%);}100%{transform:translateX(130%);}}
 .gs-tagline-sheen{animation:gs-tagline-sheen 5.5s ease-in-out infinite;}

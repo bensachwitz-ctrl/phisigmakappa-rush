@@ -45,14 +45,19 @@ export function ChapterIdentityBackdrop({
       aria-hidden="true"
       className="gs-fade-in pointer-events-none absolute inset-0 z-[1] select-none overflow-hidden"
     >
-      {/* Huge faint school wordmark across the top of the room. */}
+      {/* School wordmark — SMALLER and drifting slowly across the top of the
+          room (owner round-8: visible, never blocked by the phone/rail, in
+          motion like the letters). The flex wrapper centers it; the drift
+          animation owns the transform. */}
       {school ? (
-        <p
-          className="absolute inset-x-0 top-[6%] px-6 text-center font-serif text-[clamp(2.4rem,8vw,6.75rem)] font-black uppercase leading-[0.95] tracking-tight opacity-[0.14]"
-          style={{ color: inkPrimary }}
-        >
-          {school}
-        </p>
+        <div className="absolute inset-x-0 top-[7%] flex justify-center">
+          <p
+            className="gs-school-drift whitespace-nowrap font-serif text-[clamp(1.3rem,3vw,2.5rem)] font-black uppercase leading-none tracking-tight"
+            style={{ color: inkPrimary, ["--gso" as string]: 0.26 }}
+          >
+            {school}
+          </p>
+        </div>
       ) : null}
       {/* Chapter monogram — their letters, low-left, secondary tint. */}
       {letters ? (
