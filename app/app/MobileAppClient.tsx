@@ -1403,10 +1403,13 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setActiveTab("feed");
     setShowViewMenu(false);
   };
+  // Sub-lines are SHORT on purpose: the rail cards are 240px of text width and
+  // the owner's round-7 screenshot caught the long middot strings truncating
+  // into orphan ellipses ("…net…", "…p…"). Three words max — they must fit.
   const VIEW_PERSONAS: { id: ViewPersona; icon: any; label: string; sub: string }[] = [
-    { id: "member", icon: User, label: "Active brother", sub: "Feed · events · dues · network" },
-    { id: "exec", icon: Crown, label: "Exec board", sub: "Roster · treasury · branding · posts" },
-    { id: "alumni", icon: Briefcase, label: "Alumnus", sub: "Network · giving · career posts" },
+    { id: "member", icon: User, label: "Active brother", sub: "Feed, events and dues" },
+    { id: "exec", icon: Crown, label: "Exec board", sub: "Roster, treasury and posts" },
+    { id: "alumni", icon: Briefcase, label: "Alumnus", sub: "Network, giving and jobs" },
   ];
   const personaShortLabel =
     viewPersona === "exec" ? "Exec view" : viewPersona === "alumni" ? "Alumni view" : "Member view";
@@ -1443,7 +1446,12 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
   return (
     <div
-      className="relative flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-[calc(3.5rem+env(safe-area-inset-top))] font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
+      // `isolate` is LOAD-BEARING: the letter field + identity backdrop are
+      // -z-10 children, and without a stacking context on this div they paint
+      // BEHIND its own background gradient — i.e. completely invisible (the
+      // owner's "empty flat maroon"). isolation:isolate keeps them above this
+      // background but below all z-10 content.
+      className="relative isolate flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-[calc(3.5rem+env(safe-area-inset-top))] font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
       style={{
         // Deep brand-tinted radial wash → near-black, so the shell reads as the
         // chapter's world. Transitions smoothly when the chapter changes.
@@ -1557,7 +1565,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                         {p.label}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] leading-tight text-slate-500">{p.sub}</span>
+                      <span className="mt-0.5 block text-[11px] leading-tight text-slate-400">{p.sub}</span>
                     </span>
                     {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
                   </button>
@@ -1697,7 +1705,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                         {p.label}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] leading-tight text-slate-500">{p.sub}</span>
+                      <span className="mt-0.5 block text-[11px] leading-tight text-slate-400">{p.sub}</span>
                     </span>
                     {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
                   </button>
