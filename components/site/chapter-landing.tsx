@@ -28,9 +28,9 @@ import {
 // rush site reads in the CHAPTER color — never platform blue/gold.
 import {
   IconBond, IconScholarship, IconCharacter, IconHandshake,
-  IconCalendarStar, IconPin, IconMail as IconMailDuo, IconInstagram as IconInstagramDuo,
+  IconPin, IconMail as IconMailDuo, IconInstagram as IconInstagramDuo,
   IconHouse, IconSparkle, IconShieldCheck as IconShieldCheckDuo, IconBolt,
-  IconCrown as IconCrownDuo, IconCheckCircle as IconCheckCircleDuo,
+  IconCheckCircle as IconCheckCircleDuo,
 } from "@/components/brand/icons/chapter";
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,6 @@ import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
 
-import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 /**
@@ -251,7 +250,7 @@ export default async function ChapterLandingPage({
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <div className="mb-4 flex justify-center">
-              <SectionEyebrow icon={IconSparkle}>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
+              <SectionEyebrow>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
             </div>
             <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the {termLabelShort} {terms.recruit.toLowerCase()} list.
@@ -679,8 +678,8 @@ export default async function ChapterLandingPage({
       {cfg["show.values"] !== "false" && (
       <section className="container section-y">
         <Reveal3D className="max-w-2xl mb-10">
-          <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
-            <ShieldCheck className="h-3 w-3" aria-hidden="true" /> Three principles
+          <span className="inline-flex items-center rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+            Three principles
           </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
             {identity.cardinalPrinciples.split(/,\s*/).join(". ")}.
@@ -765,7 +764,7 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={IconInstagramDuo}>{cfg["contact.instagramHandle"]}</SectionEyebrow>
+            <SectionEyebrow>{cfg["contact.instagramHandle"]}</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">A year in the life.</h2>
           </div>
           <p className="text-muted-foreground max-w-xl leading-relaxed">
@@ -818,7 +817,7 @@ export default async function ChapterLandingPage({
       <section className="border-y border-border bg-secondary/40">
         <div className="container section-y">
           <Reveal3D className="max-w-2xl mb-10">
-            <SectionEyebrow icon={IconCalendarStar}>How rush works</SectionEyebrow>
+            <SectionEyebrow>How rush works</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Three weeks. Zero pressure.
             </h2>
@@ -869,7 +868,7 @@ export default async function ChapterLandingPage({
         <div className="container">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
-            <SectionEyebrow icon={IconCalendarStar}>{termLabelShort} calendar</SectionEyebrow>
+            <SectionEyebrow>{termLabelShort} calendar</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Upcoming events
             </h2>
@@ -962,7 +961,7 @@ export default async function ChapterLandingPage({
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <Reveal3D className="order-2 lg:order-1">
-            <SectionEyebrow icon={IconSparkle}>{terms.member} of the Month</SectionEyebrow>
+            <SectionEyebrow>{terms.member} of the Month</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Real {terms.membersLower}. Real recognition.
             </h2>
@@ -1042,7 +1041,7 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
             <div>
-              <SectionEyebrow icon={IconCrownDuo}>Chapter leadership</SectionEyebrow>
+              <SectionEyebrow>Chapter leadership</SectionEyebrow>
               <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Meet the e-board.
               </h2>
@@ -1089,7 +1088,7 @@ export default async function ChapterLandingPage({
       <section id="about" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <Reveal3D>
-            <SectionEyebrow icon={IconShieldCheckDuo}>About the chapter</SectionEyebrow>
+            <SectionEyebrow>About the chapter</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               Founded in {identity.foundingYear}.<br/> Built for what's next.
             </h2>
@@ -1254,7 +1253,7 @@ export default async function ChapterLandingPage({
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
             <Reveal3D>
-              <SectionEyebrow icon={IconSparkle}>FAQ</SectionEyebrow>
+              <SectionEyebrow>FAQ</SectionEyebrow>
               <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
                 Common questions.
               </h2>
@@ -1310,7 +1309,7 @@ export default async function ChapterLandingPage({
             and the address + contact cards carry this section. */}
         <div className="max-w-3xl mx-auto">
           <Reveal3D>
-            <SectionEyebrow icon={IconPin}>Where we live</SectionEyebrow>
+            <SectionEyebrow>Where we live</SectionEyebrow>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight">
               The house at {titleCaseAddress(cfg["contact.address"])}.
             </h2>
@@ -1403,8 +1402,8 @@ export default async function ChapterLandingPage({
             className="opacity-80"
           />
           <div className="relative max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
-              <IconSpark className="h-3 w-3" aria-hidden="true" /> {termLabelLong}
+            <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
+              {termLabelLong}
             </span>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Get on the interest list.
@@ -1475,12 +1474,13 @@ function chipIconFor(name: string): LucideIcon {
  * more premium, consistent look. Brand-toned via phisig-red (the chapter color),
  * so it reads correctly for any tenant palette.
  */
-function SectionEyebrow({
-  icon: Icon, children,
-}: { icon: React.ElementType; children: React.ReactNode }) {
+/* Text-only eyebrow pill — clean type, tracking, hairline border. Decorative
+   glyphs were purged from every badge/eyebrow pill (owner round-9: the
+   glyph-in-pill pattern reads as AI slop even with bespoke icons). */
+function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
-      <Icon className="h-3 w-3" aria-hidden="true" /> {children}
+    <span className="inline-flex items-center rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+      {children}
     </span>
   );
 }

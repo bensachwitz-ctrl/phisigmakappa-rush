@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { IconExternal, IconSpark } from "@/components/brand/icons";
+import { IconExternal } from "@/components/brand/icons";
 import { IconChip } from "@/components/ui/icon-chip";
 import { IllustrationCelebrate } from "@/components/brand/illustrations";
 
@@ -49,7 +49,6 @@ export function SuccessState({
       </div>
 
       <div className="mb-2 flex items-center justify-center gap-2">
-        <IconSpark className="h-5 w-5 text-amber-300" aria-hidden="true" />
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
           Live in seconds
         </span>

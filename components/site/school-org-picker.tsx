@@ -62,7 +62,6 @@ import {
   IconCheck,
   IconClose,
   IconChevronDown,
-  IconSpark,
   IconBranding,
 } from "@/components/brand/icons";
 import { searchSchools, type School } from "@/lib/schools";
@@ -531,7 +530,7 @@ function ManualPanel({
     <div className="space-y-2.5" onMouseDown={(e) => e.preventDefault()}>
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-300">
-          <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Enter manually
+          Enter manually
         </p>
         <button
           type="button"

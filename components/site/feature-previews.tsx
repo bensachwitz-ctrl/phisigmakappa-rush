@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { IconCheck, IconSpark } from "@/components/brand/icons";
+import { IconCheck } from "@/components/brand/icons";
 
 /**
  * IconTapCue — a tiny bespoke "try this" pointer-tap glyph that prefixes the
@@ -109,7 +109,6 @@ function MiniHeader({ title, badge }: { title: string; badge?: string }) {
   return (
     <div className="flex items-center justify-between border-b border-border pb-2 mb-3">
       <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
-        <IconSpark className="w-3.5 h-3.5 text-blue-500" />
         {title}
       </span>
       {badge && (

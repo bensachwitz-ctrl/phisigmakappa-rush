@@ -26,7 +26,6 @@ import {
   Grain,
 } from "@/components/site/anim";
 import {
-  IconSpark,
   IconRecruitment,
   IconMembers,
   IconDues,
@@ -1274,8 +1273,7 @@ function Hero() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
               />
-              <p className="mb-3.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
-                <IconLaunch className="h-3.5 w-3.5" />
+              <p className="mb-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
                 What happens when you launch
               </p>
               <ol className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-1.5">
@@ -1551,8 +1549,7 @@ function DemoShowcase() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            <GlyphTile name="feat-branding" size="xs" />
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             See it before you sign anything
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1623,8 +1620,7 @@ function Features() {
           {/* Greek-key (meander) divider — the recognizable "Greek life" motif,
               placed once above this flagship section header. Decorative. */}
           <GreekKey className="mx-auto mb-5" width="w-32" />
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            <GlyphTile name="gl-letters" size="xs" />
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Everything a chapter runs on
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1634,8 +1630,7 @@ function Features() {
             Recruitment to alumni giving — the tools your officers actually need, in a single
             branded system instead of a dozen spreadsheets and group chats.
           </p>
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/[0.06] px-4 py-1.5 text-xs font-medium text-blue-800">
-            <IconSpark className="h-3.5 w-3.5" accent="#38bdf8" />
+          <p className="mt-4 inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/[0.06] px-4 py-1.5 text-xs font-medium text-blue-800">
             Tap any feature to see it inside the app
           </p>
         </Reveal>
@@ -1862,8 +1857,7 @@ function BeforeAfter() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            <GlyphTile name="gl-brotherhood" size="xs" />
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Replace the whole stack
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -1942,8 +1936,7 @@ function BeforeAfter() {
                     className="h-10 w-10 shrink-0 rounded-xl object-contain shadow-sm ring-1 ring-black/5"
                   />
                   <div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
-                      <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
+                    <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
                       With Greekstack
                     </span>
                   </div>
@@ -2012,8 +2005,7 @@ function HowItWorks() {
     <section id="how" className="scroll-mt-20 border-y border-border bg-secondary/30 py-12 sm:py-28">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            <GlyphTile name="gl-bid" size="xs" />
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             Live in three steps
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -2163,8 +2155,7 @@ function BrandItDemo() {
     >
       {/* Left: the "fill in your chapter" inputs typing themselves. */}
       <div className="space-y-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
-          <IconWhiteLabel className="h-3.5 w-3.5" />
+        <span className="inline-flex items-center rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
           Watch it brand itself
         </span>
 
@@ -2348,8 +2339,7 @@ function Pricing() {
               <h3 className="text-base font-semibold tracking-tight">
                 Every plan includes the whole platform
               </h3>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-700">
-                <IconSpark className="h-3.5 w-3.5" accent="#f59e0b" />
+              <span className="inline-flex items-center rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">
                 No feature gates
               </span>
             </div>
@@ -2437,8 +2427,7 @@ function PlanCard({ plan }: { plan: Plan }) {
 
       {/* Ribbon (featured only). */}
       {plan.featured && (
-        <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
-          <IconSpark className="h-3.5 w-3.5" accent="#fbbf24" />
+        <span className="relative mb-4 inline-flex w-fit items-center rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
           Most popular
         </span>
       )}
@@ -2465,8 +2454,7 @@ function PlanCard({ plan }: { plan: Plan }) {
           <span className="mb-1 text-base font-medium text-muted-foreground">{plan.unit}</span>
         )}
         {plan.introBadge && (
-          <span className="mb-1 ml-1 inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-amber-700">
-            <IconFreeTag className="h-3.5 w-3.5" accent="#f59e0b" />
+          <span className="mb-1 ml-1 inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/[0.08] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-blue-700">
             {plan.introBadge}
           </span>
         )}
@@ -2515,8 +2503,7 @@ function PlanCard({ plan }: { plan: Plan }) {
                   {plan.billing.yearly.cadence}
                 </span>
                 {plan.billing.yearly.badge && (
-                  <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
-                    <IconSpark className="h-3 w-3" accent="#f59e0b" />
+                  <span className="ml-1 inline-flex items-center rounded-full border border-blue-500/35 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-blue-700">
                     {plan.billing.yearly.badge}
                   </span>
                 )}
@@ -2697,8 +2684,7 @@ function Proof() {
       />
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-            <GlyphTile name="gl-trophy" size="xs" />
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             What you get
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">

@@ -31,7 +31,7 @@ import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { IconSpark, IconCheckCircle } from "@/components/brand/icons";
+import { IconCheckCircle } from "@/components/brand/icons";
 import { IconCalendar } from "@/components/brand/icons/onboarding-wizard";
 
 /** Owner sales inbox — mirrors the /contact fallback so the copy stays on-brand. */
@@ -161,7 +161,6 @@ export function BookACall() {
 
       {/* Tiny reassurance footer — present in both branches. */}
       <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
-        <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
         No pressure — you can always book later from your admin, or skip and head straight in.
       </p>
     </div>

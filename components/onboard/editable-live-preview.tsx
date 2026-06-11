@@ -5,7 +5,6 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   IconSubdomain,
   IconSecurity,
-  IconSpark,
   IconArrowRight,
   IconCheckCircle,
 } from "@/components/brand/icons";
@@ -102,7 +101,7 @@ export function EditableLivePreview({
       {/* Eyebrow — now explicitly EDITABLE so the founder knows to type here. */}
       <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 ring-1 ring-sky-400/20">
-          <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Live Preview
+          Live Preview
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/20">
           <IconPencil className="h-3.5 w-3.5" aria-hidden="true" /> Editable

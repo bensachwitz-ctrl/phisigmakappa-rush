@@ -620,7 +620,7 @@ export default function OnboardWizard() {
             </Link>
             <span className="ml-1 hidden h-3.5 w-px bg-white/15 sm:inline-block" aria-hidden="true" />
             <span className="hidden items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300 sm:inline-flex">
-              <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Setup
+              Setup
             </span>
           </span>
         </div>
@@ -1066,7 +1066,6 @@ export default function OnboardWizard() {
 
                   {/* Gentle nudge to the live preview (mobile shows it below; desktop to the side). */}
                   <p className="flex items-center gap-1.5 rounded-xl border border-sky-400/15 bg-sky-500/[0.06] px-3 py-2.5 text-xs text-slate-300">
-                    <IconSpark className="h-3.5 w-3.5 shrink-0 text-amber-400" aria-hidden="true" />
                     <span>
                       Tip: edit your headline, name, and colors right on the live preview{" "}
                       <span className="lg:hidden">below</span>
@@ -1563,7 +1562,7 @@ function PlanCard({
       {/* "Most popular" ribbon for the recommended plan. */}
       {recommended && (
         <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-950 shadow-md shadow-amber-900/30">
-          <IconSpark className="h-3 w-3" aria-hidden="true" /> Most popular
+          Most popular
         </span>
       )}
 
@@ -1593,7 +1592,7 @@ function PlanCard({
 
       <div className="mt-4 flex items-end gap-1.5">{headline}</div>
       <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-300 ring-1 ring-amber-400/20">
-        <IconSpark className="h-3 w-3" aria-hidden="true" /> {highlight}
+        {highlight}
       </span>
 
       <ul className="mt-4 space-y-2">

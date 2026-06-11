@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { IconSubdomain, IconSecurity, IconSpark } from "@/components/brand/icons";
+import { IconSubdomain, IconSecurity } from "@/components/brand/icons";
 import { Tilt3DCard } from "@/components/site/anim";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +67,7 @@ export function LivePreview({
       {/* Eyebrow */}
       <div className="mb-3 flex items-center gap-2 px-1">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
-          <IconSpark className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Live Preview
+          Live Preview
         </span>
         <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
           {/* Tiny "live" pulse dot to reinforce that this is reacting in real time. */}

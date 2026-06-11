@@ -183,7 +183,7 @@ export default async function ContactPage() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
               <div className="lg:w-2/5">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-                  <IconSpark className="h-4 w-4" aria-hidden="true" /> Fully custom
+                  Fully custom
                 </span>
                 <h2 id="custom-heading" className="mt-2 text-2xl font-semibold tracking-tight">
                   Request a customized chapter system

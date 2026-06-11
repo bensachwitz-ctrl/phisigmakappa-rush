@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { IconCheck, IconSpark } from "@/components/brand/icons";
+import { IconCheck } from "@/components/brand/icons";
 import {
   IconAlert,
   IconSpinner,
@@ -390,7 +390,7 @@ export function CustomQuoteForm({ contactEmail }: { contactEmail: string }) {
             </>
           ) : (
             <>
-              <IconSpark className="h-4 w-4" accent="#ffffff" aria-hidden="true" /> Request my quote
+              Request my quote
             </>
           )}
         </Button>

@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
-import { IconSpark } from "@/components/brand/icons";
 import { IconLock } from "@/components/brand/icons/contact";
 
 export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
@@ -24,8 +23,8 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
           <span className="hover:opacity-90 transition-opacity">
             <Wordmark variant="compact" />
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-phisig-red/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
-            <IconSpark className="h-3.5 w-3.5" accent="currentColor" aria-hidden="true" /> Booth mode
+          <span className="inline-flex items-center rounded-full bg-phisig-red/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+            Booth mode
           </span>
         </div>
       </header>

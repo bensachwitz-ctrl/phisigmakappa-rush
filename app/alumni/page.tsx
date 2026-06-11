@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, MapPin, Briefcase, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
-import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -84,8 +83,7 @@ export default async function AlumniDirectoryPage() {
       <main className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
         {/* Hero */}
         <header className="mb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
-            <IconSpark className="w-3.5 h-3.5" aria-hidden />
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
             Alumni Network
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">

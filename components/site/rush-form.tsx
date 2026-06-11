@@ -902,7 +902,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
             </p>
           )}
           <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-phisig-red-soft border border-phisig-red/20 px-4 py-2 text-xs font-semibold text-phisig-red">
-            <IconSparkle className="h-3.5 w-3.5" /> Next rushee in 6 seconds…
+            Next rushee in 6 seconds…
           </div>
           <div className="mt-4">
             <Button variant="ghost" onClick={onRestart} className="text-muted-foreground">
