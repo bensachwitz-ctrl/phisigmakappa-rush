@@ -4,15 +4,15 @@ import React from "react";
 
 /**
  * ChapterIdentityBackdrop — the displayed chapter's IDENTITY painted into the
- * demo's ambient background: a huge, faint school wordmark across the top, the
- * chapter's Greek-letter monogram low-left, and the crest mark low-right, all
- * tinted toward the chapter's brand colors.
+ * demo's ambient background: a faint school wordmark drifting across the top,
+ * the chapter's Greek-letter monogram low-left, and the school NAME rendered
+ * big in the bottom-right corner, all tinted toward the chapter's brand colors.
  *
  * This is the "tailored to YOU" moment: when the demo re-skins (e.g. to Kappa
- * Delta at a chosen school) the drifting letters AND this school name AND the
- * crest all swap together. Re-keyed by tenant at the call site so the swap
- * lands as one gentle cross-fade (gs-fade-in — opacity only, reduced-motion
- * safe via the global collapse).
+ * Delta at a chosen school) the drifting letters AND this school name all swap
+ * together. Re-keyed by tenant at the call site so the swap lands as one gentle
+ * cross-fade (gs-fade-in — opacity only, reduced-motion safe via the global
+ * collapse).
  *
  * Purely decorative: aria-hidden + pointer-events-none, parked on the z-1
  * ambient plane of the demo shell (above the z-0 background wash, below all

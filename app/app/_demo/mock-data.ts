@@ -30,7 +30,6 @@ export interface FraternityBrand {
   textColor: string;
   accentBg: string;
   accentBorder: string;
-  crestEmoji: string;
 }
 
 export const FRATERNITY_BRANDS: FraternityBrand[] = [
@@ -43,8 +42,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C0A062", // Silver/Gold
     textColor: "text-red-600",
     accentBg: "bg-red-50",
-    accentBorder: "border-red-100",
-    crestEmoji: "🛡️"
+    accentBorder: "border-red-100"
   },
   {
     id: "sig-chi",
@@ -55,8 +53,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#B89A2E", // Old Gold
     textColor: "text-blue-600",
     accentBg: "bg-blue-50",
-    accentBorder: "border-blue-100",
-    crestEmoji: "🌟"
+    accentBorder: "border-blue-100"
   },
   {
     id: "kap-sig",
@@ -67,8 +64,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C81E2E", // Scarlet
     textColor: "text-emerald-600",
     accentBg: "bg-emerald-50",
-    accentBorder: "border-emerald-100",
-    crestEmoji: "🔑"
+    accentBorder: "border-emerald-100"
   },
   {
     id: "ato",
@@ -79,8 +75,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#D4AF37", // Old Gold
     textColor: "text-sky-600",
     accentBg: "bg-sky-50",
-    accentBorder: "border-sky-100",
-    crestEmoji: "⚓"
+    accentBorder: "border-sky-100"
   },
   {
     id: "sae",
@@ -91,8 +86,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C9A227", // Old Gold
     textColor: "text-purple-600",
     accentBg: "bg-purple-50",
-    accentBorder: "border-purple-100",
-    crestEmoji: "🦁"
+    accentBorder: "border-purple-100"
   },
   {
     id: "beta",
@@ -103,8 +97,7 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C8102E", // Crimson
     textColor: "text-sky-500",
     accentBg: "bg-sky-50",
-    accentBorder: "border-sky-100",
-    crestEmoji: "🐉"
+    accentBorder: "border-sky-100"
   }
 ];
 
@@ -285,7 +278,6 @@ export function makeCustomBrand(input: {
     textColor: "text-slate-700",
     accentBg: "bg-slate-50",
     accentBorder: "border-slate-100",
-    crestEmoji: "🏛️",
   };
 }
 
