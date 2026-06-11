@@ -283,11 +283,11 @@ export function makeCustomBrand(input: {
 
 export const DEMO_TENANTS: Tenant[] = [
   { id: "demo-psk", subdomain: "psk", name: "Phi Sigma Kappa", school: "University of South Carolina", isActive: true, brandId: "phi-sig" },
-  { id: "demo-sigchi", subdomain: "sigchi", name: "Sigma Chi", school: "University of South Carolina", isActive: true, brandId: "sig-chi" },
-  { id: "demo-kapsig", subdomain: "kapsig", name: "Kappa Sigma", school: "University of South Carolina", isActive: true, brandId: "kap-sig" },
-  { id: "demo-ato", subdomain: "ato", name: "Alpha Tau Omega", school: "University of South Carolina", isActive: true, brandId: "ato" },
-  { id: "demo-sae", subdomain: "sae", name: "Sigma Alpha Epsilon", school: "University of South Carolina", isActive: true, brandId: "sae" },
-  { id: "demo-beta", subdomain: "beta", name: "Beta Theta Pi", school: "University of South Carolina", isActive: true, brandId: "beta" },
+  { id: "demo-sigchi", subdomain: "sigchi", name: "Sigma Chi", school: "University of Southern California", isActive: true, brandId: "sig-chi" },
+  { id: "demo-kapsig", subdomain: "kapsig", name: "Kappa Sigma", school: "Clemson University", isActive: true, brandId: "kap-sig" },
+  { id: "demo-ato", subdomain: "ato", name: "Alpha Tau Omega", school: "University of Georgia", isActive: true, brandId: "ato" },
+  { id: "demo-sae", subdomain: "sae", name: "Sigma Alpha Epsilon", school: "Auburn University", isActive: true, brandId: "sae" },
+  { id: "demo-beta", subdomain: "beta", name: "Beta Theta Pi", school: "Indiana University", isActive: true, brandId: "beta" },
 ];
 
 /**
