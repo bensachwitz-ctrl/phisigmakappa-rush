@@ -69,7 +69,10 @@ export function renderFeedTab(ctx: DemoContext) {
                           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-1.5">
                             <BrandGlyphIcon name="letters" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
                           </h3>
-                          <div className="grid grid-cols-4 gap-1.5">
+                          {/* ONE row, always (owner round-7): grid-flow-col +
+                              auto-cols-fr keeps every tool on a single line no
+                              matter how many are visible for this role. */}
+                          <div className="grid grid-flow-col auto-cols-fr gap-1.5">
                             {[
                               { id: "elections" as const, label: "Elections", Icon: Vote, show: role === "brother" },
                               { id: "treasury" as const, label: "Treasury", Icon: PieChart, show: role === "brother" },
@@ -80,7 +83,7 @@ export function renderFeedTab(ctx: DemoContext) {
                               <button
                                 key={id}
                                 onClick={() => { setSpotlight(id); if (id === "giving") setDonationDone(false); }}
-                                className="press gs-glass flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5"
+                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
                               >
                                 <span
                                   className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
@@ -88,7 +91,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                 >
                                   <Icon className="h-4 w-4" />
                                 </span>
-                                <span className="text-[11px] font-bold leading-tight text-slate-700">{label}</span>
+                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">{label}</span>
                               </button>
                             ))}
                           </div>
