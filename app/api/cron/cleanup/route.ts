@@ -52,9 +52,12 @@ function isAuthorized(req: Request): boolean {
   // when CRON_SECRET is set in the project env.
   if (secret && auth.startsWith("Bearer ") && auth.slice(7) === secret) return true;
 
-  // Backward-compat: Vercel's bare cron header. Kept so an already-scheduled
-  // job that predates the secret keeps working.
-  if (req.headers.get("x-vercel-cron") !== null) return true;
+  // SECURITY (2026-06-10 strict review): the bare `x-vercel-cron` header is
+  // client-spoofable and made this destructive endpoint publicly triggerable.
+  // It is now only honored when CRON_SECRET is unset (Vercel-internal calls
+  // before the owner configures the secret) - never as a bypass once the
+  // secret exists, matching the reconcile/announcement cron routes.
+  if (!secret && req.headers.get("x-vercel-cron") !== null) return true;
 
   // Local dev / unconfigured: with no secret set, allow localhost only so the
   // developer can curl their own machine; reject every external caller.
