@@ -1759,7 +1759,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         <div className="hidden lg:block absolute -right-[11px] top-[160px] w-[3px] h-[60px] bg-slate-800 rounded-r-md" />
 
         <div
-          className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white rounded-none border-0 lg:h-[820px] lg:rounded-[48px] lg:border-[12px] lg:border-slate-800"
+          // <lg: the % height chain (h-full) can resolve to auto inside the
+          // stretched flex wrapper, letting a short surface end mid-screen with
+          // shell background below it — the dvh-based min-height guarantees the
+          // white app always reaches the bottom of the viewport.
+          className="relative z-10 flex h-full min-h-[calc(100dvh-3.5rem-env(safe-area-inset-top))] w-full flex-col overflow-hidden bg-white rounded-none border-0 lg:h-[820px] lg:min-h-0 lg:rounded-[48px] lg:border-[12px] lg:border-slate-800"
           // Phone (full-bleed real app): NO inline shadow at all. Desktop
           // showcase: a STATIC grounding shadow — the old cursor-tracked tilt
           // and dynamic glare moved the surface people interact with (owner

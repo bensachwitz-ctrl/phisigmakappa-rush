@@ -569,7 +569,11 @@
   .gs-greek-letter{
     animation:none !important;
     opacity:min(calc(var(--go,0.12) * 1.7 + 0.04), 0.42);
-    transform:rotate(var(--gr,0deg));
+    /* --gsx (set per-letter; nonzero only in the demo's side-entry field)
+       statically scatters each frozen letter along its would-be travel path so
+       the still field reads as an organic constellation instead of clustering
+       at the path midpoints. Defaults to 0 → legacy fields are unchanged. */
+    transform:translate3d(calc(var(--dx,0vw) * var(--gsx,0)),calc(var(--dy,0vh) * var(--gsx,0)),0) rotate(var(--gr,0deg));
   }
   .gs-tagline-sheen{animation:none;display:none;}
   .gs-word-reveal{opacity:1;animation:none;}

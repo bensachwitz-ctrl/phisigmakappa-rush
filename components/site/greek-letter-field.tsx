@@ -50,6 +50,10 @@ type Letter = {
   dy: number;
   rot: number;
   op: number;
+  /** Static scatter fraction (-0.5..0.5 of the travel path) used ONLY by the
+   *  prefers-reduced-motion fallback so the frozen field stays scattered along
+   *  each letter's would-be path instead of clustering at the midpoints. */
+  scatter: number;
 };
 
 /**
@@ -95,7 +99,13 @@ const DAMPING: Record<"none" | "calm" | "whisper", Damping> = {
 /** Total letters at full density (sum of tier counts). */
 const DEFAULT_TOTAL = TIERS.reduce((n, t) => n + t.count, 0); // 44
 
-function buildLetters(glyphs: string[], seed: number, total: number, damping: Damping): Letter[] {
+function buildLetters(
+  glyphs: string[],
+  seed: number,
+  total: number,
+  damping: Damping,
+  fromSides: boolean,
+): Letter[] {
   const rng = makeRng(seed);
   const out: Letter[] = [];
   // Scale each tier's count to honor a caller-supplied density while keeping the
@@ -106,6 +116,37 @@ function buildLetters(glyphs: string[], seed: number, total: number, damping: Da
   for (const tier of TIERS) {
     const n = Math.max(1, Math.round(tier.count * scale));
     for (let i = 0; i < n; i++) {
+      if (fromSides) {
+        // SIDE-ENTRY mode (the demo shell): every letter's journey BEGINS just
+        // off the left or right screen edge, so the fade-in (10% of the
+        // timeline) lands right AT the edge — the letter visibly enters from
+        // the side, drifts all the way across, and exits the far side.
+        const leftToRight = rng() > 0.5; // even split — both sides feed the room
+        const travel = 112 + rng() * 48; // 112–160vw: a guaranteed full cross
+        const dx = leftToRight ? travel : -travel;
+        // Path start sits 3–10vw outside the entry edge; the CSS keyframes
+        // place the letter at (left - dx/2) at t=0, so left = start + dx/2.
+        const start = leftToRight ? -(3 + rng() * 7) : 103 + rng() * 7;
+        out.push({
+          ch: glyphs[Math.floor(rng() * glyphs.length)],
+          left: Math.round((start + dx / 2) * 10) / 10,
+          top: Math.round((2 + rng() * 92) * 10) / 10,
+          size: tier.sizeMin + Math.round(rng() * tier.sizeRange),
+          // Crossing the full width should feel stately — 1.5× the tier pace.
+          dur: Math.round((tier.durMin + rng() * tier.durRange) * 1.5 * durMul),
+          dy: Math.round((rng() - 0.5) * 2 * 12 * dyMul), // gentle diagonal only
+          dx: Math.round(dx),
+          rot: Math.round((rng() - 0.5) * 12),
+          op: Math.round((tier.opMin + rng() * tier.opRange) * opMul * 1000) / 1000,
+          // Uniform phase along each letter's own cycle → at any instant some
+          // letters are just entering each side, others are mid-cross.
+          delay: 0, // placeholder, fixed up below (needs dur)
+          scatter: Math.round((rng() - 0.5) * 0.84 * 100) / 100, // -0.42..0.42
+        });
+        const l = out[out.length - 1];
+        l.delay = -Math.round(rng() * l.dur);
+        continue;
+      }
       // Direction: ~75% travel left→right, ~25% right→left (variety).
       const leftToRight = rng() > 0.25;
       // How far across the viewport it travels (vw). Enough to fully cross +
@@ -128,6 +169,7 @@ function buildLetters(glyphs: string[], seed: number, total: number, damping: Da
         dy: Math.round((rng() - 0.5) * 2 * tier.dyAmp * dyMul), // randomized path angle (vh of vertical travel)
         rot: Math.round((rng() - 0.5) * 12),
         op: Math.round((tier.opMin + rng() * tier.opRange) * opMul * 1000) / 1000,
+        scatter: 0, // legacy fields already spawn scattered; no extra offset
       });
     }
   }
@@ -161,14 +203,19 @@ export function GreekLetterField({
   position?: "fixed" | "absolute";
   /** Slightly slower drift + softer opacity — chapter sites / onboard. */
   calm?: boolean;
-  /** MUCH slower + fainter — the interactive demo shell, where the visitor is
-   *  reading and tapping and ambient motion must never compete. Wins over calm. */
+  /** MUCH slower + fainter — surfaces where ambient motion must never compete
+   *  with reading. Wins over calm. */
   whisper?: boolean;
+  /** Side-entry mode (the demo shell): every letter visibly enters from the
+   *  LEFT or RIGHT screen edge, drifts the full way across, and exits the far
+   *  side — at a stately 1.5× slower pace. Under prefers-reduced-motion the
+   *  field freezes as a static scatter along each letter's path. */
+  fromSides?: boolean;
 }) {
   const damping = DAMPING[whisper ? "whisper" : calm ? "calm" : "none"];
   const letters = React.useMemo(
-    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count, damping),
-    [glyphs, seed, count, damping],
+    () => buildLetters(glyphs && glyphs.length ? glyphs : FULL_ALPHABET, seed, count, damping, !!fromSides),
+    [glyphs, seed, count, damping, fromSides],
   );
 
   return (
@@ -199,6 +246,7 @@ export function GreekLetterField({
               ["--go" as string]: `${l.op}`,
               ["--dur" as string]: `${l.dur}s`,
               ["--delay" as string]: `${l.delay}s`,
+              ["--gsx" as string]: `${l.scatter}`,
             } as React.CSSProperties
           }
         >
