@@ -95,7 +95,9 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       {/* Ambient brand atmosphere — drifting Greek letters + soft color orbs,
-          both decorative, both reduced-motion-safe (see globals.css). */}
+          both decorative, both reduced-motion-safe (see globals.css). The
+          field renders at z-1 (owner round-8): the old -z-10 placement painted
+          it UNDER this div's opaque bg-background — invisible on /login. */}
       <GreekLetterField count={26} />
       <AmbientOrbs />
 

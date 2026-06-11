@@ -363,14 +363,15 @@ export default async function ChapterLandingPage({
 
   return (
     <main id="main-content" className="relative min-h-screen overflow-x-clip">
-      {/* Furthest-back opaque page wash (fixed, -z-20) — replaces the old opaque
-          `bg-background` on <main> so the drifting letter field (-z-10) reads
-          BEHIND the content but ABOVE this base. */}
-      <div aria-hidden="true" className="fixed inset-0 -z-20 bg-background" />
+      {/* Page-background layer (z-0): the opaque page wash. Owner round-8
+          z-stack — bg z-0 → letters z-1 → content z-2+. Letters were
+          previously parked at NEGATIVE z, where in-flow section backgrounds
+          painted straight over them. */}
+      <div aria-hidden="true" className="fixed inset-0 z-0 bg-background" />
       {/* Page-wide drifting Greek-letter field — THIS chapter's own letters,
-          tinted to their brand --primary, behind ALL content (fixed, -z-10).
-          Calm drift so it reads as a serene brand texture, never distracting.
-          The hero keeps its own denser FloatingSymbols layer on top of this. */}
+          tinted to their brand --primary, at z-1: plainly IN FRONT of the page
+          wash and BEHIND every card/section (content wrapper is z-2). Calm
+          drift so it reads as a serene brand texture, never distracting. */}
       <GreekLetterField
         glyphs={fieldGlyphs}
         color="hsl(var(--primary))"
@@ -378,12 +379,12 @@ export default async function ChapterLandingPage({
         count={30}
         seed={0x3a7c91d5}
       />
-      {/* Ambient chapter-identity layer — a huge, faint SCHOOL wordmark and the
-          chapter's brand-tinted crest watermark behind the page content, on the
-          same -z-10 plane as the letter field (above the -z-20 base, below all
-          sections/cards). Static + decorative; the hero's own opaque layers
-          cover it up top, so it reads through the open mid-page sections. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 select-none overflow-hidden">
+      {/* Ambient chapter-identity layer — the SCHOOL wordmark and the
+          chapter's brand-tinted crest watermark, on the same z-1 plane as the
+          letter field (above the z-0 base, below the z-2 content). The hero's
+          own opaque layers cover it up top, so it reads through the open
+          mid-page sections. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[1] select-none overflow-hidden">
         {(identity.schoolName || identity.schoolShort) && (
           <p className="absolute inset-x-0 top-[26%] px-4 text-center font-serif text-[clamp(3rem,9vw,7.5rem)] font-black uppercase leading-[0.95] tracking-tight text-[hsl(var(--primary))] opacity-[0.05]">
             {identity.schoolName || identity.schoolShort}
@@ -394,6 +395,10 @@ export default async function ChapterLandingPage({
           aria-hidden="true"
         />
       </div>
+      {/* CONTENT layer (z-2) — everything below paints ABOVE the z-1 letter
+          field + identity watermarks, so letters drift over the page color but
+          never over text/cards (owner round-8 z-stack). */}
+      <div className="relative z-[2]">
       {/* Brand-tinted scroll-progress bar pinned at the very top of the page.
           Tracks whole-document scroll; aria-hidden, transform-only. */}
       <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
@@ -1425,6 +1430,7 @@ export default async function ChapterLandingPage({
       {/* Spacer so the bottom nav doesn't overlap the footer copyright on
           mobile. The 80px (4rem + safe-area) matches MobileBottomNav height. */}
       <div className="md:hidden h-20" aria-hidden />
+      </div>
     </main>
   );
 }

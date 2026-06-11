@@ -757,12 +757,15 @@ export default function MarketingLandingPage() {
     <div className="relative min-h-screen text-foreground antialiased selection:bg-blue-500/20">
       {/* Tinted base wash — replaces the flat-white background so the page never
           reads as plain: a soft blue radial up top fading to white, then a faint
-          blue floor. Fixed + furthest back. */}
+          blue floor. Fixed page-background layer at z-0 (owner round-8 z-stack:
+          bg z-0 → letters z-1 → content z-2+). */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 -z-20 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
+        className="fixed inset-0 z-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
       />
-      {/* Greek letters drifting up across the entire screen, behind all content. */}
+      {/* Greek letters drifting across the entire screen. At z-1 the field is
+          plainly IN FRONT of the page wash (z-0) and BEHIND all cards/text
+          (main is z-10). */}
       <GreekLetterField />
       <ScrollProgressBar />
       <SiteNav />
@@ -2884,8 +2887,10 @@ const FOOTER_COLUMNS: { heading: string; links: { href: string; label: string }[
 ];
 
 function SiteFooter() {
+  // z-10 keeps the footer (translucent bg + text) ABOVE the z-1 letter
+  // field — letters must never drift over text (owner round-8 z-stack).
   return (
-    <footer className="relative border-t border-border bg-secondary/30">
+    <footer className="relative z-10 border-t border-border bg-secondary/30">
       {/* Greek-key (meander) hairline band riding the very top of the footer —
           the second (and final) tasteful placement of the motif, so the page
           closes on the same "Greek life" cue it opened the feature section with.

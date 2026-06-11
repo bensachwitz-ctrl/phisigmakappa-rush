@@ -14,9 +14,10 @@ import React from "react";
  * lands as one gentle cross-fade (gs-fade-in — opacity only, reduced-motion
  * safe via the global collapse).
  *
- * Purely decorative: aria-hidden + pointer-events-none, parked on the -z-10
- * plane of the demo shell so it can NEVER sit over cards or interactive UI —
- * the phone surface and every modal paint fully above it.
+ * Purely decorative: aria-hidden + pointer-events-none, parked on the z-1
+ * ambient plane of the demo shell (above the z-0 background wash, below all
+ * z-10+ content) so it can NEVER sit over cards or interactive UI — the phone
+ * surface and every modal paint fully above it.
  */
 export function ChapterIdentityBackdrop({
   school,
@@ -42,7 +43,7 @@ export function ChapterIdentityBackdrop({
   return (
     <div
       aria-hidden="true"
-      className="gs-fade-in pointer-events-none absolute inset-0 -z-10 select-none overflow-hidden"
+      className="gs-fade-in pointer-events-none absolute inset-0 z-[1] select-none overflow-hidden"
     >
       {/* Huge faint school wordmark across the top of the room. */}
       {school ? (

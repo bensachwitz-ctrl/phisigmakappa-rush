@@ -6,8 +6,12 @@
  * speeds, each fading gently in and out. Letters are split into three PARALLAX
  * TIERS — near (large/fast/more opaque), mid, and far (small/slow/faint) — so
  * the field reads as a sense of distance behind the UI rather than flat noise.
- * Sits fixed over the page (incl. the white cards) as a tasteful animated
- * texture; pointer-events-none + aria-hidden so it never touches the UI.
+ *
+ * Z-STACK CONTRACT (owner round-8): the field paints ABOVE the page background
+ * layer (washes/gradients/solid panels at z-0) and BELOW all cards/text
+ * (content at z-2+). It renders at zIndex 1 by default (`z` prop) — NEVER at a
+ * negative z, where any opaque ancestor/sibling background swallows it whole.
+ * pointer-events-none + aria-hidden so it never touches the UI.
  *
  * Travel: each letter starts at a scattered position INCLUDING off-screen edges
  * and crosses to the far side via a large horizontal `--dx` plus a randomized
@@ -187,6 +191,7 @@ export function GreekLetterField({
   calm = false,
   whisper = false,
   fromSides = false,
+  z = 1,
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];
@@ -212,6 +217,9 @@ export function GreekLetterField({
    *  side — at a stately 1.5× slower pace. Under prefers-reduced-motion the
    *  field freezes as a static scatter along each letter's path. */
   fromSides?: boolean;
+  /** Stacking position. 1 (default) = above the page background layer (z-0)
+   *  and below content (z-2+). Callers MUST keep their content at z≥2. */
+  z?: number;
 }) {
   const damping = DAMPING[whisper ? "whisper" : calm ? "calm" : "none"];
   const letters = React.useMemo(
@@ -223,13 +231,13 @@ export function GreekLetterField({
     <div
       aria-hidden="true"
       className={
-        `pointer-events-none ${position} inset-0 -z-10 overflow-hidden ` +
+        `pointer-events-none ${position} inset-0 overflow-hidden ` +
         // Only fall back to the default slate ink when no brand color is supplied,
         // so a chapter-tinted field paints purely from `currentColor`.
         (color ? "" : "text-slate-700 ") +
         (className || "")
       }
-      style={color ? { color } : undefined}
+      style={{ ...(color ? { color } : null), zIndex: z }}
     >
       {letters.map((l, i) => (
         <span

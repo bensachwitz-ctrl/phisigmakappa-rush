@@ -1445,19 +1445,24 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
 
   return (
     <div
-      // `isolate` is LOAD-BEARING: the letter field + identity backdrop are
-      // -z-10 children, and without a stacking context on this div they paint
-      // BEHIND its own background gradient — i.e. completely invisible (the
-      // owner's "empty flat maroon"). isolation:isolate keeps them above this
-      // background but below all z-10 content.
+      // `isolate` keeps the shell's explicit z-stack self-contained. Owner
+      // round-8 layering contract: background z-0 → letters/identity z-1 →
+      // all content z-10+. Nothing ambient lives at negative z anymore (a
+      // negative-z child under any opaque background = invisible).
       className="relative isolate flex min-h-[100dvh] w-full flex-col items-stretch justify-start overflow-hidden pt-[calc(3.5rem+env(safe-area-inset-top))] font-sans text-slate-200 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:p-8 lg:pt-8"
-      style={{
-        // Deep brand-tinted radial wash → near-black, so the shell reads as the
-        // chapter's world. Transitions smoothly when the chapter changes.
-        background: `radial-gradient(ellipse at 75% 0%, ${brandPrimary}33, transparent 55%), radial-gradient(ellipse at 15% 90%, ${brandSecond}1f, transparent 50%), linear-gradient(160deg, ${brandDeep}, #060810 60%, #04060d)`,
-        transition: "background 0.9s cubic-bezier(0.16,1,0.3,1)",
-      }}
     >
+      {/* BACKGROUND layer (z-0): deep brand-tinted radial wash → near-black,
+          so the shell reads as the chapter's world. Transitions smoothly when
+          the chapter changes. Lives on its own z-0 div so the z-1 letter
+          field + identity backdrop are guaranteed to paint OVER it. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0"
+        style={{
+          background: `radial-gradient(ellipse at 75% 0%, ${brandPrimary}33, transparent 55%), radial-gradient(ellipse at 15% 90%, ${brandSecond}1f, transparent 50%), linear-gradient(160deg, ${brandDeep}, #060810 60%, #04060d)`,
+          transition: "background 0.9s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      />
 
       {/* Chapter IDENTITY in the room itself — huge faint school wordmark +
           letter monogram + crest watermark behind everything, tinted to the
