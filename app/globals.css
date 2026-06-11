@@ -573,6 +573,12 @@
 /* Continuously animated brand gradient for the accent word. */
 @keyframes gs-grad-pan{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
 .gs-grad-anim{background-size:200% auto;animation:gs-grad-pan 6s ease-in-out infinite;}
+/* Directional arrow nudge — moves along the arrow's OWN pointing axis
+   (translateX in the icon's local frame, so a rotated wrapper makes it nudge
+   down on mobile / right on desktop). Replaces the generic animate-bounce,
+   whose keyframes stomp the rotation transform and always bob vertically. */
+@keyframes gs-nudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
+.gs-nudge{animation:gs-nudge 1.7s cubic-bezier(0.45,0,0.55,1) infinite;}
 @media (prefers-reduced-motion: reduce){
   /* Reduced motion: the Greek-letter field must stay clearly VISIBLE — render
      it as a static scattered constellation (no drift) instead of a near-
@@ -594,6 +600,7 @@
   .gs-tagline-sheen{animation:none;display:none;}
   .gs-word-reveal{opacity:1;animation:none;}
   .gs-grad-anim{animation:none;}
+  .gs-nudge{animation:none;}
 }
 /* AA-safe brand gradient for the "promise word". Every stop ≥ 4.5:1 (large
    text ≥ 3:1) against the near-white page (#f6f8fc): #1d4ed8 (8.6:1) →

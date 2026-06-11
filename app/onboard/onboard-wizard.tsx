@@ -72,6 +72,79 @@ function GsChip({
 // is intentionally light — fewer, larger, well-spaced inputs; the long identity
 // field-wall is collapsed behind a "fine-tune details" expander on the Chapter
 // stage so the default surface stays calm.
+/** round-10 — narrated provisioning beat. Shown while the launch POST runs
+ *  (tenant + admin + welcome email take real seconds): a calm, chapter-tinted
+ *  step narration so the founder watches their site being built instead of
+ *  staring at a frozen button. Pure presentation; the wizard owns the POST. */
+function ProvisioningOverlay({
+  fraternityName,
+  greekLetters,
+  subdomain,
+  reduce,
+}: {
+  fraternityName: string;
+  greekLetters: string;
+  subdomain: string;
+  reduce: boolean;
+}) {
+  const beats = React.useMemo(
+    () => [
+      `Reserving ${subdomain || "your"}.greekstack.vercel.app`,
+      `Painting ${greekLetters || "your letters"} across the site`,
+      "Setting up rush, dues, events & the exec console",
+      `Waking up ${fraternityName || "your chapter"}'s feed`,
+    ],
+    [fraternityName, greekLetters, subdomain]
+  );
+  const [beat, setBeat] = React.useState(0);
+  React.useEffect(() => {
+    // Advance through the narration but hold on the last beat until the POST
+    // resolves (the wizard unmounts this overlay on success/error).
+    const t = setInterval(
+      () => setBeat((b) => Math.min(b + 1, beats.length - 1)),
+      reduce ? 1600 : 1200
+    );
+    return () => clearInterval(t);
+  }, [beats.length, reduce]);
+  return (
+    <div className="flex flex-col items-center gap-6 py-10 text-center" role="status" aria-live="polite">
+      <motion.div
+        className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600/10 text-2xl font-bold text-blue-600"
+        animate={reduce ? undefined : { scale: [1, 1.06, 1] }}
+        transition={reduce ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {greekLetters || "GS"}
+      </motion.div>
+      <div className="space-y-2">
+        <p className="text-lg font-semibold text-foreground">Building your chapter&apos;s site</p>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={beat}
+            className="text-sm text-muted-foreground"
+            initial={reduce ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+          >
+            {beats[beat]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+      <div className="flex gap-1.5" aria-hidden="true">
+        {beats.map((_, i) => (
+          <span
+            key={i}
+            className={
+              "h-1.5 w-6 rounded-full transition-colors duration-300 " +
+              (i <= beat ? "bg-blue-600" : "bg-border")
+            }
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const STEPS = [
   { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — no card required to launch." },
   { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then make it yours in the live preview." },
@@ -90,6 +163,10 @@ export default function OnboardWizard() {
   // Drives the directional slide in the AnimatePresence wrapper below.
   const [dir, setDir] = React.useState<1 | -1>(1);
   const [busy, setBusy] = React.useState(false);
+  // Distinct from `busy` (which also covers the brief subdomain re-check): true
+  // ONLY while the provisioning POST is genuinely in flight, so the full-panel
+  // "building your site" overlay shows for the launch beat and nothing else.
+  const [provisioning, setProvisioning] = React.useState(false);
   const [launched, setLaunched] = React.useState(false);
   const [liveUrl, setLiveUrl] = React.useState("");
   // Inline launch-failure message (non-subdomain errors) so the finish line shows
@@ -465,6 +542,7 @@ export default function OnboardWizard() {
 
   async function handleLaunch() {
     setBusy(true);
+    setProvisioning(true);
     setLaunchError(null);
     try {
       const res = await fetch("/api/onboard", {
@@ -516,6 +594,7 @@ export default function OnboardWizard() {
           setSubStatus(taken ? "taken" : "invalid");
           setErrors((prev) => ({ ...prev, subdomain: message }));
           setBusy(false);
+          setProvisioning(false);
           // Re-open the chapter step (where the subdomain field lives) with a
           // backward slide, then focus + scroll the field on the next frame.
           setDir(-1);
@@ -561,6 +640,7 @@ export default function OnboardWizard() {
       push({ title: "Launch Failed", description: message, variant: "destructive" });
       setLaunchError(message);
       setBusy(false);
+      setProvisioning(false);
     }
   }
 
@@ -578,6 +658,32 @@ export default function OnboardWizard() {
         {!reduce && <ConfettiBurst />}
         <GlassPanel>
           <SuccessState fraternityName={fraternityName} greekLetters={greekLetters} url={liveUrl} />
+        </GlassPanel>
+      </motion.div>
+    );
+  }
+
+  // ── In-flight provisioning takeover ───────────────────────────────────────
+  // Provisioning a tenant spins up a Postgres schema + ~42 tables + the admin
+  // account + welcome email — several real seconds. Rather than leave the
+  // founder staring at a lone spinning button (the most anxious moment of the
+  // whole flow), take the panel over with a narrated "building your site" beat
+  // that flows straight into the success takeover the instant the POST returns.
+  if (provisioning) {
+    return (
+      <motion.div
+        className="relative mx-auto max-w-xl"
+        initial={reduce ? false : { opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={reduce ? { duration: 0.2 } : { type: "spring", stiffness: 220, damping: 24 }}
+      >
+        <GlassPanel>
+          <ProvisioningOverlay
+            fraternityName={fraternityName}
+            greekLetters={greekLetters}
+            subdomain={subdomain}
+            reduce={!!reduce}
+          />
         </GlassPanel>
       </motion.div>
     );

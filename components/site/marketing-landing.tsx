@@ -1827,12 +1827,12 @@ function FeatureCard({
    chaos. These are generic third-party tools (no logos, just names) collapsing
    into the single Greekstack card on the right. */
 const BEFORE_TOOLS: { label: string; tilt: string }[] = [
-  { label: "Spreadsheets", tilt: "sm:-rotate-2" },
-  { label: "GroupMe", tilt: "sm:rotate-1" },
-  { label: "Venmo", tilt: "sm:rotate-2" },
-  { label: "Google Forms", tilt: "sm:-rotate-1" },
-  { label: "Linktree", tilt: "sm:rotate-1" },
-  { label: "A shared Google Drive", tilt: "sm:-rotate-2" },
+  { label: "Spreadsheets", tilt: "sm:-rotate-2 sm:translate-y-0.5" },
+  { label: "GroupMe", tilt: "sm:rotate-1 sm:-translate-y-1" },
+  { label: "Venmo", tilt: "sm:rotate-2 sm:translate-y-1" },
+  { label: "Google Forms", tilt: "sm:-rotate-1 sm:-translate-y-0.5" },
+  { label: "Linktree", tilt: "sm:rotate-1 sm:translate-y-1" },
+  { label: "A shared Google Drive", tilt: "sm:-rotate-2 sm:-translate-y-0.5" },
 ];
 
 /* A tasteful "before vs after" beat: the tangle of tools chapters juggle today
@@ -1870,9 +1870,16 @@ function BeforeAfter() {
         </Reveal>
 
         <div className="mx-auto mt-14 grid max-w-5xl grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
-          {/* BEFORE — the muted, scattered pile of tools. */}
+          {/* BEFORE — the muted, scattered pile of tools. A faint diagonal
+              hatch (brand-neutral slate, near-invisible) gives the card a
+              scratch-paper texture so the chaos side has its own material —
+              deliberately flatter than the glass "after" card it loses to. */}
           <Reveal>
-            <div className="relative rounded-3xl border border-dashed border-border bg-secondary/30 p-6 sm:p-7">
+            <div className="relative overflow-hidden rounded-3xl border border-dashed border-border bg-secondary/30 p-6 sm:p-7">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,rgba(100,116,139,0.05)_0px,rgba(100,116,139,0.05)_1px,transparent_1px,transparent_9px)]"
+              />
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Today
               </span>
@@ -1901,12 +1908,18 @@ function BeforeAfter() {
             </div>
           </Reveal>
 
-          {/* Arrow — the collapse. Rotates to point down on mobile (where the
-              cards stack) and right on desktop. Soft idle drift, disabled under
-              reduced motion. */}
+          {/* Arrow — the collapse. Points down on mobile (where the cards
+              stack) and right on desktop. The rotation lives on an inner
+              wrapper so the circle's shadow stays grounded, and the icon
+              nudges along its OWN pointing axis via .gs-nudge (the old
+              animate-bounce stomped the rotation transform — the arrow
+              pointed right on mobile while bobbing vertically). Collapses
+              under reduced motion. */}
           <div className="flex items-center justify-center" aria-hidden="true">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-[0_10px_30px_-8px_rgba(37,99,235,0.6)]">
-              <IconArrowRight className="h-5 w-5 rotate-90 motion-safe:animate-bounce lg:rotate-0" />
+              <span className="flex rotate-90 lg:rotate-0">
+                <IconArrowRight className="gs-nudge h-5 w-5" />
+              </span>
             </span>
           </div>
 
@@ -2727,28 +2740,52 @@ function Proof() {
 
         {/* HONEST founder-led trust block (replaces the fabricated "what officers
             tell us" testimonial — there are no real customer quotes yet, so we
-            lead with the founder directly instead of inventing social proof). */}
+            lead with the founder directly instead of inventing social proof).
+            Round-9 craft pass: editorial pull-quote treatment in the shared
+            card language — glass surface, lit top seam, mirrored corner
+            blooms, grain, an oversized serif open-quote, the quote itself in
+            the serif identity face, and the gold Greek-key divider standing in
+            for a signature rule. The old version (flat gradient card + a
+            centered icon chip) read templated next to the rest of the page. */}
         <Reveal delay={120} className="mx-auto mt-14 max-w-3xl">
-          <figure className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-card p-8 text-center shadow-sm sm:p-10">
+          <figure className="gs-glass relative overflow-hidden rounded-3xl p-8 text-center sm:p-12">
+            {/* always-lit top seam — shared card language */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-blue-500/0 via-sky-400/70 to-amber-400/0"
             />
-            <div className="mx-auto mb-5 flex justify-center">
-              <IconChip icon={IconTalkToSales} tone="platform" size="lg" />
-            </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            {/* mirrored corner blooms — blue in, gold out */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -left-14 -top-14 h-36 w-36 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-14 -right-14 h-36 w-36 rounded-full bg-gradient-to-tl from-amber-400/10 to-blue-500/10"
+            />
+            <Grain opacity={0.04} />
+            {/* Oversized serif open-quote — the editorial cue that this is a
+                voice, not a feature card. Decorative, faint, behind the text. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1 select-none font-serif text-[7rem] font-black leading-none text-blue-600/10 sm:left-6 sm:text-[9rem]"
+            >
+              &ldquo;
+            </span>
+            <span className="relative text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
               A note from the founder
             </span>
-            <blockquote className="mt-3 text-pretty text-lg font-medium leading-relaxed text-foreground sm:text-xl">
+            <blockquote className="relative mx-auto mt-4 max-w-2xl text-pretty font-serif text-xl font-medium leading-relaxed text-foreground sm:text-2xl">
               &ldquo;I built Greekstack because I got tired of running rush out of a spreadsheet and a
               group chat. It&apos;s new, and I&apos;d rather earn your chapter than fake a wall of logos.
               Talk to me directly before you commit — I&apos;ll show you exactly how it&apos;d work for you.&rdquo;
             </blockquote>
-            <figcaption className="mt-5 text-sm text-foreground/80">
+            {/* Gold meander rule — the signature line. */}
+            <GreekKey className="relative mx-auto mt-6" width="w-24" gold />
+            <figcaption className="relative mt-4 text-sm text-foreground/80">
               <span className="font-semibold text-foreground">Greekstack</span> · Founder &amp; chapter alum
             </figcaption>
-            <div className="mt-7 flex flex-col items-center justify-center gap-3">
+            <div className="relative mt-7 flex flex-col items-center justify-center gap-3">
               <Magnetic>
                 <Button asChild variant="platform" size="lg" className="gs-sheen">
                   <Link href="/contact" className="group/btn">
