@@ -292,7 +292,7 @@ export const DEMO_CALLOUTS: Record<
 > = {
   feed: {
     title: "Chapter feed",
-    body: "Officers broadcast announcements here — pinned when it matters. Every member sees the latest chapter news on their dashboard instead of digging through a group chat.",
+    body: "Officers broadcast announcements here, pinned when it matters. Every member sees the latest chapter news on their dashboard instead of digging through a group chat.",
   },
   events: {
     title: "Events & calendar",
@@ -300,7 +300,7 @@ export const DEMO_CALLOUTS: Record<
   },
   rush: {
     title: "Recruitment pipeline",
-    body: "Run your whole rush from one board: QR check-in builds the PNM list, brothers vote anonymously, and rushees get TCPA-compliant texts — no spreadsheet, no five group chats.",
+    body: "Run your whole rush from one board: QR check-in builds the PNM list, brothers vote anonymously, and rushees get TCPA-compliant texts. No spreadsheet, no five group chats.",
   },
   dues: {
     title: "Dues & payments",
@@ -308,11 +308,11 @@ export const DEMO_CALLOUTS: Record<
   },
   directory: {
     title: "Roster & alumni network",
-    body: "A searchable directory of actives and alumni by class year — plus gated alumni onboarding and Stripe giving flows that turn graduated brothers into a recurring base.",
+    body: "A searchable directory of actives and alumni by class year, plus gated alumni onboarding and Stripe giving flows that turn graduated brothers into a recurring base.",
   },
   settings: {
     title: "Your profile",
-    body: "Each member manages their own profile, privacy, and notifications. Officers get role-scoped access so everyone sees exactly their job — nothing more.",
+    body: "Each member manages their own profile, privacy, and notifications. Officers get role-scoped access so everyone sees exactly their job, nothing more.",
   },
 };
 

@@ -58,9 +58,9 @@ export function renderSpotlight(ctx: DemoContext) {
                     <span className="font-bold" style={{ color: selectedBrand.primaryColor }}>What this does · </span>
                     {spotlight === "elections" && "Run secret-ballot officer elections in-app. Every active gets one anonymous vote per seat; the platform tallies live and auto-seats the winners when voting closes."}
                     {spotlight === "treasury" && "Your treasurer's back office: chapter balance, dues collected vs. outstanding, a line-item budget that tracks spend in real time, and a reconciled ledger."}
-                    {spotlight === "qr" && "Generate a QR for any rush event. A PNM scans it and either checks in or fills a quick form — they drop straight into your recruitment pipeline. Try it below."}
+                    {spotlight === "qr" && "Generate a QR for any rush event. A PNM scans it and either checks in or fills a quick form, and they drop straight into your recruitment pipeline. Try it below."}
                     {spotlight === "giving" && "Turn graduated brothers into a recurring base. Run branded campaigns with a live goal meter; donations clear through Stripe straight to your chapter."}
-                    {spotlight === "theme" && "Your letters, colors, and crest — the entire platform re-skins to your chapter in seconds. Tap a brand to watch every surface change live."}
+                    {spotlight === "theme" && "Your letters, colors, and crest: the entire platform re-skins to your chapter in seconds. Tap a brand to watch every surface change live."}
                   </div>
 
                   <div className="flex-1 overflow-y-auto px-3 pb-4 pt-1.5 space-y-3 text-left">
@@ -122,7 +122,7 @@ export function renderSpotlight(ctx: DemoContext) {
                                   </button>
                                 );
                               })}
-                              {!voted && <p className="text-[11px] text-slate-400 text-center pt-0.5">Your ballot is anonymous — tap a candidate to cast it.</p>}
+                              {!voted && <p className="text-[11px] text-slate-400 text-center pt-0.5">Your ballot is anonymous. Tap a candidate to cast it.</p>}
                             </div>
                           );
                         })}
@@ -302,7 +302,7 @@ export function renderSpotlight(ctx: DemoContext) {
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
                           <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                            <Palette className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand — watch it re-skin
+                            <Palette className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand and watch it re-skin
                           </h5>
                           <div className="grid grid-cols-2 gap-2">
                             {tenants.slice(0, 6).map((t) => {
@@ -315,7 +315,7 @@ export function renderSpotlight(ctx: DemoContext) {
                                     if (active) return;
                                     handleSelectTenant(t);
                                     setSpotlight(null);
-                                    showToast(`Re-skinned to ${b.name} — every surface updated.`, "success");
+                                    showToast(`Re-skinned to ${b.name}. Every surface updated.`, "success");
                                   }}
                                   className={`p-2.5 rounded-xl border flex items-center gap-2 transition active:scale-[0.98] ${active ? "border-2" : "border-slate-100 hover:border-slate-200"}`}
                                   style={active ? { borderColor: b.primaryColor } : {}}

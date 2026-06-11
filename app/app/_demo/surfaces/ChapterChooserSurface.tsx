@@ -96,7 +96,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
           {overlay ? "Make it your chapter" : "See it as your chapter"}
         </h1>
         <p className="relative mt-1 text-[13px] leading-snug text-slate-500">
-          Pick your school's chapter or build your own — letters, colors, name.
+          Pick your school's chapter or build your own: letters, colors, name.
           <span className="font-semibold text-slate-700"> The entire app instantly re-skins to YOUR chapter</span> so you can see exactly how it's tailored to you.
         </p>
 
@@ -266,7 +266,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             <input
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              placeholder="e.g. Kappa Delta — Beta Chapter"
+              placeholder="e.g. Kappa Delta, Beta Chapter"
               className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
             />
           </Field>

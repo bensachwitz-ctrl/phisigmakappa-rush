@@ -90,7 +90,7 @@ export function renderFeedTab(ctx: DemoContext) {
                             {role === "brother" && (
                               <button
                                 onClick={() => { setRole("brother"); setViewRole("exec"); setActiveTab("feed"); }}
-                                aria-label="Exec-only tools — switch to the exec board view"
+                                aria-label="Exec-only tools. Switch to the exec board view"
                                 className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
                               >
                                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">

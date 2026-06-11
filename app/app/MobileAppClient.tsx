@@ -91,7 +91,6 @@ import { renderPostJobModal } from "./_demo/modals/PostJobModal";
 import { renderPostAnnModal } from "./_demo/modals/PostAnnouncementModal";
 import { renderEditProfileModal } from "./_demo/modals/EditProfileModal";
 
-import { IconSpark } from "@/components/brand/icons";
 export default function MobileAppClient({ initialTenants }: MobileAppClientProps) {
   const [tenants] = useState<Tenant[]>(initialTenants);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -297,7 +296,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         },
       };
     });
-    showToast("Anonymous ballot recorded — your choice is never linked to you.", "success");
+    showToast("Anonymous ballot recorded. Your choice is never linked to you.", "success");
   };
 
   // Add a donation to the live campaign meter.
@@ -345,7 +344,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setQrCheckedIn((prev) => [qrName.trim(), ...prev]);
     setQrName("");
     setQrMajor("");
-    showToast(`${newPnm.name} checked in — added to the rush board.`, "success");
+    showToast(`${newPnm.name} checked in and added to the rush board.`, "success");
   };
 
   // ── Interactive demo callouts ────────────────────────────────────────────
@@ -613,7 +612,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setShowChapterChooser(false);
     // Celebrate the reskin — THE demo moment. Toast + success haptic (native
     // shell) so picking your chapter lands as an event, not a silent swap.
-    showToast(`${brand.letters} ${name} is live — the whole app just became yours.`, "success");
+    showToast(`${brand.letters} ${name} is live. The whole app just became yours.`, "success");
     try {
       localStorage.setItem("gs_mobile_token", "demo-token-12345");
       localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
@@ -788,7 +787,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     } catch {
       /* download is best-effort in the demo */
     }
-    showToast("Added to your calendar — opens in Google / iCloud / Outlook.", "success");
+    showToast("Added to your calendar. Opens in Google, iCloud, or Outlook.", "success");
   };
 
   const handleRsvp = async (eventId: string, status: "GOING" | "MAYBE" | "NOT_GOING") => {
@@ -1515,7 +1514,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
               disabled={!token}
               aria-expanded={showViewMenu}
               aria-haspopup="menu"
-              aria-label={`Change view — currently ${personaShortLabel}`}
+              aria-label={`Change view (currently ${personaShortLabel})`}
               className="press mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-300 transition hover:text-white disabled:opacity-60"
             >
               {selectedBrand.letters} · {personaShortLabel}
@@ -1641,16 +1640,17 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
               <p className="mt-0.5 text-[12px] font-semibold leading-tight text-slate-400">Interactive demo</p>
             </div>
           </div>
+          {/* Two short sentences, no dash flourishes; the three persona cards
+              below already name the roles, so the copy doesn't repeat them. */}
           <p className="text-xs text-slate-400 leading-relaxed">
-            This is the real app your chapter gets. Pick who you&apos;re viewing it
-            as — an active brother, the exec board, or an alumnus — and everything
-            on the phone updates to that experience.
+            This is the real app your chapter gets. Pick who you&apos;re viewing
+            it as and the phone updates to match.
           </p>
         </div>
 
         <div className="border-t border-white/10 pt-5 space-y-4">
           <div className="space-y-1.5">
-            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Active Chapter</span>
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Active Chapter</span>
             <button
               onClick={() => { setChooserMode("pick"); setShowChapterChooser(true); }}
               disabled={!token}
@@ -1673,7 +1673,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
               of a Member/Admin toggle framing, the LEFT rail picks WHO you're
               viewing the real app as; the phone always shows the true product. */}
           <div className="space-y-1.5">
-            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Viewing as</span>
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Viewing as</span>
             <div className="space-y-1.5" role="radiogroup" aria-label="View the app as">
               {VIEW_PERSONAS.map((p) => {
                 const active = viewPersona === p.id;
@@ -1745,7 +1745,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             onClick={() => setShowPricingModal(true)}
             className="w-full py-2.5 px-4 text-xs font-bold text-slate-950 rounded-xl bg-gradient-to-r from-blue-400 via-sky-400 to-amber-300 hover:opacity-95 shadow-[0_4px_20px_-4px_rgba(56,189,248,0.4)] flex items-center justify-center gap-2 transition"
           >
-            <IconSpark className="w-3.5 h-3.5" /> Launch your chapter
+            Launch your chapter
           </button>
         </div>
       </div>
@@ -2087,7 +2087,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                             className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
                             style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})` }}
                           >
-                            <IconSpark className="h-3.5 w-3.5" /> Launch your chapter — free
+                            Launch your chapter for free
                           </button>
                           <button
                             onClick={() => setExecTipSeen(true)}
