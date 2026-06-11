@@ -4,12 +4,12 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  ScrollText, User, Vote, Megaphone, Settings, Trash2, Edit3, Sparkles,
-  Search, X, Filter, CreditCard,
+  ScrollText, User, Vote, Megaphone, Settings, Trash2, Edit3, Search, X, Filter, CreditCard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 type Row = {
   id: string;
   actorName: string;
@@ -268,7 +268,7 @@ function ActionIcon({ action }: { action: string }) {
     if (action.startsWith("RUSH")) return { icon: Edit3, tone: "amber" as const };
     if (action.startsWith("DUES")) return { icon: CreditCard, tone: "emerald" as const };
     if (action.startsWith("BROTHER")) return { icon: User, tone: "blue" as const };
-    if (action.startsWith("EVENT")) return { icon: Sparkles, tone: "emerald" as const };
+    if (action.startsWith("EVENT")) return { icon: IconSpark, tone: "emerald" as const };
     if (action.startsWith("BROADCAST") || action.startsWith("ANNOUNCEMENT")) return { icon: Megaphone, tone: "amber" as const };
     if (action.startsWith("SETTINGS")) return { icon: Settings, tone: "muted" as const };
     if (action.includes("DELETED")) return { icon: Trash2, tone: "rose" as const };

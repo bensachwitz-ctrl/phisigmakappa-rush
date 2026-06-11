@@ -6,11 +6,12 @@ import Link from "next/link";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowLeft, Calendar, FileText, Mail, Sparkles } from "lucide-react";
+import { UserPlus, ArrowLeft, Calendar, FileText, Mail } from "lucide-react";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import type { Metadata } from "next";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -97,7 +98,7 @@ export default async function PnmPortalPage() {
           <div className="relative bg-cream-100 rounded-2xl border border-maroon-100 border-dashed p-5 overflow-hidden">
             <span aria-hidden className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-200/30 blur-2xl" />
             <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-cream-100 text-amber-600 ring-1 ring-amber-200 shadow-sm mb-3">
-              <Sparkles className="w-5 h-5" aria-hidden />
+              <IconSpark className="w-5 h-5" aria-hidden />
             </span>
             <h2 className="relative text-base font-semibold text-maroon-700 mb-1">Track your bid</h2>
             <p className="relative text-sm text-maroon-500">

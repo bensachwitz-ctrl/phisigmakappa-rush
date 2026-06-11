@@ -16,9 +16,10 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, MapPin, Briefcase, Sparkles, ArrowRight } from "lucide-react";
+import { GraduationCap, MapPin, Briefcase, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -84,7 +85,7 @@ export default async function AlumniDirectoryPage() {
         {/* Hero */}
         <header className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" aria-hidden />
+            <IconSpark className="w-3.5 h-3.5" aria-hidden />
             Alumni Network
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">

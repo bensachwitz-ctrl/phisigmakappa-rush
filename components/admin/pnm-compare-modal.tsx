@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { avatarSrc } from "@/lib/image-url";
 import {
   Mail, Phone, GraduationCap, MapPin, ThumbsUp, ThumbsDown,
-  Minus, Star, Calendar, Sparkles,
-} from "lucide-react";
+  Minus, Star, Calendar, } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 // Mirror of Roster.Rush — kept loose so the modal works against either the
 // admin roster or the brother view without re-importing types.
 type Rush = {
@@ -74,7 +74,7 @@ export function PnmCompareModal({
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-phisig-red" aria-hidden="true" />
+            <IconSpark className="h-5 w-5 text-phisig-red" aria-hidden="true" />
             Compare {rushes.length} {rushes.length === 1 ? "PNM" : "PNMs"}
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">

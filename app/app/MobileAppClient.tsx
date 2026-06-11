@@ -20,7 +20,6 @@ import {
   Check,
   X,
   Info,
-  Sparkles,
   MapPin,
   Award,
   Clock,
@@ -92,6 +91,7 @@ import { renderPostJobModal } from "./_demo/modals/PostJobModal";
 import { renderPostAnnModal } from "./_demo/modals/PostAnnouncementModal";
 import { renderEditProfileModal } from "./_demo/modals/EditProfileModal";
 
+import { IconSpark } from "@/components/brand/icons";
 export default function MobileAppClient({ initialTenants }: MobileAppClientProps) {
   const [tenants] = useState<Tenant[]>(initialTenants);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -1623,7 +1623,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             <img src="/brand/greekstack-mark.png?v=2" className="w-10 h-10 rounded-xl object-contain shadow-md" alt="Greekstack Logo" />
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" /> Interactive Demo
+                <IconSpark className="w-3.5 h-3.5" /> Interactive Demo
               </div>
               <h2 className="text-xl font-bold text-white tracking-tight mt-1.5">Greekstack App</h2>
             </div>
@@ -1732,7 +1732,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             onClick={() => setShowPricingModal(true)}
             className="w-full py-2.5 px-4 text-xs font-bold text-slate-950 rounded-xl bg-gradient-to-r from-blue-400 via-sky-400 to-amber-300 hover:opacity-95 shadow-[0_4px_20px_-4px_rgba(56,189,248,0.4)] flex items-center justify-center gap-2 transition"
           >
-            <Sparkles className="w-3.5 h-3.5" /> Launch Chapter Now
+            <IconSpark className="w-3.5 h-3.5" /> Launch Chapter Now
           </button>
         </div>
       </div>
@@ -2066,7 +2066,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                             className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
                             style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})` }}
                           >
-                            <Sparkles className="h-3.5 w-3.5" /> Launch your chapter — free
+                            <IconSpark className="h-3.5 w-3.5" /> Launch your chapter — free
                           </button>
                           <button
                             onClick={() => setExecTipSeen(true)}

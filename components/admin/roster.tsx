@@ -54,7 +54,6 @@ import {
   Download,
   Wand2,
   RefreshCw,
-  Sparkles,
   Copy,
 } from "lucide-react";
 import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
@@ -69,6 +68,7 @@ import {
 } from "@/lib/utils";
 import { format } from "date-fns";
 
+import { IconSpark } from "@/components/brand/icons";
 type Rush = {
   id: string;
   name: string;
@@ -536,7 +536,7 @@ export function Roster({
                 : `Compare ${selected.size} selected PNMs`
             }
           >
-            <Sparkles className="h-4 w-4" />
+            <IconSpark className="h-4 w-4" />
             <span className="hidden sm:inline">Compare</span> {selected.size >= 2 && selected.size <= 4 && `(${selected.size})`}
           </Button>
           <Button

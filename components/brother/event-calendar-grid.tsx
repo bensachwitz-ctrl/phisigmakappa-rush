@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Heart,
   Users,
   Crown,
@@ -20,6 +19,7 @@ import { cn, formatTime } from "@/lib/utils";
 import { EVENT_CATEGORIES } from "@/components/admin/events-manager";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 
+import { IconSpark } from "@/components/brand/icons";
 /**
  * Brother-only month-view calendar grid.
  *
@@ -52,7 +52,7 @@ type CalendarEvent = {
 type CategoryIcon = React.ComponentType<{ className?: string }>;
 
 const CATEGORY_ICON: Record<string, CategoryIcon> = {
-  RUSH: Sparkles,
+  RUSH: IconSpark,
   DATE: Heart,
   BROTHERHOOD: Users,
   CHAPTER: Crown,

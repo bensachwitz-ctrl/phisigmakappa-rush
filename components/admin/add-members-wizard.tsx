@@ -37,11 +37,11 @@ import {
 import { useToast } from "@/components/ui/toast";
 import {
   Users, GraduationCap, User, UsersRound, ArrowRight, ArrowLeft, Loader2,
-  CheckCircle2, AlertTriangle, Trash2, Plus, ClipboardPaste, Sparkles,
-  Mail, MinusCircle,
+  CheckCircle2, AlertTriangle, Trash2, Plus, ClipboardPaste, Mail, MinusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 // ── Public types ─────────────────────────────────────────────────────────────
 
 export type MemberType = "brothers" | "alumni";
@@ -419,7 +419,7 @@ export function AddMembersWizard({
           <DialogHeader className="space-y-1">
             <DialogTitle className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-phisig-red text-white" aria-hidden="true">
-                <Sparkles className="h-4 w-4" />
+                <IconSpark className="h-4 w-4" />
               </span>
               Add {term.plur}
             </DialogTitle>

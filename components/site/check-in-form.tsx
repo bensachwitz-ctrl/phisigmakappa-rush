@@ -16,8 +16,9 @@
  */
 
 import * as React from "react";
-import { CheckCircle2, Loader2, UserPlus, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, UserPlus } from "lucide-react";
 
+import { IconSpark } from "@/components/brand/icons";
 type Props = { code: string; orgName: string };
 
 type Result = { ok: true; isNewPnm: boolean; name: string; eventName: string };
@@ -85,7 +86,7 @@ export function CheckInForm({ code, orgName }: Props) {
           )}
         </p>
         <p className="mt-5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Sparkles className="h-3 w-3" aria-hidden="true" /> You can close this page.
+          <IconSpark className="h-3 w-3" aria-hidden="true" /> You can close this page.
         </p>
       </div>
     );

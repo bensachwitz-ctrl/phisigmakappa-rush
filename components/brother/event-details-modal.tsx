@@ -12,17 +12,18 @@ import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import {
   CheckCircle2, XCircle, HelpCircle, Clock, MapPin, Shirt,
-  Lock, Globe, Loader2, Users, Sparkles, Heart, Crown, PartyPopper, Calendar,
+  Lock, Globe, Loader2, Users, Heart, Crown, PartyPopper, Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate, formatTime } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 // Per-category icon + tone — kept in lockstep with EVENT_CATEGORIES in
 // components/admin/events-manager.tsx and the calendar grid icons. This
 // component imports nothing from there to keep the bundle smaller in the
 // modal-only case (it's the only consumer of these tones inside this file).
 const CATEGORY_META: Record<string, { label: string; tone: string; icon: React.ComponentType<{ className?: string }> }> = {
-  RUSH:        { label: "Rush event",     tone: "bg-phisig-red text-white",  icon: Sparkles    },
+  RUSH:        { label: "Rush event",     tone: "bg-phisig-red text-white",  icon: IconSpark    },
   DATE:        { label: "Date event",     tone: "bg-pink-500 text-white",    icon: Heart       },
   BROTHERHOOD: { label: "Brotherhood",    tone: "bg-blue-500 text-white",    icon: Users       },
   CHAPTER:     { label: "Chapter",        tone: "bg-amber-500 text-white",   icon: Crown       },

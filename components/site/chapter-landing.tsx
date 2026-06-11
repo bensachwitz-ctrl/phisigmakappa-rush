@@ -42,7 +42,7 @@ import { imageSrc, avatarSrc, isCloudinaryUrl } from "@/lib/image-url";
 import { prisma } from "@/lib/prisma";
 import {
   ArrowRight, ShieldCheck, Users, Trophy, Heart,
-  GraduationCap, Sparkles, Quote, Star, Calendar,
+  GraduationCap, Quote, Star, Calendar,
   MapPin, Award, Music, BookOpen, HandHeart,
   Instagram, Mail, Phone, Building2, Flame, Crown,
   CheckCircle2, ChevronDown,
@@ -56,6 +56,7 @@ import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 /**
@@ -1380,7 +1381,7 @@ export default async function ChapterLandingPage({
           />
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
-              <Sparkles className="h-3 w-3" aria-hidden="true" /> {termLabelLong}
+              <IconSpark className="h-3 w-3" aria-hidden="true" /> {termLabelLong}
             </span>
             <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
               Get on the interest list.

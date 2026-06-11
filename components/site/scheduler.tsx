@@ -11,7 +11,6 @@ import { useToast } from "@/components/ui/toast";
 import {
   CalendarDays,
   Clock,
-  Sparkles,
   CheckCircle2,
   Calendar,
   AlertCircle,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 interface SchedulerProps {
   calDiyUrl?: string;
   chapterShort?: string;
@@ -270,7 +270,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
           {/* Left panel: Event Type Selection */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold uppercase tracking-widest text-maroon-800 px-1 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-maroon-600 animate-pulse" />
+              <IconSpark className="w-4 h-4 text-maroon-600 animate-pulse" />
               1. Choose Meeting
             </h2>
             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">

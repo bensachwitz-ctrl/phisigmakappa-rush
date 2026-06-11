@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SettingsManager } from "@/components/admin/settings-manager";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
@@ -21,7 +22,7 @@ export default async function SettingsPage() {
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-            <Sparkles className="h-3 w-3" /> Self-serve content
+            <IconSpark className="h-3 w-3" /> Self-serve content
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Site content</h1>
           <p className="mt-1.5 text-sm text-muted-foreground max-w-2xl">

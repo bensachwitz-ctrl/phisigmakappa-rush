@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
+import { IconSpark } from "@/components/brand/icons";
 import {
   CalendarDays,
   MapPin,
@@ -22,8 +23,7 @@ import {
   ChevronUp,
   Loader2,
   Shirt,
-  Sparkles,
-} from "lucide-react";
+  } from "lucide-react";
 
 type RsvpStatus = "GOING" | "NOT_GOING" | "MAYBE";
 
@@ -152,7 +152,7 @@ export function EventCalendar({
       <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 to-white animate-soft-enter">
         <CardContent className="py-12 px-6 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
-            <Sparkles className="h-6 w-6" />
+            <IconSpark className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-semibold tracking-tight">
             Nothing on the calendar yet

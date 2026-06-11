@@ -21,7 +21,6 @@ import {
   Loader2,
   KeyRound
 } from "lucide-react";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -29,6 +28,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 
+import { IconSpark } from "@/components/brand/icons";
 interface Alumnus {
   id: string;
   fullName: string;
@@ -321,7 +321,7 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
             onClick={() => setWizardOpen(true)}
             className="flex-1 sm:flex-none bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 rounded-xl font-semibold"
           >
-            <Sparkles className="w-4 h-4" />
+            <IconSpark className="w-4 h-4" />
             Add Members
           </Button>
           <Button

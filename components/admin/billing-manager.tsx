@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { IconSpark } from "@/components/brand/icons";
 import {
   CreditCard,
   CheckCircle2,
@@ -19,7 +20,6 @@ import {
   Loader2,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   Percent,
   CalendarDays,
   Repeat,
@@ -227,7 +227,7 @@ export function BillingManager(props: {
                 </span>
               </p>
               <p className="flex items-start gap-2 text-muted-foreground">
-                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+                <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
                 Full access to every feature — your rush site, roster, dues, events,
                 and compliance trail — with no upfront or recurring cost.
               </p>
@@ -296,7 +296,7 @@ export function BillingManager(props: {
             </p>
           ) : (
             <p className="flex items-start gap-2 text-muted-foreground">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+              <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
               Subscribe to lock in your chapter&apos;s platform — full access to
               every feature for {priceLabel}.
             </p>

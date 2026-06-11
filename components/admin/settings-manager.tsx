@@ -15,13 +15,13 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { imageSrc } from "@/lib/image-url";
 import {
-  Save, Loader2, Image as ImageIcon, Star, Crown, Sparkles,
-  RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
+  Save, Loader2, Image as ImageIcon, Star, Crown, RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
   FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
   CalendarDays, ListChecks, Activity, CreditCard, MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 
+import { IconSpark } from "@/components/brand/icons";
 const ICONS = ["Crown", "Trophy", "HandHeart", "Users", "Award", "Star", "Heart", "GraduationCap", "BookOpen", "Music", "Building2", "Flame", "ShieldCheck"];
 
 // The GET payload masks write-only secrets (Resend API key, Twilio auth token)
@@ -223,7 +223,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* BRAND COLORS — chapter-level theme override (white-label) */}
-      <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={Sparkles}>
+      <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={IconSpark}>
         <p className="text-xs text-muted-foreground mb-4">
           Default is Phi Sigma Kappa cardinal red <code className="font-mono text-foreground">#C8102E</code>.
           For chapters at other schools, paste your school&apos;s hex code. Format:{" "}
@@ -498,7 +498,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* HERO */}
-      <Section title="Hero" eyebrow="Top of homepage" icon={Sparkles}>
+      <Section title="Hero" eyebrow="Top of homepage" icon={IconSpark}>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Eyebrow badge text">
             <Input value={values["hero.eyebrow"] || ""} onChange={(e) => set("hero.eyebrow", e.target.value)} placeholder="Fall Rush 2026 — Interest list now open" />
@@ -644,7 +644,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* FAQ — admin repeater */}
-      <Section title="FAQ" eyebrow="Common questions accordion" icon={Sparkles}>
+      <Section title="FAQ" eyebrow="Common questions accordion" icon={IconSpark}>
         <p className="text-xs text-muted-foreground mb-4">
           Add as many Q&amp;A pairs as you want. They render in the order shown here.
         </p>
@@ -923,7 +923,7 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       </Section>
 
       {/* Section visibility */}
-      <Section title="What shows on the homepage" eyebrow="Toggle any section on/off" icon={Sparkles}>
+      <Section title="What shows on the homepage" eyebrow="Toggle any section on/off" icon={IconSpark}>
         <p className="text-xs text-muted-foreground mb-4">
           Hide any section if it's not ready or not relevant. Toggle off, click Save, and that section disappears from the homepage. Toggle back on whenever.
         </p>

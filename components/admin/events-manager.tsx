@@ -21,13 +21,14 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { IllustrationCalendar } from "@/components/brand/illustrations";
 import {
   CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
-  ClipboardCheck, Users, Search, Sparkles, Edit3, Globe, QrCode,
+  ClipboardCheck, Users, Search, Edit3, Globe, QrCode,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import { EventQrDialog } from "@/components/admin/event-qr-dialog";
 
+import { IconSpark } from "@/components/brand/icons";
 // Event category presets — same six values used by the brother calendar.
 // Color tokens here MUST stay in sync with components/brother/event-calendar.tsx
 // so admins see the same color stripe on a card that brothers see post-publish.
@@ -379,7 +380,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       {events.length === 0 ? (
         <EmptyState
           illustration={IllustrationCalendar}
-          icon={Sparkles}
+          icon={IconSpark}
           title="No events yet"
           description={
             "Add the chapter's first event. Pick a category (Rush, Date, Brotherhood, Chapter, Social) — each shows up color-coded on the brother calendar. Toggle Invite-only to hide it from the public website while keeping it visible to logged-in brothers."

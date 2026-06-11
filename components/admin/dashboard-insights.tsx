@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, CheckCircle2, Users, Calendar,
-  ThumbsUp, ThumbsDown, Sparkles, ArrowRight, Vote,
+  ThumbsUp, ThumbsDown, ArrowRight, Vote,
   Download, FileText, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 // ── Public types ────────────────────────────────────────────────────────────
 //
 // The insights panel takes already-aggregated rush + brother + event data so
@@ -252,7 +253,7 @@ export function DashboardInsights({
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shrink-0">
-                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    <IconSpark className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <div>
                     <h3 className="text-sm font-semibold tracking-tight">Strong consensus — bid candidates</h3>

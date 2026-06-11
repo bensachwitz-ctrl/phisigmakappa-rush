@@ -30,6 +30,7 @@ import { GreekLetterField } from "@/components/site/greek-letter-field";
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { IconSpark } from "@/components/brand/icons";
 import {
   Search,
   ArrowRight,
@@ -39,7 +40,6 @@ import {
   GraduationCap,
   Building2,
   ShieldCheck,
-  Sparkles,
   ExternalLink,
   School as SchoolIcon,
   type LucideIcon,
@@ -626,7 +626,7 @@ function EmptyState({
         className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 text-blue-700"
         aria-hidden="true"
       >
-        <Sparkles className="h-5 w-5" />
+        <IconSpark className="h-5 w-5" />
       </span>
       <p className="text-sm font-semibold text-foreground">
         {variant === "no-match"

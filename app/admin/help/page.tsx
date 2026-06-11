@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconSpark } from "@/components/brand/icons";
 import {
   LayoutDashboard, Users, CalendarDays, Megaphone, Settings,
   Send, ClipboardCheck, ThumbsUp, Mail, MessageSquare,
-  Wand2, Download, Sparkles, ShieldCheck, BookOpen,
+  Wand2, Download, ShieldCheck, BookOpen,
   TrendingUp, FileText, ScrollText, Trophy, GitCompare, Palette,
 } from "lucide-react";
 
@@ -228,7 +229,7 @@ const COMMON_TASKS = [
     ],
   },
   {
-    icon: Sparkles,
+    icon: IconSpark,
     title: "Drop the rush schedule",
     steps: [
       "Go to Events tab.",

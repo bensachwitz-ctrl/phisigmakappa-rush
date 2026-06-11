@@ -19,10 +19,11 @@ import { IllustrationRoster } from "@/components/brand/illustrations";
 import {
   Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
   CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
-  CreditCard, Sparkles, KeyRound,
+  CreditCard, KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 type Brother = {
   id: string;
   name: string;
@@ -335,7 +336,7 @@ export function BrothersManager({
               <Plus className="h-4 w-4" /> Add brother
             </Button>
             <Button onClick={() => setWizardOpen(true)}>
-              <Sparkles className="h-4 w-4" /> Add members
+              <IconSpark className="h-4 w-4" /> Add members
             </Button>
           </>
         )}

@@ -21,7 +21,6 @@ import {
   GitBranch,
   UserPlus,
   Crown,
-  Sparkles,
   CornerDownRight,
   Link2Off,
   Check,
@@ -29,6 +28,7 @@ import {
 import { IconFamily } from "@/components/brand/icons/family";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 /* ───────────────────────────────────────────────────────────────────────────
    TYPES
    ─────────────────────────────────────────────────────────────────────────── */
@@ -359,7 +359,7 @@ export function FamilyManager({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Families" value={stats.families} icon={GitBranch} hint="lines with ≥1 little" />
         <StatCard label="Largest family" value={stats.largest} icon={Crown} hint="biggest lineage" />
-        <StatCard label="Unassigned" value={stats.unassigned} icon={Sparkles} hint="no big & no littles" />
+        <StatCard label="Unassigned" value={stats.unassigned} icon={IconSpark} hint="no big & no littles" />
         <StatCard label="Brothers" value={list.length} icon={Users} hint="in the tree" />
       </div>
 

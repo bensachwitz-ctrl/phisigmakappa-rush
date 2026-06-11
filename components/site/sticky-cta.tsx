@@ -3,9 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 /**
  * Mobile-only sticky CTA that fades in after scrolling past the hero.
  * Drives conversions by keeping "Register" one tap away.
@@ -43,7 +44,7 @@ export function StickyCTA() {
     >
       <Button asChild size="lg" className="w-full shadow-2xl shadow-phisig-red/30 group">
         <Link href="#register">
-          <Sparkles className="h-4 w-4" />
+          <IconSpark className="h-4 w-4" />
           Register for rush
           <ArrowRight className="h-4 w-4 ml-auto transition-transform group-hover:translate-x-0.5" />
         </Link>

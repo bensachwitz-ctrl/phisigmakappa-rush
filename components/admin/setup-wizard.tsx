@@ -9,14 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
 import {
-  CheckCircle2, ChevronRight, ChevronLeft, Loader2, Sparkles,
-  Building2, Palette, Mail, ShieldCheck, Rocket,
+  CheckCircle2, ChevronRight, ChevronLeft, Loader2, Building2, Palette, Mail, ShieldCheck, Rocket,
   ArrowRight, AlertCircle, UserPlus, Database, Trash2, Wand2,
   Upload, Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { imageSrc } from "@/lib/image-url";
 
+import { IconSpark } from "@/components/brand/icons";
 type Cfg = Record<string, string>;
 
 const STEPS = [
@@ -271,7 +271,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <div className="grid sm:grid-cols-2 gap-3">
                 <Link href="/" target="_blank" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-phisig-red" aria-hidden="true" /> View your public homepage
+                    <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" /> View your public homepage
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">Opens in a new tab — confirm everything reads correctly.</p>
                 </Link>
@@ -609,7 +609,7 @@ export function FirstRunCard({
       {/* ── Header + single unified progress meter ───────────────────────── */}
       <div className="relative flex items-start gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
+          <IconSpark className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold tracking-tight">

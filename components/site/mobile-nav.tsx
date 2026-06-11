@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Phone, Calendar, Sparkles, ShieldCheck } from "lucide-react";
+import { Phone, Calendar, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 /**
  * Mobile bottom navigation — sticks to the bottom edge of the viewport on
  * phones (under 768px) so the four highest-traffic CTAs are always one thumb
@@ -51,7 +52,7 @@ export function MobileBottomNav({
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
     >
       <div className="grid grid-cols-4 max-w-md mx-auto">
-        <BottomTab href="#register" icon={Sparkles} label="Register" emphasis />
+        <BottomTab href="#register" icon={IconSpark} label="Register" emphasis />
         <BottomTab href="/schedule" icon={Calendar} label="Schedule" />
         <BottomTab href={callHref} icon={Phone} label="Call" />
         <BottomTab href="/admin/login" icon={ShieldCheck} label={memberLabel} />

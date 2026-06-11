@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   LayoutDashboard, Users, CalendarDays, Megaphone, Settings, HelpCircle,
-  Vote, ScrollText, Sparkles, Rocket, ExternalLink, Search,
+  Vote, ScrollText, Rocket, ExternalLink, Search,
   ArrowRight, Command,
   UserPlus, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
   HandHeart, ShieldCheck, BookMarked, FileDown, Banknote,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 /**
  * Global command palette — opens with ⌘K / Ctrl+K (or "?" shortcut).
  * Power-user navigation; the chapter never needs to know about it for
@@ -250,7 +251,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
             <kbd className="rounded border border-border bg-secondary px-1 ml-1.5">↵</kbd> to open
           </span>
           <span className="inline-flex items-center gap-1">
-            <Sparkles className="h-3 w-3" aria-hidden="true" />
+            <IconSpark className="h-3 w-3" aria-hidden="true" />
             tip: try "audit" or "setup"
           </span>
         </div>

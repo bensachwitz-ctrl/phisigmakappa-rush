@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ScrollText, Vote, Edit3, Megaphone, Settings, Sparkles,
-  User, Trash2, ArrowRight, CreditCard,
+  ScrollText, Vote, Edit3, Megaphone, Settings, User, Trash2, ArrowRight, CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 /**
  * Compact recent-activity feed — last 8 audit entries with relative
  * timestamps. Renders on /admin so the signed-in brother sees what the
@@ -128,7 +128,7 @@ function ActionDot({ action }: { action: string }) {
     if (action.startsWith("RUSH")) return { icon: Edit3, tone: "amber" as const };
     if (action.startsWith("DUES")) return { icon: CreditCard, tone: "emerald" as const };
     if (action.startsWith("BROTHER")) return { icon: User, tone: "blue" as const };
-    if (action.startsWith("EVENT")) return { icon: Sparkles, tone: "emerald" as const };
+    if (action.startsWith("EVENT")) return { icon: IconSpark, tone: "emerald" as const };
     if (action.startsWith("BROADCAST") || action.startsWith("ANNOUNCEMENT")) return { icon: Megaphone, tone: "amber" as const };
     if (action.startsWith("SETTINGS")) return { icon: Settings, tone: "muted" as const };
     if (action.includes("DELETED")) return { icon: Trash2, tone: "rose" as const };

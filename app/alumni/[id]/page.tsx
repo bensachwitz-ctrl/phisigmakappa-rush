@@ -18,11 +18,11 @@ import {
   MapPin,
   Briefcase,
   Linkedin,
-  Sparkles,
   Lock,
 } from "lucide-react";
 import type { Metadata } from "next";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -85,7 +85,7 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
 
         {welcome && (
           <div className="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800 inline-flex items-center gap-2">
-            <Sparkles className="w-4 h-4" aria-hidden />
+            <IconSpark className="w-4 h-4" aria-hidden />
             You&apos;re in. Welcome back to the {id.greekLetters} network.
           </div>
         )}

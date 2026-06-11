@@ -19,7 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ShieldCheck, Loader2, Pencil, UserPlus, Trash2, Sparkles, RotateCcw,
+  ShieldCheck, Loader2, Pencil, UserPlus, Trash2, RotateCcw,
   Crown, Users, Briefcase, AlertTriangle,
 } from "lucide-react";
 import {
@@ -31,6 +31,7 @@ import {
 } from "@/lib/officer-permissions";
 import { cn } from "@/lib/utils";
 
+import { IconSpark } from "@/components/brand/icons";
 // ── Types (mirror the serialised shapes the server page hands us) ────────────
 
 type Position = {
@@ -393,7 +394,7 @@ export function OfficersClient({
         {positions.length === 0 ? (
           <Card className="border-dashed bg-muted/20">
             <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-              <IconChip icon={Sparkles} tone="brand" size="lg" />
+              <IconChip icon={IconSpark} tone="brand" size="lg" />
               <div className="space-y-1.5">
                 <p className="text-base font-semibold">No officer positions yet</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
@@ -402,7 +403,7 @@ export function OfficersClient({
                 </p>
               </div>
               <Button onClick={seedDefaults} disabled={seeding}>
-                {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <IconSpark className="h-4 w-4" />}
                 Seed default positions
               </Button>
             </CardContent>

@@ -37,10 +37,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
+import { IconSpark } from "@/components/brand/icons";
 import {
   Users, Plus, MessageCircle, Search, Loader2, TrendingUp,
   Flame, CalendarCheck, UserX, Send, CheckCircle2, XCircle,
-  ArrowRight, Sparkles, Key, Car, Clock, ShieldAlert, Calendar,
+  ArrowRight, Key, Car, Clock, ShieldAlert, Calendar,
 } from "lucide-react";
 
 export type RusheeListRow = {
@@ -378,7 +379,7 @@ export function RusheesManager({
             ) : isRushActive ? (
               <XCircle className="h-4 w-4 mr-1.5" />
             ) : (
-              <Sparkles className="h-4 w-4 mr-1.5" />
+              <IconSpark className="h-4 w-4 mr-1.5" />
             )}
             {isRushActive ? "End Rush Season" : "Re-open Rush Season"}
           </Button>

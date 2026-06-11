@@ -9,11 +9,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
+import { IconSpark } from "@/components/brand/icons";
 import {
   Trophy, Crown, Search, SlidersHorizontal, Loader2, RotateCcw, Save,
   ChevronDown, ShieldCheck, AlertTriangle, ShieldAlert, Wallet, CalendarCheck,
-  HandHeart, BookOpen, Sparkles,
-} from "lucide-react";
+  HandHeart, BookOpen, } from "lucide-react";
 import {
   DEFAULT_POINTS_CONFIG,
   standingLabel,
@@ -186,7 +186,7 @@ export function StandingClient({
         <Card className={GLASS_CARD}>
           <CardContent className="p-5 space-y-5">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-phisig-red" aria-hidden="true" />
+              <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" />
               <h2 className="text-sm font-semibold tracking-tight">Scoring rules</h2>
               <span className="text-[11px] text-muted-foreground">
                 Points available now total <span className="font-semibold tabular-nums">{Math.round(weightSum)}</span>
@@ -273,7 +273,7 @@ export function StandingClient({
       {/* Summary KPI tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <SummaryTile label="Active members" value={String(counts.total)} icon={Trophy} />
-        <SummaryTile label="Avg standing" value={`${counts.avg}%`} icon={Sparkles} tone="brand" />
+        <SummaryTile label="Avg standing" value={`${counts.avg}%`} icon={IconSpark} tone="brand" />
         <SummaryTile label="Good standing" value={String(counts.good)} icon={ShieldCheck} tone="emerald" />
         <SummaryTile
           label="Watch / at risk"
@@ -441,7 +441,7 @@ function MemberCard({
         <div className="border-t border-border bg-muted/20 px-4 py-3 animate-fade-in">
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-2">
             {member.breakdown.map((row) => {
-              const Icon = DIMENSION_ICON[row.key] || Sparkles;
+              const Icon = DIMENSION_ICON[row.key] || IconSpark;
               const rowPct = row.max > 0 ? Math.round((row.points / row.max) * 100) : 0;
               return (
                 <div key={row.key} className="rounded-xl border border-border bg-card p-3">

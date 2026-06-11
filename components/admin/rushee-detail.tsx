@@ -34,10 +34,11 @@ import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
 import {
   ArrowLeft, Send, UserCheck, UserX, MessageSquarePlus, Loader2,
-  Calendar, Mail, Phone, MapPin, Sparkles, Copy, RefreshCw,
+  Calendar, Mail, Phone, MapPin, Copy, RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 
+import { IconSpark } from "@/components/brand/icons";
 export type RusheeDetailData = {
   id: string;
   name: string;
@@ -231,7 +232,7 @@ export function RusheeDetail({
                 <ContactRow icon={Mail} label="Email" value={rush.email} />
                 <ContactRow icon={Phone} label="Phone" value={rush.phone} href={`tel:${rush.phone}`} />
                 {rush.year && <ContactRow icon={Calendar} label="Year" value={rush.year} />}
-                {rush.major && <ContactRow icon={Sparkles} label="Major" value={rush.major} />}
+                {rush.major && <ContactRow icon={IconSpark} label="Major" value={rush.major} />}
                 {rush.hometown && <ContactRow icon={MapPin} label="Hometown" value={rush.hometown} />}
               </div>
             </CardContent>

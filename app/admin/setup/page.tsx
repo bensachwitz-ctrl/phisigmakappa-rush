@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SetupWizard } from "@/components/admin/setup-wizard";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
+import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";
 
 /**
@@ -51,7 +52,7 @@ export default async function SetupPage() {
 
       <div className="mb-8">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
-          <Sparkles className="h-3 w-3" aria-hidden="true" /> Chapter setup
+          <IconSpark className="h-3 w-3" aria-hidden="true" /> Chapter setup
         </span>
         <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
           Get your chapter live in 5 minutes.
