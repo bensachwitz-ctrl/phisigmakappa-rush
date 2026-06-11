@@ -17,6 +17,17 @@ export default async function SettingsPage() {
   if (!isAdminRole()) redirect("/admin");
 
   const settings = await getSiteConfig();
+  // Platform-level credential presence (BOOLEANS ONLY — never the values). Lets
+  // the settings UI show an honest "Connected" badge per integration: a chapter
+  // that leaves the per-chapter fields blank still sends via the platform
+  // default when that env credential is configured. Mirrors /api/health's
+  // boolean integration map; no secret ever crosses to the client.
+  const envIntegrations = {
+    resend: !!process.env.RESEND_API_KEY,
+    twilio: !!process.env.TWILIO_ACCOUNT_SID && !!process.env.TWILIO_AUTH_TOKEN && !!process.env.TWILIO_PHONE_NUMBER,
+    stripe: !!process.env.STRIPE_SECRET_KEY,
+    googleCal: !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET,
+  };
   return (
     <main className="container py-8">
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
@@ -48,7 +59,7 @@ export default async function SettingsPage() {
         </ol>
       </div>
 
-      <SettingsManager initial={settings} />
+      <SettingsManager initial={settings} envIntegrations={envIntegrations} />
     </main>
   );
 }

@@ -37,7 +37,23 @@ function isUnsavableSecret(key: string, value: string): boolean {
   return v === "" || v === SECRET_MASK;
 }
 
-export function SettingsManager({ initial }: { initial: Record<string, string> }) {
+/** Platform-level credential presence (booleans only) so each integration shows
+ *  an honest "Connected via platform default" when the chapter leaves its own
+ *  fields blank. Defaults to all-false so the component is safe without it. */
+export type EnvIntegrations = {
+  resend?: boolean;
+  twilio?: boolean;
+  stripe?: boolean;
+  googleCal?: boolean;
+};
+
+export function SettingsManager({
+  initial,
+  envIntegrations = {},
+}: {
+  initial: Record<string, string>;
+  envIntegrations?: EnvIntegrations;
+}) {
   const { push } = useToast();
   const [values, setValues] = React.useState(initial);
   const [dirty, setDirty] = React.useState<Set<string>>(new Set());
@@ -96,6 +112,40 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
       setBusy(false);
     }
   }
+
+  // ── Live integration connection status ────────────────────────────────────
+  // A field counts as "set" when it holds a real value OR the secret mask (a
+  // configured secret the admin hasn't re-typed). We compute one of three honest
+  // states per integration so the section header shows the admin exactly where
+  // each one stands — the "connect this" UX the platform needs.
+  const has = (k: string) => {
+    const v = (values[k] ?? "").trim();
+    return v !== "" && v !== SECRET_MASK;
+  };
+  // Email: chapter creds = its own Resend key (+ optional from). Platform = env.
+  const resendState: "connected" | "platform" | "off" = has("resend.apiKey")
+    ? "connected"
+    : envIntegrations.resend
+      ? "platform"
+      : "off";
+  // SMS: chapter creds = the full Twilio triple. Platform = env triple.
+  const twilioOwn = has("twilio.accountSid") && has("twilio.authToken") && has("twilio.phoneNumber");
+  const twilioState: "connected" | "platform" | "off" = twilioOwn
+    ? "connected"
+    : envIntegrations.twilio
+      ? "platform"
+      : "off";
+  // Calendar: the built-in scheduler ALWAYS works, so this is never "off" — it's
+  // "connected" when a Cal.diy URL is set, else "platform" (built-in default).
+  const calState: "connected" | "platform" | "off" = has("calendar.calDiyUrl")
+    ? "connected"
+    : "platform";
+  // Dues (online card payments): live when enabled + a publishable key is set AND
+  // the platform Stripe secret exists; otherwise not connected (manual-only).
+  const duesState: "connected" | "platform" | "off" =
+    values["dues.enabled"] === "true" && has("dues.stripePublishableKey") && !!envIntegrations.stripe
+      ? "connected"
+      : "off";
 
   return (
     <div className="space-y-6">
@@ -297,6 +347,12 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         title="Dues collection (Stripe)"
         eyebrow="Optional — accept dues online via Stripe Checkout"
         icon={CreditCard}
+        status={
+          <IntegrationStatus
+            state={duesState}
+            label={duesState === "connected" ? "Online dues live" : "Manual dues only"}
+          />
+        }
       >
         <p className="text-xs text-muted-foreground mb-4">
           Leave <span className="font-mono">dues.enabled</span> as <span className="font-mono">false</span> to
@@ -411,7 +467,26 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         title="Email sender (Resend)"
         eyebrow="Optional — send transactional email from your own Resend account"
         icon={Mail}
+        status={
+          <IntegrationStatus
+            state={resendState}
+            label={
+              resendState === "connected"
+                ? "Connected · your Resend"
+                : resendState === "platform"
+                  ? "Live · platform email"
+                  : "Email not connected"
+            }
+          />
+        }
       >
+        {resendState === "off" && (
+          <div className="mb-4 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+            <strong>Email isn&apos;t connected yet.</strong> Add your chapter&apos;s Resend API key
+            below (free at <span className="font-mono">resend.com</span>) to send rush replies,
+            invites, and confirmations. Until then, those emails are queued but not delivered.
+          </div>
+        )}
         <p className="text-xs text-muted-foreground mb-4">
           Optional — use your chapter&apos;s own Resend account + verified domain. Leave blank to use
           the platform default.
@@ -444,7 +519,28 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         title="SMS (Twilio)"
         eyebrow="Optional — text from your own Twilio number"
         icon={MessageSquare}
+        status={
+          <IntegrationStatus
+            state={twilioState}
+            label={
+              twilioState === "connected"
+                ? "Connected · your number"
+                : twilioState === "platform"
+                  ? "Live · platform number"
+                  : "SMS not connected"
+            }
+          />
+        }
       >
+        {twilioState === "off" && (
+          <div className="mb-4 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+            <strong>Texting isn&apos;t connected yet.</strong> Recruits expect a text the moment an
+            event is set. Add your chapter&apos;s Twilio Account SID, Auth Token, and phone number
+            below to turn on rush SMS + the double-opt-in flow. Sign up at{" "}
+            <span className="font-mono">twilio.com</span>. Until connected, the &ldquo;text&rdquo;
+            actions are disabled and you can still reach recruits by email.
+          </div>
+        )}
         <p className="text-xs text-muted-foreground mb-4">
           Optional — your chapter&apos;s own Twilio number. Blank = platform default. Texting outside
           8am–9pm recipient-local is blocked (TCPA).
@@ -482,6 +578,12 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
         title="Calendar &amp; Scheduling (Cal.diy)"
         eyebrow="Connect Cal.diy / Cal.com for scheduling events"
         icon={CalendarDays}
+        status={
+          <IntegrationStatus
+            state={calState}
+            label={calState === "connected" ? "Connected · Cal.diy" : "Live · built-in scheduler"}
+          />
+        }
       >
         <p className="text-xs text-muted-foreground mb-4">
           Enable self-serve event scheduling for brothers and visitors. Clone and host <code className="font-mono text-foreground">https://github.com/calcom/cal.diy.git</code> and paste your instance booking URL or Cal.com username below (e.g. <code className="font-mono">phisigusc</code> or <code className="font-mono">https://cal.phisigusc.com/rush-coffee</code>). If left blank, the site will use a gorgeous, fully-functional built-in scheduler that records events directly to the database and sends confirmations via Resend.
@@ -973,13 +1075,17 @@ export function SettingsManager({ initial }: { initial: Record<string, string> }
  * sticky admin nav on jump-to-anchor.
  */
 function Section({
-  title, eyebrow, icon: Icon, children, id,
+  title, eyebrow, icon: Icon, children, id, status,
 }: {
   title: string;
   eyebrow: string;
   icon: React.ElementType;
   children: React.ReactNode;
   id?: string;
+  /** Optional live connection badge rendered to the right of the title — used by
+   *  the integration sections (email/SMS/calendar/dues) so the admin sees at a
+   *  glance whether each is live or needs setup. */
+  status?: React.ReactNode;
 }) {
   const anchorId = id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return (
@@ -989,11 +1095,57 @@ function Section({
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
             <Icon className="h-3 w-3" /> {eyebrow}
           </div>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight">{title}</h2>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+            {status}
+          </div>
         </div>
         {children}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * Live connection-status badge for an integration section. Three honest states:
+ *   • "connected"   (emerald)  — live now, via the chapter's own creds
+ *   • "platform"    (sky)      — live now, via the platform default credential
+ *   • "off"         (amber)    — not connected; shows a "Connect this" nudge
+ * Pure presentation; the caller computes which state applies from the config
+ * values it already holds (no secret ever leaves the server).
+ */
+function IntegrationStatus({
+  state,
+  label,
+}: {
+  state: "connected" | "platform" | "off";
+  label?: string;
+}) {
+  const map = {
+    connected: {
+      cls: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+      dot: "bg-emerald-500",
+      text: label || "Connected",
+    },
+    platform: {
+      cls: "bg-sky-50 text-sky-700 ring-sky-600/20",
+      dot: "bg-sky-500",
+      text: label || "Live · platform default",
+    },
+    off: {
+      cls: "bg-amber-50 text-amber-700 ring-amber-600/20",
+      dot: "bg-amber-500",
+      text: label || "Not connected",
+    },
+  }[state];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${map.cls}`}
+      role="status"
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${map.dot}`} aria-hidden="true" />
+      {map.text}
+    </span>
   );
 }
 
