@@ -1466,20 +1466,23 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         secondary={brandSecond}
       />
 
-      {/* Chapter-colored Greek-letter field drifting behind EVERYTHING — the
-          signature "picking a chapter transforms the room" effect. Tinted to the
-          brand primary, scoped to this container (absolute). WHISPER damping
-          (owner round-5: the demo is for INTERACTING — its ambient motion budget
-          is a fraction of the landing's): much slower, much fainter, fewer
-          letters. Reduced-motion-safe via the field's own CSS. */}
+      {/* Chapter-colored Greek-letter field behind EVERYTHING — the signature
+          "picking a chapter transforms the room" effect. Owner round-7: the
+          letters must visibly FLOAT IN FROM THE SIDES of the screen across the
+          dark area around the phone + rail, so `fromSides` makes every letter
+          enter at the left/right edge, drift the full way across at a stately
+          1.5× slower pace, and exit the far side. The raw brand color (often a
+          deep red/purple) vanishes on the near-black shell, so it's mixed
+          toward light slate — light, chapter-tinted letters on dark. Scoped to
+          this container (absolute); reduced-motion → static scattered field
+          via the field's own CSS. */}
       <GreekLetterField
         glyphs={brandGlyphs}
-        color={brandPrimary}
+        color={`color-mix(in srgb, ${brandPrimary} 42%, #dbe3ee)`}
         position="absolute"
-        whisper
-        count={24}
+        fromSides
+        count={26}
         seed={0x51ed270b}
-        className="opacity-[0.7]"
       />
 
       {/* The 3D WebGL plexus that used to render behind the lg+ showcase was

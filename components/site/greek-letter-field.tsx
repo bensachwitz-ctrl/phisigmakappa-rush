@@ -186,6 +186,7 @@ export function GreekLetterField({
   position = "fixed",
   calm = false,
   whisper = false,
+  fromSides = false,
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];
