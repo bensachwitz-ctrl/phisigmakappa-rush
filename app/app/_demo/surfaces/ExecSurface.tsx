@@ -244,7 +244,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
   ];
   return (
     <div className="space-y-3 text-left">
-      <SectionHead icon={ShieldCheck} title="Officer console" sub="Role-scoped admin tools" />
+      <SectionHead icon={ShieldCheck} title="Exec console" sub="Role-scoped admin tools" />
       <div className="space-y-2">
         {tools.map((t) => (
           <button

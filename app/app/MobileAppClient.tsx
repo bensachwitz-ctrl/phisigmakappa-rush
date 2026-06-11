@@ -637,7 +637,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       name: customName.trim() || "Your Chapter",
       school: customSchool.trim() || "Your University",
     });
-    showToast(`${brand.name} is live — the whole app just re-skinned.`, "success");
+    // applyBrandToDemo already fires the celebration toast — a second one here
+    // immediately overwrote it (taste pass: one event, one toast).
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -1709,7 +1710,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             onClick={() => window.location.href = "/"}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Website
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to website
           </button>
 
           {/* Sign in — sends a real chapter member to the live login (this view is
@@ -1725,14 +1726,14 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             onClick={() => { setShowBookingModal(true); setBookingSubmitted(false); }}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <Calendar className="w-3.5 h-3.5" /> Book a Meeting
+            <Calendar className="w-3.5 h-3.5" /> Book a meeting
           </button>
 
           <button
             onClick={() => setShowPricingModal(true)}
             className="w-full py-2.5 px-4 text-xs font-bold text-slate-950 rounded-xl bg-gradient-to-r from-blue-400 via-sky-400 to-amber-300 hover:opacity-95 shadow-[0_4px_20px_-4px_rgba(56,189,248,0.4)] flex items-center justify-center gap-2 transition"
           >
-            <IconSpark className="w-3.5 h-3.5" /> Launch Chapter Now
+            <IconSpark className="w-3.5 h-3.5" /> Launch your chapter
           </button>
         </div>
       </div>
@@ -1860,7 +1861,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                         attention-grabber in the chrome (owner: demo moves too much). */}
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                      {viewRole === "exec" ? "Officer" : role === "brother" ? "Member" : "Alumnus"}
+                      {viewRole === "exec" ? "Exec" : role === "brother" ? "Member" : "Alumnus"}
                     </span>
                   </button>
                 </div>

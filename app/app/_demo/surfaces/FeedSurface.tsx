@@ -40,7 +40,7 @@ export function renderFeedTab(ctx: DemoContext) {
                               <p className="mt-0.5 truncate text-[11px] text-slate-500">
                                 {role === "brother"
                                   ? `${dashboardData?.profile?.position || "Active Member"} • ${dashboardData?.profile?.pledgeClass || "Brother"}`
-                                  : `Class of ${dashboardData?.profile?.graduationYear || "Alumnus"}`}
+                                  : `Class of ${dashboardData?.profile?.graduationYear || dashboardData?.profile?.gradYear || "—"} • Alumnus`}
                               </p>
                             </div>
                           </div>
