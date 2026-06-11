@@ -1743,7 +1743,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           sticky mobile header) so it reads as a real app, not a phone-in-a-phone.
           On lg+ we keep the tilting showcase device frame. */}
       <div
-        className="relative z-10 flex shrink-0 select-none items-center justify-center w-full max-w-none flex-1 lg:max-w-md lg:flex-none"
+        // <lg: items-stretch so the full-bleed app ALWAYS fills the viewport —
+        // with items-center a short surface (e.g. the exec Roster) floated in
+        // the middle and exposed a band of shell background above the app.
+        // lg+: back to items-center for the showcase chassis.
+        className="relative z-10 flex shrink-0 select-none items-stretch justify-center w-full max-w-none flex-1 lg:max-w-md lg:flex-none lg:items-center"
         // Perspective context is DESKTOP-ONLY — on a phone there is no 3D, so we
         // don't even establish a perspective (avoids a stray GPU 3D layer that
         // can subtly misrender the full-bleed app).
