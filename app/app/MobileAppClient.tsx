@@ -112,6 +112,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   // Distinct from `role` (brother vs alumni) which selects member vs alumni
   // data; viewRole layers an officer lens on top of the brother experience.
   const [viewRole, setViewRole] = useState<"member" | "exec">("member");
+  // Owner round-7: the demo is framed as "the real app, seen as different
+  // people" — a single VIEW SWITCHER (left rail on desktop, header menu on
+  // mobile) replaces the old Member/Officer toggle inside the phone. The
+  // mobile menu's open state lives here.
+  const [showViewMenu, setShowViewMenu] = useState(false);
   // When true, the chapter chooser overlay is shown so the visitor can pick a
   // different org (or build a custom one) WITHOUT signing out of the demo.
   const [showChapterChooser, setShowChapterChooser] = useState(false);
@@ -1370,16 +1375,60 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const brandDeep = darkenHex(brandPrimary, 0.62);
   const brandGlyphs = glyphsFromBrand(selectedBrand.letters);
 
-  // ── Per-role bottom nav (feature 3) ──────────────────────────────────────
-  // Member and Officer share the 5 nav SLOTS (so the active-pill geometry is
+  // ── View personas (owner round-7) ─────────────────────────────────────────
+  // The demo shows the REAL app; the only demo control is "who am I viewing it
+  // as". Three personas map onto the existing role/viewRole state pair:
+  //   member → active brother experience (feed/events/rush/dues/network)
+  //   exec   → exec-board console (roster/announce/rush pipeline/dues/settings)
+  //   alumni → alumnus experience (feed/events/giving/network/profile)
+  type ViewPersona = "member" | "exec" | "alumni";
+  const viewPersona: ViewPersona =
+    viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member";
+  const setViewPersona = (p: ViewPersona) => {
+    if (p === viewPersona) {
+      setShowViewMenu(false);
+      return;
+    }
+    if (p === "exec") {
+      setRole("brother");
+      setViewRole("exec");
+    } else if (p === "alumni") {
+      setRole("alumni");
+      setViewRole("member");
+    } else {
+      setRole("brother");
+      setViewRole("member");
+    }
+    setActiveTab("feed");
+    setShowViewMenu(false);
+  };
+  const VIEW_PERSONAS: { id: ViewPersona; icon: any; label: string; sub: string }[] = [
+    { id: "member", icon: User, label: "Active brother", sub: "Feed · events · dues · network" },
+    { id: "exec", icon: Crown, label: "Exec board", sub: "Roster · treasury · branding · posts" },
+    { id: "alumni", icon: Briefcase, label: "Alumnus", sub: "Network · giving · career posts" },
+  ];
+  const personaShortLabel =
+    viewPersona === "exec" ? "Exec view" : viewPersona === "alumni" ? "Alumni view" : "Member view";
+
+  // ── Per-persona bottom nav (feature 3) ────────────────────────────────────
+  // All personas share the 5 nav SLOTS (so the active-pill geometry is
   // stable) but show different icons/labels + route to different content.
   type TabId = "feed" | "events" | "rush" | "dues" | "directory" | "settings";
   const memberNav: { id: TabId; icon: any; label: string }[] = [
     { id: "feed", icon: Bell, label: "Feed" },
     { id: "events", icon: Calendar, label: "Events" },
     { id: "rush", icon: Users, label: isRushActive ? "Rush" : "Pledges" },
-    { id: "dues", icon: role === "brother" ? DollarSign : Heart, label: role === "brother" ? "Dues" : "Giving" },
+    { id: "dues", icon: DollarSign, label: "Dues" },
     { id: "directory", icon: Globe, label: "Network" },
+  ];
+  // Alumni never see the rush pipeline in the real product — their fifth slot
+  // is their own profile (Settings renders the alumni profile view).
+  const alumniNav: { id: TabId; icon: any; label: string }[] = [
+    { id: "feed", icon: Bell, label: "Feed" },
+    { id: "events", icon: Calendar, label: "Events" },
+    { id: "dues", icon: Heart, label: "Giving" },
+    { id: "directory", icon: Globe, label: "Network" },
+    { id: "settings", icon: User, label: "Profile" },
   ];
   const execNav: { id: TabId; icon: any; label: string }[] = [
     { id: "feed", icon: Users, label: "Roster" },
@@ -1388,7 +1437,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     { id: "dues", icon: DollarSign, label: "Dues" },
     { id: "directory", icon: ShieldCheck, label: "Console" },
   ];
-  const navItems = viewRole === "exec" ? execNav : memberNav;
+  const navItems = viewRole === "exec" ? execNav : role === "alumni" ? alumniNav : memberNav;
   const activeNavIndex = Math.max(0, navItems.findIndex((n) => n.id === activeTab));
 
   return (
@@ -1447,9 +1496,72 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           <img src="/brand/greekstack-mark.png?v=2" className="w-8 h-8 rounded-lg object-contain shadow-md" alt="Greekstack Logo" />
           <div>
             <span className="text-xs font-bold text-white tracking-wider uppercase block leading-none">Greekstack App</span>
-            <span className="text-[11px] text-slate-400 mt-0.5 block">{selectedBrand.letters} • {role === "brother" ? "Active" : "Alumnus"}</span>
+            {/* Mobile view switcher trigger — the phone below is the REAL app;
+                this (demo chrome) is where you change who you're viewing it as. */}
+            <button
+              onClick={() => setShowViewMenu((v) => !v)}
+              disabled={!token}
+              aria-expanded={showViewMenu}
+              aria-haspopup="menu"
+              aria-label={`Change view — currently ${personaShortLabel}`}
+              className="press mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-300 transition hover:text-white disabled:opacity-60"
+            >
+              {selectedBrand.letters} · {personaShortLabel}
+              <ChevronDown
+                className={`h-3 w-3 transition-transform motion-reduce:transition-none ${showViewMenu ? "rotate-180" : ""}`}
+              />
+            </button>
           </div>
         </div>
+        {/* Mobile view menu — anchored under the header. */}
+        {showViewMenu && token && (
+          <>
+            <button
+              aria-label="Close view menu"
+              onClick={() => setShowViewMenu(false)}
+              className="fixed inset-0 z-[151] cursor-default bg-transparent"
+            />
+            <div
+              role="menu"
+              aria-label="View the app as"
+              className="absolute left-3 top-[calc(100%+0.375rem)] z-[152] w-64 animate-spring-in rounded-2xl border border-white/10 bg-slate-950/95 p-1.5 shadow-2xl backdrop-blur-xl"
+            >
+              {VIEW_PERSONAS.map((p) => {
+                const active = viewPersona === p.id;
+                const PIcon = p.icon;
+                return (
+                  <button
+                    key={p.id}
+                    role="menuitemradio"
+                    aria-checked={active}
+                    onClick={() => setViewPersona(p.id)}
+                    className={`press flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${
+                      active ? "bg-white/10" : "hover:bg-white/5"
+                    }`}
+                  >
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                      style={
+                        active
+                          ? { background: `linear-gradient(140deg, ${brandPrimary}, ${brandSecond})` }
+                          : { background: "rgba(255,255,255,0.08)" }
+                      }
+                    >
+                      <PIcon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        {p.label}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] leading-tight text-slate-500">{p.sub}</span>
+                    </span>
+                    {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
         <div className="flex items-center gap-1.5">
           {/* Website — icon-only on the narrowest phones, labeled from sm+. */}
           <button
@@ -1517,7 +1629,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             </div>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Experience the active brother and alumnus mobile application. Browse recruitment, pay dues, view calendar RSVPs, vote on elections, and check chore wheels.
+            This is the real app your chapter gets. Pick who you&apos;re viewing it
+            as — an active brother, the exec board, or an alumnus — and everything
+            on the phone updates to that experience.
           </p>
         </div>
 
@@ -1542,38 +1656,49 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
             </button>
           </div>
 
-          {/* Role View toggle — Member ⇄ Officer (feature 3) */}
+          {/* View switcher (owner round-7) — the demo's main control. Instead
+              of a Member/Admin toggle framing, the LEFT rail picks WHO you're
+              viewing the real app as; the phone always shows the true product. */}
           <div className="space-y-1.5">
-            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Role View</span>
-            <div className="relative grid grid-cols-2 rounded-xl border border-white/10 bg-white/5 p-1">
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                style={{
-                  background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})`,
-                  transform: viewRole === "exec" ? "translateX(calc(100% + 0.5rem))" : "translateX(0)",
-                }}
-              />
-              <button
-                onClick={() => { setViewRole("member"); setActiveTab("feed"); }}
-                disabled={!token}
-                className={`relative z-10 min-h-[36px] rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${viewRole === "member" ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
-              >
-                Member
-              </button>
-              <button
-                onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
-                disabled={!token}
-                className={`relative z-10 min-h-[36px] rounded-lg text-[12px] font-bold transition-colors disabled:opacity-50 ${viewRole === "exec" ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
-              >
-                Officer
-              </button>
+            <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Viewing as</span>
+            <div className="space-y-1.5" role="radiogroup" aria-label="View the app as">
+              {VIEW_PERSONAS.map((p) => {
+                const active = viewPersona === p.id;
+                const PIcon = p.icon;
+                return (
+                  <button
+                    key={p.id}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setViewPersona(p.id)}
+                    disabled={!token}
+                    className={`press group flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition disabled:opacity-50 ${
+                      active
+                        ? "border-white/25 bg-white/[0.09]"
+                        : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm transition-colors duration-300"
+                      style={
+                        active
+                          ? { background: `linear-gradient(140deg, ${brandPrimary}, ${brandSecond})` }
+                          : { background: "rgba(255,255,255,0.08)" }
+                      }
+                    >
+                      <PIcon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        {p.label}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] leading-tight text-slate-500">{p.sub}</span>
+                    </span>
+                    {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
+                  </button>
+                );
+              })}
             </div>
-            <p className="px-0.5 text-[11px] leading-snug text-slate-500">
-              {viewRole === "exec"
-                ? "Admin tools: roster, dues mgmt, rush pipeline, announcements."
-                : "Member experience: feed, events, dues, directory."}
-            </p>
           </div>
         </div>
 
@@ -1741,31 +1866,10 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                 </div>
               </div>
 
-              {/* Role-view toggle (feature 3) — always reachable inside the phone
-                  (the desktop sidebar toggle is hidden on mobile). Flips the whole
-                  experience between the member app and the officer console. */}
-              <div className="relative grid shrink-0 grid-cols-2 gap-1 border-b border-slate-100 bg-white px-3 pb-2.5 pt-2">
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-2 left-3 w-[calc(50%-0.875rem)] rounded-xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none"
-                  style={{
-                    background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecond})`,
-                    transform: viewRole === "exec" ? "translateX(calc(100% + 0.25rem))" : "translateX(0)",
-                  }}
-                />
-                <button
-                  onClick={() => { setViewRole("member"); setActiveTab("feed"); }}
-                  className={`press relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${viewRole === "member" ? "text-white" : "text-slate-500"}`}
-                >
-                  <User className="h-4 w-4" /> Member
-                </button>
-                <button
-                  onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
-                  className={`press relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${viewRole === "exec" ? "text-white" : "text-slate-500"}`}
-                >
-                  <Crown className="h-4 w-4" /> Officer
-                </button>
-              </div>
+              {/* The old in-phone Member/Officer toggle row was REMOVED (owner
+                  round-7): the phone shows the REAL app, full stop. Switching
+                  who you view it as lives in the demo chrome — the left rail on
+                  desktop, the header's view menu on mobile. */}
 
               {/* Main Scrollable Viewport — compact mobile density (p-3) so cards
                   fit more on screen; a touch roomier on the lg+ showcase. At <lg
@@ -1879,10 +1983,14 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                             each callout offers the next tab in the journey, and
                             the final beat hands off to the Officer view. */}
                         {(() => {
-                          const TOUR_ORDER = ["feed", "rush", "dues", "events", "directory"] as const;
-                          const i = TOUR_ORDER.indexOf(activeTab as (typeof TOUR_ORDER)[number]);
+                          // Alumni never see the rush pipeline, so their tour skips it.
+                          const TOUR_ORDER: readonly TabId[] =
+                            role === "alumni"
+                              ? (["feed", "events", "dues", "directory"] as const)
+                              : (["feed", "rush", "dues", "events", "directory"] as const);
+                          const i = TOUR_ORDER.indexOf(activeTab as TabId);
                           const next = i >= 0 && i < TOUR_ORDER.length - 1 ? TOUR_ORDER[i + 1] : null;
-                          const nextLabel = next ? memberNav.find((n) => n.id === next)?.label : null;
+                          const nextLabel = next ? navItems.find((n) => n.id === next)?.label : null;
                           return (
                             <div className="mt-2 flex items-center gap-3">
                               {next && nextLabel ? (
@@ -1895,11 +2003,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => { setViewRole("exec"); setActiveTab("feed"); }}
+                                  onClick={() => setViewPersona("exec")}
                                   className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
                                   style={{ backgroundColor: selectedBrand.primaryColor }}
                                 >
-                                  <Crown className="h-3.5 w-3.5" /> Try the Officer view
+                                  <Crown className="h-3.5 w-3.5" /> See the exec view
                                 </button>
                               )}
                               <button
@@ -1946,11 +2054,11 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       </span>
                       <div className="min-w-0">
                         <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
-                          You&apos;re in the Officer console
+                          You&apos;re viewing as the exec board
                         </p>
                         <p className="mt-1 text-[11px] leading-snug text-slate-600">
                           Same five tabs, now admin tools — roster, announcements, the rush pipeline,
-                          dues management, and chapter settings. Flip back to Member any time.
+                          dues management, and chapter settings. Change views any time from the switcher.
                         </p>
                         <div className="mt-2 flex items-center gap-3">
                           <button
