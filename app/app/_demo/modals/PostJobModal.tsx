@@ -34,9 +34,11 @@ export function renderPostJobModal(ctx: DemoContext) {
     setPostJobError,
     setShowPostJobModal,
   } = ctx;
+  // <lg: the sheet FILLS the content area below the demo header — no dead
+  // shell bands (owner round-8). lg+: classic in-phone bottom sheet.
   return (
-                <div className="fixed inset-0 z-50 flex flex-col justify-end bg-slate-950/75 text-left backdrop-blur-sm lg:absolute" onClick={() => { setShowPostJobModal(false); resetJobForm(); setPostJobError(null); }}>
-                  <div className="bg-white rounded-t-[32px] border-t border-slate-200 max-h-[88%] overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 flex flex-col justify-end bg-slate-950/75 text-left backdrop-blur-sm lg:absolute lg:inset-0" onClick={() => { setShowPostJobModal(false); resetJobForm(); setPostJobError(null); }}>
+                  <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[88%]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <Briefcase className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />

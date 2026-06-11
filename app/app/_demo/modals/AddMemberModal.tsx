@@ -21,9 +21,12 @@ export function renderAddMemberModal(ctx: DemoContext) {
     setNewMemberRole,
     setShowAddMemberModal,
   } = ctx;
+  // <lg: the form fills the content area below the demo header as a full
+  // sheet — no dead shell bands around a floating card (owner round-8).
+  // lg+: compact centered card inside the phone frame.
   return (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-6 backdrop-blur-sm lg:absolute" onClick={() => setShowAddMemberModal(false)}>
-              <div className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in text-left max-h-[85%] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[110] flex flex-col justify-end bg-slate-950/60 backdrop-blur-sm lg:absolute lg:inset-0 lg:items-center lg:justify-center lg:p-6" onClick={() => setShowAddMemberModal(false)}>
+              <div className="bg-white rounded-t-[32px] border border-slate-100 p-5 w-full grow space-y-4 shadow-2xl animate-scale-in text-left overflow-y-auto lg:grow-0 lg:w-full lg:max-w-xs lg:rounded-3xl lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-1.5">
                     <Crown className="w-4 h-4 text-amber-500" />
