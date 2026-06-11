@@ -74,7 +74,7 @@ function normalizePhone(p: string): string {
 
 /**
  * Twilio inbound-SMS webhook. Configure Twilio Messaging Service to point its
- * "A MESSAGE COMES IN" handler at  POST https://phisigmakappa.vercel.app/api/sms/inbound
+ * "A MESSAGE COMES IN" handler at  POST https://greekstack.vercel.app/api/sms/inbound
  *
  * Recognized keywords (case-insensitive, leading/trailing whitespace tolerated):
  *   YES / Y / CONFIRM        → flips smsConfirmed = true on the matching rushee's
@@ -204,7 +204,7 @@ export async function POST(req: Request) {
   const helpClause = rushEmail ? ` Help: ${rushEmail}.` : "";
   const emailClause = rushEmail ? ` or email ${rushEmail}` : "";
   // Resolve the site URL from env, else the request's own origin — so the
-  // privacy/sign-up link points at THIS deploy, not phisigmakappa.vercel.app.
+  // privacy/sign-up link points at THIS deploy, never a hardcoded legacy host.
   const siteUrl = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.SITE_URL ||

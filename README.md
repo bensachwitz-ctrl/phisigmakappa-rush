@@ -2,7 +2,7 @@
 
 > Production-grade Next.js platform for Greek-letter chapter rush, brotherhood management, and TCPA-compliant communications. **Originally built for Phi Sigma Kappa Gamma Triton at USC.** Designed to be re-skinned and deployed per-chapter or operated as a national white-label SaaS by an Inter/National HQ.
 
-**Live reference deploy:** <https://phisigmakappa.vercel.app>
+**Live reference deploy:** <https://greekstack.vercel.app>
 **License:** MIT — chapters and HQs free to deploy, modify, and operate.
 
 ---

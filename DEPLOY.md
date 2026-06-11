@@ -1,4 +1,4 @@
-# Deploy to phisigmakappa.vercel.app
+# Deploy to greekstack.vercel.app
 
 The app is fully built and ready. Deployment requires running the Vercel CLI on your machine — Cowork's sandbox can't reach your Vercel account.
 
@@ -16,8 +16,8 @@ npm i -g vercel
 # 3. Log in (opens browser)
 vercel login
 
-# 4. Link this folder to a new Vercel project named "phisigmakappa"
-vercel link --project phisigmakappa --yes
+# 4. Link this folder to a new Vercel project named "greekstack"
+vercel link --project greekstack --yes
 
 # 5. Provision Vercel Postgres
 #    In your browser: https://vercel.com/dashboard
@@ -30,7 +30,7 @@ vercel env pull .env.production.local
 # 7. Set the rest of your env vars (one-time)
 vercel env add ADMIN_PASSWORD             # type your chapter password
 vercel env add ADMIN_SESSION_SECRET       # paste a 32+ char random string
-vercel env add NEXT_PUBLIC_SITE_URL       # https://phisigmakappa.vercel.app
+vercel env add NEXT_PUBLIC_SITE_URL       # https://greekstack.vercel.app
 # Optional — skip until you have keys:
 vercel env add RESEND_API_KEY
 vercel env add RESEND_FROM_EMAIL
@@ -48,10 +48,10 @@ vercel deploy --prod
 
 ## What you'll see
 
-After step 9, the CLI prints the deploy URL — typically `phisigmakappa.vercel.app` if the project name was preserved, or `phisigmakappa-<hash>.vercel.app` otherwise.
+After step 9, the CLI prints the deploy URL — typically `greekstack.vercel.app` if the project name was preserved, or `greekstack-<hash>.vercel.app` otherwise.
 
 To force the canonical hostname, in Vercel dashboard:
-**Project → Settings → Domains → Add `phisigmakappa.vercel.app`**
+**Project → Settings → Domains → Add `greekstack.vercel.app`**
 
 ## Generate a session secret
 
@@ -65,8 +65,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ## Verify
 
 After deploy:
-- `https://phisigmakappa.vercel.app/` — public landing should render the hero, schedule (empty until you add events), and registration wizard
-- `https://phisigmakappa.vercel.app/admin/login` — log in with your name + ADMIN_PASSWORD
+- `https://greekstack.vercel.app/` — public landing should render the hero, schedule (empty until you add events), and registration wizard
+- `https://greekstack.vercel.app/admin/login` — log in with your name + ADMIN_PASSWORD
 - Add an event, register a test rush from the public form, see them in the roster
 
 If a page errors, check `vercel logs` or the deployment build logs in the dashboard.

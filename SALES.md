@@ -2,7 +2,7 @@
 
 > A production-ready, TCPA-compliant rush + chapter management platform built by an active chapter. Free to license, white-label, and deploy nationwide. Works tomorrow.
 
-**Live demo:** <https://phisigmakappa.vercel.app>
+**Live demo:** <https://greekstack.vercel.app>
 **Repo:** <https://github.com/bensachwitz-ctrl/phisigmakappa-rush>
 
 ---

@@ -28,7 +28,6 @@ const config: CapacitorConfig = {
       '*.greekstack.vercel.app',
       'greekstack.com',
       '*.greekstack.com',
-      'greeklifesystems.vercel.app',
     ],
   },
   ios: {

@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 /**
  * Public iCalendar feed of upcoming public rush events.
  *
- * Brothers and rushees can subscribe via webcal://phisigmakappa.vercel.app/api/events.ics
+ * Brothers and rushees can subscribe via webcal://greekstack.vercel.app/api/events.ics
+ * (or their chapter's own subdomain host)
  * (most calendar apps recognize that scheme and auto-refresh). Direct https:// also works
  * for one-shot import.
  *
@@ -101,7 +102,11 @@ export async function GET(req: Request) {
     status: 200,
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'inline; filename="phisigmakappa-rush.ics"',
+      // Filename derived from the CHAPTER identity — never a hardcoded
+      // legacy chapter string (white-label + domain accuracy, round-8).
+      "Content-Disposition": `inline; filename="${
+        identity.chapterFullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "chapter"
+      }-rush.ics"`,
       // 1 hour browser cache + 6h edge cache; calendar apps re-fetch on their own schedule.
       "Cache-Control": "public, max-age=3600, s-maxage=21600",
       "CDN-Cache-Control": "public, max-age=21600",

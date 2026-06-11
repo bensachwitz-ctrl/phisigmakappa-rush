@@ -157,7 +157,7 @@ export async function pushEvent(opts: {
         authorization: `Bearer ${opts.accessToken}`,
       },
       body: JSON.stringify({
-        iCalUID: `${opts.event.sourceId}@phisigmakappa.vercel.app`,
+        iCalUID: `${opts.event.sourceId}@greekstack.vercel.app`,
         summary: opts.event.summary,
         description: opts.event.description ?? "",
         location: opts.event.location ?? "",

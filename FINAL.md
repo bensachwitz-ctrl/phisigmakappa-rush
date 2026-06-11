@@ -1,9 +1,9 @@
 # FINAL — Phi Sigma Kappa Gamma Triton chapter site
 
 **Status:** Deployed and operational for Fall 2026 USC rush.
-**Live URL:** https://phisigmakappa.vercel.app
-**Booth URL:** https://phisigmakappa.vercel.app/?booth=1
-**Health probe:** https://phisigmakappa.vercel.app/api/health
+**Live URL:** https://greekstack.vercel.app
+**Booth URL:** https://greekstack.vercel.app/?booth=1
+**Health probe:** https://greekstack.vercel.app/api/health
 **Build at convergence:** `84c8b9d` (R37) — deploy `dpl_HjfzA6PY5DyH3Hisj5a3Q9V5Dyon`
 **Convergence floor:** **10 / 10 across accessibility, usability, and functional axes**
 **Post-convergence layer (R38):** `65cf586` — deploy `dpl_89Edsa38fV7Y5jKMWZfUaPTt21uG` — organizational decision-support panel for the e-board
