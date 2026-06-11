@@ -133,6 +133,19 @@ export function glyphsFromBrand(letters: string | undefined): string[] {
   return greek.length > 1 ? [...greek, greek.join("")] : greek;
 }
 
+/** Role map (owner round-8): chapter OFFICERS carry exec-view permissions —
+ *  President / Vice President / Treasurer / Secretary / any Chair or titled
+ *  officer. Plain actives stay read-mostly. Drives the member view's Exec
+ *  tools entry: unlocked for officers, a locked gating demo for everyone
+ *  else. */
+export function isOfficerPosition(position: string | null | undefined): boolean {
+  const p = (position || "").toLowerCase();
+  if (!p) return false;
+  return ["president", "vice", "treasurer", "secretary", "chair", "officer", "exec"].some(
+    (k) => p.includes(k),
+  );
+}
+
 /** Darken a hex color toward black by `amt` (0–1) — used to derive a hover tone
  *  and the deep end of the themed-shell gradient. */
 export function darkenHex(hex: string, amt = 0.18): string {

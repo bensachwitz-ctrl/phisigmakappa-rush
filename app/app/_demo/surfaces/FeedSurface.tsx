@@ -1,6 +1,7 @@
 import React from "react";
-import { ChevronDown, Pin, Mail, Phone, Briefcase, Gift, Lock } from "lucide-react";
+import { ChevronDown, Pin, Mail, Phone, Briefcase, Gift, Lock, Crown, Vote } from "lucide-react";
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
+import { isOfficerPosition } from "../mock-data";
 import type { DemoContext } from "../context";
 
 export function renderFeedTab(ctx: DemoContext) {
@@ -64,10 +65,12 @@ export function renderFeedTab(ctx: DemoContext) {
                         </div>
 
                         {/* Chapter tools — ONE row of icons (owner round-7), and
-                            role-gated: write tools (elections mgmt, treasury,
-                            check-in admin, branding) live in the EXEC view only.
-                            Members keep participation actions, plus a locked
-                            "Exec tools" entry that demos the gating itself. */}
+                            role-gated (owner round-8): GIVE lives on the ALUMNI
+                            view ONLY. Brothers get participation actions (vote)
+                            plus the Exec tools entry — UNLOCKED when the signed-
+                            in member is an officer (president and e-board carry
+                            exec rights via the role map), a locked gating demo
+                            for plain actives. Write tools stay exec-view only. */}
                         <div>
                           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-1.5">
                             <BrandGlyphIcon name="letters" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
@@ -75,29 +78,61 @@ export function renderFeedTab(ctx: DemoContext) {
                           {/* grid-flow-col + auto-cols-fr keeps every visible tool
                               on a single line no matter the role's tool count. */}
                           <div className="grid grid-flow-col auto-cols-fr gap-1.5">
-                            <button
-                              onClick={() => { setSpotlight("giving"); setDonationDone(false); }}
-                              className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
-                            >
-                              <span
-                                className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
-                                style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
+                            {role === "alumni" && (
+                              <button
+                                onClick={() => { setSpotlight("giving"); setDonationDone(false); }}
+                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
                               >
-                                <Gift className="h-4 w-4" />
-                              </span>
-                              <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Give</span>
-                            </button>
+                                <span
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
+                                  style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
+                                >
+                                  <Gift className="h-4 w-4" />
+                                </span>
+                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Give</span>
+                              </button>
+                            )}
                             {role === "brother" && (
                               <button
-                                onClick={() => { setRole("brother"); setViewRole("exec"); setActiveTab("feed"); }}
-                                aria-label="Exec-only tools. Switch to the exec board view"
-                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                                onClick={() => { setSpotlight("elections"); }}
+                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
                               >
-                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                  <Lock className="h-4 w-4" />
+                                <span
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
+                                  style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
+                                >
+                                  <Vote className="h-4 w-4" />
                                 </span>
-                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-500">Exec tools</span>
+                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Vote</span>
                               </button>
+                            )}
+                            {role === "brother" && (
+                              isOfficerPosition(dashboardData?.profile?.position) ? (
+                                <button
+                                  onClick={() => { setRole("brother"); setViewRole("exec"); setActiveTab("feed"); }}
+                                  aria-label={`You are ${dashboardData?.profile?.position}. Open the exec board view`}
+                                  className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                                >
+                                  <span
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
+                                    style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
+                                  >
+                                    <Crown className="h-4 w-4" />
+                                  </span>
+                                  <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Exec tools</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => { setRole("brother"); setViewRole("exec"); setActiveTab("feed"); }}
+                                  aria-label="Exec-only tools. Switch to the exec board view"
+                                  className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                                >
+                                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                    <Lock className="h-4 w-4" />
+                                  </span>
+                                  <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-500">Exec tools</span>
+                                </button>
+                              )
                             )}
                           </div>
                         </div>
