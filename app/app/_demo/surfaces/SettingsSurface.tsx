@@ -15,6 +15,7 @@ export function renderSettingsTab(ctx: DemoContext) {
     setConfirmModal,
     setShowAddMemberModal,
     setShowEditProfileModal,
+    viewRole,
   } = ctx;
   // Render-gated by the orchestrator inside `{token && selectedTenant && ...}`;
   // this guard only restores the type narrowing the enclosing block provided.
@@ -80,8 +81,10 @@ export function renderSettingsTab(ctx: DemoContext) {
                           )}
                         </div>
 
-                        {/* PRESIDENTIAL ADMINISTRATION CONSOLE */}
-                        {role === "brother" && (dashboardData?.profile?.position === "President" || dashboardData?.profile?.name === "Alex Mercer") && (
+                        {/* PRESIDENTIAL ADMINISTRATION CONSOLE — exec-view only
+                            (owner round-7 role gating: members never see write
+                            tools like add/remove member or reset links). */}
+                        {viewRole === "exec" && role === "brother" && (dashboardData?.profile?.position === "President" || dashboardData?.profile?.name === "Alex Mercer") && (
                           <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3 shadow-sm">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                               <div className="flex items-center gap-1.5">

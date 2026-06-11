@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, Pin, Mail, Phone, Briefcase, Vote, PieChart, QrCode, Gift, Palette } from "lucide-react";
+import { ChevronDown, Pin, Mail, Phone, Briefcase, Gift, Lock } from "lucide-react";
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import type { DemoContext } from "../context";
 
@@ -10,11 +10,12 @@ export function renderFeedTab(ctx: DemoContext) {
     expandedAnnouncementId,
     role,
     selectedBrand,
+    setActiveTab,
     setDonationDone,
     setExpandedAnnouncementId,
-    setShowPostAnnModal,
+    setRole,
     setSpotlight,
-    spotlight,
+    setViewRole,
   } = ctx;
   return (
                       <div className="space-y-3">
@@ -62,56 +63,54 @@ export function renderFeedTab(ctx: DemoContext) {
                           )}
                         </div>
 
-                        {/* Quick tools — launchers for every other feature so the demo
-                            showcases the WHOLE product, not just the 5 nav tabs. Each
-                            opens a fully-interactive spotlight surface. */}
+                        {/* Chapter tools — ONE row of icons (owner round-7), and
+                            role-gated: write tools (elections mgmt, treasury,
+                            check-in admin, branding) live in the EXEC view only.
+                            Members keep participation actions, plus a locked
+                            "Exec tools" entry that demos the gating itself. */}
                         <div>
                           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1 mb-1.5">
                             <BrandGlyphIcon name="letters" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter tools
                           </h3>
-                          {/* ONE row, always (owner round-7): grid-flow-col +
-                              auto-cols-fr keeps every tool on a single line no
-                              matter how many are visible for this role. */}
+                          {/* grid-flow-col + auto-cols-fr keeps every visible tool
+                              on a single line no matter the role's tool count. */}
                           <div className="grid grid-flow-col auto-cols-fr gap-1.5">
-                            {[
-                              { id: "elections" as const, label: "Elections", Icon: Vote, show: role === "brother" },
-                              { id: "treasury" as const, label: "Treasury", Icon: PieChart, show: role === "brother" },
-                              { id: "qr" as const, label: "Check-in", Icon: QrCode, show: role === "brother" },
-                              { id: "giving" as const, label: "Give", Icon: Gift, show: true },
-                              { id: "theme" as const, label: "Branding", Icon: Palette, show: role === "brother" },
-                            ].filter((t) => t.show).map(({ id, label, Icon }) => (
-                              <button
-                                key={id}
-                                onClick={() => { setSpotlight(id); if (id === "giving") setDonationDone(false); }}
-                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                            <button
+                              onClick={() => { setSpotlight("giving"); setDonationDone(false); }}
+                              className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                            >
+                              <span
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
+                                style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                               >
-                                <span
-                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
-                                  style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
-                                >
-                                  <Icon className="h-4 w-4" />
+                                <Gift className="h-4 w-4" />
+                              </span>
+                              <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Give</span>
+                            </button>
+                            {role === "brother" && (
+                              <button
+                                onClick={() => { setRole("brother"); setViewRole("exec"); setActiveTab("feed"); }}
+                                aria-label="Exec-only tools — switch to the exec board view"
+                                className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
+                              >
+                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                  <Lock className="h-4 w-4" />
                                 </span>
-                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">{label}</span>
+                                <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-500">Exec tools</span>
                               </button>
-                            ))}
+                            )}
                           </div>
                         </div>
 
                         {/* Merged Timeline Feed */}
                         <div className="space-y-2">
+                          {/* Posting announcements is an exec write — members and
+                              alumni read the feed; the Post tool lives in the exec
+                              view's Announce tab (owner round-7 role gating). */}
                           <div className="flex items-center justify-between px-1">
                             <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                               <BrandGlyphIcon name="announcements" className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> News & opportunities
                             </h3>
-                            {role === "brother" && (
-                              <button
-                                onClick={() => setShowPostAnnModal(true)}
-                                className="px-2 py-0.5 text-[11px] font-bold text-white rounded-lg transition active:scale-95 flex items-center gap-1 shadow-sm"
-                                style={{ backgroundColor: selectedBrand.primaryColor }}
-                              >
-                                <BrandGlyphIcon name="announcements" className="w-2.5 h-2.5" /> Post
-                              </button>
-                            )}
                           </div>
 
                           {combinedFeed.length > 0 ? (
