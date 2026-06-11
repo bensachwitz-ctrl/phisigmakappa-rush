@@ -78,6 +78,7 @@ import {
   PreviewAnnouncements,
   PreviewAlumni,
   PreviewTreasury,
+  PreviewRoster,
 } from "@/components/site/feature-previews";
 
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
@@ -352,21 +353,26 @@ const NAV_LINKS = [
 /* The feature cards ("squares"). Each is now a FeatureDetail: the grid shows the
    icon + title + short `desc`, and clicking a card opens <FeatureDetailModal>
    with the richer `long` copy, capability `bullets`, and an in-app `preview`
-   mockup. `wide` cards span two columns on large screens so the grid breathes
-   and the hero features read bigger. Each card also carries a concrete one-line
-   `outcome` surfaced ON the card face, so the value is legible WITHOUT opening
-   the modal. The grid LEADS with the three painkillers — Recruitment, Dues,
-   Treasury — so the most load-bearing value reads first. The "Chapter
-   announcements" card surfaces the real officer-broadcast announcements feature
-   so the grid stays full + balanced. "Officer elections"
-   (real secret-ballot voting that auto-seats winners) sits next to "Officer roles
-   & access" so the governance story reads together; its in-app preview is the
-   locally-defined <PreviewElections> mockup above. Two more genuinely-shipped
+   mockup. Every card shares ONE anatomy at ONE size — icon tile → title →
+   checkmark outcome → body → "See inside" — so the grid reads as a single
+   uniform system. (The old `wide` span-2 cards are gone: they orphaned
+   "White-label branding" in a half-empty row and stretched "Alumni & donations"
+   into a floating full-width band.) TEN cards = five even rows of two on sm+,
+   zero holes. Each card also carries a concrete one-line `outcome` surfaced ON
+   the card face, so the value is legible WITHOUT opening the modal. Row pairing
+   is deliberate: the grid LEADS with the painkillers (Recruitment + Dues, then
+   Treasury + Events), the governance story reads together on one row (Officer
+   roles & access + Officer elections — the elections preview is the
+   locally-defined <PreviewElections> mockup above), community pairs with the
+   people (Announcements + Members & roster), and brand + alumni close the grid
+   (White-label + Alumni & donations). "Members & roster" surfaces the
+   genuinely-shipped directory — actives/alumni views, member profiles, and the
+   careers board from the demo's Directory surface. Two more genuinely-shipped
    "launch-day" capabilities — one-click sample data and the guided same-day setup
    checklist — are surfaced in a dedicated strip BELOW this grid (see <Features>)
    rather than as core bento cards, since they're about getting started fast, not
    day-to-day operations. */
-const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
+const FEATURES: (FeatureDetail & { outcome: string })[] = [
   {
     icon: IconRecruitment,
     img: "feat-recruitment",
@@ -382,7 +388,6 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
       "TCPA-compliant double opt-in SMS to rushees",
     ],
     preview: <PreviewRecruitment />,
-    wide: true,
   },
   {
     icon: IconDues,
@@ -481,6 +486,22 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
     preview: <PreviewAnnouncements />,
   },
   {
+    icon: IconMembers,
+    img: "gl-brotherhood",
+    eyebrow: "Members",
+    title: "Members & roster",
+    outcome: "One living roster — every member's profile and contact info, always current.",
+    desc: "A searchable chapter directory with actives and alumni views, member profiles, and a built-in careers board — the single source of truth your officers share.",
+    long: "Retire the roster spreadsheet. Every member lives in one searchable directory — actives and alumni side by side — with profiles, contact info, and standing always current. New members are added in seconds, and the built-in careers board turns your network into real jobs and internships.",
+    bullets: [
+      "Searchable directory of actives and alumni",
+      "Member profiles with contact info and standing",
+      "Members manage their own profile & privacy",
+      "Chapter careers board for jobs & internships",
+    ],
+    preview: <PreviewRoster />,
+  },
+  {
     icon: IconWhiteLabel,
     img: "feat-branding",
     eyebrow: "Branding",
@@ -511,7 +532,6 @@ const FEATURES: (FeatureDetail & { wide?: boolean; outcome: string })[] = [
       "Giving totals and engagement at a glance",
     ],
     preview: <PreviewAlumni />,
-    wide: true,
   },
 ];
 
@@ -574,7 +594,7 @@ const STATS: {
   label: string;
 }[] = [
   { value: 0, prefix: "$", label: "To get started — no setup fee, no card" },
-  { value: 8, suffix: " tools", label: "Recruitment to alumni, in one login" },
+  { value: 10, suffix: " tools", label: "Recruitment to alumni, in one login" },
   { display: "Same-day", label: "From sign-up to a live, branded site" },
   { value: 0, prefix: "$", label: "Per-seat fees — unlimited members & officers" },
 ];
@@ -1620,27 +1640,25 @@ function Features() {
           </p>
         </Reveal>
 
-        {/* Bigger, generously-spaced bento grid. Two columns on large screens so
-            each card is wide and roomy (the brief's "make the squares bigger");
-            `wide` cards span the full row for rhythm. Equal-height rows via
-            auto-rows-fr. Each card is a cursor-tracking 3D tilt card revealed in
-            a staggered 3D sequence as the grid scrolls into view. */}
+        {/* ONE uniform, generously-spaced grid: every card is the same size and
+            anatomy — 1-col on mobile, 2-col from sm up; ten cards = five even
+            rows with zero orphan cells and zero full-width bands. Equal-height
+            rows via auto-rows-fr keep visual weight identical across the grid.
+            Each card is a cursor-tracking 3D tilt card revealed in a staggered
+            3D sequence as the grid scrolls into view. */}
         <Reveal3D
           stagger={0.07}
           className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:auto-rows-fr"
         >
           {FEATURES.map((f, i) => (
-            <Reveal3DItem
-              key={f.title}
-              className={f.wide ? "sm:col-span-2" : ""}
-            >
-              <Tilt3DCard 
-                max={7} 
-                glareColor="rgba(37,99,235,0.22)" 
+            <Reveal3DItem key={f.title}>
+              <Tilt3DCard
+                max={7}
+                glareColor="rgba(37,99,235,0.22)"
                 className="h-full rounded-3xl"
                 onClick={() => setOpenIdx(i)}
               >
-                <FeatureCard feature={f} wide={f.wide} />
+                <FeatureCard feature={f} />
               </Tilt3DCard>
             </Reveal3DItem>
           ))}
@@ -1710,10 +1728,8 @@ function Features() {
    wrapping <Tilt3DCard>. */
 function FeatureCard({
   feature,
-  wide,
 }: {
-  feature: FeatureDetail & { wide?: boolean; outcome?: string };
-  wide?: boolean;
+  feature: FeatureDetail & { outcome?: string };
 }) {
   const { icon, img, title, desc, outcome } = feature;
 
@@ -1795,32 +1811,16 @@ function FeatureCard({
         className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
       />
 
-      {wide ? (
-        // Wide cards (full-row span) read as a premium horizontal panel: a large
-        // icon block on the left, copy on the right — so the extra width is used
-        // intentionally instead of leaving the right half empty.
-        <div className="relative flex w-full flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
-          {featureIcon}
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-            {outcomeLine && <div className="mt-2.5 max-w-2xl">{outcomeLine}</div>}
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/80 sm:text-[15px]">
-              {desc}
-            </p>
-            <span className="mt-4 inline-flex">{seeInside}</span>
-          </div>
-        </div>
-      ) : (
-        // Standard cards: vertical, with the affordance pinned to the bottom so
-        // every card in a row aligns.
-        <div className="relative flex h-full w-full flex-col">
-          {featureIcon}
-          <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-          {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
-          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
-          <span className="mt-auto inline-flex pt-6">{seeInside}</span>
-        </div>
-      )}
+      {/* ONE layout for every card — vertical, with the affordance pinned to
+          the bottom so all cards in a row align. (The old `wide` horizontal
+          variant is gone: uniform anatomy = uniform grid.) */}
+      <div className="relative flex h-full w-full flex-col">
+        {featureIcon}
+        <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
+        {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
+        <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
+        <span className="mt-auto inline-flex pt-6">{seeInside}</span>
+      </div>
     </div>
   );
 }

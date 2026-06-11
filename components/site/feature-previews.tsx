@@ -663,6 +663,66 @@ export function PreviewAlumni() {
   );
 }
 
+/* ── Members & roster — one searchable directory, actives + alumni views ──── */
+export function PreviewRoster() {
+  const [tab, setTab] = React.useState<"actives" | "alumni">("actives");
+
+  // Mirrors the in-app Directory surface's mock chapter (same people as the
+  // live demo's roster, so the preview and the demo tell one story).
+  const actives = [
+    { g: "ΑΜ", name: "Alex Mercer", tone: "blue" as const, meta: "Senior · Computer Science", tag: "Good standing" },
+    { g: "ΤΣ", name: "Jack Sullivan", tone: "sky" as const, meta: "Junior · Finance", tag: "Good standing" },
+    { g: "ΕΠ", name: "Ethan Park", tone: "emerald" as const, meta: "Sophomore · Marketing", tag: "New member" },
+  ];
+  const alumni = [
+    { g: "ΜΒ", name: "Marcus Brody", tone: "gold" as const, meta: "Class of '14 · Google", tag: "Alumni" },
+    { g: "ΔΒ", name: "Daniel Vance", tone: "maroon" as const, meta: "Class of '11 · Goldman Sachs", tag: "Alumni" },
+  ];
+  const people = tab === "actives" ? actives : alumni;
+
+  return (
+    <Panel>
+      <MiniHeader title="Chapter Roster" badge={tab === "actives" ? "32 actives" : "118 alumni"} />
+      <DemoHint>Switch between the Actives and Alumni views — one directory for the whole chapter.</DemoHint>
+
+      {/* Directory switcher — mirrors the in-app roster tabs */}
+      <div className="mb-3 flex rounded-xl border border-border bg-secondary/40 p-1">
+        {(["actives", "alumni"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex-1 rounded-lg py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+              tab === t
+                ? "border border-border bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "actives" ? "Actives" : "Alumni"}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-1.5">
+        {people.map((p, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5 shadow-sm"
+          >
+            <Avatar glyph={p.g} tone={p.tone} />
+            <div className="flex-1 space-y-1">
+              <span className="block text-xs font-bold text-foreground leading-none">{p.name}</span>
+              <span className="block text-[8px] font-medium text-muted-foreground leading-none">{p.meta}</span>
+            </div>
+            <span className="rounded-full border border-border bg-secondary/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+              {p.tag}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 /* ── Treasury & budgets — line items + live expense logging ───────────────── */
 export function PreviewTreasury() {
   const [budget, setBudget] = React.useState([
