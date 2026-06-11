@@ -466,7 +466,7 @@ function PlatformPrivacyPage() {
             Because Greekstack processes member and rushee data on a chapter&apos;s behalf, we make a Data
             Processing Agreement available to subscribing chapters. To request a DPA, or to ask any
             data-protection question, email{" "}
-            <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>.
+            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
           </p>
         </PSection>
 
@@ -480,10 +480,9 @@ function PlatformPrivacyPage() {
 
         <PSection title="Contact">
           <p>
-            General questions:{" "}
-            <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>.
-            Privacy-specific requests (access, export, correction, or deletion):{" "}
-            <a href="mailto:privacy@greekstack.app" className="text-blue-600 hover:underline">privacy@greekstack.app</a>.
+            General questions and privacy-specific requests (access, export, correction, or
+            deletion):{" "}
+            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
             See also our{" "}
             <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
           </p>
@@ -491,7 +490,7 @@ function PlatformPrivacyPage() {
 
         <p className="mt-12 text-xs text-muted-foreground">
           Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Contact:{" "}
-          <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>
+          <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>
         </p>
       </main>
 

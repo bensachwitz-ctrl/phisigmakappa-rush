@@ -2957,10 +2957,10 @@ function SiteFooter() {
             <ul className="space-y-2.5">
               <li>
                 <a
-                  href="mailto:hello@greekstack.com"
+                  href="mailto:bensachwitz@gmail.com"
                   className="link-underline text-sm font-medium text-foreground/90 transition-colors hover:text-foreground"
                 >
-                  hello@greekstack.com
+                  bensachwitz@gmail.com
                 </a>
               </li>
               <li>

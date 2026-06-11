@@ -320,16 +320,14 @@ export default async function TermsPage() {
 
         <Section title="15. Contact">
           <p>
-            General questions? Email{" "}
-            <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>.
-            Legal notices may also be sent to{" "}
-            <a href="mailto:legal@greekstack.app" className="text-blue-600 hover:underline">legal@greekstack.app</a>.
+            General questions and legal notices: email{" "}
+            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
           </p>
         </Section>
 
         <p className="mt-12 text-xs text-muted-foreground">
           Effective date: {EFFECTIVE_DATE} · Greekstack — the white-label Greek-life platform · Contact:{" "}
-          <a href="mailto:hello@greekstack.com" className="text-blue-600 hover:underline">hello@greekstack.com</a>{" "}
+          <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>{" "}
           · See also our{" "}
           <Link href="/privacy" className="text-blue-600 hover:underline">privacy policy</Link>.
         </p>
