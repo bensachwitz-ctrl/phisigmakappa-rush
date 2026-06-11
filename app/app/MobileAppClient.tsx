@@ -1623,13 +1623,14 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       {/* Desktop Sidebar (Left of the phone mockup) */}
       <div className="hidden lg:flex flex-col w-72 shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-[32px] p-6 space-y-6 shadow-2xl relative z-10 text-left">
         <div className="space-y-2">
+          {/* Owner round-7: the spark-glyph "INTERACTIVE DEMO" pill read as
+              slop — the lockup is now just title + a quiet text-only line.
+              Hierarchy: logo · name (title) · what-this-is (support). */}
           <div className="flex items-center gap-3">
             <img src="/brand/greekstack-mark.png?v=2" className="w-10 h-10 rounded-xl object-contain shadow-md" alt="Greekstack Logo" />
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
-                <IconSpark className="w-3.5 h-3.5" /> Interactive Demo
-              </div>
-              <h2 className="text-xl font-bold text-white tracking-tight mt-1.5">Greekstack App</h2>
+              <h2 className="text-xl font-bold text-white tracking-tight leading-tight">Greekstack App</h2>
+              <p className="mt-0.5 text-[12px] font-semibold leading-tight text-slate-400">Interactive demo</p>
             </div>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
