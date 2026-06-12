@@ -64,9 +64,29 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // Billing Lockout Gate for API mutations
+  const isBillingLocked = req.cookies.get("phisig_billing_locked")?.value === "1";
+  if (isBillingLocked && STATE_CHANGING_METHODS.has(req.method) && pathname.startsWith("/api/")) {
+    const isAllowed =
+      pathname === "/api/admin/billing/checkout" ||
+      pathname === "/api/admin/billing/portal" ||
+      pathname.startsWith("/api/platform/billing") ||
+      pathname.includes("/webhook") ||
+      pathname.startsWith("/api/onboard") ||
+      pathname.startsWith("/api/contact");
+
+    if (!isAllowed) {
+      return NextResponse.json(
+        { ok: false, error: "Billing Lockout: Please activate your subscription at /admin/billing" },
+        { status: 402 },
+      );
+    }
+  }
+
   // Inject subdomain header for Server Components/API routes to resolve tenant
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-tenant-host", hostname);
+  requestHeaders.set("x-pathname", pathname);
 
   const response = NextResponse.next({
     request: {

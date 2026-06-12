@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { BillingBanner } from "@/components/admin/billing-banner";
 import { getCurrentSession } from "@/lib/auth";
@@ -28,6 +29,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // `isActive` flag (app/page.tsx) hard-suspends a chapter. We only show it to
   // admins (the operator who can act on billing) and only when Stripe is wired.
   let banner: React.ReactNode = null;
+  let cookieScript: React.ReactNode = null;
+
   if (isAdmin) {
     let subdomain = "";
     try {
@@ -45,11 +48,43 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         stripeConfigured={stripeConfigured}
       />
     );
+
+    const isLockedOut =
+      entitlement.status === "canceled" ||
+      entitlement.status === "unpaid" ||
+      entitlement.reason === "canceled" ||
+      entitlement.reason === "trial_expired";
+
+    if (isLockedOut) {
+      cookieScript = (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.cookie = "phisig_billing_locked=1; path=/; max-age=43200; SameSite=Lax"`,
+          }}
+        />
+      );
+
+      const pathname = headers().get("x-pathname") || "";
+      if (pathname && !pathname.startsWith("/admin/billing")) {
+        redirect("/admin/billing");
+      }
+    } else {
+      cookieScript = (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.cookie = "phisig_billing_locked=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"`,
+          }}
+        />
+      );
+    }
   }
 
   return (
-    <AdminShell isAdmin={isAdmin} banner={banner}>
-      {children}
-    </AdminShell>
+    <>
+      {cookieScript}
+      <AdminShell isAdmin={isAdmin} banner={banner}>
+        {children}
+      </AdminShell>
+    </>
   );
 }
