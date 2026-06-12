@@ -200,6 +200,7 @@ export async function provisionTenant(input: ProvisioningInput) {
           brotherId: adminBrother.id,
           positionId: presidentPosition.id,
           termCode: `${new Date().getFullYear()}-full`,
+          startDate: new Date(),
         },
       });
     }
