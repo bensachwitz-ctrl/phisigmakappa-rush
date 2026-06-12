@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const subdomain = String(body.subdomain || "").trim().toLowerCase();
+  const subdomain = String(body.subdomain || req.headers.get("x-subdomain") || "").trim().toLowerCase();
   const eventId = String(body.eventId || "").trim();
   const status = String(body.status || "").trim().toUpperCase();
   const note = body.note ? String(body.note).trim() : null;

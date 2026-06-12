@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => {
     mockDuesPaymentFindMany: vi.fn(),
     mockAnnouncementFindMany: vi.fn(),
     mockEventFindMany: vi.fn(),
+    mockEventFindUnique: vi.fn(),
+    mockBrotherRSVPUpsert: vi.fn(),
     mockAlumniProfileFindUnique: vi.fn(),
     mockAlumniProfileFindMany: vi.fn(),
     mockJobPostingFindMany: vi.fn(),
@@ -87,6 +89,10 @@ const mockTenantClient = {
   },
   event: {
     findMany: mocks.mockEventFindMany,
+    findUnique: mocks.mockEventFindUnique,
+  },
+  brotherRSVP: {
+    upsert: mocks.mockBrotherRSVPUpsert,
   },
   alumniProfile: {
     findUnique: mocks.mockAlumniProfileFindUnique,
@@ -112,6 +118,7 @@ vi.mock("@/lib/prisma", () => {
 // Now import the routes after the mocks have been set up
 import { GET as getMobileData } from "@/app/api/mobile/data/route";
 import { POST as authMobile } from "@/app/api/mobile/auth/route";
+import { POST as rsvpMobile } from "@/app/api/mobile/events/rsvp/route";
 
 const TEST_SECRET = "test-portal-secret-32-chars-.........";
 
@@ -494,5 +501,93 @@ describe("POST /api/mobile/auth", () => {
     expect(body.token).toBeDefined();
     expect(body.user.brotherId).toBe("brother-123");
     expect(mocks.mockPortalUserCreate).toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/mobile/events/rsvp", () => {
+  it("returns 400 for missing request parameters", async () => {
+    const req = new Request("https://greekstack.vercel.app/api/mobile/events/rsvp", {
+      method: "POST",
+      body: JSON.stringify({ eventId: "evt-123" }),
+    });
+
+    const res = await rsvpMobile(req);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("required");
+  });
+
+  it("returns 401 when token is missing", async () => {
+    mocks.mockTenantFindUnique.mockResolvedValue({
+      id: "tenant-1",
+      subdomain: "usc-psk",
+      isActive: true,
+    });
+
+    const req = new Request("https://greekstack.vercel.app/api/mobile/events/rsvp", {
+      method: "POST",
+      body: JSON.stringify({
+        subdomain: "usc-psk",
+        eventId: "evt-123",
+        status: "GOING",
+      }),
+    });
+
+    const res = await rsvpMobile(req);
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toContain("token is required");
+  });
+
+  it("successfully processes RSVP for an active brother", async () => {
+    mocks.mockTenantFindUnique.mockResolvedValue({
+      id: "tenant-1",
+      subdomain: "usc-psk",
+      name: "Beta Chapter",
+      school: "UofSC",
+      isActive: true,
+    });
+
+    const token = signPortalTokenForTenant("user-123", "brother", "usc-psk");
+
+    mocks.mockPortalUserFindUnique.mockResolvedValue({
+      id: "user-123",
+      email: "brother@usc.edu",
+      role: "brother",
+      brotherId: "brother-789",
+    });
+
+    mocks.mockEventFindUnique.mockResolvedValue({
+      id: "evt-123",
+      name: "Meeting",
+    });
+
+    mocks.mockBrotherRSVPUpsert.mockResolvedValue({
+      id: "rsvp-123",
+      eventId: "evt-123",
+      brotherId: "brother-789",
+      status: "GOING",
+    });
+
+    const req = new Request("https://greekstack.vercel.app/api/mobile/events/rsvp", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        subdomain: "usc-psk",
+        eventId: "evt-123",
+        status: "GOING",
+        note: "Will be there",
+      }),
+    });
+
+    const res = await rsvpMobile(req);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.rsvp.status).toBe("GOING");
+    expect(mocks.mockBrotherRSVPUpsert).toHaveBeenCalled();
   });
 });

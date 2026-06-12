@@ -188,13 +188,15 @@ class APIService: ObservableObject {
             }
         }
         
-        guard let url = URL(string: "\(apiBaseUrl)/api/mobile/events") else { return false }
+        guard let url = URL(string: "\(apiBaseUrl)/api/mobile/events/rsvp") else { return false }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(tk)", forHTTPHeaderField: "Authorization")
+        request.setValue(self.subdomain.lowercased(), forHTTPHeaderField: "x-subdomain")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let body: [String: String] = [
+            "subdomain": self.subdomain.lowercased(),
             "eventId": eventId,
             "status": status
         ]
