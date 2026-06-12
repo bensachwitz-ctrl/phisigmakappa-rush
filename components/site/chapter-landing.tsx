@@ -376,7 +376,7 @@ export default async function ChapterLandingPage({
           z-stack — bg z-0 → letters z-1 → content z-2+. Letters were
           previously parked at NEGATIVE z, where in-flow section backgrounds
           painted straight over them. */}
-      <div aria-hidden="true" className="fixed inset-0 z-0 bg-background" />
+      <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
       {/* Page-wide drifting Greek-letter field — THIS chapter's own letters,
           tinted to their brand --primary, at z-1: plainly IN FRONT of the page
           wash and BEHIND every card/section (content wrapper is z-2). Calm
@@ -393,7 +393,7 @@ export default async function ChapterLandingPage({
           on the same z-1 plane as the letter field (above the z-0 base, below
           the z-2 content). The hero's own opaque layers cover it up top, so it
           reads through the open mid-page sections. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[1] select-none overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-4] select-none overflow-hidden">
         {/* School wordmark — smaller + drifting across the page (owner
             round-8), so the school identity is plainly visible in the open
             bands between sections instead of one huge blocked watermark. */}

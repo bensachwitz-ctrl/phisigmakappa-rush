@@ -93,11 +93,12 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
       : "";
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="relative min-h-screen overflow-x-hidden text-foreground">
+      <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
       {/* Ambient brand atmosphere — drifting Greek letters + soft color orbs,
           both decorative, both reduced-motion-safe (see globals.css). The
-          field renders at z-1 (owner round-8): the old -z-10 placement painted
-          it UNDER this div's opaque bg-background — invisible on /login. */}
+          field renders at z-[-5] (default): the old z-1 placement could overlap
+          interactive content. */}
       <GreekLetterField count={26} />
       <AmbientOrbs />
 
@@ -688,7 +689,7 @@ function AmbientOrbs() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      className="pointer-events-none fixed inset-0 z-[-8] overflow-hidden"
     >
       <div className="absolute -left-24 top-[-10%] h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
       <div className="absolute right-[-10%] top-1/3 h-72 w-72 rounded-full bg-sky-300/20 blur-3xl" />

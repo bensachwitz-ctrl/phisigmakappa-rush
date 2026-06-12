@@ -1457,7 +1457,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           field + identity backdrop are guaranteed to paint OVER it. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-[-10]"
         style={{
           background: `radial-gradient(ellipse at 75% 0%, ${brandPrimary}33, transparent 55%), radial-gradient(ellipse at 15% 90%, ${brandSecond}1f, transparent 50%), linear-gradient(160deg, ${brandDeep}, #060810 60%, #04060d)`,
           transition: "background 0.9s cubic-bezier(0.16,1,0.3,1)",

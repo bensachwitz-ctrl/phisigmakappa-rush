@@ -82,11 +82,11 @@ const TIERS: Tier[] = [
   // reads as letters drifting across the screen (owner feedback: the field
   // must visibly travel, not sit as a near-static texture). Opacity tuned to
   // clearly read on the marketing bg while staying well under card text.
-  { count: 11, sizeMin: 34, sizeRange: 22, durMin: 14, durRange: 10, opMin: 0.26, opRange: 0.10, dyAmp: 20 },
+  { count: 11, sizeMin: 34, sizeRange: 22, durMin: 14, durRange: 10, opMin: 0.08, opRange: 0.04, dyAmp: 20 },
   // MID — medium size / opacity, slower
-  { count: 14, sizeMin: 19, sizeRange: 14, durMin: 22, durRange: 12, opMin: 0.17, opRange: 0.07, dyAmp: 28 },
+  { count: 14, sizeMin: 19, sizeRange: 14, durMin: 22, durRange: 12, opMin: 0.05, opRange: 0.03, dyAmp: 28 },
   // FAR — small, slowest, faint (the deep backdrop layer) — still visibly moving
-  { count: 14, sizeMin: 12, sizeRange: 8, durMin: 32, durRange: 16, opMin: 0.09, opRange: 0.06, dyAmp: 36 },
+  { count: 14, sizeMin: 12, sizeRange: 8, durMin: 32, durRange: 16, opMin: 0.03, opRange: 0.02, dyAmp: 36 },
 ];
 
 /** Damping presets. `calm` (chapter sites / onboard): slightly slower + softer,
@@ -191,7 +191,7 @@ export function GreekLetterField({
   calm = false,
   whisper = false,
   fromSides = false,
-  z = 1,
+  z = -5,
 }: {
   /** Override the glyph set (e.g. a chapter's Greek letters). Defaults to the full alphabet. */
   glyphs?: string[];

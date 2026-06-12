@@ -230,7 +230,7 @@ export function ChapterIdentityBackdrop({
   return (
     <div
       aria-hidden="true"
-      className="gs-fade-in pointer-events-none absolute inset-0 z-[1] select-none overflow-hidden"
+      className="gs-fade-in pointer-events-none absolute inset-0 z-[-4] select-none overflow-hidden"
     >
       {/* School wordmark — SMALLER and drifting slowly across the top of the
           room (owner round-8: visible, never blocked by the phone/rail, in

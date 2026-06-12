@@ -182,7 +182,7 @@ export function Reveal3DItem({
 
   return (
     <MotionTag
-      className={cn("will-change-transform", className)}
+      className={cn("will-change-transform [transform-style:preserve-3d]", className)}
       variants={finePointer ? itemVariants3D : itemVariantsFlat}
     >
       {children}

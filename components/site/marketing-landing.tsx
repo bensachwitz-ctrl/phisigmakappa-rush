@@ -676,12 +676,13 @@ const PLANS: Plan[] = [
     icon: IconPlanBase,
     price: "Free",
     unit: "your first month",
-    priceNote: "Your whole white-label site, free for the first month.",
+    priceNote: "$50/month after the first month",
     tagline: "Everything your chapter needs, on one branded site.",
     highlights: [
-      "First month free — no card to start, cancel anytime",
+      "Free for the first month",
+      "$50/month after the first month",
+      "$200 each rush cycle",
       "Unlimited members & officers — never per-seat",
-      "Best value yearly: all rush fees included",
     ],
     billing: {
       monthly: {
@@ -791,7 +792,7 @@ export default function MarketingLandingPage() {
           bg z-0 → letters z-1 → content z-2+). */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
+        className="fixed inset-0 z-[-10] bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
       />
       {/* ALL the demo frats' letters drifting across the entire screen —
           singles and joined monograms mixed (owner round-8/9). At z-1 the
@@ -893,7 +894,7 @@ function SiteNav() {
             collapse into the sheet menu. justify-center keeps it optically centered;
             min-w-0 lets the track shrink without forcing horizontal scroll. */}
         <nav
-          className="hidden min-w-0 items-center justify-center gap-5 xl:flex xl:gap-6 2xl:gap-7 text-sm"
+          className="hidden min-w-0 items-center justify-center gap-3 xl:flex xl:gap-4 2xl:gap-6 text-xs xl:text-sm"
           aria-label="Primary"
         >
           {NAV_LINKS.map((l) => (
@@ -929,8 +930,8 @@ function SiteNav() {
             <ShimmerBorder rounded="rounded-md">
               <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap px-3.5">
                 <Link href="/onboard" className="group/btn font-bold">
-                  <span className="hidden lg:inline">Launch chapter — free</span>
-                  <span className="lg:hidden">Launch free</span>
+                  <span className="hidden 2xl:inline">Launch chapter — free</span>
+                  <span className="2xl:hidden">Launch free</span>
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5 ml-1.5 inline-flex" />
                 </Link>
               </Button>
