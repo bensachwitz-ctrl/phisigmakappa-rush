@@ -6,10 +6,10 @@ bids/waivers) + `ELEVATION-SPEC-2026-06-09.md`. **Phase starts after DailyTool +
 White-label chapter-management SaaS. Build via agent swarm, loop until market-ready.
 
 ## 0. Immediate site fixes (user screenshots 2026-06-09)
-- [ ] **Header overflow** — wordmark "Greekstack" collides with nav ("Features / How it works"). Fix nav layout (flex + gap + responsive wrap/hamburger), no overlap at any width.
-- [ ] **Greek letters → BACKGROUND layer** — decorative Φ/α/ο currently render OVER the feature cards. Move them behind content: lower `z-index`, `pointer-events:none`, reduced opacity, positioned as a true ambient background (the requested "letters floating in the background" look), never overlapping text/boxes.
-- [ ] **Content overflow / left-clip** — feature cards clip on the left ("reasury & budgets", "ee inside"). Fix container max-width/padding/overflow; responsive; nothing clipped.
-- [ ] **Per-chapter tailoring** — generated chapter sites themed to the chapter (colors/letters/logo/photos/content), not the generic template.
+- [x] **Header overflow** — wordmark "Greekstack" collides with nav ("Features / How it works"). Fix nav layout (flex + gap + responsive wrap/hamburger), no overlap at any width.
+- [x] **Greek letters → BACKGROUND layer** — decorative Φ/α/ο currently render OVER the feature cards. Move them behind content: lower `z-index`, `pointer-events:none`, reduced opacity, positioned as a true ambient background (the requested "letters floating in the background" look), never overlapping text/boxes.
+- [x] **Content overflow / left-clip** — feature cards clip on the left ("reasury & budgets", "ee inside"). Fix container max-width/padding/overflow; responsive; nothing clipped.
+- [x] **Per-chapter tailoring** — generated chapter sites themed to the chapter (colors/letters/logo/photos/content), not the generic template.
 
 ## Mobile app — "Greek Stack" (App Store)
 Brothers + alumni log in (same creds as web) → full chapter functionality on phone. Build after the web SaaS is built out; web + app work simultaneously off the same API/Supabase. Deploy to App Store.
