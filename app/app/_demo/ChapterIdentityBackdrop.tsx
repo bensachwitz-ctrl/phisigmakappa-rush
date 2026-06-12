@@ -62,25 +62,70 @@ export function SchoolCrestLogo({
     return (
       <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
         {defs}
+        {/* Outer Ring */}
         <circle cx="50" cy="50" r="46" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
         <circle cx="50" cy="50" r="41" stroke={primary} strokeWidth="1.5" strokeDasharray="3 2" />
-        {/* Crescent Moon */}
-        <path d="M30 25 A 9 9 0 0 1 43 21 A 11 11 0 1 0 30 34 Z" fill="url(#goldGrad)" />
-        {/* Detailed Palmetto Tree */}
+        
+        {/* Columns & Gates */}
+        <g stroke="url(#goldGrad)" strokeWidth="1.5" strokeLinecap="round" fill="none">
+          {/* Left Column */}
+          <path d="M 24 76 L 24 35" strokeWidth="2.5" />
+          <path d="M 21 76 L 27 76" strokeWidth="3.2" /> {/* Column Base */}
+          <path d="M 22 35 L 26 35" strokeWidth="2.5" /> {/* Column Capital */}
+          
+          {/* Right Column */}
+          <path d="M 76 76 L 76 35" strokeWidth="2.5" />
+          <path d="M 73 76 L 79 76" strokeWidth="3.2" />
+          <path d="M 74 35 L 78 35" strokeWidth="2.5" />
+
+          {/* Fences/Rails */}
+          <path d="M 24 72 H 76" strokeWidth="1.5" />
+          <path d="M 24 58 H 76" strokeWidth="1.2" />
+          <path d="M 24 46 H 76" strokeWidth="1.2" />
+
+          {/* Vertical fence spikes */}
+          {[29, 34, 39, 44, 56, 61, 66, 71].map(x => (
+            <path key={x} d={`M ${x} 72 V 42`} strokeWidth="0.8" />
+          ))}
+          {/* Little spearheads for the spikes */}
+          {[29, 34, 39, 44, 56, 61, 66, 71].map(x => (
+            <path key={`head-${x}`} d={`M ${x-1.2} 42 L ${x} 39.5 L ${x+1.2} 42 Z`} fill="url(#goldGrad)" stroke="none" />
+          ))}
+        </g>
+
+        {/* Palmetto Tree */}
         <g fill="url(#goldGrad)">
           {/* Trunk */}
-          <path d="M48 76 L 49 53 Q 48 48 50 48 Q 52 48 51 53 L 52 76 Z" />
-          {/* Base grass */}
-          <path d="M38 76 C 45 74, 55 74, 62 76 Z" />
-          {/* Detailed fronds */}
-          <path d="M50 47 C 48 35, 34 38, 30 42 C 34 37, 45 44, 48 47" />
-          <path d="M50 47 C 52 35, 66 38, 70 42 C 66 37, 55 44, 52 47" />
-          <path d="M50 47 C 44 33, 40 28, 38 27 C 42 29, 46 39, 48 45" />
-          <path d="M50 47 C 56 33, 60 28, 62 27 C 58 29, 54 39, 52 45" />
-          <path d="M50 47 C 49 32, 47 24, 47 22 C 49 26, 50 37, 50 47" />
-          {/* Side leaves */}
-          <path d="M43 58 C 40 56, 35 56, 36 53 C 38 50, 46 53, 47 54" />
-          <path d="M57 58 C 60 56, 65 56, 64 53 C 62 50, 54 53, 53 54" />
+          <path d="M 48.5 76 L 49.5 48 Q 50 45 50.5 48 L 51.5 76 Z" />
+          {/* Horizontal ridges on trunk */}
+          <path d="M 49 70 H 51 M 49.2 64 H 50.8 M 49.4 58 H 50.6 M 49.6 52 H 50.4" stroke="rgba(11,15,25,0.4)" strokeWidth="0.8" />
+          
+          {/* Palmetto Crown / Fronds */}
+          {/* Upper/central leaves */}
+          <path d="M 50 46 C 49 33, 44 26, 44 24 C 47 28, 49.5 37, 50 46 Z" />
+          <path d="M 50 46 C 51 33, 56 26, 56 24 C 53 28, 50.5 37, 50 46 Z" />
+          <path d="M 50 46 C 47 34, 36 29, 34 27 C 39 31, 46 39, 50 46 Z" />
+          <path d="M 50 46 C 53 34, 64 29, 66 27 C 61 31, 54 39, 50 46 Z" />
+          
+          {/* Middle/side leaves */}
+          <path d="M 50 46 C 44 38, 30 36, 27 36 C 34 39, 43 43, 50 46 Z" />
+          <path d="M 50 46 C 56 38, 70 36, 73 36 C 66 39, 57 43, 50 46 Z" />
+          
+          {/* Lower leaves */}
+          <path d="M 50 46 C 42 42, 28 48, 25 50 C 32 49, 42 47, 50 46 Z" />
+          <path d="M 50 46 C 58 42, 72 48, 75 50 C 68 49, 58 47, 50 46 Z" />
+          <path d="M 50 46 C 43 48, 31 58, 29 62 C 34 57, 43 51, 50 46 Z" />
+          <path d="M 50 46 C 57 48, 69 58, 71 62 C 66 57, 57 51, 50 46 Z" />
+        </g>
+
+        {/* 1801 Ribbon Banner at the bottom */}
+        <g>
+          {/* Banner shape */}
+          <path d="M 33 77 Q 50 82 67 77 Q 50 87 33 77 Z" fill="url(#goldGrad)" stroke="url(#goldGrad)" strokeWidth="1" strokeLinejoin="round" />
+          {/* Tiny 1801 text in banner */}
+          <text x="50" y="81.5" textAnchor="middle" fontSize="6.5" fontWeight="900" fontFamily="sans-serif" fill="#0B0F19">
+            1801
+          </text>
         </g>
       </svg>
     );
