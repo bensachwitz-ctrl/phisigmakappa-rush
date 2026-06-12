@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
+import { generateAndUploadSignedPdf } from "@/lib/esign";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +20,8 @@ const SubmitSchema = z.object({
   headshotUrl: z.string().url().optional().or(z.literal("")),
   password: z.string().min(6).max(120).optional(),
   confirmPassword: z.string().min(6).max(120).optional(),
+  signatureName: z.string().min(2).max(100),
+  agreedToHazingWaiver: z.boolean(),
 });
 
 async function loadInvite(token: string) {
@@ -61,6 +65,11 @@ export async function POST(req: Request, { params }: { params: { token: string }
   }
   const data = parsed.data;
   const cleanName = data.name.trim();
+
+  if (!data.signatureName || !data.agreedToHazingWaiver) {
+    return NextResponse.json({ ok: false, error: "Waiver signature and agreement are required to complete onboarding." }, { status: 400 });
+  }
+
   if (data.password && data.confirmPassword && data.password !== data.confirmPassword) {
     return NextResponse.json({ ok: false, error: "Passwords don't match" }, { status: 400 });
   }
@@ -100,6 +109,51 @@ export async function POST(req: Request, { params }: { params: { token: string }
         role: "MEMBER",
       },
     });
+  }
+
+  // Handle signature & PDF upload for Onboarding Anti-Hazing Waiver
+  let pdfUrl: string | undefined;
+  const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+  const userAgent = req.headers.get("user-agent") || "unknown";
+
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+  const greekLetters = cfg["chapter.greekLetters"] || "";
+  const organization = [fraternityName, greekLetters].filter(Boolean).join(" - ") || "Greek Chapter";
+
+  try {
+    pdfUrl = await generateAndUploadSignedPdf({
+      name: data.signatureName,
+      email: brother.email || "",
+      phone: brother.phone || undefined,
+      organization,
+      documentTitle: "Anti-Hazing Waiver & Onboarding Agreement",
+      ipAddress,
+      userAgent,
+      consentText: `I hereby accept membership to ${organization} and certify that I have read and agree to all terms, including the Zero-Tolerance Anti-Hazing Agreement. I understand that hazing is strictly prohibited and that my digital signature constitutes a legally binding acceptance of these terms.`,
+    }, `${brother.id}_onboarding_waiver`);
+  } catch (err) {
+    console.error("Failed to generate/upload onboarding signed PDF:", err);
+  }
+
+  // Create Document row in DB associated with the Brother
+  if (pdfUrl) {
+    try {
+      await prisma.document.create({
+        data: {
+          name: "Anti-Hazing Waiver & Onboarding Agreement",
+          description: `Digitally signed by ${data.signatureName} during onboarding. Verification hash is recorded.`,
+          url: pdfUrl,
+          blobUrl: pdfUrl,
+          category: "POLICIES",
+          visibility: "OFFICERS",
+          uploadedById: brother.id,
+          fileName: `${brother.name.toLowerCase().replace(/[^a-z0-9_-]/g, "_")}_onboarding_waiver.pdf`,
+        },
+      });
+    } catch (dbErr) {
+      console.error("Failed to create Document record for onboarding waiver:", dbErr);
+    }
   }
 
   await prisma.brotherInvite.update({

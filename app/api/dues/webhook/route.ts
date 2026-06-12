@@ -10,6 +10,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { DUES_INTRO_FEE_USED_KEY } from "@/lib/platform-billing";
 import { logger, errorSink } from "@/lib/logger";
+import { generateAndUploadDuesReceipt } from "@/lib/dues-receipt";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -195,13 +196,54 @@ async function handleCheckoutCompleted(
   }
 
   const now = new Date();
+
+  const brother = await db.brother.findUnique({
+    where: { id: payment.brotherId },
+    select: { name: true, email: true },
+  }).catch(() => null);
+
+  const cfgRows = await db.siteConfig.findMany().catch(
+    () => [] as { key: string; value: string }[],
+  );
+  const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
+  const id = chapterIdentityFromCfg(cfg);
+  const brandHex = cfg["brand.primaryHex"] || "";
+  const duesLabel = cfg["dues.label"] || `Chapter dues — ${payment.year}`;
+  const chapterName = id.chapterAttribution || id.fraternityName;
+  const schoolName = id.schoolName || "";
+
+  // Generate branded PDF receipt and upload to Vercel Blob
+  let customReceiptUrl: string | null = null;
+  if (brother) {
+    try {
+      const receiptFilename = `dues_receipt_${payment.id}_${Date.now()}`;
+      customReceiptUrl = await generateAndUploadDuesReceipt({
+        brotherName: brother.name || "Chapter Brother",
+        brotherEmail: brother.email || "",
+        amountCents: payment.amountCents,
+        year: payment.year,
+        paidAt: now,
+        status: "PAID",
+        stripePaymentIntentId: paymentIntentId,
+        chapterName,
+        schoolName,
+        brandHex,
+        duesLabel,
+      }, receiptFilename);
+    } catch (err) {
+      errorSink(err, { route: ROUTE, outcome: "generate_dues_receipt_pdf_failed" });
+    }
+  }
+
+  const finalReceiptUrl = customReceiptUrl || receiptUrl;
+
   await db.$transaction([
     db.duesPayment.update({
       where: { id: payment.id },
       data: {
         status: "PAID",
         stripePaymentIntentId: paymentIntentId,
-        receiptUrl,
+        receiptUrl: finalReceiptUrl,
       },
     }),
     db.brother.update({
@@ -216,11 +258,6 @@ async function handleCheckoutCompleted(
       },
     }),
   ]);
-
-  const brother = await db.brother.findUnique({
-    where: { id: payment.brotherId },
-    select: { name: true, email: true },
-  }).catch(() => null);
 
   // Write the audit row with actorName overridden to "stripe-webhook"
   // so the chapter can see at a glance "this is a system-confirmed
@@ -258,20 +295,13 @@ async function handleCheckoutCompleted(
   // failure must NEVER fail the webhook (Stripe would retry a confirmed payment).
   try {
     if (brother?.email) {
-      const cfgRows = await db.siteConfig.findMany().catch(
-        () => [] as { key: string; value: string }[],
-      );
-      const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
-      const id = chapterIdentityFromCfg(cfg);
-      const brandHex = cfg["brand.primaryHex"] || "";
-      const duesLabel = cfg["dues.label"] || `Chapter dues — ${payment.year}`;
       const amount = `$${(payment.amountCents / 100).toFixed(2)}`;
       const paidOn = now.toLocaleDateString("en-US", { dateStyle: "long" });
       const firstName = (brother.name || "").split(" ")[0] || "brother";
-      const receiptRow = receiptUrl
-        ? `<tr><td style="padding:6px 0;color:#71717a;">Stripe receipt</td><td style="padding:6px 0;text-align:right;"><a href="${escUrl(
-            receiptUrl,
-          )}" style="color:${brandHex || "#1F2937"};">View / print receipt</a></td></tr>`
+      const receiptRow = finalReceiptUrl
+        ? `<tr><td style="padding:6px 0;color:#71717a;">Payment receipt</td><td style="padding:6px 0;text-align:right;"><a href="${escUrl(
+            finalReceiptUrl,
+          )}" style="color:${brandHex || "#1F2937"};">Download receipt (PDF)</a></td></tr>`
         : "";
       const bodyHtml = `
         <p style="margin:0 0 16px;">Hi ${escUrl(firstName)}, thanks — your chapter dues payment was received. Here's your receipt for your records.</p>
@@ -288,7 +318,7 @@ async function handleCheckoutCompleted(
         chapterSubline: id.schoolName || undefined,
         heading: "Your dues payment receipt",
         bodyHtml,
-        cta: receiptUrl ? { label: "View your Stripe receipt", url: receiptUrl } : null,
+        cta: finalReceiptUrl ? { label: "Download your PDF receipt", url: finalReceiptUrl } : null,
         footerNote: `Paid via Stripe to ${escUrl(id.fraternityName)}. Keep this email as your receipt.`,
       });
       await sendEmail({

@@ -24,6 +24,7 @@ import {
   Plus,
   Lock,
   Upload,
+  Download,
   ExternalLink,
   Clock,
   Clipboard,
@@ -1820,9 +1821,22 @@ export default function BrothersDashboardClient({
                   <div className="pt-4 border-t border-maroon-50 mt-4">
                     {duesConfig.enabled ? (
                       currentDuesPaid ? (
-                        <div className="flex items-center justify-center gap-1.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">
-                          <Check className="w-4 h-4" />
-                          Good Standing for {duesConfig.year}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-center gap-1.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">
+                            <Check className="w-4 h-4" />
+                            Good Standing for {duesConfig.year}
+                          </div>
+                          {duesPayments.find(p => p.year === duesConfig.year && p.status === "PAID")?.receiptUrl && (
+                            <a
+                              href={duesPayments.find(p => p.year === duesConfig.year && p.status === "PAID")?.receiptUrl || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full inline-flex items-center justify-center gap-1.5 p-2 rounded-xl border border-maroon-200 text-maroon-800 font-bold text-xs hover:bg-maroon-50 transition-colors duration-150"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Download Current Receipt
+                            </a>
+                          )}
                         </div>
                       ) : (
                         <Button
@@ -1866,6 +1880,7 @@ export default function BrothersDashboardClient({
                             <th className="p-3">Method</th>
                             <th className="p-3 text-center">Date</th>
                             <th className="p-3 text-center">Status</th>
+                            <th className="p-3 text-center">Receipt</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-maroon-50">
@@ -1896,6 +1911,22 @@ export default function BrothersDashboardClient({
                                 }`}>
                                   {p.status}
                                 </span>
+                              </td>
+                              <td className="p-3 text-center">
+                                {p.receiptUrl ? (
+                                  <a
+                                    href={p.receiptUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-maroon-700 hover:text-maroon-900 font-bold transition-colors duration-150"
+                                    title="Download PDF Receipt"
+                                  >
+                                    <Download className="w-3.5 h-3.5 text-maroon-600" />
+                                    <span>Download</span>
+                                  </a>
+                                ) : (
+                                  <span className="text-maroon-300 font-medium">—</span>
+                                )}
                               </td>
                             </tr>
                           ))}

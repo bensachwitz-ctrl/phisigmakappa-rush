@@ -139,16 +139,9 @@ const RushSchema = z.object({
   highSchoolInfo: z.string().max(2000).optional().or(z.literal("")),
   backgroundInfo: z.string().max(2000).optional().or(z.literal("")),
   headshotUrl: z.string().url().max(2048).optional().or(z.literal("")),
-  // Optional age attestation flag from the form. Defaults to ADULT_18_PLUS
-  // for older clients that don't send this field; the express-consent text
-  // they checked covers both 18+ and 17+with-guardian paths.
   ageAttestation: z.enum(["ADULT_18_PLUS", "MINOR_17_WITH_GUARDIAN_PERMISSION"]).optional(),
-  // Honeypot — hidden offscreen input that real users can't see/touch but
-  // dumb bots auto-fill. Any non-empty value here means the submission is
-  // bot traffic. We accept (return 200) so the bot doesn't iterate, but we
-  // never touch the DB. Field name "website" is the highest-yield trigger
-  // per OWASP form-spam research.
   website: z.string().max(500).optional().or(z.literal("")),
+  customAnswers: z.record(z.string(), z.string().max(1000)).optional(),
 });
 
 export async function POST(req: Request) {
@@ -247,37 +240,74 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    // Atomic upsert closes the find-then-update/create TOCTOU race: two
-    // simultaneous submissions of the same email previously both saw
-    // `existing === null`, both attempted create, and the second hit a
-    // P2002 unique violation that fell into the outer catch as a 500 the
-    // user saw as "Server error". Single upsert + the unique email index
-    // guarantees one row per email regardless of concurrency.
-    const headshotPreserve = data.headshotUrl || undefined; // undefined = leave as-is on update
-    const upserted = await prisma.rush.upsert({
+    // Format custom answers to append to notes
+    const customAnswers = parsed.customAnswers;
+    let customNote = "";
+    if (customAnswers && Object.keys(customAnswers).length > 0) {
+      customNote = "\n\n[Custom Form Answers]";
+      for (const [q, a] of Object.entries(customAnswers)) {
+        if (a && a.trim()) {
+          customNote += `\n${q}: ${a.trim()}`;
+        }
+      }
+    }
+
+    // Look up existing record to safely merge notes & enrichmentData
+    const existingRush = await prisma.rush.findUnique({
       where: { email: data.email },
-      update: {
-        name: data.name,
-        phone: data.phone,
-        hometown: data.hometown || null,
-        major: data.major || null,
-        year: data.year || null,
-        highSchoolInfo: data.highSchoolInfo || null,
-        backgroundInfo: data.backgroundInfo || null,
-        ...(headshotPreserve ? { headshotUrl: headshotPreserve } : {}),
-      },
-      create: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        hometown: data.hometown || null,
-        major: data.major || null,
-        year: data.year || null,
-        highSchoolInfo: data.highSchoolInfo || null,
-        backgroundInfo: data.backgroundInfo || null,
-        headshotUrl: data.headshotUrl || null,
-      },
+      select: { id: true, notes: true, enrichmentData: true },
     });
+
+    let newEnrichmentData = existingRush?.enrichmentData || "";
+    if (customAnswers && Object.keys(customAnswers).length > 0) {
+      try {
+        const parsedData = newEnrichmentData ? JSON.parse(newEnrichmentData) : {};
+        parsedData.customAnswers = {
+          ...(parsedData.customAnswers || {}),
+          ...customAnswers,
+        };
+        newEnrichmentData = JSON.stringify(parsedData);
+      } catch {
+        newEnrichmentData = JSON.stringify({ customAnswers });
+      }
+    }
+
+    const headshotPreserve = data.headshotUrl || undefined;
+    let upserted;
+
+    if (existingRush) {
+      upserted = await prisma.rush.update({
+        where: { id: existingRush.id },
+        data: {
+          name: data.name,
+          phone: data.phone,
+          hometown: data.hometown || null,
+          major: data.major || null,
+          year: data.year || null,
+          highSchoolInfo: data.highSchoolInfo || null,
+          backgroundInfo: data.backgroundInfo || null,
+          ...(headshotPreserve ? { headshotUrl: headshotPreserve } : {}),
+          notes: (existingRush.notes || "") + customNote,
+          ...(newEnrichmentData ? { enrichmentData: newEnrichmentData } : {}),
+        },
+      });
+    } else {
+      upserted = await prisma.rush.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          hometown: data.hometown || null,
+          major: data.major || null,
+          year: data.year || null,
+          highSchoolInfo: data.highSchoolInfo || null,
+          backgroundInfo: data.backgroundInfo || null,
+          headshotUrl: data.headshotUrl || null,
+          notes: customNote || null,
+          ...(newEnrichmentData ? { enrichmentData: newEnrichmentData } : {}),
+        },
+      });
+    }
 
     // ── Per-email idempotency window ─────────────────────────────────────
     // BEFORE the new-vs-update split: if this email already produced a

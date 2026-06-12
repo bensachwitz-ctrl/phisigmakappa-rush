@@ -34,6 +34,7 @@ type FormData = {
   about: string;
   headshotUrl: string;
   ageAttestation: "ADULT_18_PLUS" | "MINOR_17_WITH_GUARDIAN_PERMISSION";
+  customAnswers?: Record<string, string>;
 };
 
 const initial: FormData = {
@@ -41,6 +42,7 @@ const initial: FormData = {
   year: "", major: "", hometown: "",
   about: "", headshotUrl: "",
   ageAttestation: "ADULT_18_PLUS",
+  customAnswers: {},
 };
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Transfer"];
@@ -111,14 +113,12 @@ export function RushForm({
   booth: boothProp,
   socialHandle,
   socialUrl,
+  customQuestions = [],
 }: {
   booth?: boolean;
-  /** Chapter's social handle (e.g. "@phisig_usc") for the success-screen
-   *  share/follow CTA. Omitted → no hardcoded chapter; the follow button and
-   *  handle simply don't render. */
   socialHandle?: string;
-  /** Full URL to the chapter's social profile for the follow button. */
   socialUrl?: string;
+  customQuestions?: Array<{ key: string; label: string; placeholder?: string; required?: boolean }>;
 } = {}) {
   const { push } = useToast();
   // Chapter identity (per-tenant, via ChapterIdentityProvider) drives the
@@ -262,6 +262,7 @@ export function RushForm({
         headshotUrl: data.headshotUrl,
         ageAttestation: data.ageAttestation,
         website: honeypot,
+        customAnswers: data.customAnswers,
       };
       const res = await fetch("/api/rush", {
         method: "POST",
@@ -389,7 +390,7 @@ export function RushForm({
       <CardContent className="p-5 sm:p-8 md:p-10">
         <div key={step} className="animate-fade-in">
           {step === "contact" && <ContactStep data={data} errors={errors} update={update} booth={booth} totalSteps={STEPS.length} />}
-          {step === "profile" && <ProfileStep data={data} errors={errors} update={update} booth={booth} totalSteps={STEPS.length} />}
+          {step === "profile" && <ProfileStep data={data} errors={errors} update={update} booth={booth} totalSteps={STEPS.length} customQuestions={customQuestions} />}
           {step === "photo" && <PhotoStep data={data} update={update} totalSteps={STEPS.length} />}
           {step === "review" && (
             <>
@@ -618,13 +619,14 @@ function ContactStep({
 }
 
 function ProfileStep({
-  data, errors, update, booth, totalSteps,
+  data, errors, update, booth, totalSteps, customQuestions = [],
 }: {
   data: FormData;
   errors: Record<string, string>;
   update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
   booth: boolean;
   totalSteps: number;
+  customQuestions?: Array<{ key: string; label: string; placeholder?: string; required?: boolean }>;
 }) {
   return (
     <div className="space-y-5">
@@ -692,6 +694,29 @@ function ProfileStep({
           rows={3}
         />
       </Field>
+      {customQuestions && customQuestions.length > 0 && (
+        <div className="space-y-4 pt-4 border-t border-border/60">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Additional Information</p>
+          {customQuestions.map((q) => {
+            const currentVal = data.customAnswers?.[q.key] || "";
+            return (
+              <Field key={q.key} id={`custom-${q.key}`} label={q.label} required={q.required}>
+                <Input
+                  id={`custom-${q.key}`}
+                  value={currentVal}
+                  onChange={(e) => {
+                    const answers = { ...(data.customAnswers || {}), [q.key]: e.target.value };
+                    update("customAnswers", answers);
+                  }}
+                  placeholder={q.placeholder || `Enter ${q.label.toLowerCase()}`}
+                  className="bg-card/45 focus-visible:ring-phisig-red focus-visible:border-phisig-red"
+                  required={q.required}
+                />
+              </Field>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

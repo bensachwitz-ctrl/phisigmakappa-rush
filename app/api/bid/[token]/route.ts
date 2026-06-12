@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
+import { generateAndUploadSignedPdf } from "@/lib/esign";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +13,7 @@ export const dynamic = "force-dynamic";
  * because the token IS the auth: knowing it proves the PNM received the
  * bid email/SMS from the chapter.
  *
- * POST { choice: "ACCEPTED" | "DECLINED", reason?: string }
+ * POST { choice: "ACCEPTED" | "DECLINED", reason?: string, signatureName?: string, agreedToHazingWaiver?: boolean }
  *
  * On success:
  *   - Rush.status -> ACCEPTED | DECLINED
@@ -26,6 +28,8 @@ export const dynamic = "force-dynamic";
 const BodySchema = z.object({
   choice: z.enum(["ACCEPTED", "DECLINED"]),
   reason: z.string().max(2000).optional(),
+  signatureName: z.string().min(2).max(100).optional(),
+  agreedToHazingWaiver: z.boolean().optional(),
 });
 
 export async function POST(req: Request, { params }: { params: { token: string } }) {
@@ -45,15 +49,24 @@ export async function POST(req: Request, { params }: { params: { token: string }
     return NextResponse.json({ ok: false, error: "Invalid choice" }, { status: 400 });
   }
 
+  const { choice, reason, signatureName, agreedToHazingWaiver } = parsed.data;
+
+  if (choice === "ACCEPTED" && (!signatureName || !agreedToHazingWaiver)) {
+    return NextResponse.json({ ok: false, error: "Signature and waiver agreement are required for acceptance" }, { status: 400 });
+  }
+
   const rush = await prisma.rush.findUnique({
     where: { bidToken: token },
     select: {
       id: true,
       name: true,
+      email: true,
+      phone: true,
       status: true,
       bidTokenExpiresAt: true,
       bidRespondedAt: true,
       notes: true,
+      enrichmentData: true,
     },
   });
 
@@ -69,33 +82,77 @@ export async function POST(req: Request, { params }: { params: { token: string }
     return NextResponse.json({ ok: false, error: "Link expired" }, { status: 410 });
   }
 
+  // Handle signature & PDF upload for Acceptance
+  let pdfUrl: string | undefined;
+  let noteAddition = "";
+
+  if (choice === "ACCEPTED" && signatureName) {
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+    const greekLetters = cfg["chapter.greekLetters"] || "";
+    const organization = [fraternityName, greekLetters].filter(Boolean).join(" - ") || "Greek Chapter";
+
+    try {
+      pdfUrl = await generateAndUploadSignedPdf({
+        name: signatureName,
+        email: rush.email || "",
+        phone: rush.phone || undefined,
+        organization,
+        documentTitle: "Membership Bid Acceptance & Zero-Tolerance Anti-Hazing Agreement",
+        ipAddress,
+        userAgent,
+        consentText: `I hereby accept the bid of membership to ${organization} and certify that I have read and agree to all terms, including the Zero-Tolerance Anti-Hazing Agreement. I understand that hazing is strictly prohibited and that my digital signature constitutes a legally binding acceptance of these terms.`,
+      }, `${rush.id}_bid_acceptance`);
+    } catch (err) {
+      console.error("Failed to generate/upload e-signed PDF:", err);
+    }
+
+    noteAddition = `\n\n[${new Date().toISOString().slice(0, 10)} accepted bid] Digitally signed by ${signatureName}.${pdfUrl ? ` PDF Certificate: ${pdfUrl}` : ""}`;
+  } else if (choice === "DECLINED" && reason) {
+    noteAddition = `\n\n[${new Date().toISOString().slice(0, 10)} declined bid] ${reason.trim()}`;
+  }
+
+  // Prepare enrichmentData JSON payload containing the verification URL
+  let newEnrichmentData = rush.enrichmentData || "";
+  if (pdfUrl) {
+    try {
+      const parsedData = newEnrichmentData ? JSON.parse(newEnrichmentData) : {};
+      parsedData.bidWaiverUrl = pdfUrl;
+      parsedData.signatureName = signatureName;
+      parsedData.signedAt = new Date().toISOString();
+      newEnrichmentData = JSON.stringify(parsedData);
+    } catch {
+      newEnrichmentData = JSON.stringify({ bidWaiverUrl: pdfUrl, signatureName, signedAt: new Date().toISOString() });
+    }
+  }
+
   // Single transaction: record response + flip status + clear token.
   // Token nulled so a forwarded link or replay can't double-respond.
-  // Append the optional decline reason to the existing notes field for
-  // admin visibility (no schema migration needed for a free-text reason).
-  const noteAddition = parsed.data.choice === "DECLINED" && parsed.data.reason
-    ? `\n\n[${new Date().toISOString().slice(0, 10)} declined bid] ${parsed.data.reason.trim()}`
-    : null;
-
   await prisma.rush.update({
     where: { id: rush.id },
     data: {
-      status: parsed.data.choice, // ACCEPTED | DECLINED
+      status: choice, // ACCEPTED | DECLINED
       bidRespondedAt: new Date(),
-      bidResponseChoice: parsed.data.choice,
+      bidResponseChoice: choice,
       bidToken: null,
       bidTokenExpiresAt: null,
-      ...(noteAddition ? { notes: (rush.notes || "") + noteAddition } : {}),
+      notes: (rush.notes || "") + noteAddition,
+      ...(pdfUrl ? { enrichmentData: newEnrichmentData } : {}),
     },
   });
 
   await audit({
-    action: parsed.data.choice === "ACCEPTED" ? "BID_ACCEPTED" : "BID_DECLINED",
+    action: choice === "ACCEPTED" ? "BID_ACCEPTED" : "BID_DECLINED",
     subjectType: "Rush",
     subjectId: rush.id,
     subjectName: rush.name,
-    details: parsed.data.choice === "DECLINED" && parsed.data.reason
-      ? `reason given (${parsed.data.reason.length} chars)`
+    details: choice === "DECLINED" && reason
+      ? `reason given (${reason.length} chars)`
+      : choice === "ACCEPTED" && pdfUrl
+      ? `digitally signed: ${signatureName} (PDF generated)`
       : null,
     req,
   });

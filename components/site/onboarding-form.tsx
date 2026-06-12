@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
@@ -41,6 +42,8 @@ export function OnboardingForm({
     headshotUrl: "",
     password: "",
     confirmPassword: "",
+    signatureName: prefill.name || "",
+    agreedToHazingWaiver: false,
   });
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
@@ -67,6 +70,14 @@ export function OnboardingForm({
     e.preventDefault();
     if (!form.name.trim()) {
       push({ title: "Full name is required", variant: "destructive" });
+      return;
+    }
+    if (!form.signatureName.trim()) {
+      push({ title: "Signature name is required", variant: "destructive" });
+      return;
+    }
+    if (!form.agreedToHazingWaiver) {
+      push({ title: "You must agree to the Zero-Tolerance Anti-Hazing Policy", variant: "destructive" });
       return;
     }
     if (form.password.length < 6) {
@@ -264,6 +275,39 @@ export function OnboardingForm({
                   minLength={6}
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Zero-Tolerance Anti-Hazing Agreement</p>
+              <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history — never humiliation, intimidation, or harm.
+              </p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="onb-hazing-waiver"
+                checked={form.agreedToHazingWaiver}
+                onCheckedChange={(checked) => set("agreedToHazingWaiver", checked === true)}
+                className="mt-1 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
+              />
+              <Label htmlFor="onb-hazing-waiver" className="text-xs font-normal text-slate-600 leading-normal cursor-pointer select-none">
+                I agree to the Zero-Tolerance Anti-Hazing Policy and certify that my digital signature constitutes a binding acceptance of these terms.
+              </Label>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="onb-sig-name" className="text-xs font-semibold text-slate-700">Type full name to sign digitally:</Label>
+              <Input
+                id="onb-sig-name"
+                value={form.signatureName}
+                onChange={(e) => set("signatureName", e.target.value)}
+                placeholder={prefill.name}
+                required
+                className="bg-white border-slate-300 font-medium"
+              />
             </div>
           </div>
 

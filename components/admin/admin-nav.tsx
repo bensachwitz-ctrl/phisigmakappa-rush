@@ -59,6 +59,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: Rocket, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true, group: "more" },
+  { href: "/admin/website", label: "Website Builder", icon: LayoutGrid, adminOnly: true, group: "more" },
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
 ];
 

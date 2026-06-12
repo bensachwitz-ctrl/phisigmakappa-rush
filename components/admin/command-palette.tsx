@@ -164,13 +164,13 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
         setActiveIdx((i) => Math.max(0, i - 1));
       } else if (e.key === "Enter") {
         e.preventDefault();
-        const sel = filtered[activeIdx];
+        const sel = flatIdx.find((f) => f.idx === activeIdx)?.cmd;
         if (sel) execute(sel);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, filtered, activeIdx]);
+  }, [open, filtered, activeIdx, flatIdx]);
 
   // Autofocus input + scroll active row into view
   React.useEffect(() => {

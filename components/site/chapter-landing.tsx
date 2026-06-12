@@ -1,3 +1,4 @@
+import React from "react";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { MobileBottomNav } from "@/components/site/mobile-nav";
@@ -240,6 +241,7 @@ export default async function ChapterLandingPage({
   // `termLabelLong` defaults to the org-appropriate verb + the short label.
   const termLabelShort = cfg["rush.termLabel"] || "Fall '26";
   const termLabelLong = cfg["rush.termLabelLong"] || `${terms.recruit} ${termLabelShort}`;
+  const customQuestions = parseJsonArray<any>(cfg["rush.customQuestions"], []);
 
   // Booth mode = single-purpose tablet kiosk. Render only the rush form.
   // No hero, no marketing sections, no Instagram feed, no footer chrome — every
@@ -260,7 +262,7 @@ export default async function ChapterLandingPage({
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
-            <RushForm booth socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} />
+            <RushForm booth socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} customQuestions={customQuestions} />
           </div>
           <p className="text-center text-[11px] text-muted-foreground mt-6">
             Tablet auto-clears between rushees · {cfg["contact.instagramHandle"]}
@@ -370,65 +372,10 @@ export default async function ChapterLandingPage({
   const chapterGlyphs = [...singleGlyphs, ...monogramGlyphs];
   const fieldGlyphs = chapterGlyphs.length ? chapterGlyphs : undefined;
 
-  return (
-    <main id="main-content" className="relative min-h-screen overflow-x-clip">
-      {/* Page-background layer (z-0): the opaque page wash. Owner round-8
-          z-stack — bg z-0 → letters z-1 → content z-2+. Letters were
-          previously parked at NEGATIVE z, where in-flow section backgrounds
-          painted straight over them. */}
-      <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
-      {/* Page-wide drifting Greek-letter field — THIS chapter's own letters,
-          tinted to their brand --primary, at z-1: plainly IN FRONT of the page
-          wash and BEHIND every card/section (content wrapper is z-2). Calm
-          drift so it reads as a serene brand texture, never distracting. */}
-      <GreekLetterField
-        glyphs={fieldGlyphs}
-        color="hsl(var(--primary))"
-        calm
-        count={30}
-        seed={0x3a7c91d5}
-      />
-      {/* Ambient chapter-identity layer — the SCHOOL wordmark drifting across
-          the top and the school name rendered big in the bottom-right corner,
-          on the same z-1 plane as the letter field (above the z-0 base, below
-          the z-2 content). The hero's own opaque layers cover it up top, so it
-          reads through the open mid-page sections. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-4] select-none overflow-hidden">
-        {/* School wordmark — smaller + drifting across the page (owner
-            round-8), so the school identity is plainly visible in the open
-            bands between sections instead of one huge blocked watermark. */}
-        {(identity.schoolName || identity.schoolShort) && (
-          <div className="absolute inset-x-0 top-[26%] flex justify-center px-4">
-            <p
-              className="gs-school-drift whitespace-nowrap font-serif text-[clamp(1.5rem,4vw,3rem)] font-black uppercase leading-none tracking-tight text-[hsl(var(--primary))]"
-              style={{ ["--gso" as string]: 0.12 }}
-            >
-              {identity.schoolName || identity.schoolShort}
-            </p>
-          </div>
-        )}
-        {/* School name BIG — bottom-right corner (owner round-9: the old
-            murky corner-crest watermark was unreadable; the school's own
-            name, huge and brand-tinted like a stadium wall, is the identity
-            moment). Right-anchored so a long name crops cleanly off the left
-            edge; swaps per-tenant on reskin like everything else here. */}
-        {(identity.schoolShort || identity.schoolName) && (
-          <p className="absolute -bottom-[1vh] right-[-0.25vw] whitespace-nowrap text-right font-serif text-[clamp(3.5rem,16vh,9.5rem)] font-black uppercase leading-[0.82] tracking-tight text-[hsl(var(--primary))] opacity-[0.07]">
-            {identity.schoolShort || identity.schoolName}
-          </p>
-        )}
-      </div>
-      {/* CONTENT layer (z-2) — everything below paints ABOVE the z-1 letter
-          field + identity watermarks, so letters drift over the page color but
-          never over text/cards (owner round-8 z-stack). */}
-      <div className="relative z-[2]">
-      {/* Brand-tinted scroll-progress bar pinned at the very top of the page.
-          Tracks whole-document scroll; aria-hidden, transform-only. */}
-      <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
-      <PublicNav />
-
-      {/* ─── HERO ─── */}
-      {/* AnimatedBackground (tone="brand") paints drifting aurora blobs in the
+  const sectionMap: Record<string, React.ReactNode> = {
+    hero: (
+      <>
+        {/* AnimatedBackground (tone="brand") paints drifting aurora blobs in the
           chapter color behind the hero; it renders a relative, isolated,
           overflow-hidden box, so it stands in for the old hero <section>. The
           gradient + dot-grid + floating glyphs layer underneath via negative z. */}
@@ -628,9 +575,11 @@ export default async function ChapterLandingPage({
           </div>
         </div>
       </AnimatedBackground>
-
-      {/* ─── STATS STRIP ─── */}
-      {cfg["show.statsStrip"] !== "false" && (
+      </>
+    ),
+    stats: (
+      <>
+        {cfg["show.statsStrip"] !== "false" && (
       <section className="relative bg-gradient-to-br from-phisig-red via-phisig-red to-phisig-red-dark text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
         {/* Soft top sheen for depth against the hero above */}
@@ -659,9 +608,11 @@ export default async function ChapterLandingPage({
         </Reveal3D>
       </section>
       )}
-
-      {/* ─── HIGHLIGHTS BANNER ─── */}
-      {cfg["show.highlightsBanner"] !== "false" && (
+      </>
+    ),
+    highlights: (
+      <>
+        {cfg["show.highlightsBanner"] !== "false" && (
       <section className="border-b border-border bg-gradient-to-b from-secondary/40 to-secondary/10 overflow-hidden">
         <div className="container py-5 flex flex-wrap items-center gap-2 sm:gap-2.5 justify-center">
           {HIGHLIGHTS.map((h) => {
@@ -679,9 +630,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── VALUES ─── */}
-      {cfg["show.values"] !== "false" && (
+      </>
+    ),
+    values: (
+      <>
+        {cfg["show.values"] !== "false" && (
       <section className="container section-y">
         <Reveal3D className="max-w-2xl mb-10">
           <span className="inline-flex items-center rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
@@ -710,9 +663,11 @@ export default async function ChapterLandingPage({
         </Reveal3D>
       </section>
       )}
-
-      {/* ─── REGISTER ─── */}
-      <section id="register" className="relative bg-phisig-mist border-y border-border scroll-mt-20 overflow-hidden">
+      </>
+    ),
+    register: (
+      <>
+        <section id="register" className="relative bg-phisig-mist border-y border-border scroll-mt-20 overflow-hidden">
         {/* Themed aurora + grid wash behind the form — brand-toned, reduced-motion
             safe via the foundation component. Sits at the section's base layer;
             the form card renders above it untouched. */}
@@ -760,13 +715,15 @@ export default async function ChapterLandingPage({
           {/* The conversion form itself is left exactly as shipped — no motion
               wrapper around it, so submit / validation / focus are untouched. */}
           <div className="max-w-3xl mx-auto">
-            <RushForm socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} />
+            <RushForm socialHandle={cfg["contact.instagramHandle"] || undefined} socialUrl={cleanUrl(cfg["contact.instagramUrl"]) || undefined} customQuestions={customQuestions} />
           </div>
         </div>
       </section>
-
-      {/* ─── INSTAGRAM FEED — real chapter photos ─── */}
-      {cfg["show.instagramFeed"] !== "false" && (
+      </>
+    ),
+    instagram: (
+      <>
+        {cfg["show.instagramFeed"] !== "false" && (
       <section className="container section-y">
         <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
           <div>
@@ -817,9 +774,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── HOW RUSH WORKS ─── */}
-      {cfg["show.timeline"] !== "false" && (
+      </>
+    ),
+    timeline: (
+      <>
+        {cfg["show.timeline"] !== "false" && (
       <section className="border-y border-border bg-secondary/40">
         <div className="container section-y">
           <Reveal3D className="max-w-2xl mb-10">
@@ -865,9 +824,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── SCHEDULE ─── */}
-      <section id="schedule" className="relative section-y scroll-mt-20 overflow-hidden">
+      </>
+    ),
+    schedule: (
+      <>
+        <section id="schedule" className="relative section-y scroll-mt-20 overflow-hidden">
         {/* Faint brand-tinted grid band for depth behind the schedule. The dot
             grid + masked fade match the hero so the page reads as one set. */}
         <div className="absolute inset-0 -z-10 bg-dot-grid opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]" aria-hidden />
@@ -915,9 +876,11 @@ export default async function ChapterLandingPage({
         </div>
         </div>
       </section>
-
-      {/* ─── TESTIMONIAL + ABOUT (combined for density) ─── */}
-      {cfg["show.testimonial"] !== "false" && (
+      </>
+    ),
+    testimonial: (
+      <>
+        {cfg["show.testimonial"] !== "false" && (
       <section className="border-t border-border bg-gradient-to-b from-phisig-red-soft/40 via-background to-background">
         <div className="container section-y">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -960,10 +923,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── BROTHER SPOTLIGHT ─── only when this chapter configured one, so a
-          fresh tenant never shows an empty/placeholder spotlight. */}
-      {cfg["show.spotlight"] !== "false" && !!cfg["spotlight.name"] && (
+      </>
+    ),
+    spotlight: (
+      <>
+        {cfg["show.spotlight"] !== "false" && !!cfg["spotlight.name"] && (
       <section className="container section-y">
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <Reveal3D className="order-2 lg:order-1">
@@ -1040,9 +1004,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── EXECUTIVE BOARD ─── */}
-      {cfg["show.eboard"] !== "false" && eboard.length > 0 && (
+      </>
+    ),
+    eboard: (
+      <>
+        {cfg["show.eboard"] !== "false" && eboard.length > 0 && (
       <section className="border-t border-border">
         <div className="container section-y">
           <Reveal3D className="grid lg:grid-cols-[1fr_2fr] gap-8 items-end mb-8">
@@ -1089,9 +1055,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── ABOUT THE CHAPTER ─── */}
-      <section id="about" className="container section-y scroll-mt-20">
+      </>
+    ),
+    about: (
+      <>
+        <section id="about" className="container section-y scroll-mt-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <Reveal3D>
             <SectionEyebrow>About the chapter</SectionEyebrow>
@@ -1252,9 +1220,11 @@ export default async function ChapterLandingPage({
           </div>
         </div>
       </section>
-
-      {/* ─── FAQ ─── */}
-      {cfg["show.faq"] !== "false" && (
+      </>
+    ),
+    faq: (
+      <>
+        {cfg["show.faq"] !== "false" && (
       <section className="border-y border-border bg-secondary/30">
         <div className="container section-y">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-10">
@@ -1304,9 +1274,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── WHERE TO FIND US ─── */}
-      {cfg["show.whereWeLive"] !== "false" && (
+      </>
+    ),
+    where: (
+      <>
+        {cfg["show.whereWeLive"] !== "false" && (
       <section className="container section-y">
         {/* Single-column: the prior left tile hardcoded one chapter's Movember
             Instagram post, which would leak onto every tenant. There is no
@@ -1386,9 +1358,11 @@ export default async function ChapterLandingPage({
         </div>
       </section>
       )}
-
-      {/* ─── FINAL CTA ─── */}
-      <section className="container pb-16 sm:pb-20">
+      </>
+    ),
+    cta: (
+      <>
+        <section className="container pb-16 sm:pb-20">
         <Reveal className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/30 ring-1 ring-white/10">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
           {/* Soft top-light radial for depth */}
@@ -1439,24 +1413,71 @@ export default async function ChapterLandingPage({
           </div>
         </Reveal>
       </section>
+      </>
+    ),
+  };
 
-      <PublicFooter />
-      <StickyCTA />
-      {/* Mobile-only fixed bottom nav. Hidden at md+ where the desktop top
-          nav handles primary navigation. Phone + Calendar + Brothers are
-          one-thumb away on a phone. */}
-      <MobileBottomNav
-        rushPhone={cfg["contact.rushPhone"]}
-        rushEmail={cfg["contact.rushEmail"]}
-        memberLabel={terms.members}
+  const defaultOrder = [
+    "hero", "stats", "highlights", "values", "register",
+    "instagram", "timeline", "schedule", "testimonial",
+    "spotlight", "eboard", "about", "faq", "where", "cta"
+  ];
+  
+  const order = parseJsonArray<string>(cfg["website.sections"], defaultOrder);
+  const validOrder = order.filter(key => key in sectionMap);
+  defaultOrder.forEach(key => {
+    if (!validOrder.includes(key)) {
+      validOrder.push(key);
+    }
+  });
+  return (
+    <main id="main-content" className="relative min-h-screen overflow-x-clip">
+      <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
+      <GreekLetterField
+        glyphs={fieldGlyphs}
+        color="hsl(var(--primary))"
+        calm
+        count={30}
+        seed={0x3a7c91d5}
       />
-      {/* Spacer so the bottom nav doesn't overlap the footer copyright on
-          mobile. The 80px (4rem + safe-area) matches MobileBottomNav height. */}
-      <div className="md:hidden h-20" aria-hidden />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-4] select-none overflow-hidden">
+        {(identity.schoolName || identity.schoolShort) && (
+          <div className="absolute inset-x-0 top-[26%] flex justify-center px-4">
+            <p
+              className="gs-school-drift whitespace-nowrap font-serif text-[clamp(1.5rem,4vw,3rem)] font-black uppercase leading-none tracking-tight text-[hsl(var(--primary))]"
+              style={{ ["--gso" as string]: 0.12 }}
+            >
+              {identity.schoolName || identity.schoolShort}
+            </p>
+          </div>
+        )}
+        {(identity.schoolShort || identity.schoolName) && (
+          <p className="absolute -bottom-[1vh] right-[-0.25vw] whitespace-nowrap text-right font-serif text-[clamp(3.5rem,16vh,9.5rem)] font-black uppercase leading-[0.82] tracking-tight text-[hsl(var(--primary))] opacity-[0.07]">
+            {identity.schoolShort || identity.schoolName}
+          </p>
+        )}
+      </div>
+      <div className="relative z-[2]">
+        <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
+        <PublicNav />
+        {validOrder.map((sectionKey) => (
+          <React.Fragment key={sectionKey}>
+            {sectionMap[sectionKey]}
+          </React.Fragment>
+        ))}
+        <PublicFooter />
+        <StickyCTA />
+        <MobileBottomNav
+          rushPhone={cfg["contact.rushPhone"]}
+          rushEmail={cfg["contact.rushEmail"]}
+          memberLabel={terms.members}
+        />
+        <div className="md:hidden h-20" aria-hidden />
       </div>
     </main>
   );
 }
+
 
 // Map config string → icon component
 function iconFor(name: string): React.ElementType {
