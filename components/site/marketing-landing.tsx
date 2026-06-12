@@ -1237,14 +1237,14 @@ function Hero() {
               with three countable stats so a skeptic sees the value before they
               scroll past. Counters ramp on view; reduced-motion shows finals. */}
           <Reveal delay={120} className="mx-auto mt-7 w-fit max-w-full animate-slide-up [animation-delay:440ms]">
-            <dl className="flex flex-wrap items-stretch justify-center divide-x divide-border/70 overflow-hidden rounded-2xl gs-glass px-1.5 py-1.5">
+            <div className="flex flex-wrap items-stretch justify-center divide-x divide-border/70 overflow-hidden rounded-2xl gs-glass px-1.5 py-1.5">
               {[
                 { value: 8, suffix: "", label: "tools in one site" },
                 { value: 0, prefix: "$", label: "to get started" },
                 { value: 30, suffix: "s", label: "to go live" },
               ].map((s) => (
                 <div key={s.label} className="flex min-w-[7.5rem] flex-col items-center px-4 py-2 sm:px-6">
-                  <dt className="sr-only">{s.label}</dt>
+                  <span className="sr-only">{s.label}</span>
                   <AnimatedCounter
                     value={s.value}
                     prefix={s.prefix}
@@ -1252,12 +1252,12 @@ function Hero() {
                     duration={1.3}
                     className="bg-gradient-to-br from-blue-700 to-sky-500 bg-clip-text text-2xl font-extrabold tabular-nums leading-none text-transparent sm:text-3xl"
                   />
-                  <dd className="mt-1.5 text-center text-[11px] font-medium leading-tight text-muted-foreground">
+                  <span className="mt-1.5 text-center text-[11px] font-medium leading-tight text-muted-foreground">
                     {s.label}
-                  </dd>
+                  </span>
                 </div>
               ))}
-            </dl>
+            </div>
           </Reveal>
 
           {/* "What happens when you launch" — a compact reassurance strip that
@@ -1452,7 +1452,7 @@ function ProductPreview() {
           <div className="space-y-5 p-5 text-left sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold">Fall recruitment</h3>
+                <div className="text-base font-semibold">Fall recruitment</div>
                 <p className="text-xs text-muted-foreground">Live pipeline &amp; chapter health</p>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">

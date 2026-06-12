@@ -50,24 +50,11 @@ struct LoginView: View {
                                 )
                                 .shadow(color: AppTheme.gold.opacity(0.3), radius: 10)
                             
-                            // Vector Pillars / Gate representation
-                            HStack(spacing: 16) {
-                                RoundedRectangle(cornerRadius: 1)
-                                    .fill(AppTheme.gold)
-                                    .frame(width: 6, height: 40)
-                                RoundedRectangle(cornerRadius: 1)
-                                    .fill(AppTheme.gold)
-                                    .frame(width: 6, height: 40)
-                            }
-                            .overlay(
-                                // Gate arch
-                                Path { path in
-                                    path.move(to: CGPoint(x: -5, y: 12))
-                                    path.addQuadCurve(to: CGPoint(x: 35, y: 12), control: CGPoint(x: 15, y: -10))
-                                }
-                                .stroke(AppTheme.gold, lineWidth: 3)
-                                .offset(x: 0, y: -2)
-                            )
+                            Image("AppLogo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 62, height: 62)
+                                .cornerRadius(14)
                         }
                         .padding(.top, 40)
                         

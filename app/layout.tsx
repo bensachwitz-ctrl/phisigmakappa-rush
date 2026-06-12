@@ -496,7 +496,9 @@ export default async function RootLayout({
         </a>
         <ToastProvider>
           <ChapterIdentityProvider value={getSubdomain(host) === null ? APEX_IDENTITY : chapterIdentityFromCfg(cfg)}>
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
           </ChapterIdentityProvider>
         </ToastProvider>
       </body>
