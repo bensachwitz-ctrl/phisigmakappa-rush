@@ -30,56 +30,103 @@ export function SchoolCrestLogo({
 }) {
   const s = school.toLowerCase();
 
+  // Common definitions for premium gradients and glows
+  const defs = (
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FFF2D4" />
+        <stop offset="35%" stopColor="#E5A93B" />
+        <stop offset="100%" stopColor="#9A650C" />
+      </linearGradient>
+      <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FFFFFF" />
+        <stop offset="50%" stopColor="#CBD5E1" />
+        <stop offset="100%" stopColor="#64748B" />
+      </linearGradient>
+      <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor={primary} />
+        <stop offset="100%" stopColor="#0B0F19" />
+      </linearGradient>
+      <linearGradient id="secondaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor={secondary} />
+        <stop offset="100%" stopColor="transparent" opacity={0.3} />
+      </linearGradient>
+      <linearGradient id="whiteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FFFFFF" />
+        <stop offset="100%" stopColor="#E2E8F0" />
+      </linearGradient>
+    </defs>
+  );
+
   if (s.includes("south carolina")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-        <circle cx="50" cy="50" r="45" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
-        <circle cx="50" cy="50" r="41" stroke={secondary} strokeWidth="1" strokeDasharray="3 2" />
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
+        <circle cx="50" cy="50" r="46" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
+        <circle cx="50" cy="50" r="41" stroke={primary} strokeWidth="1.5" strokeDasharray="3 2" />
         {/* Crescent Moon */}
-        <path d="M32 28 A 8 8 0 0 1 44 24 A 10 10 0 1 0 32 36 Z" fill={secondary} />
-        {/* Palmetto Tree */}
-        <path d="M48 76 L 48 55 Q 48 50 50 50 Q 52 50 52 55 L 52 76 Z" fill={secondary} />
-        <path d="M44 58 C 42 56, 36 56, 38 52 C 40 48, 48 52, 48 52" stroke={secondary} strokeWidth="2" strokeLinecap="round" />
-        <path d="M56 58 C 58 56, 64 56, 62 52 C 60 48, 52 52, 52 52" stroke={secondary} strokeWidth="2" strokeLinecap="round" />
-        {/* Fronds */}
-        <path d="M50 48 C 50 35, 34 38, 32 40 C 35 34, 46 44, 48 48" fill={secondary} />
-        <path d="M50 48 C 50 35, 66 38, 68 40 C 65 34, 54 44, 52 48" fill={secondary} />
-        <path d="M50 48 C 42 34, 42 32, 40 30 C 45 32, 47 40, 49 46" fill={secondary} />
-        <path d="M50 48 C 58 34, 58 32, 60 30 C 55 32, 53 40, 51 46" fill={secondary} />
-        <path d="M50 48 C 50 30, 48 26, 47 24 C 50 28, 50 38, 50 48" stroke={secondary} strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M30 25 A 9 9 0 0 1 43 21 A 11 11 0 1 0 30 34 Z" fill="url(#goldGrad)" />
+        {/* Detailed Palmetto Tree */}
+        <g fill="url(#goldGrad)">
+          {/* Trunk */}
+          <path d="M48 76 L 49 53 Q 48 48 50 48 Q 52 48 51 53 L 52 76 Z" />
+          {/* Base grass */}
+          <path d="M38 76 C 45 74, 55 74, 62 76 Z" />
+          {/* Detailed fronds */}
+          <path d="M50 47 C 48 35, 34 38, 30 42 C 34 37, 45 44, 48 47" />
+          <path d="M50 47 C 52 35, 66 38, 70 42 C 66 37, 55 44, 52 47" />
+          <path d="M50 47 C 44 33, 40 28, 38 27 C 42 29, 46 39, 48 45" />
+          <path d="M50 47 C 56 33, 60 28, 62 27 C 58 29, 54 39, 52 45" />
+          <path d="M50 47 C 49 32, 47 24, 47 22 C 49 26, 50 37, 50 47" />
+          {/* Side leaves */}
+          <path d="M43 58 C 40 56, 35 56, 36 53 C 38 50, 46 53, 47 54" />
+          <path d="M57 58 C 60 56, 65 56, 64 53 C 62 50, 54 53, 53 54" />
+        </g>
       </svg>
     );
   }
 
   if (s.includes("southern california")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
         {/* Shield shape */}
-        <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
-        <path d="M20 20 L 80 20 L 80 50 C 80 70, 50 85, 50 85 C 50 85, 20 70, 20 50 Z" stroke={secondary} strokeWidth="1" opacity="0.5" />
-        {/* Torch */}
-        <path d="M50 72 L 46 48 L 54 48 Z" fill={secondary} />
-        <path d="M43 48 C 43 45, 57 45, 57 48 Z" fill={primary} />
-        {/* Flame */}
-        <path d="M50 26 C 54 34, 59 36, 56 44 C 54 48, 46 48, 44 44 C 41 36, 46 34, 50 26 Z" fill={secondary} />
-        <path d="M50 32 C 52 36, 55 38, 53 43 C 52 45, 48 45, 47 43 C 45 38, 48 36, 50 32 Z" fill={primary} />
+        <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
+        <path d="M20 20 L 80 20 L 80 50 C 80 72, 50 87, 50 87 C 50 87, 20 72, 20 50 Z" stroke={primary} strokeWidth="1" opacity="0.4" />
+        {/* Academic Stars */}
+        <g fill="url(#goldGrad)">
+          <path d="M30 30 L 32 34 L 36 34 L 33 37 L 34 41 L 30 39 L 26 41 L 27 37 L 24 34 L 28 34 Z" />
+          <path d="M70 30 L 72 34 L 76 34 L 73 37 L 74 41 L 70 39 L 66 41 L 67 37 L 64 34 L 68 34 Z" />
+        </g>
+        {/* Torch handle */}
+        <path d="M50 74 L 46 45 Q 50 43 54 45 Z" fill="url(#goldGrad)" />
+        {/* Torch rim */}
+        <path d="M43 45 C 43 42, 57 42, 57 45 Z" fill={primary} />
+        {/* Multi-layered flame */}
+        <path d="M50 21 C 55 31, 60 33, 57 41 C 55 45, 45 45, 43 41 C 40 33, 45 31, 50 21 Z" fill="url(#goldGrad)" />
+        <path d="M50 28 C 53 33, 56 34, 54 39 C 53 42, 47 42, 46 39 C 44 34, 47 33, 50 28 Z" fill={primary} />
       </svg>
     );
   }
 
   if (s.includes("clemson")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-        <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
-        {/* Tiger Paw print */}
-        <g fill={secondary}>
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
+        <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
+        {/* Clemson Orange Paw */}
+        <g fill="#F56600">
           {/* Main pad */}
-          <path d="M50 48 C 43 48, 38 52, 36 60 C 34 68, 40 76, 50 76 C 60 76, 66 68, 64 60 C 62 52, 57 48, 50 48 Z" />
+          <path d="M50 46 C 41 46, 35 50, 33 59 C 31 68, 38 77, 50 77 C 62 77, 69 68, 67 59 C 65 50, 59 46, 50 46 Z" />
           {/* 4 Toes */}
-          <circle cx="30" cy="42" r="6" />
-          <circle cx="42" cy="32" r="7" />
-          <circle cx="58" cy="32" r="7" />
-          <circle cx="70" cy="42" r="6" />
+          <circle cx="28" cy="40" r="7" />
+          <circle cx="41" cy="28" r="8" />
+          <circle cx="59" cy="28" r="8" />
+          <circle cx="72" cy="40" r="7" />
+        </g>
+        {/* Purple highlights inside */}
+        <g fill="#522D80" opacity="0.15">
+          <circle cx="50" cy="59" r="6" />
         </g>
       </svg>
     );
@@ -87,19 +134,22 @@ export function SchoolCrestLogo({
 
   if (s.includes("georgia")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-        <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
+        <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
         {/* Georgia Arch */}
-        <g stroke={secondary} strokeWidth="3.5" fill="none" strokeLinecap="round">
+        <g stroke="url(#goldGrad)" strokeWidth="3.5" fill="none" strokeLinecap="round">
           {/* Base / Steps */}
-          <path d="M28 76 L 72 76" strokeWidth="5" />
-          <path d="M32 72 L 68 72" strokeWidth="3" />
+          <path d="M26 78 L 74 78" strokeWidth="5.5" />
+          <path d="M30 73 L 70 73" strokeWidth="3" />
           {/* Three pillars */}
-          <path d="M35 72 L 35 44" />
-          <path d="M50 72 L 50 44" />
-          <path d="M65 72 L 65 44" />
+          <path d="M34 73 L 34 43" />
+          <path d="M50 73 L 50 43" />
+          <path d="M66 73 L 66 43" strokeWidth="3.5" />
           {/* Arch top */}
-          <path d="M32 44 C 32 24, 68 24, 68 44" />
+          <path d="M31 43 C 31 20, 69 20, 69 43" />
+          {/* Ribbon banner */}
+          <path d="M22 28 Q 50 18 78 28" stroke={primary} strokeWidth="1.5" opacity="0.3" />
         </g>
       </svg>
     );
@@ -107,16 +157,21 @@ export function SchoolCrestLogo({
 
   if (s.includes("auburn")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-        <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
+        <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
         {/* Interlocking AU monogram */}
-        <g stroke={secondary} strokeWidth="4" fill="none" strokeLinecap="square">
-          {/* Letter A */}
-          <path d="M35 72 L 50 28 L 65 72" />
-          <path d="M41 54 L 59 54" />
-          {/* Letter U */}
-          <path d="M42 40 L 42 62 Q 42 70 50 70 Q 58 70 58 62 L 58 40" stroke={primary} strokeWidth="5" />
-          <path d="M42 40 L 42 62 Q 42 70 50 70 Q 58 70 58 62 L 58 40" />
+        <g strokeWidth="4.5" fill="none" strokeLinecap="square">
+          {/* Letter A (Navy) */}
+          <path d="M34 72 L 50 26 L 66 72" stroke="#0C2340" strokeWidth="6.5" />
+          <path d="M41 54 L 59 54" stroke="#0C2340" strokeWidth="6.5" />
+          {/* Letter A (Inner Orange) */}
+          <path d="M34 72 L 50 26 L 66 72" stroke="#F26522" />
+          <path d="M41 54 L 59 54" stroke="#F26522" />
+          {/* Letter U (Orange) */}
+          <path d="M43 38 L 43 62 Q 43 71 50 71 Q 57 71 57 62 L 57 38" stroke="#F26522" strokeWidth="5.5" />
+          {/* Letter U (Inner Navy) */}
+          <path d="M43 38 L 43 62 Q 43 71 50 71 Q 57 71 57 62 L 57 38" stroke="#0C2340" />
         </g>
       </svg>
     );
@@ -124,18 +179,19 @@ export function SchoolCrestLogo({
 
   if (s.includes("indiana")) {
     return (
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-        <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+        {defs}
+        <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
         {/* IU Trident */}
-        <g stroke={secondary} strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g stroke="url(#whiteGrad)" strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
           {/* Vertical central bar */}
-          <path d="M50 24 L 50 76" />
+          <path d="M50 24 L 50 74" strokeWidth="5.5" />
           {/* Bottom horizontal base */}
-          <path d="M40 76 L 60 76" />
+          <path d="M40 74 L 60 74" strokeWidth="5" />
           {/* Left fork */}
-          <path d="M34 30 L 34 50 Q 34 62 50 62 Q 66 62 66 50 L 66 30" />
+          <path d="M34 28 L 34 48 Q 34 60 50 60 Q 66 60 66 48 L 66 28" />
           {/* Upper middle crossbar */}
-          <path d="M30 30 L 70 30" />
+          <path d="M28 28 L 72 28" />
         </g>
       </svg>
     );
@@ -143,10 +199,11 @@ export function SchoolCrestLogo({
 
   // Fallback generic elegant shield
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none">
-      <path d="M15 15 L 85 15 L 85 50 C 85 75, 50 92, 50 92 C 50 92, 15 75, 15 50 Z" stroke={primary} strokeWidth="3" fill="rgba(0,0,0,0.3)" />
-      <circle cx="50" cy="48" r="18" stroke={secondary} strokeWidth="2" />
-      <path d="M50 30 L 50 66 M 32 48 L 68 48" stroke={secondary} strokeWidth="2" />
+    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
+      {defs}
+      <path d="M15 15 L 85 15 L 85 52 C 85 78, 50 94, 50 94 C 50 94, 15 78, 15 52 Z" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
+      <circle cx="50" cy="48" r="18" stroke="url(#goldGrad)" strokeWidth="2" />
+      <path d="M50 30 L 50 66 M 32 48 L 68 48" stroke="url(#goldGrad)" strokeWidth="2" />
     </svg>
   );
 }
@@ -198,10 +255,15 @@ export function ChapterIdentityBackdrop({
           {letters}
         </p>
       ) : null}
-      {/* School crest logo - bottom-right corner with glassmorphic backing and shadows */}
+      {/* School crest logo - bottom-right corner with glassmorphic backing, shadows and name label */}
       {school ? (
-        <div className="absolute bottom-8 right-8 z-[2] w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center rounded-2xl bg-slate-900/40 backdrop-blur-md border border-white/10 p-2 shadow-2xl">
-          <SchoolCrestLogo school={school} primary={primary} secondary={secondary} />
+        <div className="absolute bottom-8 right-8 z-[2] flex flex-col items-center gap-2">
+          <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 p-3 shadow-2xl transition-all duration-300 hover:scale-[1.05] hover:border-white/20">
+            <SchoolCrestLogo school={school} primary={primary} secondary={secondary} />
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 bg-slate-950/60 backdrop-blur px-2.5 py-1 rounded-full border border-white/5 shadow-md">
+            {school.replace("University of ", "").replace("Clemson University", "Clemson")}
+          </span>
         </div>
       ) : null}
     </div>

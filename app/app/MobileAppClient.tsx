@@ -1653,6 +1653,36 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           </p>
         </div>
 
+        {/* Giant Dynamic Chapter Letters Display Card */}
+        <div 
+          className="relative overflow-hidden rounded-2xl border p-5 text-center shadow-lg transition-all duration-500"
+          style={{ 
+            borderColor: `${brandPrimary}33`,
+            background: `linear-gradient(135deg, ${brandPrimary}15, ${brandSecond}08)`
+          }}
+        >
+          <div 
+            className="absolute inset-0 opacity-10 blur-xl transition-all duration-500"
+            style={{ background: `radial-gradient(circle, ${brandPrimary} 0%, ${brandSecond} 100%)` }}
+          />
+          <span 
+            className="block text-6xl font-black tracking-widest drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] select-none font-serif"
+            style={{ 
+              background: `linear-gradient(135deg, #ffffff 40%, ${brandSecond} 100%)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent"
+            }}
+          >
+            {selectedBrand.letters}
+          </span>
+          <span className="mt-2 block text-xs font-bold uppercase tracking-wider text-slate-300 leading-none">
+            {selectedBrand.name}
+          </span>
+          <span className="mt-1 block text-[10px] font-medium text-slate-400 leading-none">
+            {selectedTenant?.school || "University of South Carolina"}
+          </span>
+        </div>
+
         <div className="border-t border-white/10 pt-5 space-y-4">
           <div className="space-y-1.5">
             <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Active Chapter</span>
