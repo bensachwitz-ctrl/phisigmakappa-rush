@@ -69,6 +69,7 @@ import {
   type FeatureDetail,
 } from "@/components/site/feature-detail-modal";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
+import { FadingVideo } from "@/components/site/fading-video";
 
 import {
   PreviewRecruitment,
@@ -823,6 +824,7 @@ export default function MarketingLandingPage() {
         <HowItWorks />
         <Features />
         <BeforeAfter />
+        <PracticeShowcase />
         <Proof />
         <Pricing />
         <Faq />
@@ -850,15 +852,15 @@ function SiteNav() {
   return (
     <header
       className={
-        // Frosted-glass header: .gs-glass-nav supplies the translucent base +
+        // Frosted-glass header: .liquid-glass-strong supplies the translucent base +
         // heavier backdrop-blur + saturation. We keep a scroll-reactive border +
         // shadow on top so the bar gains definition once the page scrolls under
         // it, and stays nearly borderless over the hero. A hairline blue→sky→gold
         // bottom edge fades in on scroll for a premium "lit" seam.
-        "gs-glass-nav sticky top-0 z-50 w-full border-b transition-all duration-300 " +
+        "liquid-glass-strong sticky top-0 z-50 w-full border-b transition-all duration-300 " +
         (scrolled
-          ? "border-border/60 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)]"
-          : "border-transparent shadow-none")
+          ? "border-border/60 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)] bg-white/80 backdrop-blur-lg"
+          : "border-transparent shadow-none bg-transparent")
       }
     >
       {/* Lit bottom seam — fades in once the page scrolls under the bar. */}
@@ -1108,7 +1110,12 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
 
 function Hero() {
   return (
-    <AnimatedBackground variant="aurora-grid" tone="platform">
+    <AnimatedBackground variant="aurora-grid" tone="platform" className="relative">
+      {/* Collegiate Greek Stack promo background video */}
+      <FadingVideo
+        src="/brand/gen/greekstack-promo.mp4"
+        className="absolute inset-0 w-full h-full object-cover z-[-8] opacity-[0.25]"
+      />
       {/* Faint film-grain texture for tactile depth — sits furthest back at
           ~4% opacity so it never competes with content (decorative, static). */}
       <Grain />
@@ -1682,7 +1689,7 @@ function Features() {
           className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:auto-rows-fr"
         >
           {FEATURES.map((f, i) => (
-            <Reveal3DItem key={f.title}>
+            <Reveal3DItem key={f.title} className={f.img === "feat-dues" ? "sm:col-span-2" : ""}>
               <Tilt3DCard
                 max={7}
                 glareColor="rgba(37,99,235,0.22)"
@@ -1807,6 +1814,8 @@ function FeatureCard({
     </span>
   );
 
+  const isDues = img === "feat-dues";
+
   return (
     <div
       role="button"
@@ -1823,8 +1832,16 @@ function FeatureCard({
       }}
       // active:scale gives the tap a tactile "give" — the only press feedback
       // touch users get, since the 3D tilt layer is desktop-only.
-      className="group relative flex h-full w-full overflow-hidden rounded-3xl gs-glass p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
+      className="group relative flex h-full w-full overflow-hidden rounded-3xl liquid-glass bg-white/70 backdrop-blur-md p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
+      style={isDues ? {
+        backgroundImage: "url('/brand/gen/feat-dues.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      } : undefined}
     >
+      {isDues && (
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] group-hover:bg-white/10 transition-all duration-300 pointer-events-none" />
+      )}
       {/* Thin gradient top-edge that lights up on hover (blue→sky→gold). */}
       <div
         aria-hidden="true"
@@ -1843,15 +1860,31 @@ function FeatureCard({
       />
 
       {/* ONE layout for every card — vertical, with the affordance pinned to
-          the bottom so all cards in a row align. (The old `wide` horizontal
-          variant is gone: uniform anatomy = uniform grid.) */}
-      <div className="relative flex h-full w-full flex-col">
-        {featureIcon}
-        <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-        {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
-        <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
-        <span className="mt-auto inline-flex pt-6">{seeInside}</span>
-      </div>
+          the bottom so all cards in a row align. For the double-column dues card,
+          we use a split landscape flex layout on sm+ screens. */}
+      {isDues ? (
+        <div className="relative flex h-full w-full flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-8 z-10">
+          <div className="flex-1 max-w-xl">
+            {featureIcon}
+            <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-2xl text-slate-900">{title}</h3>
+            {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
+            <p className="mt-2 text-sm leading-relaxed text-slate-800 font-medium">{desc}</p>
+          </div>
+          <div className="mt-6 sm:mt-0 shrink-0">
+            <span className="inline-flex rounded-full bg-white/80 backdrop-blur-md px-5 py-2.5 shadow-md border border-white/50 text-blue-700 font-semibold group-hover:bg-white transition-all">
+              See inside &rarr;
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="relative flex h-full w-full flex-col z-10">
+          {featureIcon}
+          <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
+          {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
+          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
+          <span className="mt-auto inline-flex pt-6">{seeInside}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -2451,7 +2484,7 @@ function PlanCard({ plan }: { plan: Plan }) {
   const Card = (
     <div
       className={
-        "group relative flex h-full flex-col overflow-hidden gs-glass p-7 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_44px_80px_-44px_rgba(37,99,235,0.55)] " +
+        "group relative flex h-full flex-col overflow-hidden liquid-glass bg-white/70 backdrop-blur-md p-7 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_44px_80px_-44px_rgba(37,99,235,0.55)] " +
         (plan.featured
           ? "rounded-[calc(1.5rem-1.5px)] lg:-translate-y-2 lg:hover:-translate-y-3"
           : "rounded-3xl")
@@ -2714,6 +2747,80 @@ function Faq() {
             </div>
           </div>
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ── Greek Stack in Practice (Cinematic Looping Video Card Section) ── */
+function PracticeShowcase() {
+  return (
+    <section className="relative overflow-hidden py-12 sm:py-24 bg-secondary/10 border-t border-b border-border/80">
+      {/* Background radial wash */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_50%_10%,rgba(37,99,235,0.04),transparent_60%)]"
+      />
+      <div className="container max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
+          {/* Left Column: Copy */}
+          <div className="flex flex-col justify-center pr-0 md:pr-12">
+            <span className="text-blue-700 text-xs font-semibold tracking-wider uppercase mb-2">
+              Greek Stack in Practice
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 tracking-tight">
+              One central portal. <span className="gs-gradient-text">Automated ops.</span>
+            </h2>
+            <p className="text-foreground/80 text-base sm:text-lg leading-relaxed mb-8 font-sans font-light">
+              Greekstack powers a wide range of use modes for officers, active members, and alumni wanting a safe, rewarding chapter experience. We run the technical plumbing in the background so you can focus on building brotherhood.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="platform" size="lg" className="gs-sheen">
+                <Link href="/onboard">
+                  Launch free month
+                  <IconArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-blue-500/20 text-blue-700 hover:bg-blue-50/50">
+                <Link href="/app?demo=true">Try the live demo</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Column: Cinematic Video Card */}
+          <Reveal delay={100} className="relative rounded-3xl overflow-hidden min-h-[500px] shadow-2xl flex flex-col justify-end group">
+            {/* Background Video */}
+            <FadingVideo
+              src="/brand/gen/gs-showcase-operations.mp4"
+              className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-105"
+            />
+            
+            {/* Overlay Gradient for contrast */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none z-10" />
+            
+            {/* Overlay Content */}
+            <div className="relative z-20 p-8 sm:p-10 flex flex-col items-start text-white">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-300 mb-3 backdrop-blur-sm">
+                Chapter Communications
+              </span>
+              <h3 className="text-white text-3xl font-bold leading-tight mb-3 tracking-tight">
+                Automated SMS & Roster Sync
+              </h3>
+              <p className="text-white/80 text-sm sm:text-base max-w-md mb-6 leading-relaxed">
+                Send event notices, study alerts, and double-opt-in rush schedules automatically. Roster updates synchronize permissions in real time.
+              </p>
+              <Link
+                href="/app?demo=true"
+                className="inline-flex items-center gap-3 text-white font-semibold hover:text-blue-200 transition-colors group/link"
+              >
+                <span className="w-9 h-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center transition-colors group-hover/link:bg-white group-hover/link:text-slate-900 text-white">
+                  <IconArrowRight className="w-4 h-4" />
+                </span>
+                See it in action
+              </Link>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

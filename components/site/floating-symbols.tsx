@@ -75,10 +75,10 @@ export function FloatingSymbols({
             opacity: 0;
           }
           10% {
-            opacity: 0.12;
+            opacity: 0.35;
           }
           90% {
-            opacity: 0.12;
+            opacity: 0.35;
           }
           100% {
             top: -10%;
@@ -92,7 +92,7 @@ export function FloatingSymbols({
           animation-delay: var(--delay);
           will-change: top, transform, opacity;
           opacity: 0;
-          color: var(--brand-primary, #C8102E);
+          color: var(--brand-primary, #38bdf8);
         }
       `}} />
       {symbols.map((item) => (
