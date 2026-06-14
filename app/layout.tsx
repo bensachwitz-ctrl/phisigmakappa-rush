@@ -10,6 +10,12 @@ import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
 import { isClerkConfigured } from "@/lib/clerk-config";
 import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
+import { GreekLetterField } from "@/components/site/greek-letter-field";
+
+const ALL_FRAT_GLYPHS = [
+  "Φ", "Σ", "Κ", "Χ", "Α", "Ω", "Ε", "Β", "Θ", "Π",
+  "ΦΣΚ", "ΣΧ", "ΚΣ", "ΑΤΩ", "ΣΑΕ", "ΒΘΠ",
+];
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
 // when the request has no subdomain (greekstack.vercel.app, localhost,
@@ -426,9 +432,37 @@ export default async function RootLayout({
   // host). On the apex we emit a generic Greekstack Organization node instead
   // of the chapter CollegeOrUniversity graph so no chapter identity leaks.
   const host = requestHost();
+  const subdomain = getSubdomain(host);
+  const isApex = subdomain === null;
+
+  // Resolve global glyphs for GreekLetterField
+  let globalGlyphs: string[] | undefined = undefined;
+  if (isApex) {
+    globalGlyphs = ALL_FRAT_GLYPHS;
+  } else {
+    const fraternityLetters = cfg["chapter.fraternityLetters"] || "";
+    const greekLettersGlyphs = cfg["chapter.greekLettersGlyphs"] || "";
+    const singleGlyphs = Array.from(
+      new Set(
+        `${fraternityLetters}${greekLettersGlyphs}`
+          .split("")
+          .filter((c) => c.trim()),
+      ),
+    );
+    const monogramGlyphs = Array.from(
+      new Set(
+        [fraternityLetters, greekLettersGlyphs]
+          .map((s) => (s || "").trim())
+          .filter((s) => s.length > 1),
+      ),
+    );
+    const chapterGlyphs = [...singleGlyphs, ...monogramGlyphs];
+    globalGlyphs = chapterGlyphs.length ? chapterGlyphs : undefined;
+  }
+
   const siteUrl = resolveMetadataBase(host).origin;
   const structuredData =
-    getSubdomain(host) === null
+    isApex
       ? {
           "@context": "https://schema.org",
           "@graph": [
@@ -497,7 +531,14 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <ToastProvider>
-          <ChapterIdentityProvider value={getSubdomain(host) === null ? APEX_IDENTITY : chapterIdentityFromCfg(cfg)}>
+          <ChapterIdentityProvider value={isApex ? APEX_IDENTITY : chapterIdentityFromCfg(cfg)}>
+            <GreekLetterField
+              glyphs={globalGlyphs}
+              color={isApex ? undefined : "hsl(var(--primary))"}
+              calm={!isApex}
+              count={isApex ? 44 : 30}
+              seed={isApex ? 0x51ed270b : 0x3a7c91d5}
+            />
             <main id="main-content">
               {children}
             </main>

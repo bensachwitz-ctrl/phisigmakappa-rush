@@ -55,7 +55,7 @@ import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress, cn } from "@/lib/uti
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
-import { GreekLetterField } from "@/components/site/greek-letter-field";
+
 
 export const dynamic = "force-dynamic";
 
@@ -349,28 +349,9 @@ export default async function ChapterLandingPage({
   const heroLead = cfg["hero.h1.lead"] || `${terms.recruit} starts`;
   const heroTail = cfg["hero.h1.tail"] || termLabelShort;
 
-  // Chapter glyph set for the page-wide drifting letter field — THIS chapter's
-  // own single letters PLUS their joined monograms (owner round-8: letters and
-  // Greek letters drift TOGETHER per frat — "Φ", "Σ", "Κ" and "ΦΣΚ"/"ΓΤ" all
-  // cross the screen). Falls back to a tasteful Greek sampler if a tenant
-  // hasn't set any, so the field always reads as "their letters" drifting
-  // behind the whole site (tinted to their brand --primary).
-  const singleGlyphs = Array.from(
-    new Set(
-      `${identity.fraternityLetters || ""}${identity.greekLettersGlyphs || ""}`
-        .split("")
-        .filter((c) => c.trim()),
-    ),
-  );
-  const monogramGlyphs = Array.from(
-    new Set(
-      [identity.fraternityLetters, identity.greekLettersGlyphs]
-        .map((s) => (s || "").trim())
-        .filter((s) => s.length > 1),
-    ),
-  );
-  const chapterGlyphs = [...singleGlyphs, ...monogramGlyphs];
-  const fieldGlyphs = chapterGlyphs.length ? chapterGlyphs : undefined;
+  // Chapter glyph set for the page-wide drifting letter field is now resolved
+  // globally in app/layout.tsx from cfg["chapter.fraternityLetters"] and
+  // cfg["chapter.greekLettersGlyphs"]. No per-page glyph resolution needed.
 
   const sectionMap: Record<string, React.ReactNode> = {
     hero: (
@@ -1433,13 +1414,8 @@ export default async function ChapterLandingPage({
   return (
     <main id="main-content" className="relative min-h-screen overflow-x-clip">
       <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
-      <GreekLetterField
-        glyphs={fieldGlyphs}
-        color="hsl(var(--primary))"
-        calm
-        count={30}
-        seed={0x3a7c91d5}
-      />
+      {/* Drifting Greek letters rendered globally by app/layout.tsx — chapter-
+          specific glyphs + brand color resolved there from cfg. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[-4] select-none overflow-hidden">
         {(identity.schoolName || identity.schoolShort) && (
           <div className="absolute inset-x-0 top-[26%] flex justify-center px-4">

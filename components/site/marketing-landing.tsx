@@ -9,7 +9,7 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { Reveal } from "@/components/site/reveal";
-import { GreekLetterField } from "@/components/site/greek-letter-field";
+
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import {
   TypewriterCycle,
@@ -772,16 +772,7 @@ const FAQS: { q: string; a: string }[] = [
   },
 ];
 
-/* Glyph mix for the main-page letter field — EVERY demo frat represented
-   (owner round-8/9: all frats' letters mixed on the main landing page): the
-   de-duped single letters of all six demo chapters PLUS each chapter's joined
-   monogram, so "Φ" drifts past "ΣΧ" drifts past "ΑΤΩ". Kept in sync with
-   FRATERNITY_BRANDS in app/app/_demo/mock-data.ts (inlined here so the
-   marketing bundle never imports the demo's mock data). */
-const ALL_FRAT_GLYPHS = [
-  "Φ", "Σ", "Κ", "Χ", "Α", "Τ", "Ω", "Ε", "Β", "Θ", "Π",
-  "ΦΣΚ", "ΣΧ", "ΚΣ", "ΑΤΩ", "ΣΑΕ", "ΒΘΠ",
-];
+
 
 export default function MarketingLandingPage() {
   return (
@@ -794,11 +785,9 @@ export default function MarketingLandingPage() {
         aria-hidden="true"
         className="fixed inset-0 z-[-10] bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
       />
-      {/* ALL the demo frats' letters drifting across the entire screen —
-          singles and joined monograms mixed (owner round-8/9). At z-1 the
-          field is plainly IN FRONT of the page wash (z-0) and BEHIND all
-          cards/text (main is z-10). */}
-      <GreekLetterField glyphs={ALL_FRAT_GLYPHS} />
+      {/* Drifting Greek letters are rendered globally by app/layout.tsx —
+          no local instance needed here. The field sits at z-[-5], behind
+          the page wash (z-[-10]) and all cards/text (z-10). */}
       <ScrollProgressBar />
       <SiteNav />
       {/* NARRATIVE ORDER — each scroll beat answers the next natural question:

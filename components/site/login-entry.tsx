@@ -26,7 +26,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
-import { GreekLetterField } from "@/components/site/greek-letter-field";
+
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -95,11 +95,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
   return (
     <div className="relative min-h-screen overflow-x-hidden text-foreground">
       <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
-      {/* Ambient brand atmosphere — drifting Greek letters + soft color orbs,
-          both decorative, both reduced-motion-safe (see globals.css). The
-          field renders at z-[-5] (default): the old z-1 placement could overlap
-          interactive content. */}
-      <GreekLetterField count={26} />
+      {/* Drifting Greek letters rendered globally by app/layout.tsx. */}
       <AmbientOrbs />
 
       {/* Top brand bar — the canonical Greekstack lockup links home to the apex. */}
