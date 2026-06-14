@@ -72,6 +72,8 @@ export async function POST(req: Request) {
     // Pricing method + live-edited hero copy from the upgraded wizard.
     plan: rawPlan,
     heroHeadline, heroTagline,
+    // Lifted promo/discount code from the wizard.
+    promoCode: rawPromoCode,
   } = body;
 
   const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -122,6 +124,9 @@ export async function POST(req: Request) {
   if (String(adminPassword).length < 8) {
     return NextResponse.json({ ok: false, error: "Admin password must be at least 8 characters" }, { status: 400 });
   }
+
+  const promoCode = typeof rawPromoCode === "string" ? rawPromoCode.trim().toUpperCase() : "";
+  const isPromoValid = ["GREEKFREE", "WELCOME100", "SILICON"].includes(promoCode);
 
   // schemaName is built ONLY from the sanitized subdomain ([a-z0-9-] -> _), so
   // it is safe to interpolate into raw SQL (no injection surface).
@@ -323,6 +328,8 @@ export async function POST(req: Request) {
       // field, then the historical default. (The authoritative platform-billing
       // state lives on the central Tenant row written below.)
       "billing.plan": (billingPlan || normalizedPlan || "dues_split").trim(),
+      // Record any successfully applied promo/discount code used at signup.
+      "billing.promoCode": isPromoValid ? promoCode : "",
       // 2-week payment deadline (ISO). Set-up-payment-by date from launch; after
       // this the site is subject to takedown (messaged in the welcome email). The
       // auto-takedown cron is intentionally NOT built — this is the stored value.
@@ -461,15 +468,23 @@ export async function POST(req: Request) {
           : "Monthly plan ($50/mo + $200/rush cycle, first month free)";
       const billingLineHtml =
         normalizedPlan === "yearly"
-          ? `You're on the <strong>Annual plan — $800/year</strong>, which includes every rush-cycle fee. Full access to every feature, no card required to launch.`
+          ? isPromoValid
+            ? `You're on the <strong>Annual plan — $800/year</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you'll receive <strong>$150 off your first year</strong> ($650 total)! Full access to every feature, no card required to launch.`
+            : `You're on the <strong>Annual plan — $800/year</strong>, which includes every rush-cycle fee. Full access to every feature, no card required to launch.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
+          : isPromoValid
+          ? `Your <strong>first month is free</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you get an additional 2 months free (<strong>3 months free total</strong>)! After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`
           : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`;
       const billingLineText =
         normalizedPlan === "yearly"
-          ? "You're on the Annual plan — $800/year, includes all rush fees. No card required to launch."
+          ? isPromoValid
+            ? `You're on the Annual plan — $800/year. Promo code ${promoCode} applied: $150 off your first year ($650 total). No card required to launch.`
+            : "You're on the Annual plan — $800/year, includes all rush fees. No card required to launch."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
+          : isPromoValid
+          ? `Your first month is free. Promo code ${promoCode} applied: 3 months free total! Then $50/mo + $200 per rush cycle. No card required to launch.`
           : "Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). No card required to launch.";
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
@@ -550,6 +565,7 @@ export async function POST(req: Request) {
           { label: "Admin name", value: (adminName || "").trim() },
           { label: "Admin email", value: adminEmailAddr },
           { label: "Plan", value: planLabelOwner },
+          { label: "Promo Code", value: isPromoValid ? `${promoCode} (Applied)` : "—" },
           { label: "Instagram", value: igDisplay },
           { label: "Site", value: `${subdomain}.greekstack.vercel.app` },
           { label: "Payment deadline", value: deadlineLabel },

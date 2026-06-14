@@ -159,6 +159,11 @@ export default function OnboardWizard() {
   const { push } = useToast();
   const reduce = useReducedMotion();
   const [step, setStep] = React.useState<StepId>("pricing");
+  // Lifted promo/discount code states to bubble up to Launch summary and API payload
+  const [promoCode, setPromoCode] = React.useState("");
+  const [promoApplied, setPromoApplied] = React.useState(false);
+  const [promoError, setPromoError] = React.useState("");
+  const [appliedCode, setAppliedCode] = React.useState("");
   // Animation direction for the step transition: 1 = advancing, -1 = going back.
   // Drives the directional slide in the AnimatePresence wrapper below.
   const [dir, setDir] = React.useState<1 | -1>(1);
@@ -579,6 +584,8 @@ export default function OnboardWizard() {
           // neutral white-label defaults). Trimmed server-side too.
           heroHeadline,
           heroTagline,
+          // Pass the validated promo code to the server.
+          promoCode: promoApplied ? appliedCode : undefined,
         }),
       });
 
@@ -1233,7 +1240,18 @@ export default function OnboardWizard() {
               )}
 
               {step === "pricing" && (
-                <PricingStep plan={plan} onChange={setPlan} />
+                <PricingStep
+                  plan={plan}
+                  onChange={setPlan}
+                  promoCode={promoCode}
+                  setPromoCode={setPromoCode}
+                  promoApplied={promoApplied}
+                  setPromoApplied={setPromoApplied}
+                  promoError={promoError}
+                  setPromoError={setPromoError}
+                  appliedCode={appliedCode}
+                  setAppliedCode={setAppliedCode}
+                />
               )}
 
               {step === "launch" && (
@@ -1312,6 +1330,11 @@ export default function OnboardWizard() {
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
                       <SummaryRow label="Plan">{PLAN_SUMMARY[plan]}</SummaryRow>
+                      {promoApplied && (
+                        <SummaryRow label="Promo Code">
+                          <span className="text-emerald-400 font-bold">{appliedCode}</span> (Applied)
+                        </SummaryRow>
+                      )}
                     </div>
                   </div>
 
@@ -1508,17 +1531,34 @@ function customBuildHref(): string {
  * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
  * so it's keyboard + screen-reader navigable.
  */
-function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) => void }) {
+function PricingStep({
+  plan,
+  onChange,
+  promoCode,
+  setPromoCode,
+  promoApplied,
+  setPromoApplied,
+  promoError,
+  setPromoError,
+  appliedCode,
+  setAppliedCode,
+}: {
+  plan: PlanId;
+  onChange: (p: PlanId) => void;
+  promoCode: string;
+  setPromoCode: (c: string) => void;
+  promoApplied: boolean;
+  setPromoApplied: (a: boolean) => void;
+  promoError: string;
+  setPromoError: (e: string) => void;
+  appliedCode: string;
+  setAppliedCode: (c: string) => void;
+}) {
   // Map any legacy persisted value onto the two live cards so an existing tenant
   // editing their plan still highlights the right card. semester/dues_percentage
   // are no longer selectable, but if they ever round-trip in they read as Monthly.
   const monthlySelected = plan === "monthly" || plan === "semester" || plan === "dues_percentage";
   const yearlySelected = plan === "yearly";
-
-  const [promoCode, setPromoCode] = React.useState("");
-  const [promoApplied, setPromoApplied] = React.useState(false);
-  const [promoError, setPromoError] = React.useState("");
-  const [appliedCode, setAppliedCode] = React.useState("");
 
   const handleApplyPromo = () => {
     const code = promoCode.trim().toUpperCase();
