@@ -55,8 +55,8 @@ export function WebsiteBuilderClient({
   const [busy, setBusy] = React.useState(false);
   
   // Parse order
-  const getOrderedSections = (): SectionConfig[] => {
-    let orderList = DEFAULT_ORDER;
+  const getOrderedSections = React.useCallback((): SectionConfig[] => {
+    let orderList = [...DEFAULT_ORDER];
     const rawOrder = initialConfig["website.sections"];
     if (rawOrder) {
       try {
@@ -90,13 +90,13 @@ export function WebsiteBuilderClient({
         visible
       };
     });
-  };
+  }, [initialConfig]);
 
   const [sections, setSections] = React.useState<SectionConfig[]>([]);
 
   React.useEffect(() => {
     setSections(getOrderedSections());
-  }, [initialConfig]);
+  }, [getOrderedSections]);
 
   const moveUp = (index: number) => {
     if (index === 0) return;

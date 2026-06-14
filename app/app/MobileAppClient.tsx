@@ -483,6 +483,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       }
     }
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load saved demo data from localStorage on initialization

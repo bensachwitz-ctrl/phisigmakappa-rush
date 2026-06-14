@@ -132,7 +132,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
     return order;
   }, [grouped]);
 
-  function execute(cmd: Cmd) {
+  const execute = React.useCallback((cmd: Cmd) => {
     setOpen(false);
     setQ("");
     if (cmd.action) cmd.action();
@@ -144,7 +144,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
         router.push(cmd.href);
       }
     }
-  }
+  }, [router]);
 
   // Global ⌘K / Ctrl+K binding + Escape close + arrow navigation
   React.useEffect(() => {
@@ -170,7 +170,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, filtered, activeIdx, flatIdx]);
+  }, [open, filtered, activeIdx, flatIdx, execute]);
 
   // Autofocus input + scroll active row into view
   React.useEffect(() => {
