@@ -832,7 +832,7 @@ export default function OnboardWizard() {
             decorative icons aria-hidden, wraps cleanly on mobile. */}
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
           {[
-            { icon: IconSecurity, text: plan === "custom" ? "No card required" : "Secure Stripe setup" },
+            { icon: IconSecurity, text: (plan === "custom" || plan === "dues_percentage") ? "No card required" : "Secure Stripe setup" },
             { icon: IconLaunch, text: "Live in under a minute" },
             { icon: IconCheckCircle, text: "Edit anything later" },
           ].map((t) => {
@@ -1962,7 +1962,7 @@ function PricingStep({
         <span>
           {collectDues
             ? "Your dues-share chapter goes live today. No card required. Reach out to Ben after launch to configure dues payments."
-            : "We never ask for a card at signup. Your chapter goes live today; you only set up payment when you're ready."
+            : "First month free. Card setup is required at signup to start your 30-day trial. You won't be charged today."
           }
         </span>
       </p>

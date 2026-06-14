@@ -229,7 +229,7 @@ export default async function SupportPage() {
             </Faq>
             <Faq question="How does billing and the free trial work?">
               <p>
-                Your first month is free — no credit card to start. After that, your chapter is billed on the
+                Your first month is free — paid plans require card setup at signup to start your trial (dues-share and custom plans remain card-free). After that, your chapter is billed on the
                 plan you pick, and you can cancel any time from the admin billing settings. Card payments are
                 handled securely by Stripe; Greekstack never sees or stores full card numbers. For billing
                 questions or a custom quote, email us or use{" "}

@@ -566,7 +566,7 @@ const STEPS: { icon: GsIcon; img: string; step: string; title: string; desc: str
     img: "gl-bid",
     step: "01",
     title: "Sign up",
-    desc: "Create your account and claim a chapter subdomain. No credit card, no install — you're in within a minute.",
+    desc: "Create your account and claim a chapter subdomain. Start your 30-day free trial in a minute with card setup.",
   },
   {
     icon: IconWhiteLabel,
@@ -595,7 +595,7 @@ const STATS: {
   decimals?: number;
   label: string;
 }[] = [
-  { value: 0, prefix: "$", label: "To get started — no setup fee, no card" },
+  { value: 30, suffix: "-day free trial", label: "To get started (card required for subscription plans)" },
   { value: 10, suffix: " tools", label: "Recruitment to alumni, in one login" },
   { display: "Same-day", label: "From sign-up to a live, branded site" },
   { value: 0, prefix: "$", label: "Per-seat fees — unlimited members & officers" },
@@ -685,7 +685,7 @@ const PLANS: Plan[] = [
       "No monthly platform fee — ever",
       "1.5% fee on your first dues cycle",
       "3% standard fee on subsequent cycles",
-      "No setup cost & no credit card required",
+      "No setup cost & no card required to start",
     ],
     cta: { label: "Start on Dues-Share", href: "/onboard" },
     fineprint: "No card needed to start · setup via Ben",
@@ -719,7 +719,7 @@ const PLANS: Plan[] = [
     },
     cta: { label: "Start free month", href: "/onboard" },
     featured: true,
-    fineprint: "First month free · no card to start · cancel anytime",
+    fineprint: "First month free · card setup required at signup · cancel anytime",
   },
   {
     id: "custom",
@@ -768,7 +768,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Alternatively, you can choose our Dues-Share plan to waive the monthly platform fee entirely, paying a simple percentage (1.5% intro, then 3%) on dues collected online. Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any platform markup.",
+    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Subscription plans require card setup at signup to start your free trial. Alternatively, you can choose our Dues-Share plan to waive the monthly platform fee entirely, paying a simple percentage (1.5% intro, then 3%) on dues collected online (no card required to sign up). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any platform markup.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -788,7 +788,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I have to pay anything to start?",
-    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that, you can choose between our monthly plan ($50/mo + $200/rush cycle), our annual plan ($800/year), or our Dues-Share plan which waives the monthly platform fee entirely in exchange for a percentage on dues collected.",
+    a: "No. Your first month is completely free. Paid plans require setting up a card at signup, but you won't be charged today and can cancel at any time. It includes the full product — every feature, unlimited members and officers. Alternatively, choose our Dues-Share plan which requires no card to start.",
   },
 ];
 
@@ -1253,7 +1253,7 @@ function Hero() {
 
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> No credit card to start
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> 30-day free trial
             </span>
             <span className="inline-flex items-center gap-1.5">
               <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Live the same day
@@ -2666,7 +2666,7 @@ function Faq() {
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
             The real questions chapter officers ask — security, compliance, fees, and getting
-            started. Still curious? Start free (first month, no card) and see it yourself.
+            started. Still curious? Start your 30-day free trial and see it yourself.
           </p>
         </Reveal>
 

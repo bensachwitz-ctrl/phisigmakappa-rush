@@ -135,7 +135,7 @@ export default async function TermsPage() {
           <p>
             New chapters start with their <span className="font-medium text-foreground">first month free</span>{" "}
             on the Base plan (or with <span className="font-medium text-foreground">$0 upfront</span> on the
-            dues-share plan), with no card required to launch. No charge is made during the first month. Unless
+            dues-share plan). Subscription plans require card setup at signup to start your trial, while dues-share and custom plans remain card-free. No charge is made during the first month. Unless
             you cancel before the first month ends, billing begins in month two and the payment method on file
             is charged the then-current fee for your selected plan. You may cancel at any time from your billing
             settings; if you cancel during the first month you are not charged. We may modify or discontinue
