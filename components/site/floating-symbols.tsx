@@ -18,11 +18,13 @@ interface FloatingSymbol {
 export function FloatingSymbols({
   greekLettersGlyphs = "",
   fraternityLetters = "",
+  className = "z-[-10]",
 }: {
   /** The chapter's chapter-designation glyphs, e.g. "ΓΤ" (Gamma Triton). */
   greekLettersGlyphs?: string;
   /** The chapter's national-org letters, e.g. "ΦΣΚ" / "ΚΔ". */
   fraternityLetters?: string;
+  className?: string;
 }) {
   const [symbols, setSymbols] = useState<FloatingSymbol[]>([]);
 
@@ -64,7 +66,7 @@ export function FloatingSymbols({
   if (symbols.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[-10]" aria-hidden="true">
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`} aria-hidden="true">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes float-up {
           0% {

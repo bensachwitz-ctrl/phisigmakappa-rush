@@ -1115,7 +1115,7 @@ function Hero() {
       {/* Extra drifting orb layer + a parallaxing faint grid for real depth. */}
       <FloatingOrbs />
       {/* Floating Greek letters rising randomly from bottom to top in the background */}
-      <FloatingSymbols fraternityLetters="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" greekLettersGlyphs="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" />
+      <FloatingSymbols fraternityLetters="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" greekLettersGlyphs="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" className="z-[-5]" />
       {/* (Cursor spotlight removed — its mousemove-repainted 520px blur was a
           major source of compositing jank / "glitching".) */}
       <Parallax
