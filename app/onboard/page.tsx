@@ -29,7 +29,9 @@ export default async function OnboardPage() {
       tone="platform"
       className="min-h-screen bg-slate-950 text-slate-100"
     >
-      {/* Drifting Greek letters rendered globally by app/layout.tsx. */}
+      {/* The global GreekLetterField in app/layout.tsx is intentionally hidden
+          behind this opaque bg-slate-950 aurora — the AnimatedBackground
+          provides its own visual interest on the onboard wizard. */}
       <main className="relative z-[2] flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-6xl">
           <OnboardWizard />

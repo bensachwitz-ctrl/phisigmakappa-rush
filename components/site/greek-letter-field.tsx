@@ -7,10 +7,13 @@
  * TIERS — near (large/fast/more opaque), mid, and far (small/slow/faint) — so
  * the field reads as a sense of distance behind the UI rather than flat noise.
  *
- * Z-STACK CONTRACT (owner round-8): the field paints ABOVE the page background
- * layer (washes/gradients/solid panels at z-0) and BELOW all cards/text
- * (content at z-2+). It renders at zIndex 1 by default (`z` prop) — NEVER at a
- * negative z, where any opaque ancestor/sibling background swallows it whole.
+ * Z-STACK CONTRACT: the field renders at zIndex -5 by default (`z` prop),
+ * painting BEHIND pages with opaque backgrounds (portal dashboards, admin,
+ * onboard wizard) and VISIBLE on pages with translucent/gradient surfaces
+ * (marketing hero, login entry). This is intentional — the global instance in
+ * app/layout.tsx lets the field show through on brand-awareness pages while
+ * staying invisible on task-focused surfaces. Pages that want the field visible
+ * MUST use transparent or semi-transparent backgrounds.
  * pointer-events-none + aria-hidden so it never touches the UI.
  *
  * Travel: each letter starts at a scattered position INCLUDING off-screen edges
@@ -217,8 +220,11 @@ export function GreekLetterField({
    *  side — at a stately 1.5× slower pace. Under prefers-reduced-motion the
    *  field freezes as a static scatter along each letter's path. */
   fromSides?: boolean;
-  /** Stacking position. 1 (default) = above the page background layer (z-0)
-   *  and below content (z-2+). Callers MUST keep their content at z≥2. */
+  /** Stacking position. -5 (default) = behind opaque page backgrounds (z-0),
+   *  visible only on pages with translucent/gradient surfaces. The global
+   *  instance in app/layout.tsx uses this default. The MobileAppClient uses
+   *  position="absolute" within a positioned container, so z doesn't matter
+   *  there. */
   z?: number;
 }) {
   const damping = DAMPING[whisper ? "whisper" : calm ? "calm" : "none"];
