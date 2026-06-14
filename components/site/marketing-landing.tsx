@@ -604,10 +604,14 @@ const STATS: {
 /* The value props the hero headline types through before settling on the
    brand promise. Kept short + punchy; the SSR markup shows the settled line. */
 const HERO_PHRASES = [
-  "Run rush.",
-  "Collect dues, automatically.",
-  "Manage your whole roster.",
-  "Stay TCPA-compliant.",
+  "Run rush & recruitment.",
+  "Collect dues automatically.",
+  "Manage your officer access.",
+  "Cast secret ballots & elections.",
+  "Track chapter scholarship.",
+  "Broadcast TCPA-compliant text alerts.",
+  "Build alumni giving campaigns.",
+  "Custom subdomains & white-label.",
 ];
 const HERO_SETTLE = "Run your whole chapter.";
 
@@ -1194,19 +1198,22 @@ function Hero() {
               { label: "Recruitment & Rush", icon: "recruitment" },
               { label: "Online Dues Collection", icon: "dues" },
               { label: "Roster & Ranks", icon: "portal" },
-              { label: "Event RSVP & Calendar", icon: "events" },
-              { label: "Secret Elections", icon: "ballot" },
+              { label: "Event RSVP & Attendance", icon: "checkin" },
+              { label: "Secret Ballots & Elections", icon: "ballot" },
               { label: "Treasury & Budgets", icon: "treasury" },
-              { label: "SMS Broadcasts", icon: "announcements" },
-              { label: "Alumni Network", icon: "alumni" },
-              { label: "White-Label Domain", icon: "branding" },
+              { label: "Officer Access Control", icon: "officers" },
+              { label: "TCPA-Compliant SMS Broadcasts", icon: "announcements" },
+              { label: "Alumni Giving Campaigns", icon: "alumni" },
+              { label: "Bespoke White-Label Domains", icon: "branding" },
+              { label: "Brotherhood Bonds", icon: "brotherhood" },
+              { label: "Bid Day Management", icon: "bid" },
             ].map((feat, idx) => (
               <span
                 key={idx}
                 className="flex items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-50/40 px-3 py-1 text-xs font-semibold text-blue-800 shadow-[0_2px_10px_-4px_rgba(59,130,246,0.1)] transition-all hover:scale-105 hover:bg-blue-50 hover:border-blue-500/25 dark:border-blue-500/20 dark:bg-blue-950/20 dark:text-blue-300 dark:hover:bg-blue-950/40"
               >
                 <span className="w-3 h-3 opacity-85 flex items-center justify-center text-blue-700">
-                  <BrandGlyph name={feat.icon} size="xs" />
+                  <BrandGlyph name={feat.icon as any} size="xs" />
                 </span>
                 {feat.label}
               </span>
