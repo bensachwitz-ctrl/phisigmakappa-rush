@@ -1705,7 +1705,7 @@ function Features() {
           className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:auto-rows-fr"
         >
           {FEATURES.map((f, i) => (
-            <Reveal3DItem key={f.title} className={f.img === "feat-dues" ? "sm:col-span-2" : ""}>
+            <Reveal3DItem key={f.title}>
               <Tilt3DCard
                 max={7}
                 glareColor="rgba(37,99,235,0.22)"
@@ -1830,8 +1830,6 @@ function FeatureCard({
     </span>
   );
 
-  const isDues = img === "feat-dues";
-
   return (
     <div
       role="button"
@@ -1849,15 +1847,7 @@ function FeatureCard({
       // active:scale gives the tap a tactile "give" — the only press feedback
       // touch users get, since the 3D tilt layer is desktop-only.
       className="group relative flex h-full w-full overflow-hidden rounded-3xl liquid-glass bg-white/70 backdrop-blur-md p-7 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_22px_48px_-18px_rgba(15,23,42,0.24),0_48px_84px_-44px_rgba(37,99,235,0.55)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-8"
-      style={isDues ? {
-        backgroundImage: "url('/brand/gen/feat-dues.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      } : undefined}
     >
-      {isDues && (
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] group-hover:bg-white/10 transition-all duration-300 pointer-events-none" />
-      )}
       {/* Thin gradient top-edge that lights up on hover (blue→sky→gold). */}
       <div
         aria-hidden="true"
@@ -1875,32 +1865,13 @@ function FeatureCard({
         className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
       />
 
-      {/* ONE layout for every card — vertical, with the affordance pinned to
-          the bottom so all cards in a row align. For the double-column dues card,
-          we use a split landscape flex layout on sm+ screens. */}
-      {isDues ? (
-        <div className="relative flex h-full w-full flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-8 z-10">
-          <div className="flex-1 max-w-xl">
-            {featureIcon}
-            <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-2xl text-slate-900">{title}</h3>
-            {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
-            <p className="mt-2 text-sm leading-relaxed text-slate-800 font-medium">{desc}</p>
-          </div>
-          <div className="mt-6 sm:mt-0 shrink-0">
-            <span className="inline-flex rounded-full bg-white/80 backdrop-blur-md px-5 py-2.5 shadow-md border border-white/50 text-blue-700 font-semibold group-hover:bg-white transition-all">
-              See inside &rarr;
-            </span>
-          </div>
-        </div>
-      ) : (
-        <div className="relative flex h-full w-full flex-col z-10">
-          {featureIcon}
-          <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
-          {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
-          <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
-          <span className="mt-auto inline-flex pt-6">{seeInside}</span>
-        </div>
-      )}
+      <div className="relative flex h-full w-full flex-col z-10">
+        {featureIcon}
+        <h3 className="mt-5 text-lg font-semibold tracking-tight sm:text-xl">{title}</h3>
+        {outcomeLine && <div className="mt-2.5">{outcomeLine}</div>}
+        <p className="mt-2 text-sm leading-relaxed text-foreground/80">{desc}</p>
+        <span className="mt-auto inline-flex pt-6">{seeInside}</span>
+      </div>
     </div>
   );
 }
