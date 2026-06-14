@@ -159,15 +159,15 @@ export function Roster({
 }) {
   // Brand fallback: matches the lib/site-config DEFAULTS so the email/SMS
   // templates always render with the Phi Sig USC reference if cfg unset.
-  const brand: ChapterBrand = chapterBrand ?? {
+  const brand = React.useMemo(() => chapterBrand ?? {
     fraternityName: "Phi Sigma Kappa",
     fraternityShort: "Phi Sig",
     schoolShort: "USC",
     chapterAttribution: "Phi Sig USC",
     houseAddress: "1525 College St",
-  };
-  const EMAIL_TEMPLATES = React.useMemo(() => buildEmailTemplates(brand), [brand.fraternityName, brand.fraternityShort, brand.schoolShort, brand.chapterAttribution]);
-  const SMS_TEMPLATES = React.useMemo(() => buildSmsTemplates(brand), [brand.fraternityShort, brand.chapterAttribution, brand.houseAddress]);
+  }, [chapterBrand]);
+  const EMAIL_TEMPLATES = React.useMemo(() => buildEmailTemplates(brand), [brand]);
+  const SMS_TEMPLATES = React.useMemo(() => buildSmsTemplates(brand), [brand]);
   const { push } = useToast();
   const [rushes, setRushes] = React.useState<Rush[]>(initial);
   const [query, setQuery] = React.useState("");
@@ -933,13 +933,14 @@ function RushDetail({
   const [enrichBusy, setEnrichBusy] = React.useState(false);
   const { push } = useToast();
 
+  const rushId = rush?.id;
   React.useEffect(() => {
-    if (!rush) return;
-    fetch(`/api/admin/vote?rushId=${rush.id}`)
+    if (!rushId) return;
+    fetch(`/api/admin/vote?rushId=${rushId}`)
       .then((r) => r.json())
       .then((j) => setAllVotes(j.votes || []))
       .catch(() => setAllVotes([]));
-    fetch(`/api/admin/enrich?rushId=${rush.id}`)
+    fetch(`/api/admin/enrich?rushId=${rushId}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.ok) {
@@ -948,7 +949,7 @@ function RushDetail({
         }
       })
       .catch(() => {});
-  }, [rush?.id]);
+  }, [rushId]);
 
   async function runEnrich() {
     if (!rush) return;
