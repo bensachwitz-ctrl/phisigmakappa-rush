@@ -232,6 +232,15 @@ export function BillingManager(props: {
                 Full access to every feature — your rush site, roster, dues, events,
                 and compliance trail — with no upfront or recurring cost.
               </p>
+              <div className="mt-3 p-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.04] text-xs text-sky-800 space-y-1 bg-white/[0.02]">
+                <p className="font-bold flex items-center gap-1.5 text-foreground">
+                  <AlertCircle className="h-4 w-4 text-sky-600" aria-hidden="true" />
+                  Dues Setup Required
+                </p>
+                <p className="text-muted-foreground">
+                  To set up your specific dues payments and amount, please reach out to Ben at <a href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup" className="underline font-semibold hover:text-foreground">bensachwitz@gmail.com</a>.
+                </p>
+              </div>
             </div>
           ) : isCustom ? (
             /* ── CUSTOM PLAN ──────────────────────────────────────────── */
@@ -400,6 +409,10 @@ export function BillingManager(props: {
             onSwitch={(p) => {
               if (p === "custom") {
                 window.location.href = "/contact#custom";
+                return;
+              }
+              if (p === "dues_percentage") {
+                window.location.href = "mailto:bensachwitz@gmail.com?subject=Switch%20to%20Dues%20Percentage%20Plan";
                 return;
               }
               void go("checkout", p);

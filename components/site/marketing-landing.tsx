@@ -68,6 +68,8 @@ import {
   FeatureDetailModal,
   type FeatureDetail,
 } from "@/components/site/feature-detail-modal";
+import { FloatingSymbols } from "@/components/site/floating-symbols";
+
 import {
   PreviewRecruitment,
   PreviewDues,
@@ -671,6 +673,23 @@ type Plan = {
 
 const PLANS: Plan[] = [
   {
+    id: "dues_percentage",
+    name: "Dues-Share",
+    icon: IconPayout,
+    price: "$0",
+    unit: "platform fee",
+    priceNote: "1.5% then 3% on dues collected",
+    tagline: "Waive all monthly platform fees and pay only as you collect.",
+    highlights: [
+      "No monthly platform fee — ever",
+      "1.5% fee on your first dues cycle",
+      "3% standard fee on subsequent cycles",
+      "No setup cost & no credit card required",
+    ],
+    cta: { label: "Start on Dues-Share", href: "/onboard" },
+    fineprint: "No card needed to start · setup via Ben",
+  },
+  {
     id: "platform",
     name: "Platform",
     icon: IconPlanBase,
@@ -748,7 +767,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any markup or platform fee on top of dues or donations. Payouts go straight to your chapter's connected Stripe account via Stripe Connect. Need something tailored? Talk to Ben about a custom build and pricing.",
+    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Alternatively, you can choose our Dues-Share plan to waive the monthly platform fee entirely, paying a simple percentage (1.5% intro, then 3%) on dues collected online. Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any platform markup.",
   },
   {
     q: "How does the white-label branding actually work?",
@@ -768,7 +787,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I have to pay anything to start?",
-    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that it's $50/mo + $200 per rush cycle, or $800/year with rush fees included.",
+    a: "No. Your first month is completely free with no credit card required, and it's the full product — every feature, unlimited members and officers. Set up your branded site, run a recruitment cycle, and invite your e-board before you ever decide to pay. After that, you can choose between our monthly plan ($50/mo + $200/rush cycle), our annual plan ($800/year), or our Dues-Share plan which waives the monthly platform fee entirely in exchange for a percentage on dues collected.",
   },
 ];
 
@@ -1095,6 +1114,8 @@ function Hero() {
       <Grain />
       {/* Extra drifting orb layer + a parallaxing faint grid for real depth. */}
       <FloatingOrbs />
+      {/* Floating Greek letters rising randomly from bottom to top in the background */}
+      <FloatingSymbols fraternityLetters="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" greekLettersGlyphs="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" />
       {/* (Cursor spotlight removed — its mousemove-repainted 520px blur was a
           major source of compositing jank / "glitching".) */}
       <Parallax
@@ -1160,6 +1181,31 @@ function Hero() {
             letters and colors, live the same day.
           </p>
 
+          {/* Tagline/badge strip showcasing each feature and tool it provides */}
+          <div className="mx-auto mt-8 flex flex-wrap justify-center gap-2 max-w-2xl animate-slide-up [animation-delay:240ms]">
+            {[
+              { label: "Recruitment & Rush", icon: "recruitment" },
+              { label: "Online Dues Collection", icon: "dues" },
+              { label: "Roster & Ranks", icon: "portal" },
+              { label: "Event RSVP & Calendar", icon: "events" },
+              { label: "Secret Elections", icon: "ballot" },
+              { label: "Treasury & Budgets", icon: "treasury" },
+              { label: "SMS Broadcasts", icon: "announcements" },
+              { label: "Alumni Network", icon: "alumni" },
+              { label: "White-Label Domain", icon: "branding" },
+            ].map((feat, idx) => (
+              <span
+                key={idx}
+                className="flex items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-50/40 px-3 py-1 text-xs font-semibold text-blue-800 shadow-[0_2px_10px_-4px_rgba(59,130,246,0.1)] transition-all hover:scale-105 hover:bg-blue-50 hover:border-blue-500/25 dark:border-blue-500/20 dark:bg-blue-950/20 dark:text-blue-300 dark:hover:bg-blue-950/40"
+              >
+                <span className="w-3 h-3 opacity-85 flex items-center justify-center text-blue-700">
+                  <BrandGlyph name={feat.icon} size="xs" />
+                </span>
+                {feat.label}
+              </span>
+            ))}
+          </div>
+
           {/* The two CTAs render at IDENTICAL width at EVERY viewport (owner
               round-5): stacked (<md) both fill the same max-w-[22rem] column;
               in a row (md+) the grid is w-fit with auto-cols-fr, so both
@@ -1214,7 +1260,7 @@ function Hero() {
               (the old duplicate links were folded into this single CTA).
               Anchored, crawlable, AA-contrast. */}
           <p className="mt-3 text-sm text-foreground/80 animate-slide-up [animation-delay:400ms]">
-            First month free, then $50/mo + $200 per rush cycle —{" "}
+            First month free, or waive fees with Dues-Share —{" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               see pricing
             </Link>
@@ -2307,21 +2353,19 @@ function Pricing() {
             Simple, honest pricing
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            <span className="gs-gradient-text">First month free.</span> Then pick what fits.
+            <span className="gs-gradient-text">Waive fees or start free.</span> Then pick what fits.
           </h2>
           <p className="mt-4 text-pretty text-base text-foreground/80">
-            Start free for a month, then keep it simple: $50/month + $200 per rush cycle, or go
-            yearly at $800 with every rush fee included. Same product, same support, every feature —
-            unlimited members, no per-seat math.
+            Waive the monthly platform fee entirely by choosing our Dues-Share plan, or start free for a month on the Platform plan ($50/month + $200 per rush cycle, or $800/year annual). Same product, same support, every feature — unlimited members, no per-seat math.
           </p>
         </Reveal>
 
-        {/* Two clean plan cards — the recommended Platform card (first month free,
-            monthly-vs-yearly) wears the shimmer ring + ribbon, with a Custom card
-            beside it. Centered + capped so two cards never stretch awkwardly. */}
+        {/* Three clean plan cards — the recommended Platform card (first month free,
+            monthly-vs-yearly) wears the shimmer ring + ribbon, with a Dues-Share card
+            and a Custom card. Centered + capped so cards never stretch awkwardly. */}
         <Reveal3D
           stagger={0.1}
-          className="mx-auto mt-14 grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2"
+          className="mx-auto mt-14 grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-3"
         >
           {PLANS.map((plan) => (
             <Reveal3DItem key={plan.id} className="h-full">

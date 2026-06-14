@@ -354,6 +354,13 @@ export function SettingsManager({
           />
         }
       >
+        <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3.5 text-xs leading-relaxed text-muted-foreground">
+          <p className="font-bold text-foreground mb-1">💡 Save on Your Platform Fee!</p>
+          <span>
+            If you collect dues online via Greek Stack, you can waive your monthly $50/mo platform subscription fee! Under this plan, we just take a percentage of dues collected. 
+            To activate this, please <a href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup" className="underline font-semibold text-foreground hover:text-emerald-500 transition-colors">reach out to Ben</a> to configure your specific dues payments and amount.
+          </span>
+        </div>
         <p className="text-xs text-muted-foreground mb-4">
           Leave <span className="font-mono">dues.enabled</span> as <span className="font-mono">false</span> to
           keep manual-only mode (admin toggles a brother&apos;s dues badge — same as today). To enable

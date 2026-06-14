@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,14 +146,15 @@ function ProvisioningOverlay({
   );
 }
 
-const STEPS = [
-  { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — no card required to launch." },
+const ALL_STEPS = [
+  { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — first month free, cancel anytime." },
   { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then make it yours in the live preview." },
   { id: "admin", label: "Admin Login", icon: IconAdmin, blurb: "Create your chapter's administrator account — this is how you'll sign in." },
+  { id: "payment", label: "Payment Method", icon: IconCoins, blurb: "Add your billing details to start your free first month." },
   { id: "launch", label: "Launch", icon: IconLaunch, blurb: "Go live in seconds — then optionally grab a hand from the owner." },
 ] as const;
 
-type StepId = (typeof STEPS)[number]["id"];
+type StepId = "pricing" | "chapter" | "admin" | "payment" | "launch";
 
 export default function OnboardWizard() {
   const router = useRouter();
@@ -281,6 +283,18 @@ export default function OnboardWizard() {
   // confirm a long password on a phone before launching (a mistyped password
   // here locks the only admin out of the chapter they just created).
   const [showPassword, setShowPassword] = React.useState(false);
+
+  const [stripe, setStripe] = React.useState<any>(null);
+  const [card, setCard] = React.useState<any>(null);
+  const [paymentError, setPaymentError] = React.useState<string | null>(null);
+  const [paymentMethodId, setPaymentMethodId] = React.useState<string | null>(null);
+
+  const STEPS = React.useMemo(() => {
+    if (plan === "custom" || plan === "dues_percentage") {
+      return ALL_STEPS.filter((s) => s.id !== "payment");
+    }
+    return ALL_STEPS;
+  }, [plan]);
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -433,7 +447,7 @@ export default function OnboardWizard() {
     return true;
   }
 
-  function goNext() {
+  async function goNext() {
     if (!validateStep(step)) return;
     // On the chapter step, refuse to advance past a known-bad subdomain so the
     // user fixes it here instead of at the final Launch. (Mirrors the disabled
@@ -462,6 +476,58 @@ export default function OnboardWizard() {
       }
       return;
     }
+
+    if (step === "admin") {
+      if (plan === "custom" || plan === "dues_percentage") {
+        setDir(1);
+        setStep("launch");
+      } else {
+        setDir(1);
+        setStep("payment");
+      }
+      return;
+    }
+
+    if (step === "payment") {
+      if (paymentMethodId) {
+        setDir(1);
+        setStep("launch");
+        return;
+      }
+      if (!stripe || !card) return;
+      setBusy(true);
+      setPaymentError(null);
+      try {
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+          type: "card",
+          card: card,
+          billing_details: {
+            name: adminName,
+            email: adminEmail,
+          },
+        });
+        if (error) {
+          setPaymentError(error.message || "Failed to verify card.");
+          setBusy(false);
+          try {
+            window.GreekStackNative?.hapticNotify?.("error");
+          } catch {}
+          return;
+        }
+        setPaymentMethodId(paymentMethod.id);
+        setBusy(false);
+        try {
+          window.GreekStackNative?.hapticNotify?.("success");
+        } catch {}
+        setDir(1);
+        setStep("launch");
+      } catch (err: any) {
+        setPaymentError(err.message || "An error occurred verifying your card.");
+        setBusy(false);
+      }
+      return;
+    }
+
     if (stepIndex < STEPS.length - 1) {
       setDir(1);
       setStep(STEPS[stepIndex + 1].id);
@@ -469,6 +535,21 @@ export default function OnboardWizard() {
   }
 
   function goPrev() {
+    if (step === "launch") {
+      if (plan === "custom" || plan === "dues_percentage") {
+        setDir(-1);
+        setStep("admin");
+      } else {
+        setDir(-1);
+        setStep("payment");
+      }
+      return;
+    }
+    if (step === "payment") {
+      setDir(-1);
+      setStep("admin");
+      return;
+    }
     if (stepIndex > 0) {
       setErrors({});
       setDir(-1);
@@ -586,6 +667,8 @@ export default function OnboardWizard() {
           heroTagline,
           // Pass the validated promo code to the server.
           promoCode: promoApplied ? appliedCode : undefined,
+          // Pass the tokenized Stripe payment method id.
+          paymentMethodId: paymentMethodId || undefined,
         }),
       });
 
@@ -749,7 +832,7 @@ export default function OnboardWizard() {
             decorative icons aria-hidden, wraps cleanly on mobile. */}
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
           {[
-            { icon: IconSecurity, text: "No card required" },
+            { icon: IconSecurity, text: plan === "custom" ? "No card required" : "Secure Stripe setup" },
             { icon: IconLaunch, text: "Live in under a minute" },
             { icon: IconCheckCircle, text: "Edit anything later" },
           ].map((t) => {
@@ -770,60 +853,71 @@ export default function OnboardWizard() {
           path between steps reads as one continuous journey. The active chip
           retints its icon accent to gold (--gs-accent) and breathes; completed
           steps flip to an emerald check. */}
-      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-xl shadow-blue-950/20 ring-1 ring-white/5 backdrop-blur-md sm:p-4">
-        {/* Readout + percentage */}
-        <div className="mb-2.5 flex items-center justify-between px-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
-            Step {stepIndex + 1}
-            <span className="text-slate-500"> / {STEPS.length}</span>
-            <span className="ml-2 font-medium normal-case tracking-normal text-slate-300">
-              {STEPS[stepIndex].label}
-            </span>
-          </p>
-          <p className="text-[11px] font-semibold tabular-nums text-slate-400">
-            {Math.round(((stepIndex + 1) / STEPS.length) * 100)}%
-          </p>
-        </div>
+      {(() => {
+        const spineInset = `${100 / (2 * STEPS.length)}%`;
+        return (
+          <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-xl shadow-blue-950/20 ring-1 ring-white/5 backdrop-blur-md sm:p-4">
+            {/* Readout + percentage */}
+            <div className="mb-2.5 flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+                Step {stepIndex + 1}
+                <span className="text-slate-500"> / {STEPS.length}</span>
+                <span className="ml-2 font-medium normal-case tracking-normal text-slate-300">
+                  {STEPS[stepIndex].label}
+                </span>
+              </p>
+              <p className="text-[11px] font-semibold tabular-nums text-slate-400">
+                {Math.round(((stepIndex + 1) / STEPS.length) * 100)}%
+              </p>
+            </div>
 
-        {/* Animated fill track — eases to the % complete as steps advance. A soft
-            sheen rides the leading edge for a touch of life. Progress is honest-
-            but-encouraging: the OPENING step already reads ~25% (1 of 4 done),
-            not a deflating 0%, and the final step completes at 100%. */}
-        <div
-          className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
-          role="progressbar"
-          aria-label="Setup progress"
-          aria-valuemin={0}
-          aria-valuemax={STEPS.length}
-          aria-valuenow={stepIndex + 1}
-        >
-          <motion.div
-            className="relative h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
-            initial={false}
-            animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
-            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
-          >
-            <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(251,191,36,0.6)]" aria-hidden="true" />
-          </motion.div>
-        </div>
+            {/* Animated fill track — eases to the % complete as steps advance. A soft
+                sheen rides the leading edge for a touch of life. Progress is honest-
+                but-encouraging: the OPENING step already reads ~25% (1 of 4 done),
+                not a deflating 0%, and the final step completes at 100%. */}
+            <div
+              className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
+              role="progressbar"
+              aria-label="Setup progress"
+              aria-valuemin={0}
+              aria-valuemax={STEPS.length}
+              aria-valuenow={stepIndex + 1}
+            >
+              <motion.div
+                className="relative h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-amber-400"
+                initial={false}
+                animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
+                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
+              >
+                <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(251,191,36,0.6)]" aria-hidden="true" />
+              </motion.div>
+            </div>
 
-        {/* Step chips, over a connecting spine. */}
-        <div className="relative mt-3">
-          {/* Spine: a faint base line + an emerald progress line tracing completed
-              steps. Inset to the first/last chip CENTERS so it spans between them,
-              behind the chips. With 4 equal columns the centers sit at 12.5% and
-              87.5%, so we inset by 12.5% (1/8). */}
-          <div className="pointer-events-none absolute inset-x-[12.5%] top-[22px] -z-0 h-0.5 rounded-full bg-white/[0.07]" aria-hidden="true" />
-          <motion.div
-            className="pointer-events-none absolute left-[12.5%] top-[22px] -z-0 h-0.5 origin-left rounded-full bg-gradient-to-r from-emerald-400/70 to-sky-400/60"
-            style={{ right: "12.5%" }}
-            initial={false}
-            animate={{ scaleX: STEPS.length > 1 ? stepIndex / (STEPS.length - 1) : 0 }}
-            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
-            aria-hidden="true"
-          />
+            {/* Step chips, over a connecting spine. */}
+            <div className="relative mt-3">
+              {/* Spine: a faint base line + an emerald progress line tracing completed
+                  steps. Inset to the first/last chip CENTERS so it spans between them,
+                  behind the chips. */}
+              <div
+                className="pointer-events-none absolute top-[22px] -z-0 h-0.5 rounded-full bg-white/[0.07]"
+                style={{ left: spineInset, right: spineInset }}
+                aria-hidden="true"
+              />
+              <motion.div
+                className="pointer-events-none absolute top-[22px] -z-0 h-0.5 origin-left rounded-full bg-gradient-to-r from-emerald-400/70 to-sky-400/60"
+                style={{ left: spineInset, right: spineInset }}
+                initial={false}
+                animate={{ scaleX: STEPS.length > 1 ? stepIndex / (STEPS.length - 1) : 0 }}
+                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 26 }}
+                aria-hidden="true"
+              />
 
-          <ol className="relative z-[1] grid grid-cols-4 gap-2 sm:gap-3" role="list" aria-label="Setup steps">
+              <ol
+                className="relative z-[1] grid gap-2 sm:gap-3"
+                style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
+                role="list"
+                aria-label="Setup steps"
+              >
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const current = s.id === step;
@@ -907,6 +1001,8 @@ export default function OnboardWizard() {
           </ol>
         </div>
       </div>
+        );
+      })()}
 
       {/* Layout — the editable live preview is CHAPTER-specific, so it only joins
           as a second column on that stage. Pricing / Admin / Launch render the
@@ -1254,6 +1350,25 @@ export default function OnboardWizard() {
                 />
               )}
 
+              {step === "payment" && (
+                <PaymentStep
+                  adminName={adminName}
+                  adminEmail={adminEmail}
+                  plan={plan}
+                  promoApplied={promoApplied}
+                  appliedCode={appliedCode}
+                  stripe={stripe}
+                  setStripe={setStripe}
+                  card={card}
+                  setCard={setCard}
+                  paymentError={paymentError}
+                  setPaymentError={setPaymentError}
+                  paymentMethodId={paymentMethodId}
+                  setPaymentMethodId={setPaymentMethodId}
+                  busy={busy}
+                />
+              )}
+
               {step === "launch" && (
                 <div className="space-y-4">
                   {/* Inline launch-failure recovery card (non-subdomain errors —
@@ -1330,6 +1445,13 @@ export default function OnboardWizard() {
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
                       <SummaryRow label="Plan">{PLAN_SUMMARY[plan]}</SummaryRow>
+                      {plan !== "custom" && paymentMethodId && (
+                        <SummaryRow label="Payment">
+                          <span className="text-emerald-400 font-semibold inline-flex items-center gap-1">
+                            <IconCheck className="h-3.5 w-3.5" /> Card Verified
+                          </span>
+                        </SummaryRow>
+                      )}
                       {promoApplied && (
                         <SummaryRow label="Promo Code">
                           <span className="text-emerald-400 font-bold">{appliedCode}</span> (Applied)
@@ -1341,8 +1463,21 @@ export default function OnboardWizard() {
                   <p className="flex items-center gap-1.5 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-3 py-2.5 text-xs text-emerald-100/90">
                     <IconSecurity className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
                     <span>
-                      No card required now — you&apos;re launching on the{" "}
-                      <span className="font-semibold text-white">{PLAN_SUMMARY[plan]}</span>.
+                      {plan === "custom" || plan === "dues_percentage" ? (
+                        <>
+                          No card required now — you&apos;re launching on the{" "}
+                          <span className="font-semibold text-white">
+                            {plan === "custom" ? "Custom plan" : "Dues-Share plan"}
+                          </span>.
+                        </>
+                      ) : (
+                        <>
+                          Card verified securely. You&apos;re launching on the{" "}
+                          <span className="font-semibold text-white">
+                            {plan === "yearly" ? "Annual Plan ($800/year)" : "Monthly Plan ($50/mo + $200/rush, first month free)"}
+                          </span>.
+                        </>
+                      )}
                     </span>
                   </p>
 
@@ -1499,7 +1634,7 @@ const PLAN_SUMMARY: Record<PlanId, string> = {
   monthly: "Monthly — first month free, then $50/mo + $200 per rush cycle",
   yearly: "Annual — $800/year (includes all rush fees)",
   semester: "Monthly — first month free, then $50/mo + $200 per rush cycle",
-  dues_percentage: "Monthly — first month free, then $50/mo + $200 per rush cycle",
+  dues_percentage: "Dues-Share — no monthly fee, percentage on dues collected",
   custom: "Custom — tailored quote",
 };
 
@@ -1554,11 +1689,17 @@ function PricingStep({
   appliedCode: string;
   setAppliedCode: (c: string) => void;
 }) {
-  // Map any legacy persisted value onto the two live cards so an existing tenant
-  // editing their plan still highlights the right card. semester/dues_percentage
-  // are no longer selectable, but if they ever round-trip in they read as Monthly.
-  const monthlySelected = plan === "monthly" || plan === "semester" || plan === "dues_percentage";
+  const collectDues = plan === "dues_percentage";
+  const monthlySelected = plan === "monthly" || plan === "semester";
   const yearlySelected = plan === "yearly";
+
+  const handleDuesToggle = (checked: boolean) => {
+    if (checked) {
+      onChange("dues_percentage");
+    } else {
+      onChange("monthly");
+    }
+  };
 
   const handleApplyPromo = () => {
     const code = promoCode.trim().toUpperCase();
@@ -1581,104 +1722,211 @@ function PricingStep({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <p className="text-sm leading-relaxed text-slate-300">
-        First, pick the plan that fits your chapter. Your{" "}
-        <span className="font-semibold text-white">first month is free</span> and{" "}
-        <span className="font-semibold text-white">no card is required</span> to launch — switch
-        or add payment later from Admin&nbsp;→&nbsp;Billing.
+        Choose what features you want as part of your chapter site and pick the billing model that fits your needs. 
+        You do not have to collect dues online, and can turn this on or off at any time easily.
       </p>
 
-      <div
-        role="radiogroup"
-        aria-label="Pricing plan"
-        className="grid gap-4 lg:grid-cols-2"
-      >
-        {/* ── Monthly (recommended) ───────────────────────────────────────── */}
-        <PlanCard
-          selected={monthlySelected}
-          onSelect={() => onChange("monthly")}
-          icon={IconCoins}
-          eyebrow="Pay monthly"
-          title="Monthly"
-          recommended
-          headline={
-            <>
-              <span className="text-3xl font-extrabold text-white">$50</span>
-              <span className="text-sm font-semibold text-slate-400">/mo</span>
-              <span className="text-sm font-semibold text-slate-400"> + $200 / rush cycle</span>
-            </>
-          }
-          highlight={promoApplied ? "Applied: 3 months free!" : "First month free"}
-          features={[
-            "Everything included — recruitment, dues, events, roster, compliance",
-            "$50/month after your free first month — cancel anytime, no contract",
-            "$200 each rush cycle",
-            "Stripe processing at cost (no platform markup)",
-          ]}
-        />
+      {/* ── Feature Selection Card ── */}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4 shadow-xl">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          Step 1: Choose Your Features
+        </h3>
+        
+        <div className="space-y-3">
+          {/* Feature 1: Core Platform */}
+          <div className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.01] p-3.5 text-sm">
+            <div className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-sky-400/20 text-sky-300 border border-sky-400/30">
+              <span className="text-[10px] font-bold">✓</span>
+            </div>
+            <div>
+              <p className="font-semibold text-white flex items-center gap-1.5">
+                Core Chapter Platform
+                <span className="rounded bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-300">
+                  Included
+                </span>
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Public recruitment (rush) site, interactive events, RSVP tracking, brother directory, e-board console, and compliance tools.
+              </p>
+            </div>
+          </div>
 
-        {/* ── Annual — best value, rush fees included ─────────────────────── */}
-        <PlanCard
-          selected={yearlySelected}
-          onSelect={() => onChange("yearly")}
-          icon={IconCoins}
-          eyebrow="Pay yearly"
-          title="Annual"
-          headline={
-            <>
-              <span className="text-3xl font-extrabold text-white">$800</span>
-              <span className="text-sm font-semibold text-slate-400">/year</span>
-            </>
-          }
-          highlight={promoApplied ? "Applied: $150 off first year!" : "Includes all rush fees"}
-          features={[
-            "Everything in Monthly — every feature, no limits",
-            "All rush-cycle fees included — no $200 per cycle",
-            "Best value — save vs. paying monthly + rush cycles",
-            "Stripe processing at cost (no platform markup)",
-          ]}
-        />
+          {/* Feature 2: Online Dues */}
+          <label className={cn(
+            "flex items-start gap-3 rounded-xl border p-3.5 text-sm transition-all cursor-pointer select-none",
+            collectDues 
+              ? "border-emerald-500/50 bg-emerald-500/[0.06] shadow-sm shadow-emerald-950/20" 
+              : "border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/25"
+          )}>
+            <input
+              type="checkbox"
+              checked={collectDues}
+              onChange={(e) => handleDuesToggle(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-white/10 bg-slate-900 text-sky-400 focus:ring-sky-400/50 cursor-pointer"
+            />
+            <div>
+              <p className="font-semibold text-white flex items-center gap-1.5">
+                Online Dues Collection Feature
+                <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300 uppercase tracking-wide">
+                  Waives Monthly Fee!
+                </span>
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Accept credit/debit card payments from brothers. <strong>Waives the monthly platform fee</strong> completely! Greek Stack will only take a percentage transaction fee. (Requires custom setup with Ben).
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* ── Step 2: Select Plan based on Dues Choice ── */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">
+          Step 2: Billing Model
+        </h3>
+
+        {collectDues ? (
+          /* ── Dues Percentage Plan Active ── */
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.04] p-5 space-y-4 shadow-xl">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20">
+                <IconCoins className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                  Dues-Share Plan
+                  <span className="rounded bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                    Active
+                  </span>
+                </p>
+                <div className="mt-1.5 flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold text-white">0</span>
+                  <span className="text-sm font-semibold text-slate-400">/mo</span>
+                  <span className="text-sm font-semibold text-emerald-400 ml-2">No monthly platform fee!</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/5 pt-4 space-y-3">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Greek Stack will earn a transaction fee on dues collected: <strong>1.5% for your first dues cycle</strong>, then <strong>3%</strong> after.
+              </p>
+              
+              <div className="rounded-xl border border-sky-400/20 bg-sky-500/[0.05] p-3 text-xs leading-relaxed text-sky-200 space-y-2">
+                <p className="font-bold flex items-center gap-1.5 text-white">
+                  <IconSecurity className="h-4 w-4 text-sky-300" aria-hidden="true" />
+                  Action Required
+                </p>
+                <p>
+                  To set up your specific dues payments and amount, you will need to reach out to Ben to configure it.
+                </p>
+                <a
+                  href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup"
+                  className="inline-flex items-center gap-1 font-bold text-sky-300 hover:text-white underline"
+                >
+                  Email bensachwitz@gmail.com to configure <IconExternal className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ── Normal Subscription Plans (Monthly & Yearly) ── */
+          <div
+            role="radiogroup"
+            aria-label="Pricing plan"
+            className="grid gap-4 lg:grid-cols-2"
+          >
+            {/* Monthly */}
+            <PlanCard
+              selected={monthlySelected}
+              onSelect={() => onChange("monthly")}
+              icon={IconCoins}
+              eyebrow="Pay monthly"
+              title="Monthly"
+              recommended
+              headline={
+                <>
+                  <span className="text-3xl font-extrabold text-white">$50</span>
+                  <span className="text-sm font-semibold text-slate-400">/mo</span>
+                  <span className="text-sm font-semibold text-slate-400"> + $200 / rush cycle</span>
+                </>
+              }
+              highlight={promoApplied ? "Applied: 3 months free!" : "First month free"}
+              features={[
+                "Core chapter platform — recruitment, roster, events, compliance",
+                "$50/month after your free first month — cancel anytime",
+                "$200 each rush cycle",
+                "Optional online dues collection (keep standard Connect keys)",
+              ]}
+            />
+
+            {/* Annual */}
+            <PlanCard
+              selected={yearlySelected}
+              onSelect={() => onChange("yearly")}
+              icon={IconCoins}
+              eyebrow="Pay yearly"
+              title="Annual"
+              headline={
+                <>
+                  <span className="text-3xl font-extrabold text-white">$800</span>
+                  <span className="text-sm font-semibold text-slate-400">/year</span>
+                </>
+              }
+              highlight={promoApplied ? "Applied: $150 off first year!" : "Includes all rush fees"}
+              features={[
+                "Everything in Monthly — every feature, no limits",
+                "All rush-cycle fees included — save $200 per cycle",
+                "Best value — save vs. paying monthly + rush cycles",
+                "Optional online dues collection (keep standard Connect keys)",
+              ]}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Promo Code Section ── */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
-          Have a promo or discount code?
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Enter code (e.g. WELCOME100)"
-            value={promoCode}
-            onChange={(e) => {
-              setPromoCode(e.target.value);
-              if (promoError) setPromoError("");
-            }}
-            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
-          />
-          <button
-            type="button"
-            onClick={handleApplyPromo}
-            className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl transition press"
-          >
-            Apply
-          </button>
+      {!collectDues && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+            Have a promo or discount code?
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter code (e.g. WELCOME100)"
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value);
+                if (promoError) setPromoError("");
+              }}
+              className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+            />
+            <button
+              type="button"
+              onClick={handleApplyPromo}
+              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl transition press"
+            >
+              Apply
+            </button>
+          </div>
+          {promoApplied && (
+            <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Promo code <strong>{appliedCode}</strong> applied successfully! Discount will be reflected on your first invoice.
+            </p>
+          )}
+          {promoError && (
+            <p className="text-xs font-semibold text-red-400 animate-shake-x">
+              {promoError}
+            </p>
+          )}
         </div>
-        {promoApplied && (
-          <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Promo code <strong>{appliedCode}</strong> applied successfully! Discount will be reflected on your first invoice.
-          </p>
-        )}
-        {promoError && (
-          <p className="text-xs font-semibold text-red-400 animate-shake-x">
-            {promoError}
-          </p>
-        )}
-      </div>
+      )}
 
-      {/* ── Custom (link out → talk to Ben) ───────────────────────────────── */}
+      {/* ── Custom (link out → talk to Ben) ── */}
       <a
         href={customBuildHref()}
         target={customBuildHref().startsWith("http") ? "_blank" : undefined}
@@ -1712,8 +1960,10 @@ function PricingStep({
       <p className="flex items-start gap-2 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-3 py-2.5 text-xs leading-relaxed text-emerald-100/90">
         <IconSecurity className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
         <span>
-          We never ask for a card at signup. Your chapter goes live today; you only set up
-          payment when you&apos;re ready.
+          {collectDues
+            ? "Your dues-share chapter goes live today. No card required. Reach out to Ben after launch to configure dues payments."
+            : "We never ask for a card at signup. Your chapter goes live today; you only set up payment when you're ready."
+          }
         </span>
       </p>
     </div>
@@ -2136,6 +2386,146 @@ function WColor({
         />
       </div>
       {error ? <FieldError>{error}</FieldError> : null}
+    </div>
+  );
+}
+
+function PaymentStep({
+  adminName,
+  adminEmail,
+  plan,
+  promoApplied,
+  appliedCode,
+  stripe,
+  setStripe,
+  card,
+  setCard,
+  paymentError,
+  setPaymentError,
+  paymentMethodId,
+  setPaymentMethodId,
+  busy,
+}: {
+  adminName: string;
+  adminEmail: string;
+  plan: string;
+  promoApplied: boolean;
+  appliedCode: string;
+  stripe: any;
+  setStripe: (s: any) => void;
+  card: any;
+  setCard: (c: any) => void;
+  paymentError: string | null;
+  setPaymentError: (e: string | null) => void;
+  paymentMethodId: string | null;
+  setPaymentMethodId: (id: string | null) => void;
+  busy: boolean;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    async function initStripe() {
+      const pubKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+      if (!pubKey) {
+        setPaymentError("Stripe publishable key is missing. Contact support.");
+        return;
+      }
+      try {
+        const stripeInstance = await loadStripe(pubKey);
+        if (!active) return;
+        setStripe(stripeInstance);
+
+        if (stripeInstance && containerRef.current) {
+          containerRef.current.innerHTML = "";
+          const els = stripeInstance.elements();
+          const cardEl = els.create("card", {
+            style: {
+              base: {
+                color: "#ffffff",
+                fontSize: "15px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                "::placeholder": {
+                  color: "#94a3b8",
+                },
+              },
+              invalid: {
+                color: "#f87171",
+                iconColor: "#f87171",
+              },
+            },
+          });
+          cardEl.mount(containerRef.current);
+          cardEl.on("change", () => {
+            setPaymentMethodId(null);
+            setPaymentError(null);
+          });
+          setCard(cardEl);
+        }
+      } catch (err: any) {
+        if (active) {
+          setPaymentError(err.message || "Failed to load Stripe.");
+        }
+      }
+    }
+
+    const timer = setTimeout(() => {
+      initStripe();
+    }, 150);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [setStripe, setCard, setPaymentMethodId, setPaymentError]);
+
+  return (
+    <div className="space-y-6 animate-soft-enter">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center space-y-4">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+          <IconCoins className="h-6 w-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold text-white">
+            {plan === "yearly" ? "Greekstack Annual Plan" : "Free First Month"}
+          </h3>
+          <p className="text-sm text-slate-300">
+            {plan === "yearly"
+              ? "Billed as $800/year (all rush fees included)"
+              : "then $50 a month + $200 a rush cycle"}
+          </p>
+          {promoApplied && (
+            <p className="text-xs text-emerald-400 font-semibold mt-1">
+              Promo code {appliedCode} applied!
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          Card Details
+        </Label>
+        <div className="rounded-xl border border-white/10 bg-slate-900/60 p-4 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+          <div ref={containerRef} id="card-element" className="w-full min-h-[20px]" />
+        </div>
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          Your card will not be charged today (first month is 100% free). You can cancel at any time from your admin panel.
+        </p>
+      </div>
+
+      {paymentError && (
+        <p className="text-xs font-semibold text-rose-400 animate-shake-x">
+          {paymentError}
+        </p>
+      )}
+
+      {paymentMethodId && (
+        <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Card verified successfully! Ready to launch.
+        </p>
+      )}
     </div>
   );
 }

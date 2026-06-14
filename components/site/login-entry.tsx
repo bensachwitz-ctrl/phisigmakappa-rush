@@ -666,7 +666,7 @@ function NewChapterCta() {
             New chapter? Launch your own site.
           </p>
           <p className="text-xs text-muted-foreground">
-            Your branded chapter platform, live the same day — first month free.
+            Your branded chapter platform, live the same day — free to start.
           </p>
         </div>
       </div>

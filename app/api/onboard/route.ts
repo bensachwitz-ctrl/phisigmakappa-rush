@@ -10,6 +10,9 @@ import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { sendSalesEmail } from "@/lib/sales-contact";
 import fs from "fs";
 import path from "path";
+import Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
+import { platformSubscriptionDescription } from "@/lib/platform-billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,6 +77,7 @@ export async function POST(req: Request) {
     heroHeadline, heroTagline,
     // Lifted promo/discount code from the wizard.
     promoCode: rawPromoCode,
+    paymentMethodId,
   } = body;
 
   const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -328,6 +332,7 @@ export async function POST(req: Request) {
       // field, then the historical default. (The authoritative platform-billing
       // state lives on the central Tenant row written below.)
       "billing.plan": (billingPlan || normalizedPlan || "dues_split").trim(),
+      "dues.enabled": normalizedPlan === "dues_percentage" ? "true" : "false",
       // Record any successfully applied promo/discount code used at signup.
       "billing.promoCode": isPromoValid ? promoCode : "",
       // 2-week payment deadline (ISO). Set-up-payment-by date from launch; after
@@ -376,33 +381,106 @@ export async function POST(req: Request) {
       },
     });
 
-    // 5. Only now — with the tenant fully built — write the central registry
-    //    row, so a registry entry always implies a complete, usable tenant.
-    //    ADDITIVE platform-billing: start a 14-day free trial of the "chapter"
-    //    plan. These columns track the chapter's subscription TO Greekstack
-    //    (distinct from the Stripe CONNECT account it later uses to collect dues
-    //    from its own members). The soft-gate (lib/entitlement.ts) fails open, so
-    //    even if these are absent the chapter still serves — they exist so the
-    //    admin sees an accurate trial countdown + billing banner from day one.
-    //    `isActive: true` is preserved exactly: the operator flag stays the only
-    //    hard on/off switch.
+    // 5. Stripe Customer & Subscription setup (if required by plan & Stripe is configured)
     const TRIAL_DAYS = 14;
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    let stripeCustomerId: string | null = null;
+    let stripeSubscriptionId: string | null = null;
+    let finalSubscriptionStatus: string = subscriptionStatus;
+    let finalTrialEndsAt: Date | null = normalizedPlan === "custom" ? null : trialEndsAt;
+
+    const stripe = getStripe();
+    const requiresPayment = stripe && (normalizedPlan === "monthly" || normalizedPlan === "yearly");
+
+    if (requiresPayment) {
+      if (!paymentMethodId) {
+        return NextResponse.json(
+          { ok: false, error: "Payment method registration is required to launch on this plan." },
+          { status: 400 }
+        );
+      }
+      try {
+        // 1. Create a Customer
+        const customer = await stripe.customers.create({
+          email: adminEmail.trim().toLowerCase(),
+          name: `${adminName.trim()} (${fraternityName.trim()})`,
+          metadata: { subdomain },
+        });
+        stripeCustomerId = customer.id;
+
+        // 2. Attach payment method
+        await stripe.paymentMethods.attach(paymentMethodId, {
+          customer: stripeCustomerId,
+        });
+
+        // 3. Set default payment method
+        await stripe.customers.update(stripeCustomerId, {
+          invoice_settings: {
+            default_payment_method: paymentMethodId,
+          },
+        });
+
+        // 4. Resolve the Price ID
+        const priceId = await getOrCreateStripePrice(stripe, normalizedPlan);
+
+        // 5. Create Subscription
+        const subParams: Stripe.SubscriptionCreateParams = {
+          customer: stripeCustomerId,
+          items: [{ price: priceId }],
+          metadata: { subdomain, plan: normalizedPlan },
+          description: platformSubscriptionDescription(normalizedPlan, fraternityName.trim()),
+          payment_settings: {
+            save_default_payment_method: "on_subscription",
+          },
+        };
+
+        if (normalizedPlan === "monthly") {
+          subParams.trial_period_days = 30; // first month free
+        }
+
+        const subscription = await stripe.subscriptions.create(subParams);
+        stripeSubscriptionId = subscription.id;
+        finalSubscriptionStatus = narrowStatus(subscription.status);
+        finalTrialEndsAt = trialEndDate(subscription);
+
+        // 6. Create secondary rush subscription if monthly
+        if (normalizedPlan === "monthly") {
+          try {
+            const rushPriceId = await getOrCreateStripePrice(stripe, "rush");
+            await stripe.subscriptions.create({
+              customer: stripeCustomerId,
+              items: [{ price: rushPriceId }],
+              metadata: { subdomain, kind: "rush_cycle" },
+              description: `Greek Stack rush cycle (each semester) — ${fraternityName.trim()}`,
+              trial_period_days: 30, // first month free
+              payment_settings: {
+                save_default_payment_method: "on_subscription",
+              },
+            });
+          } catch (rushErr: any) {
+            errorSink(rushErr, { route: ROUTE, tenant: subdomain, outcome: "rush_subscription_failed" });
+          }
+        }
+      } catch (stripeErr: any) {
+        logger.error("Stripe subscription setup failed", stripeErr);
+        return NextResponse.json(
+          { ok: false, error: `Stripe setup failed: ${stripeErr.message || "Please check card details and try again."}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Write the central registry row
     await centralDb.tenant.create({
       data: {
         subdomain,
         name: fraternityName.trim(),
         school: (schoolName || "").trim(),
         isActive: true,
-        // Persist the chosen pricing method as the canonical platform-billing
-        // state. Base (monthly|semester) starts a "trialing" subscription with a
-        // real trial window; Dues-share is "active" from day one (the chapter
-        // pays via a % of dues, so the soft-gate must treat it as good standing,
-        // never surfacing the trial/dunning banner). trialEndsAt is still stamped
-        // for Base so the admin sees an accurate countdown; it's inert for the
-        // active dues-share status.
-        subscriptionStatus,
-        trialEndsAt,
+        stripeCustomerId,
+        stripeSubscriptionId,
+        subscriptionStatus: finalSubscriptionStatus,
+        trialEndsAt: finalTrialEndsAt,
         plan: normalizedPlan,
       },
     });
@@ -529,7 +607,7 @@ export async function POST(req: Request) {
       }).catch((e) =>
         errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "welcome_email_failed" }),
       );
-    } catch (e) {
+    } catch (e: any) {
       // Swallow — provisioning already succeeded; the welcome email is a nicety.
       errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "welcome_email_failed" });
     }
@@ -576,7 +654,7 @@ export async function POST(req: Request) {
       }).catch((e) =>
         errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "owner_notify_failed" }),
       );
-    } catch (e) {
+    } catch (e: any) {
       // Swallow — provisioning already succeeded; the owner notice is best-effort.
       errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "owner_notify_failed" });
     }
@@ -607,4 +685,95 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+
+async function getOrCreateStripePrice(stripe: Stripe, plan: "monthly" | "yearly" | "rush"): Promise<string> {
+  // 1. Check env vars first
+  if (plan === "monthly" && process.env.STRIPE_PLATFORM_PRICE_ID) {
+    return process.env.STRIPE_PLATFORM_PRICE_ID;
+  }
+  if (plan === "yearly" && process.env.STRIPE_PLATFORM_YEARLY_PRICE_ID) {
+    return process.env.STRIPE_PLATFORM_YEARLY_PRICE_ID;
+  }
+  if (plan === "rush" && process.env.STRIPE_PLATFORM_RUSH_PRICE_ID) {
+    return process.env.STRIPE_PLATFORM_RUSH_PRICE_ID;
+  }
+
+  // 2. Fallback: Search for an existing price in Stripe by lookup_key
+  const lookupKey = `greekstack_${plan}`;
+  try {
+    const prices = await stripe.prices.list({
+      lookup_keys: [lookupKey],
+      active: true,
+    });
+    if (prices.data.length > 0) {
+      return prices.data[0].id;
+    }
+  } catch (e: any) {
+    logger.error("Failed to list prices in Stripe during onboard", e);
+  }
+
+  // 3. Fallback: Create Product and Price on the fly
+  const name = plan === "monthly"
+    ? "Greekstack Chapter — Monthly"
+    : plan === "yearly"
+      ? "Greekstack Chapter — Yearly"
+      : "Greekstack — Rush Cycle";
+
+  const description = plan === "monthly"
+    ? "Greekstack platform subscription — monthly"
+    : plan === "yearly"
+      ? "Greekstack platform subscription — yearly"
+      : "Greekstack rush cycle fee — semester";
+
+  const amount = plan === "monthly"
+    ? 5000 // $50/mo
+    : plan === "yearly"
+      ? 80000 // $800/yr
+      : 20000; // $200/semester
+
+  const interval = plan === "yearly" ? "year" : "month";
+  const interval_count = plan === "rush" ? 6 : 1;
+
+  const product = await stripe.products.create({
+    name,
+    description,
+    metadata: { plan },
+  });
+
+  const price = await stripe.prices.create({
+    product: product.id,
+    unit_amount: amount,
+    currency: "usd",
+    recurring: {
+      interval,
+      interval_count,
+    },
+    lookup_key: lookupKey,
+  });
+
+  return price.id;
+}
+
+function narrowStatus(s: string | null | undefined): string {
+  switch (s) {
+    case "trialing":
+    case "active":
+    case "past_due":
+    case "canceled":
+      return s;
+    case "unpaid":
+      return "past_due";
+    case "incomplete":
+    case "incomplete_expired":
+    case "paused":
+    default:
+      return "canceled";
+  }
+}
+
+function trialEndDate(sub: Stripe.Subscription): Date | null {
+  const t = sub.trial_end;
+  if (!t || typeof t !== "number") return null;
+  return new Date(t * 1000);
 }
