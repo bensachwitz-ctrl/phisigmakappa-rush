@@ -122,9 +122,24 @@ export async function GET(req: Request) {
           ],
         },
       });
-      invitePruned = result.count;
+      invitePruned += result.count;
     } catch (err: any) {
       errors.push(`brotherInvite: ${err?.message || "failed"}`);
+    }
+
+    try {
+      const result = await db.alumniInvite.deleteMany({
+        where: {
+          createdAt: { lt: inviteCutoff },
+          OR: [
+            { status: { in: ["COMPLETED", "EXPIRED", "REVOKED"] } },
+            { expiresAt: { lt: nowDate } },
+          ],
+        },
+      });
+      invitePruned += result.count;
+    } catch (err: any) {
+      errors.push(`alumniInvite: ${err?.message || "failed"}`);
     }
 
     return { rushLogPruned, auditPruned, invitePruned, errors };

@@ -326,7 +326,7 @@ export const DEMO_CALLOUTS: Record<
   },
 };
 
-export function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
+export function getMockDemoData(tenant: Tenant, brand: FraternityBrand, persona: string = "member") {
   // Persona pledge class follows the CHOSEN org (ΦΣΚ → "Phi Class") so the
   // welcome card always reads as the selected chapter, never another org.
   const personaPledgeClass = pledgeClassFromBrand(brand);
@@ -344,7 +344,7 @@ export function getMockDemoData(tenant: Tenant, brand: FraternityBrand) {
       phone: "803-555-0144",
       year: "Senior",
       major: "Computer Science",
-      position: "President",
+      position: persona === "alumni" ? "Alumnus" : "President",
       pledgeClass: personaPledgeClass,
       hometown: "Charleston, SC",
       gradYear: "2026",

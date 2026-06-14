@@ -24,6 +24,7 @@ describe("getEntitlement", () => {
     vi.spyOn(centralDb.tenant, "findUnique").mockResolvedValue({
       id: "t1",
       subdomain: "test",
+      domain: null,
       name: "Test",
       school: "Test School",
       isActive: false,
@@ -47,6 +48,7 @@ describe("getEntitlement", () => {
     vi.spyOn(centralDb.tenant, "findUnique").mockResolvedValue({
       id: "t1",
       subdomain: "test",
+      domain: null,
       name: "Test",
       school: "Test School",
       isActive: false,
@@ -72,6 +74,7 @@ describe("getEntitlement", () => {
     vi.spyOn(centralDb.tenant, "findUnique").mockResolvedValue({
       id: "t1",
       subdomain: "test",
+      domain: null,
       name: "Test",
       school: "Test School",
       isActive: true,
@@ -94,6 +97,7 @@ describe("getEntitlement", () => {
     vi.spyOn(centralDb.tenant, "findUnique").mockResolvedValue({
       id: "t1",
       subdomain: "test",
+      domain: null,
       name: "Test",
       school: "Test School",
       isActive: true,

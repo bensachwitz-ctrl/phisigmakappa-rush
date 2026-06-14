@@ -56,6 +56,17 @@ export default async function RusheeDetailPage({
     bidTokenExpiresAt: rush.bidTokenExpiresAt ? rush.bidTokenExpiresAt.toISOString() : null,
     bidRespondedAt: rush.bidRespondedAt ? rush.bidRespondedAt.toISOString() : null,
     bidResponseChoice: rush.bidResponseChoice,
+    bidWaiverUrl: (() => {
+      if (rush.enrichmentData) {
+        try {
+          const parsed = JSON.parse(rush.enrichmentData);
+          return parsed.bidWaiverUrl || null;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    })(),
     votes: rush.votes.map((v: any) => ({
       id: v.id,
       value: v.value,

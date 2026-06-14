@@ -1515,6 +1515,31 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
   const monthlySelected = plan === "monthly" || plan === "semester" || plan === "dues_percentage";
   const yearlySelected = plan === "yearly";
 
+  const [promoCode, setPromoCode] = React.useState("");
+  const [promoApplied, setPromoApplied] = React.useState(false);
+  const [promoError, setPromoError] = React.useState("");
+  const [appliedCode, setAppliedCode] = React.useState("");
+
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+    if (["GREEKFREE", "WELCOME100", "SILICON"].includes(code)) {
+      setPromoApplied(true);
+      setAppliedCode(code);
+      setPromoError("");
+      try {
+        window.GreekStackNative?.hapticNotify?.("success");
+      } catch {}
+    } else {
+      setPromoError("Invalid promo code. Please try again.");
+      setPromoApplied(false);
+      setAppliedCode("");
+      try {
+        window.GreekStackNative?.hapticNotify?.("error");
+      } catch {}
+    }
+  };
+
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-slate-300">
@@ -1544,7 +1569,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
               <span className="text-sm font-semibold text-slate-400"> + $200 / rush cycle</span>
             </>
           }
-          highlight="First month free"
+          highlight={promoApplied ? "Applied: 3 months free!" : "First month free"}
           features={[
             "Everything included — recruitment, dues, events, roster, compliance",
             "$50/month after your free first month — cancel anytime, no contract",
@@ -1566,7 +1591,7 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
               <span className="text-sm font-semibold text-slate-400">/year</span>
             </>
           }
-          highlight="Includes all rush fees"
+          highlight={promoApplied ? "Applied: $150 off first year!" : "Includes all rush fees"}
           features={[
             "Everything in Monthly — every feature, no limits",
             "All rush-cycle fees included — no $200 per cycle",
@@ -1574,6 +1599,43 @@ function PricingStep({ plan, onChange }: { plan: PlanId; onChange: (p: PlanId) =
             "Stripe processing at cost (no platform markup)",
           ]}
         />
+      </div>
+
+      {/* ── Promo Code Section ── */}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+          Have a promo or discount code?
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter code (e.g. WELCOME100)"
+            value={promoCode}
+            onChange={(e) => {
+              setPromoCode(e.target.value);
+              if (promoError) setPromoError("");
+            }}
+            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+          />
+          <button
+            type="button"
+            onClick={handleApplyPromo}
+            className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl transition press"
+          >
+            Apply
+          </button>
+        </div>
+        {promoApplied && (
+          <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Promo code <strong>{appliedCode}</strong> applied successfully! Discount will be reflected on your first invoice.
+          </p>
+        )}
+        {promoError && (
+          <p className="text-xs font-semibold text-red-400 animate-shake-x">
+            {promoError}
+          </p>
+        )}
       </div>
 
       {/* ── Custom (link out → talk to Ben) ───────────────────────────────── */}

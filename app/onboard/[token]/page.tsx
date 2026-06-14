@@ -4,6 +4,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,14 @@ async function fetchInvite(token: string, base: string) {
 }
 
 export default async function OnboardPage({ params }: { params: { token: string } }) {
-  const base = process.env.SITE_URL || "";
+  let base = "";
+  try {
+    const host = headers().get("host") || "";
+    const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+    base = `${protocol}://${host}`;
+  } catch {
+    base = process.env.SITE_URL || "";
+  }
   const data = base ? await fetchInvite(params.token, base) : null;
   // Chapter identity for the white-label heading/copy — falls back to the
   // reference values, so a fresh deploy renders correctly before /admin/setup.

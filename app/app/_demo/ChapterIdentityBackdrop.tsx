@@ -63,59 +63,42 @@ export function SchoolCrestLogo({
       <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" fill="none">
         {defs}
         {/* Outer Ring */}
-        <circle cx="50" cy="50" r="46" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.7)" />
+        <circle cx="50" cy="50" r="46" stroke="url(#goldGrad)" strokeWidth="2.5" fill="rgba(11,15,25,0.9)" />
+        {/* Inner red dashed ring */}
         <circle cx="50" cy="50" r="41" stroke={primary} strokeWidth="1.5" strokeDasharray="3 2" />
         
-        {/* Columns & Gates */}
-        <g stroke="url(#goldGrad)" strokeWidth="1.5" strokeLinecap="round" fill="none">
-          {/* Left Column */}
-          <path d="M 24 76 L 24 35" strokeWidth="2.5" />
-          <path d="M 21 76 L 27 76" strokeWidth="3.2" /> {/* Column Base */}
-          <path d="M 22 35 L 26 35" strokeWidth="2.5" /> {/* Column Capital */}
-          
-          {/* Right Column */}
-          <path d="M 76 76 L 76 35" strokeWidth="2.5" />
-          <path d="M 73 76 L 79 76" strokeWidth="3.2" />
-          <path d="M 74 35 L 78 35" strokeWidth="2.5" />
-
-          {/* Fences/Rails */}
-          <path d="M 24 72 H 76" strokeWidth="1.5" />
-          <path d="M 24 58 H 76" strokeWidth="1.2" />
-          <path d="M 24 46 H 76" strokeWidth="1.2" />
-
-          {/* Vertical fence spikes */}
-          {[29, 34, 39, 44, 56, 61, 66, 71].map(x => (
-            <path key={x} d={`M ${x} 72 V 42`} strokeWidth="0.8" />
-          ))}
-          {/* Little spearheads for the spikes */}
-          {[29, 34, 39, 44, 56, 61, 66, 71].map(x => (
-            <path key={`head-${x}`} d={`M ${x-1.2} 42 L ${x} 39.5 L ${x+1.2} 42 Z`} fill="url(#goldGrad)" stroke="none" />
-          ))}
-        </g>
-
         {/* Palmetto Tree */}
         <g fill="url(#goldGrad)">
           {/* Trunk */}
-          <path d="M 48.5 76 L 49.5 48 Q 50 45 50.5 48 L 51.5 76 Z" />
+          <path d="M 48.5 76 L 49.5 44 Q 50 41 50.5 44 L 51.5 76 Z" />
           {/* Horizontal ridges on trunk */}
           <path d="M 49 70 H 51 M 49.2 64 H 50.8 M 49.4 58 H 50.6 M 49.6 52 H 50.4" stroke="rgba(11,15,25,0.4)" strokeWidth="0.8" />
           
           {/* Palmetto Crown / Fronds */}
           {/* Upper/central leaves */}
-          <path d="M 50 46 C 49 33, 44 26, 44 24 C 47 28, 49.5 37, 50 46 Z" />
-          <path d="M 50 46 C 51 33, 56 26, 56 24 C 53 28, 50.5 37, 50 46 Z" />
-          <path d="M 50 46 C 47 34, 36 29, 34 27 C 39 31, 46 39, 50 46 Z" />
-          <path d="M 50 46 C 53 34, 64 29, 66 27 C 61 31, 54 39, 50 46 Z" />
+          <path d="M 50 42 C 49 29, 44 22, 44 20 C 47 24, 49.5 33, 50 42 Z" />
+          <path d="M 50 42 C 51 29, 56 22, 56 20 C 53 24, 50.5 33, 50 42 Z" />
+          <path d="M 50 42 C 47 30, 36 25, 34 23 C 39 27, 46 35, 50 42 Z" />
+          <path d="M 50 42 C 53 30, 64 25, 66 23 C 61 27, 54 35, 50 42 Z" />
           
           {/* Middle/side leaves */}
-          <path d="M 50 46 C 44 38, 30 36, 27 36 C 34 39, 43 43, 50 46 Z" />
-          <path d="M 50 46 C 56 38, 70 36, 73 36 C 66 39, 57 43, 50 46 Z" />
+          <path d="M 50 42 C 44 34, 30 32, 27 32 C 34 35, 43 39, 50 42 Z" />
+          <path d="M 50 42 C 56 34, 70 32, 73 32 C 66 35, 57 39, 50 42 Z" />
           
           {/* Lower leaves */}
-          <path d="M 50 46 C 42 42, 28 48, 25 50 C 32 49, 42 47, 50 46 Z" />
-          <path d="M 50 46 C 58 42, 72 48, 75 50 C 68 49, 58 47, 50 46 Z" />
-          <path d="M 50 46 C 43 48, 31 58, 29 62 C 34 57, 43 51, 50 46 Z" />
-          <path d="M 50 46 C 57 48, 69 58, 71 62 C 66 57, 57 51, 50 46 Z" />
+          <path d="M 50 42 C 42 38, 28 44, 25 46 C 32 45, 42 43, 50 42 Z" />
+          <path d="M 50 42 C 58 38, 72 44, 75 46 C 68 45, 58 43, 50 42 Z" />
+          <path d="M 50 42 C 43 44, 31 54, 29 58 C 34 53, 43 47, 50 42 Z" />
+          <path d="M 50 42 C 57 44, 69 54, 71 58 C 66 53, 57 47, 50 42 Z" />
+
+          {/* Little gold triangles/stars/marks around the tree branch bases */}
+          <path d="M 39 44 L 41 42 L 42 45 Z" />
+          <path d="M 61 44 L 59 42 L 58 45 Z" />
+          <path d="M 37 52 L 39 50 L 40 53 Z" />
+          <path d="M 63 52 L 61 50 L 60 53 Z" />
+
+          {/* Crescent Moon under the tree trunk */}
+          <path d="M 40 68 C 40 74, 60 74, 60 68 C 57 71, 43 71, 40 68 Z" />
         </g>
 
         {/* 1801 Ribbon Banner at the bottom */}

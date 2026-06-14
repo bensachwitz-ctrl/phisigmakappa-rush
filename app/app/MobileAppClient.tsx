@@ -62,6 +62,7 @@ import {
   darkenHex,
   makeCustomBrand,
   normalizeLetters,
+  isOfficerPosition,
   type Tenant,
   type MobileAppClientProps,
   type FraternityBrand,
@@ -448,7 +449,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       setUser(demoUser);
       setRole("brother");
       setIsDemo(true);
-      setDashboardData(getMockDemoData(demoTenant, brand));
+      setDashboardData(getMockDemoData(demoTenant, brand, viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member"));
       // ?pick=1 — the landing page's "see YOUR chapter" deep link: open the
       // chapter chooser overlay immediately over the running demo, so the very
       // first thing the visitor does is make the app theirs (one action from
@@ -483,6 +484,37 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     }
     setLoading(false);
   }, []);
+
+  // Load saved demo data from localStorage on initialization
+  useEffect(() => {
+    if (isDemo && selectedTenant) {
+      const savedBallots = localStorage.getItem(`gs_demo_ballots_${selectedTenant.id}`);
+      if (savedBallots) {
+        try {
+          setMyBallot(JSON.parse(savedBallots));
+        } catch {}
+      }
+      const savedDbData = localStorage.getItem(`gs_demo_dashboard_${selectedTenant.id}`);
+      if (savedDbData) {
+        try {
+          setDashboardData(JSON.parse(savedDbData));
+        } catch {}
+      }
+    }
+  }, [isDemo, selectedTenant]);
+
+  // Persist demo state changes
+  useEffect(() => {
+    if (isDemo && selectedTenant && Object.keys(myBallot).length > 0) {
+      localStorage.setItem(`gs_demo_ballots_${selectedTenant.id}`, JSON.stringify(myBallot));
+    }
+  }, [myBallot, isDemo, selectedTenant]);
+
+  useEffect(() => {
+    if (isDemo && selectedTenant && dashboardData) {
+      localStorage.setItem(`gs_demo_dashboard_${selectedTenant.id}`, JSON.stringify(dashboardData));
+    }
+  }, [dashboardData, isDemo, selectedTenant]);
 
   // Fetch real portal data when authenticated in non-demo mode
   useEffect(() => {
@@ -558,7 +590,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         setToken("demo-token-12345");
         setUser(demoUser);
         setRole("brother");
-        setDashboardData(getMockDemoData(t, brand));
+        setDashboardData(getMockDemoData(t, brand, viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member"));
         
         localStorage.setItem("gs_mobile_token", "demo-token-12345");
         localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
@@ -606,7 +638,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     setUser(demoUser);
     setRole("brother");
     setIsDemo(true);
-    setDashboardData(getMockDemoData(tenant, brand));
+    setDashboardData(getMockDemoData(tenant, brand, viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member"));
     setLoading(false);
     setActiveTab("feed");
     setShowChapterChooser(false);
@@ -667,7 +699,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         };
         setToken("demo-token-12345");
         setUser(demoUser);
-        setDashboardData(getMockDemoData(selectedTenant, selectedBrand));
+        setDashboardData(getMockDemoData(selectedTenant, selectedBrand, role === "alumni" ? "alumni" : viewRole === "exec" ? "exec" : "member"));
         
         localStorage.setItem("gs_mobile_token", "demo-token-12345");
         localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
@@ -1399,6 +1431,20 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       setRole("brother");
       setViewRole("member");
     }
+
+    if (dashboardData?.profile) {
+      setDashboardData((prev: any) => {
+        if (!prev || !prev.profile) return prev;
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            position: p === "alumni" ? "Alumnus" : "President"
+          }
+        };
+      });
+    }
+
     setActiveTab("feed");
     setShowViewMenu(false);
   };
@@ -1908,15 +1954,28 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                     </span>
                   )}
                   <button
-                    onClick={() => setActiveTab("settings")}
-                    aria-label="Account settings"
+                    onClick={() => {
+                      if (isOfficerPosition(dashboardData?.profile?.position)) {
+                        const nextRole = viewRole === "exec" ? "member" : "exec";
+                        setViewRole(nextRole);
+                        setActiveTab("feed");
+                        showToast(`Switched to ${nextRole === "exec" ? "Officer / Exec" : "Active Member"} view`, "success");
+                      } else {
+                        setActiveTab("settings");
+                      }
+                    }}
+                    aria-label={isOfficerPosition(dashboardData?.profile?.position) ? "Toggle Exec/Member dashboard view" : "Account settings"}
                     className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
                     {/* Static "online" dot — the ping ripple was a persistent
                         attention-grabber in the chrome (owner: demo moves too much). */}
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                      {viewRole === "exec" ? "Exec" : role === "brother" ? "Member" : "Alumnus"}
+                      {viewRole === "exec" 
+                        ? "Exec" 
+                        : role === "brother" 
+                        ? (isOfficerPosition(dashboardData?.profile?.position) ? dashboardData.profile.position : "Member") 
+                        : "Alumnus"}
                     </span>
                   </button>
                 </div>

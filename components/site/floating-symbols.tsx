@@ -68,7 +68,8 @@ export function FloatingSymbols({
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes float-up {
           0% {
-            transform: translate3d(0, 105vh, 0) rotate(0deg);
+            top: 105%;
+            transform: translate3d(0, 0, 0) rotate(0deg);
             opacity: 0;
           }
           10% {
@@ -78,16 +79,16 @@ export function FloatingSymbols({
             opacity: 0.12;
           }
           100% {
-            transform: translate3d(var(--drift), -10vh, 0) rotate(var(--rotate));
+            top: -10%;
+            transform: translate3d(var(--drift), 0, 0) rotate(var(--rotate));
             opacity: 0;
           }
         }
         .floating-item {
           position: absolute;
-          bottom: 0;
           animation: float-up var(--duration) linear infinite;
           animation-delay: var(--delay);
-          will-change: transform, opacity;
+          will-change: top, transform, opacity;
           opacity: 0;
           color: var(--brand-primary, #C8102E);
         }

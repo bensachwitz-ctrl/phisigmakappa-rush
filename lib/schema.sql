@@ -1,4 +1,4 @@
-﻿-- CreateTable
+-- CreateTable
 CREATE TABLE "Rush" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -226,6 +226,7 @@ CREATE TABLE "Announcement" (
     "failureReason" TEXT,
     "channels" TEXT NOT NULL DEFAULT 'inapp',
     "totalRecipients" INTEGER,
+    "pollId" TEXT,
 
     CONSTRAINT "Announcement_pkey" PRIMARY KEY ("id")
 );
@@ -1042,6 +1043,10 @@ ALTER TABLE "AlumniVouch" ADD CONSTRAINT "AlumniVouch_alumniId_fkey" FOREIGN KEY
 -- new columns without error and never duplicates them).
 ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "hometown" TEXT;
 ALTER TABLE "Brother" ADD COLUMN IF NOT EXISTS "gradYear" TEXT;
+ALTER TABLE "Announcement" ADD COLUMN IF NOT EXISTS "pollId" TEXT;
+
+-- AddForeignKey
+ALTER TABLE "Announcement" ADD CONSTRAINT "Announcement_pollId_fkey" FOREIGN KEY ("pollId") REFERENCES "Poll"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- ── Officer Elections (secret ballot → seat winners into OfficerAssignment) ──
 -- CreateTable

@@ -123,7 +123,17 @@ export async function PATCH(
 
   const before = await prisma.rush.findUnique({
     where: { id: params.id },
-    select: { name: true, status: true, notes: true, major: true, year: true, hometown: true },
+    select: { 
+      name: true, 
+      status: true, 
+      notes: true, 
+      major: true, 
+      year: true, 
+      hometown: true,
+      email: true,
+      phone: true,
+      enrichmentData: true
+    },
   });
   if (!before) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
@@ -155,6 +165,33 @@ export async function PATCH(
             },
           });
           createdBrotherId = b.id;
+
+          // Copy bid waiver info and create a Document record (Compliance Audit Trail)
+          if (updated.enrichmentData) {
+            try {
+              const enrichment = JSON.parse(updated.enrichmentData);
+              const waiverUrl = enrichment.bidWaiverUrl;
+              const signatureName = enrichment.signatureName;
+              const signedAt = enrichment.signedAt;
+
+              if (waiverUrl) {
+                await prisma.document.create({
+                  data: {
+                    name: `${updated.name} - Signed Bid & Anti-Hazing Waiver`,
+                    description: `Digitally signed by ${signatureName || updated.name} on ${signedAt ? new Date(signedAt).toLocaleDateString() : new Date().toLocaleDateString()}`,
+                    url: waiverUrl,
+                    blobUrl: waiverUrl,
+                    category: "POLICIES",
+                    visibility: "OFFICERS",
+                    fileName: `${updated.name.replace(/\s+/g, "_")}_bid_waiver.pdf`,
+                    uploadedById: b.id,
+                  },
+                });
+              }
+            } catch (jsonErr) {
+              console.error("[rushees/PATCH convert] JSON parse or document create failed:", jsonErr);
+            }
+          }
         }
       } catch (innerErr) {
         // Best-effort: log but don't fail the conversion. Rush.status is

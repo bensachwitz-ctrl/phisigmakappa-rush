@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
 import {
   ArrowLeft, Send, UserCheck, UserX, MessageSquarePlus, Loader2,
-  Calendar, Mail, Phone, MapPin, Copy, RefreshCw,
+  Calendar, Mail, Phone, MapPin, Copy, RefreshCw, FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -57,6 +57,7 @@ export type RusheeDetailData = {
   bidTokenExpiresAt: string | null;
   bidRespondedAt: string | null;
   bidResponseChoice: string | null;
+  bidWaiverUrl: string | null;
   votes: {
     id: string;
     value: number;
@@ -272,16 +273,28 @@ export function RusheeDetail({
                 </div>
               )}
               {rush.bidRespondedAt && (
-                <p className="text-xs">
-                  Response:{" "}
-                  <span className={cn(
-                    "font-medium",
-                    rush.bidResponseChoice === "ACCEPTED" ? "text-emerald-700" : "text-zinc-500"
-                  )}>
-                    {rush.bidResponseChoice === "ACCEPTED" ? "Accepted" : "Declined"}
-                  </span>
-                  {" "}{format(new Date(rush.bidRespondedAt), "MMM d, h:mm a")}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs">
+                    Response:{" "}
+                    <span className={cn(
+                      "font-medium",
+                      rush.bidResponseChoice === "ACCEPTED" ? "text-emerald-700" : "text-zinc-500"
+                    )}>
+                      {rush.bidResponseChoice === "ACCEPTED" ? "Accepted" : "Declined"}
+                    </span>
+                    {" "}{format(new Date(rush.bidRespondedAt), "MMM d, h:mm a")}
+                  </p>
+                  {rush.bidWaiverUrl && (
+                    <a
+                      href={rush.bidWaiverUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-950 underline mt-1"
+                    >
+                      <FileText className="h-3 w-3" /> View Signed Hazing Waiver &amp; Bid
+                    </a>
+                  )}
+                </div>
               )}
               <Button
                 variant="outline"

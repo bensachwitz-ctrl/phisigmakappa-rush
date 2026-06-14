@@ -1,6 +1,8 @@
 import React from "react";
 import { Search, ChevronRight, Clock, XCircle, Key, Car } from "lucide-react";
 import type { DemoContext } from "../context";
+import { isOfficerPosition } from "../mock-data";
+
 
 export function renderRushTab(ctx: DemoContext) {
   const {
@@ -60,7 +62,7 @@ export function renderRushTab(ctx: DemoContext) {
                             </div>
 
                             {/* End Rush Toggle for Officers */}
-                            {(dashboardData?.profile?.position === "President" || dashboardData?.profile?.name === "Alex Mercer") && (
+                            {(isOfficerPosition(dashboardData?.profile?.position)) && (
                               <button
                                 onClick={() => {
                                   setIsRushActive(false);
