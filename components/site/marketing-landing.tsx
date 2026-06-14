@@ -612,6 +612,10 @@ const HERO_PHRASES = [
   "Broadcast TCPA-compliant text alerts.",
   "Build alumni giving campaigns.",
   "Custom subdomains & white-label.",
+  "Check-in at events & track attendance.",
+  "Manage budgets & treasuries.",
+  "Coordinate Bid Day rosters.",
+  "Enforce chapter bylaws & compliance.",
 ];
 const HERO_SETTLE = "Run your whole chapter.";
 
@@ -1207,6 +1211,11 @@ function Hero() {
               { label: "Bespoke White-Label Domains", icon: "branding" },
               { label: "Brotherhood Bonds", icon: "brotherhood" },
               { label: "Bid Day Management", icon: "bid" },
+              { label: "Chapter Excellence", icon: "trophy" },
+              { label: "Bylaws & Governance", icon: "gavel" },
+              { label: "Officer Messaging", icon: "chat" },
+              { label: "National Member Directory", icon: "network" },
+              { label: "High-Security Data Vault", icon: "shield" },
             ].map((feat, idx) => (
               <span
                 key={idx}
