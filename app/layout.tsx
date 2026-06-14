@@ -9,6 +9,7 @@ import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-con
 import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
 import { isClerkConfigured } from "@/lib/clerk-config";
+import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
 // when the request has no subdomain (greekstack.vercel.app, localhost,
@@ -491,6 +492,7 @@ export default async function RootLayout({
         )}
       </head>
       <body>
+        <TelemetryBootstrap />
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>
