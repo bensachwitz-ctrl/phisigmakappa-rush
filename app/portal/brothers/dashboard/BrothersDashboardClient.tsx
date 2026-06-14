@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { avatarSrc } from "@/lib/image-url";
 import {
   Users,
@@ -34,8 +35,10 @@ import {
   HelpCircle,
   ChevronDown,
   Vote,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
+import { isNative } from "@/lib/native-bridge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -527,6 +530,25 @@ export default function BrothersDashboardClient({
   // under /portal/brothers stay as-is — only visible labels re-genders per org.
   const { greekLetters, terms } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
+
+  const [showPromoBanner, setShowPromoBanner] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isAppNative = isNative();
+      const dismissed = localStorage.getItem("gs.promo.dismissed") === "1";
+      if (!isAppNative && !dismissed) {
+        setShowPromoBanner(true);
+      }
+    }
+  }, []);
+
+  const dismissPromoBanner = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gs.promo.dismissed", "1");
+      setShowPromoBanner(false);
+    }
+  };
 
   // Local state management to enable instant interactive client feedback
   const [brother, setBrother] = useState<Brother>(initialBrother);
@@ -1037,6 +1059,49 @@ export default function BrothersDashboardClient({
             </div>
           </div>
         </header>
+
+        {showPromoBanner && (
+          <div className="bg-gradient-to-r from-maroon-950 via-maroon-900 to-maroon-950 text-cream-50 border-b border-maroon-800 shadow-inner relative overflow-hidden transition-all duration-300">
+            {/* Background absolute elements for aesthetic depth */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
+            <div className="absolute -left-12 -top-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4 z-10 relative">
+              <div className="flex items-start gap-3.5 text-left w-full md:w-auto">
+                <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20 shadow-md shrink-0 mt-0.5">
+                  <Smartphone className="w-5 h-5 animate-bounce" style={{ animationDuration: '3s' }} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm sm:text-base text-cream-100 flex items-center gap-1.5 leading-snug">
+                    Get the Greek Stack Companion iOS App
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider border border-amber-500/30">
+                      Recommended
+                    </span>
+                  </h4>
+                  <p className="text-xs text-cream-200/90 max-w-2xl mt-1 leading-normal">
+                    Get real-time push notifications for events and announcements, unlock instantly with Face ID / Touch ID, and enjoy full offline access to your chapter roster and calendar.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 w-full md:w-auto justify-end md:justify-start shrink-0">
+                <button
+                  onClick={dismissPromoBanner}
+                  className="px-3.5 py-2 text-xs font-semibold text-cream-300 hover:text-cream-50 hover:bg-white/5 rounded-xl transition duration-200"
+                >
+                  Dismiss
+                </button>
+                <Link
+                  href="/ios"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-maroon-950 text-xs font-bold rounded-xl shadow-[0_4px_14px_rgba(245,158,11,0.3)] transition duration-200 hover:-translate-y-px"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Install Guide
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Content Container */}
         <div className="max-w-6xl mx-auto px-4 py-6">
