@@ -8,27 +8,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
+// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
+// LUCIDE→BESPOKE TODO at the foot of this file). CheckCircle2 + ArrowRight were
+// migrated to the bespoke utility set (IconCheckCircle / IconArrowRight) below.
 import {
-  CheckCircle2, ChevronRight, ChevronLeft, Loader2, Building2, Palette, Mail, ShieldCheck, Rocket,
-  ArrowRight, AlertCircle, UserPlus, Database, Trash2, Wand2,
+  ChevronRight, ChevronLeft, Loader2, Building2, Rocket,
+  AlertCircle, UserPlus, Database, Trash2, Wand2,
   Upload, Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { imageSrc } from "@/lib/image-url";
 
-import { IconSpark } from "@/components/brand/icons";
+// Bespoke onboarding glyphs — the wizard step rail now fronts each step with a
+// made-for-Greekstack duotone icon (temple / palette / envelope+chat / shield /
+// rocket) instead of generic lucide, matching the bespoke step illustrations.
+// IconCheckCircle / IconArrowRight close the last raw-lucide affordances on the
+// step rail, launch card, and the dashboard FirstRunCard checklist.
+import {
+  IconSpark,
+  IconChapter,
+  IconBranding,
+  IconComms,
+  IconShieldCheck,
+  IconLaunch,
+  IconCheckCircle,
+  IconArrowRight,
+} from "@/components/brand/icons";
 type Cfg = Record<string, string>;
 
 const STEPS = [
-  { id: "identity", label: "Chapter identity", icon: Building2,
+  { id: "identity", label: "Chapter identity", icon: IconChapter,
     blurb: "Who and where — drives page titles, footer attribution, JSON-LD." },
-  { id: "brand", label: "Brand colors", icon: Palette,
+  { id: "brand", label: "Brand colors", icon: IconBranding,
     blurb: "Your organization's primary color — overrides the default brand color across your site." },
-  { id: "contact", label: "Contact", icon: Mail,
+  { id: "contact", label: "Contact", icon: IconComms,
     blurb: "Rush inbox, advisor of record, chapter house address." },
-  { id: "policy", label: "Anti-hazing", icon: ShieldCheck,
+  { id: "policy", label: "Anti-hazing", icon: IconShieldCheck,
     blurb: "Your organization's anti-hazing / risk-management hotline — visible on Privacy, Parents, and the about page." },
-  { id: "launch", label: "Launch", icon: Rocket,
+  { id: "launch", label: "Launch", icon: IconLaunch,
     blurb: "Review and go live." },
 ] as const;
 
@@ -106,7 +123,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                   done && !current && "bg-emerald-500 text-white",
                   !current && !done && "bg-secondary text-muted-foreground"
                 )}>
-                  {done && !current ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
+                  {done && !current ? <IconCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> : <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
                 </span>
                 <span className={cn(
                   "text-[11px] font-medium leading-tight",
@@ -261,7 +278,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
             <div className="space-y-4">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
                 <p className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> You're ready to go live.
+                  <IconCheckCircle className="h-4 w-4" aria-hidden="true" /> You're ready to go live.
                 </p>
                 <p className="mt-1.5 text-sm text-emerald-800 leading-relaxed">
                   Your chapter identity, brand colors, contact info, and anti-hazing policy are saved.
@@ -661,7 +678,7 @@ export function FirstRunCard({
               Send invite links so officers set their own login
             </p>
           </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" aria-hidden="true" />
+          <IconArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" aria-hidden="true" />
         </Link>
 
         {/* Load sample data — instant populated value for a new admin. */}
@@ -705,7 +722,7 @@ export function FirstRunCard({
           >
             {c.ok ? (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shrink-0 mt-px ring-1 ring-emerald-200">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                <IconCheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
             ) : (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700 shrink-0 mt-px ring-1 ring-amber-200">
@@ -723,7 +740,7 @@ export function FirstRunCard({
                 href={c.href}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-phisig-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
               >
-                Fix <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
+                Fix <IconArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
             )}
           </li>
@@ -738,7 +755,7 @@ export function FirstRunCard({
         >
           <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
           {brandSetupComplete ? "Review chapter setup wizard" : "Resume full setup wizard"}
-          <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          <IconArrowRight className="h-3 w-3" aria-hidden="true" />
         </Link>
         <button
           type="button"
@@ -757,3 +774,21 @@ export function FirstRunCard({
     </section>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LUCIDE → BESPOKE TODO (setup wizard + FirstRunCard)
+// ─────────────────────────────────────────────────────────────────────────────
+// The 5 step icons are bespoke, and the step-rail "done" check + every
+// directional arrow are now bespoke (IconCheckCircle / IconArrowRight). The
+// remaining raw lucide here have NO sensible bespoke equivalent yet and are left
+// as-is rather than force a weak match (each keeps identical size/aria):
+//   • ChevronLeft / ChevronRight — Back / Save & continue footer nav
+//   • Loader2                    — in-flight spinners (animate-spin)
+//   • Rocket                     — "Mark setup complete" / launch-my-chapter
+//   • Building2                  — "Advanced settings" card
+//   • AlertCircle                — incomplete-step warning chip
+//   • UserPlus                   — "Invite your e-board" accelerator
+//   • Database / Wand2 / Trash2  — sample-data load/clear actions
+//   • Upload / ImageIcon         — logo uploader affordances
+// Next pass: draw the bespoke counterparts (IconChevron*, IconSpinner, IconRocket,
+// IconUpload, …) in icon-base.tsx and swap these.

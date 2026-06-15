@@ -5,14 +5,22 @@ import { useRouter } from "next/navigation";
 import {
   Dialog, DialogContent, DialogTitle,
 } from "@/components/ui/dialog";
+// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
+// LUCIDE→BESPOKE TODO at the foot of this file). `ExternalLink` was migrated to
+// the bespoke `IconExternal` below.
 import {
-  HelpCircle, Vote, ScrollText, ExternalLink, Search,
-  ArrowRight, Command, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
-  HandHeart, BookMarked, FileDown, Banknote, Network, BookUser, CreditCard,
+  HelpCircle, Search, Command,
 } from "lucide-react";
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark,
+  // Bespoke replacements for the former raw-lucide command rows, so the ⌘K
+  // palette matches the always-on nav's made-for-Greek-life icon family.
+  IconDirectory, IconFamilyTree, IconMeetings, IconRiskDesk, IconAcademic,
+  IconChores, IconService, IconBallot, IconLibrary, IconAuditLog, IconExports,
+  IconPayouts, IconBilling, IconArrowRight,
+  // Bespoke "open off-site / new tab" glyph for the External command row.
+  IconExternal,
 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
@@ -45,32 +53,32 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "nav-rush", group: "Navigate", icon: IconDashboard, label: "Rush dashboard", href: "/admin", synonyms: ["pnms", "candidates", "decisions", "stats", "kpi"] },
       { id: "nav-rushees", group: "Navigate", icon: IconRecruitment, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], adminOnly: true },
       { id: "nav-brothers", group: "Navigate", icon: IconMembers, label: "Brothers", href: "/admin/brothers", synonyms: ["roster", "people", "members", "directory"] },
-      { id: "nav-directory", group: "Navigate", icon: BookUser, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
-      { id: "nav-family", group: "Navigate", icon: Network, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },
-      { id: "nav-meetings", group: "Navigate", icon: CalendarCheck, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
+      { id: "nav-directory", group: "Navigate", icon: IconDirectory, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
+      { id: "nav-family", group: "Navigate", icon: IconFamilyTree, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },
+      { id: "nav-meetings", group: "Navigate", icon: IconMeetings, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
       { id: "nav-calendar", group: "Navigate", icon: IconCalendarTool, label: "Calendar", href: "/admin/calendar", synonyms: ["schedule", "month", "agenda", "upcoming", "events", "meetings", "dates"] },
-      { id: "nav-risk", group: "Navigate", icon: ShieldAlert, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
-      { id: "nav-academic", group: "Navigate", icon: GraduationCap, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
-      { id: "nav-chores", group: "Navigate", icon: CheckSquare, label: "Chores / House", href: "/admin/chores", synonyms: ["tasks", "duties", "house", "cleaning", "checklist"] },
-      { id: "nav-service", group: "Navigate", icon: HandHeart, label: "Service hours", href: "/admin/service", synonyms: ["philanthropy", "volunteer", "community", "hours"] },
-      { id: "nav-polls", group: "Navigate", icon: Vote, label: "Polls", href: "/admin/polls", synonyms: ["vote", "decision"] },
+      { id: "nav-risk", group: "Navigate", icon: IconRiskDesk, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
+      { id: "nav-academic", group: "Navigate", icon: IconAcademic, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
+      { id: "nav-chores", group: "Navigate", icon: IconChores, label: "Chores / House", href: "/admin/chores", synonyms: ["tasks", "duties", "house", "cleaning", "checklist"] },
+      { id: "nav-service", group: "Navigate", icon: IconService, label: "Service hours", href: "/admin/service", synonyms: ["philanthropy", "volunteer", "community", "hours"] },
+      { id: "nav-polls", group: "Navigate", icon: IconBallot, label: "Polls", href: "/admin/polls", synonyms: ["vote", "decision"] },
       { id: "nav-events", group: "Navigate", icon: IconEvents, label: "Events", href: "/admin/events", synonyms: ["calendar", "schedule", "rsvp"], adminOnly: true },
       { id: "nav-news", group: "Navigate", icon: IconComms, label: "News / Announcements", href: "/admin/announcements", synonyms: ["broadcast", "post", "blast"], adminOnly: true },
       { id: "nav-officers", group: "Navigate", icon: IconSecurity, label: "Officers / RBAC", href: "/admin/officers", synonyms: ["roles", "permissions", "positions", "eboard", "executive", "rbac", "access"], adminOnly: true },
-      { id: "nav-library", group: "Navigate", icon: BookMarked, label: "Library / Documents", href: "/admin/library", synonyms: ["docs", "files", "bylaws", "resources", "documents"] },
-      { id: "nav-audit", group: "Navigate", icon: ScrollText, label: "Audit log", href: "/admin/audit", synonyms: ["history", "governance", "trail", "who changed"], adminOnly: true },
+      { id: "nav-library", group: "Navigate", icon: IconLibrary, label: "Library / Documents", href: "/admin/library", synonyms: ["docs", "files", "bylaws", "resources", "documents"] },
+      { id: "nav-audit", group: "Navigate", icon: IconAuditLog, label: "Audit log", href: "/admin/audit", synonyms: ["history", "governance", "trail", "who changed"], adminOnly: true },
       { id: "nav-settings", group: "Navigate", icon: IconAdmin, label: "Site content / settings", href: "/admin/settings", synonyms: ["config", "brand", "colors", "advisor"], adminOnly: true },
       // Actions / quick jumps
       { id: "act-setup", group: "Actions", icon: IconLaunch, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
-      { id: "act-dues-connect", group: "Actions", icon: Banknote, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
+      { id: "act-dues-connect", group: "Actions", icon: IconPayouts, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
       { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
-      { id: "act-billing", group: "Actions", icon: CreditCard, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
-      { id: "act-exports", group: "Actions", icon: FileDown, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
-      { id: "act-export-rushes", group: "Actions", icon: ScrollText, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
-      { id: "act-export-brothers", group: "Actions", icon: ScrollText, label: "Download Brothers CSV", href: "/api/admin/export/brothers", adminOnly: true },
-      { id: "act-digest", group: "Actions", icon: ScrollText, label: "Weekly digest (JSON)", href: "/api/admin/digest", adminOnly: true },
+      { id: "act-billing", group: "Actions", icon: IconBilling, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
+      { id: "act-exports", group: "Actions", icon: IconExports, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
+      { id: "act-export-rushes", group: "Actions", icon: IconExports, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
+      { id: "act-export-brothers", group: "Actions", icon: IconExports, label: "Download Brothers CSV", href: "/api/admin/export/brothers", adminOnly: true },
+      { id: "act-digest", group: "Actions", icon: IconAuditLog, label: "Weekly digest (JSON)", href: "/api/admin/digest", adminOnly: true },
       // External
-      { id: "ext-home", group: "External", icon: ExternalLink, label: "View public homepage", href: "/", synonyms: ["site", "live", "public"] },
+      { id: "ext-home", group: "External", icon: IconExternal, label: "View public homepage", href: "/", synonyms: ["site", "live", "public"] },
       { id: "ext-help", group: "Help", icon: HelpCircle, label: "Open admin handbook (Help)", href: "/admin/help", synonyms: ["docs", "how"] },
     ];
     return base.filter((c) => !c.adminOnly || isAdmin);
@@ -223,7 +231,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
                     >
                       <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-phisig-red" : "text-muted-foreground")} aria-hidden="true" />
                       <span className="flex-1 truncate">{c.label}</span>
-                      {isActive && <ArrowRight className="h-3.5 w-3.5 text-phisig-red shrink-0" aria-hidden="true" />}
+                      {isActive && <IconArrowRight className="h-3.5 w-3.5 text-phisig-red shrink-0" aria-hidden="true" />}
                     </button>
                   );
                 })}
@@ -262,3 +270,15 @@ export function CommandPaletteLauncher({ onOpen }: { onOpen: () => void }) {
     </button>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LUCIDE → BESPOKE TODO (⌘K palette)
+// ─────────────────────────────────────────────────────────────────────────────
+// Every navigate/action command ROW glyph + the External row are bespoke. The
+// remaining raw lucide here are palette CHROME with no bespoke equivalent yet
+// and are left as-is rather than force a weak match (size/aria unchanged):
+//   • Search     — the search-field leading glyph
+//   • Command    — the ⌘ hint in the input + footer + mobile launcher
+//   • HelpCircle — the Help command row + handbook entry
+// Next pass: draw IconSearch / IconCommand / IconHelp in the bespoke design
+// language (components/brand/icons/icon-base.tsx) and swap these three.

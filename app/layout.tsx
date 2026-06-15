@@ -10,6 +10,7 @@ import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
 import { isClerkConfigured } from "@/lib/clerk-config";
 import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
+import { ChatwootWidget } from "@/components/site/chatwoot-widget";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
 
 const ALL_FRAT_GLYPHS = [
@@ -544,6 +545,11 @@ export default async function RootLayout({
             </main>
           </ChapterIdentityProvider>
         </ToastProvider>
+        {/* OPTIONAL Chatwoot live-chat support — a free, self-hostable support
+            desk for recruits + members. INERT by default: renders nothing
+            unless CHATWOOT_BASE_URL + CHATWOOT_WEBSITE_TOKEN are configured.
+            The floating launcher is tinted to the chapter's brand color. */}
+        <ChatwootWidget launcherColor={brandPrimary} />
       </body>
     </html>
   );

@@ -22,9 +22,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 
-// greekstack-mark-alt.png is the stacked-"G" brand mark already composed on the
-// brand navy in app-icon form (rounded layers + the signature gold accent layer),
-// which reads far better at icon scale than the generic columns glyph.
+// greekstack-mark-alt.png is the canonical GreekStack brand mark — a navy Greek
+// temple/pediment with four columns on a warm rounded tile — already composed in
+// app-icon form. (It is byte-identical to greekstack-mark.png; the "-alt" name is
+// historical. Keep both regenerated from the SAME source so the favicon, the OG
+// card, and this native icon can never drift apart.)
 const MARK = path.join(root, "public", "brand", "greekstack-mark-alt.png");
 const ICONSET = path.join(
   root,

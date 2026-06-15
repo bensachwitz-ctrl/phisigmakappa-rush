@@ -15,7 +15,6 @@ import {
   Check,
   Search,
   Building,
-  User,
   LogOut,
   Mail,
   Phone,
@@ -65,6 +64,22 @@ import {
   IllustrationRoster,
   type IllustrationProps,
 } from "@/components/brand/illustrations";
+// Bespoke, on-brand tab-nav + quick-action glyphs (replace the generic lucide
+// set that previously fronted the member dashboard's primary navigation).
+import {
+  IconActivity,
+  IconEvents,
+  IconServiceHours,
+  IconDues,
+  IconMembers,
+  IconPolls,
+  IconProfile,
+  IconElections,
+  IconRecruitment,
+  IconSettings,
+  IconTreasury,
+  IconAddMember,
+} from "@/components/brand/icons";
 
 // Interfaces to ensure strict type safety matching the server page props
 interface Brother {
@@ -1109,16 +1124,16 @@ export default function BrothersDashboardClient({
           {/* R45 Navigation tabs row */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
-              { id: "overview", label: "Overview", icon: Activity },
-              { id: "events", label: "Events & RSVPs", icon: Calendar },
-              { id: "service", label: "Service Hours", icon: Award },
-              { id: "dues", label: "Chapter Dues", icon: DollarSign },
-              { id: "alumni", label: "Alumni Directory", icon: Users },
-              { id: "polls", label: "Chapter Polls", icon: FileText },
-              { id: "profile", label: "My Profile", icon: User },
+              { id: "overview", label: "Overview", icon: IconActivity },
+              { id: "events", label: "Events & RSVPs", icon: IconEvents },
+              { id: "service", label: "Service Hours", icon: IconServiceHours },
+              { id: "dues", label: "Chapter Dues", icon: IconDues },
+              { id: "alumni", label: "Alumni Directory", icon: IconMembers },
+              { id: "polls", label: "Chapter Polls", icon: IconPolls },
+              { id: "profile", label: "My Profile", icon: IconProfile },
               // Standalone pages (not tab-panels) route via router.push instead
               // of flipping the active tab.
-              { id: "elections", label: "Officer Elections", icon: Vote, href: "/portal/brothers/elections" },
+              { id: "elections", label: "Officer Elections", icon: IconElections, href: "/portal/brothers/elections" },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -1169,11 +1184,11 @@ export default function BrothersDashboardClient({
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     {[
-                      { label: "Manage Recruitment", icon: Users, path: "/admin/rush", desc: "Rush pipelines & bid responses" },
-                      { label: "Chore Wheel Rotate", icon: Settings, path: "/admin/chores", desc: "Rotate chore schedules & grades" },
-                      { label: "Treasury & Budgets", icon: DollarSign, path: "/admin/treasury", desc: "Track chapter accounts & cashflow" },
-                      { label: "Calendar & Events", icon: Calendar, path: "/admin/events", desc: "Add & schedule chapter events" },
-                      { label: "Roster Invites", icon: Plus, path: "/admin/brothers", desc: "Invite new members & updates" },
+                      { label: "Manage Recruitment", icon: IconRecruitment, path: "/admin/rush", desc: "Rush pipelines & bid responses" },
+                      { label: "Chore Wheel Rotate", icon: IconSettings, path: "/admin/chores", desc: "Rotate chore schedules & grades" },
+                      { label: "Treasury & Budgets", icon: IconTreasury, path: "/admin/treasury", desc: "Track chapter accounts & cashflow" },
+                      { label: "Calendar & Events", icon: IconEvents, path: "/admin/events", desc: "Add & schedule chapter events" },
+                      { label: "Roster Invites", icon: IconAddMember, path: "/admin/brothers", desc: "Invite new members & updates" },
                     ].map((btn) => {
                       const BtnIcon = btn.icon;
                       return (

@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
-import { CheckCircle2, Loader2, Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
+import { IconCheckCircle } from "@/components/brand/icons";
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Grad"];
 const MAJORS = [
@@ -134,7 +135,7 @@ export function OnboardingForm({
       <Card className="border-emerald-200 bg-emerald-50/40">
         <CardContent className="p-8 text-center">
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 mb-4">
-            <CheckCircle2 className="h-6 w-6" />
+            <IconCheckCircle className="h-6 w-6" />
           </span>
           <h2 className="text-2xl font-semibold tracking-tight">You're in.</h2>
           <p className="mt-2 text-sm text-muted-foreground">

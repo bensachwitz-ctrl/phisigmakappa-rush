@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getTenantClient, centralDb } from "@/lib/prisma";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
+import { getEntitlement } from "@/lib/entitlement";
 
 export const dynamic = "force-dynamic";
 
@@ -275,6 +276,34 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     }).catch(() => []);
 
+    // 9. PLATFORM-BILLING ENTITLEMENT (advisory only — never hard-blocks).
+    //    Mirror the web admin's soft-gate so the mobile dashboard can show the
+    //    SAME advisory billing banner ("Trial ends in N days", "Payment past
+    //    due", …). getEntitlement is fail-open and never throws; we still wrap it
+    //    so a billing read can never break the member's data load. We surface the
+    //    machine-readable `reason` + status/daysLeft and NEVER the entitled=false
+    //    case as a block — the member always gets their chapter (preserve
+    //    fail-open). Only the operator's hard `isActive` switch takes a chapter
+    //    offline, and that is already enforced above (403 on !tenant.isActive).
+    let billing: {
+      reason: string;
+      status: string | null;
+      daysLeft: number | null;
+      plan: string | null;
+    } | null = null;
+    try {
+      const ent = await getEntitlement(subdomain);
+      billing = {
+        reason: ent.reason,
+        status: ent.status,
+        daysLeft: ent.daysLeft,
+        plan: ent.plan,
+      };
+    } catch {
+      // Defensive: a billing-read hiccup must not affect the dashboard payload.
+      billing = null;
+    }
+
     return NextResponse.json({
       ok: true,
       chapter: {
@@ -282,6 +311,9 @@ export async function GET(req: Request) {
         name: tenant.name || subdomain,
         schoolName: tenant.school || "",
       },
+      // Advisory platform-billing state for the member-facing banner. Always
+      // advisory — the dashboard NEVER hard-blocks on this (fail-open).
+      billing,
       role: sess.role,
       profile,
       standing,

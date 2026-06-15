@@ -11,11 +11,16 @@ export interface Tenant {
   name: string | null;
   school: string | null;
   isActive: boolean;
+  /** Custom domain (additive) — used to route real chapters to their own host. */
+  domain?: string | null;
   brandId?: string;
 }
 
 export interface MobileAppClientProps {
   initialTenants: Tenant[];
+  /** Server-computed: true when the central registry has ≥1 real active chapter.
+   *  Drives the cold-start picker's real-vs-demo framing. Optional for back-compat. */
+  hasRealChapters?: boolean;
 }
 
 export interface FraternityBrand {

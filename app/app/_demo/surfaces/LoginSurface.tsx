@@ -2,6 +2,21 @@ import React from "react";
 import { ChevronRight, ArrowRight, AlertCircle } from "lucide-react";
 import type { DemoContext } from "../context";
 
+/** A short, ALL-CAPS school label for the chapter pill ("USC", "CLEMSON"…),
+ *  derived from the chapter's school name. Falls back to "CHAPTER" when unknown. */
+function schoolShortLabel(school: string | null | undefined): string {
+  const s = (school || "").trim();
+  if (!s) return "CHAPTER";
+  // Common abbreviations first.
+  const lower = s.toLowerCase();
+  if (lower.includes("south carolina")) return "USC";
+  if (lower.includes("southern california")) return "USC";
+  // Else use the last significant word (e.g. "Clemson University" → "CLEMSON").
+  const words = s.replace(/university|college|the|of|at/gi, "").trim().split(/\s+/).filter(Boolean);
+  const pick = words[0] || s;
+  return pick.slice(0, 12).toUpperCase();
+}
+
 export function renderLogin(ctx: DemoContext) {
   const {
     authLoading,
@@ -27,9 +42,10 @@ export function renderLogin(ctx: DemoContext) {
               <div className="flex items-center justify-between mb-6 shrink-0">
                 <button
                   onClick={() => { setSelectedTenant(null); setError(null); }}
-                  className="text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition"
+                  aria-label="Back to chapter picker"
+                  className="text-xs text-slate-600 hover:text-slate-900 flex min-h-[44px] items-center gap-1 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
                 >
-                  <ChevronRight className="w-3 h-3 rotate-180" /> Back to Chapters
+                  <ChevronRight className="w-3 h-3 rotate-180" aria-hidden="true" /> Back to Chapters
                 </button>
                 <div 
                   className="w-2.5 h-2.5 rounded-full"
@@ -38,13 +54,17 @@ export function renderLogin(ctx: DemoContext) {
               </div>
 
               <div className="text-center mb-6">
-                <span 
+                <span
                   className="text-[12px] font-bold tracking-widest uppercase border px-2.5 py-1 rounded-full"
                   style={{ backgroundColor: selectedBrand.primaryColor + '10', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                 >
-                  {selectedBrand.letters} USC CHAPTER
+                  {/* Chapter pill follows the CHOSEN chapter (not a hardcoded
+                      "USC") so a real chapter at any school reads correctly. */}
+                  {selectedBrand.letters} {schoolShortLabel(selectedTenant.school)}
                 </span>
-                <h2 className="text-xl font-bold text-slate-900 mt-3 leading-tight">{selectedTenant.name}</h2>
+                <h2 className="text-xl font-bold text-slate-900 mt-3 leading-tight">
+                  {(selectedTenant.name || "").replace(/\s*\[Demo\]\s*$/i, "")}
+                </h2>
                 <p className="text-xs text-slate-500 mt-1">{selectedTenant.school}</p>
               </div>
 
@@ -53,7 +73,8 @@ export function renderLogin(ctx: DemoContext) {
                 <button
                   type="button"
                   onClick={() => setRole("brother")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${
+                  aria-pressed={role === "brother"}
+                  className={`flex-1 min-h-[44px] py-2 text-xs font-semibold rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none ${
                     role === "brother"
                       ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                       : "text-slate-500 hover:text-slate-950"
@@ -64,7 +85,8 @@ export function renderLogin(ctx: DemoContext) {
                 <button
                   type="button"
                   onClick={() => setRole("alumni")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${
+                  aria-pressed={role === "alumni"}
+                  className={`flex-1 min-h-[44px] py-2 text-xs font-semibold rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none ${
                     role === "alumni"
                       ? "bg-white text-slate-900 shadow-sm border border-slate-200"
                       : "text-slate-500 hover:text-slate-950"

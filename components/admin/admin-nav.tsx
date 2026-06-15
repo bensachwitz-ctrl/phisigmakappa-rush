@@ -9,14 +9,23 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
+// LUCIDE→BESPOKE TODO at the foot of this file). Menu/X/ChevronDown/ExternalLink
+// were migrated to the bespoke utility set below.
 import {
-  LogOut, HelpCircle, Menu, X, ExternalLink, Vote, GraduationCap, CheckSquare, ShieldAlert,
-  CalendarCheck, HandHeart, BookMarked, FileDown, ChevronDown, Command,
-  Banknote, ScrollText, Network, BookUser, CreditCard, Crown, Trophy, LayoutGrid,
+  LogOut, HelpCircle, Command, LayoutGrid,
 } from "lucide-react";
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin,
+  // Bespoke replacements for the former raw-lucide nav destinations, so the
+  // always-on officer chrome reads as ONE cohesive made-for-Greek-life set.
+  IconDirectory, IconStanding, IconFamilyTree, IconMeetings, IconRiskDesk,
+  IconAcademic, IconChores, IconBallot, IconElections, IconService, IconLibrary,
+  IconExports, IconPayouts, IconBilling, IconAuditLog,
+  // Bespoke UI-utility glyphs replacing the former raw-lucide chrome (menu/close/
+  // chevron/external) so even the nav's mechanical affordances are on-brand.
+  IconMenu, IconClose, IconChevronDown, IconExternal,
 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
@@ -37,28 +46,28 @@ const ITEMS: NavItem[] = [
   { href: "/admin", label: "Rush", icon: IconDashboard, adminOnly: false, group: "primary" },
   { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: true, group: "primary" },
   { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary" },
-  { href: "/admin/directory", label: "Directory", icon: BookUser, adminOnly: false, group: "more" },
-  { href: "/admin/standing", label: "Standing", icon: Trophy, adminOnly: false, group: "more" },
-  { href: "/admin/family", label: "Big/Little", icon: Network, adminOnly: true, group: "more" },
+  { href: "/admin/directory", label: "Directory", icon: IconDirectory, adminOnly: false, group: "more" },
+  { href: "/admin/standing", label: "Standing", icon: IconStanding, adminOnly: false, group: "more" },
+  { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: true, group: "more" },
   { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary" },
-  { href: "/admin/meetings", label: "Meetings", icon: CalendarCheck, adminOnly: false, group: "primary" },
+  { href: "/admin/meetings", label: "Meetings", icon: IconMeetings, adminOnly: false, group: "primary" },
   { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more" },
-  { href: "/admin/risk", label: "Risk Desk", icon: ShieldAlert, adminOnly: false, group: "primary" },
+  { href: "/admin/risk", label: "Risk Desk", icon: IconRiskDesk, adminOnly: false, group: "primary" },
 
-  { href: "/admin/academic", label: "Academic", icon: GraduationCap, adminOnly: false, group: "more" },
-  { href: "/admin/chores", label: "Chores", icon: CheckSquare, adminOnly: false, group: "more" },
-  { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false, group: "more" },
-  { href: "/admin/elections", label: "Elections", icon: Crown, adminOnly: false, group: "more" },
+  { href: "/admin/academic", label: "Academic", icon: IconAcademic, adminOnly: false, group: "more" },
+  { href: "/admin/chores", label: "Chores", icon: IconChores, adminOnly: false, group: "more" },
+  { href: "/admin/polls", label: "Polls", icon: IconBallot, adminOnly: false, group: "more" },
+  { href: "/admin/elections", label: "Elections", icon: IconElections, adminOnly: false, group: "more" },
   { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: true, group: "more" },
-  { href: "/admin/service", label: "Service", icon: HandHeart, adminOnly: false, group: "more" },
+  { href: "/admin/service", label: "Service", icon: IconService, adminOnly: false, group: "more" },
   { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
-  { href: "/admin/library", label: "Library", icon: BookMarked, adminOnly: false, group: "more" },
-  { href: "/admin/exports", label: "Exports", icon: FileDown, adminOnly: true, group: "more" },
+  { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more" },
+  { href: "/admin/exports", label: "Exports", icon: IconExports, adminOnly: true, group: "more" },
   { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: true, group: "more" },
-  { href: "/admin/dues/connect", label: "Payouts", icon: Banknote, adminOnly: true, group: "more" },
+  { href: "/admin/dues/connect", label: "Payouts", icon: IconPayouts, adminOnly: true, group: "more" },
   { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: true, group: "more" },
-  { href: "/admin/billing", label: "Billing", icon: CreditCard, adminOnly: true, group: "more" },
-  { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
+  { href: "/admin/billing", label: "Billing", icon: IconBilling, adminOnly: true, group: "more" },
+  { href: "/admin/audit", label: "Audit log", icon: IconAuditLog, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more" },
   { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more" },
@@ -164,7 +173,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
                     <LayoutGrid className="h-4 w-4" aria-hidden="true" />
                   )}
                   {activeMore ? activeMore.label : "More"}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform" aria-hidden="true" />
+                  <IconChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform" aria-hidden="true" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -232,7 +241,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
             title="Open the public homepage in a new tab"
           >
-            <ExternalLink className="h-3.5 w-3.5 text-phisig-red" />
+            <IconExternal className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
             <span className="hidden md:inline">View site</span>
           </Link>
 
@@ -248,7 +257,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
             aria-expanded={menuOpen}
             aria-controls="admin-mobile-menu"
           >
-            {menuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
+            {menuOpen ? <IconClose className="h-4 w-4" aria-hidden="true" /> : <IconMenu className="h-4 w-4" aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -286,3 +295,17 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
     </header>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LUCIDE → BESPOKE TODO (officer chrome)
+// ─────────────────────────────────────────────────────────────────────────────
+// Every nav DESTINATION glyph + the mechanical menu/close/chevron/external
+// affordances are now bespoke (@/components/brand/icons). The few remaining raw
+// lucide imports here have NO sensible bespoke equivalent yet and are LEFT AS-IS
+// rather than force a weak match (each keeps identical size/aria/onClick):
+//   • LogOut    — sign-out action (mobile menu + outline button)
+//   • HelpCircle— mobile Help affordance
+//   • Command   — ⌘K "Quick jump" hint chip
+//   • LayoutGrid— the "More" overflow trigger's default (non-active) glyph
+// Next pass: draw IconSignOut / IconHelp / IconCommand / IconGrid in the bespoke
+// design language (see components/brand/icons/icon-base.tsx) and swap these four.

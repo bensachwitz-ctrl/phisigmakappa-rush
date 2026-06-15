@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, Clock, CreditCard, X, ArrowRight } from "lucide-react";
+import { resolveBillingTone, type BillingReason } from "@/lib/billing-banner-tone";
 
 /**
  * SOFT-GATE billing banner (admin shell).
@@ -25,17 +26,7 @@ import { AlertTriangle, Clock, CreditCard, X, ArrowRight } from "lucide-react";
  * nag within the same session for the same state.
  */
 
-type Reason =
-  | "operator_active"
-  | "subscribed"
-  | "trialing"
-  | "trial_active"
-  | "no_tenant_row"
-  | "lookup_error"
-  | "past_due"
-  | "canceled"
-  | "trial_expired"
-  | "unknown";
+type Reason = BillingReason;
 
 export function BillingBanner(props: {
   reason: Reason;
@@ -125,26 +116,27 @@ type Tone = {
 };
 
 /**
- * Map the entitlement reason → banner tone, or null when no banner is warranted
- * (active subscription / healthy operator-comped / unresolved-but-fine states).
+ * Map the entitlement reason → banner tone, or null when no banner is warranted.
+ * The SHOW/HIDE decision + copy now come from the shared, unit-tested
+ * `resolveBillingTone` (lib/billing-banner-tone.ts) so the web admin banner and
+ * the mobile dashboard banner never drift. This adapter only layers the web
+ * shell's specific palette + lucide icon onto the resolved tone.
  */
 function bannerTone(args: {
   reason: Reason;
   status: string | null;
   daysLeft: number | null;
 }): Tone | null {
-  const { reason, status, daysLeft } = args;
+  const resolved = resolveBillingTone(args);
+  if (!resolved) return null;
 
-  // Active subscription → entitled via subscription → no banner.
-  if (status === "active" || reason === "subscribed") return null;
-
-  // Past due → red, always show (dunning).
-  if (status === "past_due" || reason === "past_due") {
+  // Danger (past_due) → red; warning (trial / inactive) → amber.
+  if (resolved.severity === "danger") {
     return {
-      key: "past_due",
-      title: "Payment past due",
-      body: "update your billing to keep your subscription in good standing.",
-      ctaLabel: "Update billing",
+      key: resolved.key,
+      title: resolved.title,
+      body: resolved.body,
+      ctaLabel: resolved.ctaLabel,
       icon: AlertTriangle,
       wrap: "border-red-200 bg-red-50",
       text: "text-red-800",
@@ -154,50 +146,21 @@ function bannerTone(args: {
     };
   }
 
-  // Trial ending → amber. Only nudge inside the final stretch (<= 7 days) so we
-  // don't nag from day 1; always show on the last day / expired.
-  const trialing = status === "trialing" || reason === "trial_active" || reason === "trialing";
-  if (trialing) {
-    if (typeof daysLeft === "number" && daysLeft > 7) return null; // early trial — stay quiet
-    const dLabel =
-      typeof daysLeft === "number" && daysLeft > 0
-        ? `${daysLeft} day${daysLeft === 1 ? "" : "s"}`
-        : "soon";
-    return {
-      key: `trial_${typeof daysLeft === "number" ? daysLeft : "x"}`,
-      title:
-        typeof daysLeft === "number" && daysLeft > 0
-          ? `Trial ends in ${dLabel}`
-          : "Your trial is ending",
-      body: "set up billing so your chapter keeps full access without interruption.",
-      ctaLabel: "Set up billing",
-      icon: Clock,
-      wrap: "border-amber-200 bg-amber-50",
-      text: "text-amber-800",
-      iconColor: "text-amber-600",
-      cta: "bg-amber-500 text-white hover:bg-amber-600",
-      dismiss: "text-amber-500 hover:bg-amber-100 hover:text-amber-700",
-    };
-  }
-
-  // Trial expired / canceled → amber nudge to re-subscribe.
-  if (reason === "trial_expired" || status === "canceled" || reason === "canceled") {
-    return {
-      key: "inactive",
-      title:
-        reason === "trial_expired" ? "Your free trial has ended" : "Subscription inactive",
-      body: "start a subscription to keep full access — your chapter stays online.",
-      ctaLabel: "Start subscription",
-      icon: CreditCard,
-      wrap: "border-amber-200 bg-amber-50",
-      text: "text-amber-800",
-      iconColor: "text-amber-600",
-      cta: "bg-phisig-red text-white hover:opacity-90",
-      dismiss: "text-amber-500 hover:bg-amber-100 hover:text-amber-700",
-    };
-  }
-
-  // operator_active with no billing issue, no_tenant_row, lookup_error, unknown
-  // → fail-open, no banner.
-  return null;
+  // Warning: trial-countdown uses the Clock; re-subscribe (expired/canceled)
+  // uses the CreditCard with the brand-red CTA. Keyed off the resolved `key`.
+  const isInactive = resolved.key === "inactive";
+  return {
+    key: resolved.key,
+    title: resolved.title,
+    body: resolved.body,
+    ctaLabel: resolved.ctaLabel,
+    icon: isInactive ? CreditCard : Clock,
+    wrap: "border-amber-200 bg-amber-50",
+    text: "text-amber-800",
+    iconColor: "text-amber-600",
+    cta: isInactive
+      ? "bg-phisig-red text-white hover:opacity-90"
+      : "bg-amber-500 text-white hover:bg-amber-600",
+    dismiss: "text-amber-500 hover:bg-amber-100 hover:text-amber-700",
+  };
 }

@@ -10,7 +10,15 @@ import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
-import { Users, GraduationCap, Shield, ArrowRight } from "lucide-react";
+// Bespoke, on-brand role + chrome glyphs for the portal hub — the brand-defining
+// "pick your door" entry point. (Replaces lucide Users / GraduationCap / Shield /
+// ArrowRight so the member entry point reads in the GreekStack icon family.)
+import {
+  IconMembers,
+  IconGraduation,
+  IconShieldCheck,
+  IconArrowRight,
+} from "@/components/brand/icons";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
@@ -30,7 +38,7 @@ interface PortalCard {
   href: string;
   title: string;
   description: string;
-  icon: typeof Users;
+  icon: typeof IconMembers;
   accentClass: string;
 }
 
@@ -39,14 +47,14 @@ const PORTALS: PortalCard[] = [
     href: "/portal/brothers",
     title: "Brothers",
     description: "Active members. Pay dues, RSVP, log service hours, browse the alumni network.",
-    icon: Users,
+    icon: IconMembers,
     accentClass: "from-maroon-700 to-maroon-900",
   },
   {
     href: "/portal/alumni",
     title: "Alumni",
     description: "Graduated brothers. Update what you're up to, RSVP for alumni weekend, mentor an active.",
-    icon: GraduationCap,
+    icon: IconGraduation,
     accentClass: "from-amber-600 to-amber-800",
   },
   // PNMs intentionally have NO portal yet — they don't have a login. Only
@@ -78,7 +86,7 @@ export default async function PortalHubPage() {
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         <header className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
-            <Shield className="w-3.5 h-3.5" aria-hidden />
+            <IconShieldCheck className="w-3.5 h-3.5" aria-hidden />
             Portal
           </div>
           <h1 className="text-2xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
@@ -107,7 +115,9 @@ export default async function PortalHubPage() {
                   <div
                     className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${p.accentClass} text-cream-50 mb-4 shadow-sm`}
                   >
-                    <Icon className="w-6 h-6" aria-hidden />
+                    {/* accent="currentColor" → both duotone layers render in the
+                        tile's white ink for a clean read on the gradient chip. */}
+                    <Icon className="w-6 h-6" accent="currentColor" aria-hidden />
                   </div>
                   <h2 className="text-xl font-bold tracking-tight text-maroon-900 mb-2 group-hover:text-maroon-700 transition">
                     {p.title}
@@ -115,7 +125,7 @@ export default async function PortalHubPage() {
                   <p className="text-sm text-maroon-700 mb-5 leading-relaxed">{p.description}</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-maroon-800 group-hover:gap-2.5 transition-all">
                     Enter
-                    <ArrowRight className="w-4 h-4" aria-hidden />
+                    <IconArrowRight className="w-4 h-4" aria-hidden />
                   </span>
                 </div>
               </Link>
@@ -126,7 +136,7 @@ export default async function PortalHubPage() {
         {/* Admin override note */}
         <div className="mt-12 max-w-2xl mx-auto text-center">
           <div className="inline-flex items-start gap-3 bg-white border border-maroon-100 rounded-2xl px-5 py-4 text-left shadow-sm">
-            <Shield className="w-5 h-5 text-maroon-600 mt-0.5 shrink-0" aria-hidden />
+            <IconShieldCheck className="w-5 h-5 text-maroon-600 mt-0.5 shrink-0" aria-hidden />
             <div>
               <p className="text-sm font-semibold text-maroon-900 mb-1">Chapter officer?</p>
               <p className="text-xs text-maroon-700 leading-relaxed">

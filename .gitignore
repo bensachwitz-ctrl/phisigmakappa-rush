@@ -69,3 +69,6 @@ ios/App/DerivedData/
 ios/capacitor-cordova-ios-plugins/
 ios/**/xcuserdata/
 ios/**/.DS_Store
+
+# wave gate logs
+*.log

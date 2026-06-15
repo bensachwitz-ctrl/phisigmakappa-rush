@@ -354,6 +354,16 @@ describe("GET /api/mobile/data", () => {
     expect(body.roster.actives).toHaveLength(1);
     expect(body.roster.alumni).toHaveLength(1);
     expect(body.careers).toHaveLength(1);
+
+    // Advisory PLATFORM-billing block (gap 5): the payload carries the
+    // machine-readable entitlement state so the mobile dashboard can show the
+    // SAME billing banner the web admin does. It is ADVISORY only — the route
+    // still returned 200 with full data (fail-open preserved). The mocked tenant
+    // is isActive:true (operator override) → entitled with an informative reason.
+    expect(body.billing).toBeTruthy();
+    expect(typeof body.billing.reason).toBe("string");
+    expect("status" in body.billing).toBe(true);
+    expect("daysLeft" in body.billing).toBe(true);
   });
 });
 

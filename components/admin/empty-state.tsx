@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight as ArrowRight } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import {
   IllustrationWelcome,

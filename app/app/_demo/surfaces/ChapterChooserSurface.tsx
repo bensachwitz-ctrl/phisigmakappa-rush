@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, ChevronRight, AlertCircle, Palette, ArrowRight, Wand2 } from "lucide-react";
+import { Search, ChevronRight, AlertCircle, Palette, ArrowRight, Wand2, Sparkles, Rocket } from "lucide-react";
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import {
   FRATERNITY_BRANDS,
@@ -86,7 +86,8 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
           {overlay && (
             <button
               onClick={() => setShowChapterChooser(false)}
-              className="press min-h-[36px] rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+              aria-label="Close chapter switcher"
+              className="press min-h-[44px] rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-200 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
             >
               Close
             </button>
@@ -109,19 +110,21 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
           />
           <button
             onClick={() => setChooserMode("pick")}
-            className={`relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${
+            aria-pressed={chooserMode === "pick"}
+            className={`relative z-10 flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none ${
               chooserMode === "pick" ? "text-slate-900" : "text-slate-500"
             }`}
           >
-            <Search className="h-4 w-4" /> Pick one
+            <Search className="h-4 w-4" aria-hidden="true" /> Pick one
           </button>
           <button
             onClick={() => setChooserMode("create")}
-            className={`relative z-10 flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors ${
+            aria-pressed={chooserMode === "create"}
+            className={`relative z-10 flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none ${
               chooserMode === "create" ? "text-slate-900" : "text-slate-500"
             }`}
           >
-            <Wand2 className="h-4 w-4" /> Create yours
+            <Wand2 className="h-4 w-4" aria-hidden="true" /> Create yours
           </button>
         </div>
       </div>
@@ -142,6 +145,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                 return (
                   <button
                     key={b.id}
+                    aria-label={`Preview ${b.name} (${b.letters})`}
                     onClick={() => {
                       if (overlay) {
                         applyBrandToDemo(b, { name: b.name, school: "University of South Carolina" });
@@ -151,7 +155,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                         else applyBrandToDemo(b, { name: b.name, school: "University of South Carolina" });
                       }
                     }}
-                    className="press group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="press group flex min-h-[44px] flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
                     <span
                       className="flex h-12 w-12 items-center justify-center rounded-xl text-[16px] font-extrabold text-white shadow-sm overflow-hidden"
@@ -190,8 +194,9 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                 return (
                   <button
                     key={t.id}
+                    aria-label={`${isDemoItem ? "Preview demo chapter " : "Open "}${t.name || br.name}${t.school ? ` at ${t.school}` : ""}`}
                     onClick={() => (overlay ? choosePreset(br, t.name || br.name, t.school || "University of South Carolina") : handleSelectTenant(t))}
-                    className="press group flex w-full min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md"
+                    className="press group flex w-full min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div
@@ -237,6 +242,38 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
       {/* ── CREATE MODE ───────────────────────────────────────────────────── */}
       {chooserMode === "create" && (
         <div className="flex-1 space-y-4 overflow-y-auto px-6 pb-6">
+          {/* PREVIEW-ONLY notice — unambiguously labels this branch as a
+              non-authenticated demo so a "Create yours" chapter is never mistaken
+              for a real, signed-in tenant. The chapter you build here only
+              re-skins the local demo; it is never persisted as a real session.
+              The path to a REAL chapter is the /onboard CTA below. */}
+          <div
+            role="note"
+            className="flex items-start gap-2.5 rounded-2xl border border-blue-200 bg-blue-50 p-3"
+          >
+            <span
+              className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600"
+              aria-hidden="true"
+            >
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-bold text-blue-900">Preview only — not a real login</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-blue-800/90">
+                Building a chapter here instantly re-skins this demo so you can see
+                it as yours. It doesn&apos;t create an account or sign you in. Ready
+                to launch your real chapter?{" "}
+                <a
+                  href="/onboard"
+                  className="font-bold text-blue-700 underline underline-offset-2 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+                >
+                  Start onboarding
+                </a>
+                .
+              </p>
+            </div>
+          </div>
+
           {/* Live preview card — re-brands as you type */}
           <div
             className="relative overflow-hidden rounded-2xl border p-4 transition-colors"
@@ -287,8 +324,9 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                 <button
                   key={g}
                   type="button"
+                  aria-label={`Add Greek letter ${g}`}
                   onClick={() => setCustomLetters((customLetters || "") + g)}
-                  className="press flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-[15px] font-serif font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="press flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-[15px] font-serif font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
                 >
                   {g}
                 </button>
@@ -310,11 +348,22 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
 
           <button
             onClick={applyCustomChapter}
-            className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
+            aria-label="Preview this chapter in the demo (does not sign you in)"
+            className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900 motion-reduce:transition-none motion-reduce:active:scale-100"
             style={{ background: `linear-gradient(135deg, ${customPrimary}, ${customSecondary})` }}
           >
-            <Palette className="h-4 w-4" /> Launch this chapter <ArrowRight className="h-4 w-4" />
+            <Palette className="h-4 w-4" aria-hidden="true" /> Preview this chapter{" "}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
+
+          {/* Explicit path to a REAL chapter — distinct from the preview above so
+              the demo and the production onboarding are never conflated. */}
+          <a
+            href="/onboard"
+            className="press flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-[13px] font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
+          >
+            <Rocket className="h-4 w-4 text-blue-600" aria-hidden="true" /> Launch my real chapter
+          </a>
         </div>
       )}
     </div>
@@ -370,8 +419,9 @@ function ColorField({
             key={c}
             type="button"
             onClick={() => onChange(c)}
-            aria-label={`Use ${c}`}
-            className={`h-7 w-7 rounded-lg border shadow-sm transition hover:scale-110 ${
+            aria-label={`Use color ${c}`}
+            aria-pressed={value.toLowerCase() === c.toLowerCase()}
+            className={`h-8 w-8 rounded-lg border shadow-sm transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-500 motion-reduce:transition-none motion-reduce:hover:scale-100 ${
               value.toLowerCase() === c.toLowerCase() ? "ring-2 ring-offset-1 ring-slate-900" : "border-black/10"
             }`}
             style={{ backgroundColor: c }}

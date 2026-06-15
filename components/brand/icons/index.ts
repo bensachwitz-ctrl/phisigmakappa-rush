@@ -61,3 +61,36 @@ export {
 export { IconTreasury } from "./treasury";
 export { IconCalendarTool } from "./calendar-tool";
 
+// Member + alumni dashboard tab-nav / quick-action glyphs.
+export {
+  IconActivity,
+  IconServiceHours,
+  IconPolls,
+  IconProfile,
+  IconElections,
+  IconMap,
+  IconGraduation,
+  IconGiving,
+  IconSettings,
+  IconAddMember,
+} from "./dashboard-tabs";
+
+// Admin nav + ⌘K command-palette destination glyphs (close the lucide cohesion
+// gap on the always-on officer chrome).
+export {
+  IconDirectory,
+  IconStanding,
+  IconFamilyTree,
+  IconMeetings,
+  IconRiskDesk,
+  IconAcademic,
+  IconChores,
+  IconService,
+  IconLibrary,
+  IconExports,
+  IconPayouts,
+  IconBilling,
+  IconAuditLog,
+  IconBallot,
+} from "./admin-nav";
+

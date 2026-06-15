@@ -282,10 +282,13 @@ export default async function ChapterLandingPage({
     sub?: string;
   };
   const stats: StatRow[] = [
-    { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || `Active ${terms.membersLower}`, icon: Users, sub: cfg["stats.brothers.sub"] || undefined },
-    { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: GraduationCap, sub: cfg["stats.gpa.sub"] || "Above the all-Greek average" },
-    { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: ShieldCheck, sub: cfg["stats.years.sub"] || `Founded ${identity.foundingYear}` },
-    { ...parseStat(cfg["stats.charity"]), label: cfg["stats.charity.label"] || "Raised for charity", icon: HandHeart, sub: cfg["stats.charity.sub"] || cfg["philanthropy.beneficiaryShort"] },
+    // Stats fronted by the bespoke CHAPTER-brand duotone marks (not generic
+    // lucide) so the hero stat band reads in the chapter's own color and stays
+    // cohesive with the pillars/values above it.
+    { ...parseStat(cfg["stats.brothers"]), label: cfg["stats.brothers.label"] || `Active ${terms.membersLower}`, icon: IconBond, sub: cfg["stats.brothers.sub"] || undefined },
+    { ...parseStat(cfg["stats.gpa"]), label: cfg["stats.gpa.label"] || "Chapter GPA", icon: IconScholarship, sub: cfg["stats.gpa.sub"] || "Above the all-Greek average" },
+    { ...parseStat(cfg["stats.years"]), label: cfg["stats.years.label"] || "Years strong", icon: IconShieldCheckDuo, sub: cfg["stats.years.sub"] || `Founded ${identity.foundingYear}` },
+    { ...parseStat(cfg["stats.charity"]), label: cfg["stats.charity.label"] || "Raised for charity", icon: IconHandshake, sub: cfg["stats.charity.sub"] || cfg["philanthropy.beneficiaryShort"] },
   ];
   const eboard = [1, 2, 3, 4, 5]
     .map((n) => ({

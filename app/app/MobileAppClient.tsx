@@ -76,6 +76,13 @@ import { GreekLetterField } from "@/components/site/greek-letter-field";
 import { ChapterIdentityBackdrop } from "./_demo/ChapterIdentityBackdrop";
 import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
 import type { DemoContext } from "./_demo/context";
+import {
+  buildPickerChapters,
+  singleTenantPreselect,
+  type PickerChapter,
+} from "@/lib/app-picker";
+import { subdomainFromHost } from "@/lib/login-routing";
+import { renderSchoolChapterPicker } from "./_demo/surfaces/SchoolChapterPickerSurface";
 import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
 import { renderLogin } from "./_demo/surfaces/LoginSurface";
 import { renderFeedTab } from "./_demo/surfaces/FeedSurface";
@@ -86,6 +93,7 @@ import { renderDirectoryTab } from "./_demo/surfaces/DirectorySurface";
 import { renderSettingsTab } from "./_demo/surfaces/SettingsSurface";
 import { renderSpotlight } from "./_demo/surfaces/SpotlightSurface";
 import { renderExec } from "./_demo/surfaces/ExecSurface";
+import { MobileBillingBanner } from "./_demo/surfaces/MobileBillingBanner";
 import { renderBookingModal } from "./_demo/modals/BookingModal";
 import { renderPricingModal } from "./_demo/modals/PricingModal";
 import { renderToast } from "./_demo/modals/Toast";
@@ -97,7 +105,19 @@ import { renderPostJobModal } from "./_demo/modals/PostJobModal";
 import { renderPostAnnModal } from "./_demo/modals/PostAnnouncementModal";
 import { renderEditProfileModal } from "./_demo/modals/EditProfileModal";
 
-export default function MobileAppClient({ initialTenants }: MobileAppClientProps) {
+/** Browser-only: the chapter subdomain this webview is currently served on (or
+ *  null on the apex). Used for single-tenant preselect so a deploy already
+ *  serving a chapter host auto-selects that chapter. SSR-safe (returns null). */
+function subdomainFromCurrentHost(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return subdomainFromHost(window.location.host);
+  } catch {
+    return null;
+  }
+}
+
+export default function MobileAppClient({ initialTenants, hasRealChapters: hasRealChaptersProp }: MobileAppClientProps) {
   const [tenants] = useState<Tenant[]>(initialTenants);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<FraternityBrand>(FRATERNITY_BRANDS[0]);
@@ -109,6 +129,22 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isDemo, setIsDemo] = useState(false);
+
+  // ── iOS cold-start School → Chapter picker (entry mode) ───────────────────
+  // entryMode decides what the FIRST screen is on mount:
+  //   "picker"   — cold start (no ?demo, no saved session): the new
+  //                school-grouped picker built from the real Tenant registry.
+  //   "showcase" — ?demo=true (or a demo selection): the brand-grouped chooser
+  //                + auto-demo showcase (the pre-existing behavior).
+  //   "session"  — a restored localStorage session goes straight to the dash.
+  // Starts as "picker" so SSR/first-paint is the clean entry; the mount effect
+  // flips it to showcase/session as appropriate (so ?demo + saved sessions are
+  // never a regression). `pickerStep` drives the two-step picker flow.
+  const [entryMode, setEntryMode] = useState<"picker" | "showcase" | "session">("picker");
+  const [pickerStep, setPickerStep] = useState<"school" | "chapter">("school");
+  const [pickerSchool, setPickerSchool] = useState<string | null>(null);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const hasRealChapters = hasRealChaptersProp ?? initialTenants.length > 0;
 
   // ── Owner-requested demo controls ────────────────────────────────────────
   // viewRole flips the WHOLE dashboard between the member experience ("member"
@@ -414,6 +450,15 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     }
   }, [showEditProfileModal, dashboardData]);
 
+  // ── Picker chapter set (real + demo merged, deduped) ──────────────────────
+  // Built once from the registry rows passed by app/app/page.tsx. Real chapters
+  // win over same-subdomain demos so the canonical live Phi-Sig appears "Live".
+  // This is the SOURCE for the cold-start School → Chapter picker.
+  const pickerChapters = React.useMemo<PickerChapter[]>(
+    () => buildPickerChapters(initialTenants as any),
+    [initialTenants],
+  );
+
   // Combine real and demo chapters for picker
   const allChapters = React.useMemo(() => {
     const dbTenants = tenants.map(t => {
@@ -436,6 +481,10 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
+      // ?demo=true → the brand-grouped showcase (existing behavior), NOT the
+      // cold-start school picker. Mark the entry mode so the render branch shows
+      // the ChapterChooser/auto-demo instead of the school picker.
+      setEntryMode("showcase");
       const demoTenant = DEMO_TENANTS[0]; // Phi Sigma Kappa
       const brand = FRATERNITY_BRANDS[0];
       const demoUser = {
@@ -447,7 +496,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         chapterName: demoTenant.name,
         schoolName: demoTenant.school
       };
-      
+
       setSelectedTenant(demoTenant);
       setSelectedBrand(brand);
       setToken("demo-token-12345");
@@ -483,8 +532,23 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
         if (savedBrand) {
           setSelectedBrand(JSON.parse(savedBrand));
         }
+        // A restored session goes straight to the dashboard — never the picker.
+        setEntryMode("session");
       } catch (e) {
         localStorage.clear();
+      }
+    } else {
+      // ── COLD START (Step 0) ──────────────────────────────────────────────
+      // No ?demo, no saved session → the new School → Chapter picker is the
+      // first screen. Single-tenant preselect (Step 6): if exactly one REAL
+      // chapter exists (or the deploy is already serving a chapter host), skip
+      // straight into that chapter's login so the existing one-tap Phi-Sig
+      // single-tenant flow is never a regression.
+      setEntryMode("picker");
+      const currentSub = subdomainFromCurrentHost();
+      const sole = singleTenantPreselect(pickerChapters, currentSub);
+      if (sole && sole.source === "real") {
+        applyPickerChapter(sole, { skipAdvance: true });
       }
     }
     setLoading(false);
@@ -611,6 +675,95 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
       setUser(null);
       setError(null);
     }
+  };
+
+  // ── iOS cold-start picker: route a chosen School→Chapter selection ────────
+  // A DEMO chapter routes into the instant mock auto-login (the showcase still
+  // works with zero backend). A REAL chapter sets the tenant + its resolved
+  // brand and leaves `token` null so the themed LoginSurface renders and then
+  // POSTs to the tenant-bound /api/mobile/auth — NO cross-origin redirect, so
+  // the Bearer token stays on the apex /app webview (routing decision: pass the
+  // subdomain as a parameter, per the subdomain registry architecture).
+  const applyPickerChapter = (c: PickerChapter, opts?: { skipAdvance?: boolean }) => {
+    const tenant: Tenant = {
+      id: c.id,
+      subdomain: c.subdomain,
+      name: c.name,
+      school: c.school,
+      isActive: true,
+      domain: c.domain,
+      brandId: c.brand.id,
+    };
+    setSelectedBrand(c.brand);
+
+    if (c.source === "demo") {
+      // Instant demo auto-login — mirrors handleSelectTenant's demo path so the
+      // showcase is reachable straight from the school picker with no backend.
+      setSelectedTenant(tenant);
+      setIsDemo(true);
+      setLoading(true);
+      setTimeout(() => {
+        const demoUser = {
+          id: "demo-user-id",
+          email: `alex.mercer@${c.subdomain}.edu`,
+          role: "brother",
+          brotherId: "demo-brother-id",
+          subdomain: c.subdomain,
+          chapterName: c.name,
+          schoolName: c.school,
+        };
+        setToken("demo-token-12345");
+        setUser(demoUser);
+        setRole("brother");
+        setDashboardData(getMockDemoData(tenant, c.brand, viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member"));
+        try {
+          localStorage.setItem("gs_mobile_token", "demo-token-12345");
+          localStorage.setItem("gs_mobile_user", JSON.stringify(demoUser));
+          localStorage.setItem("gs_mobile_tenant", JSON.stringify(tenant));
+          localStorage.setItem("gs_mobile_brand", JSON.stringify(c.brand));
+        } catch {
+          /* best-effort */
+        }
+        setLoading(false);
+      }, 300);
+      return;
+    }
+
+    // REAL chapter → themed login (token stays null → renderLogin runs).
+    setIsDemo(false);
+    setToken(null);
+    setUser(null);
+    setError(null);
+    setSelectedTenant(tenant);
+  };
+
+  // Picker selection handler handed to the surface via ctx.
+  const handlePickPickerChapter = (c: PickerChapter) => applyPickerChapter(c);
+
+  // "Just exploring? See a live demo" — enter the brand-grouped showcase from
+  // the school picker. Switches entry mode and auto-logs into the Phi-Sig demo
+  // (same destination as ?demo=true), without a navigation.
+  const enterDemoShowcase = () => {
+    setEntryMode("showcase");
+    const demoTenant = DEMO_TENANTS[0];
+    const brand = FRATERNITY_BRANDS[0];
+    const demoUser = {
+      id: "demo-user-id",
+      email: "alex.mercer@sc.edu",
+      role: "brother",
+      brotherId: "demo-brother-id",
+      subdomain: demoTenant.subdomain,
+      chapterName: demoTenant.name,
+      schoolName: demoTenant.school,
+    };
+    setSelectedTenant(demoTenant);
+    setSelectedBrand(brand);
+    setToken("demo-token-12345");
+    setUser(demoUser);
+    setRole("brother");
+    setIsDemo(true);
+    setDashboardData(getMockDemoData(demoTenant, brand, "member"));
+    setLoading(false);
   };
 
   // ── Apply a chosen brand to the live demo without a full re-login ─────────
@@ -1395,6 +1548,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
     editHometown, setEditHometown, editYear, setEditYear, editMajor, setEditMajor,
     editCompany, setEditCompany, editJobTitle, setEditJobTitle, editCity, setEditCity,
     editState, setEditState, editBio, setEditBio, editLinkedIn, setEditLinkedIn,
+    pickerStep, setPickerStep, pickerSchool, setPickerSchool, pickerQuery, setPickerQuery,
+    pickerChapters, hasRealChapters, handlePickPickerChapter, enterDemoShowcase,
     allChapters, filteredChapters, combinedFeed,
     handleSelectTenant, handleSignIn, handleSignOut, handleAddToCalendar, handleRsvp,
     handlePostJob, resetJobForm, handlePostAnnouncement, handleSaveProfile,
@@ -1911,8 +2066,16 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
           {/* Custom Add Member Overlay Modal (President Console) */}
           {showAddMemberModal && renderAddMemberModal(ctx)}
           
-          {/* 1. Onboarding Chapter Selection (pick OR build any chapter) */}
-          {!selectedTenant && renderChapterChooser(ctx)}
+          {/* 1a. COLD-START School → Chapter picker (Step 0) — the first screen
+                  the iOS shell lands on with no ?demo + no saved session. Built
+                  from the real Tenant registry (merged with demo chapters). */}
+          {!selectedTenant && entryMode === "picker" && renderSchoolChapterPicker(ctx)}
+
+          {/* 1b. Showcase onboarding chooser (pick OR build any chapter) — the
+                  brand-grouped demo entry, now reached via ?demo=true or the
+                  picker's "See a live demo" link. Also the Create/preview-your-
+                  chapter branch for visitors whose chapter isn't live yet. */}
+          {!selectedTenant && entryMode !== "picker" && renderChapterChooser(ctx)}
 
           {/* In-app chapter switcher overlay — re-skins the live demo without a
               sign-out. Slides up over the running app. */}
@@ -2013,7 +2176,22 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                       Return to Login
                     </button>
                   </div>
-                ) : viewRole === "exec" ? (
+                ) : (
+                  <>
+                    {/* Advisory PLATFORM-billing banner — mirrors the web admin's
+                        soft-gate so the member sees the same "trial ends / past
+                        due" heads-up. REAL sessions only (the demo has no real
+                        subscription); fed by the /api/mobile/data `billing` block
+                        (getEntitlement). Never blocks — advisory only. Officers
+                        get the actionable CTA. */}
+                    {!isDemo && dashboardData?.billing && (
+                      <MobileBillingBanner
+                        billing={dashboardData.billing}
+                        canManage={isOfficerPosition(dashboardData?.profile?.position)}
+                      />
+                    )}
+
+                    {viewRole === "exec" ? (
                   /* ── OFFICER / EXEC EXPERIENCE (feature 3) ─────────────────
                      The same 5 nav slots become officer tools; each routes to a
                      live, interactive admin surface. Keyed on activeTab so tab
@@ -2046,6 +2224,8 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                     {/* F. SETTINGS TAB */}
                     {activeTab === "settings" && renderSettingsTab(ctx)}
                   </div>
+                    )}
+                  </>
                 )}
 
               </div>

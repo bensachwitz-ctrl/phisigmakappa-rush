@@ -1,5 +1,6 @@
 import type React from "react";
 import type { Tenant, FraternityBrand } from "./mock-data";
+import type { PickerChapter } from "@/lib/app-picker";
 
 // Shared context bundle for the interactive demo's surfaces and modals.
 //
@@ -260,6 +261,25 @@ export interface DemoContext {
   setEditBio: React.Dispatch<React.SetStateAction<string>>;
   editLinkedIn: string;
   setEditLinkedIn: React.Dispatch<React.SetStateAction<string>>;
+
+  // ── iOS cold-start School → Chapter picker ─────────────────────────────
+  // The very first screen the native shell lands on when there's no saved
+  // session and no ?demo. `pickerStep` drives the two-step flow; null/absent
+  // means the picker is bypassed (showcase/demo or restored session).
+  pickerStep: "school" | "chapter";
+  setPickerStep: React.Dispatch<React.SetStateAction<"school" | "chapter">>;
+  pickerSchool: string | null;
+  setPickerSchool: React.Dispatch<React.SetStateAction<string | null>>;
+  pickerQuery: string;
+  setPickerQuery: React.Dispatch<React.SetStateAction<string>>;
+  /** Merged real + demo chapters (deduped), built from the registry. */
+  pickerChapters: PickerChapter[];
+  /** Server flag: registry has ≥1 real active chapter. */
+  hasRealChapters: boolean;
+  /** Route a chosen picker chapter: demo → mock auto-login; real → themed login. */
+  handlePickPickerChapter: (c: PickerChapter) => void;
+  /** "Just exploring? See a live demo" — enters the showcase (?demo flow). */
+  enterDemoShowcase: () => void;
 
   // ── Derived values ─────────────────────────────────────────────────────
   allChapters: Tenant[];

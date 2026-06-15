@@ -84,23 +84,47 @@ const config: Config = {
           paper: "#FFFFFF",
           mist: "#F5F5F7",
         },
+        // ── R49 BRAND UNIFICATION ────────────────────────────────────────────
+        // The logged-in member + alumni portals were originally painted off a
+        // static maroon/cream ramp that had NOTHING to do with the royal-blue +
+        // gold Greekstack identity, and — worse — ignored the per-chapter
+        // `--brand-primary` override, so a navy/gold chapter still saw a maroon
+        // dashboard (white-label was broken on the whole authenticated surface).
+        //
+        // Rather than touch-edit ~590 class references across 29 files (high
+        // risk on CSS — see the "line-range strip is unsafe" rule), we REDEFINE
+        // the two ramps here so every `text-maroon-900`, `bg-cream-50`,
+        // `from-maroon-700`, etc. retints in place with the lightness ordering
+        // preserved. The mid "brand" shades (500–700 / 850) are bound to the
+        // live `--brand-primary*` CSS vars, so the dashboards now follow the
+        // chapter's school color exactly like the rest of the product. The
+        // structural extremes (deep navy ink at 900–950, pale blue tints at
+        // 50–200) stay fixed so contrast/AA is stable regardless of school hue.
+        //
+        // `maroon-*` → ROYAL-BLUE / NAVY ramp (50 pale → 950 deep navy ink).
         maroon: {
-          50: '#fef2f2',
-          100: '#fde6e7',
-          200: '#f9c1c3',
-          400: '#c8505a',
-          500: '#a83040',
-          600: '#8b2234',
-          700: '#6f1b2a',
-          800: '#5a1523',
-          900: '#4a111d',
-          950: '#2d0a12',
+          50: '#eff5ff',   // pale blue wash (was near-white pink) — card/section tints
+          100: '#dbe7fe',  // hairline borders / dividers
+          200: '#bcd2fb',  // soft borders / chips
+          300: '#93b4f8',
+          400: '#5e8af0',
+          // 500–700: the live brand band — follows the chapter's school color.
+          500: 'var(--brand-primary, #2563eb)',
+          600: 'var(--brand-primary, #2563eb)',
+          650: 'var(--brand-primary-dark, #1d4ed8)',
+          700: 'var(--brand-primary-dark, #1d4ed8)',
+          750: '#1a3da8',
+          800: '#17357f',  // deep navy gradient stop
+          850: '#122a63',
+          900: '#0f2350',  // primary body text — deep navy (≈11:1 on white)
+          950: '#0a1838',  // darkest ink / on-gold text
         },
+        // `cream-*` → warm GOLD / PARCHMENT ramp (light surfaces + on-navy text).
         cream: {
-          50: '#fefdfb',
-          100: '#fdf8f0',
-          200: '#f8ecd8',
-          300: '#f2dbb8',
+          50: '#fffdf6',   // warmest paper — page/card backgrounds on the portal
+          100: '#fdf6e3',  // soft gold-tinted surface
+          200: '#f8e7bf',  // gold border / band
+          300: '#f0d089',  // gold accent edge
         },
       },
       borderRadius: {

@@ -19,7 +19,6 @@ import {
   ChevronRight,
   BookOpen,
   Heart,
-  User,
   Briefcase,
   Linkedin,
   type LucideIcon,
@@ -43,6 +42,18 @@ import {
   IllustrationSearch,
   type IllustrationProps,
 } from "@/components/brand/illustrations";
+// Bespoke, on-brand tab-nav glyphs for the alumni portal — replacing the
+// generic lucide set that previously fronted its primary navigation.
+import {
+  IconActivity,
+  IconProfile,
+  IconMap,
+  IconMembers,
+  IconGraduation,
+  IconPolls,
+  IconEvents,
+  IconGiving,
+} from "@/components/brand/icons";
 
 interface Alumnus {
   id: string;
@@ -759,14 +770,14 @@ export default function DashboardClient({
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
-              { id: "overview", label: "Overview", icon: Users },
-              { id: "profile", label: "My Profile", icon: User },
-              { id: "pnms", label: "Hometown PNMs", icon: MapPin },
-              { id: "brothers", label: `Active ${terms.members}`, icon: Users },
-              { id: "alumni", label: "Alumni Directory", icon: GraduationCap },
-              { id: "polls", label: "Surveys & Polls", icon: Vote },
-              { id: "events", label: "Events Calendar", icon: Calendar },
-              { id: "donate", label: "Donate & Support", icon: Heart },
+              { id: "overview", label: "Overview", icon: IconActivity },
+              { id: "profile", label: "My Profile", icon: IconProfile },
+              { id: "pnms", label: "Hometown PNMs", icon: IconMap },
+              { id: "brothers", label: `Active ${terms.members}`, icon: IconMembers },
+              { id: "alumni", label: "Alumni Directory", icon: IconGraduation },
+              { id: "polls", label: "Surveys & Polls", icon: IconPolls },
+              { id: "events", label: "Events Calendar", icon: IconEvents },
+              { id: "donate", label: "Donate & Support", icon: IconGiving },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
