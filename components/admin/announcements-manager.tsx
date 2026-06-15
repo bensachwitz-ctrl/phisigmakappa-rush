@@ -235,13 +235,13 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => togglePin(a)} title={a.pinned ? "Unpin" : "Pin"}>
+                    <Button variant="ghost" size="icon" onClick={() => togglePin(a)} aria-label={a.pinned ? "Unpin announcement" : "Pin announcement"} title={a.pinned ? "Unpin" : "Pin"}>
                       <Pin className={cn("h-4 w-4", a.pinned && "fill-current text-phisig-red")} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(a)} title="Edit">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(a)} aria-label="Edit announcement" title="Edit">
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive" title="Delete">
+                    <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete announcement" title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

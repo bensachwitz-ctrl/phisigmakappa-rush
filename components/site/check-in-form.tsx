@@ -36,6 +36,15 @@ export function CheckInForm({ code, orgName }: Props) {
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState<Result | null>(null);
 
+  // Move focus to the success heading when the terminal screen renders so a
+  // keyboard/screen-reader user is taken to the confirmation rather than being
+  // stranded on the (now-unmounted) form. The heading is tabIndex={-1} so it can
+  // receive programmatic focus without entering the tab order.
+  const successHeadingRef = React.useRef<HTMLHeadingElement>(null);
+  React.useEffect(() => {
+    if (done) successHeadingRef.current?.focus();
+  }, [done]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -67,7 +76,7 @@ export function CheckInForm({ code, orgName }: Props) {
         <span className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
           <CheckCircle2 className="h-7 w-7" aria-hidden="true" />
         </span>
-        <h2 className="text-2xl font-semibold tracking-tight">
+        <h2 ref={successHeadingRef} tabIndex={-1} className="text-2xl font-semibold tracking-tight outline-none">
           {done.isNewPnm ? `Welcome, ${firstName(done.name)}!` : `You're in, ${firstName(done.name)}.`}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
@@ -213,7 +222,7 @@ export function CheckInForm({ code, orgName }: Props) {
       )}
 
       {error && (
-        <p className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+        <p role="alert" aria-live="assertive" className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
           {error}
         </p>
       )}

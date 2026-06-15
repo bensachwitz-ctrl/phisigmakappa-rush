@@ -64,7 +64,7 @@ export function generateSignedPdfBuffer(details: SigneeDetails): Buffer {
   drawCornerBrackets(12, 12, 6);
 
   // 2. Header
-  const orgName = details.organization || "GREEK LIFE SYSTEMS PLATFORM";
+  const orgName = details.organization || "Greek Stack";
   doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);

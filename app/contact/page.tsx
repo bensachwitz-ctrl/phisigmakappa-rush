@@ -282,7 +282,7 @@ function ApexHeader() {
         <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
           <GreekstackWordmark
             size="md"
-            markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+            markClassName="h-8 w-8 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
         <div className="flex items-center gap-4">

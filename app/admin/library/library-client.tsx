@@ -394,7 +394,7 @@ export function LibraryClient({
 
       {/* Upload Dialog */}
       <Dialog open={uploadOpen} onOpenChange={(o) => { if (!uploading && !saving) setUploadOpen(o); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
           </DialogHeader>
@@ -501,7 +501,7 @@ export function LibraryClient({
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleting} onOpenChange={(o) => { if (!deleteBusy && !o) setDeleting(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
           </DialogHeader>

@@ -48,7 +48,9 @@ export function FloatingSymbols({
     const hasLetters = alphabet.length > 0;
 
     const items: FloatingSymbol[] = [];
-    for (let i = 0; i < 25; i++) {
+    // 12 nodes (down from 25) — a calmer ambient field that also halves the
+    // number of compositor layers behind the hero.
+    for (let i = 0; i < 12; i++) {
       let type: "text" | "crest" | "school" = "crest";
       if (hasLetters) {
         const r = Math.random();
@@ -98,10 +100,15 @@ export function FloatingSymbols({
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`} aria-hidden="true">
       <style dangerouslySetInnerHTML={{ __html: `
+        /* TRANSFORM-ONLY float — never animates the layout-triggering \`top\`
+           property. The item is parked at top:0 and the entire vertical journey
+           (from just below the viewport up past the top) is driven by a single
+           composited translate3d on the Y axis, combined with the horizontal
+           drift + rotation. Animating only transform/opacity keeps this off the
+           main thread (no layout/paint per frame), which is the whole point. */
         @keyframes float-up {
           0% {
-            top: 105%;
-            transform: translate3d(0, 0, 0) rotate(0deg);
+            transform: translate3d(0, 115vh, 0) rotate(0deg);
             opacity: 0;
           }
           10% {
@@ -111,16 +118,16 @@ export function FloatingSymbols({
             opacity: 0.35;
           }
           100% {
-            top: -10%;
-            transform: translate3d(var(--drift), 0, 0) rotate(var(--rotate));
+            transform: translate3d(var(--drift), -15vh, 0) rotate(var(--rotate));
             opacity: 0;
           }
         }
         .floating-item {
           position: absolute;
+          top: 0;
           animation: float-up var(--duration) linear infinite;
           animation-delay: var(--delay);
-          will-change: top, transform, opacity;
+          will-change: transform, opacity;
           opacity: 0;
           color: var(--brand-primary, #38bdf8);
         }

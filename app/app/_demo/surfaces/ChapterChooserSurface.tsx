@@ -104,7 +104,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
         <div className="relative mt-4 grid grid-cols-2 rounded-2xl border border-slate-200 bg-slate-100 p-1">
           <span
             aria-hidden="true"
-            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-xl bg-white shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-xl bg-white shadow-sm transition-transform duration-300 ease-gs-spring"
             style={{ transform: chooserMode === "create" ? "translateX(calc(100% + 0.5rem))" : "translateX(0)" }}
           />
           <button
@@ -154,10 +154,14 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                     className="press group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <span
-                      className="flex h-12 w-12 items-center justify-center rounded-xl text-[16px] font-extrabold text-white shadow-sm"
-                      style={{ background: `linear-gradient(140deg, ${b.primaryColor}, ${sec})` }}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-[16px] font-extrabold text-white shadow-sm overflow-hidden"
+                      style={{ background: b.crestUrl ? "transparent" : `linear-gradient(140deg, ${b.primaryColor}, ${sec})` }}
                     >
-                      {b.letters}
+                      {b.crestUrl ? (
+                        <img src={b.crestUrl} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        b.letters
+                      )}
                     </span>
                     <span className="line-clamp-2 text-[11px] font-bold leading-tight text-slate-700">{b.name}</span>
                   </button>

@@ -100,6 +100,7 @@ export async function POST(req: Request) {
         name: true,
         plan: true,
         stripeCustomerId: true,
+        stripeSubscriptionId: true,
         subscriptionStatus: true,
       },
     })
@@ -117,11 +118,49 @@ export async function POST(req: Request) {
           name: true,
           plan: true,
           stripeCustomerId: true,
+          stripeSubscriptionId: true,
           subscriptionStatus: true,
         },
       });
     } catch {
       tenant = null;
+    }
+  }
+
+  // ── Double-billing guard ─────────────────────────────────────────────────
+  // If this chapter ALREADY has a live platform subscription, do NOT mint a
+  // second Checkout — that would create a duplicate subscription and bill the
+  // chapter twice for the same plan. We re-VERIFY against Stripe (read-only) so
+  // we never refuse on a stale local mirror: only an actually-live subscription
+  // blocks. A genuinely active/trialing/past_due subscription → 409 with a clear
+  // pointer to the billing portal (where they change plan / payment method /
+  // cancel). Canceled/incomplete or a subscription Stripe no longer has → fall
+  // through and let them re-subscribe.
+  const mirroredActive =
+    tenant?.subscriptionStatus === "active" ||
+    tenant?.subscriptionStatus === "trialing" ||
+    tenant?.subscriptionStatus === "past_due";
+  if (tenant?.stripeSubscriptionId && mirroredActive) {
+    let live: Stripe.Subscription | null = null;
+    try {
+      live = await stripe.subscriptions.retrieve(tenant.stripeSubscriptionId);
+    } catch {
+      // Stripe doesn't recognize the stored subscription id (deleted/migrated) —
+      // treat the local mirror as stale and allow a fresh subscription below.
+      live = null;
+    }
+    const LIVE_BLOCKING = new Set(["active", "trialing", "past_due", "unpaid", "incomplete"]);
+    if (live && LIVE_BLOCKING.has(live.status)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Your chapter already has an active Greekstack subscription. Open the billing portal to change your plan, update payment, or cancel.",
+          code: "already_subscribed",
+          manageUrl: "/admin/billing",
+        },
+        { status: 409 },
+      );
     }
   }
 

@@ -78,7 +78,7 @@ export function generateDuesReceiptBuffer(details: DuesReceiptDetails): Buffer {
   drawCornerBrackets(12, 12, 6);
 
   // 2. Header
-  const orgName = details.chapterName || "GREEK LIFE SYSTEMS PLATFORM";
+  const orgName = details.chapterName || "Greek Stack";
   doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);

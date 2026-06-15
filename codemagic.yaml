@@ -15,27 +15,30 @@
 #   4. npx cap sync ios  (installs native plugin pods: push, preferences, etc.)
 #   5. Sets MARKETING_VERSION from the tag (v1.2.3 → 1.2.3) + a monotonic build #
 #   6. Patches Info.plist (push entitlement note) + iPhone-only device family
-#   7. Imports the iOS Distribution cert (.p12) + provisioning profile
-#   8. Archives + exports the IPA with manual signing
+#   7. AUTOMATIC SIGNING: fetches (and creates if missing) the App Store
+#      distribution cert + provisioning profile via the App Store Connect API key
+#      alone — `app-store-connect fetch-signing-files` + `keychain
+#      add-certificates` + `xcode-project use-profiles`. No .p12 / .mobileprovision
+#      to manage by hand.
+#   8. Archives + exports the IPA
 #   9. Uploads to App Store Connect → TestFlight Internal Testing
 #
 # Trigger: a git tag matching `v*` (e.g. `v1.0.0`). NO auto-deploy of the web app.
 #
 # REQUIRED Codemagic environment variable group `greekstack_ios` (Codemagic UI →
-# greek-stack → Environment variables → Add group). All marked Secret:
+# greek-stack → Environment variables → Add group). All marked Secret —
+# JUST THE THREE App Store Connect API key vars (automatic signing derives the
+# cert + profile from these; the old IOS_DIST_* / IOS_PROFILE_* secrets are no
+# longer needed):
 #
 #   APP_STORE_CONNECT_KEY_IDENTIFIER   — ASC API key ID, 10 chars (e.g. ANZ67ZGPGR)
 #   APP_STORE_CONNECT_ISSUER_ID        — ASC API issuer UUID
 #   APP_STORE_CONNECT_PRIVATE_KEY_B64  — base64 of AuthKey_<KEYID>.p8
-#   IOS_DIST_P12_BASE64                — base64 of the iOS Distribution cert .p12
-#   IOS_DIST_P12_PASSWORD              — password for the .p12
-#   IOS_PROFILE_BASE64                 — base64 of the App Store .mobileprovision
-#   IOS_PROFILE_NAME                   — profile Name (e.g. "Greek Stack App Store")
-#   IOS_PROFILE_UUID                   — profile UUID
 #
-# The provisioning profile + App ID (com.greekstack.app) must have the Push
-# Notifications capability enabled in the Apple Developer portal, and an APNs
-# Auth Key (.p8) uploaded to App Store Connect, for push to function in TestFlight.
+# The App ID (com.greekstack.app) must have the Push Notifications + Associated
+# Domains capabilities enabled in the Apple Developer portal, and an APNs Auth Key
+# (.p8) uploaded to App Store Connect, for push to function in TestFlight. The ASC
+# API key needs the App Manager role so it can create the signing files.
 
 workflows:
   ios-testflight:
@@ -123,10 +126,15 @@ workflows:
             sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" "$PBX"
           fi
 
-      - name: Patch pbxproj for Manual signing on Release config
+      - name: Force Manual signing on Release config (use-profiles writes the rest)
         # `cap add ios` defaults to Automatic signing + "iPhone Developer" on
-        # Release — wrong for App Store archives. Flip Release to Manual +
-        # iPhone Distribution so xcodebuild honors PROVISIONING_PROFILE_SPECIFIER.
+        # Release. For automatic signing via the ASC API key we still archive with
+        # CODE_SIGN_STYLE=Manual, because `xcode-project use-profiles` (run after the
+        # fetch step below) writes the fetched distribution profile + cert identity
+        # into the build settings and xcodebuild must honor those explicit values
+        # rather than try to talk to a Developer-account session that doesn't exist
+        # on the runner. Flip the identity to iPhone Distribution to match the
+        # App Store cert that fetch-signing-files creates.
         script: |
           PBX="ios/App/App.xcodeproj/project.pbxproj"
           if [ -f "$PBX" ]; then
@@ -161,14 +169,21 @@ workflows:
           echo "--- App.entitlements ---"
           cat "$ENT"
 
-      - name: Import iOS Distribution cert + install provisioning profile
+      - name: Fetch signing files via App Store Connect API (automatic signing)
+        # AUTOMATIC SIGNING. Instead of hand-managed .p12 + .mobileprovision
+        # secrets, Codemagic's `app-store-connect` CLI uses the ASC API key
+        # (the three APP_STORE_CONNECT_* vars + the `codemagic` integration) to
+        # fetch — and `--create` if absent — the App Store distribution cert and
+        # provisioning profile, install the cert into a fresh keychain, and write
+        # the profile into the Xcode build settings. This removes the two most
+        # common failure modes ("No signing certificate" / "profile doesn't
+        # match") and the 5 fragile IOS_DIST_*/IOS_PROFILE_* secrets.
         script: |
           set -e
 
-          # Validate required secrets.
-          for var in IOS_DIST_P12_BASE64 IOS_DIST_P12_PASSWORD \
-                     IOS_PROFILE_BASE64 IOS_PROFILE_NAME IOS_PROFILE_UUID \
-                     APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_ISSUER_ID \
+          # Validate the (now only three) required secrets.
+          for var in APP_STORE_CONNECT_KEY_IDENTIFIER \
+                     APP_STORE_CONNECT_ISSUER_ID \
                      APP_STORE_CONNECT_PRIVATE_KEY_B64; do
             eval "val=\${$var}"
             if [ -z "$val" ]; then
@@ -177,39 +192,8 @@ workflows:
             fi
           done
 
-          # 1. Decode the .p12.
-          P12_PATH=$(mktemp -t dist.XXXXXX.p12)
-          echo "$IOS_DIST_P12_BASE64" | base64 --decode > "$P12_PATH"
-
-          # 2. Temp keychain, import cert, set default.
-          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-          KEYCHAIN_PATH="$HOME/Library/Keychains/build.keychain-db"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$P12_PATH" \
-            -P "$IOS_DIST_P12_PASSWORD" \
-            -A -t cert -f pkcs12 \
-            -k "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: \
-            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" \
-            "$HOME/Library/Keychains/login.keychain-db"
-          security default-keychain -s "$KEYCHAIN_PATH"
-
-          echo "--- Codesigning identities ---"
-          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-
-          # 3. Install the existing provisioning profile.
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-          PROFILE_FILE="$PROFILES_DIR/$IOS_PROFILE_UUID.mobileprovision"
-          echo "$IOS_PROFILE_BASE64" | base64 --decode > "$PROFILE_FILE"
-          PROFILE_PLIST=$(security cms -D -i "$PROFILE_FILE")
-          /usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<<"$PROFILE_PLIST"
-          /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<<"$PROFILE_PLIST"
-
-          # 4. Decode the App Store Connect API key for the upload step.
+          # Decode the ASC API key (.p8) — used both for signing-file fetch and
+          # the later upload step.
           mkdir -p "$HOME/private_keys"
           API_KEY_FILE="$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
           echo "$APP_STORE_CONNECT_PRIVATE_KEY_B64" | base64 --decode > "$API_KEY_FILE"
@@ -218,68 +202,65 @@ workflows:
             | grep -E "^-----BEGIN (PRIVATE|EC PRIVATE) KEY-----$" \
             || { echo "::error::API key file header check failed"; exit 1; }
 
-      - name: Archive + Export IPA (manual signing)
+          # Fresh keychain for the fetched distribution cert.
+          keychain initialize
+
+          # Fetch (creating if missing) the App Store distribution cert + profile
+          # for the bundle id. --create provisions them on first run.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --private-key "@file:$API_KEY_FILE" \
+            --create
+
+          # Add the fetched distribution certificate(s) to the keychain.
+          keychain add-certificates
+
+          # Write the fetched provisioning profile + cert identity into the Xcode
+          # project build settings so the (Manual-style) archive uses them.
+          xcode-project use-profiles
+
+          echo "--- Codesigning identities ---"
+          security find-identity -v -p codesigning || true
+
+      - name: Archive + Export IPA (automatic signing via fetched profile)
         script: |
           set -e
 
           API_KEY_FILE="$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
 
-          TEAM_ID=$(security find-identity -v -p codesigning \
-            | grep -m1 "iPhone Distribution" \
-            | sed -E 's/.*\(([A-Z0-9]+)\).*/\1/')
-          if [ -z "$TEAM_ID" ]; then
-            echo "::error::Could not extract Team ID from keychain identity"
-            security find-identity -v -p codesigning
-            exit 1
-          fi
-          echo "Team ID: $TEAM_ID"
-
           ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive"
           IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
           mkdir -p "$IPA_DIR"
 
+          # `xcode-project use-profiles` (previous step) already wrote the correct
+          # DEVELOPMENT_TEAM, CODE_SIGN_IDENTITY and PROVISIONING_PROFILE into the
+          # build settings from the fetched profile, so we don't pass them by hand.
           xcodebuild \
             -workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$ARCHIVE_PATH" \
-            -allowProvisioningUpdates \
             -authenticationKeyPath "$API_KEY_FILE" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_NAME" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
             archive
 
-          printf '%s\n' \
-            '<?xml version="1.0" encoding="UTF-8"?>' \
-            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
-            '<plist version="1.0">' \
-            '<dict>' \
-            '  <key>method</key><string>app-store</string>' \
-            "  <key>teamID</key><string>$TEAM_ID</string>" \
-            '  <key>uploadSymbols</key><true/>' \
-            '  <key>uploadBitcode</key><false/>' \
-            '  <key>compileBitcode</key><false/>' \
-            '  <key>signingStyle</key><string>manual</string>' \
-            '  <key>provisioningProfiles</key>' \
-            '  <dict>' \
-            "    <key>$BUNDLE_ID</key><string>$IOS_PROFILE_NAME</string>" \
-            '  </dict>' \
-            '</dict>' \
-            '</plist>' \
-            > /tmp/ExportOptions.plist
+          # Export the archive to a signed App Store .ipa. Codemagic provides
+          # `xcode-project use-profiles --export-options-plist` to emit a matching
+          # ExportOptions.plist from the fetched profile.
+          EXPORT_OPTIONS="$CM_BUILD_DIR/build/ios/ExportOptions.plist"
+          xcode-project use-profiles \
+            --export-options-plist "$EXPORT_OPTIONS"
           echo "--- ExportOptions.plist ---"
-          cat /tmp/ExportOptions.plist
+          cat "$EXPORT_OPTIONS"
 
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportOptionsPlist "$EXPORT_OPTIONS" \
             -exportPath "$IPA_DIR" \
-            -allowProvisioningUpdates \
             -authenticationKeyPath "$API_KEY_FILE" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -209,14 +210,51 @@ export function RushForm({
   function validateStep(s: StepId): boolean {
     const e: Record<string, string> = {};
     if (s === "contact") {
-      if (data.name.trim().length < 2) e.name = "Please enter your full name.";
-      if (data.phone.replace(/\D/g, "").length < 10) e.phone = "Enter a valid phone number.";
-      if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Enter a valid email.";
+      const contactSchema = z.object({
+        name: z.string().min(2, "Please enter your full name."),
+        phone: z.string().refine((val) => val.replace(/\D/g, "").length >= 10, "Enter a valid phone number."),
+        email: z.string().email("Enter a valid email.").or(z.literal("")),
+      });
+      const result = contactSchema.safeParse({
+        name: data.name.trim(),
+        phone: data.phone,
+        email: data.email.trim(),
+      });
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          const path = issue.path[0] as string;
+          if (!e[path]) {
+            e[path] = issue.message;
+          }
+        }
+      }
     }
     if (s === "profile") {
-      if (!data.year) e.year = "Pick your year.";
+      const profileSchema = z.object({
+        year: z.string().min(1, "Pick your year."),
+      });
+      const result = profileSchema.safeParse({
+        year: data.year,
+      });
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          const path = issue.path[0] as string;
+          if (!e[path]) {
+            e[path] = issue.message;
+          }
+        }
+      }
     }
     setErrors(e);
+
+    const firstErrorKey = Object.keys(e)[0];
+    if (firstErrorKey) {
+      setTimeout(() => {
+        const el = document.getElementById(firstErrorKey) || (document.querySelector(`[name="${firstErrorKey}"]`) as HTMLElement);
+        if (el) el.focus();
+      }, 50);
+    }
+
     return Object.keys(e).length === 0;
   }
 
@@ -261,6 +299,12 @@ export function RushForm({
         backgroundInfo: data.about.trim(),
         headshotUrl: data.headshotUrl,
         ageAttestation: data.ageAttestation,
+        // Server-side consent gate (TCPA): the express-written-consent box must
+        // be affirmatively checked before a consent receipt is created. The
+        // submit button is already client-gated on `consent`, but we send it so
+        // the server can REFUSE to fabricate a receipt for any direct API caller
+        // that bypasses the UI. /api/rush returns 400 when this is not true.
+        consent,
         website: honeypot,
         customAnswers: data.customAnswers,
       };

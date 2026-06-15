@@ -68,7 +68,6 @@ import {
   FeatureDetailModal,
   type FeatureDetail,
 } from "@/components/site/feature-detail-modal";
-import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { FadingVideo } from "@/components/site/fading-video";
 
 import {
@@ -566,7 +565,7 @@ const STEPS: { icon: GsIcon; img: string; step: string; title: string; desc: str
     img: "gl-bid",
     step: "01",
     title: "Sign up",
-    desc: "Create your account and claim a chapter subdomain. Start your 30-day free trial in a minute with card setup.",
+    desc: "Create your account and claim a chapter subdomain. Your first month is free — set up in a minute, no card required to launch.",
   },
   {
     icon: IconWhiteLabel,
@@ -641,16 +640,18 @@ const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
 ];
 
 /* ── Pricing ──────────────────────────────────────────────────────────────
-   TWO simple, honest ways to pay for the SAME full platform — kept deliberately
-   minimal so the choice is fluid (fewer options = easier decision):
+   The honest ways to pay for the SAME full platform — kept deliberately minimal
+   so the choice is fluid (fewer options = easier decision):
      1. PLATFORM — the lead is FIRST MONTH FREE. After that you pick how you pay:
         • Monthly: $50/month + $200 per rush cycle, OR
         • Yearly:  $800/year — all rush fees included (the better value; this is
           the recommended/featured card and wears the shimmer ring + ribbon).
-     2. CUSTOM — need something tailored? Talk to Ben about a custom build +
+     2. DUES-SHARE — waive the monthly platform fee entirely and instead pay a
+        small percentage on dues collected online (1.5% intro, then 3%); no card
+        required to start.
+     3. CUSTOM — need something tailored? Talk to Ben about a custom build +
         pricing → /contact#book (the existing book-a-call path).
-   There is NO semester option and NO dues-share plan — pricing is flat monthly,
-   flat yearly, or custom. Every method unlocks the entire product (same
+   There is NO semester option. Every method unlocks the entire product (same
    features, same support). CTAs route real (/onboard, /contact#book). */
 type Plan = {
   id: string;
@@ -899,7 +900,7 @@ function SiteNav() {
               tilts on hover for a touch of life. */}
           <GreekstackWordmark
             size="md"
-            markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+            markClassName="h-8 w-8 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
 
@@ -1119,27 +1120,16 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
 function Hero() {
   return (
     <AnimatedBackground variant="aurora-grid" tone="platform" className="relative">
-      {/* Collegiate Greek Stack promo background video */}
-      <FadingVideo
-        src="/brand/gen/greekstack-promo.mp4"
-        className="absolute inset-0 w-full h-full object-cover z-[-8] opacity-[0.25]"
-      />
-      {/* Faint film-grain texture for tactile depth — sits furthest back at
-          ~4% opacity so it never competes with content (decorative, static). */}
+      {/* MOTION BUDGET (GOTY): the above-the-fold hero is held to a small number
+          of concurrent motion systems. We keep ONE ambient background (the
+          aurora-grid of <AnimatedBackground>) and the typewriter as the single
+          hero motion moment; the entrance word-reveal/slide-ups are one-shot, not
+          looping. The previously-stacked background video, drifting orbs, rising
+          Greek letters, and parallaxing grid were removed from the hero — they
+          compounded into 9+ concurrent infinite systems (compositing jank +
+          "motion = active" AI-slop) without adding meaning. The static film
+          grain stays (decorative, no animation). */}
       <Grain />
-      {/* Extra drifting orb layer + a parallaxing faint grid for real depth. */}
-      <FloatingOrbs />
-      {/* Floating Greek letters rising randomly from bottom to top in the background */}
-      <FloatingSymbols fraternityLetters="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" greekLettersGlyphs="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" className="z-[-5]" />
-      {/* (Cursor spotlight removed — its mousemove-repainted 520px blur was a
-          major source of compositing jank / "glitching".) */}
-      <Parallax
-        aria-hidden="true"
-        translateY={70}
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:radial-gradient(ellipse_at_50%_30%,black_20%,transparent_70%)]"
-      >
-        <span />
-      </Parallax>
 
       <section className="container relative z-10 pb-16 pt-20 sm:pb-24 sm:pt-28">
         <div className="mx-auto max-w-3xl text-center">
@@ -1196,30 +1186,23 @@ function Hero() {
             letters and colors, live the same day.
           </p>
 
-          {/* Tagline/badge strip showcasing each feature and tool it provides */}
+          {/* Tagline/badge strip — the SIX highest-signal tools, not an
+              exhaustive keyword dump. Curated (was 17) so the band reads as a
+              confident "here's the core," lets the H1 above breathe, and doesn't
+              dilute the "8 tools in one site" stat below it. The full breadth is
+              carried by the feature grid further down the page. */}
           <div className="mx-auto mt-8 flex flex-wrap justify-center gap-2 max-w-2xl animate-slide-up [animation-delay:240ms]">
             {[
               { label: "Recruitment & Rush", icon: "recruitment" },
               { label: "Online Dues Collection", icon: "dues" },
-              { label: "Roster & Ranks", icon: "portal" },
               { label: "Event RSVP & Attendance", icon: "checkin" },
               { label: "Secret Ballots & Elections", icon: "ballot" },
               { label: "Treasury & Budgets", icon: "treasury" },
-              { label: "Officer Access Control", icon: "officers" },
-              { label: "TCPA-Compliant SMS Broadcasts", icon: "announcements" },
-              { label: "Alumni Giving Campaigns", icon: "alumni" },
-              { label: "Bespoke White-Label Domains", icon: "branding" },
-              { label: "Brotherhood Bonds", icon: "brotherhood" },
-              { label: "Bid Day Management", icon: "bid" },
-              { label: "Chapter Excellence", icon: "trophy" },
-              { label: "Bylaws & Governance", icon: "gavel" },
-              { label: "Officer Messaging", icon: "chat" },
-              { label: "National Member Directory", icon: "network" },
-              { label: "High-Security Data Vault", icon: "shield" },
+              { label: "White-Label Domains", icon: "branding" },
             ].map((feat, idx) => (
               <span
                 key={idx}
-                className="flex items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-50/40 px-3 py-1 text-xs font-semibold text-blue-800 shadow-[0_2px_10px_-4px_rgba(59,130,246,0.1)] transition-all hover:scale-105 hover:bg-blue-50 hover:border-blue-500/25 dark:border-blue-500/20 dark:bg-blue-950/20 dark:text-blue-300 dark:hover:bg-blue-950/40"
+                className="flex items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-50/40 px-3 py-1 text-xs font-semibold text-blue-800 shadow-[0_2px_10px_-4px_rgba(59,130,246,0.1)] transition-all hover:scale-105 hover:bg-blue-50 hover:border-blue-500/25"
               >
                 <span className="w-3 h-3 opacity-85 flex items-center justify-center text-blue-700">
                   <BrandGlyph name={feat.icon as any} size="xs" />
@@ -1269,7 +1252,7 @@ function Hero() {
 
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground animate-slide-up [animation-delay:360ms]">
             <span className="inline-flex items-center gap-1.5">
-              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> 30-day free trial
+              <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> First month free
             </span>
             <span className="inline-flex items-center gap-1.5">
               <IconCheckCircle className="h-3.5 w-3.5 text-blue-600" /> Live the same day
@@ -1401,7 +1384,7 @@ function Hero() {
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-center rounded-2xl bg-blue-950/0 transition-colors duration-300 group-hover/preview:bg-blue-950/[0.06] group-focus-visible/preview:bg-blue-950/[0.06] sm:flex"
                 >
-                  <span className="translate-y-1.5 scale-95 rounded-full bg-white/95 px-5 py-2.5 text-sm font-bold text-blue-700 opacity-0 shadow-[0_18px_40px_-12px_rgba(15,23,42,0.35)] ring-1 ring-blue-500/20 backdrop-blur transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/preview:translate-y-0 group-hover/preview:scale-100 group-hover/preview:opacity-100 group-focus-visible/preview:translate-y-0 group-focus-visible/preview:scale-100 group-focus-visible/preview:opacity-100 motion-reduce:transition-none">
+                  <span className="translate-y-1.5 scale-95 rounded-full bg-white/95 px-5 py-2.5 text-sm font-bold text-blue-700 opacity-0 shadow-[0_18px_40px_-12px_rgba(15,23,42,0.35)] ring-1 ring-blue-500/20 backdrop-blur transition-all duration-300 ease-gs-spring group-hover/preview:translate-y-0 group-hover/preview:scale-100 group-hover/preview:opacity-100 group-focus-visible/preview:translate-y-0 group-focus-visible/preview:scale-100 group-focus-visible/preview:opacity-100 motion-reduce:transition-none">
                     Open the interactive demo &rarr;
                   </span>
                 </span>
@@ -1545,7 +1528,7 @@ function ProductPreview() {
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 motion-safe:transition-[width] motion-safe:duration-[1400ms] motion-safe:ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 motion-safe:transition-[width] motion-safe:duration-[1400ms] motion-safe:ease-gs-spring"
                   style={{ width: filled ? "62%" : "0%" }}
                 />
               </div>
@@ -1740,7 +1723,7 @@ function Features() {
                   <GlyphTile
                     name={item.img}
                     size="lg"
-                    className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+                    className="transition-transform duration-300 ease-gs-spring group-hover:scale-105"
                   />
                   <div className="min-w-0">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -1811,14 +1794,14 @@ function FeatureCard({
     <BrandGlyph
       name={img}
       size="lg"
-      className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+      className="transition-transform duration-300 ease-gs-spring group-hover:scale-105"
     />
   ) : (
     <IconChip
       icon={icon}
       tone="platform"
       size="lg"
-      className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+      className="shrink-0 transition-transform duration-300 ease-gs-spring group-hover:scale-105"
     />
   );
 
@@ -2129,7 +2112,7 @@ function HowItWorks() {
                   blue-tinted ambient shadow on hover. */}
               <div className="group relative h-full rounded-2xl gs-glass p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-16px_rgba(15,23,42,0.22),0_40px_70px_-40px_rgba(37,99,235,0.5)]">
                 <div className="mx-auto flex justify-center">
-                  <GlyphTile name={s.img} size="lg" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-rotate-3" />
+                  <GlyphTile name={s.img} size="lg" className="transition-transform duration-300 ease-gs-spring group-hover:scale-105 group-hover:-rotate-3" />
                 </div>
                 <span className="mt-4 block text-xs font-bold tracking-[0.2em] text-blue-700">
                   STEP {s.step}
@@ -2500,7 +2483,7 @@ function PlanCard({ plan }: { plan: Plan }) {
       )}
 
       <div className="relative flex items-center gap-3">
-        <IconChip icon={plan.icon} tone="platform" size="md" className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6" />
+        <IconChip icon={plan.icon} tone="platform" size="md" className="transition-transform duration-300 ease-gs-spring group-hover:scale-105" />
         <span className="text-sm font-bold uppercase tracking-[0.16em] text-blue-700">
           {plan.name}
         </span>
@@ -2653,7 +2636,7 @@ function Faq() {
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
             The real questions chapter officers ask — security, compliance, fees, and getting
-            started. Still curious? Start your 30-day free trial and see it yourself.
+            started. Still curious? Your first month is free — launch and see it yourself.
           </p>
         </Reveal>
 
@@ -2684,7 +2667,7 @@ function Faq() {
                       <span
                         aria-hidden="true"
                         className={
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none " +
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/15 to-sky-500/10 ring-1 ring-blue-500/20 transition-transform duration-300 ease-gs-spring motion-reduce:transition-none " +
                           (isOpen ? "rotate-180" : "")
                         }
                       >
@@ -2779,6 +2762,11 @@ function PracticeShowcase() {
             {/* Background Video */}
             <FadingVideo
               src="/brand/gen/gs-showcase-operations.mp4"
+              // Static first-frame poster (extracted from the clip itself) so the
+              // card paints a real branded frame instantly instead of an empty box
+              // while the multi-MB clip streams — and it's the full fallback under
+              // prefers-reduced-motion (no autoplaying loop).
+              poster="/brand/gen/gs-showcase-operations-poster.jpg"
               className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-105"
             />
             
@@ -3078,7 +3066,7 @@ function SiteFooter() {
             <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
               <GreekstackWordmark
                 size="sm"
-                markClassName="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg]"
+                markClassName="h-7 w-7 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg]"
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-foreground/80">

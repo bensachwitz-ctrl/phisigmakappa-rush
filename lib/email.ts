@@ -263,25 +263,68 @@ export async function sendEmail(opts: SendEmailOpts): Promise<EmailResult> {
     return { ok: true, provider: "mock", mock: true };
   }
 
-  try {
-    const resend = new Resend(apiKey);
-    const res = await resend.emails.send({
-      from,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text || opts.subject,
-      replyTo: opts.replyTo,
-    });
+  const resend = new Resend(apiKey);
 
-    if ("error" in res && res.error) {
-      console.error("Resend API error:", res.error);
-      return { ok: false, provider: "resend", error: res.error.message };
+  // Single send attempt against a given From header. Normalizes both the
+  // structured `res.error` and a thrown exception into one shape so the
+  // caller can decide whether the failure is the recoverable
+  // "domain-not-verified" case and re-route.
+  async function attempt(
+    fromHeader: string,
+  ): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
+    try {
+      const res = await resend.emails.send({
+        from: fromHeader,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text || opts.subject,
+        replyTo: opts.replyTo,
+      });
+      if ("error" in res && res.error) {
+        return { ok: false, error: res.error.message };
+      }
+      return { ok: true, id: (res as any).id };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || "Unknown error" };
     }
-
-    return { ok: true, provider: "resend", id: (res as any).id };
-  } catch (err: any) {
-    console.error("Resend execution error:", err);
-    return { ok: false, provider: "resend", error: err?.message || "Unknown error" };
   }
+
+  // A send fails with this when the From-DOMAIN isn't verified in the Resend
+  // account (the dominant misconfiguration: a chapter pastes a Resend key but
+  // never verifies its custom sending domain, or RESEND_FROM_EMAIL points at an
+  // unverified domain). Resend returns a 403 whose message names the domain and
+  // says it "is not verified". Match defensively on the wording.
+  function isUnverifiedDomainError(msg: string): boolean {
+    const m = msg.toLowerCase();
+    return m.includes("not verified") || (m.includes("domain") && m.includes("verif"));
+  }
+
+  // Resend lets EVERY account send from this shared, always-verified address
+  // (no domain setup required). We re-route to it when the chapter's own
+  // From-domain is unverified so a transactional email (password reset, alumni
+  // invite, booking confirmation) still LANDS instead of silently failing.
+  // The chapter-aware from-NAME is preserved; only the address changes.
+  const RESEND_FALLBACK_ADDR = "onboarding@resend.dev";
+
+  const first = await attempt(from);
+  if (first.ok) {
+    return { ok: true, provider: "resend", id: first.id };
+  }
+
+  if (isUnverifiedDomainError(first.error) && fromAddr !== RESEND_FALLBACK_ADDR) {
+    console.warn(
+      `[email] Resend From-domain unverified ("${fromAddr}"); re-routing via ${RESEND_FALLBACK_ADDR}. ` +
+        `Verify the domain in Resend (or set resend.fromEmail / RESEND_FROM_EMAIL to a verified sender) to brand the From address.`,
+    );
+    const fallback = await attempt(`${fromName} <${RESEND_FALLBACK_ADDR}>`);
+    if (fallback.ok) {
+      return { ok: true, provider: "resend", id: fallback.id };
+    }
+    console.error("Resend fallback send failed:", fallback.error);
+    return { ok: false, provider: "resend", error: fallback.error };
+  }
+
+  console.error("Resend API error:", first.error);
+  return { ok: false, provider: "resend", error: first.error };
 }

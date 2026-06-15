@@ -1,10 +1,16 @@
 "use client";
 
+// NOTE: the force-dynamic route config lives in the sibling server-component
+// layout.tsx — `export const dynamic` is ignored inside a "use client" file.
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
-import { PublicFooter } from "@/components/site/footer";
+// "use client" page → use the client-safe footer. The async server
+// <PublicFooter/> throws "Not implemented." at request time inside a client
+// tree, which silently broke (omitted) the footer on this screen.
+import { PublicFooterClient } from "@/components/site/footer-client";
 import { Button } from "@/components/ui/button";
 import { 
   GraduationCap, 
@@ -564,7 +570,7 @@ export default function AlumniRegisterPage() {
         </main>
       </div>
 
-      <PublicFooter />
+      <PublicFooterClient />
     </div>
   );
 }

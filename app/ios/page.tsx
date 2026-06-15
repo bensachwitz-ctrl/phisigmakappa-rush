@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { getSubdomain } from "@/lib/prisma";
+import { resolveTestFlightUrl } from "@/lib/ios-app";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { 
   Smartphone, 
@@ -22,6 +23,18 @@ import {
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The chapter's TestFlight invite link. Owner-gated: it only exists once the iOS
+ * build is live in App Store Connect / TestFlight. Set NEXT_PUBLIC_TESTFLIGHT_URL
+ * to the real `https://testflight.apple.com/join/<code>` invite to light up the
+ * install CTAs. Until then the /ios page renders an honest "coming soon" state
+ * instead of a dead `…/join/placeholder` link (resolution + validation live in
+ * lib/ios-app.ts so they're unit-tested and reused).
+ */
+function testFlightUrl(): string | null {
+  return resolveTestFlightUrl(process.env.NEXT_PUBLIC_TESTFLIGHT_URL);
+}
 
 function requestHost(): string {
   try {
@@ -59,6 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function IosPage() {
+  const tfUrl = testFlightUrl();
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <ApexHeader />
@@ -74,31 +88,41 @@ export default async function IosPage() {
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-slate-100 p-8 sm:p-12 shadow-[0_24px_50px_-12px_rgba(15,23,42,0.6)]">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
-          <div className="absolute -right-24 -top-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -left-24 -bottom-24 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -right-24 -top-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-24 -bottom-24 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10">
             <div className="lg:col-span-7 space-y-6 text-left">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold uppercase tracking-wider border border-indigo-500/20">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-400/10 text-sky-300 text-xs font-semibold uppercase tracking-wider border border-sky-400/20">
                 <Smartphone className="w-3.5 h-3.5" /> Mobile Companion
               </span>
               <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
-                Greek Stack on <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">your iPhone</span>.
+                Greek Stack on <span className="bg-gradient-to-r from-sky-300 via-blue-400 to-amber-300 bg-clip-text text-transparent">your iPhone</span>.
               </h1>
               <p className="text-base sm:text-lg text-slate-300/90 leading-relaxed">
                 Unlock native iOS capabilities to stay connected with your chapter. Keep track of events, complete service hours, check-in for attendance, and coordinate directly on the go.
               </p>
               
               <div className="flex flex-wrap gap-4 pt-2">
-                <a
-                  href="https://testflight.apple.com/join/placeholder"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-sm font-bold rounded-2xl shadow-[0_8px_30px_rgb(99,102,241,0.3)] transition duration-200 hover:-translate-y-px"
-                >
-                  <Download className="w-4 h-4" />
-                  Install via TestFlight
-                </a>
+                {tfUrl ? (
+                  <a
+                    href={tfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-sm font-bold rounded-2xl shadow-[0_8px_30px_rgb(37,99,235,0.35)] transition duration-200 hover:-translate-y-px"
+                  >
+                    <Download className="w-4 h-4" aria-hidden="true" />
+                    Install via TestFlight
+                  </a>
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 text-slate-200 text-sm font-bold rounded-2xl border border-white/10"
+                    role="status"
+                  >
+                    <Smartphone className="w-4 h-4" aria-hidden="true" />
+                    iOS app — coming soon
+                  </span>
+                )}
                 <Link
                   href="#install-steps"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-semibold rounded-2xl border border-white/10 transition duration-200"
@@ -131,19 +155,19 @@ export default async function IosPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-[10px] font-bold">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-[10px] font-bold">
                           GS
                         </div>
                         <span className="text-xs font-bold tracking-tight text-white">Greek Stack</span>
                       </div>
-                      <Bell className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+                      <Bell className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
                     </div>
 
                     {/* Active Chapter Card */}
                     <div className="bg-slate-800/80 border border-slate-700/50 p-3 rounded-xl space-y-2 text-left">
                       <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400">Upcoming Event</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400">Upcoming Event</span>
                       </div>
                       <h4 className="text-xs font-bold text-white leading-tight">Chapter Meeting & Voting</h4>
                       <p className="text-[9px] text-slate-400">Sunday @ 7:00 PM • Memorial Hall</p>
@@ -164,7 +188,7 @@ export default async function IosPage() {
 
                   {/* Navigation bar */}
                   <div className="border-t border-slate-800/80 pt-2 flex justify-between items-center px-1 text-[8px] text-slate-400 font-medium z-20">
-                    <div className="flex flex-col items-center gap-0.5 text-indigo-400">
+                    <div className="flex flex-col items-center gap-0.5 text-sky-400">
                       <Smartphone className="w-3.5 h-3.5" />
                       <span>Feed</span>
                     </div>
@@ -198,7 +222,7 @@ export default async function IosPage() {
 
           <div className="grid gap-6 sm:grid-cols-3">
             <FeatureCard
-              icon={<Bell className="h-6 w-6 text-indigo-600" />}
+              icon={<Bell className="h-6 w-6 text-blue-600" />}
               title="Push Notifications"
               description="Never miss a chapter update, calendar changes, or rush announcement. Push notifications route you instantly to target pages."
             />
@@ -235,9 +259,13 @@ export default async function IosPage() {
             <StepItem
               number="2"
               title="Join the Beta"
-              description="Tap our TestFlight invitation link to install the latest build of Greek Stack."
-              actionLink="https://testflight.apple.com/join/placeholder"
-              actionText="Join Greek Stack Beta"
+              description={
+                tfUrl
+                  ? "Tap our TestFlight invitation link to install the latest build of Greek Stack."
+                  : "The TestFlight beta link will appear here the moment your chapter's iOS build goes live. Until then, the full platform runs in your mobile browser — add it to your Home Screen for an app-like experience."
+              }
+              actionLink={tfUrl || undefined}
+              actionText={tfUrl ? "Join Greek Stack Beta" : undefined}
             />
             <StepItem
               number="3"
@@ -291,7 +319,7 @@ function StepItem({
 }) {
   return (
     <div className="flex items-start gap-4 sm:gap-6 border-b border-border/50 pb-6 last:border-0 last:pb-0">
-      <div className="w-8 h-8 rounded-full bg-indigo-600/10 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-600/20">
+      <div className="w-8 h-8 rounded-full bg-blue-600/10 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-600/20">
         {number}
       </div>
       <div className="space-y-1.5 flex-1 text-left">
@@ -302,7 +330,7 @@ function StepItem({
             href={actionLink}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 pt-1.5 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 pt-1.5 transition-colors"
           >
             {actionText} <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -318,25 +346,25 @@ function ApexHeader() {
       {/* Lit bottom seam */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent"
       />
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
         <Link href="/" className="group inline-flex items-center" aria-label="Greekstack home">
           <GreekstackWordmark
             size="md"
-            markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+            markClassName="h-8 w-8 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
           />
         </Link>
         <div className="flex items-center gap-4">
           <Link
             href="/app?demo=true"
-            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
           >
             Interactive demo
           </Link>
           <Link
             href="/onboard"
-            className="text-sm font-semibold text-indigo-700 transition-colors hover:text-indigo-800"
+            className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
           >
             Get started
           </Link>
@@ -367,7 +395,7 @@ function ApexFooter() {
             <Link href="/terms" className="link-underline text-sm text-muted-foreground transition-colors hover:text-foreground">
               Terms
             </Link>
-            <Link href="/onboard" className="text-sm font-semibold text-indigo-700 transition-colors hover:text-indigo-800">
+            <Link href="/onboard" className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800">
               Get started
             </Link>
           </nav>

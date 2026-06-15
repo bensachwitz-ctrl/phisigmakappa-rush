@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { Wordmark } from "@/components/brand/wordmark";
 import { BidResponseForm } from "@/components/site/bid-response-form";
+import { ConfettiPayoff } from "@/components/ui/confetti";
 import { CheckCircle2, XCircle, Clock, ShieldCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -106,6 +107,7 @@ export default async function BidPage({ params }: { params: { token: string } })
 
         {result.kind === "already-responded" && (
           <div className="rounded-2xl border bg-card p-8 text-center">
+            {result.choice === "ACCEPTED" && <ConfettiPayoff />}
             <span className={`inline-flex h-12 w-12 items-center justify-center rounded-full mb-4 ${
               result.choice === "ACCEPTED" ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-700"
             }`}>

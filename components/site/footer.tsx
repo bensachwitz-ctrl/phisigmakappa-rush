@@ -4,8 +4,22 @@ import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 
-export async function PublicFooter() {
-  const cfg = await getSiteConfig();
+/**
+ * Presentational footer — PURE (no hooks, no async, no I/O). It takes a fully
+ * resolved SiteConfig map and renders the markup, so it is safe to render from
+ * BOTH a Server Component tree (via <PublicFooter/>) and a Client Component tree
+ * (via <PublicFooterClient/> in components/site/footer-client.tsx).
+ *
+ * WHY THIS SPLIT EXISTS: the original <PublicFooter/> was an ASYNC Server
+ * Component (it awaits getSiteConfig(), which reads the DB + request headers).
+ * Rendering an async Server Component from inside a "use client" page throws
+ * "Error: Not implemented." at request time — which 500'd the whole
+ * /alumni/onboard/[token] route and silently broke the footer on the
+ * reset-password and alumni/register client pages. Keeping the markup here as a
+ * synchronous, prop-driven view lets the client pages render it without ever
+ * awaiting a server function in the browser.
+ */
+export function PublicFooterView({ cfg }: { cfg: Record<string, string> }) {
   // Term-aware identity so the motto fallback re-genders per orgType.
   const identity = chapterIdentityFromCfg(cfg);
   // White-label fallbacks: any unset chapter-identity field falls back to a
@@ -122,4 +136,16 @@ export async function PublicFooter() {
       </div>
     </footer>
   );
+}
+
+/**
+ * Server-Component footer — loads the chapter's SiteConfig (DB + request
+ * headers) and renders the presentational view. Used by every SERVER page
+ * (app/page.tsx, app/privacy, donate/success, etc.). Async by nature, so it
+ * must NEVER be rendered from inside a "use client" tree — those use
+ * <PublicFooterClient/> instead.
+ */
+export async function PublicFooter() {
+  const cfg = await getSiteConfig();
+  return <PublicFooterView cfg={cfg} />;
 }

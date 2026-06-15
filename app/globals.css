@@ -943,15 +943,14 @@
   pointer-events: none;
 }
 
-@keyframes marquee {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
-}
-
+/* The marquee ANIMATION is owned entirely by components/site/anim/marquee.tsx
+   (scoped @keyframes gs-marquee + inline animationName/Duration), so a single
+   source of truth drives speed/direction per call-site. The old global
+   `@keyframes marquee` (22s) here was dead — it was always overridden by the
+   component's inline animationName, so removing it changes nothing visible.
+   This `.marquee-track` class remains only as the stable hook the component
+   targets for hover-pause and the reduced-motion freeze. */
 .marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 22s linear infinite;
   will-change: transform;
 }
 

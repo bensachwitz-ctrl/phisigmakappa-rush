@@ -53,6 +53,11 @@ import {
 } from "lucide-react";
 
 import {
+  IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
+  IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark, IconGrowth, IconChapter, IconAlumni,
+} from "@/components/brand/icons";
+
+import {
   FRATERNITY_BRANDS,
   DEMO_TENANTS,
   DEMO_CALLOUTS,
@@ -1453,9 +1458,9 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   // the owner's round-7 screenshot caught the long middot strings truncating
   // into orphan ellipses ("…net…", "…p…"). Three words max — they must fit.
   const VIEW_PERSONAS: { id: ViewPersona; icon: any; label: string; sub: string }[] = [
-    { id: "member", icon: User, label: "Active brother", sub: "Feed, events and dues" },
-    { id: "exec", icon: Crown, label: "Exec board", sub: "Roster, treasury and posts" },
-    { id: "alumni", icon: Briefcase, label: "Alumnus", sub: "Network, giving and jobs" },
+    { id: "member", icon: IconMembers, label: "Active brother", sub: "Feed, events and dues" },
+    { id: "exec", icon: IconSecurity, label: "Exec board", sub: "Roster, treasury and posts" },
+    { id: "alumni", icon: IconAlumni, label: "Alumnus", sub: "Network, giving and jobs" },
   ];
   const personaShortLabel =
     viewPersona === "exec" ? "Exec view" : viewPersona === "alumni" ? "Alumni view" : "Member view";
@@ -1465,27 +1470,27 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
   // stable) but show different icons/labels + route to different content.
   type TabId = "feed" | "events" | "rush" | "dues" | "directory" | "settings";
   const memberNav: { id: TabId; icon: any; label: string }[] = [
-    { id: "feed", icon: Bell, label: "Feed" },
-    { id: "events", icon: Calendar, label: "Events" },
-    { id: "rush", icon: Users, label: isRushActive ? "Rush" : "Pledges" },
-    { id: "dues", icon: DollarSign, label: "Dues" },
-    { id: "directory", icon: Globe, label: "Network" },
+    { id: "feed", icon: IconComms, label: "Feed" },
+    { id: "events", icon: IconEvents, label: "Events" },
+    { id: "rush", icon: IconRecruitment, label: isRushActive ? "Rush" : "Pledges" },
+    { id: "dues", icon: IconDues, label: "Dues" },
+    { id: "directory", icon: IconWhiteLabel, label: "Network" },
   ];
   // Alumni never see the rush pipeline in the real product — their fifth slot
   // is their own profile (Settings renders the alumni profile view).
   const alumniNav: { id: TabId; icon: any; label: string }[] = [
-    { id: "feed", icon: Bell, label: "Feed" },
-    { id: "events", icon: Calendar, label: "Events" },
-    { id: "dues", icon: Heart, label: "Giving" },
-    { id: "directory", icon: Globe, label: "Network" },
-    { id: "settings", icon: User, label: "Profile" },
+    { id: "feed", icon: IconComms, label: "Feed" },
+    { id: "events", icon: IconEvents, label: "Events" },
+    { id: "dues", icon: IconSpark, label: "Giving" },
+    { id: "directory", icon: IconWhiteLabel, label: "Network" },
+    { id: "settings", icon: IconChapter, label: "Profile" },
   ];
   const execNav: { id: TabId; icon: any; label: string }[] = [
-    { id: "feed", icon: Users, label: "Roster" },
-    { id: "events", icon: Bell, label: "Announce" },
-    { id: "rush", icon: TrendingUp, label: "Rush" },
-    { id: "dues", icon: DollarSign, label: "Dues" },
-    { id: "directory", icon: ShieldCheck, label: "Console" },
+    { id: "feed", icon: IconMembers, label: "Roster" },
+    { id: "events", icon: IconComms, label: "Announce" },
+    { id: "rush", icon: IconGrowth, label: "Rush" },
+    { id: "dues", icon: IconDues, label: "Dues" },
+    { id: "directory", icon: IconSecurity, label: "Console" },
   ];
   const navItems = viewRole === "exec" ? execNav : role === "alumni" ? alumniNav : memberNav;
   const activeNavIndex = Math.max(0, navItems.findIndex((n) => n.id === activeTab));
@@ -2215,7 +2220,7 @@ export default function MobileAppClient({ initialTenants }: MobileAppClientProps
                 {/* Sliding brand active-pill behind the icons. */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute bottom-1.5 top-1.5 rounded-2xl transition-transform duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
+                  className="pointer-events-none absolute bottom-1.5 top-1.5 rounded-2xl transition-transform duration-380 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
                   style={{
                     width: "calc(20% - 0.5rem)",
                     left: "0.25rem",

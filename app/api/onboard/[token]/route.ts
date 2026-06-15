@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { generateAndUploadSignedPdf } from "@/lib/esign";
 import { getSiteConfig } from "@/lib/site-config";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,7 +114,7 @@ export async function POST(req: Request, { params }: { params: { token: string }
 
   // Handle signature & PDF upload for Onboarding Anti-Hazing Waiver
   let pdfUrl: string | undefined;
-  const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+  const ipAddress = getClientIp(req) || "127.0.0.1";
   const userAgent = req.headers.get("user-agent") || "unknown";
 
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));

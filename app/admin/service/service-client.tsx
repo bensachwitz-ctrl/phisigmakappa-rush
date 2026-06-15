@@ -690,7 +690,7 @@ export function ServiceClient({
 
       {/* Reject Dialog */}
       <Dialog open={!!rejecting} onOpenChange={(o) => !o && setRejecting(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Reject Service Hours</DialogTitle>
           </DialogHeader>
@@ -731,7 +731,7 @@ export function ServiceClient({
 
       {/* Event Create Dialog */}
       <Dialog open={eventDialogOpen} onOpenChange={setEventDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>New Service Event</DialogTitle>
           </DialogHeader>
@@ -827,7 +827,7 @@ export function ServiceClient({
 
       {/* Partner Create Dialog */}
       <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>New Partner Organization</DialogTitle>
           </DialogHeader>

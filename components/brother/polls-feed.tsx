@@ -355,7 +355,7 @@ function PollCard({
               type="button"
               onClick={() => onDelete(poll.id)}
               aria-label="Delete poll"
-              className="press inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+              className="press inline-flex h-11 w-11 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>

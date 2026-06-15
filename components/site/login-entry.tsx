@@ -108,7 +108,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
           >
             <GreekstackWordmark
               size="md"
-              markClassName="h-8 w-8 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+              markClassName="h-8 w-8 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
             />
           </Link>
           <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
@@ -188,7 +188,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
           {/* STEP 2 — portal (revealed once a chapter is chosen) */}
           <div
             className={cn(
-              "grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+              "grid transition-all duration-500 ease-gs-spring motion-reduce:transition-none",
               selected
                 ? "mt-7 grid-rows-[1fr] opacity-100"
                 : "grid-rows-[0fr] opacity-0",
@@ -588,7 +588,7 @@ function PortalCard({
           <BrandGlyph
             name={img}
             size="md"
-            className="relative transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 group-hover:-rotate-6"
+            className="relative transition-transform duration-300 ease-gs-spring group-hover:scale-110 group-hover:-rotate-6"
           />
         </span>
       ) : (

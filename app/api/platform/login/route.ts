@@ -5,6 +5,7 @@ import {
   clearSuperAdminCookie,
   isSuperAdminConfigured,
 } from "@/lib/superadmin";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,11 +23,9 @@ const WINDOW_MS = 15 * 60 * 1000; // 15 min
 const LIMIT = 8;
 
 function clientIp(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
+  // Prefer the non-forgeable platform header so a client can't rotate
+  // x-forwarded-for to dodge the per-IP cap on this destructive surface.
+  return getClientIp(req) || "unknown";
 }
 
 function isRateLimited(ip: string): boolean {

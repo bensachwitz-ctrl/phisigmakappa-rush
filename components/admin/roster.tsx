@@ -100,7 +100,10 @@ type SortKey = "createdAt" | "name" | "status" | "voteSum";
 const VOTE_OPTIONS = [
   { value: 2, label: "Strong yes", icon: Star, tone: "bg-emerald-600 text-white" },
   { value: 1, label: "Yes", icon: ThumbsUp, tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
-  { value: 0, label: "Neutral", icon: Minus, tone: "bg-zinc-50 text-zinc-700 ring-1 ring-zinc-200" },
+  // value 0 is NOT a stored "abstain" — castVote() translates it to a DELETE
+  // that clears the caller's vote. Labeled accordingly so the UI matches the
+  // API (which rejects a literal 0) and the tally (which never sees a 0 row).
+  { value: 0, label: "Clear my vote", icon: Minus, tone: "bg-zinc-50 text-zinc-700 ring-1 ring-zinc-200" },
   { value: -1, label: "No", icon: ThumbsDown, tone: "bg-rose-50 text-rose-700 ring-1 ring-rose-200" },
   { value: -2, label: "Strong no", icon: ThumbsDown, tone: "bg-rose-600 text-white" },
 ] as const;
@@ -159,15 +162,22 @@ export function Roster({
 }) {
   // Brand fallback: matches the lib/site-config DEFAULTS so the email/SMS
   // templates always render with the Phi Sig USC reference if cfg unset.
-  const brand = React.useMemo(() => chapterBrand ?? {
+  const brand: ChapterBrand = chapterBrand ?? {
     fraternityName: "Phi Sigma Kappa",
     fraternityShort: "Phi Sig",
     schoolShort: "USC",
     chapterAttribution: "Phi Sig USC",
     houseAddress: "1525 College St",
-  }, [chapterBrand]);
-  const EMAIL_TEMPLATES = React.useMemo(() => buildEmailTemplates(brand), [brand]);
-  const SMS_TEMPLATES = React.useMemo(() => buildSmsTemplates(brand), [brand]);
+  };
+  // Deps are the SPECIFIC brand fields each template reads — NOT the whole
+  // `brand` object. `brand` is a fresh literal every render when chapterBrand is
+  // undefined (the USC fallback above), so depending on the object identity would
+  // rebuild the memo on every render and defeat it. The primitive-field deps are
+  // intentional and exhaustive for what the builders actually use.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const EMAIL_TEMPLATES = React.useMemo(() => buildEmailTemplates(brand), [brand.fraternityName, brand.fraternityShort, brand.schoolShort, brand.chapterAttribution]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const SMS_TEMPLATES = React.useMemo(() => buildSmsTemplates(brand), [brand.fraternityShort, brand.chapterAttribution, brand.houseAddress]);
   const { push } = useToast();
   const [rushes, setRushes] = React.useState<Rush[]>(initial);
   const [query, setQuery] = React.useState("");
@@ -933,14 +943,13 @@ function RushDetail({
   const [enrichBusy, setEnrichBusy] = React.useState(false);
   const { push } = useToast();
 
-  const rushId = rush?.id;
   React.useEffect(() => {
-    if (!rushId) return;
-    fetch(`/api/admin/vote?rushId=${rushId}`)
+    if (!rush) return;
+    fetch(`/api/admin/vote?rushId=${rush.id}`)
       .then((r) => r.json())
       .then((j) => setAllVotes(j.votes || []))
       .catch(() => setAllVotes([]));
-    fetch(`/api/admin/enrich?rushId=${rushId}`)
+    fetch(`/api/admin/enrich?rushId=${rush.id}`)
       .then((r) => r.json())
       .then((j) => {
         if (j.ok) {
@@ -949,7 +958,12 @@ function RushDetail({
         }
       })
       .catch(() => {});
-  }, [rushId]);
+    // Intentionally keyed on rush?.id ONLY: we refetch votes/enrichment when the
+    // SELECTED rush changes, not when any field of the same rush mutates (e.g. a
+    // notes save). Depending on the whole `rush` object would refire these fetches
+    // on every in-place edit. Only rush.id is read inside the effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rush?.id]);
 
   async function runEnrich() {
     if (!rush) return;

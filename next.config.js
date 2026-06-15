@@ -17,6 +17,15 @@ const nextConfig = {
   // client bundle shipped to chapter members.
   swcMinify: true,
   productionBrowserSourceMaps: false,
+  // Strip console.* from PRODUCTION client bundles (keep console.error/warn for
+  // real diagnostics). Belt-and-suspenders behind the zero-console bar so a
+  // stray console.log in any component never ships to chapter members. No effect
+  // in dev, where logs are still useful.
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production"
+      ? { exclude: ["error", "warn"] }
+      : false,
+  },
   // next/image is intentionally NOT used on the public pages — chapter photos
   // go through the custom /api/photo proxy (SSRF-hardened, AVIF/WebP transcode,
   // 30-day edge cache) so the existing `<img src="/api/photo/...">` responsive
@@ -52,6 +61,25 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb',
     },
+    // Enables instrumentation.ts (Sentry server/edge init + onRequestError
+    // tenant-tagged error capture). Inert unless SENTRY_DSN is set — the hook
+    // self-gates, so there is no runtime cost when Sentry is unconfigured.
+    instrumentationHook: true,
+  },
+  // Silence the cosmetic "Critical dependency: require function is used in a way
+  // in which dependencies cannot be statically extracted" warning emitted by
+  // require-in-the-middle (pulled in by @sentry/nextjs's OpenTelemetry
+  // instrumentation) during `next build`. It is a known, benign dynamic require
+  // inside a dependency and cannot be actioned from app code; this filters only
+  // that module's Critical-dependency warning so the build log stays clean (and
+  // never hides a real warning from our own code).
+  webpack(config) {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /require-in-the-middle/, message: /Critical dependency/ },
+      { module: /@opentelemetry\/instrumentation/, message: /Critical dependency/ },
+    ];
+    return config;
   },
   // Browsers and many crawlers (Slack unfurl, RSS readers, older Safari) hard-
   // code a request for /favicon.ico before reading <link rel="icon"> in HTML.
@@ -85,6 +113,12 @@ const nextConfig = {
     const scriptSrc = isProd
       ? "script-src 'self' 'unsafe-inline'"
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+    // Only widen connect-src to Sentry's ingest host when client error tracking
+    // is actually configured. With NEXT_PUBLIC_SENTRY_DSN unset the CSP stays
+    // exactly as tight as before — no Sentry origin is allowed.
+    const sentryConnect = process.env.NEXT_PUBLIC_SENTRY_DSN
+      ? " https://*.sentry.io https://*.ingest.sentry.io"
+      : "";
     return [
       {
         // Apple universal-links association file. Lives at
@@ -129,7 +163,7 @@ const nextConfig = {
               // Stream (chat) + Clerk (auth) origins are allowed so those
               // integrations work when their env keys are set. Inert otherwise —
               // no request hits these hosts unless the feature is configured.
-              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://*.clerk.accounts.dev https://*.clerk.com https://cal.com https://*.cal.com",
+              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://*.clerk.accounts.dev https://*.clerk.com https://cal.com https://*.cal.com" + sentryConnect,
               "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://*.clerk.accounts.dev https://*.clerk.com https://cal.com https://*.cal.com",
               "object-src 'none'",
               "base-uri 'self'",
@@ -150,4 +184,30 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Wrap with Sentry ONLY when a DSN is configured. withSentryConfig is otherwise
+// a passthrough, but gating it keeps the build identical (no Sentry webpack
+// plugin, no source-map upload attempt) for the common no-DSN case — important
+// because Vercel deploys are the only place the DSN/auth token live. Source-map
+// upload additionally requires SENTRY_AUTH_TOKEN + SENTRY_ORG/SENTRY_PROJECT;
+// without those it silently skips upload (errors still report, frames are
+// minified). `tunnelRoute` proxies browser events through the app origin to
+// dodge ad-blockers; safe to leave on.
+let finalConfig = nextConfig;
+if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { withSentryConfig } = require('@sentry/nextjs');
+  finalConfig = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    silent: !process.env.CI,
+    // Keep client bundles lean: hide the Sentry SDK logger in production.
+    disableLogger: true,
+    // Proxy events through /monitoring so ad-blockers don't drop them.
+    tunnelRoute: '/monitoring',
+    // Only upload source maps when an auth token is present.
+    sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  });
+}
+
+module.exports = finalConfig;

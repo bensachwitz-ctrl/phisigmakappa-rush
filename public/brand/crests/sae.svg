@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" fill="none">
+  <defs>
+    <linearGradient id="saeGrad" x1="0" y1="0" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#512888" />
+      <stop offset="1" stop-color="#311852" />
+    </linearGradient>
+  </defs>
+  <path d="M 8 6 L 56 6 L 56 38 C 56 50 49 60 32 70 C 15 60 8 50 8 38 Z" fill="url(#saeGrad)" stroke="#C9A227" stroke-width="2.6" stroke-linejoin="round" />
+  <path d="M 12 10 L 52 10 L 52 37.5 C 52 47 46 55.5 32 64.5 C 18 55.5 12 47 12 37.5 Z" fill="none" stroke="#C9A227" stroke-width="0.8" opacity="0.45" />
+  <text x="32" y="45" text-anchor="middle" font-family="Georgia, serif" font-size="16" font-weight="700" fill="white" letter-spacing="0.5">ΣΑΕ</text>
+  <text x="32" y="58" text-anchor="middle" font-family="Georgia, serif" font-size="6" font-weight="700" font-style="italic" fill="#C9A227" opacity="0.9">1856</text>
+</svg>

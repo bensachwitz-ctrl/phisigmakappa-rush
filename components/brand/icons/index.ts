@@ -56,3 +56,8 @@ export {
   IconClose,
   IconShieldCheck,
 } from "./utility";
+
+// Custom tool-specific glyphs.
+export { IconTreasury } from "./treasury";
+export { IconCalendarTool } from "./calendar-tool";
+

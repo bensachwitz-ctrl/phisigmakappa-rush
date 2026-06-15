@@ -106,13 +106,13 @@ export default function ElectionsVoter({ isAdmin }: { isAdmin: boolean }) {
         )}
 
         {loading ? (
-          <div className={`${CARD} flex items-center justify-center gap-2 py-16 text-sm text-maroon-600`}>
-            <Loader2 className="w-4 h-4 animate-spin" />
+          <div role="status" aria-live="polite" className={`${CARD} flex items-center justify-center gap-2 py-16 text-sm text-maroon-600`}>
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             Loading elections…
           </div>
         ) : error ? (
-          <div className={`${CARD} px-5 py-10 text-center`}>
-            <AlertTriangle className="mx-auto h-6 w-6 text-amber-600" />
+          <div role="alert" aria-live="assertive" className={`${CARD} px-5 py-10 text-center`}>
+            <AlertTriangle className="mx-auto h-6 w-6 text-amber-600" aria-hidden="true" />
             <p className="mt-2 text-sm font-medium text-maroon-900">{error}</p>
             <button
               onClick={() => { setLoading(true); setError(null); void load(); }}

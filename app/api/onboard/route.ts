@@ -19,6 +19,24 @@ export const dynamic = "force-dynamic";
 
 const ROUTE = "/api/onboard";
 
+/**
+ * A client-facing validation failure raised AFTER the tenant schema has been
+ * created. Throwing (instead of an early `return`) routes through the outer
+ * catch so the half-created schema + any Stripe objects are rolled back, while
+ * still surfacing the intended status + message to the caller (the catch reads
+ * these off the error rather than emitting a generic 500).
+ */
+class OnboardClientError extends Error {
+  status: number;
+  clientMessage: string;
+  constructor(clientMessage: string, status = 400) {
+    super(clientMessage);
+    this.name = "OnboardClientError";
+    this.status = status;
+    this.clientMessage = clientMessage;
+  }
+}
+
 // Per-IP rate limit on tenant creation. Each provisioning spins up a Postgres
 // schema + ~42 tables, so an open/unauth endpoint is a cheap way to exhaust the
 // database. In-memory is fine for a single instance; a multi-instance deploy
@@ -137,6 +155,13 @@ export async function POST(req: Request) {
   const schemaName = `schema_${subdomain.replace(/[^a-zA-Z0-9]/g, "_")}`;
   let tenantPrisma: PrismaClient | null = null;
   let schemaCreated = false;
+  // Hoisted so the outer catch can roll back any LIVE Stripe objects created
+  // BEFORE the central registry row write — otherwise a failure between the
+  // subscription create and the tenant.create leaves an orphaned, billing
+  // customer + subscription with no tenant behind it.
+  let stripeCustomerId: string | null = null;
+  let stripeSubscriptionId: string | null = null;
+  let stripeRushSubscriptionId: string | null = null;
 
   try {
     // 0. Ensure the central registry table exists so a fresh deploy never 500s
@@ -384,8 +409,6 @@ export async function POST(req: Request) {
     // 5. Stripe Customer & Subscription setup (if required by plan & Stripe is configured)
     const TRIAL_DAYS = 14;
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-    let stripeCustomerId: string | null = null;
-    let stripeSubscriptionId: string | null = null;
     let finalSubscriptionStatus: string = subscriptionStatus;
     let finalTrialEndsAt: Date | null = normalizedPlan === "custom" ? null : trialEndsAt;
 
@@ -394,9 +417,14 @@ export async function POST(req: Request) {
 
     if (requiresPayment) {
       if (!paymentMethodId) {
-        return NextResponse.json(
-          { ok: false, error: "Payment method registration is required to launch on this plan." },
-          { status: 400 }
+        // Throw (not bare return) so the outer catch DROPs the freshly-created
+        // tenant schema — otherwise the subdomain is orphaned and can never be
+        // re-provisioned (the registry uniqueness check would still pass, but
+        // the CREATE SCHEMA IF NOT EXISTS would collide). The catch surfaces the
+        // 400 + this message to the caller.
+        throw new OnboardClientError(
+          "Payment method registration is required to launch on this plan.",
+          400,
         );
       }
       try {
@@ -447,7 +475,7 @@ export async function POST(req: Request) {
         if (normalizedPlan === "monthly") {
           try {
             const rushPriceId = await getOrCreateStripePrice(stripe, "rush");
-            await stripe.subscriptions.create({
+            const rushSub = await stripe.subscriptions.create({
               customer: stripeCustomerId,
               items: [{ price: rushPriceId }],
               metadata: { subdomain, kind: "rush_cycle" },
@@ -457,15 +485,25 @@ export async function POST(req: Request) {
                 save_default_payment_method: "on_subscription",
               },
             });
+            stripeRushSubscriptionId = rushSub.id;
           } catch (rushErr: any) {
             errorSink(rushErr, { route: ROUTE, tenant: subdomain, outcome: "rush_subscription_failed" });
           }
         }
       } catch (stripeErr: any) {
         logger.error("Stripe subscription setup failed", stripeErr);
-        return NextResponse.json(
-          { ok: false, error: `Stripe setup failed: ${stripeErr.message || "Please check card details and try again."}` },
-          { status: 400 }
+        // Throw (not bare return) so the outer catch DROPs the freshly-created
+        // tenant schema AND rolls back any Stripe customer/subscription already
+        // created in this block before the failure. A bare return would orphan
+        // the schema (CREATE SCHEMA IF NOT EXISTS would later collide on retry)
+        // and leave a live Stripe customer/subscription billing the founder's
+        // card with no chapter behind it. The catch surfaces this 400 + message.
+        if (stripeErr instanceof OnboardClientError) {
+          throw stripeErr;
+        }
+        throw new OnboardClientError(
+          `Stripe setup failed: ${stripeErr.message || "Please check card details and try again."}`,
+          400,
         );
       }
     }
@@ -677,6 +715,50 @@ export async function POST(req: Request) {
       await centralDb
         .$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`)
         .catch(() => {});
+    }
+    // Roll back any LIVE Stripe objects created before the failure. The central
+    // tenant.create is the LAST write, so if we land here with a subscription or
+    // customer already created, there is no tenant row referencing them — they
+    // would otherwise keep billing the founder's card with no chapter behind
+    // them. Cancel subscriptions first, then delete the customer (deleting a
+    // customer also detaches the payment method). Each call is best-effort and
+    // independently guarded so one failure doesn't skip the rest.
+    try {
+      const stripe = getStripe();
+      if (stripe) {
+        if (stripeSubscriptionId) {
+          await stripe.subscriptions
+            .cancel(stripeSubscriptionId)
+            .catch((e: any) =>
+              errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "rollback_cancel_subscription_failed" }),
+            );
+        }
+        if (stripeRushSubscriptionId) {
+          await stripe.subscriptions
+            .cancel(stripeRushSubscriptionId)
+            .catch((e: any) =>
+              errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "rollback_cancel_rush_subscription_failed" }),
+            );
+        }
+        if (stripeCustomerId) {
+          await stripe.customers
+            .del(stripeCustomerId)
+            .catch((e: any) =>
+              errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "rollback_delete_customer_failed" }),
+            );
+        }
+      }
+    } catch (rollbackErr: any) {
+      errorSink(rollbackErr, { route: ROUTE, tenant: subdomain, outcome: "stripe_rollback_failed" });
+    }
+    // A deliberate client-facing validation error (e.g. missing payment method
+    // discovered after schema creation) surfaces its own status + message — the
+    // rollback above already cleaned up the schema/Stripe objects.
+    if (err instanceof OnboardClientError) {
+      return NextResponse.json(
+        { ok: false, error: err.clientMessage },
+        { status: err.status },
+      );
     }
     // Real error already captured server-side via errorSink above; never echo
     // the internal message (DDL/SQL/schema detail) back to the client.

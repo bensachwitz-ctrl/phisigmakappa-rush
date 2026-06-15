@@ -467,17 +467,17 @@ export function BrothersManager({
                   </div>
                   <div className="flex gap-1">
                     {(isAdmin || b.id === currentBrotherId) && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(b)} title={b.id === currentBrotherId && !isAdmin ? "Edit your profile" : "Edit"}>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(b)} aria-label={b.id === currentBrotherId && !isAdmin ? "Edit your profile" : "Edit brother"} title={b.id === currentBrotherId && !isAdmin ? "Edit your profile" : "Edit"}>
                         <Edit3 className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {isAdmin && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => sendPasswordReset(b.email, b.name)} title="Send Password Reset Link">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => sendPasswordReset(b.email, b.name)} aria-label="Send password reset link" title="Send Password Reset Link">
                         <KeyRound className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {isAdmin && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)} title="Delete (admin only)">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)} aria-label="Delete brother" title="Delete (admin only)">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     )}

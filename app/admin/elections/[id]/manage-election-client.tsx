@@ -362,7 +362,7 @@ function SeatCard({
               onClick={removeSeat}
               disabled={removing}
               aria-label="Remove office"
-              className="press inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+              className="press inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
             >
               {removing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
             </button>
@@ -497,7 +497,7 @@ function CandidateList({
                   type="button"
                   onClick={() => removeCandidate(c.id)}
                   aria-label={`Withdraw ${c.name}`}
-                  className="press inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                  className="press inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

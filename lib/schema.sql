@@ -427,6 +427,11 @@ CREATE TABLE "AuditLog" (
     "details" TEXT,
     "ipAddress" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Tamper-evidence hash chain (see lib/audit.ts). Nullable for forward-compat
+    -- with rows written before the chain existed.
+    "seq" INTEGER,
+    "prevHash" TEXT,
+    "hash" TEXT,
 
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
@@ -821,6 +826,9 @@ CREATE INDEX "AuditLog_subjectType_subjectId_idx" ON "AuditLog"("subjectType", "
 
 -- CreateIndex
 CREATE INDEX "AuditLog_actorId_idx" ON "AuditLog"("actorId");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_seq_idx" ON "AuditLog"("seq");
 
 -- CreateIndex
 CREATE INDEX "ChapterMeeting_scheduledAt_idx" ON "ChapterMeeting"("scheduledAt");

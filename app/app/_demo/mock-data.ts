@@ -30,6 +30,7 @@ export interface FraternityBrand {
   textColor: string;
   accentBg: string;
   accentBorder: string;
+  crestUrl?: string;
 }
 
 export const FRATERNITY_BRANDS: FraternityBrand[] = [
@@ -42,7 +43,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C0A062", // Silver/Gold
     textColor: "text-red-600",
     accentBg: "bg-red-50",
-    accentBorder: "border-red-100"
+    accentBorder: "border-red-100",
+    crestUrl: "/brand/crests/phi-sig.svg"
   },
   {
     id: "sig-chi",
@@ -53,7 +55,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#B89A2E", // Old Gold
     textColor: "text-blue-600",
     accentBg: "bg-blue-50",
-    accentBorder: "border-blue-100"
+    accentBorder: "border-blue-100",
+    crestUrl: "/brand/crests/sig-chi.svg"
   },
   {
     id: "kap-sig",
@@ -64,7 +67,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C81E2E", // Scarlet
     textColor: "text-emerald-600",
     accentBg: "bg-emerald-50",
-    accentBorder: "border-emerald-100"
+    accentBorder: "border-emerald-100",
+    crestUrl: "/brand/crests/kap-sig.svg"
   },
   {
     id: "ato",
@@ -75,7 +79,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#D4AF37", // Old Gold
     textColor: "text-sky-600",
     accentBg: "bg-sky-50",
-    accentBorder: "border-sky-100"
+    accentBorder: "border-sky-100",
+    crestUrl: "/brand/crests/ato.svg"
   },
   {
     id: "sae",
@@ -86,7 +91,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C9A227", // Old Gold
     textColor: "text-purple-600",
     accentBg: "bg-purple-50",
-    accentBorder: "border-purple-100"
+    accentBorder: "border-purple-100",
+    crestUrl: "/brand/crests/sae.svg"
   },
   {
     id: "beta",
@@ -97,7 +103,8 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     secondaryColor: "#C8102E", // Crimson
     textColor: "text-sky-500",
     accentBg: "bg-sky-50",
-    accentBorder: "border-sky-100"
+    accentBorder: "border-sky-100",
+    crestUrl: "/brand/crests/beta.svg"
   }
 ];
 

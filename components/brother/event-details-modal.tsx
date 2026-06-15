@@ -150,7 +150,7 @@ export function EventDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden" aria-describedby={undefined}>
         {/* Category-colored header band */}
         <div className={cn("px-6 py-5 text-white relative", cat.tone)}>
           <div className="flex items-start gap-3">

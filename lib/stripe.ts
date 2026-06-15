@@ -46,6 +46,10 @@ export function getSiteUrl(): string {
  */
 export function applyPassThrough(baseCents: number): number {
   const STRIPE_RATE = 0.029;
-  const total = baseCents / (1 - STRIPE_RATE);
+  // Stripe deducts 2.9% + a fixed 30¢ per successful card charge. The fixed
+  // 30¢ MUST be grossed up alongside the percentage, otherwise the chapter
+  // nets ~30¢ short on every payment (the docstring formula above already
+  // accounts for it; the prior implementation omitted the +30).
+  const total = (baseCents + 30) / (1 - STRIPE_RATE);
   return Math.ceil(total);
 }

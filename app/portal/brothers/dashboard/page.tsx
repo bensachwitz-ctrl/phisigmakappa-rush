@@ -35,9 +35,16 @@ export default async function BrothersDashboardPage() {
     }
 
     if (sess.isAdmin && !brotherId) {
-      // If admin is overriding, pick the first brother profile in the system
+      // Admin override (an admin with no linked brother profile previews the
+      // brother dashboard). Pick a DETERMINISTIC member — ordered by name then
+      // id — so the same admin always lands on the same profile rather than an
+      // arbitrary Prisma-default row. The client renders an "Admin Override
+      // Mode" badge plus the member's name in the header, so whose data is shown
+      // is always visible.
       const firstBrother = await prisma.brother.findFirst({
         where: { passwordHash: { not: null } },
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+        select: { id: true },
       });
       brotherId = firstBrother?.id;
     }
@@ -67,8 +74,19 @@ export default async function BrothersDashboardPage() {
     redirect("/portal/brothers?error=not-found");
   }
 
+  // ── Dashboard data load ────────────────────────────────────────────────────
+  // Every query below was previously UNGUARDED, so a single transient DB error
+  // — or a tenant whose schema predates one of these tables — threw past the
+  // graceful redirect above and dumped the brother onto the generic error
+  // boundary (inconsistent with the deliberately .catch()-guarded loadMemberStanding
+  // below). Wrap the whole load so ANY failure degrades to the same graceful
+  // "?error=unavailable" redirect as the brother lookup. Next's redirect() throws
+  // a NEXT_REDIRECT control signal, so re-throw those untouched.
+  let meetings, chores, serviceLogs, events, serviceEvents, duesPayments,
+    polls, announcements, alumniNetwork, jobPostings, configs;
+  try {
   // Fetch Chapter Meeting Attendance
-  const meetings = await prisma.chapterMeeting.findMany({
+  meetings = await prisma.chapterMeeting.findMany({
     orderBy: { scheduledAt: "desc" },
     include: {
       attendance: {
@@ -78,7 +96,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch Chore Wheel Assignments
-  const chores = await prisma.choreWheelAssignment.findMany({
+  chores = await prisma.choreWheelAssignment.findMany({
     where: { memberId: brother.id },
     orderBy: { weekStarting: "desc" },
     include: {
@@ -87,7 +105,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch Service Hour Logs
-  const serviceLogs = await prisma.serviceHourLog.findMany({
+  serviceLogs = await prisma.serviceHourLog.findMany({
     where: { memberId: brother.id },
     orderBy: { performedAt: "desc" },
     include: {
@@ -98,7 +116,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch all upcoming events (so the brother can RSVP)
-  const events = await prisma.event.findMany({
+  events = await prisma.event.findMany({
     where: {
       startsAt: { gte: new Date() }
     },
@@ -120,7 +138,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch approved service events for log association
-  const serviceEvents = await prisma.serviceEvent.findMany({
+  serviceEvents = await prisma.serviceEvent.findMany({
     where: {
       status: "approved",
       eventDate: { gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) } // last 60 days to future
@@ -135,13 +153,13 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch past dues payments
-  const duesPayments = await prisma.duesPayment.findMany({
+  duesPayments = await prisma.duesPayment.findMany({
     where: { brotherId: brother.id },
     orderBy: { createdAt: "desc" }
   });
 
   // Fetch active surveys/polls
-  const polls = await prisma.poll.findMany({
+  polls = await prisma.poll.findMany({
     where: {
       audience: { in: ["BROTHERS", "ALL"] },
       closedAt: null
@@ -160,7 +178,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch pinned & recent announcements
-  const announcements = await prisma.announcement.findMany({
+  announcements = await prisma.announcement.findMany({
     where: {
       audience: { in: ["BROTHERS", "ALL"] },
       status: "sent"
@@ -205,7 +223,7 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch directory of opted-in alumni for networking
-  const alumniNetwork = await prisma.alumniProfile.findMany({
+  alumniNetwork = await prisma.alumniProfile.findMany({
     where: { optInDirectory: true },
     orderBy: { graduationYear: "desc" },
     select: {
@@ -226,18 +244,23 @@ export default async function BrothersDashboardPage() {
   });
 
   // Fetch career opportunities / job postings
-  const jobPostings = await prisma.jobPosting.findMany({
+  jobPostings = await prisma.jobPosting.findMany({
     orderBy: { createdAt: "desc" }
   });
 
   // Load Stripe dues configs from SiteConfig KV store
-  const configs = await prisma.siteConfig.findMany({
+  configs = await prisma.siteConfig.findMany({
     where: {
       key: {
         in: ["dues.enabled", "dues.amountCents", "dues.year", "dues.label", "dues.stripePublishableKey"]
       }
     }
   });
+  } catch (err) {
+    if (isNextSignal(err)) throw err;
+    console.error("[brothers dashboard] data load failed:", err);
+    redirect("/portal/brothers?error=unavailable");
+  }
 
   const duesConfig = {
     enabled: configs.find(c => c.key === "dues.enabled")?.value === "true",

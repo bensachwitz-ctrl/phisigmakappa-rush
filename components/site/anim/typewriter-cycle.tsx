@@ -138,13 +138,20 @@ export function TypewriterCycle({
 
   return (
     <Tag className={cn("relative inline-block", className)}>
+      {/* Stable, screen-reader-only label. The visible text is typed one char at
+          a time; announcing every partial fragment (the old aria-live='polite'
+          on the live span) flooded SR users with a torrent of incomplete words.
+          Instead we expose ONE stable full label here and hide the animated text
+          from assistive tech below. */}
+      <span className="sr-only">{fallback}</span>
       {/* Invisible width/height reserver so the gradient line never reflows. */}
       <span aria-hidden="true" className="invisible block whitespace-pre-wrap">
         {longest}
       </span>
       {/* Live typed text overlaid on the reserved box. textClassName carries any
-          gradient/clip styling so it lands on the text-bearing element. */}
-      <span className={cn("absolute inset-0 block", textClassName)} aria-live="polite">
+          gradient/clip styling so it lands on the text-bearing element. Hidden
+          from AT (the sr-only label above carries the meaning). */}
+      <span className={cn("absolute inset-0 block", textClassName)} aria-hidden="true">
         {mounted ? text : fallback}
         <span
           aria-hidden="true"

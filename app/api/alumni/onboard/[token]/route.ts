@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { setPortalCookie } from "@/lib/portal-auth";
@@ -251,10 +252,28 @@ export async function POST(req: Request, { params }: { params: { token: string }
     optInNewsletter: data.optInNewsletter !== false,
   };
 
+  // Single-use: burn the invite FIRST, conditionally, BEFORE writing any
+  // profile/PortalUser data, so two concurrent redemptions of the same link
+  // can't BOTH clobber the AlumniProfile. updateMany on the current status (only
+  // a still-open invite flips) is atomic — the loser gets count===0 and bails as
+  // already-redeemed (friendly 409, not a 500) without having touched the
+  // profile. The winner (count===1) is the only request that proceeds to the
+  // profile/PortalUser writes below.
+  const burned = await prisma.alumniInvite.updateMany({
+    where: { id: invite.id, status: { notIn: ["COMPLETED", "REVOKED", "EXPIRED"] } },
+    data: { status: "COMPLETED", completedAt: new Date() },
+  });
+  if (burned.count === 0) {
+    return NextResponse.json(
+      { ok: false, reason: "completed", error: "This invite has already been redeemed. Try signing in instead." },
+      { status: 409 },
+    );
+  }
+
   // Attach to the bound profile if the invite carried one; else match an
   // existing public profile by email; else create fresh. This keeps a single
   // canonical AlumniProfile per person (no duplicate rows from an HQ import +
-  // self-onboard).
+  // self-onboard). Only the burn winner reaches this point.
   let alumniProfile =
     (invite.alumniId
       ? await prisma.alumniProfile.findUnique({ where: { id: invite.alumniId } })
@@ -270,21 +289,29 @@ export async function POST(req: Request, { params }: { params: { token: string }
     alumniProfile = await prisma.alumniProfile.create({ data: profileData });
   }
 
-  const portalUser = await prisma.portalUser.create({
-    data: {
-      role: "alumni",
-      email,
-      passwordHash: hashPassword(data.password),
-      alumniId: alumniProfile.id,
-      lastLoginAt: new Date(),
-    },
-  });
-
-  // Single-use: burn the invite so a forwarded link can't be replayed.
-  await prisma.alumniInvite.update({
-    where: { id: invite.id },
-    data: { status: "COMPLETED", completedAt: new Date() },
-  });
+  let portalUser;
+  try {
+    portalUser = await prisma.portalUser.create({
+      data: {
+        role: "alumni",
+        email,
+        passwordHash: hashPassword(data.password),
+        alumniId: alumniProfile.id,
+        lastLoginAt: new Date(),
+      },
+    });
+  } catch (err) {
+    // P2002 = unique constraint (email) — a concurrent redemption created the
+    // login between our pre-check and this insert. Return the SAME friendly 409
+    // the sequential path returns instead of a 500.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json(
+        { ok: false, error: "An account with this email already exists. Try signing in instead." },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   // Auto-login the new alum.
   setPortalCookie(portalUser.id, "alumni");

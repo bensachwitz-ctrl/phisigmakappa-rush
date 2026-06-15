@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
-import { PublicFooter } from "@/components/site/footer";
+// This is a "use client" page, so it must use the client-safe footer.
+// Rendering the async server <PublicFooter/> here throws "Not implemented." at
+// request time (it 500'd this whole route — the alumni onboarding funnel).
+import { PublicFooterClient } from "@/components/site/footer-client";
 import { Button } from "@/components/ui/button";
 import {
   GraduationCap, User, Mail, Lock, MapPin, Briefcase, Phone,
@@ -372,7 +375,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <PublicNav />
         <main className="max-w-2xl mx-auto px-4 py-8 sm:py-12">{children}</main>
       </div>
-      <PublicFooter />
+      <PublicFooterClient />
     </div>
   );
 }

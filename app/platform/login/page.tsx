@@ -126,8 +126,8 @@ export default function PlatformLoginPage() {
         <Card className="border-slate-200 bg-white/90 backdrop-blur-sm">
           <CardContent className="p-6 sm:p-8">
             {error && (
-              <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">
-                <AlertGlyph className="mt-0.5 h-4 w-4" />
+              <div role="alert" aria-live="assertive" className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">
+                <AlertGlyph className="mt-0.5 h-4 w-4" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}

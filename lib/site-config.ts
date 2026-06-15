@@ -1,4 +1,19 @@
+import * as React from "react";
 import { prisma, getSubdomain } from "@/lib/prisma";
+
+/**
+ * Per-request memoizer. In the Next.js App Router server runtime, `React.cache`
+ * exists and dedupes calls within a single request render. The stable `react`
+ * 18.3.1 package used by unit tests (pure-node vitest) does NOT export `cache`,
+ * so we fall back to an identity wrapper there — correct, just un-memoized.
+ * Typed through so callers keep the original function signature.
+ */
+const requestCache: <A extends any[], R>(
+  fn: (...args: A) => R
+) => (...args: A) => R =
+  typeof (React as any).cache === "function"
+    ? (React as any).cache
+    : (fn) => fn;
 
 /**
  * Default site config — used when the SiteConfig DB table is empty or a key is unset.
@@ -335,7 +350,20 @@ export type ConfigKey = keyof typeof DEFAULTS;
 // neutral DEFAULTS. Operational config (brand.*, show.*, dues.*) still applies.
 const APEX_DROP_PREFIX = /^(chapter\.|contact\.|hero\.|spotlight\.|eboard\.|testimonial\.|about\.|philanthropy\.|antiHazing\.|stats\.)/;
 
-export async function getSiteConfig(): Promise<Record<string, string>> {
+/**
+ * Per-request memoized via React's `cache`. getSiteConfig is called many times
+ * across layout + page + components during a single render (4x in app/layout.tsx,
+ * 3x in components/site/chapter-landing.tsx, plus messaging-config helpers), and
+ * each call was a real tenant-schema `siteConfig.findMany()` round-trip through
+ * the Host-resolving Prisma proxy. `cache()` collapses those to ONE query per
+ * request. Outside a React request (crons / SMS webhook / scripts) `cache` simply
+ * executes the function each call with no memoization — behavior is unchanged.
+ * Safe because within one request the resolved Host (and thus tenant schema) is
+ * constant, so the cached value is correct for every caller in that request.
+ */
+export const getSiteConfig = requestCache(async function getSiteConfig(): Promise<
+  Record<string, string>
+> {
   let rows: { key: string; value: string }[] = [];
   try {
     rows = await prisma.siteConfig.findMany();
@@ -359,4 +387,4 @@ export async function getSiteConfig(): Promise<Record<string, string>> {
     map[r.key] = r.value;
   }
   return map;
-}
+});

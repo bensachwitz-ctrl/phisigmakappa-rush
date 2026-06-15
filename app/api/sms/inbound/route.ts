@@ -1,58 +1,15 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import { forEachTenant } from "@/lib/prisma";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
+import {
+  verifyTwilioSignatureMultiToken,
+  collectCandidateTwilioTokens,
+} from "@/lib/twilio-verify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/**
- * Verify the X-Twilio-Signature header on inbound webhooks.
- *
- * Twilio computes HMAC-SHA1 of (full URL + sorted form params) using the
- * account auth token, base64-encoded. This blocks an attacker from forging
- * STOP / opt-out events for arbitrary phone numbers — without verification,
- * anyone could destroy our TCPA audit trail by spamming this endpoint.
- *
- * Behavior when TWILIO_AUTH_TOKEN is missing:
- *   - Production (NODE_ENV=production OR VERCEL_ENV=production):  DENY.
- *     Fail-closed: an attacker cannot send forged STOP events just because
- *     someone forgot to set the env var.
- *   - Dev / preview / test: accept with a warning so local testing works
- *     without round-tripping through the Twilio Console.
- */
-function verifyTwilioSignature(
-  url: string,
-  params: Record<string, string>,
-  signatureHeader: string | null
-): boolean {
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const isProd =
-    process.env.NODE_ENV === "production" ||
-    process.env.VERCEL_ENV === "production";
-  if (!token) {
-    if (isProd) {
-      console.error("[sms/inbound] TWILIO_AUTH_TOKEN not set in production — denying");
-      return false;
-    }
-    console.warn("[sms/inbound] TWILIO_AUTH_TOKEN not set (dev/preview) — accepting unverified");
-    return true;
-  }
-  if (!signatureHeader) return false;
-  // Concatenate URL with sorted (key + value) pairs per Twilio's spec.
-  const sorted = Object.keys(params).sort();
-  let signed = url;
-  for (const k of sorted) signed += k + params[k];
-  const expected = crypto
-    .createHmac("sha1", token)
-    .update(signed, "utf-8")
-    .digest("base64");
-  // Constant-time compare to avoid timing attacks.
-  if (expected.length !== signatureHeader.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signatureHeader));
-}
 
 /** Strict E.164 / domestic US-style validator — at least 7 digits, optional +. */
 function isValidPhone(raw: string): boolean {
@@ -127,7 +84,11 @@ export async function POST(req: Request) {
   const url = `${fwdProto || reqUrl.protocol.replace(/:$/, "")}://${
     fwdHost || reqUrl.host
   }${reqUrl.pathname}${reqUrl.search}`;
-  if (!verifyTwilioSignature(url, allParams, signature)) {
+  // Tenant-aware verification: accept if the signature matches the platform env
+  // token OR any active chapter's own configured Twilio auth token, so a chapter
+  // on its own Twilio account isn't 403'd (which would silently break STOP).
+  const candidateTokens = await collectCandidateTwilioTokens();
+  if (!verifyTwilioSignatureMultiToken(url, allParams, signature, candidateTokens)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 

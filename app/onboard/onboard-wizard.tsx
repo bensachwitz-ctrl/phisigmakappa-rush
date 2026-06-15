@@ -24,6 +24,7 @@ import {
 import { Magnetic, Reveal3D, FloatingOrbs, Spotlight, ShimmerBorder } from "@/components/site/anim";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
+import { captureEvent } from "@/lib/posthog";
 import {
   IconBranding, IconAdmin, IconLaunch, IconSpark,
   IconCheck, IconCheckCircle, IconArrowRight, IconSecurity, IconClose, IconExternal, type IconProps,
@@ -710,6 +711,9 @@ export default function OnboardWizard() {
       }
 
       push({ title: "Setup Complete", description: "Your site has been successfully initialized!", variant: "success" });
+      // Product-flow analytics: a chapter finished provisioning. No-op unless
+      // PostHog is configured (captureEvent self-gates), so dev/keyless is silent.
+      captureEvent("chapter_onboarded", { plan });
       if (data.url) {
         // Show the celebratory "your site is live" beat, then hand off to the
         // freshly provisioned subdomain (preserves the original redirect).
@@ -807,7 +811,7 @@ export default function OnboardWizard() {
             >
               <GreekstackLogo
                 title="Greekstack"
-                className="h-7 w-7 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-[-6deg] group-hover:scale-105"
+                className="h-7 w-7 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
               />
               <span className="text-base font-bold leading-none tracking-[-0.02em]">
                 <span className="text-white">Greek</span>

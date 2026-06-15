@@ -82,7 +82,33 @@ export async function POST(req: Request, { params }: { params: { token: string }
     return NextResponse.json({ ok: false, error: "Link expired" }, { status: 410 });
   }
 
-  // Handle signature & PDF upload for Acceptance
+  // ── Atomic claim ─────────────────────────────────────────────────────────
+  // Win the right to respond BEFORE doing any expensive/side-effecting work
+  // (PDF generation, audit). A conditional updateMany on `bidRespondedAt: null`
+  // is a single atomic DB operation: of two concurrent POSTs only ONE updates a
+  // row (count === 1); the loser gets count === 0 and bails as already-responded.
+  // This replaces the previous check-then-act (findUnique → update by id), which
+  // let both racers pass the `bidRespondedAt` guard and double-generate signed
+  // PDFs + audit rows. We stamp bidRespondedAt/choice and null the token now;
+  // the notes/PDF URL are filled in by a second update only on the winner.
+  const claim = await prisma.rush.updateMany({
+    where: { id: rush.id, bidRespondedAt: null },
+    data: {
+      status: choice, // ACCEPTED | DECLINED
+      bidRespondedAt: new Date(),
+      bidResponseChoice: choice,
+      bidToken: null,
+      bidTokenExpiresAt: null,
+    },
+  });
+  if (claim.count === 0) {
+    // Another concurrent request already responded — no-op success so a
+    // double-submit doesn't error the user (mirrors the early already-responded
+    // path above).
+    return NextResponse.json({ ok: true, alreadyResponded: true });
+  }
+
+  // Handle signature & PDF upload for Acceptance — only the winner reaches here.
   let pdfUrl: string | undefined;
   let noteAddition = "";
 
@@ -129,20 +155,19 @@ export async function POST(req: Request, { params }: { params: { token: string }
     }
   }
 
-  // Single transaction: record response + flip status + clear token.
-  // Token nulled so a forwarded link or replay can't double-respond.
-  await prisma.rush.update({
-    where: { id: rush.id },
-    data: {
-      status: choice, // ACCEPTED | DECLINED
-      bidRespondedAt: new Date(),
-      bidResponseChoice: choice,
-      bidToken: null,
-      bidTokenExpiresAt: null,
-      notes: (rush.notes || "") + noteAddition,
-      ...(pdfUrl ? { enrichmentData: newEnrichmentData } : {}),
-    },
-  });
+  // Persist the post-claim artifacts (signed-PDF note + waiver URL). The status
+  // flip + token nulling already happened atomically in the claim above; this
+  // second write only appends the notes/enrichment the winner produced. Skip it
+  // entirely when there's nothing to add.
+  if (noteAddition || pdfUrl) {
+    await prisma.rush.update({
+      where: { id: rush.id },
+      data: {
+        notes: (rush.notes || "") + noteAddition,
+        ...(pdfUrl ? { enrichmentData: newEnrichmentData } : {}),
+      },
+    });
+  }
 
   await audit({
     action: choice === "ACCEPTED" ? "BID_ACCEPTED" : "BID_DECLINED",

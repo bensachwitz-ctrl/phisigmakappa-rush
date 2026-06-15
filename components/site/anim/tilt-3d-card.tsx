@@ -33,8 +33,13 @@ export function Tilt3DCard({
   max = 9,
   /** Lift toward the viewer on hover (px of translateZ via scale). */
   glare = true,
-  /** Spotlight glow tint that follows the cursor. */
-  glareColor = "rgba(99,102,241,0.28)",
+  /**
+   * Spotlight glow tint that follows the cursor. Defaults to the brand blue
+   * (NOT the old indigo/violet that the codebase de-purpled in globals.css:50 /
+   * floating-orbs.tsx) so a <Tilt3DCard> without an explicit glareColor never
+   * paints off-brand violet.
+   */
+  glareColor = "rgba(37,99,235,0.22)",
   spring = { stiffness: 220, damping: 22, mass: 0.6 },
   onClick,
 }: {

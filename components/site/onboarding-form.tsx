@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,26 +69,48 @@ export function OnboardingForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) {
-      push({ title: "Full name is required", variant: "destructive" });
+
+    const onboardingSchema = z.object({
+      name: z.string().min(1, "Full name is required"),
+      signatureName: z.string().min(1, "Signature name is required"),
+      agreedToHazingWaiver: z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the Zero-Tolerance Anti-Hazing Policy" }),
+      }),
+      password: z.string().min(6, "Pick a password at least 6 characters long"),
+      confirmPassword: z.string().min(6, "Confirm password is required"),
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    });
+
+    const result = onboardingSchema.safeParse({
+      name: form.name.trim(),
+      signatureName: form.signatureName.trim(),
+      agreedToHazingWaiver: form.agreedToHazingWaiver,
+      password: form.password,
+      confirmPassword: form.confirmPassword,
+    });
+
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      push({ title: issue.message, variant: "destructive" });
+
+      const keyMap: Record<string, string> = {
+        name: "onb-name",
+        signatureName: "onb-sig-name",
+        agreedToHazingWaiver: "onb-hazing-waiver",
+        password: "onb-password",
+        confirmPassword: "onb-confirm",
+      };
+
+      const elementId = keyMap[issue.path[0] as string] || (issue.path[0] as string);
+      setTimeout(() => {
+        const el = document.getElementById(elementId) || (document.querySelector(`[name="${elementId}"]`) as HTMLElement);
+        if (el) el.focus();
+      }, 50);
       return;
     }
-    if (!form.signatureName.trim()) {
-      push({ title: "Signature name is required", variant: "destructive" });
-      return;
-    }
-    if (!form.agreedToHazingWaiver) {
-      push({ title: "You must agree to the Zero-Tolerance Anti-Hazing Policy", variant: "destructive" });
-      return;
-    }
-    if (form.password.length < 6) {
-      push({ title: "Pick a password at least 6 characters long", variant: "destructive" });
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      push({ title: "Passwords don't match", variant: "destructive" });
-      return;
-    }
+
     setBusy(true);
     try {
       const res = await fetch(`/api/onboard/${token}`, {

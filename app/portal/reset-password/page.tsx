@@ -4,10 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
-import { PublicFooter } from "@/components/site/footer";
+// "use client" page → use the client-safe footer. The async server
+// <PublicFooter/> throws "Not implemented." at request time inside a client
+// tree, which silently broke (omitted) the footer on this screen.
+import { PublicFooterClient } from "@/components/site/footer-client";
 import { Button } from "@/components/ui/button";
 import { Lock, ArrowLeft, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
+
+// NOTE: force-dynamic route config lives in the sibling server-component
+// layout.tsx — `export const dynamic` is ignored inside a "use client" file.
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -177,7 +183,7 @@ export default function ResetPasswordPage() {
         </main>
       </div>
 
-      <PublicFooter />
+      <PublicFooterClient />
     </div>
   );
 }

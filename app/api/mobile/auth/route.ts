@@ -2,8 +2,21 @@ import { NextResponse } from "next/server";
 import { centralDb, getTenantClient } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { signPortalTokenForTenant } from "@/lib/portal-auth";
+import {
+  rateLimit,
+  recordRateLimit,
+  clearRateLimit,
+  clientIpFromRequest,
+} from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Per-IP+subdomain+email brute-force throttle: 8 failed attempts within 15
+// minutes → hard-block for the remainder of the window. The native app hits
+// this endpoint with a chapter's member credentials, so it is a password-
+// guessing target exactly like the web portal login — mirror that throttle.
+const LOGIN_LIMIT = { limit: 8, windowMs: 15 * 60 * 1000 };
 
 export async function POST(req: Request) {
   let body: any;
@@ -24,6 +37,17 @@ export async function POST(req: Request) {
 
   if (role !== "brother" && role !== "alumni") {
     return NextResponse.json({ error: "Role must be either 'brother' or 'alumni'." }, { status: 400 });
+  }
+
+  // Brute-force throttle (record-on-failure / clear-on-success), keyed on
+  // IP + chapter + email so an attacker can't grind one member's password.
+  const rlKey = `mobile-auth:${clientIpFromRequest(req)}:${subdomain}:${email}`;
+  const rl = rateLimit(rlKey, LOGIN_LIMIT);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many failed attempts. Wait 15 minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
   }
 
   // 1. Verify that tenant is active in central registry
@@ -116,8 +140,13 @@ export async function POST(req: Request) {
   }
 
   if (!authenticated || !portalUser) {
+    // Record the failed attempt against the throttle key.
+    recordRateLimit(rlKey, LOGIN_LIMIT);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
+
+  // Successful login — clear the failed-attempt counter for this key.
+  clearRateLimit(rlKey);
 
   // Tenant-bound token: signed with the chapter's per-tenant secret so it only
   // verifies when this same `subdomain` is presented — never reusable on another

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, ArrowRight, Clock } from "lucide-react";
+import { ConfettiPayoff } from "@/components/ui/confetti";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export default async function DuesSuccessPage({
         <CardContent className="p-8 text-center space-y-4">
           {isPaid ? (
             <>
+              <ConfettiPayoff />
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 mx-auto">
                 <CheckCircle2 className="h-7 w-7" />
               </div>

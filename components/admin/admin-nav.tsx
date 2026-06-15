@@ -10,18 +10,20 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  LogOut, LayoutDashboard, CalendarDays, Users, Megaphone, Settings,
-  HelpCircle, Menu, X, ExternalLink, Vote, UserPlus, GraduationCap, CheckSquare, ShieldAlert,
-  ShieldCheck, CalendarCheck, HandHeart, BookMarked, FileDown, LayoutGrid, ChevronDown, Command,
-  Banknote, Wallet, ScrollText, Rocket, Landmark, Network, BookUser, CreditCard, CalendarRange, Crown, Trophy,
+  LogOut, HelpCircle, Menu, X, ExternalLink, Vote, GraduationCap, CheckSquare, ShieldAlert,
+  CalendarCheck, HandHeart, BookMarked, FileDown, ChevronDown, Command,
+  Banknote, ScrollText, Network, BookUser, CreditCard, Crown, Trophy, LayoutGrid,
 } from "lucide-react";
+import {
+  IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
+  IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin,
+} from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<any>;
   adminOnly: boolean;
   /** "primary" pins the item to the slim desktop bar; "more" tucks it into the
    *  "More" dropdown. Everything still appears in the mobile grid regardless. */
@@ -32,34 +34,34 @@ type NavItem = {
 // the rest collapse into a tidy "More" dropdown so the bar never overflows even
 // with 16 sections. The mobile menu (below) keeps listing all of them in a grid.
 const ITEMS: NavItem[] = [
-  { href: "/admin", label: "Rush", icon: LayoutDashboard, adminOnly: false, group: "primary" },
-  { href: "/admin/rushees", label: "PNMs", icon: UserPlus, adminOnly: true, group: "primary" },
-  { href: "/admin/brothers", label: "Brothers", icon: Users, adminOnly: false, group: "primary" },
+  { href: "/admin", label: "Rush", icon: IconDashboard, adminOnly: false, group: "primary" },
+  { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: true, group: "primary" },
+  { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary" },
   { href: "/admin/directory", label: "Directory", icon: BookUser, adminOnly: false, group: "more" },
   { href: "/admin/standing", label: "Standing", icon: Trophy, adminOnly: false, group: "more" },
   { href: "/admin/family", label: "Big/Little", icon: Network, adminOnly: true, group: "more" },
-  { href: "/admin/events", label: "Events", icon: CalendarDays, adminOnly: true, group: "primary" },
+  { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary" },
   { href: "/admin/meetings", label: "Meetings", icon: CalendarCheck, adminOnly: false, group: "primary" },
-  { href: "/admin/calendar", label: "Calendar", icon: CalendarRange, adminOnly: false, group: "more" },
+  { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more" },
   { href: "/admin/risk", label: "Risk Desk", icon: ShieldAlert, adminOnly: false, group: "primary" },
 
   { href: "/admin/academic", label: "Academic", icon: GraduationCap, adminOnly: false, group: "more" },
   { href: "/admin/chores", label: "Chores", icon: CheckSquare, adminOnly: false, group: "more" },
   { href: "/admin/polls", label: "Polls", icon: Vote, adminOnly: false, group: "more" },
   { href: "/admin/elections", label: "Elections", icon: Crown, adminOnly: false, group: "more" },
-  { href: "/admin/announcements", label: "News", icon: Megaphone, adminOnly: true, group: "more" },
+  { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: true, group: "more" },
   { href: "/admin/service", label: "Service", icon: HandHeart, adminOnly: false, group: "more" },
-  { href: "/admin/officers", label: "Officers", icon: ShieldCheck, adminOnly: true, group: "more" },
+  { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
   { href: "/admin/library", label: "Library", icon: BookMarked, adminOnly: false, group: "more" },
   { href: "/admin/exports", label: "Exports", icon: FileDown, adminOnly: true, group: "more" },
-  { href: "/admin/dues", label: "Dues", icon: Wallet, adminOnly: true, group: "more" },
+  { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: true, group: "more" },
   { href: "/admin/dues/connect", label: "Payouts", icon: Banknote, adminOnly: true, group: "more" },
-  { href: "/admin/treasury", label: "Treasury", icon: Landmark, adminOnly: true, group: "more" },
+  { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: true, group: "more" },
   { href: "/admin/billing", label: "Billing", icon: CreditCard, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true, group: "more" },
-  { href: "/admin/setup", label: "Setup wizard", icon: Rocket, adminOnly: true, group: "more" },
-  { href: "/admin/settings", label: "Site content", icon: Settings, adminOnly: true, group: "more" },
-  { href: "/admin/website", label: "Website Builder", icon: LayoutGrid, adminOnly: true, group: "more" },
+  { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },
+  { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more" },
+  { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more" },
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
 ];
 

@@ -108,6 +108,17 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // Named tokens for the spring easing + 380ms duration used across the
+      // marketing/onboarding surfaces. Promotes the arbitrary
+      // ease-[cubic-bezier(0.16,1,0.3,1)] / duration-[380ms] classes (which
+      // Tailwind logs as "ambiguous … matches multiple utilities" on every
+      // build) to clean ease-gs-spring / duration-380 utilities.
+      transitionTimingFunction: {
+        "gs-spring": "cubic-bezier(0.16,1,0.3,1)",
+      },
+      transitionDuration: {
+        "380": "380ms",
+      },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
         display: ["var(--font-display)", "ui-serif", "Georgia"],

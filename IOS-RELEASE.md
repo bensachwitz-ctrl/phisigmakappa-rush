@@ -38,6 +38,10 @@ You do this once. Three buckets: (A) Apple Developer / App Store Connect,
 
 ### A. Apple Developer + App Store Connect
 
+The pipeline now uses **automatic signing**, so you do NOT create or export a
+distribution certificate or provisioning profile by hand — Codemagic fetches (and
+creates on first run) both from the App Store Connect API key. You only need:
+
 1. **App ID** — Developer portal → Certificates, IDs & Profiles → Identifiers →
    register an App ID with bundle id **`com.greekstack.app`**. Enable capabilities:
    - **Push Notifications**
@@ -45,21 +49,15 @@ You do this once. Three buckets: (A) Apple Developer / App Store Connect,
 2. **App record** — App Store Connect → Apps → **+** → New App:
    - Platform: iOS · Name: **Greek Stack** · Bundle ID: `com.greekstack.app`
    - SKU: `greekstack-ios` · Primary language: English (U.S.)
-3. **Distribution certificate** — create an **iOS Distribution (App Store)**
-   certificate (Developer portal or Xcode). Export it as a **`.p12`** with a
-   password (you'll need both for Codemagic).
-4. **Provisioning profile** — create an **App Store** distribution profile for
-   `com.greekstack.app` using that distribution cert. Download the
-   `.mobileprovision`. Note its **Name** and **UUID** (UUID is in the filename /
-   `security cms -D -i profile.mobileprovision`).
-5. **App Store Connect API key** — Users and Access → Integrations → App Store
-   Connect API → generate a key with **App Manager** role. Download the
-   **`AuthKey_XXXXXXXXXX.p8`** (one download only). Note the **Key ID** and the
-   team **Issuer ID**.
+3. **App Store Connect API key** — Users and Access → Integrations → App Store
+   Connect API → generate a key with **App Manager** role (required so the CI can
+   create the signing files). Download the **`AuthKey_XXXXXXXXXX.p8`** (one
+   download only). Note the **Key ID** and the team **Issuer ID**.
 
-> Prefer less manual work? Codemagic supports **automatic signing** via the App
-> Store Connect API key alone (skip steps 3–4 and the `IOS_DIST_*` / `IOS_PROFILE_*`
-> secrets). See "Alternative: automatic signing" at the bottom.
+> The distribution cert + App Store provisioning profile are created/fetched
+> automatically on the first tagged build (`app-store-connect fetch-signing-files
+> … --create`). No `.p12` / `.mobileprovision` to manage. (The older manual flow
+> is preserved in "Appendix: manual signing" at the bottom if you ever need it.)
 
 ### B. Codemagic
 
@@ -69,21 +67,19 @@ You do this once. Three buckets: (A) Apple Developer / App Store Connect,
    `codemagic` (Teams → Integrations → Apple → add the `.p8` + Key ID + Issuer
    ID). The workflow references `integrations: app_store_connect: codemagic`.
 3. Create the secret environment-variable **group `greekstack_ios`** (App
-   settings → Environment variables). All marked **Secret**:
+   settings → Environment variables). With automatic signing there are now just
+   **three** vars, all marked **Secret**:
 
    | Variable | Value |
    |---|---|
    | `APP_STORE_CONNECT_KEY_IDENTIFIER` | the ASC API **Key ID** (10 chars) |
    | `APP_STORE_CONNECT_ISSUER_ID` | the ASC API **Issuer ID** (UUID) |
    | `APP_STORE_CONNECT_PRIVATE_KEY_B64` | `base64 -i AuthKey_XXXX.p8` |
-   | `IOS_DIST_P12_BASE64` | `base64 -i dist.p12` |
-   | `IOS_DIST_P12_PASSWORD` | password you set on the `.p12` |
-   | `IOS_PROFILE_BASE64` | `base64 -i profile.mobileprovision` |
-   | `IOS_PROFILE_NAME` | the profile **Name** (e.g. `Greek Stack App Store`) |
-   | `IOS_PROFILE_UUID` | the profile **UUID** |
 
    On macOS, `base64 -i FILE | pbcopy` copies the value to paste into Codemagic.
-   (On Linux use `base64 -w0 FILE`.)
+   (On Linux use `base64 -w0 FILE`.) The old `IOS_DIST_*` / `IOS_PROFILE_*`
+   secrets are no longer used — automatic signing derives the cert + profile from
+   the API key, so you can leave them unset.
 
 ### C. Push notifications (APNs)
 
@@ -118,10 +114,16 @@ You do this once. Three buckets: (A) Apple Developer / App Store Connect,
    app, haptics, splash-screen, status-bar) and copies the boot shell.
 4. Sets `MARKETING_VERSION` from the tag (`v1.0.0` → `1.0.0`) + a monotonic
    `CURRENT_PROJECT_VERSION` (Codemagic build number + 100).
-5. Flips the **Release** config to Manual signing + iPhone Distribution.
+5. Flips the **Release** config to Manual style (so xcodebuild honors the
+   explicit fetched profile) + iPhone Distribution identity.
 6. Re-asserts the push entitlement (committed in `App.entitlements`).
-7. Imports the distribution cert + provisioning profile into a temp keychain.
-8. `xcodebuild archive` + `-exportArchive` → signed `.ipa`.
+7. **Automatic signing**: `app-store-connect fetch-signing-files
+   com.greekstack.app --type IOS_APP_STORE --create` fetches/creates the App
+   Store distribution cert + profile from the ASC API key, `keychain
+   add-certificates` installs the cert, and `xcode-project use-profiles` writes
+   the profile into the build settings.
+8. `xcodebuild archive` + `-exportArchive` (ExportOptions.plist also emitted by
+   `use-profiles`) → signed `.ipa`.
 9. Uploads to App Store Connect → **TestFlight Internal Testing**
    (`submit_to_testflight: true`).
 
@@ -186,31 +188,39 @@ the app still ships and works fine. Push-notification deep links use the
 
 ---
 
-## Alternative: automatic signing (fewer secrets)
+## Appendix: manual signing (legacy fallback)
 
-If you'd rather not manage the `.p12`/profile manually, Codemagic can sign
-automatically using just the App Store Connect API key:
-- Keep the `app_store_connect: codemagic` integration + the three
-  `APP_STORE_CONNECT_*` vars.
-- Replace the manual cert/profile import + archive steps with Codemagic's
-  `app-store-connect fetch-signing-files com.greekstack.app --type IOS_APP_STORE
-  --create` + `keychain add-certificates` + `xcode-project use-profiles`. Drop the
-  `IOS_DIST_*` / `IOS_PROFILE_*` secrets.
-This trades a bit of CI YAML for not handling cert files by hand. The committed
-manual-signing flow is kept as the default because it's the proven DailyTool /
-Bar Crawl Golf pipeline.
+The pipeline now defaults to **automatic signing** (see the steps above). If you
+ever need to pin an exact cert/profile by hand (e.g. enterprise distribution, or
+to reproduce a specific historical build), the manual flow was:
+- Create an iOS Distribution (App Store) cert, export it as a `.p12` with a
+  password; create an App Store provisioning profile for `com.greekstack.app`,
+  download the `.mobileprovision`, note its Name + UUID.
+- Add the 5 secrets `IOS_DIST_P12_BASE64`, `IOS_DIST_P12_PASSWORD`,
+  `IOS_PROFILE_BASE64`, `IOS_PROFILE_NAME`, `IOS_PROFILE_UUID` to the
+  `greekstack_ios` group.
+- Import the cert into a temp keychain, install the profile, and archive with
+  `CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="iPhone Distribution"
+  PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_NAME"`.
+
+Automatic signing is preferred because it removes the two most common signing
+failures ("No signing certificate" / "profile doesn't match") and 5 fragile
+secrets, cutting first-time setup from ~45 min to ~10 min.
 
 ---
 
 ## Troubleshooting
 
-- **"No signing certificate found"** → the `.p12` didn't import; re-check
-  `IOS_DIST_P12_BASE64` (no wrapping/newlines) and `IOS_DIST_P12_PASSWORD`.
-- **"Provisioning profile doesn't match"** → `IOS_PROFILE_NAME` must equal the
-  profile's exact Name, and the profile must include the distribution cert +
-  the `com.greekstack.app` App ID with Push + Associated Domains.
-- **"aps-environment not allowed"** → enable Push Notifications on the App ID and
-  regenerate the provisioning profile.
+- **"No signing certificate found"** → the ASC API key lacks the **App Manager**
+  role (so `fetch-signing-files --create` can't provision a cert), or the
+  `APP_STORE_CONNECT_PRIVATE_KEY_B64` is malformed. Re-check the three
+  `APP_STORE_CONNECT_*` vars.
+- **"Provisioning profile doesn't match"** → the App ID `com.greekstack.app` must
+  have **Push Notifications + Associated Domains** enabled before the first
+  fetch; if you toggled a capability after a profile was created, delete the
+  stale profile in the portal and re-run (the build re-creates it).
+- **"aps-environment not allowed"** → enable Push Notifications on the App ID;
+  the next build re-fetches a profile that includes it.
 - **Build number already exists** → ASC rejects a duplicate (version, build).
   Re-tag with a new patch version (`v1.0.1`) — the build number auto-increments.
 - **App appears as iPad-compatible / asks for iPad screenshots** → confirm

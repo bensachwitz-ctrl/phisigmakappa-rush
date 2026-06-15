@@ -1364,7 +1364,7 @@ function JsonArrayEditor({
                     type="button"
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
-                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
+                    className="h-11 w-11 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
                     aria-label="Move up"
                     title="Move up"
                   >
@@ -1374,7 +1374,7 @@ function JsonArrayEditor({
                     type="button"
                     onClick={() => move(i, 1)}
                     disabled={i === rows.length - 1}
-                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
+                    className="h-11 w-11 inline-flex items-center justify-center rounded hover:bg-secondary disabled:opacity-30"
                     aria-label="Move down"
                     title="Move down"
                   >
@@ -1383,7 +1383,7 @@ function JsonArrayEditor({
                   <button
                     type="button"
                     onClick={() => remove(i)}
-                    className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-red-50 text-red-600"
+                    className="h-11 w-11 inline-flex items-center justify-center rounded hover:bg-red-50 text-red-600"
                     aria-label="Remove"
                     title="Remove"
                   >

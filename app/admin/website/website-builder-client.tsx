@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { 
   ArrowUp, ArrowDown, Eye, EyeOff, Save, RefreshCw, Flame, Trophy, Heart, 
   GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote, 
@@ -125,22 +133,34 @@ export function WebsiteBuilderClient({
     }));
   };
 
-  const resetToDefaults = () => {
-    if (confirm("Are you sure you want to reset the homepage section layout and visibility to defaults?")) {
-      const reset = DEFAULT_ORDER.map(key => {
-        const meta = SECTION_METADATA[key];
-        return {
-          id: key,
-          name: meta.name,
-          description: meta.description,
-          icon: meta.icon,
-          showKey: meta.showKey,
-          visible: true
-        };
-      });
-      setSections(reset);
-    }
+  // In-app confirm (replaces the jarring native window.confirm) for the
+  // destructive "reset layout" action — matches the Dialog pattern used in the
+  // roster. A native confirm() also blocks the JS thread and can't be styled or
+  // reduced-motion-aware, so it's the wrong fit for a GOTY-bar admin surface.
+  const [resetConfirmOpen, setResetConfirmOpen] = React.useState(false);
+
+  const applyDefaults = () => {
+    const reset = DEFAULT_ORDER.map(key => {
+      const meta = SECTION_METADATA[key];
+      return {
+        id: key,
+        name: meta.name,
+        description: meta.description,
+        icon: meta.icon,
+        showKey: meta.showKey,
+        visible: true
+      };
+    });
+    setSections(reset);
+    setResetConfirmOpen(false);
+    push({
+      title: "Layout reset to defaults",
+      description: "Review the order, then Save Layout Changes to publish it.",
+      variant: "default",
+    });
   };
+
+  const resetToDefaults = () => setResetConfirmOpen(true);
 
   const handleSave = async () => {
     setBusy(true);
@@ -250,8 +270,9 @@ export function WebsiteBuilderClient({
                         size="icon"
                         onClick={() => moveUp(index)}
                         disabled={index === 0 || busy}
-                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-none hover:bg-slate-100 text-slate-500 disabled:opacity-35"
+                        className="h-11 w-11 sm:h-8 sm:w-8 rounded-none hover:bg-slate-100 text-slate-500 disabled:opacity-35"
                         title="Move Up"
+                        aria-label={`Move ${sect.name} up`}
                       >
                         <ChevronUp className="h-4 w-4" />
                       </Button>
@@ -261,8 +282,9 @@ export function WebsiteBuilderClient({
                         size="icon"
                         onClick={() => moveDown(index)}
                         disabled={index === sections.length - 1 || busy}
-                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-none border-t sm:border-t-0 sm:border-l hover:bg-slate-100 text-slate-500 disabled:opacity-35"
+                        className="h-11 w-11 sm:h-8 sm:w-8 rounded-none border-t sm:border-t-0 sm:border-l hover:bg-slate-100 text-slate-500 disabled:opacity-35"
                         title="Move Down"
+                        aria-label={`Move ${sect.name} down`}
                       >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
@@ -304,6 +326,29 @@ export function WebsiteBuilderClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Reset-to-defaults confirm (replaces window.confirm) */}
+      <Dialog open={resetConfirmOpen} onOpenChange={(o) => !busy && setResetConfirmOpen(o)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reset layout to defaults?</DialogTitle>
+            <DialogDescription>
+              This restores the original section order and makes every section
+              visible. Nothing is published until you Save Layout Changes, so you
+              can still cancel after reviewing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetConfirmOpen(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button onClick={applyDefaults} disabled={busy} className="gap-1.5">
+              <RefreshCw className="h-4 w-4" />
+              Reset layout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

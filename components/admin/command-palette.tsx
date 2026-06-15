@@ -6,35 +6,15 @@ import {
   Dialog, DialogContent, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  LayoutDashboard, Users, CalendarDays, Megaphone, Settings, HelpCircle,
-  Vote, ScrollText, Rocket, ExternalLink, Search,
-  ArrowRight, Command,
-  UserPlus, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
-  HandHeart, ShieldCheck, BookMarked, FileDown, Banknote,
-  Landmark, Network, BookUser, CreditCard, CalendarRange,
+  HelpCircle, Vote, ScrollText, ExternalLink, Search,
+  ArrowRight, Command, CalendarCheck, ShieldAlert, GraduationCap, CheckSquare,
+  HandHeart, BookMarked, FileDown, Banknote, Network, BookUser, CreditCard,
 } from "lucide-react";
+import {
+  IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
+  IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark,
+} from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
-
-import { IconSpark } from "@/components/brand/icons";
-/**
- * Global command palette — opens with ⌘K / Ctrl+K (or "?" shortcut).
- * Power-user navigation; the chapter never needs to know about it for
- * the basics, but the e-board members who use the platform daily will
- * find it indispensable.
- *
- * Commands list is curated (not auto-derived) so the order is deliberate:
- * most-used routes first, infrequent ones last.
- *
- * Filtering is case-insensitive substring match on the command label
- * AND a fuzzy synonym list (so "people" finds Brothers, "stats" finds
- * the dashboard, etc.).
- *
- * Keyboard:
- *   ⌘K / Ctrl+K   open
- *   Esc            close
- *   ↑ ↓            move selection
- *   ↵              execute selected
- */
 
 type Cmd = {
   id: string;
@@ -62,28 +42,28 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
   const commands: Cmd[] = React.useMemo(() => {
     const base: Cmd[] = [
       // Navigate
-      { id: "nav-rush", group: "Navigate", icon: LayoutDashboard, label: "Rush dashboard", href: "/admin", synonyms: ["pnms", "candidates", "decisions", "stats", "kpi"] },
-      { id: "nav-rushees", group: "Navigate", icon: UserPlus, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], adminOnly: true },
-      { id: "nav-brothers", group: "Navigate", icon: Users, label: "Brothers", href: "/admin/brothers", synonyms: ["roster", "people", "members", "directory"] },
+      { id: "nav-rush", group: "Navigate", icon: IconDashboard, label: "Rush dashboard", href: "/admin", synonyms: ["pnms", "candidates", "decisions", "stats", "kpi"] },
+      { id: "nav-rushees", group: "Navigate", icon: IconRecruitment, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], adminOnly: true },
+      { id: "nav-brothers", group: "Navigate", icon: IconMembers, label: "Brothers", href: "/admin/brothers", synonyms: ["roster", "people", "members", "directory"] },
       { id: "nav-directory", group: "Navigate", icon: BookUser, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
       { id: "nav-family", group: "Navigate", icon: Network, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },
       { id: "nav-meetings", group: "Navigate", icon: CalendarCheck, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
-      { id: "nav-calendar", group: "Navigate", icon: CalendarRange, label: "Calendar", href: "/admin/calendar", synonyms: ["schedule", "month", "agenda", "upcoming", "events", "meetings", "dates"] },
+      { id: "nav-calendar", group: "Navigate", icon: IconCalendarTool, label: "Calendar", href: "/admin/calendar", synonyms: ["schedule", "month", "agenda", "upcoming", "events", "meetings", "dates"] },
       { id: "nav-risk", group: "Navigate", icon: ShieldAlert, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
       { id: "nav-academic", group: "Navigate", icon: GraduationCap, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
       { id: "nav-chores", group: "Navigate", icon: CheckSquare, label: "Chores / House", href: "/admin/chores", synonyms: ["tasks", "duties", "house", "cleaning", "checklist"] },
       { id: "nav-service", group: "Navigate", icon: HandHeart, label: "Service hours", href: "/admin/service", synonyms: ["philanthropy", "volunteer", "community", "hours"] },
       { id: "nav-polls", group: "Navigate", icon: Vote, label: "Polls", href: "/admin/polls", synonyms: ["vote", "decision"] },
-      { id: "nav-events", group: "Navigate", icon: CalendarDays, label: "Events", href: "/admin/events", synonyms: ["calendar", "schedule", "rsvp"], adminOnly: true },
-      { id: "nav-news", group: "Navigate", icon: Megaphone, label: "News / Announcements", href: "/admin/announcements", synonyms: ["broadcast", "post", "blast"], adminOnly: true },
-      { id: "nav-officers", group: "Navigate", icon: ShieldCheck, label: "Officers / RBAC", href: "/admin/officers", synonyms: ["roles", "permissions", "positions", "eboard", "executive", "rbac", "access"], adminOnly: true },
+      { id: "nav-events", group: "Navigate", icon: IconEvents, label: "Events", href: "/admin/events", synonyms: ["calendar", "schedule", "rsvp"], adminOnly: true },
+      { id: "nav-news", group: "Navigate", icon: IconComms, label: "News / Announcements", href: "/admin/announcements", synonyms: ["broadcast", "post", "blast"], adminOnly: true },
+      { id: "nav-officers", group: "Navigate", icon: IconSecurity, label: "Officers / RBAC", href: "/admin/officers", synonyms: ["roles", "permissions", "positions", "eboard", "executive", "rbac", "access"], adminOnly: true },
       { id: "nav-library", group: "Navigate", icon: BookMarked, label: "Library / Documents", href: "/admin/library", synonyms: ["docs", "files", "bylaws", "resources", "documents"] },
       { id: "nav-audit", group: "Navigate", icon: ScrollText, label: "Audit log", href: "/admin/audit", synonyms: ["history", "governance", "trail", "who changed"], adminOnly: true },
-      { id: "nav-settings", group: "Navigate", icon: Settings, label: "Site content / settings", href: "/admin/settings", synonyms: ["config", "brand", "colors", "advisor"], adminOnly: true },
+      { id: "nav-settings", group: "Navigate", icon: IconAdmin, label: "Site content / settings", href: "/admin/settings", synonyms: ["config", "brand", "colors", "advisor"], adminOnly: true },
       // Actions / quick jumps
-      { id: "act-setup", group: "Actions", icon: Rocket, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
+      { id: "act-setup", group: "Actions", icon: IconLaunch, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
       { id: "act-dues-connect", group: "Actions", icon: Banknote, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
-      { id: "act-treasury", group: "Actions", icon: Landmark, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
+      { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
       { id: "act-billing", group: "Actions", icon: CreditCard, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
       { id: "act-exports", group: "Actions", icon: FileDown, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
       { id: "act-export-rushes", group: "Actions", icon: ScrollText, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
@@ -183,9 +163,16 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden" aria-label="Command palette">
+      <DialogContent
+        className="max-w-xl p-0 overflow-hidden"
+        aria-label="Command palette"
+        aria-describedby={undefined}
+      >
         {/* Visually-hidden title for SR users — DialogContent requires a
-            DialogTitle for a11y or it throws a console warning. */}
+            DialogTitle for a11y or it throws a console warning. There is no
+            descriptive body text, so we pass aria-describedby={undefined} to
+            silence the Radix "Missing Description" warning (the aria-label
+            alone does NOT suppress it). */}
         <DialogTitle className="sr-only">Command palette</DialogTitle>
         <div className="border-b border-border">
           <div className="flex items-center gap-2 px-3 py-2">

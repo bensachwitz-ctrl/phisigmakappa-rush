@@ -22,6 +22,27 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getCurrentSession();
   const isAdmin = !!session?.isAdmin;
 
+  // DEFENSE-IN-DEPTH page-level auth gate. Middleware already redirects an
+  // unauthenticated /admin/* request to /admin/login, but middleware must NOT be
+  // the only gate: a middleware bypass (e.g. CVE-2025-29927, patched by the Next
+  // 14.2.35 bump, but belt-and-suspenders for any future regression) would
+  // otherwise render this layout — and its admin Server Components — to an
+  // unauthenticated caller. So we re-verify the session here and redirect when it
+  // is missing. We resolve the current path from the middleware-injected
+  // x-pathname header and NEVER redirect the /admin/login page itself (that would
+  // loop). getCurrentSession() returns null for any tampered/expired cookie, so
+  // a forged value can't satisfy this gate (the HMAC is verified in lib/auth).
+  let currentPath = "";
+  try {
+    currentPath = headers().get("x-pathname") || "";
+  } catch {
+    currentPath = "";
+  }
+  const onLoginPage = currentPath.startsWith("/admin/login");
+  if (!session && !onLoginPage) {
+    redirect("/admin/login");
+  }
+
   // SOFT-GATE: resolve the chapter's platform-billing entitlement (fail-open —
   // never throws, never reports false on uncertainty) and surface a dismissible
   // banner to the chapter admin when the subscription needs attention (trial

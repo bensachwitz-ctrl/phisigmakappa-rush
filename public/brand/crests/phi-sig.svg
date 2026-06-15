@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" fill="none">
+  <defs>
+    <linearGradient id="phiSigGrad" x1="0" y1="0" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8102E" />
+      <stop offset="1" stop-color="#800A1D" />
+    </linearGradient>
+  </defs>
+  <path d="M 8 6 L 56 6 L 56 38 C 56 50 49 60 32 70 C 15 60 8 50 8 38 Z" fill="url(#phiSigGrad)" stroke="#C0A062" stroke-width="2.6" stroke-linejoin="round" />
+  <path d="M 12 10 L 52 10 L 52 37.5 C 52 47 46 55.5 32 64.5 C 18 55.5 12 47 12 37.5 Z" fill="none" stroke="#C0A062" stroke-width="0.8" opacity="0.45" />
+  <g fill="white" opacity="0.95">
+    <path d="M 20 15 l 0.78 2.40 2.52 0 -2.04 1.49 0.78 2.40 -2.04 -1.48 -2.04 1.48 0.78 -2.40 -2.04 -1.49 2.52 0 z" />
+    <path d="M 32 15 l 0.78 2.40 2.52 0 -2.04 1.49 0.78 2.40 -2.04 -1.48 -2.04 1.48 0.78 -2.40 -2.04 -1.49 2.52 0 z" />
+    <path d="M 44 15 l 0.78 2.40 2.52 0 -2.04 1.49 0.78 2.40 -2.04 -1.48 -2.04 1.48 0.78 -2.40 -2.04 -1.49 2.52 0 z" />
+  </g>
+  <text x="32" y="45" text-anchor="middle" font-family="Georgia, serif" font-size="16" font-weight="700" fill="white" letter-spacing="0.5">ΦΣΚ</text>
+  <text x="32" y="58" text-anchor="middle" font-family="Georgia, serif" font-size="6" font-weight="700" font-style="italic" fill="#C0A062" opacity="0.9">1873</text>
+</svg>

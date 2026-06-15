@@ -6,6 +6,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { isAdminAuthed } from "@/lib/auth";
 import { getTwilioConfig } from "@/lib/messaging-config";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -139,18 +140,27 @@ const RushSchema = z.object({
   highSchoolInfo: z.string().max(2000).optional().or(z.literal("")),
   backgroundInfo: z.string().max(2000).optional().or(z.literal("")),
   headshotUrl: z.string().url().max(2048).optional().or(z.literal("")),
-  ageAttestation: z.enum(["ADULT_18_PLUS", "MINOR_17_WITH_GUARDIAN_PERMISSION"]).optional(),
+  // Age attestation is REQUIRED — the consent receipt must record WHICH path the
+  // rushee chose (18+ vs 17-with-guardian), so we never silently default it to
+  // ADULT_18_PLUS for a caller that omitted it. The form always sends one of the
+  // two values; a direct API client must too.
+  ageAttestation: z.enum(["ADULT_18_PLUS", "MINOR_17_WITH_GUARDIAN_PERMISSION"]),
+  // Express-written-consent affirmation. Must be literally `true` — a TCPA
+  // consent receipt is only created when the rushee affirmatively agreed. A
+  // missing/false value is a 400 (handled below) so the server never fabricates
+  // a consent record the user never granted (the prior client-only gate could be
+  // bypassed by any direct POST).
+  consent: z.boolean(),
   website: z.string().max(500).optional().or(z.literal("")),
   customAnswers: z.record(z.string(), z.string().max(1000)).optional(),
 });
 
 export async function POST(req: Request) {
   try {
-    // TCPA evidence — captured at the moment of submission.
-    const ipAddress =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      null;
+    // TCPA evidence + rate-limit key — captured at the moment of submission.
+    // Use the non-forgeable platform header so the per-IP submit cap can't be
+    // dodged by rotating x-forwarded-for (see lib/client-ip).
+    const ipAddress = getClientIp(req);
     const userAgent = req.headers.get("user-agent") || null;
 
     // ── Rate limit ────────────────────────────────────────────────────────
@@ -202,6 +212,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, updated: false }, { status: 200 });
     }
 
+    // Express-written-consent gate. zod already requires `consent` to be a
+    // boolean; here we REFUSE to proceed unless it is literally true. This is the
+    // server-side enforcement of the TCPA disclosure — no consent receipt may be
+    // created for a submission the rushee did not affirmatively agree to. (The
+    // form's submit button is already consent-gated; this closes the direct-API
+    // bypass that could fabricate a receipt without agreement.)
+    if (parsed.consent !== true) {
+      return NextResponse.json(
+        { ok: false, error: "Consent to receive recruitment messages is required to submit." },
+        { status: 400 },
+      );
+    }
+
     // Email fallback: if the PNM submitted without an email (or the form
     // skipped the synthesizer for some reason), generate a stable
     // <slugified-name>-<random>@noemail.local placeholder. Same shape the
@@ -219,7 +242,8 @@ export async function POST(req: Request) {
       phone: parsed.phone.trim(),
     };
 
-    const ageAttestation = data.ageAttestation || "ADULT_18_PLUS";
+    // Required by the schema — always one of the two enum values now.
+    const ageAttestation = data.ageAttestation;
 
     // Build the tenant-specific consent disclosure ONCE for this request so
     // both the re-affirmation and first-submission RushConsent rows store the

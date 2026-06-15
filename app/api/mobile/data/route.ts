@@ -238,6 +238,18 @@ export async function GET(req: Request) {
       },
     });
 
+    // PII scoping: active brothers legitimately share contact info with EACH
+    // OTHER, but an ALUMNI-token holder should not receive every active member's
+    // email + phone (alumni opt into their OWN directory exposure, but actives
+    // never consented to broadcast contact details to the alumni network). So we
+    // strip email/phone from the actives projection for alumni callers. Brothers
+    // see the full roster as before. (The alumni roster below is already gated on
+    // each alum's own optInDirectory flag.)
+    const scopedActiveRoster =
+      sess.role === "alumni"
+        ? activeRoster.map(({ email: _e, phone: _p, ...rest }) => rest)
+        : activeRoster;
+
     const alumniRoster = await db.alumniProfile.findMany({
       where: { optInDirectory: true },
       orderBy: { graduationYear: "desc" },
@@ -295,7 +307,7 @@ export async function GET(req: Request) {
         myRsvp: (e as any).rsvps?.[0] || null,
       })),
       roster: {
-        actives: activeRoster,
+        actives: scopedActiveRoster,
         alumni: alumniRoster.map((al) => ({
           id: al.id,
           name: al.fullName,

@@ -774,9 +774,20 @@ model AuditLog {
   ipAddress   String?
   createdAt   DateTime @default(now())
 
+  // Tamper-evidence (hash chain). Each row carries a monotonic sequence number
+  // and a SHA-256 hash over its canonical content + the PREVIOUS row's hash, so
+  // any edit/deletion/reorder of historical rows breaks the chain at that point.
+  // verifyChain() in lib/audit.ts walks the rows in seq order and recomputes.
+  // Nullable so pre-hashchain rows (and a degraded best-effort insert) don't
+  // throw; verifyChain anchors at the first hashed row.
+  seq         Int?
+  prevHash    String?
+  hash        String?
+
   @@index([createdAt])
   @@index([subjectType, subjectId])
   @@index([actorId])
+  @@index([seq])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

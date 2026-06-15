@@ -47,7 +47,11 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-12 rounded-md px-6 text-base",
-        icon: "h-10 w-10",
+        // 44px square — the Apple HIG minimum touch target (was 40px). Icon-only
+        // buttons have no text padding to grow the hit area, so the variant must
+        // carry the minimum itself. A call-site can still shrink the visible glyph
+        // while keeping the 44px target by padding rather than overriding h/w.
+        icon: "h-11 w-11",
         xl: "h-14 rounded-xl px-8 text-base font-semibold",
       },
     },

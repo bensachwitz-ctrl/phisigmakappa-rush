@@ -334,7 +334,7 @@ export function RiskClient({
 
       {/* Detail & Triage Dialog */}
       <Dialog open={!!selectedIncident} onOpenChange={(o) => !o && setSelectedIncident(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>Incident Detail</span>

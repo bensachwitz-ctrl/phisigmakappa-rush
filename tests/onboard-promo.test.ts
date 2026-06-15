@@ -120,6 +120,7 @@ describe("POST /api/onboard — Onboarding Promo Code Integration", () => {
     const upsertCalls = mocks.mockUpsert.mock.calls;
     const promoCodeUpsert = upsertCalls.find((call: any) => call[0].where.key === "billing.promoCode");
     expect(promoCodeUpsert).toBeDefined();
+    if (!promoCodeUpsert) throw new Error("billing.promoCode upsert not called");
     expect(promoCodeUpsert[0].create.value).toBe("WELCOME100");
 
     // Verify welcome email matches promo benefits

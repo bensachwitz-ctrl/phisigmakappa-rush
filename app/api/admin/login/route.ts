@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { setBrotherCookie, clearAdminCookie } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,10 +79,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
   }
 
-  const ipAddress =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    null;
+  // Throttle key: prefer the non-forgeable platform header so a client can't
+  // rotate x-forwarded-for to dodge the per-IP fail cap (see lib/client-ip).
+  const ipAddress = getClientIp(req);
 
   // ─── Admin login ─────────────────────────────────────────────────────────
   const adminParsed = AdminSchema.safeParse(body);

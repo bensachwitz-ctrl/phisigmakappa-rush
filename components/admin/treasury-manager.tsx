@@ -421,14 +421,14 @@ export function TreasuryManager({
                                 <TableCell className="pr-5">
                                   <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                                     <Button
-                                      variant="ghost" size="icon" className="h-8 w-8"
+                                      variant="ghost" size="icon" className="h-11 w-11"
                                       onClick={() => openEdit(l)} title="Edit line"
                                     >
                                       <Edit3 className="h-3.5 w-3.5" />
                                     </Button>
                                     <Button
                                       variant="ghost" size="icon"
-                                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                      className="h-11 w-11 text-muted-foreground hover:text-destructive"
                                       onClick={() => setConfirmLine(l)} title="Delete line"
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -484,14 +484,14 @@ export function TreasuryManager({
                             </div>
                             <div className="flex gap-0.5 shrink-0 -mt-1">
                               <Button
-                                variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
+                                variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground"
                                 onClick={() => openEdit(l)} title="Edit line"
                               >
                                 <Edit3 className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost" size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                className="h-11 w-11 text-muted-foreground hover:text-destructive"
                                 onClick={() => setConfirmLine(l)} title="Delete line"
                               >
                                 <Trash2 className="h-4 w-4" />

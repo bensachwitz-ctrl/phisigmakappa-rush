@@ -262,29 +262,33 @@ export function AcademicClient({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-background"
+                          className="h-11 w-11 hover:bg-background"
                           disabled={isBusy}
                           onClick={() => adjustHours(b, -1)}
+                          aria-label={`Subtract an hour from ${b.name}`}
                         >
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-background"
+                          className="h-11 w-11 hover:bg-background"
                           disabled={isBusy}
                           onClick={() => adjustHours(b, 1)}
+                          aria-label={`Add an hour to ${b.name}`}
                         >
-                          <ChevronUp className="h-4 w-4" />
+                          <ChevronUp className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 hover:bg-background text-muted-foreground hover:text-foreground"
+                          className="h-11 w-11 hover:bg-background text-muted-foreground hover:text-foreground"
                           disabled={isBusy}
                           onClick={() => handleOpenEdit(b)}
+                          aria-label={`Edit academic status for ${b.name}`}
+                          aria-busy={isBusy}
                         >
-                          {isBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Edit2 className="h-3 w-3" />}
+                          {isBusy ? <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> : <Edit2 className="h-3 w-3" aria-hidden="true" />}
                         </Button>
                       </div>
                     )}
@@ -298,7 +302,7 @@ export function AcademicClient({
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBrother} onOpenChange={(o) => !o && setEditingBrother(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Edit Academic Status</DialogTitle>
           </DialogHeader>

@@ -20,7 +20,7 @@ import NativeBridge from "./NativeBridge";
 const MobileAppClient = dynamic(() => import("./MobileAppClient"), {
   loading: () => (
     <div
-      className="min-h-screen w-full flex items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-slate-950"
+      className="min-h-screen w-full flex items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-slate-950"
       aria-busy="true"
       aria-label="Loading interactive demo"
     >
@@ -31,7 +31,7 @@ const MobileAppClient = dynamic(() => import("./MobileAppClient"), {
           alt="Greekstack"
         />
         <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-1/2 rounded-full bg-indigo-400/70 motion-safe:animate-pulse" />
+          <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-blue-500/80 to-sky-400/80 motion-safe:animate-pulse" />
         </div>
         <span className="text-xs font-medium tracking-wide text-slate-400">
           Loading the live demo…
