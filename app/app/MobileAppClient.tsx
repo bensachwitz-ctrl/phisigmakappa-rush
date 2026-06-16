@@ -1938,8 +1938,12 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
         return {
           ...prev,
           profile: {
+            // member/exec fix: only the EXEC persona is an officer ("President").
+            // The plain member persona must read as a member — previously it
+            // fell through to "President" too, mislabeling a regular brother as
+            // an officer in the demo header.
             ...prev.profile,
-            position: p === "alumni" ? "Alumnus" : "President"
+            position: p === "alumni" ? "Alumnus" : p === "exec" ? "President" : "Active Member"
           }
         };
       });

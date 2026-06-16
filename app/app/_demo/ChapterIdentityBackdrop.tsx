@@ -283,17 +283,10 @@ export function ChapterIdentityBackdrop({
           {letters}
         </p>
       ) : null}
-      {/* School crest logo - bottom-right corner with glassmorphic backing, shadows and name label */}
-      {school ? (
-        <div className="absolute bottom-8 right-8 z-[2] flex flex-col items-center gap-2">
-          <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 p-3 shadow-2xl transition-all duration-300 hover:scale-[1.05] hover:border-white/20">
-            <SchoolCrestLogo school={school} primary={primary} secondary={secondary} />
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 bg-slate-950/60 backdrop-blur px-2.5 py-1 rounded-full border border-white/5 shadow-md">
-            {school.replace("University of ", "").replace("Clemson University", "Clemson")}
-          </span>
-        </div>
-      ) : null}
+      {/* School crest badge removed per owner: the bottom-right chapter-crest
+          card (e.g. the "SOUTH CAROLINA" palmetto seal) read as a stray UI
+          element floating on the dark shell. The faint drift wordmark +
+          monogram above remain as the ambient, non-distracting chapter tint. */}
     </div>
   );
 }
