@@ -356,7 +356,7 @@ export function getMockDemoData(tenant: Tenant, brand: FraternityBrand, persona:
       phone: "803-555-0144",
       year: "Senior",
       major: "Computer Science",
-      position: persona === "alumni" ? "Alumnus" : "President",
+      position: persona === "alumni" ? "Alumnus" : persona === "exec" ? "President" : "Active Member",
       pledgeClass: personaPledgeClass,
       hometown: "Charleston, SC",
       gradYear: "2026",
