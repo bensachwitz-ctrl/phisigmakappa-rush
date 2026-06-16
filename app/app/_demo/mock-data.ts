@@ -138,6 +138,22 @@ export function glyphsFromBrand(letters: string | undefined): string[] {
   return greek.length > 1 ? [...greek, greek.join("")] : greek;
 }
 
+/** The demo persona keys the showcase switches between. Kept as a string union
+ *  so callers (the seed, the localStorage-restore reconciler, the view switcher)
+ *  all agree on the same three values. */
+export type DemoPersona = "member" | "exec" | "alumni";
+
+/** Single source of truth mapping a demo persona → the profile.position label
+ *  the phone header reads. member → "Active Member" (a regular brother is NEVER
+ *  shown as an officer), exec → "President", alumni → "Alumnus". Used by the seed
+ *  AND by every place that re-skins or reconciles the demo profile so the
+ *  selected persona and the rendered position can never disagree. NOTE: anything
+ *  isOfficerPosition()-true ("President") unlocks the Exec-tools entry, so the
+ *  member label must stay a plain-member string. */
+export function personaPosition(persona: string): string {
+  return persona === "alumni" ? "Alumnus" : persona === "exec" ? "President" : "Active Member";
+}
+
 /** Role map (owner round-8): chapter OFFICERS carry exec-view permissions —
  *  President / Vice President / Treasurer / Secretary / any Chair or titled
  *  officer. Plain actives stay read-mostly. Drives the member view's Exec
@@ -356,7 +372,7 @@ export function getMockDemoData(tenant: Tenant, brand: FraternityBrand, persona:
       phone: "803-555-0144",
       year: "Senior",
       major: "Computer Science",
-      position: persona === "alumni" ? "Alumnus" : persona === "exec" ? "President" : "Active Member",
+      position: personaPosition(persona),
       pledgeClass: personaPledgeClass,
       hometown: "Charleston, SC",
       gradYear: "2026",

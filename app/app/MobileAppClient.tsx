@@ -62,6 +62,7 @@ import {
   DEMO_TENANTS,
   DEMO_CALLOUTS,
   getMockDemoData,
+  personaPosition,
   brandSecondary,
   glyphsFromBrand,
   darkenHex,
@@ -567,10 +568,28 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       const savedDbData = localStorage.getItem(`gs_demo_dashboard_${selectedTenant.id}`);
       if (savedDbData) {
         try {
-          setDashboardData(JSON.parse(savedDbData));
+          const restored = JSON.parse(savedDbData);
+          // member/exec consistency: the restored snapshot carries whatever
+          // persona the visitor LAST viewed (e.g. "President" after exploring the
+          // Exec board). On a fresh /app?demo=true entry the view switcher resets
+          // to the member persona, so a blind restore would render President while
+          // "Active brother" is selected — the inconsistency this fixes. Reconcile
+          // profile.position to the CURRENT persona (derived from viewRole/role)
+          // so the selected persona and the rendered position can never disagree.
+          // Demo-display only — never forges a REAL session's server position.
+          const currentPersona = viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member";
+          if (restored?.profile) {
+            restored.profile = { ...restored.profile, position: personaPosition(currentPersona) };
+          }
+          setDashboardData(restored);
         } catch {}
       }
     }
+    // viewRole/role are read to align the restored persona; this effect only
+    // re-runs on demo/tenant change (a persona switch already re-skins position
+    // via setViewPersona, so it must NOT re-read localStorage here and clobber
+    // in-session ballots/donations).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDemo, selectedTenant]);
 
   // Persist demo state changes
@@ -1943,7 +1962,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             // fell through to "President" too, mislabeling a regular brother as
             // an officer in the demo header.
             ...prev.profile,
-            position: p === "alumni" ? "Alumnus" : p === "exec" ? "President" : "Active Member"
+            position: personaPosition(p)
           }
         };
       });
