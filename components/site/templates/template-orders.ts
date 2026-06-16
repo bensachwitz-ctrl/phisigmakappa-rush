@@ -1,0 +1,87 @@
+import type { TemplateId } from "./types";
+
+/**
+ * template-orders.ts — the PURE, tsx-free data half of the chapter-site template
+ * config: the template id list, default section orders, gallery metadata, and the
+ * id resolver. Kept separate from template-config.ts (which adds the hero-variant
+ * component map) so this can be imported by pure-node vitest WITHOUT dragging the
+ * heavy hero .tsx component tree (and its animation imports) into the test graph.
+ * template-config.ts re-exports everything here.
+ */
+
+export const TEMPLATE_IDS = ["classic", "modern", "bold"] as const;
+
+/**
+ * Coerce an arbitrary cfg value to a known TemplateId. Unknown / empty / legacy
+ * values fall back to "classic" so an un-customized or mis-typed chapter (and
+ * the apex) always renders the original Classic layout — byte-identical to the
+ * pre-generator build.
+ */
+export function resolveTemplateId(raw: string | undefined): TemplateId {
+  return (TEMPLATE_IDS as readonly string[]).includes(raw ?? "")
+    ? (raw as TemplateId)
+    : "classic";
+}
+
+/**
+ * Per-template default section order.
+ *
+ * INVARIANT: TEMPLATE_ORDER.classic is the EXACT legacy defaultOrder that lived
+ * inline in chapter-landing.tsx (so switching nothing keeps the original page).
+ * Every order starts with "hero" (index 0) and includes the ungated, always-on
+ * "register" form, so no template can ship a homepage without the sign-up CTA.
+ */
+export const TEMPLATE_ORDER: Record<TemplateId, string[]> = {
+  // ── Classic Crest (default) — the original, unchanged order. ──────────────
+  classic: [
+    "hero", "stats", "highlights", "values", "register",
+    "instagram", "timeline", "schedule", "testimonial",
+    "spotlight", "eboard", "about", "faq", "where", "cta",
+  ],
+  // ── Modern Split — leads with the form + IG collage, gold accent rhythm. ──
+  modern: [
+    "hero", "register", "instagram", "stats", "values",
+    "eboard", "schedule", "timeline", "testimonial",
+    "spotlight", "about", "faq", "where", "cta",
+  ],
+  // ── Bold Banner — promotes the big-type stats + IG straight after the
+  //    banner; high-contrast, poster-forward. ──────────────────────────────
+  bold: [
+    "hero", "stats", "instagram", "register", "values",
+    "highlights", "eboard", "timeline", "schedule", "testimonial",
+    "spotlight", "about", "faq", "where", "cta",
+  ],
+};
+
+export type TemplateMeta = {
+  id: TemplateId;
+  name: string;
+  blurb: string;
+  /** Static mockup thumbnail in /public/templates/. */
+  thumb: string;
+};
+
+/** Gallery cards for the /admin/website Template Gallery. */
+export const TEMPLATE_META: TemplateMeta[] = [
+  {
+    id: "classic",
+    name: "Classic Crest",
+    blurb:
+      "The signature layout — an animated aurora hero with your crest, photo collage, and the full section stack. Timeless and conversion-tested.",
+    thumb: "/templates/classic.svg",
+  },
+  {
+    id: "modern",
+    name: "Modern Split",
+    blurb:
+      "An asymmetric split hero — copy on the left, photo collage on the right — with a gold accent rhythm. Form and Instagram lead the page.",
+    thumb: "/templates/modern.svg",
+  },
+  {
+    id: "bold",
+    name: "Bold Banner",
+    blurb:
+      "A full-bleed photo banner with a centered, poster-scale headline and big-type stats up top. High-contrast and unmistakable.",
+    thumb: "/templates/bold.svg",
+  },
+];

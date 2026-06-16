@@ -5,6 +5,7 @@ import Script from "next/script";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteConfig } from "@/lib/site-config";
+import { buildBrandThemeStyle } from "@/lib/brand-theme";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
 import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
 import { getSubdomain } from "@/lib/prisma";
@@ -403,20 +404,20 @@ export default async function RootLayout({
   // Sig cardinal red, which clashed with the blue marketing site). A real chapter
   // overrides these from /admin/settings → brand.
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#2563eb");
-  const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], "#1e40af");
-  const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], "#eff6ff");
 
   // Inline CSS override binds the cfg-supplied colors to the same Tailwind
-  // tokens (--phisig-red et al) used throughout the build. No client JS,
-  // no FOUC, no rebuild needed when admin saves.
-  // Also re-derive the shadcn HSL tokens (--primary / --ring) from the SAME
-  // chapter hex so the shared-foundation components themed via tone="brand"
-  // (AnimatedBackground aurora, IconChip) track the chapter color instead of
-  // the static cardinal default. --primary-foreground stays white (all brand
-  // ramps are dark enough for white text on the gradient CTA / stats strip).
-  const brandPrimaryHsl = hexToHslTriple(brandPrimary);
-  const themeStyle = `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};--primary:${brandPrimaryHsl};--ring:${brandPrimaryHsl};}`;
+  // tokens (--brand-primary*, --brand-secondary) used throughout the build, plus
+  // the derived shadcn HSL tokens (--primary / --ring) so the shared-foundation
+  // components themed via tone="brand" (AnimatedBackground aurora, IconChip)
+  // track the chapter color. No client JS, no FOUC, no rebuild when admin saves.
+  // The pure builder (lib/brand-theme.ts) keeps the math unit-testable; an
+  // unbranded chapter (and the apex) resolves to platform royal-blue + gold,
+  // identical to today. --brand-secondary feeds the Modern + Bold templates'
+  // gold accent (Classic never reads it, so Classic stays pixel-identical).
+  const themeStyle = buildBrandThemeStyle(cfg);
+  // The chapter primary (validated) is also used to tint the optional Chatwoot
+  // launcher below. Same default + guard as the theme builder.
+  const brandPrimary = safeHex(cfg["brand.primaryHex"], "#2563eb");
 
   // OPTIONAL Plausible analytics — INERT by default. Only renders the
   // (cookieless, <1KB) script when the chapter has set a domain in

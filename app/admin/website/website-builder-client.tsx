@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +15,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { 
-  ArrowUp, ArrowDown, Eye, EyeOff, Save, RefreshCw, Flame, Trophy, Heart, 
-  GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote, 
-  Users, Crown, HelpCircle, MapPin, Rocket, ShieldCheck, ChevronUp, ChevronDown 
+import {
+  Save, RefreshCw, Flame, Trophy, Heart,
+  GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote,
+  Users, Crown, HelpCircle, MapPin, Rocket, ShieldCheck, ChevronUp, ChevronDown,
+  LayoutGrid, Palette, Check, Sparkles,
 } from "lucide-react";
+// Import the PURE template data (orders/meta/resolver) — NOT template-config,
+// which also pulls in the hero .tsx components. This client only needs the meta
+// + the id resolver.
+import {
+  TEMPLATE_META,
+  resolveTemplateId,
+} from "@/components/site/templates/template-orders";
+import type { TemplateId } from "@/components/site/templates/types";
 
 interface SectionConfig {
   id: string;
@@ -47,11 +57,65 @@ const SECTION_METADATA: Record<string, { name: string; description: string; icon
   cta: { name: "Final Call-To-Action", description: "Concluding bottom block encouraging PNMs to sign up.", icon: Rocket }
 };
 
+// Mirrors TEMPLATE_ORDER.classic in template-config.ts (the legacy default
+// order). Used as the section-list fallback + the "reset to defaults" target so
+// the customizer's Layout tab stays independent of which template is staged.
 const DEFAULT_ORDER = [
   "hero", "stats", "highlights", "values", "register",
   "instagram", "timeline", "schedule", "testimonial",
   "spotlight", "eboard", "about", "faq", "where", "cta"
 ];
+
+// Platform royal-blue + gold preset (the Greek Stack identity defaults).
+const GS_PRIMARY = "#2563eb";
+const GS_SECONDARY = "#f59e0b";
+
+type TabId = "templates" | "brand" | "layout";
+
+/* ── 44px swatch + hex input (lifted from onboard/editable-live-preview.tsx) ── */
+function ColorEditable({
+  label,
+  value,
+  onChange,
+  fallback,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  fallback: string;
+}) {
+  const id = React.useId();
+  // The native color input demands a valid #rrggbb; fall back so a partial hex
+  // mid-type doesn't reset the swatch to black.
+  const swatchValue = /^#([0-9a-fA-F]{6})$/.test(value.trim()) ? value.trim() : fallback;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 transition-colors focus-within:ring-2 focus-within:ring-phisig-red/40 hover:border-phisig-red/30">
+      <input
+        type="color"
+        value={swatchValue}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`${label} color`}
+        style={{ boxShadow: `0 0 0 1px rgba(0,0,0,0.08), 0 2px 8px -2px ${swatchValue}99` }}
+        className="h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 cursor-pointer rounded-md border border-border bg-transparent p-0.5 transition-transform hover:scale-105"
+      />
+      <div className="min-w-0 flex-1">
+        <label htmlFor={id} className="block text-xs font-semibold leading-tight text-foreground">
+          {label}
+        </label>
+        <input
+          id={id}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`${label} hex value`}
+          spellCheck={false}
+          maxLength={7}
+          className="mt-0.5 w-full truncate bg-transparent font-mono text-xs uppercase leading-tight text-muted-foreground outline-none focus:text-foreground"
+        />
+      </div>
+    </div>
+  );
+}
 
 export function WebsiteBuilderClient({
   initialConfig
@@ -61,7 +125,25 @@ export function WebsiteBuilderClient({
   const router = useRouter();
   const { push } = useToast();
   const [busy, setBusy] = React.useState(false);
-  
+  const [tab, setTab] = React.useState<TabId>("templates");
+
+  // ── Staged brand + template (additive — Layout list is unchanged) ──────────
+  const [template, setTemplate] = React.useState<TemplateId>(
+    resolveTemplateId(initialConfig["website.template"]),
+  );
+  const [primaryHex, setPrimaryHex] = React.useState(
+    initialConfig["brand.primaryHex"] || GS_PRIMARY,
+  );
+  const [secondaryHex, setSecondaryHex] = React.useState(
+    initialConfig["brand.secondaryHex"] || GS_SECONDARY,
+  );
+  // When the admin switches template, offer to clear any explicit
+  // website.sections override so the new template's default order takes effect
+  // (an existing override otherwise pins the order across templates).
+  const [resetOrderOnTemplate, setResetOrderOnTemplate] = React.useState(true);
+  const hasOrderOverride = Boolean(initialConfig["website.sections"]);
+  const initialTemplate = resolveTemplateId(initialConfig["website.template"]);
+
   // Parse order
   const getOrderedSections = React.useCallback((): SectionConfig[] => {
     let orderList = [...DEFAULT_ORDER];
@@ -74,14 +156,14 @@ export function WebsiteBuilderClient({
         }
       } catch {}
     }
-    
+
     // Add missing default sections if any
     DEFAULT_ORDER.forEach(key => {
       if (!orderList.includes(key)) {
         orderList.push(key);
       }
     });
-    
+
     return orderList.map(key => {
       const meta = SECTION_METADATA[key];
       const showKey = meta.showKey;
@@ -155,37 +237,58 @@ export function WebsiteBuilderClient({
     setResetConfirmOpen(false);
     push({
       title: "Layout reset to defaults",
-      description: "Review the order, then Save Layout Changes to publish it.",
+      description: "Review the order, then Save changes to publish it.",
       variant: "default",
     });
   };
 
   const resetToDefaults = () => setResetConfirmOpen(true);
 
+  // "Reset to Greek Stack royal-blue + gold" — restores the platform brand preset.
+  const resetBrandPreset = () => {
+    setPrimaryHex(GS_PRIMARY);
+    setSecondaryHex(GS_SECONDARY);
+    push({
+      title: "Brand reset to Greek Stack royal-blue + gold",
+      description: "Save changes to publish the platform palette.",
+      variant: "default",
+    });
+  };
+
   const handleSave = async () => {
     setBusy(true);
     try {
       const updates: Record<string, string> = {
         "website.sections": JSON.stringify(sections.map(s => s.id)),
+        "website.template": template,
+        "brand.primaryHex": primaryHex.trim(),
+        "brand.secondaryHex": secondaryHex.trim(),
       };
       sections.forEach(s => {
         if (s.showKey) {
           updates[s.showKey] = s.visible ? "true" : "false";
         }
       });
-      
+
+      // When the template changed and the admin opted in, clear the explicit
+      // section-order override so the NEW template's default order reflows.
+      // Writing "" lets the public renderer fall back to TEMPLATE_ORDER[template].
+      if (template !== initialTemplate && resetOrderOnTemplate) {
+        updates["website.sections"] = "";
+      }
+
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),
       });
-      
+
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) throw new Error(j.error || "Save failed");
-      
+
       push({
-        title: "Layout configuration saved",
-        description: "Your chapter landing page has been updated with the new section order immediately.",
+        title: "Website configuration saved",
+        description: "Your chapter landing page has been updated immediately.",
         variant: "default",
       });
       router.refresh();
@@ -200,131 +303,323 @@ export function WebsiteBuilderClient({
     }
   };
 
+  const TABS: { id: TabId; label: string; icon: React.ComponentType<any> }[] = [
+    { id: "templates", label: "Template", icon: LayoutGrid },
+    { id: "brand", label: "Brand", icon: Palette },
+    { id: "layout", label: "Layout", icon: ChevronUp },
+  ];
+
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Layout Hierarchy</h2>
-          <Button variant="outline" size="sm" onClick={resetToDefaults} disabled={busy} className="text-xs gap-1.5 h-8">
-            <RefreshCw className="h-3 w-3" />
-            Reset to defaults
-          </Button>
-        </div>
-
-        <div className="space-y-2.5">
-          {sections.map((sect, index) => {
-            const Icon = sect.icon;
-            const isAlwaysVisible = !sect.showKey;
-            
-            return (
-              <Card key={sect.id} className={`transition-all duration-200 border-l-4 ${
-                sect.visible ? "border-l-phisig-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50"
-              }`}>
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm leading-none">{sect.name}</span>
-                        {sect.visible ? (
-                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-100">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
-                            Hidden
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{sect.description}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Visibility Toggle */}
-                    {!isAlwaysVisible ? (
-                      <div className="flex items-center gap-1.5 mr-2">
-                        <Checkbox
-                          id={`visible-${sect.id}`}
-                          checked={sect.visible}
-                          onCheckedChange={() => toggleVisibility(sect.id)}
-                          className="h-4 w-4 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
-                        />
-                        <label htmlFor={`visible-${sect.id}`} className="text-xs text-slate-600 font-medium cursor-pointer select-none">
-                          Show
-                        </label>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 font-medium italic mr-3 select-none">
-                        Always Visible
-                      </span>
-                    )}
-
-                    {/* Order Controls */}
-                    <div className="flex flex-col sm:flex-row border rounded-lg bg-card overflow-hidden">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => moveUp(index)}
-                        disabled={index === 0 || busy}
-                        className="h-11 w-11 sm:h-8 sm:w-8 rounded-none hover:bg-slate-100 text-slate-500 disabled:opacity-35"
-                        title="Move Up"
-                        aria-label={`Move ${sect.name} up`}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => moveDown(index)}
-                        disabled={index === sections.length - 1 || busy}
-                        className="h-11 w-11 sm:h-8 sm:w-8 rounded-none border-t sm:border-t-0 sm:border-l hover:bg-slate-100 text-slate-500 disabled:opacity-35"
-                        title="Move Down"
-                        aria-label={`Move ${sect.name} down`}
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+    <div className="space-y-6">
+      {/* ── Tab rail ─────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1" role="tablist" aria-label="Website builder sections">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "inline-flex min-h-[40px] items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                active
+                  ? "bg-card text-phisig-red shadow-sm ring-1 ring-phisig-red/15"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="space-y-5">
-        <Card className="bg-gradient-to-br from-white to-phisig-mist border-phisig-red/10 shadow-md">
-          <CardContent className="p-5 space-y-4">
-            <h3 className="font-bold text-base">Actions</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Rearranging layouts here immediately updates the main landing page structure. Changes are white-labeled and cached safely per subdomain.
-            </p>
-            
-            <Button onClick={handleSave} disabled={busy} className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white font-medium shadow-sm">
-              {busy ? (
-                <><RefreshCw className="h-4 w-4 animate-spin mr-2" /> Saving...</>
-              ) : (
-                <><Save className="h-4 w-4 mr-2" /> Save Layout Changes</>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          {/* ── TEMPLATE GALLERY ──────────────────────────────────────────── */}
+          {tab === "templates" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Choose a template</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Each template keeps every section you configure — it only changes
+                  the hero style and the default section order. Classic is the
+                  original layout.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {TEMPLATE_META.map((tpl) => {
+                  const selected = template === tpl.id;
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setTemplate(tpl.id)}
+                      className={cn(
+                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+                        selected
+                          ? "border-phisig-red shadow-md"
+                          : "border-border hover:border-phisig-red/40 hover:shadow-sm",
+                      )}
+                    >
+                      {selected && (
+                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white shadow">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                      {/* Mockup thumbnail (static SVG in /public/templates). The
+                          <img> degrades to the brand block if the asset is missing. */}
+                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-phisig-red-soft to-phisig-mist">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={tpl.thumb}
+                          alt={`${tpl.name} template preview`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </span>
+                      <span className="flex flex-1 flex-col gap-1 p-3">
+                        <span className="flex items-center gap-1.5 text-sm font-semibold">
+                          {tpl.name}
+                          {tpl.id === initialTemplate && (
+                            <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-slate-500">
+                              Live
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-xs leading-relaxed text-muted-foreground">{tpl.blurb}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
 
-        <Card className="border border-slate-200">
-          <CardContent className="p-5 space-y-3">
-            <h3 className="font-semibold text-sm">Builder Guides</h3>
-            <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
-              <li>Use the <strong>Up/Down arrows</strong> to change the render priority. Sections closer to the top load first (LCP).</li>
-              <li>Sections like <strong>Hero</strong> and <strong>Registration Form</strong> cannot be hidden to ensure the site is functional for prospective members.</li>
-              <li>Toggle visibility checkboxes off to hide sections like <strong>Spotlight</strong> or <strong>Instagram</strong> if they aren't fully configured yet.</li>
-            </ul>
-          </CardContent>
-        </Card>
+              {/* Reset-order opt-in — only meaningful when a custom order exists
+                  AND the staged template differs from the live one. */}
+              {hasOrderOverride && template !== initialTemplate && (
+                <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <Checkbox
+                    checked={resetOrderOnTemplate}
+                    onCheckedChange={(v) => setResetOrderOnTemplate(Boolean(v))}
+                    className="mt-0.5 h-4 w-4 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  />
+                  <span className="text-xs leading-relaxed text-amber-900">
+                    <strong>Reset section order to this template&apos;s default.</strong>{" "}
+                    You previously customized the section order on the Layout tab.
+                    Leave this on so the {TEMPLATE_META.find((t) => t.id === template)?.name}{" "}
+                    layout reflows; turn it off to keep your custom order across templates.
+                  </span>
+                </label>
+              )}
+            </div>
+          )}
+
+          {/* ── BRAND PANEL ───────────────────────────────────────────────── */}
+          {tab === "brand" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Brand colors</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your primary color themes the whole site instantly. The accent
+                  (gold) is used by the Modern and Bold templates for highlights,
+                  bands, and dividers.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ColorEditable
+                  label="Primary color"
+                  value={primaryHex}
+                  onChange={setPrimaryHex}
+                  fallback={GS_PRIMARY}
+                />
+                <ColorEditable
+                  label="Accent color (gold)"
+                  value={secondaryHex}
+                  onChange={setSecondaryHex}
+                  fallback={GS_SECONDARY}
+                />
+              </div>
+
+              {/* Live swatch preview so the admin sees the pair before saving. */}
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                <span className="flex -space-x-2">
+                  <span
+                    className="h-9 w-9 rounded-full border-2 border-white shadow"
+                    style={{ backgroundColor: /^#([0-9a-fA-F]{6})$/.test(primaryHex.trim()) ? primaryHex.trim() : GS_PRIMARY }}
+                    aria-hidden
+                  />
+                  <span
+                    className="h-9 w-9 rounded-full border-2 border-white shadow"
+                    style={{ backgroundColor: /^#([0-9a-fA-F]{6})$/.test(secondaryHex.trim()) ? secondaryHex.trim() : GS_SECONDARY }}
+                    aria-hidden
+                  />
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  Primary &amp; accent preview. Saving applies them across the public site.
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetBrandPreset}
+                disabled={busy}
+                className="gap-1.5 text-xs"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Reset to Greek Stack royal-blue + gold
+              </Button>
+            </div>
+          )}
+
+          {/* ── LAYOUT (the original section list — unchanged) ───────────────── */}
+          {tab === "layout" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold tracking-tight">Layout Hierarchy</h2>
+                <Button variant="outline" size="sm" onClick={resetToDefaults} disabled={busy} className="text-xs gap-1.5 h-8">
+                  <RefreshCw className="h-3 w-3" />
+                  Reset to defaults
+                </Button>
+              </div>
+
+              <div className="space-y-2.5">
+                {sections.map((sect, index) => {
+                  const Icon = sect.icon;
+                  const isAlwaysVisible = !sect.showKey;
+
+                  return (
+                    <Card key={sect.id} className={`transition-all duration-200 border-l-4 ${
+                      sect.visible ? "border-l-phisig-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50"
+                    }`}>
+                      <CardContent className="p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm leading-none">{sect.name}</span>
+                              {sect.visible ? (
+                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-100">
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
+                                  Hidden
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">{sect.description}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Visibility Toggle */}
+                          {!isAlwaysVisible ? (
+                            <div className="flex items-center gap-1.5 mr-2">
+                              <Checkbox
+                                id={`visible-${sect.id}`}
+                                checked={sect.visible}
+                                onCheckedChange={() => toggleVisibility(sect.id)}
+                                className="h-4 w-4 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
+                              />
+                              <label htmlFor={`visible-${sect.id}`} className="text-xs text-slate-600 font-medium cursor-pointer select-none">
+                                Show
+                              </label>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-medium italic mr-3 select-none">
+                              Always Visible
+                            </span>
+                          )}
+
+                          {/* Order Controls */}
+                          <div className="flex flex-col sm:flex-row border rounded-lg bg-card overflow-hidden">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => moveUp(index)}
+                              disabled={index === 0 || busy}
+                              className="h-11 w-11 sm:h-8 sm:w-8 rounded-none hover:bg-slate-100 text-slate-500 disabled:opacity-35"
+                              title="Move Up"
+                              aria-label={`Move ${sect.name} up`}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => moveDown(index)}
+                              disabled={index === sections.length - 1 || busy}
+                              className="h-11 w-11 sm:h-8 sm:w-8 rounded-none border-t sm:border-t-0 sm:border-l hover:bg-slate-100 text-slate-500 disabled:opacity-35"
+                              title="Move Down"
+                              aria-label={`Move ${sect.name} down`}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Sticky actions rail (shared across tabs) ───────────────────────── */}
+        <div className="space-y-5">
+          <Card className="bg-gradient-to-br from-white to-phisig-mist border-phisig-red/10 shadow-md">
+            <CardContent className="p-5 space-y-4">
+              <h3 className="font-bold text-base">Actions</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Saving publishes your template, brand colors, and section layout to
+                the public landing page immediately. Changes are white-labeled and
+                cached safely per subdomain.
+              </p>
+
+              <Button onClick={handleSave} disabled={busy} className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white font-medium shadow-sm">
+                {busy ? (
+                  <><RefreshCw className="h-4 w-4 animate-spin mr-2" /> Saving...</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-2" /> Save changes</>
+                )}
+              </Button>
+
+              <div className="rounded-lg border border-border bg-card/60 p-3 text-xs text-slate-600">
+                <div className="font-medium text-foreground">Staged</div>
+                <ul className="mt-1.5 space-y-1">
+                  <li>Template: <strong className="capitalize">{TEMPLATE_META.find((t) => t.id === template)?.name}</strong></li>
+                  <li className="flex items-center gap-1.5">
+                    Brand:
+                    <span className="inline-block h-3 w-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: /^#([0-9a-fA-F]{6})$/.test(primaryHex.trim()) ? primaryHex.trim() : GS_PRIMARY }} aria-hidden />
+                    <span className="inline-block h-3 w-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: /^#([0-9a-fA-F]{6})$/.test(secondaryHex.trim()) ? secondaryHex.trim() : GS_SECONDARY }} aria-hidden />
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-200">
+            <CardContent className="p-5 space-y-3">
+              <h3 className="font-semibold text-sm">Builder Guides</h3>
+              <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
+                <li>The <strong>Template</strong> changes the hero style + default order; every section you configure carries over.</li>
+                <li>The <strong>accent (gold)</strong> color only affects the Modern and Bold templates — Classic stays on your primary color.</li>
+                <li>Use the <strong>Up/Down arrows</strong> on the Layout tab to fine-tune order. Sections closer to the top load first (LCP).</li>
+                <li><strong>Hero</strong> and <strong>Registration Form</strong> cannot be hidden so the site is always functional for prospects.</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Reset-to-defaults confirm (replaces window.confirm) */}
@@ -334,8 +629,8 @@ export function WebsiteBuilderClient({
             <DialogTitle>Reset layout to defaults?</DialogTitle>
             <DialogDescription>
               This restores the original section order and makes every section
-              visible. Nothing is published until you Save Layout Changes, so you
-              can still cancel after reviewing.
+              visible. Nothing is published until you Save changes, so you can
+              still cancel after reviewing.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

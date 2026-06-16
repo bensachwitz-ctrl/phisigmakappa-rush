@@ -120,37 +120,37 @@ export const DEFAULTS = {
 
   // ── Chapter-site template + accent (white-label site generator) ──────────────
   // Which homepage TEMPLATE the public chapter site renders with. One of
-  // "classic" | "modern" (the hero variants live in components/site/templates/:
-  // hero-classic.tsx + hero-split.tsx; the 15 shared section bodies are in
-  // section-map.tsx). Default "classic" = the original Crest hero + original
-  // section order, so an un-customized chapter (and the apex — "website." is NOT
-  // an APEX_DROP_PREFIX, it's operational config) is byte-identical to the
-  // pre-generator render.
-  //
-  // NOTE (generator status): these template modules are BUILT but not yet wired
-  // into the renderer. components/site/chapter-landing.tsx still uses its own
-  // inline sectionMap + Classic hero and never reads this key, so today every
-  // chapter renders Classic regardless of this value — the live single-template
-  // site is unchanged. Wiring the renderer to read cfg["website.template"] and
-  // an /admin/website Template Gallery picker are the remaining steps.
+  // "classic" | "modern" | "bold". The hero variants live in
+  // components/site/templates/: hero-classic.tsx (Classic Crest), hero-split.tsx
+  // (Modern Split), hero-banner.tsx (Bold Banner); the 15 shared section bodies
+  // are in section-map.tsx and are IDENTICAL across all three templates — a
+  // template only swaps the hero + the default section order (template-config.ts
+  // TEMPLATE_ORDER) + a few thin per-section layout-variant CLASS hints. Default
+  // "classic" = the original Crest hero + original section order, so an
+  // un-customized chapter (and the apex — "website." is NOT an APEX_DROP_PREFIX,
+  // it's operational config) is byte-identical to the pre-generator render. An
+  // unknown value also falls back to "classic". The renderer
+  // (components/site/chapter-landing.tsx) reads this key, picks the matching hero
+  // + order via template-config.ts, and builds the page with buildSectionMap;
+  // the exec customizer (/admin/website) exposes a Template Gallery that writes
+  // this key through PATCH /api/admin/settings.
   "website.template": "classic",
 
   // Secondary / accent brand color (the "gold" in the platform's royal-blue+gold
-  // identity), per chapter. Read by the Modern (hero-split) template for accent
-  // bands, dividers, and the underline; the Classic template never references it,
-  // so Classic stays pixel-identical. Default = platform gold #f59e0b, so an
-  // unset/apex chapter matches the platform accent exactly. Auto-validated to a
+  // identity), per chapter. Read by the Modern (hero-split) + Bold (hero-banner)
+  // templates for accent bands, dividers, badges, and the headline underline via
+  // the `bg-brand-secondary` / `text-brand-secondary` Tailwind tokens (bound to
+  // the `--brand-secondary` CSS var that app/layout.tsx injects). The Classic
+  // template never references it, so Classic stays pixel-identical. Default =
+  // platform gold #f59e0b, so an unset/apex chapter matches the platform accent
+  // exactly (the token's hardcoded fallback is also #f59e0b). Auto-validated to a
   // clean #RRGGBB by the settings route (scrubAdminValue: any key ending "hex").
-  // TODO (wiring): hero-split currently uses bg-/text-brand-secondary utilities +
-  // a --brand-secondary var that are NOT yet defined in tailwind.config.ts /
-  // app/layout.tsx. Those must be added (and the renderer must select the Modern
-  // hero) before this value affects any pixel — until then it is inert.
   "brand.secondaryHex": "#f59e0b",
 
-  // OPTIONAL full-bleed hero photo for the Modern (hero-split) template. EMPTY by
-  // default → the template falls back to the brand-tinted gradient + Crest
-  // treatment (never another chapter's photo). Classic ignores it entirely.
-  // Cloudinary/Blob URL (or data URI in dev). Inert until the Modern hero is wired.
+  // OPTIONAL full-bleed hero photo for the Modern (hero-split) + Bold (hero-banner)
+  // templates. EMPTY by default → those templates fall back to the brand-tinted
+  // gradient + Crest treatment (never another chapter's photo). Classic ignores it
+  // entirely. Cloudinary/Blob URL (or data URI in dev).
   "brand.heroImageUrl": "",
 
   // OPTIONAL gallery of uploaded chapter photos beyond the Instagram feed, as a

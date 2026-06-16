@@ -84,6 +84,15 @@ const config: Config = {
           paper: "#FFFFFF",
           mist: "#F5F5F7",
         },
+        // ── Secondary / accent brand color (the platform's royal-blue+gold
+        //    "gold"). Bound to the `--brand-secondary` CSS var that
+        //    app/layout.tsx injects from cfg["brand.secondaryHex"], with the
+        //    platform gold #f59e0b as the static fallback. The Modern (hero-split)
+        //    + Bold (hero-banner) chapter-site templates read this via
+        //    `bg-brand-secondary` / `text-brand-secondary` / `border-brand-secondary`
+        //    so their accent recolors per chapter with no rebuild. The Classic
+        //    template never references it, so Classic stays pixel-identical.
+        "brand-secondary": "var(--brand-secondary, #f59e0b)",
         // ── R49 BRAND UNIFICATION ────────────────────────────────────────────
         // The logged-in member + alumni portals were originally painted off a
         // static maroon/cream ramp that had NOTHING to do with the royal-blue +
