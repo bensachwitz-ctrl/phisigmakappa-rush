@@ -3,10 +3,39 @@ import { getTenantClient, centralDb } from "@/lib/prisma";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
 import { getEntitlement } from "@/lib/entitlement";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
+import { computeMemberCapabilities } from "@/lib/member-capabilities";
+import { currentPeriod } from "@/lib/treasury";
 
 export const dynamic = "force-dynamic";
 
+// Validate a stored brand color before it leaves the API: ONLY a canonical
+// `#RRGGBB` (case-insensitive) value passes; anything else (empty, named color,
+// malformed, or a CSS-injection attempt) returns null so the bundled shell can
+// safely interpolate it straight into a CSS custom property.
+function sanitizeHex(value: string | null | undefined): string | null {
+  const v = (value || "").trim();
+  return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null;
+}
+
+// CORS preflight — the bundled app's GET carries an Authorization header, which
+// makes the WebView fire an OPTIONS preflight. No-op allow header for non-native
+// origins (the web app is same-origin and never preflights).
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
+
 export async function GET(req: Request) {
+  return withCors(req, await handleGet(req));
+}
+
+async function handleGet(req: Request): Promise<NextResponse> {
   const { searchParams } = new URL(req.url);
   const subdomain = (searchParams.get("subdomain") || req.headers.get("x-subdomain") || "").trim().toLowerCase();
 
@@ -57,6 +86,27 @@ export async function GET(req: Request) {
     let profile: any = null;
     let standing: any = null;
     let dues: any = null;
+    // The member's REAL, admin-controlled chapter position (officer seat or
+    // null). Captured from the verified brother row below and fed into the
+    // SERVER-SIDE capability computation — the client never decides this.
+    let memberPosition: string | null = null;
+
+    // CHAPTER FEATURE FLAG — dues enabled? Read ONCE, chapter-wide (not member-
+    // scoped) and BEFORE the role branch so it gates BOTH the dues payload and
+    // the returned capability flag. When a chapter has not enabled online dues,
+    // the API serves NO dues data at all (the surface is hidden client-side AND
+    // the data is withheld here) — defense in depth, not UI-only hiding.
+    let duesEnabled = false;
+    try {
+      const duesEnabledCfg = await db.siteConfig.findUnique({
+        where: { key: "dues.enabled" },
+      });
+      duesEnabled = duesEnabledCfg?.value === "true";
+    } catch {
+      // Defensive: a flag-read hiccup defaults to DISABLED (fail-closed for the
+      // dues surface — never expose dues data on an ambiguous flag read).
+      duesEnabled = false;
+    }
 
     if (sess.role === "brother") {
       if (portalUser.brotherId) {
@@ -69,6 +119,9 @@ export async function GET(req: Request) {
         });
 
         if (brother) {
+          // Server-trusted officer seat for the capability gate below. This is
+          // the admin-set DB value — a member cannot edit their own position.
+          memberPosition = brother.position ?? null;
           profile = {
             id: brother.id,
             name: brother.name,
@@ -102,48 +155,52 @@ export async function GET(req: Request) {
             console.error("Failed to load standing in mobile endpoint:", e);
           }
 
-          // Dues ledger & configuration
-          const duesConfigs = await db.siteConfig.findMany({
-            where: {
-              key: {
-                in: [
-                  "dues.enabled",
-                  "dues.amountCents",
-                  "dues.year",
-                  "dues.label",
-                  "dues.stripePublishableKey",
-                ],
+          // Dues ledger & configuration — SERVED ONLY when the chapter has
+          // enabled online dues. When disabled, `dues` stays null so the API
+          // never ships dues config/amounts/payment history for a chapter that
+          // turned the feature off; the client hides the Dues surface to match.
+          if (duesEnabled) {
+            const duesConfigs = await db.siteConfig.findMany({
+              where: {
+                key: {
+                  in: [
+                    "dues.amountCents",
+                    "dues.year",
+                    "dues.label",
+                    "dues.stripePublishableKey",
+                  ],
+                },
               },
-            },
-          });
+            });
 
-          const duesConfig = {
-            enabled: duesConfigs.find((c) => c.key === "dues.enabled")?.value === "true",
-            amountCents: parseInt(duesConfigs.find((c) => c.key === "dues.amountCents")?.value || "0", 10),
-            year: duesConfigs.find((c) => c.key === "dues.year")?.value || "",
-            label: duesConfigs.find((c) => c.key === "dues.label")?.value || "Active Dues",
-            stripePublishableKey: duesConfigs.find((c) => c.key === "dues.stripePublishableKey")?.value || "",
-          };
+            const duesConfig = {
+              enabled: true,
+              amountCents: parseInt(duesConfigs.find((c) => c.key === "dues.amountCents")?.value || "0", 10),
+              year: duesConfigs.find((c) => c.key === "dues.year")?.value || "",
+              label: duesConfigs.find((c) => c.key === "dues.label")?.value || "Active Dues",
+              stripePublishableKey: duesConfigs.find((c) => c.key === "dues.stripePublishableKey")?.value || "",
+            };
 
-          const payments = await db.duesPayment.findMany({
-            where: { brotherId: brother.id },
-            orderBy: { createdAt: "desc" },
-          });
+            const payments = await db.duesPayment.findMany({
+              where: { brotherId: brother.id },
+              orderBy: { createdAt: "desc" },
+            });
 
-          dues = {
-            config: duesConfig,
-            payments: payments.map((p) => ({
-              id: p.id,
-              amountCents: p.amountCents,
-              year: p.year,
-              status: p.status,
-              method: p.method,
-              receiptUrl: p.receiptUrl,
-              notes: p.notes,
-              createdAt: p.createdAt.toISOString(),
-            })),
-            isPaid: brother.duesPaid,
-          };
+            dues = {
+              config: duesConfig,
+              payments: payments.map((p) => ({
+                id: p.id,
+                amountCents: p.amountCents,
+                year: p.year,
+                status: p.status,
+                method: p.method,
+                receiptUrl: p.receiptUrl,
+                notes: p.notes,
+                createdAt: p.createdAt.toISOString(),
+              })),
+              isPaid: brother.duesPaid,
+            };
+          }
         }
       }
     } else if (sess.role === "alumni") {
@@ -184,6 +241,28 @@ export async function GET(req: Request) {
           };
         }
       }
+    }
+
+    // 4b. CHAPTER BRAND (non-sensitive) — the admin-editable royal-blue/gold-or-
+    //     school-color the web app already themes with (SiteConfig brand.*Hex).
+    //     The bundled iOS shell uses this to seed --brand/--brand2 from the
+    //     chapter's REAL configured color instead of a deterministic 7-color hash,
+    //     so a chapter that set #500000 (Texas A&M maroon) themes maroon — and an
+    //     unconfigured tenant falls back to the GS royal-blue default below.
+    //     Read for ALL roles (brand is chapter-wide, not member-scoped). Hex is
+    //     validated so a malformed config value can never inject CSS at the shell.
+    let brand: { primaryHex: string | null; primaryDarkHex: string | null } | null = null;
+    try {
+      const brandCfgs = await db.siteConfig.findMany({
+        where: { key: { in: ["brand.primaryHex", "brand.primaryDarkHex"] } },
+      });
+      const primaryHex = sanitizeHex(brandCfgs.find((c) => c.key === "brand.primaryHex")?.value);
+      const primaryDarkHex = sanitizeHex(brandCfgs.find((c) => c.key === "brand.primaryDarkHex")?.value);
+      brand = primaryHex || primaryDarkHex ? { primaryHex, primaryDarkHex } : null;
+    } catch {
+      // Defensive: a brand-config read hiccup must not affect the data payload;
+      // the shell falls back to the GS royal-blue + gold default.
+      brand = null;
     }
 
     // 5. Fetch announcements feed
@@ -304,16 +383,116 @@ export async function GET(req: Request) {
       billing = null;
     }
 
+    // 10. EXEC-ONLY payload (treasury summary + PNM/rush list). Computed from
+    //     the SAME server-side capability the client uses — recomputed here from
+    //     the verified session role + the member's REAL admin-set position. A
+    //     non-officer (or alumni token) gets exec=false, so this whole block is
+    //     SKIPPED and the data is WITHHELD from the payload (defense in depth:
+    //     the surface is hidden client-side AND never serialized here). Officers
+    //     get a lightweight treasury rollup + the current rush pipeline.
+    const caps = computeMemberCapabilities(sess.role, memberPosition, duesEnabled);
+    let treasury:
+      | {
+          period: string;
+          budgetedCents: number;
+          actualCents: number;
+          remainingCents: number;
+          lineCount: number;
+          pendingExpenses: number;
+          pendingExpenseCents: number;
+        }
+      | null = null;
+    let pnms:
+      | Array<{
+          id: string;
+          name: string;
+          status: string;
+          year: string | null;
+          major: string | null;
+          createdAt: string;
+        }>
+      | null = null;
+
+    if (caps.exec) {
+      try {
+        // Treasury rollup over the CURRENT term's budget lines + pending expenses.
+        const period = currentPeriod();
+        const [budgetLines, pendingExp] = await Promise.all([
+          db.budgetLine.findMany({
+            where: { period },
+            select: { budgetedCents: true, actualCents: true },
+          }),
+          db.expense.findMany({
+            where: { status: "PENDING" },
+            select: { amountCents: true },
+          }),
+        ]);
+        const budgetedCents = budgetLines.reduce((s, l) => s + (l.budgetedCents || 0), 0);
+        const actualCents = budgetLines.reduce((s, l) => s + (l.actualCents || 0), 0);
+        const pendingExpenseCents = pendingExp.reduce((s, e) => s + (e.amountCents || 0), 0);
+        treasury = {
+          period,
+          budgetedCents,
+          actualCents,
+          remainingCents: budgetedCents - actualCents,
+          lineCount: budgetLines.length,
+          pendingExpenses: pendingExp.length,
+          pendingExpenseCents,
+        };
+      } catch (e) {
+        console.error("Failed to load treasury summary (exec):", e);
+        treasury = null;
+      }
+
+      try {
+        // Active rush pipeline (PNMs) — officers manage this from the app. Only
+        // non-terminal statuses are surfaced; contact details stay minimal.
+        const rushees = await db.rush.findMany({
+          where: { status: { notIn: ["REJECTED", "DECLINED", "WITHDRAWN"] } },
+          orderBy: { createdAt: "desc" },
+          take: 200,
+          select: { id: true, name: true, status: true, year: true, major: true, createdAt: true },
+        });
+        pnms = rushees.map((r) => ({
+          id: r.id,
+          name: r.name,
+          status: r.status,
+          year: r.year,
+          major: r.major,
+          createdAt: r.createdAt.toISOString(),
+        }));
+      } catch (e) {
+        console.error("Failed to load PNM list (exec):", e);
+        pnms = null;
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       chapter: {
         subdomain,
         name: tenant.name || subdomain,
         schoolName: tenant.school || "",
+        // Chapter's REAL configured brand color (validated #RRGGBB or null).
+        // The bundled iOS shell seeds --brand/--brand2 from this; null → the
+        // shell keeps its GS royal-blue + gold default (no random hash).
+        brand,
       },
       // Advisory platform-billing state for the member-facing banner. Always
       // advisory — the dashboard NEVER hard-blocks on this (fail-open).
       billing,
+      // SERVER-ENFORCED capability flags (market-critical RBAC). Computed from
+      // the verified session role + the member's REAL admin-set Brother.position
+      // + the chapter's dues flag — never from anything the client sends. A
+      // regular member gets `exec:false`, so the client must not (and the data
+      // layer does not) surface exec-only tools/data to them. `duesEnabled`
+      // mirrors the flag the dues payload above was gated on.
+      capabilities: caps,
+      // EXEC-ONLY data — present ONLY when capabilities.exec is true (see the
+      // gated block above). For a non-officer these are simply absent from the
+      // payload (null), so the data never leaves the server for them.
+      treasury,
+      pnms,
       role: sess.role,
       profile,
       standing,

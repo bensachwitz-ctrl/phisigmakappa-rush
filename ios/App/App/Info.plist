@@ -32,36 +32,38 @@
 	<array>
 		<string>arm64</string>
 	</array>
+	<!-- iPhone-only app (TARGETED_DEVICE_FAMILY=1): portrait only. The iPad
+	     orientation array was removed — the app does not target iPad. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 
+	<!-- ── Export compliance ──────────────────────────────────────────────────
+	     The app uses only standard HTTPS/TLS (exempt encryption), so declare
+	     ITSAppUsesNonExemptEncryption=false. Without this key, every TestFlight
+	     build stalls awaiting a manual export-compliance answer before it can be
+	     distributed to testers. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
 	<!-- ── Greek Stack: privacy usage strings ─────────────────────────────────
-	     The hosted /app client uses the camera for the live rush/event QR
-	     check-in scanner and the photo library for member profile photos.
-	     iOS rejects a build that triggers these prompts without a usage string,
-	     even if the feature is web-driven inside the WKWebView. -->
-	<key>NSCameraUsageDescription</key>
-	<string>Greek Stack uses the camera to scan rush and event QR codes so you can check members and guests in.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Greek Stack lets you choose a photo from your library for your chapter profile.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Greek Stack can save chapter event flyers and QR codes to your photo library.</string>
+	     The SHIPPED app is the bundled, dependency-free client (mobile-shell/),
+	     which does NOT use the camera or the photo library — there is no in-app
+	     QR scanner or photo picker in the bundled binary. The camera/photo usage
+	     strings were therefore REMOVED so the app declares only the device
+	     access it actually exercises (Apple Guideline 2.3 — accurate metadata /
+	     no unused permission prompts). If a future build adds a native QR scanner
+	     or photo upload, re-add the matching NS*UsageDescription AND wire the
+	     capability at the same time. -->
 
 	<!-- ── Deep links: custom URL scheme greekstack:// ────────────────────────
 	     Universal (https) links into a chapter are handled via the Associated
 	     Domains entitlement (App.entitlements); this custom scheme is the
-	     fallback used by push-notification deep links (data.deepLink). -->
+	     fallback opened via the Capacitor App appUrlOpen listener
+	     (lib/native-bridge.ts initDeepLinks → navigateToDeepLink). -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -76,11 +78,14 @@
 		</dict>
 	</array>
 
-	<!-- ── Background modes: remote push (events + announcements) ──────────── -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
+	<!-- ── Push notifications: NOT used by the shipped bundled shell ──────────
+	     The shipped UI is the bundled Capacitor mobile-shell, which does NOT
+	     register for or consume push (the push Capacitor plugin is unused in
+	     mobile-shell/index.html). Declaring a background mode for it without
+	     actually using push is an Apple Guideline 2.3.1 risk ("unused
+	     capability"), so the push background mode AND the push entitlement were
+	     both removed. Re-add them together (Info.plist + App.entitlements) and
+	     wire the plugin if a future build truly uses push. -->
 
 	<!-- ── App Transport Security ─────────────────────────────────────────────
 	     We only ever load https origins (greekstack.vercel.app / *.greekstack.com),

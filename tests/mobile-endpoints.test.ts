@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
     mockBrotherFindFirst: vi.fn(),
     mockBrotherFindMany: vi.fn(),
     mockSiteConfigFindMany: vi.fn(),
+    mockSiteConfigFindUnique: vi.fn(),
     mockDuesPaymentFindMany: vi.fn(),
     mockAnnouncementFindMany: vi.fn(),
     mockEventFindMany: vi.fn(),
@@ -80,6 +81,7 @@ const mockTenantClient = {
   },
   siteConfig: {
     findMany: mocks.mockSiteConfigFindMany,
+    findUnique: mocks.mockSiteConfigFindUnique,
   },
   duesPayment: {
     findMany: mocks.mockDuesPaymentFindMany,
@@ -232,12 +234,18 @@ describe("GET /api/mobile/data", () => {
       duesPaid: false,
     });
 
+    // dues.enabled is now read via siteConfig.findUnique (chapter-wide flag,
+    // checked BEFORE the dues payload is assembled).
+    mocks.mockSiteConfigFindUnique.mockResolvedValue({ key: "dues.enabled", value: "true" });
     mocks.mockSiteConfigFindMany.mockResolvedValue([
-      { key: "dues.enabled", value: "true" },
       { key: "dues.amountCents", value: "50000" },
       { key: "dues.year", value: "2026" },
       { key: "dues.label", value: "Active Dues" },
       { key: "dues.stripePublishableKey", value: "pk_test" },
+      // Chapter's REAL configured brand color — the bundled iOS shell seeds
+      // --brand from this instead of a 7-color hash (release-gate fix).
+      { key: "brand.primaryHex", value: "#500000" },
+      { key: "brand.primaryDarkHex", value: "#3a0000" },
     ]);
 
     mocks.mockDuesPaymentFindMany.mockResolvedValue([
@@ -347,6 +355,10 @@ describe("GET /api/mobile/data", () => {
     expect(body.standing.score).toBe(90.0);
     expect(body.dues.isPaid).toBe(false);
     expect(body.dues.payments).toHaveLength(1);
+
+    // SERVER-ENFORCED capabilities (market-critical RBAC): this brother's REAL
+    // position is President → exec granted; dues flag is on → duesEnabled true.
+    expect(body.capabilities).toEqual({ exec: true, duesEnabled: true });
     expect(body.announcements).toHaveLength(1);
     expect(body.announcements[0].authorRole).toBe("Vice President");
     expect(body.events).toHaveLength(1);
@@ -364,6 +376,55 @@ describe("GET /api/mobile/data", () => {
     expect(typeof body.billing.reason).toBe("string");
     expect("status" in body.billing).toBe(true);
     expect("daysLeft" in body.billing).toBe(true);
+
+    // BRAND PARITY (release-gate fix): the chapter payload carries the chapter's
+    // REAL admin-configured brand color (validated #RRGGBB), so the bundled iOS
+    // shell themes --brand from the actual color instead of a deterministic
+    // 7-color hash that ignored brand.primaryHex.
+    expect(body.chapter.brand).toEqual({
+      primaryHex: "#500000",
+      primaryDarkHex: "#3a0000",
+    });
+  });
+
+  it("sanitizes brand color and falls back to null for a malformed/empty config", async () => {
+    mocks.mockTenantFindUnique.mockResolvedValue({
+      id: "tenant-2",
+      subdomain: "usc-psk",
+      name: "Beta Chapter",
+      school: "UofSC",
+      isActive: true,
+    });
+
+    const token = signPortalTokenForTenant("user-123", "brother", "usc-psk");
+
+    mocks.mockPortalUserFindUnique.mockResolvedValue({
+      id: "user-123",
+      email: "brother@usc.edu",
+      role: "brother",
+      brotherId: null, // no profile branch → exercises the unconditional brand read
+    });
+
+    // A garbage primary (CSS-injection attempt) + a missing dark → brand should
+    // be null so the shell keeps its GS royal-blue default, never injecting CSS.
+    mocks.mockSiteConfigFindMany.mockResolvedValue([
+      { key: "brand.primaryHex", value: "red; } body{display:none}" },
+    ]);
+    mocks.mockAnnouncementFindMany.mockResolvedValue([]);
+    mocks.mockEventFindMany.mockResolvedValue([]);
+    mocks.mockBrotherFindMany.mockResolvedValue([]);
+    mocks.mockAlumniProfileFindMany.mockResolvedValue([]);
+    mocks.mockJobPostingFindMany.mockResolvedValue([]);
+
+    const req = new Request("https://greekstack.vercel.app/api/mobile/data?subdomain=usc-psk", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    const res = await getMobileData(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // Malformed hex never leaves the API → null (safe shell default).
+    expect(body.chapter.brand).toBeNull();
   });
 });
 

@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
 import { getTenantClient, centralDb } from "@/lib/prisma";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 
 export const dynamic = "force-dynamic";
 
+// CORS preflight for the bundled native app's RSVP POST.
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
+
 export async function POST(req: Request) {
+  return withCors(req, await handlePost(req));
+}
+
+async function handlePost(req: Request): Promise<NextResponse> {
   let body: any;
   try {
     body = await req.json();

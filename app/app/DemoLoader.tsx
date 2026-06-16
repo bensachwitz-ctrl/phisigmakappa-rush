@@ -8,8 +8,9 @@ import NativeBridge from "./NativeBridge";
 // Lazy/dynamic boundary for the flagship interactive demo.
 //
 // MobileAppClient is a very large client component (the full stateful product
-// preview + a WebGL plexus background). Statically importing it pulled the
-// entire bundle into the initial payload of the marketing-reached /app route.
+// preview — the WebGL plexus background was removed in a later pass; the weight
+// is now the demo's stateful surfaces + modals). Statically importing it pulled
+// the entire bundle into the initial payload of the marketing-reached /app route.
 // Splitting it behind next/dynamic gives it its own chunk that streams in after
 // the shell, so the route's first paint isn't blocked on the heavy demo JS.
 //

@@ -1,13 +1,19 @@
 // lib/native-bridge.ts — the Greek Stack native (Capacitor) value layer.
 //
 // WHY THIS EXISTS (Apple Guideline 4.2 / 4.7):
-// The iOS app loads the hosted responsive /app client through a native shell
-// (server.url in capacitor.config.ts). A *pure* webview wrapper risks App Store
-// rejection, so this module adds the native value Apple wants:
-//   1. Push notifications  (events + announcements)
-//   2. Native sign-in + biometric unlock (session persists on-device, Face/Touch ID)
-//   3. Deep links / universal links into a specific chapter
-//   4. Offline cache of the last view (graceful when the network drops)
+// The iOS app ships the bundled Capacitor "mobile-shell" webDir. A *pure* webview
+// wrapper risks App Store rejection, so this module adds the native value Apple
+// wants:
+//   1. Native sign-in + biometric unlock (session persists on-device, Face/Touch ID)
+//   2. Deep links / universal links into a specific chapter
+//   3. Offline cache of the last view (graceful when the network drops)
+//   4. Native haptics + splash/status-bar chrome
+//
+// NOTE: push notifications are intentionally NOT wired — the shipped shell does
+// not register for or consume push (no aps-environment entitlement, no
+// remote-notification background mode, no @capacitor/push-notifications plugin).
+// Re-add the push capability (Info.plist + App.entitlements + the plugin + an
+// /api/mobile/push/register endpoint) together if a future build truly uses it.
 //
 // HARD DESIGN RULE — INERT ON WEB:
 // The web app (greekstack.vercel.app) must be byte-for-byte unchanged by this
@@ -65,113 +71,7 @@ function plugin<T = any>(name: string): T | null {
   return (p as T) ?? null;
 }
 
-// ── 1. Push notifications (events + announcements) ───────────────────────────
-
-export interface PushRegistration {
-  /** The reusable subdomain+token context used to POST the device token. */
-  registerToServer: (ctx: { subdomain: string; token: string }) => Promise<void>;
-}
-
-/**
- * Register the device for push (events + announcements) and forward the APNs
- * token to our backend, scoped to the signed-in chapter. No-op on web.
- *
- * `getAuth` lets the caller supply the current member session lazily (it may not
- * exist yet at first mount); we only POST the device token once we have both an
- * APNs token AND an authenticated chapter session.
- *
- * Returns a teardown function that removes the listeners (or a no-op on web).
- */
-export async function initPushNotifications(
-  getAuth: () => { subdomain: string; token: string } | null,
-): Promise<() => void> {
-  if (!isNative()) return () => {};
-  const Push = plugin('PushNotifications');
-  if (!Push) return () => {};
-
-  const listeners: PluginListener[] = [];
-  let lastDeviceToken: string | null = null;
-
-  const flushToServer = async () => {
-    const auth = getAuth();
-    if (!auth || !lastDeviceToken) return;
-    try {
-      await fetch('/api/mobile/push/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({
-          subdomain: auth.subdomain,
-          deviceToken: lastDeviceToken,
-          platform: cap()?.getPlatform?.() ?? 'ios',
-        }),
-      });
-    } catch {
-      // Telemetry/registration failure must never surface to the member.
-    }
-  };
-
-  try {
-    // Ask for permission, then register with APNs only if granted.
-    const perm = await Push.requestPermissions?.();
-    if (perm?.receive === 'granted') {
-      await Push.register?.();
-    }
-
-    listeners.push(
-      await Push.addListener?.('registration', (t: { value: string }) => {
-        lastDeviceToken = t?.value ?? null;
-        void flushToServer();
-      }),
-    );
-
-    // Errors are swallowed (no permission, simulator, etc.) — we just don't push.
-    listeners.push(
-      await Push.addListener?.('registrationError', () => {
-        lastDeviceToken = null;
-      }),
-    );
-
-    // Tapping a notification (events/announcements) deep-links into the app.
-    listeners.push(
-      await Push.addListener?.(
-        'pushNotificationActionPerformed',
-        (action: { notification?: { data?: Record<string, string> } }) => {
-          const data = action?.notification?.data;
-          if (data?.deepLink) navigateToDeepLink(data.deepLink);
-        },
-      ),
-    );
-  } catch {
-    // Any plugin error → behave like web (push simply unavailable).
-  }
-
-  // Expose a way for the caller to re-flush once the member finishes signing in.
-  pendingPushFlush = flushToServer;
-
-  return () => {
-    pendingPushFlush = null;
-    for (const l of listeners) {
-      try {
-        void l?.remove?.();
-      } catch {
-        /* ignore */
-      }
-    }
-  };
-}
-
-/** Set by initPushNotifications so a post-login session can trigger token upload. */
-let pendingPushFlush: (() => Promise<void>) | null = null;
-
-/** Call after a successful sign-in so the device token is associated server-side. */
-export function onSessionEstablished(): void {
-  if (pendingPushFlush) void pendingPushFlush();
-}
-
-// ── 2. Native session persistence + biometric unlock ─────────────────────────
+// ── 1. Native session persistence + biometric unlock ─────────────────────────
 
 export interface NativeSession {
   token: string;
@@ -285,7 +185,7 @@ export async function unlockWithBiometricIfEnabled(): Promise<NativeSession | nu
   }
 }
 
-// ── 3. Deep links / universal links into a chapter ───────────────────────────
+// ── 2. Deep links / universal links into a chapter ───────────────────────────
 
 /** Parse a Greek Stack deep link into a chapter subdomain + in-app path. */
 export function parseDeepLink(
@@ -357,7 +257,7 @@ export async function initDeepLinks(): Promise<() => void> {
   };
 }
 
-// ── 4. Offline cache of the last view ────────────────────────────────────────
+// ── 3. Offline cache of the last view ────────────────────────────────────────
 
 /**
  * Persist a snapshot of the last successfully rendered chapter data so the app
@@ -394,7 +294,7 @@ export function isOffline(): boolean {
   return navigator.onLine === false;
 }
 
-// ── 5. Haptics (native tactile feedback) ─────────────────────────────────────
+// ── 4. Haptics (native tactile feedback) ─────────────────────────────────────
 //
 // Adds the small tap/selection feedback an iOS user expects from a native app
 // (tab switches, primary actions, success/error toasts). All no-ops on web, so

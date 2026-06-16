@@ -98,15 +98,17 @@ export const DEFAULTS = {
   "about.caption": "Chapter formal · third-party vendor, sober transportation",
 
   // ── Brand colors — admin-editable for white-label deployments ──
-  // Primary brand color (default = Phi Sigma Kappa cardinal red #C8102E).
-  // Each chapter can override with their school color: USC garnet #73000A,
-  // Texas A&M maroon #500000, Penn State blue #001E44, etc. Renders via the
-  // `--phisig-red` CSS custom property in app/globals.css — every component
-  // that uses `bg-phisig-red`, `text-phisig-red`, etc. updates automatically.
-  // Format: hex (#RRGGBB). Optional dark variant for gradient stops.
-  "brand.primaryHex": "#C8102E",
-  "brand.primaryDarkHex": "#A20D26",
-  "brand.primarySoftHex": "#FCEFF1",
+  // Primary brand color. Each chapter overrides with its school color: USC
+  // garnet #73000A, Texas A&M maroon #500000, Penn State blue #001E44, etc.
+  // Binds to the `--brand-primary` CSS custom property (NOT the old
+  // `--phisig-red`, which was renamed) that app/layout.tsx injects, so every
+  // component using the `phisig.red`/`brand-*` Tailwind tokens recolors with no
+  // rebuild. New chapters are seeded the GS royal-blue platform identity by the
+  // onboarding wizard (app/api/onboard/route.ts); this raw DEFAULT is the legacy
+  // fallback for any pre-onboarding/unconfigured read. Format: hex (#RRGGBB).
+  "brand.primaryHex": "#2563eb",
+  "brand.primaryDarkHex": "#1e40af",
+  "brand.primarySoftHex": "#eff6ff",
 
   // Chapter logo / crest image (white-label). OPTIONAL — defaults EMPTY so a
   // chapter that uploads nothing gets the auto-generated, brand-tinted shield

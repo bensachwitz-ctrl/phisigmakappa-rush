@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,20 @@ export async function GET() {
   const me = await getCurrentBrother();
   if (!me) {
     return NextResponse.json({ ok: false, error: "Not signed in" }, { status: 401 });
+  }
+
+  // FEATURE-FLAG GATE: when the chapter has NOT enabled dues, this surface does
+  // not exist for them — return 404 and serve NO dues data (ledger, amounts,
+  // receipts). The Dues tab/card is hidden client-side to match; this is the
+  // server half of that gate so a member can't pull dues data by hitting the
+  // route directly. Mirrors the 503 graceful-degrade /api/dues/checkout already
+  // returns when dues is unconfigured.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  if (cfg["dues.enabled"] !== "true") {
+    return NextResponse.json(
+      { ok: false, error: "Dues are not enabled for this chapter." },
+      { status: 404 },
+    );
   }
 
   const payments = await prisma.duesPayment.findMany({

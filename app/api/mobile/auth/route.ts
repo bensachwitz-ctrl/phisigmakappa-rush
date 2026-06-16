@@ -8,9 +8,24 @@ import {
   clearRateLimit,
   clientIpFromRequest,
 } from "@/lib/rate-limit";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// CORS preflight for the bundled native app (capacitor://localhost et al). The
+// web app is same-origin and never preflights; a non-native origin gets no
+// allow header and is blocked by the WebView, exactly as before.
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+/** Attach CORS headers to a response when the caller is an allowed native origin. */
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
 
 // Per-IP+subdomain+email brute-force throttle: 8 failed attempts within 15
 // minutes → hard-block for the remainder of the window. The native app hits
@@ -19,6 +34,12 @@ export const dynamic = "force-dynamic";
 const LOGIN_LIMIT = { limit: 8, windowMs: 15 * 60 * 1000 };
 
 export async function POST(req: Request) {
+  // Single CORS wrap point: handlePost returns the real response and we attach
+  // native CORS headers to whatever it produced (success or any error branch).
+  return withCors(req, await handlePost(req));
+}
+
+async function handlePost(req: Request): Promise<NextResponse> {
   let body: any;
   try {
     body = await req.json();

@@ -3,13 +3,11 @@
 import { useEffect } from "react";
 import {
   isNative,
-  initPushNotifications,
   initDeepLinks,
   restoreSession,
   unlockWithBiometricIfEnabled,
   saveSession,
   clearSession,
-  onSessionEstablished,
   cacheLastView,
   readLastView,
   hideSplash,
@@ -22,7 +20,7 @@ import {
 } from "@/lib/native-bridge";
 
 // NativeBridge — mounts inside the /app route and wires the Capacitor native
-// value layer (push, biometric session, deep links, offline cache, splash).
+// value layer (biometric session, deep links, offline cache, splash, haptics).
 //
 // CRITICAL: this renders nothing and is INERT on web. Every effect first checks
 // isNative(); on greekstack.vercel.app in a browser nothing here runs, so the
@@ -31,10 +29,11 @@ import {
 // It also exposes a tiny `window.GreekStackNative` bridge so the existing /app
 // client (or the future authenticated client) can, when running natively:
 //   • persist the member session on-device (saveSession)
-//   • trigger the push-token upload after sign-in (onSessionEstablished)
 //   • snapshot the last view for offline boot (cacheLastView)
+//   • fire native haptics on taps/actions (hapticImpact/Selection/Notify)
 // On web these are still defined but every underlying call no-ops, so callers
-// don't need their own platform checks.
+// don't need their own platform checks. (No push: the shipped shell does not use
+// push notifications — see lib/native-bridge.ts.)
 
 declare global {
   interface Window {
@@ -42,7 +41,6 @@ declare global {
       isNative: boolean;
       saveSession: (s: NativeSession) => Promise<void>;
       clearSession: () => Promise<void>;
-      onSignedIn: () => void;
       cacheLastView: (snapshot: unknown) => Promise<void>;
       readLastView: () => Promise<{ at: number; data: unknown } | null>;
       // Haptics — tactile feedback the client fires on taps/actions. No-ops on web.
@@ -62,7 +60,6 @@ export default function NativeBridge() {
       isNative: isNative(),
       saveSession,
       clearSession,
-      onSignedIn: onSessionEstablished,
       cacheLastView,
       readLastView,
       hapticImpact,
@@ -76,7 +73,6 @@ export default function NativeBridge() {
       return;
     }
 
-    let teardownPush: (() => void) | null = null;
     let teardownLinks: (() => void) | null = null;
     let cancelled = false;
 
@@ -93,25 +89,14 @@ export default function NativeBridge() {
         /* ignore — fall back to the normal sign-in surface */
       }
 
-      // 2) Push notifications (events + announcements). The token is uploaded
-      //    once both the APNs token AND a chapter session exist.
-      try {
-        teardownPush = await initPushNotifications(() => {
-          const s = window.GreekStackNative?.restoredSession;
-          return s ? { subdomain: s.subdomain, token: s.token } : null;
-        });
-      } catch {
-        /* ignore */
-      }
-
-      // 3) Deep links / universal links into a specific chapter.
+      // 2) Deep links / universal links into a specific chapter.
       try {
         teardownLinks = await initDeepLinks();
       } catch {
         /* ignore */
       }
 
-      // 4) Honor a cold-start deep link passed as a launch query param.
+      // 3) Honor a cold-start deep link passed as a launch query param.
       try {
         const launchUrl = window.location.href;
         if (/[?&]chapter=/.test(launchUrl)) {
@@ -121,14 +106,14 @@ export default function NativeBridge() {
         /* ignore */
       }
 
-      // 5) Re-assert the dark-chrome status bar (light text on navy).
+      // 4) Re-assert the dark-chrome status bar (light text on navy).
       try {
         await applyStatusBarStyle();
       } catch {
         /* ignore */
       }
 
-      // 6) Drop the native splash now that the client is interactive.
+      // 5) Drop the native splash now that the client is interactive.
       try {
         await hideSplash();
       } catch {
@@ -138,11 +123,6 @@ export default function NativeBridge() {
 
     return () => {
       cancelled = true;
-      try {
-        teardownPush?.();
-      } catch {
-        /* ignore */
-      }
       try {
         teardownLinks?.();
       } catch {

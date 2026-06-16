@@ -4,8 +4,21 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import {
+  rateLimit,
+  recordRateLimit,
+  clientIpFromRequest,
+} from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+// Per-IP throttle: this is a PUBLIC, unauthenticated endpoint (a prospect books a
+// coffee chat from the marketing site), so it is an abuse target — a bot could
+// spray bookings to flood the chapter calendar + the mailer. Same in-memory
+// limiter + window the mobile/auth + forgot-password routes use. 10 bookings /
+// 10 min / IP is generous for a human, hostile to a script. Recorded on every
+// attempt (success or not) so the count reflects real submission pressure.
+const BOOKING_LIMIT = { limit: 10, windowMs: 10 * 60 * 1000 };
 
 const BookingSchema = z.object({
   name: z.string().min(2).max(100),
@@ -16,49 +29,74 @@ const BookingSchema = z.object({
   location: z.string().max(200).optional().default("Chapter House / Online"),
 });
 
+// Resolve the calendar category from the client-supplied eventType string via a
+// strict server-side allow-list. This NEVER returns a privileged/internal
+// category — only the two PUBLIC values the schema marks as public-facing:
+//   "RUSH"  — a rush/recruitment booking (coffee chat, info night, etc.)
+//   "OTHER" — neutral fallback for anything not recognized as rush
+// Because both outputs are public and the route hard-forces audience="ALL" /
+// isPrivate=false separately, this cannot be used to escalate audience or mint a
+// private event. Anything that isn't a recognized rush term (e.g. an injected
+// "eboard secret meeting") deterministically falls through to "OTHER".
+function categoryFromEventType(eventType: string): "RUSH" | "OTHER" {
+  const t = eventType.toLowerCase();
+  const RUSH_TERMS = ["rush", "recruit", "coffee chat", "info night", "interest", "pnm", "bid"];
+  return RUSH_TERMS.some((term) => t.includes(term)) ? "RUSH" : "OTHER";
+}
+
 export async function POST(req: Request) {
   try {
+    // Throttle BEFORE any parse/DB/email work.
+    const rlKey = `schedule:${clientIpFromRequest(req)}`;
+    const rl = rateLimit(rlKey, BOOKING_LIMIT);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { ok: false, error: "Too many booking requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      );
+    }
+    recordRateLimit(rlKey, BOOKING_LIMIT);
+
     const body = await req.json().catch(() => ({}));
     const parsed = BookingSchema.safeParse(body);
-    
+
     if (!parsed.success) {
       return NextResponse.json({ ok: false, error: "Invalid booking details" }, { status: 400 });
     }
-    
+
     const { name, email, eventType, date, notes, location } = parsed.data;
     const startsAt = new Date(date);
-    
+
     if (isNaN(startsAt.getTime())) {
       return NextResponse.json({ ok: false, error: "Invalid date format" }, { status: 400 });
     }
-    
+
     // Default duration is 30 mins
     const endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
-    
+
     const cfg = await getSiteConfig();
     const id = chapterIdentityFromCfg(cfg);
-    
-    // Determine category and audience
-    let category = "OTHER";
-    let audience = "ALL";
-    let isPrivate = false;
-    
-    if (eventType.toLowerCase().includes("rush")) {
-      category = "RUSH";
-      audience = "ALL";
-    } else if (eventType.toLowerCase().includes("brotherhood")) {
-      category = "BROTHERHOOD";
-      audience = "BROTHERS";
-      isPrivate = true;
-    } else if (eventType.toLowerCase().includes("chapter") || eventType.toLowerCase().includes("eboard")) {
-      category = "CHAPTER";
-      audience = "EBOARD";
-      isPrivate = true;
-    } else if (eventType.toLowerCase().includes("social")) {
-      category = "SOCIAL";
-      audience = "BROTHERS";
-    }
-    
+
+    // SECURITY: this is a PUBLIC endpoint — we MUST NOT let an unauthenticated
+    // caller pick the audience/visibility. The old code derived category +
+    // audience + isPrivate from the client-supplied `eventType` keywords, so a
+    // public POST with eventType="eboard meeting" could mint a PRIVATE, EBOARD-
+    // scoped event on the chapter calendar (audience escalation + private-event
+    // injection).
+    //
+    // We now hard-FORCE audience + visibility to public server-side and IGNORE
+    // any client-implied audience/visibility. The category is derived ONLY via a
+    // strict server-side allow-list that can resolve to exactly two PUBLIC,
+    // unprivileged values: "RUSH" (a rush/recruitment coffee chat — a public,
+    // public-facing category by the schema's own definition) or "OTHER" (the
+    // neutral fallback). Privileged/internal categories (EBOARD, BROTHERHOOD,
+    // CHAPTER, …) can NEVER be produced here, and audience/isPrivate are never
+    // honored from client input — so the escalation vector stays closed while a
+    // legitimate "Rush Coffee Chat" booking still lands on the rush calendar.
+    const category = categoryFromEventType(eventType);
+    const audience = "ALL"; // public booking → visible to all, never EBOARD/private
+    const isPrivate = false; // never honor a client-implied private flag
+
     // Create the event in the DB
     const event = await prisma.event.create({
       data: {

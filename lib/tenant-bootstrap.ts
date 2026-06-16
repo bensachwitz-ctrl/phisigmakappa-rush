@@ -27,6 +27,30 @@ async function runBootstrap(): Promise<void> {
   await centralDb.$executeRawUnsafe(
     `CREATE UNIQUE INDEX IF NOT EXISTS "Tenant_subdomain_key" ON public."Tenant"("subdomain");`,
   );
+  // Platform-billing columns. The original bootstrap created ONLY the base
+  // registry columns, but the live /onboard route's `centralDb.tenant.create`
+  // writes stripeCustomerId / stripeSubscriptionId / subscriptionStatus /
+  // trialEndsAt / plan (all part of the Prisma Tenant model). On a fresh deploy
+  // where `prisma db push` was never run against public, the self-heal CREATE
+  // TABLE above produced a Tenant table MISSING these columns — so the very
+  // first signup would 500 with "column \"plan\" of relation \"Tenant\" does not
+  // exist" and the chapter could never be provisioned. We ADD COLUMN IF NOT
+  // EXISTS each one (nullable, no default) so the self-heal path produces a table
+  // that exactly satisfies tenant.create. Idempotent: a no-op when `prisma db
+  // push` already created them, and runs at most once per process.
+  await centralDb.$executeRawUnsafe(
+    `ALTER TABLE public."Tenant"
+       ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT,
+       ADD COLUMN IF NOT EXISTS "stripeSubscriptionId" TEXT,
+       ADD COLUMN IF NOT EXISTS "subscriptionStatus" TEXT,
+       ADD COLUMN IF NOT EXISTS "trialEndsAt" TIMESTAMP(3),
+       ADD COLUMN IF NOT EXISTS "plan" TEXT;`,
+  );
+  // Index mirrors the Prisma @@index([stripeCustomerId]) so the platform webhook
+  // can resolve a tenant by Stripe customer id without a seq-scan.
+  await centralDb.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "Tenant_stripeCustomerId_idx" ON public."Tenant"("stripeCustomerId");`,
+  );
 }
 
 /**

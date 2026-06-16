@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyEdgeSession } from "./lib/auth-edge";
+import { isAllowedNativeOrigin } from "./lib/mobile-cors";
 
 const STATE_CHANGING_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
 
@@ -56,7 +57,27 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/api/") &&
     !pathname.includes("/webhook")
   ) {
-    if (!isSameOriginEdge(req)) {
+    // NARROW native-app allowance: the BUNDLED iOS/Android app calls the mobile
+    // APIs cross-origin from the Capacitor shell origin (capacitor://localhost
+    // et al). Those routes authenticate with a tenant-bound BEARER TOKEN, not a
+    // cookie, so the Origin/SameSite CSRF defense is not their security boundary
+    // — a CSRF attacker can neither forge nor read the Bearer. So we let a known
+    // native origin past the same-origin check, but ONLY on /api/mobile/*. Every
+    // other route still requires same-origin. (Web requests are unaffected: the
+    // web app is same-origin and never carries a native Origin.)
+    const origin = req.headers.get("origin");
+    // The bundled app's dues checkout (POST /api/dues/checkout) is the one
+    // non-/api/mobile/* route the native shell calls cross-origin. It now
+    // authenticates the native caller with the SAME tenant-bound Bearer token
+    // the mobile routes use (see lib/dues-actor.ts) — so, exactly like the
+    // mobile family, the Origin/SameSite CSRF defense is not its security
+    // boundary and a known native origin can be allowed past the same-origin
+    // check. Web callers are unaffected (same-origin, no native Origin).
+    const isNativeMobileCall =
+      (pathname.startsWith("/api/mobile/") || pathname === "/api/dues/checkout") &&
+      isAllowedNativeOrigin(origin);
+
+    if (!isNativeMobileCall && !isSameOriginEdge(req)) {
       return NextResponse.json(
         { ok: false, error: "Cross-origin request blocked" },
         { status: 403 },

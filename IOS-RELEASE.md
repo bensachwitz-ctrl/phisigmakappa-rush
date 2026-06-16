@@ -1,11 +1,18 @@
 # Greek Stack — iOS Release Runbook (TestFlight + App Store)
 
 How the **Greek Stack** iOS app gets built, signed, and shipped. The app is a
-**Capacitor** native Swift host (`ios/App`) that loads the device-adaptive
-`/app` client from `https://greekstack.vercel.app/app` (multitenant: a member
-signs in → their chapter, per-chapter theming). Native value (push, haptics,
-biometric session, deep links, offline cache) is wired in `lib/native-bridge.ts`
-and stays inert on the web.
+**Capacitor** native Swift host (`ios/App`) that ships a **bundled** member
+client INSIDE the binary (`webDir: mobile-shell/`, loaded from
+`capacitor://localhost` — there is **no** `server.url` pointing at the hosted
+site). The bundled client talks to each chapter's backend over the existing
+tenant-bound mobile APIs at an absolute, configurable API base
+(`NEXT_PUBLIC_GS_API_BASE`, default `https://greekstack.vercel.app`): School →
+Chapter picker → themed login → per-chapter dashboard (Feed, Events, Rush, Dues,
+Directory, Profile, and an officer/Exec view), plus a no-login demo. Because the
+primary UI is bundled (not a webview wrapper pointed at the website), this clears
+the Apple Guideline 4.2 "minimum functionality / just a website" risk the old
+`server.url` carried. Native value (push, haptics, biometric session, deep links,
+offline cache) is wired in `lib/native-bridge.ts` and stays inert on the web.
 
 The iOS binary is built on **Codemagic's macOS runners** (`codemagic.yaml`).
 **It cannot be built on Windows** — Windows is only used to generate/maintain the
@@ -33,8 +40,11 @@ success/failure (`bensachwitz@gmail.com`).
 
 ## One-time owner setup
 
-You do this once. Three buckets: (A) Apple Developer / App Store Connect,
-(B) Codemagic secrets, (C) push (APNs). Budget ~45–60 min.
+You do this once. Two required buckets: (A) Apple Developer / App Store Connect,
+(B) Codemagic secrets. Budget ~30–45 min. (C) push (APNs) is **NOT required for
+v1** — the shipped bundled shell does not use push (the push capability +
+entitlement were removed; see Info.plist / App.entitlements). Section C is kept
+only as reference for a future build that actually wires push.
 
 ### A. Apple Developer + App Store Connect
 
@@ -44,8 +54,8 @@ creates on first run) both from the App Store Connect API key. You only need:
 
 1. **App ID** — Developer portal → Certificates, IDs & Profiles → Identifiers →
    register an App ID with bundle id **`com.greekstack.app`**. Enable capabilities:
-   - **Push Notifications**
    - **Associated Domains** (for universal links)
+   - Push Notifications is NOT needed for v1 (the shipped shell does not use push).
 2. **App record** — App Store Connect → Apps → **+** → New App:
    - Platform: iOS · Name: **Greek Stack** · Bundle ID: `com.greekstack.app`
    - SKU: `greekstack-ios` · Primary language: English (U.S.)

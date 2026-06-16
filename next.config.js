@@ -160,11 +160,11 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               scriptSrc,
               "font-src 'self' data:",
-              // Stream (chat) + Clerk (auth) origins are allowed so those
-              // integrations work when their env keys are set. Inert otherwise —
-              // no request hits these hosts unless the feature is configured.
-              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://*.clerk.accounts.dev https://*.clerk.com https://cal.com https://*.cal.com" + sentryConnect,
-              "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://*.clerk.accounts.dev https://*.clerk.com https://cal.com https://*.cal.com",
+              // Stream (chat) origins are allowed so the integration works when
+              // its env keys are set. Inert otherwise — no request hits these
+              // hosts unless the feature is configured.
+              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://cal.com https://*.cal.com" + sentryConnect,
+              "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://cal.com https://*.cal.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

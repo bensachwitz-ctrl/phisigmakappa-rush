@@ -2,13 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Push notifications (events + announcements). The matching App ID /
-	     provisioning profile in the Apple Developer portal must have the Push
-	     Notifications capability enabled, and an APNs Auth Key (.p8) uploaded to
-	     App Store Connect, for delivery to work. "production" is correct for both
-	     TestFlight and the App Store (Apple maps TestFlight to the prod APNs env). -->
-	<key>aps-environment</key>
-	<string>production</string>
+	<!-- Push notifications: NOT declared. The shipped bundled shell does not use
+	     push (the push Capacitor plugin is unused in mobile-shell/index.html), so
+	     the push entitlement was removed to match actual behavior and avoid an
+	     Apple Guideline 2.3.1 unused-capability flag. Re-add the push entitlement
+	     here (and the push background mode in Info.plist) together if a future
+	     build actually wires push. -->
 
 	<!-- Universal links: tapping https://greekstack.com/app?chapter=… (or the
 	     vercel host) opens the app straight into that chapter instead of Safari.

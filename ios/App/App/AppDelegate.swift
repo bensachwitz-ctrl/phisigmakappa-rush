@@ -1,75 +1,71 @@
 import UIKit
 import Capacitor
-import SwiftUI
 
+// STANDARD Capacitor AppDelegate (the default `npx cap add ios` produces).
+//
+// WHY THIS IS THE DEFAULT (and the SwiftUI override was archived):
+// The SHIPPED iOS app is the bundled Capacitor "mobile-shell" webDir — the
+// no-login School→Chapter picker, themed login, per-chapter dashboard, exec
+// view, real Stripe dues, and account deletion. That UI is loaded by the
+// storyboard root: Main.storyboard → CAPBridgeViewController → the bundled
+// webDir served from capacitor://localhost (capacitor.config.ts webDir:
+// 'mobile-shell', no server.url).
+//
+// This AppDelegate intentionally does NOT create a UIWindow or set a
+// rootViewController. With no window set here, UIKit instantiates the
+// UIMainStoryboardFile (Info.plist key "Main") as the app's root — i.e. the
+// Capacitor bridge view controller. The previous custom AppDelegate created its
+// own UIWindow whose root was a SwiftUI hosting controller, which bypassed the
+// storyboard and launched the now-dead SwiftUI app instead of the shell. That
+// override (and the SwiftUI sources) now live in _archived-swiftui/.
+//
+// Push notifications: the bundled shell does NOT use push, so the APNs
+// device-token relay methods were removed along with the push capability
+// (UIBackgroundModes / aps-environment). Re-add both the entitlement AND these
+// `didRegisterForRemoteNotificationsWithDeviceToken` relays together if a future
+// build actually wires @capacitor/push-notifications.
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Instantiate the SwiftUI ContentView as the root window.
-        let contentView = ContentView()
-        let window = UIWindow(frame: UIScreen.main.bounds)
-        window.rootViewController = UIHostingController(rootView: contentView)
-        self.window = window
-        window.makeKeyAndVisible()
+        // Override point for customization after application launch. The root
+        // view controller is the storyboard's CAPBridgeViewController (which
+        // loads the bundled mobile-shell webDir) — do NOT instantiate a window
+        // or SwiftUI root here, or you would override the storyboard.
         return true
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+        // Sent when the application is about to move from active to inactive state.
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        // Use this method to release shared resources, save user data, etc.
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
-        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        // Called as part of the transition from the background to the active state.
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Restart any tasks that were paused (or not yet started) while inactive.
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        // Called when the application is about to terminate.
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // Called when the app was launched with a url. Feel free to add additional processing here,
-        // but if you want the App API to support tracking app url opens, make sure to keep this call
+        // Called when the app was launched with a url. Keep this call so the
+        // Capacitor App API can track app url opens (custom-scheme deep links).
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
-    // MARK: - Push notifications (events + announcements)
-    //
-    // The @capacitor/push-notifications plugin listens on NotificationCenter for
-    // these APNs callbacks; without them the JS `registration` / `registrationError`
-    // events never fire and lib/native-bridge.ts can't forward the device token to
-    // /api/mobile/push/register. Capacitor relays the token to the plugin from here.
-
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        NotificationCenter.default.post(
-            name: .capacitorDidRegisterForRemoteNotifications,
-            object: deviceToken
-        )
-    }
-
-    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        NotificationCenter.default.post(
-            name: .capacitorDidFailToRegisterForRemoteNotifications,
-            object: error
-        )
-    }
-
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        // Called when the app was launched with an activity, including Universal Links.
-        // Feel free to add additional processing here, but if you want the App API to support
-        // tracking app url opens, make sure to keep this call
+        // Called when the app was launched with an activity, including Universal
+        // Links. Keep this call so the Capacitor App API can track them.
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 

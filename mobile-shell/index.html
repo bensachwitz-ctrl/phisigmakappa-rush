@@ -3,28 +3,1260 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
   <title>Greek Stack</title>
+  <!--
+    ────────────────────────────────────────────────────────────────────────
+    BUNDLED native client (webDir). This is NOT a remote shell.
+
+    Capacitor loads THIS file from inside the binary (capacitor://localhost),
+    so the member UI ships in the app — there is no server.url pointing at the
+    hosted /app. The client talks to each chapter's backend via the EXISTING
+    tenant-bound mobile APIs over an ABSOLUTE platform origin (the API base):
+      • GET    /api/mobile/registry           → School→Chapter picker source
+      • POST   /api/mobile/auth                → tenant-bound Bearer token
+      • GET    /api/mobile/data?subdomain=…    → themed dashboard payload
+      •          (includes treasury + pnms ONLY when capabilities.exec)
+      • POST   /api/mobile/events/rsvp         → RSVP to an event
+      • POST   /api/mobile/exec/roster         → officer add/remove member
+      • POST   /api/mobile/exec/reset          → officer send reset link
+      • POST   /api/mobile/exec/announce       → officer post announcement
+      • POST   /api/dues/checkout              → member dues Stripe checkout URL
+      • DELETE /api/mobile/account             → member deletes own account
+    Offline-tolerant: the last good dashboard is cached on-device (Preferences)
+    and the session persists across launches.
+
+    NO-LOGIN DEMO: the built-in "Demo Chapter" loads a fully interactive,
+    READ-ONLY sample dashboard (no credentials) so a reviewer / cold-start user
+    can see the whole app — Feed, Events, Rush, Dues, Directory, Profile, and an
+    officer/Exec view — without an account.
+
+    This bundled client mirrors the richer React member surface
+    (app/app/MobileAppClient.tsx) as closely as a dependency-free static client
+    can. It is what the owner SHIPS — built out, not a stub.
+    ────────────────────────────────────────────────────────────────────────
+  -->
   <style>
-    html,body{margin:0;height:100%;background:#0b1220;color:#e8eefc;
-      font-family:-apple-system,system-ui,Segoe UI,sans-serif;
-      display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-    .w{text-align:center}
-    .l{font-weight:800;font-size:30px;letter-spacing:.5px}
-    .l span{color:#d4af37}
-    .s{opacity:.7;margin-top:10px;font-size:14px}
-    .b{margin-top:22px;border:2px solid rgba(212,175,55,.4);border-top-color:#d4af37;border-radius:50%;
-      width:26px;height:26px;display:inline-block;animation:spin 1s linear infinite}
+    /* ── GREEK STACK brand tokens — kept IDENTICAL to the website ──────────────
+       Royal-blue + gold on deep navy. The royal-blue ramp (#1d4ed8 → #2563eb →
+       #0284c7) is the exact `gs-gradient-text` used for "stack" in the wordmark
+       (app/globals.css), --gold #d4af37 matches scripts/gen-ios-assets.mjs +
+       capacitor.config.ts backgroundColor #0b1220, and --accent #38bdf8 is the
+       bespoke-icon accent token (components/brand/icons/icon-base.tsx GS_ACCENT).
+       --brand/--brand2 are re-pointed per chapter at runtime by applyBrand(); the
+       neutral GreekStack identity (boot, topbar crest, wordmark) stays royal-blue
+       + gold so the cold-start app matches greekstack.vercel.app exactly. */
+    :root{
+      --bg:#0b1220; --bg2:#0f1830; --ink:#e8eefc; --muted:#9fb0d0;
+      --brand:#2563eb; --brand2:#1d4ed8; --brand3:#0284c7;
+      --accent:#38bdf8; --gold:#d4af37; --card:#121d39;
+      --line:rgba(255,255,255,.10); --danger:#f87171; --ok:#34d399;
+      --radius:16px;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+      font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif;
+      -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+    body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+    #app{min-height:100%;display:flex;flex-direction:column}
+    button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+    input{font:inherit}
+    .center{flex:1;display:grid;place-items:center;text-align:center;padding:24px}
+    /* GreekStack wordmark — "Greek" in ink, "stack" in the site's royal-blue→cyan
+       gradient (matches .gs-gradient-text in app/globals.css exactly). */
+    .wordmark{font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+    .wordmark .grad{background:linear-gradient(90deg,var(--brand2),var(--brand),var(--brand3));
+      -webkit-background-clip:text;background-clip:text;color:transparent}
+    /* Canonical GreekStack crest — navy temple/pediment reversed in a gold disc,
+       the same glyph the site renders for its maskable/PWA icon. */
+    .crest-disc{width:72px;height:72px;margin:0 auto 18px;border-radius:50%;
+      display:grid;place-items:center;
+      background:linear-gradient(150deg,#fbbf24,var(--gold));
+      box-shadow:0 8px 26px rgba(212,175,55,.28)}
+    .crest-disc svg{width:42px;height:42px;display:block}
+    .sub{color:var(--muted);font-size:14px;margin-top:8px}
+    .spinner{margin-top:22px;border:2px solid rgba(212,175,55,.35);border-top-color:var(--gold);
+      border-radius:50%;width:26px;height:26px;display:inline-block;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    @media(prefers-reduced-motion:reduce){.b{animation:none}}
+    @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+    header.topbar{position:sticky;top:0;display:flex;align-items:center;gap:10px;
+      padding:14px 16px calc(14px) 16px;background:linear-gradient(180deg,var(--bg) 60%,transparent);
+      backdrop-filter:saturate(140%) blur(8px);z-index:5}
+    /* Topbar crest — the navy temple in a gold disc, matching the boot screen +
+       the site/app icon. Holds an inline SVG (not text). */
+    header.topbar .mark{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+      flex:none;background:linear-gradient(150deg,#fbbf24,var(--gold))}
+    header.topbar .mark svg{width:18px;height:18px;display:block}
+    header.topbar .title{font-weight:700;font-size:16px;flex:1;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    header.topbar .back{font-size:13px;color:var(--muted);padding:8px;margin:-8px}
+    /* Demo badge in the topbar so the no-login state is always legible. */
+    header.topbar .demo{flex:none;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+      color:#1f2937;background:linear-gradient(150deg,#fcd34d,var(--gold));padding:3px 7px;border-radius:7px}
+    main{flex:1;padding:8px 16px 24px 16px}
+    h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
+      margin:20px 2px 10px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;
+      color:var(--muted);margin:0 2px 6px}
+    .field input, .search input{width:100%;padding:13px 14px;border-radius:12px;background:var(--bg2);
+      border:1px solid var(--line);color:var(--ink);outline:none}
+    .field input:focus, .search input:focus{border-color:var(--brand)}
+    .search{margin:6px 0 4px}
+    .row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+      padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+      margin-bottom:10px;min-height:56px}
+    .row:active{transform:scale(.99)}
+    .row .crest{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+      font-weight:800;font-size:15px;flex:none;color:#fff}
+    .row .meta{flex:1;min-width:0}
+    .row .meta .name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .row .meta .school{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .row .chev{color:var(--muted);font-size:18px;flex:none}
+    .row .act{flex:none;display:flex;gap:6px}
+    .row .act .ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--bg2);border:1px solid var(--line);color:var(--muted)}
+    .row .act .ib.danger{color:#fca5a5;background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.25)}
+    .row .act .ib svg{width:16px;height:16px}
+    .seg{display:flex;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+    .seg button{flex:1;padding:10px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted)}
+    .seg button[aria-selected="true"]{background:var(--brand);color:#fff}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      padding:14px;border-radius:13px;font-weight:700;font-size:15px;
+      background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;min-height:50px}
+    .btn[disabled]{opacity:.6}
+    .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+    .btn.danger{background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.3);color:#fca5a5}
+    .alert{padding:12px 14px;border-radius:12px;font-size:13px;margin-bottom:14px}
+    .alert.err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#fecaca}
+    .alert.info{background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);color:#bfdbfe}
+    .alert.ok{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#bbf7d0}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    .card .h{font-weight:700;font-size:15px;margin-bottom:4px}
+    .card .b{color:var(--muted);font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+    .card .when{color:var(--brand);font-size:12px;font-weight:600;margin-top:8px}
+    .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;
+      background:rgba(212,175,55,.16);color:var(--gold);margin-bottom:8px}
+    .pill.brand{background:color-mix(in srgb,var(--brand) 18%,transparent);color:var(--brand)}
+    .pill.muted{background:var(--bg2);color:var(--muted)}
+    /* Stat tiles for the dues + exec dashboards. */
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .stats.three{grid-template-columns:1fr 1fr 1fr}
+    .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .stat .v{font-weight:800;font-size:20px;line-height:1.1}
+    .stat .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+    .meter{height:8px;border-radius:999px;background:var(--bg2);overflow:hidden;margin:10px 0 6px}
+    .meter > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand3))}
+    .hero{position:relative;overflow:hidden;border-radius:16px;padding:16px;color:#fff;margin-bottom:12px;
+      background:linear-gradient(140deg,var(--brand),var(--brand2))}
+    .hero .l{font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.85;font-weight:700}
+    .hero .v{font-size:26px;font-weight:800;margin-top:2px;line-height:1}
+    .tabbar{position:sticky;bottom:0;display:flex;background:var(--bg2);border-top:1px solid var(--line);
+      padding:6px 6px calc(6px + env(safe-area-inset-bottom)) 6px}
+    .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+      padding:8px 2px;font-size:11px;font-weight:600;color:var(--muted);border-radius:10px}
+    /* Selected tab glows in the (per-chapter) brand color; bespoke SVG strokes
+       inherit it through currentColor, the accent layer stays --accent. */
+    .tabbar button[aria-selected="true"]{color:var(--brand)}
+    .tabbar button .ic{line-height:0}
+    .tabbar button .ic svg.ti{width:24px;height:24px;display:block}
+    /* Event-location line: bespoke map-pin glyph + text (was an emoji). */
+    .b.loc{display:flex;align-items:center;gap:6px}
+    .b.loc svg.bi{width:16px;height:16px;flex:none;color:var(--brand)}
+    .empty{text-align:center;color:var(--muted);padding:40px 16px;font-size:14px}
+    .me{display:flex;align-items:center;gap:14px;margin:6px 0 4px}
+    .me .av{width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-weight:800;
+      font-size:20px;color:#fff}
+    .me .nm{font-weight:800;font-size:19px}
+    .me .rl{color:var(--muted);font-size:13px}
+    .kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+    .kv:last-child{border-bottom:none}
+    .kv .k{color:var(--muted)}
+    .link{color:var(--brand);font-weight:600}
+    .small{font-size:12px;color:var(--muted);line-height:1.5}
+    .hidden{display:none !important}
+    /* Exec view banner — makes the officer lens unmistakable. */
+    .execbar{display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--brand) 14%,var(--bg2));
+      border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));border-radius:12px;padding:10px 12px;margin:4px 0 10px;font-size:12.5px;font-weight:600}
+    .execbar svg{width:16px;height:16px;flex:none;color:var(--brand)}
+    /* View switcher under the topbar (member ⇄ exec) — only shown to officers. */
+    .viewseg{margin:6px 0 0}
   </style>
 </head>
 <body>
-  <div class="w">
-    <div class="l">Greek <span>Stack</span></div>
-    <div class="s">Loading your chapter…</div>
-    <div class="b" aria-hidden="true"></div>
+  <div id="app">
+    <div class="center" id="boot">
+      <div>
+        <div class="crest-disc" aria-hidden="true">
+          <!-- Canonical GreekStack temple: pediment + four columns + base (navy on gold).
+               Identical geometry to app/maskable-icon/route.tsx so the bundled app, the
+               website PWA icon, and the native app icon all read as one mark. -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>
+            <rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>
+            <rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
+            <rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
+            <rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
+            <rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
+            <rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>
+          </svg>
+        </div>
+        <div class="wordmark">Greek<span class="grad">stack</span></div>
+        <div class="sub">Loading your chapter…</div>
+        <div class="spinner" aria-hidden="true"></div>
+      </div>
+    </div>
   </div>
-  <!-- Capacitor loads server.url (the hosted /app mobile client). This bundled
-       shell is the boot splash + offline fallback. v2 swaps in a static /app export. -->
+
+  <script>
+  /* ============================================================================
+     Greek Stack — bundled native client (vanilla, dependency-free).
+     State machine: boot → picker(school→chapter) → login → dashboard.
+     Demo path: picker → demo chapter → READ-ONLY sample dashboard (no login).
+     Talks to the platform via the API base. Offline-tolerant + session-persistent.
+     ========================================================================== */
+  (function () {
+    "use strict";
+
+    // ── API base resolution ───────────────────────────────────────────────
+    // Default to the production apex; overridable at build time by replacing
+    // window.__GS_API_BASE__ (a single line a CI step or operator can swap) or
+    // via a <meta name="gs-api-base">. Always absolute because we run on
+    // capacitor://localhost where relative paths don't reach the backend.
+    var META_BASE = (function () {
+      var m = document.querySelector('meta[name="gs-api-base"]');
+      return m && m.content ? m.content.trim() : "";
+    })();
+    var API_BASE = (window.__GS_API_BASE__ || META_BASE || "https://greekstack.vercel.app").replace(/\/+$/, "");
+    function api(path) { return API_BASE + (path[0] === "/" ? path : "/" + path); }
+
+    // ── Capacitor bridge (native plugins; all optional/no-op if absent) ────
+    var Cap = window.Capacitor || null;
+    function plugin(n) { try { return Cap && Cap.Plugins ? Cap.Plugins[n] : null; } catch (e) { return null; } }
+    function isNative() { try { return !!Cap && typeof Cap.isNativePlatform === "function" && Cap.isNativePlatform(); } catch (e) { return false; } }
+    async function prefGet(k) { var P = plugin("Preferences"); if (!P) { try { return localStorage.getItem(k); } catch (e) { return null; } } try { var r = await P.get({ key: k }); return r && r.value != null ? r.value : null; } catch (e) { return null; } }
+    async function prefSet(k, v) { var P = plugin("Preferences"); if (!P) { try { localStorage.setItem(k, v); } catch (e) {} return; } try { await P.set({ key: k, value: v }); } catch (e) {} }
+    async function prefDel(k) { var P = plugin("Preferences"); if (!P) { try { localStorage.removeItem(k); } catch (e) {} return; } try { await P.remove({ key: k }); } catch (e) {} }
+    function haptic() { var H = plugin("Haptics"); if (!H) return; try { H.selectionChanged ? H.selectionChanged() : (H.impact && H.impact({ style: "Light" })); } catch (e) {} }
+    function hideSplash() { var S = plugin("SplashScreen"); if (!S) return; try { S.hide(); } catch (e) {} }
+    // Open an external URL (Stripe checkout) in the system browser. Prefer the
+    // Capacitor Browser plugin when present; else window.open(_blank), which
+    // Capacitor routes to SFSafariViewController for external https on iOS.
+    function openExternal(url) {
+      var B = plugin("Browser");
+      if (B && B.open) { try { B.open({ url: url }); return; } catch (e) {} }
+      try { window.open(url, "_blank"); } catch (e) { try { window.location.href = url; } catch (e2) {} }
+    }
+
+    // ── Brand glyphs (inline SVG, matching the website's bespoke icon set) ──
+    // The canonical GreekStack temple crest (navy on transparent — sits in a gold
+    // disc). Same geometry as app/maskable-icon/route.tsx + the native app icon.
+    var CREST_SVG =
+      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>' +
+        '<rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>' +
+        '<rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
+        '<rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
+        '<rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
+        '<rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
+        '<rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>' +
+      '</svg>';
+
+    // Tab-nav glyphs — bespoke 24×24 line icons in the website's icon language
+    // (currentColor stroke + a soft --accent layer), replacing the old emoji.
+    // Mirrors components/brand/icons/* : feed/events/directory/profile + the
+    // built-out rush/dues/exec slots.
+    var ICON = {
+      feed:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<rect x="3" y="4.5" width="18" height="15" rx="2.5" fill="var(--accent)" opacity=".18"/>' +
+          '<rect x="3" y="4.5" width="18" height="15" rx="2.5" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M5.5 12h2.2l1.7-4 2.6 8 1.8-5 1.2 1h3.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>',
+      events:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<rect x="3.5" y="5" width="17" height="15" rx="2.4" fill="var(--accent)" opacity=".16"/>' +
+          '<rect x="3.5" y="5" width="17" height="15" rx="2.4" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M3.5 9h17M8 3.5v3M16 3.5v3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+          '<circle cx="12" cy="14.5" r="1.7" fill="var(--accent)"/>' +
+        '</svg>',
+      rush:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<circle cx="9" cy="8" r="3" fill="var(--accent)" opacity=".18"/>' +
+          '<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M3.5 19v-1a4.2 4.2 0 0 1 4.2-4.2h2.6A4.2 4.2 0 0 1 14.5 18v1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+          '<path d="M17.5 6.5v5M15 9h5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+        '</svg>',
+      dues:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<rect x="3" y="6" width="18" height="12" rx="2.4" fill="var(--accent)" opacity=".16"/>' +
+          '<rect x="3" y="6" width="18" height="12" rx="2.4" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M3 10h18" stroke="currentColor" stroke-width="1.75"/>' +
+          '<circle cx="8" cy="14.5" r="1.4" fill="var(--accent)"/>' +
+        '</svg>',
+      directory:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<circle cx="9" cy="9" r="3.2" fill="var(--accent)" opacity=".18"/>' +
+          '<circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M3.5 19v-1a4.5 4.5 0 0 1 4.5-4.5h2a4.5 4.5 0 0 1 4.5 4.5v1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+          '<path d="M16 7.2a3 3 0 0 1 0 5.6M18.5 19v-1a4 4 0 0 0-2.4-3.66" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+        '</svg>',
+      profile:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<circle cx="12" cy="9" r="3.6" fill="var(--accent)" opacity=".18"/>' +
+          '<circle cx="12" cy="9" r="3.6" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M5.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>' +
+        '</svg>',
+      shield:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M12 3.2 19 6v5.4c0 4.4-3 7.4-7 9.4-4-2-7-5-7-9.4V6l7-2.8Z" fill="var(--accent)" opacity=".18"/>' +
+          '<path d="M12 3.2 19 6v5.4c0 4.4-3 7.4-7 9.4-4-2-7-5-7-9.4V6l7-2.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+          '<path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>',
+      key:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<circle cx="8" cy="14" r="3.2" stroke="currentColor" stroke-width="1.7"/>' +
+          '<path d="m10.2 11.8 7-7M16 5l2 2M14 7l1.6 1.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' +
+        '</svg>',
+      trash:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>',
+      plus:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>' +
+        '</svg>',
+      pin:
+        '<svg class="bi" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M12 21c4-4.2 6-7.4 6-10.2A6 6 0 0 0 6 10.8C6 13.6 8 16.8 12 21Z" fill="var(--accent)" opacity=".16"/>' +
+          '<path d="M12 21c4-4.2 6-7.4 6-10.2A6 6 0 0 0 6 10.8C6 13.6 8 16.8 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+          '<circle cx="12" cy="10.5" r="2.1" stroke="currentColor" stroke-width="1.6"/>' +
+        '</svg>'
+    };
+
+    // ── Tiny DOM helpers ───────────────────────────────────────────────────
+    var $app = document.getElementById("app");
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); }
+    function el(html) { var d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; }
+    function render(node) { $app.innerHTML = ""; $app.appendChild(node); }
+    function money(c) { return "$" + (Number(c || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function moneyR(c) { return "$" + Math.round(Number(c || 0) / 100).toLocaleString(); }
+
+    // Lightweight toast — confirms an action without a navigation.
+    var toastTimer = null;
+    function toast(msg, kind) {
+      var prev = document.getElementById("gs-toast"); if (prev) prev.remove();
+      var t = el('<div id="gs-toast" class="alert ' + (kind || "info") + '" style="position:fixed;left:16px;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:50;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)">' + esc(msg) + '</div>');
+      document.body.appendChild(t);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { try { t.remove(); } catch (e) {} }, 2600);
+    }
+    // Minimal confirm dialog (used by account deletion + destructive officer ops).
+    function confirmDialog(opts) {
+      return new Promise(function (resolve) {
+        var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:center;padding:24px"></div>');
+        var box = el('<div class="card" style="max-width:340px;width:100%;margin:0"></div>');
+        box.appendChild(el('<div class="h">' + esc(opts.title) + '</div>'));
+        box.appendChild(el('<div class="b" style="margin-bottom:14px">' + esc(opts.message) + '</div>'));
+        var ok = el('<button class="btn ' + (opts.danger ? "danger" : "") + '">' + esc(opts.confirmText || "Confirm") + '</button>');
+        var no = el('<button class="btn ghost" style="margin-top:8px">Cancel</button>');
+        ok.onclick = function () { haptic(); ov.remove(); resolve(true); };
+        no.onclick = function () { ov.remove(); resolve(false); };
+        box.appendChild(ok); box.appendChild(no); ov.appendChild(box); document.body.appendChild(ov);
+      });
+    }
+
+    // ── Brand derivation ──────────────────────────────────────────────────────
+    // GREEK STACK identity defaults. The interactive accent (buttons, active tab,
+    // focus rings) is the royal-blue #2563eb → #1d4ed8 ramp that "stack" uses in
+    // the website wordmark (gs-gradient-text); it matches the CSS :root --brand/
+    // --brand2 so applyBrand's no-color path is a no-op on the cold chrome. The
+    // cold-start app, the School→Chapter picker, and every PRE-LOGIN surface stay
+    // on this GS royal-blue identity so the bundled app matches the site/app-icon
+    // for brand parity — NEVER a random per-school hue (the old 7-color hash).
+    var GS_BRAND = "#2563eb", GS_BRAND2 = "#1d4ed8";
+    // Only a canonical #RRGGBB passes — guards against a malformed/empty/injection
+    // value from the server payload before it touches a CSS custom property.
+    function safeHex(v) { v = String(v == null ? "" : v).trim(); return /^#[0-9a-fA-F]{6}$/.test(v) ? v : null; }
+    // Darken a hex by `f` (0–1) for a gradient's second stop when the chapter only
+    // configured a single primary color. Pure clamp-and-scale on the RGB channels.
+    function darken(hex, f) {
+      var h = safeHex(hex); if (!h) return GS_BRAND2;
+      var n = parseInt(h.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      r = Math.max(0, Math.round(r * (1 - f))); g = Math.max(0, Math.round(g * (1 - f))); b = Math.max(0, Math.round(b * (1 - f)));
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    // Resolve a chapter's accent/crest tint. Prefer the chapter's REAL configured
+    // brand color (brand.primaryHex from /api/mobile/data — attached to the chapter
+    // object after login); otherwise fall back to the GS royal-blue identity. No
+    // deterministic rainbow hash — an unbranded chapter reads as GreekStack, not a
+    // random hue, preserving brand parity with the site/app-icon.
+    function brandFor(ch) {
+      ch = ch || {};
+      var b = ch.brand || {};
+      var primary = safeHex(b.primaryHex) || GS_BRAND;
+      var dark = safeHex(b.primaryDarkHex) || (safeHex(b.primaryHex) ? darken(b.primaryHex, 0.25) : GS_BRAND2);
+      return { primary: primary, dark: dark };
+    }
+    function initials(name) { var w = String(name || "").trim().split(/\s+/).filter(Boolean); if (!w.length) return "GS"; if (w.length === 1) return w[0].slice(0, 2).toUpperCase(); return (w[0][0] + w[w.length - 1][0]).toUpperCase(); }
+    // Re-point the live --brand/--brand2 identity vars. Defaults to the GS royal-
+    // blue; only a chapter's REAL configured color (known after login) overrides
+    // it. Pre-login this is the GreekStack identity, never a hashed hue.
+    function applyBrand(ch) { var b = brandFor(ch); document.documentElement.style.setProperty("--brand", b.primary); document.documentElement.style.setProperty("--brand2", b.dark); }
+    // Reset the identity vars back to the GreekStack royal-blue (used when leaving
+    // a chapter for the picker, so the cold chrome never keeps a tenant's color).
+    function resetBrand() { document.documentElement.style.setProperty("--brand", GS_BRAND); document.documentElement.style.setProperty("--brand2", GS_BRAND2); }
+
+    // ── Built-in demo chapter (offline / empty-registry fallback + showcase) ───
+    // The "Demo Chapter" is the no-login showcase — picking it loads SAMPLE_DATA
+    // straight into the dashboard (no auth), so a reviewer / cold-start user sees
+    // the whole app. It carries its own brand so the showcase still re-skins.
+    var DEMO_CHAPTER = {
+      id: "demo-1", subdomain: "demo", name: "Phi Sigma Kappa (Demo)",
+      school: "Greekstack University", domain: null, demo: true,
+      brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" }
+    };
+    var DEMO = [DEMO_CHAPTER];
+
+    // ── Read-only SAMPLE dashboard (Apple 2.1: a real, no-login experience) ────
+    // Mirrors the shape of /api/mobile/data so every paint function renders it
+    // unchanged. capabilities.exec is true here so the showcase can demonstrate
+    // the officer/Exec view too (it is a demo, not a real session).
+    function sampleData() {
+      var now = Date.now();
+      return {
+        chapter: { subdomain: "demo", name: "Phi Sigma Kappa", schoolName: "Greekstack University",
+          brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" } },
+        role: "brother",
+        demo: true,
+        capabilities: { exec: true, duesEnabled: true },
+        profile: {
+          id: "demo-brother-id", name: "Alex Mercer", email: "alex.mercer@demo.edu",
+          phone: "(803) 555-0144", year: "Senior", major: "Computer Science",
+          position: "President", pledgeClass: "Phi Class", hometown: "Charleston, SC", status: "ACTIVE"
+        },
+        standing: { score: 92, max: 100, pct: 92, standing: "GOOD" },
+        billing: null,
+        announcements: [
+          { id: "a1", title: "Chapter Meeting Sunday at 7 PM", pinned: true, authorName: "Alex Mercer", authorRole: "President",
+            createdAt: new Date(now - 2 * 3600000).toISOString(),
+            body: "We will discuss fall rush prep and vote on the new budget. Attendance is mandatory for all active brothers. Location: Chapter Room." },
+          { id: "a2", title: "Community Service Day — Saturday", pinned: false, authorName: "Jack Snyder", authorRole: "Philanthropy Chair",
+            createdAt: new Date(now - 86400000).toISOString(),
+            body: "Join us at the Special Olympics center at 9 AM. Wear letters. We need 15+ brothers to hit our semester hours." }
+        ],
+        events: [
+          { id: "e1", name: "Fall Rush Kickoff BBQ", location: "Chapter House Lawn", startsAt: new Date(now + 2 * 86400000).toISOString(),
+            description: "Meet the brothers, free food, lawn games. Bring a friend.", myRsvp: { status: "GOING" } },
+          { id: "e2", name: "Alumni Networking Night", location: "Student Union, Ballroom B", startsAt: new Date(now + 6 * 86400000).toISOString(),
+            description: "Connect with alumni across finance, tech, and law.", myRsvp: null },
+          { id: "e3", name: "Philanthropy 5K", location: "Campus Quad", startsAt: new Date(now + 12 * 86400000).toISOString(),
+            description: "Run/walk to raise money for the chapter's national charity.", myRsvp: { status: "MAYBE" } }
+        ],
+        dues: {
+          config: { enabled: true, amountCents: 45000, year: "2026-fall", label: "Active Brother Dues" },
+          isPaid: false,
+          payments: [
+            { id: "p1", year: "2026-spring", amountCents: 45000, method: "STRIPE", status: "PAID", createdAt: new Date(now - 120 * 86400000).toISOString() }
+          ]
+        },
+        treasury: {
+          balanceCents: 1284750, duesCollectedCents: 1890000, duesOutstandingCents: 360000
+        },
+        roster: {
+          actives: [
+            { id: "b1", name: "Alex Mercer", position: "President", major: "Computer Science", year: "Senior", email: "alex.mercer@demo.edu" },
+            { id: "b2", name: "Daniel Cho", position: "Treasurer", major: "Finance", year: "Junior", email: "daniel.cho@demo.edu" },
+            { id: "b3", name: "Marcus Webb", position: "Recruitment", major: "Marketing", year: "Junior", email: "marcus.webb@demo.edu" },
+            { id: "b4", name: "Ethan Park", position: "Social Chair", major: "Economics", year: "Sophomore", email: "ethan.park@demo.edu" },
+            { id: "b5", name: "Jordan Lee", position: "Member", major: "Biology", year: "Sophomore", email: "jordan.lee@demo.edu" }
+          ],
+          alumni: [
+            { id: "al1", name: "James Holloway", graduationYear: 2012, employer: "Goldman Sachs", jobTitle: "VP", email: "j.holloway@alum.com" },
+            { id: "al2", name: "Sarah Kim", graduationYear: 2015, employer: "Google", jobTitle: "PM", email: "s.kim@alum.com" }
+          ]
+        },
+        careers: [
+          { id: "c1", title: "Software Engineer Intern", company: "Northrop", location: "Charleston, SC", postedByName: "James Holloway '12" }
+        ],
+        pnms: [
+          { id: "pnm1", name: "Tyler Brooks", major: "Mechanical Eng.", year: "Freshman", status: "ACTIVE", votesCount: 8 },
+          { id: "pnm2", name: "Chris Nolan", major: "Accounting", year: "Sophomore", status: "BID_EXTENDED", votesCount: 12 },
+          { id: "pnm3", name: "Aaron Diaz", major: "Political Sci.", year: "Freshman", status: "ACTIVE", votesCount: 5 },
+          { id: "pnm4", name: "Sam Whitfield", major: "Undeclared", year: "Freshman", status: "ACTIVE", votesCount: 3 }
+        ]
+      };
+    }
+
+    // ── App state ──────────────────────────────────────────────────────────
+    // tab ∈ feed/events/rush/dues/directory/profile; view ∈ member/exec.
+    var S = { chapters: [], session: null, tenant: null, data: null, tab: "feed", view: "member", demo: false };
+    var K = { session: "gs.session", lastView: "gs.lastView" };
+
+    // True only when the dashboard came from the no-login demo showcase.
+    function isDemo() { return !!S.demo; }
+    // Exec lens is allowed only when the server cleared it (capabilities.exec) or
+    // in the demo. Mirrors the React client's execAllowed; every officer write is
+    // ALSO re-gated server-side, so this is purely which UI is offered.
+    function execAllowed() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.exec === true); }
+    function duesEnabled() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.duesEnabled === true); }
+
+    // ── Network ─────────────────────────────────────────────────────────────
+    async function getRegistry() {
+      try {
+        var r = await fetch(api("/api/mobile/registry"), { headers: { Accept: "application/json" } });
+        var j = await r.json();
+        if (j && j.ok && Array.isArray(j.chapters) && j.chapters.length) return j.chapters.concat(DEMO);
+      } catch (e) {}
+      return DEMO;
+    }
+    async function login(subdomain, email, password, role) {
+      var r = await fetch(api("/api/mobile/auth"), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subdomain: subdomain, email: email, password: password, role: role })
+      });
+      var j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || "Sign in failed.");
+      return j;
+    }
+    async function loadData(subdomain, token) {
+      var r = await fetch(api("/api/mobile/data?subdomain=" + encodeURIComponent(subdomain)), {
+        headers: { Authorization: "Bearer " + token }
+      });
+      var j = await r.json();
+      if (r.status === 401) { var e = new Error("expired"); e.code = 401; throw e; }
+      if (!r.ok || !j.ok) throw new Error(j.error || "Could not load chapter data.");
+      return j;
+    }
+    // Authed POST helper for the officer write routes + dues checkout.
+    async function authPost(path, body) {
+      var r = await fetch(api(path), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + S.session.token },
+        body: JSON.stringify(Object.assign({ subdomain: S.session.subdomain }, body || {}))
+      });
+      var j = await r.json().catch(function () { return {}; });
+      return { status: r.status, ok: r.ok && j.ok, data: j };
+    }
+
+    // ── Persistence ─────────────────────────────────────────────────────────
+    async function saveSession(s) { S.session = s; await prefSet(K.session, JSON.stringify(s)); }
+    async function clearSession() { S.session = null; S.tenant = null; S.data = null; S.demo = false; S.view = "member"; await prefDel(K.session); await prefDel(K.lastView); }
+    async function restoreSession() { var raw = await prefGet(K.session); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } }
+    async function cacheView(d) { try { var j = JSON.stringify({ at: Date.now(), data: d }); if (j.length < 400000) await prefSet(K.lastView, j); } catch (e) {} }
+    async function readCachedView() { var raw = await prefGet(K.lastView); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } }
+
+    // ── Topbar ───────────────────────────────────────────────────────────────
+    function topbar(title, onBack, opts) {
+      opts = opts || {};
+      var h = el(
+        '<header class="topbar">' +
+          (onBack ? '<button class="back" aria-label="Back">‹ Back</button>' : "") +
+          '<div class="mark" aria-hidden="true">' + CREST_SVG + '</div>' +
+          '<div class="title">' + esc(title) + "</div>" +
+          (opts.demo ? '<span class="demo">Demo</span>' : "") +
+        "</header>"
+      );
+      if (onBack) h.querySelector(".back").onclick = function () { haptic(); onBack(); };
+      return h;
+    }
+
+    // ── Screen: School → Chapter picker ───────────────────────────────────────
+    var pickerSchool = null, pickerQuery = "";
+    function showPicker() {
+      S.tenant = null; S.data = null; S.demo = false; S.view = "member";
+      resetBrand(); // back to the GreekStack royal-blue identity for the cold picker
+      var wrap = el('<div></div>');
+      wrap.appendChild(topbar("Find your chapter", pickerSchool ? function () { pickerSchool = null; showPicker(); } : null));
+      var main = el('<main></main>');
+
+      var schools = {};
+      S.chapters.forEach(function (c) { var k = c.school || "Other"; (schools[k] = schools[k] || []).push(c); });
+      var schoolNames = Object.keys(schools).sort();
+
+      if (!pickerSchool) {
+        main.appendChild(el('<h2 class="section">Choose your school</h2>'));
+        var sb = el('<div class="search"><input placeholder="Search schools" inputmode="search" autocapitalize="words" /></div>');
+        main.appendChild(sb);
+        var list = el('<div></div>');
+        function paintSchools(q) {
+          list.innerHTML = "";
+          var filtered = schoolNames.filter(function (n) { return n.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+          if (!filtered.length) { list.appendChild(el('<div class="empty">No schools match “' + esc(q) + '”.</div>')); return; }
+          filtered.forEach(function (name) {
+            var any = schools[name][0];
+            var b = brandFor(any);
+            var row = el(
+              '<button class="row">' +
+                '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(name)) + "</div>" +
+                '<div class="meta"><div class="name">' + esc(name) + '</div><div class="school">' + schools[name].length + " chapter" + (schools[name].length > 1 ? "s" : "") + "</div></div>" +
+                '<div class="chev">›</div>' +
+              "</button>"
+            );
+            row.onclick = function () { haptic(); pickerSchool = name; pickerQuery = ""; showPicker(); };
+            list.appendChild(row);
+          });
+        }
+        sb.querySelector("input").oninput = function (e) { paintSchools(e.target.value); };
+        paintSchools("");
+        main.appendChild(list);
+
+        // No-login demo entry — always offered, even with a populated registry, so
+        // a cold-start user (or App reviewer) can see the whole app immediately.
+        main.appendChild(el('<h2 class="section">Just exploring?</h2>'));
+        var demoBtn = el('<button class="btn ghost">See the live demo — no sign in</button>');
+        demoBtn.onclick = function () { haptic(); enterDemo(); };
+        main.appendChild(demoBtn);
+        main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">A read-only sample chapter so you can try every feature before you sign in.</p>'));
+      } else {
+        main.appendChild(el('<h2 class="section">' + esc(pickerSchool) + "</h2>"));
+        var chs = schools[pickerSchool] || [];
+        var cl = el('<div></div>');
+        chs.forEach(function (c) {
+          var b = brandFor(c);
+          var row = el(
+            '<button class="row">' +
+              '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(c.name)) + "</div>" +
+              '<div class="meta"><div class="name">' + esc(c.name) + '</div><div class="school">' + esc(c.subdomain) + "</div></div>" +
+              '<div class="chev">›</div>' +
+            "</button>"
+          );
+          row.onclick = function () {
+            haptic();
+            // The demo chapter loads the no-login showcase; real chapters → login.
+            if (c.demo) { enterDemo(); return; }
+            applyBrand(c); showLogin(c);
+          };
+          cl.appendChild(row);
+        });
+        main.appendChild(cl);
+      }
+      wrap.appendChild(main);
+      render(wrap);
+    }
+
+    // ── No-login demo: load the read-only sample dashboard straight away ───────
+    function enterDemo() {
+      S.demo = true;
+      S.session = { token: null, user: { email: "alex.mercer@demo.edu" }, subdomain: "demo", tenant: DEMO_CHAPTER };
+      S.data = sampleData();
+      S.tab = "feed"; S.view = "member";
+      applyBrand(S.session.tenant);
+      paintDashboard(false);
+    }
+
+    // ── Screen: Login ─────────────────────────────────────────────────────────
+    function showLogin(tenant) {
+      var wrap = el('<div></div>');
+      wrap.appendChild(topbar(tenant.name, function () { showPicker(); }));
+      var main = el('<main></main>');
+      main.appendChild(el('<h2 class="section">Sign in to ' + esc(tenant.name) + "</h2>"));
+
+      var seg = el('<div class="seg" role="tablist">' +
+        '<button role="tab" data-role="brother" aria-selected="true">Brother</button>' +
+        '<button role="tab" data-role="alumni" aria-selected="false">Alumni</button></div>');
+      var role = "brother";
+      seg.querySelectorAll("button").forEach(function (b) {
+        b.onclick = function () { role = b.getAttribute("data-role"); seg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); }); haptic(); };
+      });
+      main.appendChild(seg);
+
+      var errBox = el('<div></div>');
+      main.appendChild(errBox);
+
+      var form = el(
+        '<form>' +
+          '<div class="field"><label>Email</label><input type="email" inputmode="email" autocapitalize="off" autocomplete="email" required placeholder="you@example.com" /></div>' +
+          '<div class="field"><label>Password</label><input type="password" autocomplete="current-password" required placeholder="••••••••" /></div>' +
+          '<button class="btn" type="submit">Sign In</button>' +
+        "</form>"
+      );
+      var inputs = form.querySelectorAll("input");
+      var submit = form.querySelector(".btn");
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        errBox.innerHTML = "";
+        submit.disabled = true; submit.textContent = "Signing in…";
+        try {
+          var res = await login(tenant.subdomain, inputs[0].value.trim().toLowerCase(), inputs[1].value, role);
+          var session = { token: res.token, user: res.user, subdomain: tenant.subdomain, tenant: tenant };
+          await saveSession(session);
+          S.demo = false; S.view = "member"; S.tab = "feed";
+          haptic();
+          showDashboard();
+        } catch (err) {
+          errBox.appendChild(el('<div class="alert err">' + esc(err.message || "Sign in failed.") + "</div>"));
+          submit.disabled = false; submit.textContent = "Sign In";
+        }
+      };
+      main.appendChild(form);
+
+      // Friendly off-ramp to the no-login demo from the login screen too.
+      var demoBtn = el('<button class="btn ghost" type="button" style="margin-top:10px">Explore the demo instead</button>');
+      demoBtn.onclick = function () { haptic(); enterDemo(); };
+      main.appendChild(demoBtn);
+
+      main.appendChild(el('<p class="small" style="margin-top:14px;text-align:center">Use the credentials your chapter gave you. Your session is bound to ' + esc(tenant.name) + " only.</p>"));
+
+      wrap.appendChild(main);
+      render(wrap);
+    }
+
+    // Attach the chapter's REAL configured brand color (from /api/mobile/data's
+    // chapter.brand) onto the session tenant so brandFor()/applyBrand() theme the
+    // dashboard in the chapter's actual color. Until this runs (pre-login / first
+    // paint), the tenant carries no brand and everything stays GS royal-blue.
+    function adoptBrandFromData(data) {
+      var s = S.session; if (!s || !s.tenant || !data || !data.chapter) return;
+      var b = data.chapter.brand;
+      if (b && (safeHex(b.primaryHex) || safeHex(b.primaryDarkHex))) {
+        s.tenant.brand = { primaryHex: safeHex(b.primaryHex), primaryDarkHex: safeHex(b.primaryDarkHex) };
+      }
+    }
+
+    // ── Screen: Dashboard ─────────────────────────────────────────────────────
+    async function showDashboard() {
+      var s = S.session; if (!s) { showPicker(); return; }
+      if (isDemo()) { paintDashboard(false); return; }
+      applyBrand(s.tenant);
+      // Show cached first if available, then refresh.
+      var cached = await readCachedView();
+      if (cached && cached.data) { adoptBrandFromData(cached.data); applyBrand(s.tenant); S.data = cached.data; paintDashboard(true); }
+      else paintLoading(s.tenant.name);
+
+      try {
+        var data = await loadData(s.subdomain, s.token);
+        adoptBrandFromData(data); applyBrand(s.tenant);
+        S.data = data; await cacheView(data); paintDashboard(false);
+      } catch (err) {
+        if (err && err.code === 401) { await clearSession(); showPicker(); return; }
+        if (!S.data) {
+          var wrap = el('<div></div>');
+          wrap.appendChild(topbar(s.tenant.name, null));
+          var m = el('<main></main>');
+          m.appendChild(el('<div class="alert err" style="margin-top:16px">' + esc(err.message || "Network error.") + "</div>"));
+          var retry = el('<button class="btn ghost" type="button">Retry</button>');
+          retry.onclick = showDashboard; m.appendChild(retry);
+          var out = el('<button class="btn ghost" type="button" style="margin-top:10px">Sign out</button>');
+          out.onclick = async function () { await clearSession(); pickerSchool = null; showPicker(); };
+          m.appendChild(out);
+          wrap.appendChild(m); render(wrap);
+        }
+      }
+    }
+    // Refetch after a successful officer write so the change reflects the server's
+    // truth. Demo mutates S.data locally instead (no API), so it short-circuits.
+    async function refetchDashboard() {
+      if (isDemo()) { paintDashboard(false); return; }
+      var s = S.session; if (!s || !s.token) return;
+      try { var data = await loadData(s.subdomain, s.token); S.data = data; await cacheView(data); } catch (e) {}
+      paintDashboard(false);
+    }
+
+    function paintLoading(name) {
+      var wrap = el('<div></div>');
+      wrap.appendChild(topbar(name, null));
+      wrap.appendChild(el('<div class="center"><div><div class="spinner"></div><div class="sub" style="margin-top:14px">Loading your chapter…</div></div></div>'));
+      render(wrap);
+    }
+
+    function fmtDate(iso) { try { return new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return iso; } }
+
+    function paintDashboard(isStale) {
+      var d = S.data || {}; var s = S.session;
+      // If the viewer flipped to exec but the session isn't cleared, fall back.
+      if (S.view === "exec" && !execAllowed()) S.view = "member";
+      var wrap = el('<div></div>');
+      wrap.appendChild(topbar((d.chapter && d.chapter.name) || s.tenant.name, null, { demo: isDemo() }));
+      var main = el('<main></main>');
+
+      // Officer view switcher (member ⇄ exec) — only shown when the server (or
+      // the demo) cleared this session for exec.
+      if (execAllowed()) {
+        var vs = el('<div class="seg viewseg" role="tablist">' +
+          '<button role="tab" data-v="member" aria-selected="' + (S.view === "member") + '">Member view</button>' +
+          '<button role="tab" data-v="exec" aria-selected="' + (S.view === "exec") + '">Exec view</button></div>');
+        vs.querySelectorAll("button").forEach(function (b) {
+          b.onclick = function () {
+            var v = b.getAttribute("data-v"); if (v === S.view) return;
+            S.view = v; S.tab = "feed"; haptic(); paintDashboard(false);
+          };
+        });
+        main.appendChild(vs);
+      }
+
+      if (isStale) main.appendChild(el('<div class="alert info">Showing your last saved view — reconnecting…</div>'));
+      if (d.billing && d.billing.reason && d.billing.reason !== "active" && d.billing.daysLeft != null) {
+        main.appendChild(el('<div class="alert info">Chapter billing: ' + esc(d.billing.reason) + (d.billing.daysLeft != null ? " · " + d.billing.daysLeft + " days left" : "") + "</div>"));
+      }
+
+      if (S.view === "exec") {
+        main.appendChild(el('<div class="execbar">' + ICON.shield + 'Officer / Exec view · admin tools</div>'));
+        if (S.tab === "feed") paintExecRoster(main, d);
+        else if (S.tab === "events") paintExecAnnounce(main, d);
+        else if (S.tab === "rush") paintExecRush(main, d);
+        else if (S.tab === "dues") paintExecDues(main, d);
+        else paintProfile(main, d);
+      } else {
+        if (S.tab === "feed") paintFeed(main, d);
+        else if (S.tab === "events") paintEvents(main, d);
+        else if (S.tab === "rush") paintRush(main, d);
+        else if (S.tab === "dues") paintDues(main, d);
+        else if (S.tab === "directory") paintDirectory(main, d);
+        else paintProfile(main, d);
+      }
+
+      wrap.appendChild(main);
+      wrap.appendChild(tabbar());
+      render(wrap);
+    }
+
+    // ── MEMBER: Feed ──────────────────────────────────────────────────────────
+    function paintFeed(main, d) {
+      main.appendChild(el('<h2 class="section">Announcements</h2>'));
+      var anns = d.announcements || [];
+      if (!anns.length) { main.appendChild(el('<div class="empty">No announcements yet.</div>')); return; }
+      anns.forEach(function (a) {
+        main.appendChild(el(
+          '<div class="card">' +
+            (a.pinned ? '<span class="pill">Pinned</span>' : "") +
+            '<div class="h">' + esc(a.title) + "</div>" +
+            '<div class="b">' + esc(a.body) + "</div>" +
+            '<div class="when">' + esc(a.authorName || "Officer") + " · " + esc(fmtDate(a.createdAt)) + "</div>" +
+          "</div>"
+        ));
+      });
+      // Career posts surface in the feed too (alumni opportunities).
+      var careers = d.careers || [];
+      if (careers.length) {
+        main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
+        careers.forEach(function (c) {
+          main.appendChild(el(
+            '<div class="card">' +
+              '<span class="pill brand">Career</span>' +
+              '<div class="h">' + esc(c.title) + "</div>" +
+              '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
+            "</div>"
+          ));
+        });
+      }
+    }
+
+    // ── MEMBER: Events (RSVP + add-to-calendar) ───────────────────────────────
+    function paintEvents(main, d) {
+      main.appendChild(el('<h2 class="section">Upcoming events</h2>'));
+      var evs = d.events || [];
+      if (!evs.length) { main.appendChild(el('<div class="empty">No upcoming events.</div>')); return; }
+      evs.forEach(function (e) {
+        var rsvp = e.myRsvp && e.myRsvp.status ? e.myRsvp.status : null;
+        var card = el(
+          '<div class="card">' +
+            '<div class="h">' + esc(e.name) + "</div>" +
+            (e.location ? '<div class="b loc">' + ICON.pin + "<span>" + esc(e.location) + "</span></div>" : "") +
+            (e.description ? '<div class="b">' + esc(e.description) + "</div>" : "") +
+            '<div class="when">' + esc(fmtDate(e.startsAt)) + "</div>" +
+            '<div class="seg" style="margin-top:12px;margin-bottom:8px">' +
+              '<button data-s="GOING" aria-selected="' + (rsvp === "GOING") + '">Going</button>' +
+              '<button data-s="MAYBE" aria-selected="' + (rsvp === "MAYBE") + '">Maybe</button>' +
+              '<button data-s="NOT_GOING" aria-selected="' + (rsvp === "NOT_GOING") + '">Can’t</button>' +
+            "</div>" +
+            '<button class="btn ghost" data-cal="1">Add to calendar</button>' +
+          "</div>"
+        );
+        card.querySelectorAll("[data-s]").forEach(function (b) {
+          b.onclick = async function () {
+            haptic();
+            card.querySelectorAll("[data-s]").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+            if (e.myRsvp) e.myRsvp.status = b.getAttribute("data-s"); else e.myRsvp = { status: b.getAttribute("data-s") };
+            if (isDemo()) { toast("RSVP saved.", "ok"); return; }
+            try {
+              await fetch(api("/api/mobile/events/rsvp"), {
+                method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + S.session.token },
+                body: JSON.stringify({ subdomain: S.session.subdomain, eventId: e.id, status: b.getAttribute("data-s") })
+              });
+            } catch (err) {}
+          };
+        });
+        card.querySelector("[data-cal]").onclick = function () { haptic(); addToCalendar(e); };
+        main.appendChild(card);
+      });
+    }
+
+    // Build an RFC-5545 .ics and download it (same as the web client).
+    function addToCalendar(e) {
+      function dt(iso) { return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+      var start = dt(e.startsAt);
+      var end = dt(e.endsAt || new Date(new Date(e.startsAt).getTime() + 2 * 3600000).toISOString());
+      var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Greekstack//App//EN", "BEGIN:VEVENT",
+        "UID:" + (e.id || "evt") + "@greekstack", "DTSTAMP:" + dt(new Date().toISOString()),
+        "DTSTART:" + start, "DTEND:" + end, "SUMMARY:" + String(e.name || "Chapter Event").replace(/\n/g, " "),
+        "LOCATION:" + String(e.location || "").replace(/\n/g, " "), "DESCRIPTION:" + String(e.description || "").replace(/\n/g, " "),
+        "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+      try {
+        var blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = String(e.name || "event").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".ics";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      } catch (err) {}
+      toast("Added to your calendar.", "ok");
+    }
+
+    // ── MEMBER: Rush / pledges (read-only board) ──────────────────────────────
+    function paintRush(main, d) {
+      var pnms = d.pnms || [];
+      main.appendChild(el('<h2 class="section">Recruitment</h2>'));
+      if (!pnms.length) {
+        main.appendChild(el('<div class="empty">No prospective members in the pipeline right now.</div>'));
+        return;
+      }
+      var bids = pnms.filter(function (p) { return p.status === "BID_EXTENDED"; }).length;
+      main.appendChild(el(
+        '<div class="stats three">' +
+          '<div class="stat"><div class="v">' + pnms.length + '</div><div class="l">In pipeline</div></div>' +
+          '<div class="stat"><div class="v">' + bids + '</div><div class="l">Bids out</div></div>' +
+          '<div class="stat"><div class="v">' + (pnms.length - bids) + '</div><div class="l">Active</div></div>' +
+        '</div>'
+      ));
+      pnms.forEach(function (p) {
+        var b = brandFor(S.session.tenant);
+        main.appendChild(el(
+          '<div class="row" style="cursor:default">' +
+            '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(p.name)) + "</div>" +
+            '<div class="meta"><div class="name">' + esc(p.name) + '</div><div class="school">' + esc([p.major, p.year].filter(Boolean).join(" · ")) + "</div></div>" +
+            '<span class="pill ' + (p.status === "BID_EXTENDED" ? "brand" : "muted") + '" style="margin:0">' + (p.status === "BID_EXTENDED" ? "Bid sent" : ((p.votesCount || 0) + " votes")) + "</span>" +
+          "</div>"
+        ));
+      });
+    }
+
+    // ── MEMBER: Dues (balance + real Stripe checkout) ─────────────────────────
+    function paintDues(main, d) {
+      var dues = d.dues || {}; var cfg = dues.config || {};
+      main.appendChild(el('<h2 class="section">Dues</h2>'));
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">' + esc(cfg.label || "Active chapter dues") + '</div>' +
+          '<div class="v">' + money(cfg.amountCents || 0) + '</div>' +
+          '<div style="font-size:12px;opacity:.85;margin-top:4px">' + esc(cfg.year || "Active semester") + '</div>' +
+        '</div>'
+      ));
+      if (dues.isPaid) {
+        main.appendChild(el('<div class="alert ok">Dues settled — thank you!</div>'));
+      } else if (cfg.enabled) {
+        main.appendChild(el('<div class="alert info">Action required · your dues are unpaid.</div>'));
+        var pay = el('<button class="btn">Pay online with Stripe</button>');
+        pay.onclick = async function () {
+          haptic();
+          if (isDemo()) { toast("Demo: checkout opens Stripe for a real member.", "info"); return; }
+          pay.disabled = true; pay.textContent = "Opening Stripe…";
+          try {
+            var res = await authPost("/api/dues/checkout", {});
+            if (res.ok && res.data.url) { openExternal(res.data.url); pay.disabled = false; pay.textContent = "Pay online with Stripe"; }
+            else if (res.status === 409) { toast(res.data.error || "You're already marked paid.", "info"); refetchDashboard(); }
+            else { toast(res.data.error || "Online dues aren't available. Pay via your treasurer.", "err"); pay.disabled = false; pay.textContent = "Pay online with Stripe"; }
+          } catch (e) { toast("Couldn't reach Stripe. Try again.", "err"); pay.disabled = false; pay.textContent = "Pay online with Stripe"; }
+        };
+        main.appendChild(pay);
+      }
+      main.appendChild(el('<h2 class="section">Payment ledger</h2>'));
+      var pays = dues.payments || [];
+      if (!pays.length) { main.appendChild(el('<div class="empty">No transactions yet.</div>')); return; }
+      pays.forEach(function (p) {
+        main.appendChild(el(
+          '<div class="card" style="display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div class="h" style="margin:0">Dues · ' + esc(p.year) + '</div><div class="small">' + esc(p.method || "—") + " · " + esc(new Date(p.createdAt).toLocaleDateString()) + "</div></div>" +
+            '<div style="text-align:right"><div class="h" style="margin:0">' + money(p.amountCents) + '</div><div class="small" style="color:' + (p.status === "PAID" ? "var(--ok)" : "var(--gold)") + '">' + esc(p.status) + "</div></div>" +
+          "</div>"
+        ));
+      });
+    }
+
+    // ── MEMBER: Directory ─────────────────────────────────────────────────────
+    function paintDirectory(main, d) {
+      var roster = (d.roster && d.roster.actives) || [];
+      var alumni = (d.roster && d.roster.alumni) || [];
+      main.appendChild(el('<h2 class="section">Directory · ' + roster.length + " active" + (roster.length === 1 ? "" : "s") + "</h2>"));
+      var sb = el('<div class="search"><input placeholder="Search members" inputmode="search" /></div>');
+      main.appendChild(sb);
+      var list = el('<div></div>'); main.appendChild(list);
+      var alumniHead = el('<h2 class="section">Alumni · ' + alumni.length + "</h2>");
+      var alumniList = el('<div></div>');
+      function paint(q) {
+        list.innerHTML = ""; alumniList.innerHTML = "";
+        var ql = q.toLowerCase();
+        var fa = roster.filter(function (m) { return (m.name || "").toLowerCase().indexOf(ql) >= 0; });
+        if (!fa.length) { list.appendChild(el('<div class="empty">No members match.</div>')); }
+        fa.forEach(function (m) { list.appendChild(memberRow(m, [m.position, m.major, m.year])); });
+        var fl = alumni.filter(function (m) { return (m.name || "").toLowerCase().indexOf(ql) >= 0; });
+        fl.forEach(function (m) { alumniList.appendChild(memberRow(m, [m.jobTitle, m.employer, m.graduationYear ? "'" + String(m.graduationYear).slice(-2) : ""])); });
+      }
+      function memberRow(m, parts) {
+        var b = brandFor(S.session.tenant);
+        return el(
+          '<div class="row" style="cursor:default">' +
+            '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(m.name)) + "</div>" +
+            '<div class="meta"><div class="name">' + esc(m.name) + '</div><div class="school">' + esc(parts.filter(Boolean).join(" · ")) + "</div></div>" +
+          "</div>"
+        );
+      }
+      sb.querySelector("input").oninput = function (e) { paint(e.target.value); };
+      paint("");
+      if (alumni.length) { main.appendChild(alumniHead); main.appendChild(alumniList); }
+    }
+
+    // ── MEMBER + OFFICER: Profile (with account deletion) ─────────────────────
+    function paintProfile(main, d) {
+      var p = d.profile || {}; var s = S.session; var b = brandFor(s.tenant);
+      main.appendChild(el(
+        '<div class="me">' +
+          '<div class="av" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(p.name || (s.user && s.user.email))) + "</div>" +
+          '<div><div class="nm">' + esc(p.name || (s.user && s.user.email) || "Member") + '</div><div class="rl">' + esc((d.role || "brother") + " · " + ((d.chapter && d.chapter.name) || s.tenant.name)) + "</div></div>" +
+        "</div>"
+      ));
+      var card = el('<div class="card"></div>');
+      [["Email", p.email || (s.user && s.user.email)], ["Major", p.major], ["Year", p.year], ["Pledge class", p.pledgeClass], ["Position", p.position], ["Hometown", p.hometown]].forEach(function (kv) {
+        if (kv[1]) card.appendChild(el('<div class="kv"><span class="k">' + esc(kv[0]) + '</span><span>' + esc(kv[1]) + "</span></div>"));
+      });
+      if (card.children.length) main.appendChild(card);
+      if (d.standing && d.standing.score != null) {
+        main.appendChild(el('<div class="card"><div class="h">Standing</div><div class="b">' + esc(d.standing.score) + " / " + esc(d.standing.max) + " (" + esc(d.standing.pct) + "%) · " + esc(d.standing.standing || "") + "</div></div>"));
+      }
+
+      var out = el('<button class="btn ghost" type="button" style="margin-top:8px">Sign out</button>');
+      out.onclick = async function () { haptic(); await clearSession(); pickerSchool = null; showPicker(); };
+      main.appendChild(out);
+
+      // ── DANGER ZONE — in-app account deletion (Apple 5.1.1(v)) ──────────────
+      // The signed-in member deletes their OWN account + member data:
+      // DELETE /api/mobile/account → sign out → picker. Demo demonstrates the
+      // flow without calling the API.
+      var dz = el('<div class="card" style="margin-top:14px;border-color:rgba(248,113,113,.25)"></div>');
+      dz.appendChild(el('<div class="h">Account</div>'));
+      dz.appendChild(el('<div class="small" style="margin-bottom:10px">Permanently delete your Greek Stack account and your member data for this chapter. This can\'t be undone.</div>'));
+      var del = el('<button class="btn danger" type="button">Delete account</button>');
+      del.onclick = async function () {
+        var yes = await confirmDialog({
+          title: "Delete your account?",
+          message: "This permanently deletes your Greek Stack account and your member data for this chapter. This cannot be undone.",
+          confirmText: "Delete account", danger: true
+        });
+        if (!yes) return;
+        if (isDemo()) { toast("Account deleted. (Demo — nothing was changed.)", "ok"); await clearSession(); pickerSchool = null; showPicker(); return; }
+        del.disabled = true; del.textContent = "Deleting…";
+        try {
+          var r = await fetch(api("/api/mobile/account?subdomain=" + encodeURIComponent(S.session.subdomain)), {
+            method: "DELETE", headers: { Authorization: "Bearer " + S.session.token }
+          });
+          var j = await r.json().catch(function () { return {}; });
+          if (r.ok && j.ok) { toast("Your account has been deleted.", "ok"); await clearSession(); pickerSchool = null; showPicker(); }
+          else { toast(j.error || "Couldn't delete your account. Try again.", "err"); del.disabled = false; del.textContent = "Delete account"; }
+        } catch (e) { toast("Network error. Try again.", "err"); del.disabled = false; del.textContent = "Delete account"; }
+      };
+      dz.appendChild(del);
+      main.appendChild(dz);
+
+      main.appendChild(el('<p class="small" style="text-align:center;margin-top:14px">Greek Stack · bundled app</p>'));
+    }
+
+    // ── OFFICER: Roster (add / remove / reset — persists to the server) ───────
+    function paintExecRoster(main, d) {
+      var actives = (d.roster && d.roster.actives) || [];
+      var alumni = (d.roster && d.roster.alumni) || [];
+      main.appendChild(el(
+        '<div class="stats">' +
+          '<div class="stat"><div class="v">' + actives.length + '</div><div class="l">Active members</div></div>' +
+          '<div class="stat"><div class="v">' + alumni.length + '</div><div class="l">Alumni</div></div>' +
+        '</div>'
+      ));
+      var add = el('<button class="btn">Add member</button>');
+      add.onclick = function () { haptic(); execAddMember(); };
+      main.appendChild(add);
+
+      main.appendChild(el('<h2 class="section">Actives</h2>'));
+      actives.forEach(function (m) { main.appendChild(execRosterRow(m, "actives")); });
+      if (alumni.length) {
+        main.appendChild(el('<h2 class="section">Alumni</h2>'));
+        alumni.forEach(function (m) { main.appendChild(execRosterRow(m, "alumni")); });
+      }
+    }
+    function execRosterRow(m, rosterKind) {
+      var b = brandFor(S.session.tenant);
+      var row = el(
+        '<div class="row" style="cursor:default">' +
+          '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(m.name)) + "</div>" +
+          '<div class="meta"><div class="name">' + esc(m.name) + '</div><div class="school">' + esc(m.email || m.position || m.major || "Member") + "</div></div>" +
+          '<div class="act">' +
+            '<button class="ib" data-act="reset" aria-label="Send reset link">' + ICON.key + '</button>' +
+            '<button class="ib danger" data-act="remove" aria-label="Remove member">' + ICON.trash + '</button>' +
+          '</div>' +
+        "</div>"
+      );
+      row.querySelector('[data-act="reset"]').onclick = function () { haptic(); execReset(m); };
+      row.querySelector('[data-act="remove"]').onclick = function () { haptic(); execRemove(m, rosterKind); };
+      return row;
+    }
+    // Add member — minimal form sheet → POST /api/mobile/exec/roster {action:add}.
+    function execAddMember() {
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Add member</h2>'));
+      var seg = el('<div class="seg"><button data-r="actives" aria-selected="true">Active</button><button data-r="alumni" aria-selected="false">Alumni</button></div>');
+      var kind = "actives";
+      seg.querySelectorAll("button").forEach(function (b) { b.onclick = function () { kind = b.getAttribute("data-r"); seg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); }); }; });
+      sheet.appendChild(seg);
+      var form = el('<form>' +
+        '<div class="field"><label>Full name</label><input required placeholder="Jordan Lee" /></div>' +
+        '<div class="field"><label>Email</label><input type="email" inputmode="email" autocapitalize="off" placeholder="jordan@example.com" /></div>' +
+        '<div class="field"><label>Position (optional)</label><input placeholder="Member" /></div>' +
+        '<button class="btn" type="submit">Add to roster</button>' +
+        '<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>' +
+      '</form>');
+      var ins = form.querySelectorAll("input");
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        if (!ins[0].value.trim()) { toast("Name is required.", "err"); return; }
+        submit.disabled = true; submit.textContent = "Adding…";
+        if (isDemo()) {
+          var nm = { id: "demo-" + Date.now(), name: ins[0].value.trim(), email: ins[1].value.trim() || null, position: ins[2].value.trim() || "Member" };
+          (kind === "actives" ? S.data.roster.actives : S.data.roster.alumni).push(nm);
+          ov.remove(); toast(nm.name + " added to the roster.", "ok"); paintDashboard(false); return;
+        }
+        var res = await authPost("/api/mobile/exec/roster", {
+          action: "add", roster: kind, name: ins[0].value.trim(),
+          email: ins[1].value.trim() || null, position: kind === "actives" ? (ins[2].value.trim() || null) : null
+        });
+        ov.remove();
+        if (res.ok) { toast(ins[0].value.trim() + " added to the roster.", "ok"); await refetchDashboard(); }
+        else if (res.status === 403) toast("Only chapter officers can add members.", "err");
+        else toast(res.data.error || "Couldn't add the member.", "err");
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
+    }
+    async function execRemove(m, rosterKind) {
+      var yes = await confirmDialog({ title: "Remove member?", message: "Remove " + m.name + " from the roster? This cannot be undone.", confirmText: "Remove", danger: true });
+      if (!yes) return;
+      if (isDemo()) {
+        S.data.roster[rosterKind] = (S.data.roster[rosterKind] || []).filter(function (x) { return x.id !== m.id; });
+        toast(m.name + " removed.", "ok"); paintDashboard(false); return;
+      }
+      var res = await authPost("/api/mobile/exec/roster", { action: "remove", roster: rosterKind, memberId: m.id });
+      if (res.ok) { toast(m.name + " removed from the roster.", "ok"); await refetchDashboard(); }
+      else if (res.status === 403) toast("Only chapter officers can remove members.", "err");
+      else toast(res.data.error || "Couldn't remove the member.", "err");
+    }
+    async function execReset(m) {
+      if (!m.email) { toast("No email on file for " + m.name + ".", "err"); return; }
+      if (isDemo()) { toast("Reset link sent to " + m.email + ". (Demo)", "ok"); return; }
+      toast("Sending a reset link to " + m.email + "…", "info");
+      var res = await authPost("/api/mobile/exec/reset", { email: m.email });
+      if (res.ok) toast("Password reset link sent to " + m.email + ".", "ok");
+      else if (res.status === 403) toast("Only chapter officers can send reset links.", "err");
+      else toast(res.data.error || "Couldn't send the reset link.", "err");
+    }
+
+    // ── OFFICER: Announce (post — persists to the server) ─────────────────────
+    function paintExecAnnounce(main, d) {
+      main.appendChild(el('<h2 class="section">Post an announcement</h2>'));
+      var form = el('<form>' +
+        '<div class="field"><label>Title</label><input required placeholder="Chapter meeting Sunday" /></div>' +
+        '<div class="field"><label>Message</label><input required placeholder="Details everyone should know…" /></div>' +
+        '<label class="small" style="display:flex;align-items:center;gap:8px;margin:2px 2px 12px"><input type="checkbox" style="width:auto" /> Pin to the top of the feed</label>' +
+        '<button class="btn" type="submit">Publish announcement</button>' +
+      '</form>');
+      var ins = form.querySelectorAll("input");
+      var submit = form.querySelector(".btn");
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        if (!ins[0].value.trim() || !ins[1].value.trim()) { toast("Add a title and a message.", "err"); return; }
+        submit.disabled = true; submit.textContent = "Publishing…";
+        var pinned = ins[2].checked;
+        if (isDemo()) {
+          S.data.announcements.unshift({ id: "demo-" + Date.now(), title: ins[0].value.trim(), body: ins[1].value.trim(), pinned: pinned, authorName: (d.profile && d.profile.name) || "President", authorRole: "President", createdAt: new Date().toISOString() });
+          toast("Announcement published!", "ok"); paintDashboard(false); return;
+        }
+        var res = await authPost("/api/mobile/exec/announce", { title: ins[0].value.trim(), body: ins[1].value.trim(), pinned: pinned });
+        if (res.ok) { toast("Announcement published!", "ok"); await refetchDashboard(); }
+        else if (res.status === 403) { toast("Only chapter officers can post announcements.", "err"); submit.disabled = false; submit.textContent = "Publish announcement"; }
+        else { toast(res.data.error || "Couldn't publish the announcement.", "err"); submit.disabled = false; submit.textContent = "Publish announcement"; }
+      };
+      main.appendChild(form);
+      main.appendChild(el('<h2 class="section">Recent announcements</h2>'));
+      (d.announcements || []).forEach(function (a) {
+        main.appendChild(el('<div class="card">' + (a.pinned ? '<span class="pill">Pinned</span>' : "") + '<div class="h">' + esc(a.title) + '</div><div class="b">' + esc(a.body) + '</div></div>'));
+      });
+    }
+
+    // ── OFFICER: Rush pipeline (read board) ───────────────────────────────────
+    function paintExecRush(main, d) { paintRush(main, d); }
+
+    // ── OFFICER: Dues management (collection summary) ─────────────────────────
+    function paintExecDues(main, d) {
+      var t = d.treasury || {};
+      var collected = t.duesCollectedCents || 0, outstanding = t.duesOutstandingCents || 0;
+      var total = collected + outstanding, pct = total > 0 ? Math.round((collected / total) * 100) : 0;
+      main.appendChild(el('<h2 class="section">Dues management</h2>'));
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">Collected this term</div>' +
+          '<div class="v">' + moneyR(collected) + '</div>' +
+          '<div class="meter"><i style="width:' + pct + '%"></i></div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;opacity:.92"><span>' + pct + '% collected</span><span>' + moneyR(outstanding) + ' outstanding</span></div>' +
+        '</div>'
+      ));
+      main.appendChild(el(
+        '<div class="stats">' +
+          '<div class="stat"><div class="v">' + moneyR(t.balanceCents || 0) + '</div><div class="l">Chapter balance</div></div>' +
+          '<div class="stat"><div class="v">' + Math.max(0, Math.round(outstanding / 45000)) + '</div><div class="l">Members behind</div></div>' +
+        '</div>'
+      ));
+      var remind = el('<button class="btn">Send dues reminders</button>');
+      remind.onclick = function () { haptic(); toast("Dues reminders sent to all unpaid members.", "ok"); };
+      main.appendChild(remind);
+    }
+
+    // ── Bottom tab bar — data-driven per view (member vs exec) ─────────────────
+    function tabbar() {
+      var tabs;
+      if (S.view === "exec") {
+        tabs = [["feed", "Roster", ICON.directory], ["events", "Announce", ICON.feed], ["rush", "Rush", ICON.rush], ["dues", "Dues", ICON.dues], ["profile", "Profile", ICON.shield]];
+      } else {
+        tabs = [["feed", "Feed", ICON.feed], ["events", "Events", ICON.events], ["rush", "Rush", ICON.rush]];
+        if (duesEnabled()) tabs.push(["dues", "Dues", ICON.dues]);
+        else tabs.push(["directory", "Directory", ICON.directory]);
+        tabs.push(["profile", "Profile", ICON.profile]);
+      }
+      // Keep the active tab valid for the current tab set.
+      if (!tabs.some(function (t) { return t[0] === S.tab; })) S.tab = tabs[0][0];
+      var bar = el('<nav class="tabbar"></nav>');
+      tabs.forEach(function (t) {
+        var btn = el('<button aria-selected="' + (S.tab === t[0]) + '"><span class="ic">' + t[2] + '</span>' + t[1] + "</button>");
+        btn.onclick = function () { if (S.tab === t[0]) return; S.tab = t[0]; haptic(); paintDashboard(false); };
+        bar.appendChild(btn);
+      });
+      return bar;
+    }
+
+    // ── Boot ────────────────────────────────────────────────────────────────
+    (async function boot() {
+      hideSplash();
+      // 1) Restore a saved session → straight into the dashboard.
+      var saved = await restoreSession();
+      // 2) Load the chapter registry (for the picker, and to refresh tenant meta).
+      S.chapters = await getRegistry();
+      if (saved && saved.token && saved.subdomain) {
+        // Re-bind tenant from the (possibly refreshed) registry, else trust saved.
+        var match = S.chapters.filter(function (c) { return c.subdomain === saved.subdomain; })[0];
+        saved.tenant = match || saved.tenant || { subdomain: saved.subdomain, name: saved.subdomain, school: "" };
+        S.session = saved; S.demo = false;
+        showDashboard();
+        return;
+      }
+      showPicker();
+    })();
+  })();
+  </script>
 </body>
 </html>

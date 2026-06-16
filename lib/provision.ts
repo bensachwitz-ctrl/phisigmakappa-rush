@@ -13,9 +13,66 @@ export interface ProvisioningInput {
   school: string;
   adminName: string;
   adminEmail: string;
-  adminPassword?: string;
+  /**
+   * REQUIRED. The first admin's password. There is intentionally NO default:
+   * the previous `"Welcome123!"` fallback minted every programmatically-created
+   * chapter with the SAME publicly-known password, an account-takeover vector
+   * for any tenant created via this path (POST /api/platform/tenants). Callers
+   * MUST supply a strong, caller-chosen password (validated by
+   * `assertStrongAdminPassword` below) so no predictable credential is ever
+   * seeded.
+   */
+  adminPassword: string;
   greekLetters?: string;
   orgType?: "fraternity" | "sorority";
+}
+
+/**
+ * Minimum length for a seeded admin password. Mirrors the 8-char floor the
+ * self-serve /onboard route enforces, so both provisioning paths agree.
+ */
+export const MIN_ADMIN_PASSWORD_LENGTH = 8;
+
+/**
+ * A small denylist of trivially-guessable passwords that must never be accepted
+ * for a freshly-seeded admin — most importantly the historical hardcoded default
+ * `Welcome123!`, plus the common variants an operator might reflexively type.
+ * Comparison is case-insensitive.
+ */
+const WEAK_ADMIN_PASSWORDS: ReadonlySet<string> = new Set([
+  "welcome123!",
+  "welcome123",
+  "password",
+  "password1",
+  "password123",
+  "changeme",
+  "changeme123",
+  "letmein",
+  "admin123",
+  "greekstack",
+  "greekstack1",
+]);
+
+/**
+ * Throw a descriptive Error unless `password` is an acceptable admin password:
+ * a non-empty string of at least MIN_ADMIN_PASSWORD_LENGTH characters that is
+ * not on the weak-password denylist. Centralizes the rule so provisionTenant and
+ * any future programmatic caller (or test) share one definition.
+ */
+export function assertStrongAdminPassword(password: unknown): asserts password is string {
+  if (typeof password !== "string" || password.length === 0) {
+    throw new Error("An admin password is required to provision a chapter.");
+  }
+  if (password.length < MIN_ADMIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `Admin password must be at least ${MIN_ADMIN_PASSWORD_LENGTH} characters.`,
+    );
+  }
+  if (WEAK_ADMIN_PASSWORDS.has(password.trim().toLowerCase())) {
+    throw new Error(
+      "Admin password is too common / guessable — choose a stronger one.",
+    );
+  }
 }
 
 /**
@@ -57,6 +114,21 @@ export async function provisionTenant(input: ProvisioningInput) {
     throw new Error(`Subdomain "${input.subdomain}" is ${rejectReason}`);
   }
 
+  // Reject a missing/weak admin password BEFORE any DB write. This closes the
+  // account-takeover vector where the old code silently fell back to the
+  // publicly-known "Welcome123!" — every programmatically provisioned chapter
+  // would have shared one guessable admin credential. Now a strong, caller-
+  // supplied password is mandatory.
+  assertStrongAdminPassword(input.adminPassword);
+
+  // Validate the admin email so a programmatic caller can't seed an admin whose
+  // only login address is malformed (which would also bounce every future
+  // reset). Mirrors the conservative single-@ check the /onboard route uses.
+  const adminEmail = String(input.adminEmail || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
+    throw new Error("A valid admin email is required to provision a chapter.");
+  }
+
   // Check if tenant already exists in registry
   const existing = await centralDb.tenant.findUnique({
     where: { subdomain },
@@ -65,7 +137,15 @@ export async function provisionTenant(input: ProvisioningInput) {
     throw new Error(`Subdomain "${subdomain}" is already registered`);
   }
 
-  const schemaName = `schema_${subdomain}`;
+  // Sanitize the subdomain into the schema-name suffix: ONLY [a-zA-Z0-9] survive;
+  // every other char (notably the hyphen in a multi-word subdomain like
+  // "phi-sig-usc") collapses to "_". This MUST match the identical transform in
+  // getTenantClient()/the onboard path so the schema we CREATE here is the exact
+  // schema those readers later resolve — otherwise a hyphenated subdomain provisions
+  // into one schema name but every subsequent tenant query targets a different,
+  // non-existent one (silent empty-tenant bug). Postgres also rejects a bare hyphen
+  // in an unquoted identifier, so this is correctness + safety in one.
+  const schemaName = `schema_${subdomain.replace(/[^a-zA-Z0-9]/g, "_")}`;
   const baseUri = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || "";
   if (!baseUri) {
     throw new Error("Database connection URL is not configured (DATABASE_URL)");
@@ -139,7 +219,7 @@ export async function provisionTenant(input: ProvisioningInput) {
       "chapter.fraternityShort": input.name,
       "chapter.schoolName": input.school,
       "chapter.greekLetters": input.greekLetters || "",
-      "contact.rushEmail": input.adminEmail,
+      "contact.rushEmail": adminEmail.toLowerCase(),
     };
 
     if (input.orgType) {
@@ -179,14 +259,15 @@ export async function provisionTenant(input: ProvisioningInput) {
       where: { slug: "president" },
     });
 
-    // 6. Create the first Admin Brother
-    const adminPassword = input.adminPassword || "Welcome123!";
-    const passwordHash = hashPassword(adminPassword);
+    // 6. Create the first Admin Brother. The password was already validated as
+    //    strong + non-default above (assertStrongAdminPassword), so there is no
+    //    fallback credential here — we hash exactly what the caller supplied.
+    const passwordHash = hashPassword(input.adminPassword);
 
     const adminBrother = await tenantPrisma.brother.create({
       data: {
         name: input.adminName,
-        email: input.adminEmail,
+        email: adminEmail.toLowerCase(),
         role: "ADMIN",
         passwordHash,
         status: "ACTIVE",

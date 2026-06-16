@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { prisma, centralDb, getSubdomain } from "@/lib/prisma";
-import { getCurrentBrother } from "@/lib/auth";
-import { getSiteConfig } from "@/lib/site-config";
+import { centralDb, getSubdomain } from "@/lib/prisma";
 import { getStripe, getSiteUrl, applyPassThrough } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
 import {
@@ -12,12 +10,28 @@ import {
 } from "@/lib/platform-billing";
 import { audit } from "@/lib/audit";
 import { errorSink } from "@/lib/logger";
+import { resolveDuesActor } from "@/lib/dues-actor";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ROUTE = "/api/dues/checkout";
+
+// CORS preflight for the bundled native app. The native shell calls this cross-
+// origin (apex-hosted backend, Capacitor origin) with Authorization + Content-
+// Type, so the WebView fires an OPTIONS preflight. The web app is same-origin and
+// never preflights — it sees no CORS header and behaves exactly as before.
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
 
 /**
  * POST /api/dues/checkout
@@ -51,10 +65,29 @@ function checkRateLimit(brotherId: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const brother = await getCurrentBrother();
-  if (!brother) {
-    return NextResponse.json({ ok: false, error: "Not signed in" }, { status: 401 });
+  // Wrap so native-origin CORS headers are attached to EVERY branch (web sees no
+  // CORS header and is unaffected).
+  return withCors(req, await handlePost(req));
+}
+
+async function handlePost(req: Request): Promise<NextResponse> {
+  // The native app sends a JSON body carrying { subdomain } for Bearer-token
+  // auth; the web app posts no body and authenticates via cookie. Parse leniently.
+  let body: any = {};
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
   }
+
+  // Resolve the dues-paying brother + tenant context for BOTH transports. Native
+  // (Bearer + body.subdomain) resolves against the tenant schema; web (cookie)
+  // keeps the exact prior behavior. NEVER trusts a client brotherId.
+  const actor = await resolveDuesActor(req, body?.subdomain);
+  if (!actor.ok) {
+    return NextResponse.json({ ok: false, error: actor.error }, { status: actor.status });
+  }
+  const { brother, db, cfg, subdomain: actorSubdomain, transport } = actor;
 
   // Rate-limit before any DB / Stripe work.
   if (!checkRateLimit(brother.id)) {
@@ -64,7 +97,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const enabled = cfg["dues.enabled"] === "true";
   const publishableKey = cfg["dues.stripePublishableKey"] || "";
   // The webhook secret can be the SINGLE platform-global STRIPE_WEBHOOK_SECRET
@@ -104,7 +136,7 @@ export async function POST(req: Request) {
     (cfg["chapter.fraternityShort"] || "").trim();
 
   // Already paid? Short-circuit.
-  const existing = await prisma.duesPayment.findFirst({
+  const existing = await db.duesPayment.findFirst({
     where: { brotherId: brother.id, year, status: "PAID" },
   }).catch(() => null);
   if (existing) {
@@ -118,9 +150,15 @@ export async function POST(req: Request) {
   // Stripe metadata. If session-creation throws we still have a row
   // for forensics — admin can see "Brother X started 3 sessions and
   // none completed; treasurer should follow up."
+  // Chapter subdomain — native callers carry it explicitly (apex-hosted, no
+  // chapter Host header); web callers derive it from the request Host. Used both
+  // for error context AND for the Stripe metadata.subdomain the single platform
+  // webhook routes each event back by.
+  const sub = actorSubdomain || getSubdomain(headers().get("host")) || "";
+
   let payment;
   try {
-    payment = await prisma.duesPayment.create({
+    payment = await db.duesPayment.create({
       data: {
         brotherId: brother.id,
         amountCents: totalCents,
@@ -133,7 +171,7 @@ export async function POST(req: Request) {
   } catch (err) {
     errorSink(err, {
       route: ROUTE,
-      tenant: getSubdomain(headers().get("host")) || null,
+      tenant: sub || null,
       brotherId: brother.id,
       outcome: "create_dues_payment_failed",
     });
@@ -145,10 +183,10 @@ export async function POST(req: Request) {
 
   // Stripe Checkout Session.
   const siteUrl = getSiteUrl();
-  // Chapter subdomain — read from the request Host so the platform's single
-  // webhook endpoint (called server-to-server by Stripe with NO subdomain)
-  // can route the event back to THIS chapter's schema via metadata.subdomain.
-  const sub = getSubdomain(headers().get("host")) || "";
+  // `sub` (the chapter subdomain) was resolved above — native callers carry it
+  // explicitly, web callers derive it from Host. The platform's single webhook
+  // endpoint (called server-to-server by Stripe with NO subdomain) routes each
+  // event back to THIS chapter's schema via metadata.subdomain below.
 
   // Base Checkout params — IDENTICAL to the legacy platform-collects flow.
   // metadata.subdomain MUST stay intact: the single platform webhook routes
@@ -279,7 +317,7 @@ export async function POST(req: Request) {
       outcome: "stripe_session_create_failed",
     });
     // Mark the row FAILED so it's not stuck PENDING forever.
-    await prisma.duesPayment.update({
+    await db.duesPayment.update({
       where: { id: payment.id },
       data: { status: "FAILED", notes: `Stripe error: ${err?.message || "unknown"}` },
     }).catch(() => {});
@@ -290,7 +328,7 @@ export async function POST(req: Request) {
   }
 
   // Persist the session ID so the webhook can look the row up.
-  await prisma.duesPayment.update({
+  await db.duesPayment.update({
     where: { id: payment.id },
     data: { stripeSessionId: session.id },
   }).catch(() => {});
@@ -300,7 +338,7 @@ export async function POST(req: Request) {
     subjectType: "Brother",
     subjectId: brother.id,
     subjectName: brother.name,
-    details: `$${(totalCents / 100).toFixed(2)} ${currency.toUpperCase()} — ${year}`,
+    details: `$${(totalCents / 100).toFixed(2)} ${currency.toUpperCase()} — ${year} · via ${transport}`,
     req,
   });
 

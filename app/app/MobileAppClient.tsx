@@ -67,7 +67,6 @@ import {
   darkenHex,
   makeCustomBrand,
   normalizeLetters,
-  isOfficerPosition,
   type Tenant,
   type MobileAppClientProps,
   type FraternityBrand,
@@ -82,6 +81,7 @@ import {
   type PickerChapter,
 } from "@/lib/app-picker";
 import { subdomainFromHost } from "@/lib/login-routing";
+import { apiUrl } from "@/lib/mobile-api-base";
 import { renderSchoolChapterPicker } from "./_demo/surfaces/SchoolChapterPickerSurface";
 import { renderChapterChooser } from "./_demo/surfaces/ChapterChooserSurface";
 import { renderLogin } from "./_demo/surfaces/LoginSurface";
@@ -586,6 +586,37 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     }
   }, [dashboardData, isDemo, selectedTenant]);
 
+  // ── Refetch the real dashboard payload (used after exec writes persist) ────
+  // A thin, side-effect-light reload of /api/mobile/data so an officer's
+  // add/remove/announce shows the SERVER's new truth (not just local state).
+  // No loading spinner flip — it's a background refresh after a successful
+  // write that already toasted. Demo sessions short-circuit (they mutate local
+  // state directly). Safe to call any time we hold a real token + tenant.
+  const refetchDashboardData = React.useCallback(async () => {
+    if (!token || !selectedTenant || isDemo) return;
+    try {
+      const res = await fetch(
+        apiUrl(`/api/mobile/data?subdomain=${selectedTenant.subdomain}`),
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setDashboardData(data);
+        try {
+          void window.GreekStackNative?.cacheLastView?.(data);
+        } catch {
+          /* ignore */
+        }
+      } else if (res.status === 401) {
+        handleSignOut();
+      }
+    } catch {
+      /* keep the current view on a transient refetch failure */
+    }
+    // handleSignOut is stable for the component's lifetime; intentionally omitted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, selectedTenant, isDemo]);
+
   // Fetch real portal data when authenticated in non-demo mode
   useEffect(() => {
     if (!token || !selectedTenant || isDemo) return;
@@ -594,7 +625,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/mobile/data?subdomain=${selectedTenant.subdomain}`, {
+        // apiUrl() keeps this same-origin on web ("/api/mobile/data") but
+        // rewrites it to the absolute platform origin in the bundled native
+        // app, where a relative path would hit capacitor://localhost instead
+        // of the hosted backend.
+        const res = await fetch(apiUrl(`/api/mobile/data?subdomain=${selectedTenant.subdomain}`), {
           headers: {
             "Authorization": `Bearer ${token}`,
           },
@@ -873,7 +908,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     }
 
     try {
-      const res = await fetch("/api/mobile/auth", {
+      const res = await fetch(apiUrl("/api/mobile/auth"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -896,16 +931,14 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
         localStorage.setItem("gs_mobile_brand", JSON.stringify(selectedBrand));
 
         // Native shell only (no-ops on web): persist the session on-device for
-        // biometric unlock next launch, then register this device for push so
-        // events/announcements can notify the member. window.GreekStackNative is
-        // published by <NativeBridge/> and self-guards via Capacitor.isNativePlatform().
+        // biometric unlock next launch. window.GreekStackNative is published by
+        // <NativeBridge/> and self-guards via Capacitor.isNativePlatform().
         try {
           await window.GreekStackNative?.saveSession?.({
             token: data.token,
             user: data.user,
             subdomain: selectedTenant.subdomain,
           });
-          window.GreekStackNative?.onSignedIn?.();
         } catch {
           /* native-only; ignore on web */
         }
@@ -940,6 +973,59 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     setRosterSearch("");
     setRushSearch("");
     setSelectedPnm(null);
+  };
+
+  // ── Account deletion (Apple 5.1.1(v) blocker) ─────────────────────────────
+  // The signed-in member can delete their OWN PortalUser account (+ cascade)
+  // from the Profile screen. Confirm → DELETE /api/mobile/account → sign out →
+  // back to the picker. Demo sessions never hit the API (there's no real
+  // account to delete) — they just confirm + reset to the picker so the flow is
+  // visible to a reviewer. App Store requires an in-app account-deletion path.
+  const [accountDeleting, setAccountDeleting] = useState(false);
+  const handleDeleteAccount = () => {
+    setConfirmModal({
+      title: "Delete your account?",
+      message:
+        "This permanently deletes your Greek Stack account and your member data for this chapter. This cannot be undone.",
+      onConfirm: async () => {
+        // Demo: no real account — just demonstrate the flow back to the picker.
+        if (isDemo) {
+          showToast("Account deleted. (Demo — nothing was changed.)", "success");
+          handleSignOut();
+          return;
+        }
+        if (!selectedTenant || !token || accountDeleting) return;
+        setAccountDeleting(true);
+        try {
+          window.GreekStackNative?.hapticNotify?.("warning");
+        } catch {
+          /* ignore */
+        }
+        try {
+          const res = await fetch(
+            apiUrl(`/api/mobile/account?subdomain=${selectedTenant.subdomain}`),
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            showToast("Your account has been deleted.", "success");
+            handleSignOut(); // clears local + native session, returns to picker
+          } else {
+            showToast(
+              data.error || "Couldn't delete your account. Try again or contact your chapter.",
+              "error",
+            );
+          }
+        } catch {
+          showToast("Network error deleting your account. Try again.", "error");
+        } finally {
+          setAccountDeleting(false);
+        }
+      },
+    });
   };
 
   // Add-to-calendar: build a real RFC-5545 .ics file in the browser and trigger a
@@ -1001,7 +1087,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     setRsvpSubmittingId(eventId);
 
     try {
-      const res = await fetch("/api/mobile/events/rsvp", {
+      const res = await fetch(apiUrl("/api/mobile/events/rsvp"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1093,7 +1179,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     }
 
     try {
-      const res = await fetch("/api/mobile/career/post", {
+      const res = await fetch(apiUrl("/api/mobile/career/post"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1138,9 +1224,55 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     setJobRequirements("");
   };
 
-  const handlePostAnnouncement = (e: React.FormEvent) => {
+  const handlePostAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dashboardData) return;
+    if (!annTitle.trim() || !annBody.trim()) {
+      showToast("Add a title and a message.", "error");
+      return;
+    }
+
+    // REAL officer session → persist via the shared route contract
+    // /api/mobile/exec/announce (server re-gates on capabilities.exec), then
+    // refetch so the new post shows the server's canonical row.
+    if (!isDemo) {
+      if (!selectedTenant || !token) return;
+      try {
+        const res = await fetch(apiUrl("/api/mobile/exec/announce"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            subdomain: selectedTenant.subdomain,
+            title: annTitle.trim(),
+            body: annBody.trim(),
+            pinned: annPinned,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          setPostAnnSuccess(true);
+          setAnnTitle("");
+          setAnnBody("");
+          setAnnPinned(false);
+          showToast("Announcement published!", "success");
+          await refetchDashboardData();
+          setTimeout(() => {
+            setPostAnnSuccess(false);
+            setShowPostAnnModal(false);
+          }, 1000);
+        } else if (res.status === 403) {
+          showToast("Only chapter officers can post announcements.", "error");
+        } else {
+          showToast(data.error || "Couldn't publish the announcement. Try again.", "error");
+        }
+      } catch {
+        showToast("Network error publishing announcement. Try again.", "error");
+      }
+      return;
+    }
 
     const mockAnn = {
       id: `demo-ann-${Date.now()}`,
@@ -1263,6 +1395,71 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     }, 1000);
   };
 
+  // ── REAL dues checkout (blocker) ──────────────────────────────────────────
+  // A signed-in member taps "Pay online with Stripe" → we POST to the shared
+  // route contract POST /api/dues/checkout (Bearer + subdomain so it resolves
+  // the brother + chapter cross-origin from the native shell) and OPEN the
+  // returned Stripe Checkout URL. On native, window.open(_blank) hands the URL
+  // to the system browser / SFSafariViewController (Capacitor routes external
+  // https there); on web it's a same-tab redirect. Dues are a real-world
+  // membership paid via the chapter's Stripe — NOT Apple IAP. We never touch
+  // card data and never auto-charge (the member completes the flow in Stripe).
+  const [duesCheckoutLoading, setDuesCheckoutLoading] = useState(false);
+  const handleStartDuesCheckout = async () => {
+    // Demo sessions have no real Stripe — keep the offline simulation.
+    if (isDemo) {
+      handleSimulateStripePay();
+      return;
+    }
+    if (!selectedTenant || !token || duesCheckoutLoading) return;
+    setDuesCheckoutLoading(true);
+    try {
+      window.GreekStackNative?.hapticImpact?.("light");
+    } catch {
+      /* ignore */
+    }
+    showToast("Opening secure Stripe checkout…", "info");
+    try {
+      const res = await fetch(apiUrl("/api/dues/checkout"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // subdomain in the body so the cross-origin native call resolves the
+        // chapter the same way the other mobile routes do (the route reads the
+        // verified session + this subdomain, never a client-trusted amount).
+        body: JSON.stringify({ subdomain: selectedTenant.subdomain }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok && data.url) {
+        // Open Stripe Checkout. _blank → system browser on native; same-origin
+        // redirect on web. The member finishes payment in Stripe, not in-app.
+        try {
+          const w = window.open(data.url, "_blank");
+          if (!w) window.location.href = data.url; // popup-blocked fallback (web)
+        } catch {
+          window.location.href = data.url;
+        }
+      } else if (res.status === 409) {
+        // Already paid — reflect it so the surface flips to "settled".
+        setDashboardData((prev: any) =>
+          prev?.dues ? { ...prev, dues: { ...prev.dues, isPaid: true } } : prev,
+        );
+        showToast(data.error || "You're already marked paid for this term.", "info");
+      } else {
+        showToast(
+          data.error || "Online dues aren't available right now. Pay via your treasurer.",
+          "error",
+        );
+      }
+    } catch {
+      showToast("Couldn't reach Stripe. Check your connection and try again.", "error");
+    } finally {
+      setDuesCheckoutLoading(false);
+    }
+  };
+
   // Vote on PNM in Rush tab (Simulation)
   const handlePnmVote = (pnmId: string, score: number) => {
     if (!isDemo) {
@@ -1376,10 +1573,59 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   };
 
   // Presidential Admin: Add member
-  const handleAddMobileMember = (e: React.FormEvent) => {
+  // Demo → mutate local mock roster (offline showcase). REAL officer session →
+  // POST the shared route contract /api/mobile/exec/roster {action:'add'} so the
+  // change PERSISTS server-side (capabilities.exec recomputed on the server; a
+  // non-officer is 403'd there regardless of any client flag), then refetch so
+  // the roster reflects the server's truth.
+  const handleAddMobileMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim()) {
       showToast("Member name is required.", "error");
+      return;
+    }
+
+    if (!isDemo) {
+      if (!selectedTenant || !token) return;
+      try {
+        const res = await fetch(apiUrl("/api/mobile/exec/roster"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            subdomain: selectedTenant.subdomain,
+            action: "add",
+            roster: newMemberRole,
+            name: newMemberName.trim(),
+            email: newMemberEmail.trim() || null,
+            phone: newMemberPhone.trim() || null,
+            position: newMemberRole === "actives" ? newMemberPosition.trim() || null : null,
+            graduationYear:
+              newMemberRole === "alumni"
+                ? parseInt(newMemberGradYear, 10) || new Date().getFullYear()
+                : null,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          showToast(`${newMemberName.trim()} added to the roster.`, "success");
+          setNewMemberName("");
+          setNewMemberEmail("");
+          setNewMemberPhone("");
+          setNewMemberPosition("");
+          setNewMemberRole("actives");
+          setShowAddMemberModal(false);
+          await refetchDashboardData();
+        } else if (res.status === 403) {
+          showToast("Only chapter officers can add members.", "error");
+        } else {
+          showToast(data.error || "Couldn't add the member. Try again.", "error");
+        }
+      } catch {
+        showToast("Network error adding member. Try again.", "error");
+      }
       return;
     }
 
@@ -1421,7 +1667,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     });
 
     showToast(`${newMemberName} added to directory.`, "success");
-    
+
     // Reset form
     setNewMemberName("");
     setNewMemberEmail("");
@@ -1432,11 +1678,45 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   };
 
   // Presidential Admin: Remove member
+  // Demo → drop from the local mock roster. REAL officer session → confirm,
+  // then POST /api/mobile/exec/roster {action:'remove'} (server re-gates on
+  // capabilities.exec) and refetch so the removal persists.
   const handleRemoveMobileMember = (id: string, name: string, memberType: "actives" | "alumni") => {
     setConfirmModal({
       title: "Remove Member?",
       message: `Are you sure you want to remove ${name} from the roster? This cannot be undone.`,
-      onConfirm: () => {
+      onConfirm: async () => {
+        if (!isDemo) {
+          if (!selectedTenant || !token) return;
+          try {
+            const res = await fetch(apiUrl("/api/mobile/exec/roster"), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                subdomain: selectedTenant.subdomain,
+                action: "remove",
+                roster: memberType,
+                memberId: id,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.ok) {
+              showToast(`${name} removed from the roster.`, "success");
+              await refetchDashboardData();
+            } else if (res.status === 403) {
+              showToast("Only chapter officers can remove members.", "error");
+            } else {
+              showToast(data.error || "Couldn't remove the member. Try again.", "error");
+            }
+          } catch {
+            showToast("Network error removing member. Try again.", "error");
+          }
+          return;
+        }
+
         setDashboardData((prev: any) => {
           if (!prev) return prev;
           const updatedRoster = { ...prev.roster };
@@ -1456,9 +1736,37 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   };
 
   // Presidential Admin: Send reset link
-  const handleSendMobileResetLink = (email: string | null, name: string) => {
+  // Demo → just toast. REAL officer session → POST /api/mobile/exec/reset, which
+  // actually sends the member a password-reset email (server re-gates on
+  // capabilities.exec).
+  const handleSendMobileResetLink = async (email: string | null, name: string) => {
     if (!email) {
       showToast(`No email on file for ${name}.`, "error");
+      return;
+    }
+    if (!isDemo) {
+      if (!selectedTenant || !token) return;
+      showToast(`Sending a reset link to ${email}…`, "info");
+      try {
+        const res = await fetch(apiUrl("/api/mobile/exec/reset"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ subdomain: selectedTenant.subdomain, email }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          showToast(`Password reset link sent to ${email}.`, "success");
+        } else if (res.status === 403) {
+          showToast("Only chapter officers can send reset links.", "error");
+        } else {
+          showToast(data.error || "Couldn't send the reset link. Try again.", "error");
+        }
+      } catch {
+        showToast("Network error sending reset link. Try again.", "error");
+      }
       return;
     }
     showToast(`Password reset link sent to ${email}`, "success");
@@ -1506,7 +1814,12 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     tenants, selectedTenant, setSelectedTenant, selectedBrand, setSelectedBrand,
     searchQuery, setSearchQuery, role, setRole, email, setEmail, password, setPassword,
     token, setToken, user, setUser, isDemo, setIsDemo,
-    viewRole, setViewRole, showChapterChooser, setShowChapterChooser, applyBrandToDemo,
+    viewRole, setViewRole,
+    // Server-enforced exec gate mirror (demo OR capabilities.exec). Computed
+    // inline so the surfaces can render/enable officer-only writes only when the
+    // server cleared this session; every write is ALSO re-gated server-side.
+    execAllowed: isDemo || dashboardData?.capabilities?.exec === true,
+    showChapterChooser, setShowChapterChooser, applyBrandToDemo,
     chooserMode, setChooserMode, customName, setCustomName, customLetters, setCustomLetters,
     customSchool, setCustomSchool, customPrimary, setCustomPrimary, customSecondary, setCustomSecondary,
     applyCustomChapter,
@@ -1553,9 +1866,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     allChapters, filteredChapters, combinedFeed,
     handleSelectTenant, handleSignIn, handleSignOut, handleAddToCalendar, handleRsvp,
     handlePostJob, resetJobForm, handlePostAnnouncement, handleSaveProfile,
-    handleSimulateStripePay, handlePnmVote, handleAddImpression, handleSimulateCheckIn,
+    handleSimulateStripePay, handleStartDuesCheckout, duesCheckoutLoading,
+    handlePnmVote, handleAddImpression, handleSimulateCheckIn,
     handleMobileForgotSubmit, handleAddMobileMember, handleRemoveMobileMember,
     handleSendMobileResetLink,
+    handleDeleteAccount, accountDeleting,
   };
 
   // ── Full-screen chapter theming (feature 2) ──────────────────────────────
@@ -1577,8 +1892,28 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   type ViewPersona = "member" | "exec" | "alumni";
   const viewPersona: ViewPersona =
     viewRole === "exec" ? "exec" : role === "alumni" ? "alumni" : "member";
+
+  // ── SERVER-ENFORCED exec gate (market-critical RBAC) ──────────────────────
+  // For a REAL (non-demo) session the exec lens is allowed ONLY when the API
+  // said so: `capabilities.exec` is computed server-side from the verified
+  // session role + the member's admin-set Brother.position (which the member
+  // cannot edit on their own row). A regular member can NOT flip into exec by
+  // poking client state — and even if they did, the API never served exec-only
+  // data to them. The DEMO is a sales showcase with no real session, so it
+  // keeps free persona switching. `duesVisible` likewise mirrors the server's
+  // dues flag so the Dues surface only shows when the chapter enabled dues.
+  const execAllowed = isDemo || dashboardData?.capabilities?.exec === true;
+  const duesVisible = isDemo || dashboardData?.capabilities?.duesEnabled === true;
+
   const setViewPersona = (p: ViewPersona) => {
     if (p === viewPersona) {
+      setShowViewMenu(false);
+      return;
+    }
+    // Hard gate: a non-officer real member can never enter the exec lens. (The
+    // exec persona is also hidden from the switcher below, so this is belt-and-
+    // suspenders against a stale/forced click.)
+    if (p === "exec" && !execAllowed) {
       setShowViewMenu(false);
       return;
     }
@@ -1593,7 +1928,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       setViewRole("member");
     }
 
-    if (dashboardData?.profile) {
+    // Demo-only: re-skin the mock profile's position so the showcase reads as
+    // the chosen persona. NEVER done for a real session — forging a member's
+    // position client-side would be exactly the privilege-escalation this gate
+    // exists to prevent. A real session's position comes only from the server.
+    if (isDemo && dashboardData?.profile) {
       setDashboardData((prev: any) => {
         if (!prev || !prev.profile) return prev;
         return {
@@ -1617,6 +1956,10 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     { id: "exec", icon: IconSecurity, label: "Exec board", sub: "Roster, treasury and posts" },
     { id: "alumni", icon: IconAlumni, label: "Alumnus", sub: "Network, giving and jobs" },
   ];
+  // The switcher only OFFERS the exec persona to someone the server cleared for
+  // it (real officer, or the demo showcase). A regular member never sees the
+  // "Exec board" option — it isn't in their menu and the gate above blocks it.
+  const visiblePersonas = VIEW_PERSONAS.filter((p) => p.id !== "exec" || execAllowed);
   const personaShortLabel =
     viewPersona === "exec" ? "Exec view" : viewPersona === "alumni" ? "Alumni view" : "Member view";
 
@@ -1628,7 +1971,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     { id: "feed", icon: IconComms, label: "Feed" },
     { id: "events", icon: IconEvents, label: "Events" },
     { id: "rush", icon: IconRecruitment, label: isRushActive ? "Rush" : "Pledges" },
-    { id: "dues", icon: IconDues, label: "Dues" },
+    // Dues tab appears ONLY when the chapter has dues enabled (server flag). When
+    // disabled, the slot is dropped here AND the API serves no dues data — the
+    // surface simply does not exist for that chapter. The "Network" slot fills in
+    // so the bottom nav stays a clean set rather than a gap.
+    ...(duesVisible ? [{ id: "dues" as TabId, icon: IconDues, label: "Dues" }] : []),
     { id: "directory", icon: IconWhiteLabel, label: "Network" },
   ];
   // Alumni never see the rush pipeline in the real product — their fifth slot
@@ -1749,7 +2096,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
               aria-label="View the app as"
               className="absolute left-3 top-[calc(100%+0.375rem)] z-[152] w-64 animate-spring-in rounded-2xl border border-white/10 bg-slate-950/95 p-1.5 shadow-2xl backdrop-blur-xl"
             >
-              {VIEW_PERSONAS.map((p) => {
+              {visiblePersonas.map((p) => {
                 const active = viewPersona === p.id;
                 const PIcon = p.icon;
                 return (
@@ -1917,7 +2264,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
           <div className="space-y-1.5">
             <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Viewing as</span>
             <div className="space-y-1.5" role="radiogroup" aria-label="View the app as">
-              {VIEW_PERSONAS.map((p) => {
+              {visiblePersonas.map((p) => {
                 const active = viewPersona === p.id;
                 const PIcon = p.icon;
                 return (
@@ -2124,7 +2471,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                   )}
                   <button
                     onClick={() => {
-                      if (isOfficerPosition(dashboardData?.profile?.position)) {
+                      // SERVER-ENFORCED: only an exec-cleared session (real officer
+                      // per `capabilities.exec`, or the demo) can toggle into the
+                      // exec view. A regular member's tap opens settings instead —
+                      // it can never flip the lens.
+                      if (execAllowed) {
                         const nextRole = viewRole === "exec" ? "member" : "exec";
                         setViewRole(nextRole);
                         setActiveTab("feed");
@@ -2133,17 +2484,17 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                         setActiveTab("settings");
                       }
                     }}
-                    aria-label={isOfficerPosition(dashboardData?.profile?.position) ? "Toggle Exec/Member dashboard view" : "Account settings"}
+                    aria-label={execAllowed ? "Toggle Exec/Member dashboard view" : "Account settings"}
                     className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
                     {/* Static "online" dot — the ping ripple was a persistent
                         attention-grabber in the chrome (owner: demo moves too much). */}
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                      {viewRole === "exec" 
-                        ? "Exec" 
-                        : role === "brother" 
-                        ? (isOfficerPosition(dashboardData?.profile?.position) ? dashboardData.profile.position : "Member") 
+                      {viewRole === "exec"
+                        ? "Exec"
+                        : role === "brother"
+                        ? (execAllowed && dashboardData?.profile?.position ? dashboardData.profile.position : "Member")
                         : "Alumnus"}
                     </span>
                   </button>
@@ -2187,7 +2538,10 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     {!isDemo && dashboardData?.billing && (
                       <MobileBillingBanner
                         billing={dashboardData.billing}
-                        canManage={isOfficerPosition(dashboardData?.profile?.position)}
+                        // Server-enforced: only an exec-cleared session sees the
+                        // actionable "manage billing" CTA (alumni/non-officers get
+                        // the advisory banner without it).
+                        canManage={execAllowed}
                       />
                     )}
 
@@ -2215,8 +2569,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     {/* C. RUSH TAB (Brother-only PNM Database / Pledges view) */}
                     {activeTab === "rush" && role === "brother" && renderRushTab(ctx)}
 
-                    {/* D. DUES TAB (Brothers) or GIVING TAB (Alumni) */}
-                    {activeTab === "dues" && renderDuesTab(ctx)}
+                    {/* D. DUES TAB (Brothers) or GIVING TAB (Alumni). The brother
+                        dues surface is gated on the chapter's dues flag (the nav
+                        slot is also removed when disabled); alumni GIVING is a
+                        separate donations feature and is unaffected. */}
+                    {activeTab === "dues" && (role === "alumni" || duesVisible) && renderDuesTab(ctx)}
 
                     {/* E. DIRECTORY TAB (Actives, Alumni, Careers sub-views) */}
                     {activeTab === "directory" && renderDirectoryTab(ctx)}

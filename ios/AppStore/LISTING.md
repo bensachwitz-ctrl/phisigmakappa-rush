@@ -36,22 +36,25 @@ Greek Stack is the all-in-one app for your fraternity or sorority chapter. Sign 
 
 Built for brothers, sisters, alumni, and officers alike.
 
+TRY IT WITHOUT AN ACCOUNT
+Tap "See the live demo" on the first screen to explore a full sample chapter — Feed, Events, Rush, Dues, Directory, Profile, and the officer view — with no sign-in required.
+
 EVERYTHING YOUR CHAPTER NEEDS
-• Feed & announcements — never miss chapter news, with push notifications when something is posted.
+• Feed & announcements — never miss chapter news; open the app to see the latest posts the moment they go up.
 • Events & calendar — see what's coming up, RSVP in a tap, and add any event straight to your phone's calendar.
-• Dues & payments — check your balance and pay securely.
+• Dues — check your balance and pay your chapter dues securely through your chapter's Stripe checkout.
 • Roster & directory — find any brother, sister, or alum, with profiles, majors, and contact info.
-• Rush & recruitment — officers manage the PNM pipeline, votes, and notes; check guests in with a QR scan.
-• Career network — alumni post opportunities and connect with actives.
+• Rush & recruitment — see the recruitment pipeline and where each prospective member stands.
+• Career opportunities — alumni post jobs that surface right in your feed.
 
 MADE FOR OFFICERS, TOO
-Switch into the officer view to manage your roster, run dues, post announcements, move rush candidates through the pipeline, and run elections — all from your phone.
+If you're a chapter officer, switch into the Exec view to manage your roster (add or remove members, send password-reset links), post announcements, see the rush pipeline, and track dues collection — all from your phone. Officer tools appear only for verified officers.
 
 THEMED TO YOUR CHAPTER
 Greek Stack is multitenant: when you sign in, the entire app re-skins to your organization's letters, colors, and brand. It's your chapter's system, not a generic template.
 
-SECURE BY DESIGN
-Your data is scoped to your chapter. Sign in once and unlock with Face ID or Touch ID. Push notifications keep you in the loop on events and announcements.
+YOUR ACCOUNT, YOUR CONTROL
+Sign in once and unlock with Face ID or Touch ID. You can delete your account and member data at any time from the Profile screen. Your data is scoped to your chapter.
 
 Greek Stack pairs with the Greek Stack web platform (greekstack.com). Your chapter's admin sets up the chapter site; members and alumni just sign in here.
 
@@ -102,24 +105,38 @@ truthfully (moderation = chapter officers; content is not public).
 
 ## App Review notes (paste into "Notes" for the reviewer)
 ```
-Greek Stack is a companion app for the Greek Stack web platform. It loads the
-member experience at greekstack.com/app inside a native shell and adds native
-features (push notifications, Face/Touch ID unlock, haptics, deep links, offline
-cache).
+Greek Stack is a companion app for the Greek Stack web platform. The member
+experience is BUNDLED in the binary (it is not a webview wrapper pointed at a
+website); it talks to each chapter's backend over our HTTPS APIs and adds native
+features (Face/Touch ID unlock, haptics, deep links, offline cache).
 
-DEMO ACCESS for review (no real account needed):
-Open the app, tap "Explore the demo" / load any demo chapter — the app runs a
-fully interactive sample chapter (Phi Sigma Kappa) with no login required, so you
-can see all features (Feed, Events, Rush, Dues, Directory, officer view) without
-credentials.
+NO-LOGIN DEMO for review (no account needed):
+On the first screen, tap "See the live demo — no sign in." The app loads a fully
+interactive, read-only sample chapter (Phi Sigma Kappa) with no credentials, so
+you can exercise every feature:
+  • Feed (announcements + career posts)
+  • Events (RSVP + add to calendar)
+  • Rush (recruitment pipeline)
+  • Dues (balance + the "Pay online with Stripe" action)
+  • Directory (actives + alumni)
+  • Profile — including the "Delete account" action
+  • Exec view (officer tools: roster add/remove, reset links, announcements,
+    dues collection) via the "Member view / Exec view" switcher at the top
+
+ACCOUNT DELETION (Guideline 5.1.1(v)):
+Profile screen → "Delete account" → confirm. For a real signed-in member this
+deletes their account and member data; in the demo it confirms and returns to the
+chapter picker. No separate website visit is required.
 
 To test a real sign-in if desired:
   Chapter/subdomain: <PROVIDE A TEST CHAPTER>
   Email: <PROVIDE A TEST MEMBER EMAIL>
   Password: <PROVIDE A TEST PASSWORD>
 
-Dues payments open the chapter's Stripe checkout (real-world membership dues, not
-digital goods consumed in-app).
+DUES: tapping "Pay online with Stripe" opens the chapter's Stripe Checkout in the
+system browser. These are real-world chapter membership dues collected via the
+chapter's own Stripe account, not digital goods consumed in the app — so Apple
+IAP does not apply (Guideline 3.1.3(e)).
 ```
 > Fill the `<...>` test-account placeholders before submitting, OR rely on the
 > no-login demo path (recommended — guarantees the reviewer can exercise the app).

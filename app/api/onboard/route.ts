@@ -306,9 +306,15 @@ export async function POST(req: Request) {
       // supply its own). Fall back to the chapter's national-org letters derived
       // from the wizard, else empty (the hero then shows the brand-tinted Crest).
       "chapter.fraternityLetters": (fraternityLetters || greekLettersGlyphs || "").trim(),
-      "brand.primaryHex": (primaryColor || "#C8102E").trim(),
-      "brand.primaryDarkHex": (darkColor || "#A20D26").trim(),
-      "brand.primarySoftHex": (softColor || "#FCEFF1").trim(),
+      // WHITE-LABEL DEFAULT: a brand-new chapter that doesn't pick a color in the
+      // wizard starts on the GS royal-blue + gold PLATFORM identity — the SAME
+      // runtime fallback app/layout.tsx uses (#2563eb / #1e40af / #eff6ff) — not
+      // Phi Sig's cardinal red, which clashed with the blue marketing site and
+      // rained one chapter's brand over every fresh tenant. Phi Sig keeps its red
+      // via its OWN saved SiteConfig; this only changes the unconfigured default.
+      "brand.primaryHex": (primaryColor || "#2563eb").trim(),
+      "brand.primaryDarkHex": (darkColor || "#1e40af").trim(),
+      "brand.primarySoftHex": (softColor || "#eff6ff").trim(),
       // Chapter logo (optional). Seeded EMPTY so a fresh chapter gets the auto-
       // generated brand-tinted shield until they upload their own crest in
       // /admin/setup or /admin/settings → Brand. If the signup wizard captured
@@ -413,17 +419,25 @@ export async function POST(req: Request) {
     let finalTrialEndsAt: Date | null = normalizedPlan === "custom" ? null : trialEndsAt;
 
     const stripe = getStripe();
-    const requiresPayment = stripe && (normalizedPlan === "monthly" || normalizedPlan === "yearly");
+    // Whether this signup attaches a card right now. MONTHLY can launch WITHOUT
+    // one (true free trial — the marketing's "no card required to launch"); when
+    // a card IS provided we attach it so billing starts seamlessly after the
+    // trial. YEARLY is an immediate $800/yr charge with no trial, so it genuinely
+    // requires a card up front. `cardProvided` is also threaded into the welcome
+    // email so the copy never claims "no card required" when one was charged.
+    const isSubscriptionPlan = normalizedPlan === "monthly" || normalizedPlan === "yearly";
+    const cardProvided = Boolean(paymentMethodId);
+    const requiresPayment = Boolean(stripe) && isSubscriptionPlan;
 
-    if (requiresPayment) {
-      if (!paymentMethodId) {
-        // Throw (not bare return) so the outer catch DROPs the freshly-created
-        // tenant schema — otherwise the subdomain is orphaned and can never be
-        // re-provisioned (the registry uniqueness check would still pass, but
-        // the CREATE SCHEMA IF NOT EXISTS would collide). The catch surfaces the
-        // 400 + this message to the caller.
+    if (requiresPayment && stripe) {
+      // YEARLY requires a card (it bills $800 immediately — no trial). MONTHLY
+      // does NOT: it can launch card-free on a 30-day trial, matching the
+      // "no card required to launch" promise. Only YEARLY without a card is a
+      // hard stop. Throwing (not a bare return) routes through the outer catch so
+      // the freshly-created schema is dropped and the subdomain frees up cleanly.
+      if (normalizedPlan === "yearly" && !cardProvided) {
         throw new OnboardClientError(
-          "Payment method registration is required to launch on this plan.",
+          "A payment method is required to launch on the Annual plan ($800/year, billed today). Choose Monthly to start free without a card.",
           400,
         );
       }
@@ -436,17 +450,23 @@ export async function POST(req: Request) {
         });
         stripeCustomerId = customer.id;
 
-        // 2. Attach payment method
-        await stripe.paymentMethods.attach(paymentMethodId, {
-          customer: stripeCustomerId,
-        });
+        // 2. Attach payment method (only when the founder supplied one — a
+        //    card-free MONTHLY launch skips attach/default-PM entirely).
+        if (cardProvided) {
+          await stripe.paymentMethods.attach(paymentMethodId, {
+            customer: stripeCustomerId,
+          });
+        }
 
-        // 3. Set default payment method
-        await stripe.customers.update(stripeCustomerId, {
-          invoice_settings: {
-            default_payment_method: paymentMethodId,
-          },
-        });
+        // 3. Set default payment method (only when a card was supplied — a
+        //    card-free MONTHLY trial has no PM to set as default yet).
+        if (cardProvided) {
+          await stripe.customers.update(stripeCustomerId, {
+            invoice_settings: {
+              default_payment_method: paymentMethodId,
+            },
+          });
+        }
 
         // 4. Resolve the Price ID
         const priceId = await getOrCreateStripePrice(stripe, normalizedPlan);
@@ -464,6 +484,19 @@ export async function POST(req: Request) {
 
         if (normalizedPlan === "monthly") {
           subParams.trial_period_days = 30; // first month free
+          if (!cardProvided) {
+            // CARD-FREE MONTHLY LAUNCH. The chapter goes live on a 30-day trial
+            // with NO payment method. trial_settings tells Stripe what to do if
+            // the trial ends and no card was ever added: CANCEL the subscription
+            // (never silently attempt a charge / leave it past_due). This makes
+            // the "no card required to launch" promise literally true and SAFE —
+            // a chapter that never adds a card simply has its platform sub
+            // cancelled at trial end (the 14-day payment-deadline messaging +
+            // Admin → Billing prompt them to add one well before then).
+            subParams.trial_settings = {
+              end_behavior: { missing_payment_method: "cancel" },
+            };
+          }
         }
 
         const subscription = await stripe.subscriptions.create(subParams);
@@ -471,8 +504,13 @@ export async function POST(req: Request) {
         finalSubscriptionStatus = narrowStatus(subscription.status);
         finalTrialEndsAt = trialEndDate(subscription);
 
-        // 6. Create secondary rush subscription if monthly
-        if (normalizedPlan === "monthly") {
+        // 6. Create secondary rush subscription if monthly — ONLY when a card was
+        //    supplied. Without a default PM the rush sub couldn't bill after its
+        //    trial anyway; for card-free launches the rush cycle is set up later
+        //    when the chapter adds payment in Admin → Billing (mirrors the
+        //    platform-billing rush add-on flow). This keeps a card-free launch to
+        //    exactly ONE trialing subscription with safe end-behavior.
+        if (normalizedPlan === "monthly" && cardProvided) {
           try {
             const rushPriceId = await getOrCreateStripePrice(stripe, "rush");
             const rushSub = await stripe.subscriptions.create({
@@ -582,26 +620,37 @@ export async function POST(req: Request) {
           : normalizedPlan === "custom"
           ? "Custom plan"
           : "Monthly plan ($50/mo + $200/rush cycle, first month free)";
+      // Card-state aware so the copy NEVER claims "no card required" when one was
+      // charged. Monthly: "no card required" only when the founder skipped the
+      // card (true free trial); when they DID add a card we say it's saved and
+      // billing starts after the free month. Yearly: a card is always required
+      // (it bills $800 today, no trial), so the copy reflects an immediate charge.
+      const monthlyCardClauseHtml = cardProvided
+        ? `Your card is saved — you won't be charged until your <strong>first month free</strong> ends.`
+        : `<strong>No card required to launch.</strong> Add one in Admin → Billing before your free month ends to keep your site live.`;
       const billingLineHtml =
         normalizedPlan === "yearly"
           ? isPromoValid
-            ? `You're on the <strong>Annual plan — $800/year</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you'll receive <strong>$150 off your first year</strong> ($650 total)! Full access to every feature, no card required to launch.`
-            : `You're on the <strong>Annual plan — $800/year</strong>, which includes every rush-cycle fee. Full access to every feature, no card required to launch.`
+            ? `You're on the <strong>Annual plan — $800/year</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you'll receive <strong>$150 off your first year</strong> ($650 total)! Your card was charged today and includes every rush-cycle fee for the year.`
+            : `You're on the <strong>Annual plan — $800/year</strong>, charged today, which includes every rush-cycle fee. Full access to every feature.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
           : isPromoValid
-          ? `Your <strong>first month is free</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you get an additional 2 months free (<strong>3 months free total</strong>)! After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`
-          : `Your <strong>first month is free</strong> — full access to every feature, no card required. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees).`;
+          ? `Your <strong>first month is free</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you get an additional 2 months free (<strong>3 months free total</strong>)! After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees). ${monthlyCardClauseHtml}`
+          : `Your <strong>first month is free</strong> — full access to every feature. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees). ${monthlyCardClauseHtml}`;
+      const monthlyCardClauseText = cardProvided
+        ? "Your card is saved — you won't be charged until your first free month ends."
+        : "No card required to launch. Add one in Admin -> Billing before your free month ends to keep your site live.";
       const billingLineText =
         normalizedPlan === "yearly"
           ? isPromoValid
-            ? `You're on the Annual plan — $800/year. Promo code ${promoCode} applied: $150 off your first year ($650 total). No card required to launch.`
-            : "You're on the Annual plan — $800/year, includes all rush fees. No card required to launch."
+            ? `You're on the Annual plan — $800/year. Promo code ${promoCode} applied: $150 off your first year ($650 total). Charged today, includes all rush fees.`
+            : "You're on the Annual plan — $800/year, charged today, includes all rush fees."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
           : isPromoValid
-          ? `Your first month is free. Promo code ${promoCode} applied: 3 months free total! Then $50/mo + $200 per rush cycle. No card required to launch.`
-          : "Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). No card required to launch.";
+          ? `Your first month is free. Promo code ${promoCode} applied: 3 months free total! Then $50/mo + $200 per rush cycle. ${monthlyCardClauseText}`
+          : `Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). ${monthlyCardClauseText}`;
       const welcomeBody = `
         <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
         <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>

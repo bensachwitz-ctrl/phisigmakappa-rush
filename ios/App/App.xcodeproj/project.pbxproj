@@ -7,17 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E838086257F85A3779D3875E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8EB0F58926D479CB33E6804 /* Theme.swift */; };
-		E7FCA99F642FA2B3B5E5281A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67DD7666F620B6BA6684C58 /* Models.swift */; };
-		EFF4DA34F3B596D07D3D4F31 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9D8CE8C4EFF9DBB0095B392 /* APIService.swift */; };
-		ED1D2DD600677832451AF229 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12EDB006B24EBBADEB29BF6 /* LoginView.swift */; };
-		EA17D31F8AB58B845675CB3A /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F00B1FE681055DE9D8DB7B /* FeedView.swift */; };
-		E8180EF18012C9FEA72527F6 /* EventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E55DEEA0B434B4D890D911D3 /* EventsView.swift */; };
-		E41AAD1C3CD040EC7A1BCCC6 /* DirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA05A20C2122EDB35B09BFB /* DirectoryView.swift */; };
-		E5AC16623D080CA36C815C83 /* DuesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E031F809BEEA62A27DED5642 /* DuesView.swift */; };
-		E85D3D904B3E4CF11EF0A304 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF02F5F5C6A33AB2D897E3A9 /* SettingsView.swift */; };
-		E82FDB5029E6F8623BBAF724 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB3E48D4B9BABC5FB05CF46 /* ContentView.swift */; };
-		ECAD37D3F3C0D30CA04F5D4A /* CapacitorWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E692DE8E466254A30833096B /* CapacitorWebView.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -29,17 +18,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		E8EB0F58926D479CB33E6804 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		E67DD7666F620B6BA6684C58 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		E9D8CE8C4EFF9DBB0095B392 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
-		E12EDB006B24EBBADEB29BF6 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		E4F00B1FE681055DE9D8DB7B /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
-		E55DEEA0B434B4D890D911D3 /* EventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsView.swift; sourceTree = "<group>"; };
-		EFA05A20C2122EDB35B09BFB /* DirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryView.swift; sourceTree = "<group>"; };
-		E031F809BEEA62A27DED5642 /* DuesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuesView.swift; sourceTree = "<group>"; };
-		EF02F5F5C6A33AB2D897E3A9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		ECB3E48D4B9BABC5FB05CF46 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		E692DE8E466254A30833096B /* CapacitorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapacitorWebView.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,24 +42,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		E8AB628C017957B50C823A08 /* SwiftUI */ = {
-			isa = PBXGroup;
-			children = (
-				E8EB0F58926D479CB33E6804 /* Theme.swift */,
-				E67DD7666F620B6BA6684C58 /* Models.swift */,
-				E9D8CE8C4EFF9DBB0095B392 /* APIService.swift */,
-				E12EDB006B24EBBADEB29BF6 /* LoginView.swift */,
-				E4F00B1FE681055DE9D8DB7B /* FeedView.swift */,
-				E55DEEA0B434B4D890D911D3 /* EventsView.swift */,
-				EFA05A20C2122EDB35B09BFB /* DirectoryView.swift */,
-				E031F809BEEA62A27DED5642 /* DuesView.swift */,
-				EF02F5F5C6A33AB2D897E3A9 /* SettingsView.swift */,
-				ECB3E48D4B9BABC5FB05CF46 /* ContentView.swift */,
-				E692DE8E466254A30833096B /* CapacitorWebView.swift */,
-			);
-			path = SwiftUI;
-			sourceTree = "<group>";
-		};
 		504EC2FB1FED79650016851F = {
 			isa = PBXGroup;
 			children = (
@@ -102,7 +62,6 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
-				E8AB628C017957B50C823A08 /* SwiftUI */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -196,17 +155,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E838086257F85A3779D3875E /* Theme.swift in Sources */,
-				E7FCA99F642FA2B3B5E5281A /* Models.swift in Sources */,
-				EFF4DA34F3B596D07D3D4F31 /* APIService.swift in Sources */,
-				ED1D2DD600677832451AF229 /* LoginView.swift in Sources */,
-				EA17D31F8AB58B845675CB3A /* FeedView.swift in Sources */,
-				E8180EF18012C9FEA72527F6 /* EventsView.swift in Sources */,
-				E41AAD1C3CD040EC7A1BCCC6 /* DirectoryView.swift in Sources */,
-				E5AC16623D080CA36C815C83 /* DuesView.swift in Sources */,
-				E85D3D904B3E4CF11EF0A304 /* SettingsView.swift in Sources */,
-				E82FDB5029E6F8623BBAF724 /* ContentView.swift in Sources */,
-				ECAD37D3F3C0D30CA04F5D4A /* CapacitorWebView.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

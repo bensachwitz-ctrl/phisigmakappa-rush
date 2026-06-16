@@ -4,8 +4,11 @@ import type { DemoContext } from "../context";
 
 export function renderSettingsTab(ctx: DemoContext) {
   const {
+    accountDeleting,
     dashboardData,
     email,
+    execAllowed,
+    handleDeleteAccount,
     handleRemoveMobileMember,
     handleSendMobileResetLink,
     handleSignOut,
@@ -81,10 +84,14 @@ export function renderSettingsTab(ctx: DemoContext) {
                           )}
                         </div>
 
-                        {/* PRESIDENTIAL ADMINISTRATION CONSOLE — exec-view only
-                            (owner round-7 role gating: members never see write
-                            tools like add/remove member or reset links). */}
-                        {viewRole === "exec" && role === "brother" && (dashboardData?.profile?.position === "President" || dashboardData?.profile?.name === "Alex Mercer") && (
+                        {/* PRESIDENTIAL ADMINISTRATION CONSOLE — exec-view only,
+                            and ONLY when the server cleared this session for exec
+                            (capabilities.exec, mirrored by execAllowed). A real
+                            non-officer never sees the add/remove/reset write tools
+                            even if local state were forged; the demo always shows
+                            them. The roster writes themselves are ALSO re-gated
+                            server-side on every call. */}
+                        {viewRole === "exec" && role === "brother" && execAllowed && (
                           <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3 shadow-sm">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                               <div className="flex items-center gap-1.5">
@@ -191,6 +198,37 @@ export function renderSettingsTab(ctx: DemoContext) {
                             className="w-full py-2.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
                           >
                             <LogOut className="w-4 h-4 text-red-500" /> Logout Securely
+                          </button>
+                        </div>
+
+                        {/* DANGER ZONE — in-app account deletion (Apple 5.1.1(v)).
+                            The signed-in member deletes their OWN account + member
+                            data → DELETE /api/mobile/account → sign out → picker.
+                            Visually separated so it's never tapped by accident. */}
+                        <div className="mt-2 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            Account
+                          </p>
+                          <p className="mt-1 text-[12px] leading-snug text-slate-500">
+                            Permanently delete your Greek Stack account and your member data for this
+                            chapter. This can&apos;t be undone.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleDeleteAccount}
+                            disabled={accountDeleting}
+                            className="press mt-2.5 flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white text-xs font-bold text-red-600 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-60"
+                          >
+                            {accountDeleting ? (
+                              <>
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                                Deleting…
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4" /> Delete account
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>

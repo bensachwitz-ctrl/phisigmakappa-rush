@@ -2,28 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
 import { Users, ArrowLeft, Mail, Lock, LogIn } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
-import { isClerkConfiguredClient } from "@/lib/clerk-config";
 
-// OPTIONAL Clerk "Continue with Google" control. Loaded client-side ONLY
-// (ssr:false) and rendered ONLY when isClerkConfiguredClient() is true, so the
-// Clerk hooks it uses (useSignIn — requires <ClerkProvider>) never execute on
-// the default, Clerk-unconfigured build. The email/password form below is the
-// source of truth and is always rendered; this is strictly additive.
-const ClerkGoogleButton = dynamic(
-  () => import("@/components/auth/clerk-google-button"),
-  { ssr: false },
-);
+// Brothers portal sign-in is email/password ONLY — chapter-scoped credentials
+// issued by an e-board officer. No third-party / social sign-in.
 
 export default function BrothersLoginPage() {
-  // Snapshot the gate once per render. When false, no Clerk component mounts.
-  const clerkEnabled = isClerkConfiguredClient();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -271,10 +260,6 @@ export default function BrothersLoginPage() {
                 </Button>
               </form>
             )}
-
-            {/* OPTIONAL social sign-in — appears ONLY when Clerk is configured,
-                ALONGSIDE (never replacing) the email/password form above. */}
-            {clerkEnabled && <ClerkGoogleButton />}
 
             <div className="border-t border-maroon-100 pt-4 text-center">
               <p className="text-xs text-maroon-700 mb-2">Haven&apos;t activated your account yet?</p>

@@ -152,4 +152,65 @@ describe("POST /api/schedule — Booking Scheduler API", () => {
     expect(body.ok).toBe(false);
     expect(body.error).toContain("complete your booking");
   });
+
+  // ── SECURITY MEDIUM: forces neutral public category, ignores client intent ──
+  it("FORCES a neutral PUBLIC category — a client cannot mint a private EBOARD event", async () => {
+    mocks.mockSiteConfigFindMany.mockResolvedValue([]);
+    mocks.mockEventCreate.mockResolvedValue({ id: "event-x", name: "x", startsAt: new Date(), endsAt: new Date() });
+
+    const req = new Request("https://greekstack.vercel.app/api/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": "9.9.9.9" },
+      // A malicious eventType that the OLD code mapped to a PRIVATE, EBOARD event.
+      body: JSON.stringify({
+        name: "Sneaky Bot",
+        email: "bot@x.com",
+        eventType: "eboard secret meeting",
+        date: "2026-06-15T13:00:00.000Z",
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const createArgs = mocks.mockEventCreate.mock.calls[0][0];
+    // Server forced neutral/public regardless of the client-supplied eventType.
+    expect(createArgs.data.category).toBe("OTHER");
+    expect(createArgs.data.audience).toBe("ALL");
+    expect(createArgs.data.isPrivate).toBe(false);
+  });
+
+  // ── SECURITY MEDIUM: per-IP rate-limit ──────────────────────────────────────
+  it("THROTTLES a flood of bookings from one IP (429 after the limit)", async () => {
+    mocks.mockSiteConfigFindMany.mockResolvedValue([]);
+    mocks.mockEventCreate.mockResolvedValue({ id: "event-rl", name: "x", startsAt: new Date(), endsAt: new Date() });
+
+    // A dedicated IP so this test's bucket is isolated from the others.
+    const ip = "203.0.113.77";
+    const makeReq = () =>
+      new Request("https://greekstack.vercel.app/api/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+        body: JSON.stringify({
+          name: "Repeat Caller",
+          email: "rc@sc.edu",
+          eventType: "Rush Coffee Chat",
+          date: "2026-06-15T13:00:00.000Z",
+        }),
+      });
+
+    // The route allows 10 within the window; the 11th must be throttled.
+    let throttled = false;
+    let lastStatus = 0;
+    for (let i = 0; i < 12; i++) {
+      const res = await POST(makeReq());
+      lastStatus = res.status;
+      if (res.status === 429) {
+        throttled = true;
+        expect(res.headers.get("Retry-After")).toBeTruthy();
+        break;
+      }
+    }
+    expect(throttled).toBe(true);
+    expect(lastStatus).toBe(429);
+  });
 });

@@ -5,8 +5,8 @@ import type { DemoContext } from "../context";
 export function renderDuesTab(ctx: DemoContext) {
   const {
     dashboardData,
-    handleSimulateStripePay,
-    isDemo,
+    handleStartDuesCheckout,
+    duesCheckoutLoading,
     role,
     selectedBrand,
     showToast,
@@ -51,11 +51,21 @@ export function renderDuesTab(ctx: DemoContext) {
                               {!dashboardData?.dues?.isPaid && dashboardData?.dues?.config?.enabled && (
                                 <button
                                   type="button"
-                                  onClick={isDemo ? handleSimulateStripePay : () => showToast("Initiating checkout session via Stripe Connect...", "info")}
-                                  className="press flex min-h-[48px] w-full items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold text-white shadow-lg transition active:scale-[0.99]"
+                                  onClick={handleStartDuesCheckout}
+                                  disabled={duesCheckoutLoading}
+                                  className="press flex min-h-[48px] w-full items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold text-white shadow-lg transition active:scale-[0.99] disabled:opacity-70"
                                   style={{ backgroundColor: selectedBrand.primaryColor }}
                                 >
-                                  <CreditCard className="h-4 w-4" /> Pay online with Stripe
+                                  {duesCheckoutLoading ? (
+                                    <>
+                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
+                                      Opening Stripe…
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CreditCard className="h-4 w-4" /> Pay online with Stripe
+                                    </>
+                                  )}
                                 </button>
                               )}
                             </div>

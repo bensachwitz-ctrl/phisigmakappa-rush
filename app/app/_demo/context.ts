@@ -29,6 +29,10 @@ export interface DemoContext {
   // exec = officer/admin tools). Distinct from `role` (brother vs alumni).
   viewRole: "member" | "exec";
   setViewRole: React.Dispatch<React.SetStateAction<"member" | "exec">>;
+  /** SERVER-enforced exec gate: demo OR capabilities.exec === true. Officer-only
+   *  write surfaces (roster/reset/announce) render/enable ONLY when this is true.
+   *  The server still re-gates every write — this is the UI mirror. */
+  execAllowed: boolean;
   // In-app chapter chooser overlay (pick/create any org and re-skin live).
   showChapterChooser: boolean;
   setShowChapterChooser: React.Dispatch<React.SetStateAction<boolean>>;
@@ -297,11 +301,19 @@ export interface DemoContext {
   handlePostAnnouncement: (e: React.FormEvent) => void;
   handleSaveProfile: (e: React.FormEvent) => void;
   handleSimulateStripePay: () => void;
+  /** Real dues checkout: POST /api/dues/checkout → open the Stripe URL (demo falls back to the simulation). */
+  handleStartDuesCheckout: () => Promise<void> | void;
+  /** True while a real /api/dues/checkout request is in flight (disables the Pay button). */
+  duesCheckoutLoading: boolean;
   handlePnmVote: (pnmId: string, score: number) => void;
   handleAddImpression: (e: React.FormEvent, pnmId: string) => void;
   handleSimulateCheckIn: (pnmId: string) => void;
   handleMobileForgotSubmit: (e: React.FormEvent) => void;
-  handleAddMobileMember: (e: React.FormEvent) => void;
+  handleAddMobileMember: (e: React.FormEvent) => Promise<void> | void;
   handleRemoveMobileMember: (id: string, name: string, memberType: "actives" | "alumni") => void;
-  handleSendMobileResetLink: (email: string | null, name: string) => void;
+  handleSendMobileResetLink: (email: string | null, name: string) => Promise<void> | void;
+  /** Apple 5.1.1(v): confirm → DELETE /api/mobile/account → sign out → picker. */
+  handleDeleteAccount: () => void;
+  /** True while the DELETE /api/mobile/account request is in flight. */
+  accountDeleting: boolean;
 }

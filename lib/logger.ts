@@ -11,12 +11,15 @@
 // throws: a logger that crashes the request it's observing is worse than no
 // logger at all.
 //
-// SENTRY-READY (but NOT Sentry-coupled): `errorSink()` is the single
-// chokepoint every error flows through. When the team later adopts Sentry,
-// the one place to wire `Sentry.captureException` is the clearly-marked hook
-// inside `errorSink` — no other call site changes. We do NOT import @sentry
-// here; there is no @sentry dependency in package.json and adding one is out
-// of scope for this free, Vercel-native layer.
+// SENTRY-WIRED (but NOT Sentry-coupled): `errorSink()` is the single
+// chokepoint every error flows through. It ALWAYS emits a structured
+// `logger.error` line (Vercel Runtime Logs), AND — when `SENTRY_DSN` is set —
+// forwards the same error to Sentry so deliberately try/caught failures
+// (Stripe webhook, onboard provisioning, dues receipts, tenant updates) surface
+// in the operator's error tracker, not just the runtime logs. The @sentry import
+// is DYNAMIC + DSN-gated, so with no DSN there is zero import cost and the layer
+// stays fully Vercel-native in local/dev/CI. This is the ONE place that forwards;
+// no call site changes.
 
 // ── Levels ────────────────────────────────────────────────────────────────
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -180,9 +183,11 @@ export const logger = {
  * The SINGLE error-reporting chokepoint for the app. Route every caught error
  * that matters through `errorSink(err, ctx)` instead of a bare `console.error`.
  *
- * Today it just emits a structured `logger.error` line (captured by Vercel
- * Runtime Logs). It is deliberately shaped as the one hook a future Sentry
- * (or any APM) integration plugs into — see the clearly-marked block below.
+ * It ALWAYS emits a structured `logger.error` line (captured by Vercel Runtime
+ * Logs) AND — when `SENTRY_DSN` is configured — forwards the SAME error to
+ * Sentry (`@sentry/nextjs`, already initialized by sentry.server.config.ts).
+ * Auto-instrumentation only captures UNHANDLED exceptions; every deliberately
+ * try/caught failure that flows through here would otherwise never reach Sentry.
  *
  * @param err  The thrown value (Error or unknown). Normalized + redacted.
  * @param ctx  Structured context: `{ route, tenant, requestId, ... }`.
@@ -199,23 +204,23 @@ export function errorSink(err: unknown, ctx?: LogContext): void {
     err: normalized,
   });
 
-  // ── FUTURE SENTRY HOOK (no-op today) ──────────────────────────────────────
-  // When the team adopts Sentry, this is the ONE place to forward errors — no
-  // other call site changes. Intentionally NOT importing @sentry/* (it is not
-  // a dependency; adding it is out of scope for this free, Vercel-native layer).
-  //
-  // To enable later:
-  //   1. `npm i @sentry/nextjs` and add the standard instrumentation files.
-  //   2. Uncomment + wire the guarded block below.
-  //
-  // if (process.env.SENTRY_DSN) {
-  //   // import("@sentry/nextjs").then((Sentry) =>
-  //   //   Sentry.captureException(err, { extra: redact(ctx) as Record<string, unknown> })
-  //   // ).catch(() => {});  // never let telemetry failure surface to the request
-  // }
-  // TODO(sentry): activate the block above once @sentry/nextjs is installed and
-  // SENTRY_DSN is configured in Vercel env. Until then this is a structured-log
-  // no-op so error reporting is centralized and ready to upgrade.
+  // ── SENTRY FORWARDING (active when SENTRY_DSN is set) ──────────────────────
+  // The ONE place caught errors reach Sentry. DSN-gated + dynamically imported
+  // so there is zero cost (and zero @sentry load) when SENTRY_DSN is absent —
+  // local/dev/CI behavior is unchanged. The original (pre-normalization) `err`
+  // is forwarded so Sentry keeps the real Error type/stack; `ctx` is REDACTED
+  // (same fail-closed masking as the log line) before it becomes Sentry `extra`,
+  // so no credential ever leaves the process. Telemetry failures are swallowed —
+  // a broken error tracker must NEVER surface to the request being observed.
+  if (process.env.SENTRY_DSN) {
+    import("@sentry/nextjs")
+      .then((Sentry) =>
+        Sentry.captureException(err, {
+          extra: redact(ctx ?? {}) as Record<string, unknown>,
+        }),
+      )
+      .catch(() => {});
+  }
 }
 
 /** JSON.stringify that never throws (used only for non-Error thrown values). */

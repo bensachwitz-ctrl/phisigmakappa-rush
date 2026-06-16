@@ -244,9 +244,14 @@ export default function OnboardWizard() {
   const [orgSel, setOrgSel] = React.useState<OrgSelection | null>(null);
 
   // Brand State
-  const [primaryColor, setPrimaryColor] = React.useState("#C8102E");
-  const [darkColor, setDarkColor] = React.useState("#A20D26");
-  const [softColor, setSoftColor] = React.useState("#FCEFF1");
+  // Default the brand pickers to the GreekStack royal-blue identity (matching
+  // lib/site-config.ts DEFAULTS), NOT the legacy Phi-Sig cardinal red. The
+  // custom-school / custom-org / skip paths all leave these untouched, so the
+  // default is what an unbranded chapter provisions with — it must be on-brand
+  // royal-blue, never another org's color.
+  const [primaryColor, setPrimaryColor] = React.useState("#2563eb");
+  const [darkColor, setDarkColor] = React.useState("#1e40af");
+  const [softColor, setSoftColor] = React.useState("#eff6ff");
 
   // Hero copy — editable directly on the live preview. Empty = the launched
   // site keeps its neutral white-label default (lib/site-config.ts); a non-empty
@@ -533,6 +538,18 @@ export default function OnboardWizard() {
       setDir(1);
       setStep(STEPS[stepIndex + 1].id);
     }
+  }
+
+  // Skip the card on the MONTHLY plan and launch card-free (true free trial).
+  // The API creates a trialing subscription with NO payment method and a safe
+  // cancel-at-trial-end behavior, so "no card required to launch" is literally
+  // true. Only valid for monthly — yearly bills today and must collect a card.
+  function skipPayment() {
+    if (plan !== "monthly") return;
+    setPaymentMethodId(null);
+    setPaymentError(null);
+    setDir(1);
+    setStep("launch");
   }
 
   function goPrev() {
@@ -1255,9 +1272,9 @@ export default function OnboardWizard() {
                       <div className="space-y-3">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Brand colors</p>
                         <div className="grid gap-4 sm:grid-cols-3">
-                          <WColor label="Primary" value={primaryColor} onChange={setPrimaryColor} fallback="#C8102E" />
-                          <WColor label="Dark / text" value={darkColor} onChange={setDarkColor} fallback="#A20D26" />
-                          <WColor label="Soft tint" value={softColor} onChange={setSoftColor} fallback="#FCEFF1" />
+                          <WColor label="Primary" value={primaryColor} onChange={setPrimaryColor} fallback="#2563eb" />
+                          <WColor label="Dark / text" value={darkColor} onChange={setDarkColor} fallback="#1e40af" />
+                          <WColor label="Soft tint" value={softColor} onChange={setSoftColor} fallback="#eff6ff" />
                         </div>
                         <ColorPresets primaryColor={primaryColor} onPick={applyColorPreset} />
                       </div>
@@ -1474,11 +1491,18 @@ export default function OnboardWizard() {
                             {plan === "custom" ? "Custom plan" : "Dues-Share plan"}
                           </span>.
                         </>
+                      ) : plan === "monthly" && !paymentMethodId ? (
+                        <>
+                          No card required — you&apos;re launching free on the{" "}
+                          <span className="font-semibold text-white">
+                            Monthly Plan (first month free)
+                          </span>. Add a card in Admin → Billing before your free month ends.
+                        </>
                       ) : (
                         <>
                           Card verified securely. You&apos;re launching on the{" "}
                           <span className="font-semibold text-white">
-                            {plan === "yearly" ? "Annual Plan ($800/year)" : "Monthly Plan ($50/mo + $200/rush, first month free)"}
+                            {plan === "yearly" ? "Annual Plan ($800/year, billed today)" : "Monthly Plan ($50/mo + $200/rush, first month free)"}
                           </span>.
                         </>
                       )}
@@ -1541,20 +1565,35 @@ export default function OnboardWizard() {
               </Button>
 
               {!isLastStep ? (
-                <Magnetic strength={14} radius={80}>
-                  <ShimmerBorder rounded="rounded-full">
-                    <Button
+                <div className="flex items-center gap-3">
+                  {/* MONTHLY-only: launch card-free (true free trial). Makes the
+                      "no card required to launch" promise real; yearly omits this
+                      because it bills $800 today. */}
+                  {step === "payment" && plan === "monthly" && !paymentMethodId && (
+                    <button
                       type="button"
-                      variant="platform"
-                      size="lg"
-                      onClick={goNext}
-                      disabled={busy || (step === "chapter" && subdomainBlocks)}
-                      className="gs-sheen"
+                      onClick={skipPayment}
+                      disabled={busy}
+                      className="text-sm font-semibold text-slate-300 underline-offset-4 transition-colors hover:text-white hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
                     >
-                      Continue <IconArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </ShimmerBorder>
-                </Magnetic>
+                      Skip — start free without a card
+                    </button>
+                  )}
+                  <Magnetic strength={14} radius={80}>
+                    <ShimmerBorder rounded="rounded-full">
+                      <Button
+                        type="button"
+                        variant="platform"
+                        size="lg"
+                        onClick={goNext}
+                        disabled={busy || (step === "chapter" && subdomainBlocks)}
+                        className="gs-sheen"
+                      >
+                        Continue <IconArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </Button>
+                    </ShimmerBorder>
+                  </Magnetic>
+                </div>
               ) : (
                 <Magnetic strength={16} radius={90}>
                   <ShimmerBorder rounded="rounded-full">
@@ -2508,13 +2547,15 @@ function PaymentStep({
 
       <div className="space-y-2">
         <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Card Details
+          Card Details{plan === "monthly" ? " (optional)" : ""}
         </Label>
         <div className="rounded-xl border border-white/10 bg-slate-900/60 p-4 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
           <div ref={containerRef} id="card-element" className="w-full min-h-[20px]" />
         </div>
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          Your card will not be charged today (first month is 100% free). You can cancel at any time from your admin panel.
+          {plan === "yearly"
+            ? "Your card will be charged $800 today for the full year (all rush fees included). Cancel anytime from your admin panel."
+            : "Your card will not be charged today (first month is 100% free). Prefer to add it later? You can launch now without a card and add one before your free month ends — cancel anytime from your admin panel."}
         </p>
       </div>
 
