@@ -32,6 +32,9 @@ jobs:
       - name: TypeScript typecheck
         run: npx tsc --noEmit
 
+      - name: Unit tests
+        run: npm test # vitest run — blocking; do not add continue-on-error
+
       - name: ESLint
         run: npx next lint --no-cache
         continue-on-error: true # don't block PRs on lint warnings; surface them only
