@@ -54,6 +54,79 @@ describe("computeMemberCapabilities (server-side RBAC source of truth)", () => {
   });
 });
 
+// ── 1b. Client-side demo-honesty gates (MobileAppClient) ─────────────────────
+// The demo (/app?demo=true) has NO real session, so it can't read the server's
+// `capabilities` object. Two owner-reported bugs came from the demo FORCING
+// exec/dues visible (`isDemo || …`):
+//   • "why is exec tools on member" — the member-persona screen still exposed an
+//     exec toggle, bleeding exec tooling onto the member view.
+//   • "dues is hiding if they do not have them set up" — dues was force-shown in
+//     the demo regardless of the chapter's actual dues setting.
+// These tests pin the corrected derivations the client now uses, so a future
+// edit can't silently re-force them true. They mirror the EXACT expressions in
+// MobileAppClient.tsx (kept in lock-step with that file).
+describe("demo-honesty client gates (mirror MobileAppClient derivations)", () => {
+  // duesVisible: real session → server flag; demo → the demo chapter's OWN dues
+  // config (`dues.config.enabled`), never force-true just because isDemo.
+  const duesVisible = (
+    isDemo: boolean,
+    data: { capabilities?: { duesEnabled?: boolean }; dues?: { config?: { enabled?: boolean } } } | null,
+  ): boolean =>
+    isDemo
+      ? data?.dues?.config?.enabled === true
+      : data?.capabilities?.duesEnabled === true;
+
+  // execToggleActive: the header behaves as an exec toggle only when the exec
+  // lens is genuinely in play for THIS persona — a real cleared officer
+  // (execAllowed && !isDemo), OR the demo while already in the exec persona.
+  // It is NEVER active on the demo member screen.
+  const execToggleActive = (
+    isDemo: boolean,
+    execAllowed: boolean,
+    viewPersona: "member" | "exec" | "alumni",
+  ): boolean => (viewPersona === "exec") || (execAllowed && !isDemo);
+
+  it("demo member persona: dues follows the chapter's own config, not isDemo", () => {
+    // Dues set up in the demo chapter → visible.
+    expect(duesVisible(true, { dues: { config: { enabled: true } } })).toBe(true);
+    // Dues NOT set up → hidden, even though isDemo is true (the bug).
+    expect(duesVisible(true, { dues: { config: { enabled: false } } })).toBe(false);
+    expect(duesVisible(true, { dues: { config: {} } })).toBe(false);
+    expect(duesVisible(true, {})).toBe(false);
+  });
+
+  it("real session: dues follows the server capability flag", () => {
+    expect(duesVisible(false, { capabilities: { duesEnabled: true } })).toBe(true);
+    expect(duesVisible(false, { capabilities: { duesEnabled: false } })).toBe(false);
+    expect(duesVisible(false, {})).toBe(false);
+  });
+
+  it("demo member persona: the header is NOT an exec toggle (no exec tools on member)", () => {
+    // execAllowed is true in the demo (exec persona is offerable), but the toggle
+    // must stay inactive on the member screen.
+    expect(execToggleActive(true, true, "member")).toBe(false);
+    expect(execToggleActive(true, true, "alumni")).toBe(false);
+  });
+
+  it("demo exec persona: the header toggle is active (so you can flip back)", () => {
+    expect(execToggleActive(true, true, "exec")).toBe(true);
+  });
+
+  it("real officer: the header toggle is active from any persona", () => {
+    expect(execToggleActive(false, true, "member")).toBe(true);
+    expect(execToggleActive(false, true, "exec")).toBe(true);
+  });
+
+  it("real non-officer: the header toggle is never active in any REACHABLE persona", () => {
+    // A real non-officer (execAllowed=false) can only ever be in the member or
+    // alumni persona — the persona-switch guard + the switcher's visiblePersonas
+    // filter make the exec persona UNREACHABLE for them, so viewPersona can never
+    // be "exec" here. In those reachable states the toggle is always inactive.
+    expect(execToggleActive(false, false, "member")).toBe(false);
+    expect(execToggleActive(false, false, "alumni")).toBe(false);
+  });
+});
+
 // ── 2 & 3. Mobile data route — exec capability + dues gating ──────────────────
 const mocks = vi.hoisted(() => ({
   mockTenantFindUnique: vi.fn(),

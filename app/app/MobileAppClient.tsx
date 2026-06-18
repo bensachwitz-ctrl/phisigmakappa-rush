@@ -73,6 +73,7 @@ import {
   type FraternityBrand,
 } from "./_demo/mock-data";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { ChapterIdentityBackdrop } from "./_demo/ChapterIdentityBackdrop";
 import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
 import type { DemoContext } from "./_demo/context";
@@ -1919,10 +1920,36 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   // cannot edit on their own row). A regular member can NOT flip into exec by
   // poking client state — and even if they did, the API never served exec-only
   // data to them. The DEMO is a sales showcase with no real session, so it
-  // keeps free persona switching. `duesVisible` likewise mirrors the server's
-  // dues flag so the Dues surface only shows when the chapter enabled dues.
+  // keeps free persona switching (so a prospect can OFFER themselves the exec
+  // showcase from the persona switcher).
   const execAllowed = isDemo || dashboardData?.capabilities?.exec === true;
-  const duesVisible = isDemo || dashboardData?.capabilities?.duesEnabled === true;
+
+  // member/exec leak fix (owner: "why is exec tools on member"): `execAllowed`
+  // means the exec lens is OFFERABLE — but in the member persona we must not
+  // bleed exec affordances into the member screen. The header toggle below is an
+  // exec control; for a REAL cleared officer it always toggles, but in the DEMO
+  // it only acts as an exec toggle once the visitor has ALREADY chosen the exec
+  // persona (so they can flip back) — the canonical way into exec in the demo is
+  // the explicit "Viewing as → Exec board" switcher, never a button sitting on
+  // the member view. `execActive` = the exec lens is currently SELECTED.
+  const execActive = viewPersona === "exec";
+  // The header control should behave as an exec toggle only when the exec lens is
+  // genuinely in play for THIS persona: a real officer (execAllowed && !isDemo)
+  // may toggle from anywhere; the demo only exposes the toggle while already in
+  // the exec persona, keeping the member persona free of exec controls.
+  const execToggleActive = execActive || (execAllowed && !isDemo);
+
+  // dues-visibility fix (owner: "dues is hiding if they do not have them set
+  // up"): the Dues surface must reflect whether the chapter ACTUALLY enabled
+  // online dues — never be force-shown just because we're in the demo. For a
+  // REAL session the authority is the server flag `capabilities.duesEnabled`
+  // (computed from the chapter's `dues.enabled` SiteConfig, fail-closed). In the
+  // DEMO there is no server capability object, so we read the demo chapter's own
+  // dues config (`dues.config.enabled`) — so a demo chapter without dues set up
+  // hides the surface exactly like a real one would, instead of always showing.
+  const duesVisible = isDemo
+    ? dashboardData?.dues?.config?.enabled === true
+    : dashboardData?.capabilities?.duesEnabled === true;
 
   const setViewPersona = (p: ViewPersona) => {
     if (p === viewPersona) {
@@ -2086,7 +2113,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
           box-content keeps the 3.5rem content height exact above the inset. */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 box-content pt-[env(safe-area-inset-top)] bg-slate-950/80 backdrop-blur-md border-b border-white/10 px-4 flex items-center justify-between z-[150] select-none">
         <div className="flex items-center gap-2">
-          <img src="/brand/greekstack-mark.png?v=2" className="w-8 h-8 rounded-lg object-contain shadow-md" alt="Greekstack Logo" />
+          <GreekstackLogo title="Greekstack" className="w-8 h-8 shadow-md" />
           <div>
             <span className="text-xs font-bold text-white tracking-wider uppercase block leading-none">Greekstack App</span>
             {/* Mobile view switcher trigger — the phone below is the REAL app;
@@ -2494,11 +2521,14 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                   )}
                   <button
                     onClick={() => {
-                      // SERVER-ENFORCED: only an exec-cleared session (real officer
-                      // per `capabilities.exec`, or the demo) can toggle into the
-                      // exec view. A regular member's tap opens settings instead —
-                      // it can never flip the lens.
-                      if (execAllowed) {
+                      // SERVER-ENFORCED + persona-honest: the header acts as an
+                      // exec toggle only when the exec lens is genuinely in play
+                      // for this persona (`execToggleActive` — a real cleared
+                      // officer, or the demo while already in the exec persona).
+                      // On the member screen it is NOT an exec affordance; a tap
+                      // opens settings, so exec tools never bleed into the member
+                      // view. A regular member can never flip the lens.
+                      if (execToggleActive) {
                         const nextRole = viewRole === "exec" ? "member" : "exec";
                         setViewRole(nextRole);
                         setActiveTab("feed");
@@ -2507,7 +2537,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                         setActiveTab("settings");
                       }
                     }}
-                    aria-label={execAllowed ? "Toggle Exec/Member dashboard view" : "Account settings"}
+                    aria-label={execToggleActive ? "Toggle Exec/Member dashboard view" : "Account settings"}
                     className="press flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-slate-700 transition hover:text-slate-900"
                   >
                     {/* Static "online" dot — the ping ripple was a persistent
@@ -2517,7 +2547,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       {viewRole === "exec"
                         ? "Exec"
                         : role === "brother"
-                        ? (execAllowed && dashboardData?.profile?.position ? dashboardData.profile.position : "Member")
+                        ? (execToggleActive && dashboardData?.profile?.position ? dashboardData.profile.position : "Member")
                         : "Alumnus"}
                     </span>
                   </button>
