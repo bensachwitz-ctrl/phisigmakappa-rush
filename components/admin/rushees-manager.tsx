@@ -952,7 +952,7 @@ function AddPnmDialog({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 inline-block">Email</Label>
-              <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@usc.edu" />
+              <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@university.edu" />
             </div>
             <div>
               <Label className="mb-1 inline-block">Phone</Label>

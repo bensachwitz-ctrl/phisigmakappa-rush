@@ -263,7 +263,7 @@ export function CommandPaletteLauncher({ onOpen }: { onOpen: () => void }) {
       type="button"
       onClick={onOpen}
       aria-label="Open command palette (Cmd+K)"
-      className="fixed bottom-4 right-4 z-40 flex sm:hidden items-center gap-1.5 rounded-full bg-foreground/90 text-background px-3 py-2 text-xs font-medium shadow-lg hover:bg-foreground transition-colors"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] right-4 z-40 flex sm:hidden items-center gap-1.5 rounded-full bg-foreground/90 text-background px-3 py-2 text-xs font-medium shadow-lg hover:bg-foreground transition-colors"
     >
       <Command className="h-3 w-3" aria-hidden="true" />
       <kbd className="text-[10px]">⌘K</kbd>

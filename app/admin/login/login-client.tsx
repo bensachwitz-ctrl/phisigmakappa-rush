@@ -21,6 +21,19 @@ export default function LoginClient() {
 
   const [mode, setMode] = React.useState<Mode>("admin");
 
+  // Refs to the two mode radios so arrow-key navigation can MOVE focus to the
+  // newly-checked radio (the WAI-ARIA radiogroup contract) — otherwise focus is
+  // stranded on the old radio, which just became tabIndex={-1}.
+  const brotherTabRef = React.useRef<HTMLButtonElement>(null);
+  const adminTabRef = React.useRef<HTMLButtonElement>(null);
+  function focusMode(next: Mode) {
+    setMode(next);
+    // Defer to the next frame so the radio is tabbable (tabIndex 0) before focus.
+    requestAnimationFrame(() => {
+      (next === "brother" ? brotherTabRef : adminTabRef).current?.focus();
+    });
+  }
+
   // Brother fields
   const [firstName, setFirstName] = React.useState("");
   const [brotherPw, setBrotherPw] = React.useState("");
@@ -118,11 +131,12 @@ export default function LoginClient() {
                 onKeyDown={(e) => {
                   if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
                     e.preventDefault();
-                    setMode((m) => (m === "admin" ? "brother" : "admin"));
+                    focusMode(mode === "admin" ? "brother" : "admin");
                   }
                 }}
               >
                 <button
+                  ref={brotherTabRef}
                   type="button"
                   role="radio"
                   aria-checked={mode === "brother"}
@@ -136,6 +150,7 @@ export default function LoginClient() {
                   Brother
                 </button>
                 <button
+                  ref={adminTabRef}
                   type="button"
                   role="radio"
                   aria-checked={mode === "admin"}

@@ -31,7 +31,11 @@ export function StickyCTA() {
         // "Brothers"), blocking taps. Use bottom-[calc(...)] to add the
         // safe-area inset on top of the nav height so notched phones don't
         // double-stack into the home indicator.
-        "sm:hidden fixed inset-x-0 z-40 px-4 pb-4 pt-8",
+        // md:hidden (not sm:hidden) so the CTA stays visible across the SAME
+        // <768px band the MobileBottomNav (md:hidden) and page spacer occupy —
+        // otherwise the 640–767px band shows the bottom nav but silently drops
+        // this conversion button.
+        "md:hidden fixed inset-x-0 z-40 px-4 pb-4 pt-8",
         "bottom-[calc(env(safe-area-inset-bottom,0px)+64px)]",
         // Hide in print so a parent printing the consent receipt doesn't
         // get the floating CTA on the page.

@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { RUSH_STATUSES } from "@/lib/utils";
 import { audit } from "@/lib/audit";
 
@@ -24,9 +25,11 @@ const DeleteSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // PNM roster read — officer/admin floor (API twin of the /admin layout
+  // boundary), not isAdminAuthed() alone, so a plain member-login cookie can't
+  // pull the rush pipeline straight from the JSON.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   const rushes = await prisma.rush.findMany({
     orderBy: { createdAt: "desc" },
   });

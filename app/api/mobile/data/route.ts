@@ -330,6 +330,13 @@ async function handleGet(req: Request): Promise<NextResponse> {
         ? activeRoster.map(({ email: _e, phone: _p, ...rest }) => rest)
         : activeRoster;
 
+    // PII scoping: an alum's optInDirectory flag opts them into a DIRECTORY
+    // LISTING (name / grad year / employer / city), NOT into broadcasting their
+    // email + phone to the whole chapter app. The documented contract
+    // (lib/alumni.publicAlumniView + the public /api/alumni-directory route) is
+    // that the directory view STRIPS email/phone. This mobile payload must match
+    // that contract — so we deliberately omit email/phone from the projection
+    // (the actives roster above is similarly minimized for alumni callers).
     const alumniRoster = await db.alumniProfile.findMany({
       where: { optInDirectory: true },
       orderBy: { graduationYear: "desc" },
@@ -339,8 +346,6 @@ async function handleGet(req: Request): Promise<NextResponse> {
         preferredName: true,
         graduationYear: true,
         pledgeClass: true,
-        email: true,
-        phone: true,
         city: true,
         state: true,
         employer: true,
@@ -525,8 +530,8 @@ async function handleGet(req: Request): Promise<NextResponse> {
           preferredName: al.preferredName,
           graduationYear: al.graduationYear,
           pledgeClass: al.pledgeClass,
-          email: al.email,
-          phone: al.phone,
+          // email/phone intentionally omitted — the alumni directory contract
+          // exposes a LISTING (name/employer/city), not contact broadcast.
           city: al.city,
           state: al.state,
           employer: al.employer,

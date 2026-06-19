@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -60,9 +61,10 @@ type ListRow = {
 };
 
 export async function GET() {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // PNM list carries contact info + vote sums + impression tone — officer/admin
+  // floor (API twin of the /admin layout boundary), not isAdminAuthed() alone.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   try {
     const rushes = await prisma.rush.findMany({
       orderBy: { createdAt: "desc" },

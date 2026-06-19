@@ -342,7 +342,7 @@ export function Roster({
   function remove(id: string) {
     askConfirm({
       title: "Remove this rush?",
-      description: "Remove this rush from the database? This cannot be undone.",
+      description: "This permanently removes them from your roster. This cannot be undone.",
       confirmLabel: "Remove",
       destructive: true,
       onConfirm: async () => {
@@ -586,7 +586,7 @@ export function Roster({
           primaryAction={{ label: "View public homepage", href: "/" }}
         />
       ) : (
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent bg-secondary/50">

@@ -121,3 +121,49 @@ export async function checkOfficerPermission(
   const perms = await getCurrentOfficerPermissions();
   return { allowed: hasPermission(perms, domain, action), perms };
 }
+
+/**
+ * COARSE admin-area gate for /api/admin/* JSON handlers — the API-layer twin of
+ * the `app/admin/layout.tsx` boundary check.
+ *
+ * The page layout admits the admin area only for a session that is EITHER a
+ * chapter super-admin (isAdmin=true) OR an officer holding ≥1 active
+ * OfficerAssignment — bouncing a plain member (valid member-login cookie, zero
+ * assignments) to /portal. But that gate lived ONLY in the layout: many
+ * /api/admin/* GET handlers gated on `isAdminAuthed()` alone, which proves only
+ * that the cookie HMAC is valid for this tenant — NOT that it's an officer/admin.
+ * So a plain member who minted a `phisig_admin` cookie via the "Active brothers"
+ * login (and is bounced from the /admin UI) could still fetch chapter-wide PII,
+ * PNM votes/notes, and rush enrichment straight from the JSON endpoints.
+ *
+ * `isOfficerOrAdmin()` recomputes the SAME admit decision the layout uses, and
+ * `guardOfficerOrAdmin()` turns it into a ready 401 (no/invalid session) or 403
+ * (valid member, but not an officer/admin) response — `null` means proceed.
+ * Per-domain `requireOfficerPermission()` still enforces the FINER split on the
+ * routes that have one; this is the coarse "allowed in the building" floor for
+ * the broadly-readable roster/PNM surfaces that previously had none.
+ */
+export async function isOfficerOrAdmin(): Promise<boolean> {
+  const session = await getCurrentSession();
+  if (!session) return false;
+  if (session.isAdmin) return true;
+  const perms = await getOfficerPermissionsForBrother(session.brother.id);
+  return !!perms.superAdmin || Object.keys(perms.domain || {}).length > 0;
+}
+
+export async function guardOfficerOrAdmin(): Promise<NextResponse | null> {
+  const session = await getCurrentSession();
+  if (!session) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  if (session.isAdmin) return null;
+  const perms = await getOfficerPermissionsForBrother(session.brother.id);
+  const isOfficer = !!perms.superAdmin || Object.keys(perms.domain || {}).length > 0;
+  if (!isOfficer) {
+    return NextResponse.json(
+      { ok: false, error: "Officer access required" },
+      { status: 403 }
+    );
+  }
+  return null;
+}

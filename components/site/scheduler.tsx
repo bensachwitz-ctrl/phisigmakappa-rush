@@ -423,7 +423,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
                         id="sched-location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        placeholder="Chapter House — 1525 College St"
+                        placeholder="Chapter house or meeting spot"
                         className="pl-9.5 border-maroon-100 focus-visible:ring-maroon-700 rounded-xl focus:border-maroon-500 shadow-sm"
                       />
                     </div>

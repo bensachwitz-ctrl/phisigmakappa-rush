@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, getCurrentBrotherId, getCurrentSession } from "@/lib/auth";
-import { requireOfficerPermission, hasPermission, getCurrentOfficerPermissions } from "@/lib/permissions";
+import { getCurrentBrotherId, getCurrentSession } from "@/lib/auth";
+import { hasPermission, getCurrentOfficerPermissions, guardOfficerOrAdmin } from "@/lib/permissions";
 import { DOCUMENT_VISIBILITIES } from "@/lib/member-lifecycle";
 
 export const runtime = "nodejs";
@@ -40,11 +40,28 @@ async function ensureWrite() {
 }
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Coarse officer/admin floor (API twin of the /admin layout boundary): a plain
+  // member-login cookie can't list the chapter library straight from the JSON.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
+
+  // Document.visibility was written (PUBLIC|MEMBERS|INITIATES|OFFICERS) but never
+  // enforced on this read — so OFFICERS-tagged documents (signed bid/anti-hazing
+  // waivers, sensitive policy PDFs) shipped to ANY officer/admin session. Filter
+  // OFFICERS-only docs to callers who actually hold the documents domain (admins
+  // short-circuit). Officers without it see everything EXCEPT the OFFICERS tier.
+  const session = await getCurrentSession();
+  let canSeeOfficerDocs = !!session?.isAdmin;
+  if (!canSeeOfficerDocs) {
+    const perms = await getCurrentOfficerPermissions();
+    canSeeOfficerDocs = hasPermission(perms, "documents", "read");
+  }
+
   const url = new URL(req.url);
   const category = url.searchParams.get("category");
   const where: any = {};
   if (category && (CATEGORIES as readonly string[]).includes(category)) where.category = category;
+  if (!canSeeOfficerDocs) where.visibility = { not: "OFFICERS" };
   const docs = await prisma.document.findMany({
     where,
     orderBy: { createdAt: "desc" },

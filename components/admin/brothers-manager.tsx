@@ -404,11 +404,45 @@ export function BrothersManager({
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {b.duesPaid ? (
-                    <Badge className={`bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 ${isAdmin ? "cursor-pointer" : ""}`} onClick={isAdmin ? () => quickToggleDues(b) : undefined}>
+                    <Badge
+                      className={`bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 ${isAdmin ? "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400" : ""}`}
+                      onClick={isAdmin ? () => quickToggleDues(b) : undefined}
+                      // Make the toggle keyboard-operable + screen-reader-announced
+                      // when interactive — a bare <span onClick> is mouse-only.
+                      role={isAdmin ? "button" : undefined}
+                      tabIndex={isAdmin ? 0 : undefined}
+                      aria-label={isAdmin ? `Mark ${b.name} dues unpaid` : undefined}
+                      onKeyDown={
+                        isAdmin
+                          ? (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                quickToggleDues(b);
+                              }
+                            }
+                          : undefined
+                      }
+                    >
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Dues paid
                     </Badge>
                   ) : (
-                    <Badge className={`bg-amber-50 text-amber-800 ring-1 ring-amber-200 ${isAdmin ? "cursor-pointer" : ""}`} onClick={isAdmin ? () => quickToggleDues(b) : undefined}>
+                    <Badge
+                      className={`bg-amber-50 text-amber-800 ring-1 ring-amber-200 ${isAdmin ? "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400" : ""}`}
+                      onClick={isAdmin ? () => quickToggleDues(b) : undefined}
+                      role={isAdmin ? "button" : undefined}
+                      tabIndex={isAdmin ? 0 : undefined}
+                      aria-label={isAdmin ? `Mark ${b.name} dues paid` : undefined}
+                      onKeyDown={
+                        isAdmin
+                          ? (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                quickToggleDues(b);
+                              }
+                            }
+                          : undefined
+                      }
+                    >
                       Dues unpaid
                     </Badge>
                   )}

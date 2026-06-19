@@ -426,7 +426,7 @@ function BroadcastDialog({
           {(channel === "EMAIL" || channel === "BOTH") && (
             <div>
               <Label className="mb-1 inline-block">Subject (email)</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Phi Sig USC — Chapter Update" />
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Chapter Update" />
             </div>
           )}
           <div>

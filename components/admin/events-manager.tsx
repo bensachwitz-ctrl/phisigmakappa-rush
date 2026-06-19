@@ -520,7 +520,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
           <div className="grid gap-4">
             <div>
               <Label className="mb-1 inline-block">Name</Label>
-              <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Tailgate at Williams-Brice" />
+              <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Game-day tailgate" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -534,7 +534,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
             </div>
             <div>
               <Label className="mb-1 inline-block">Location</Label>
-              <Input value={form.location} onChange={(e) => update("location", e.target.value)} placeholder="Phi Sig House — 1525 College St" />
+              <Input value={form.location} onChange={(e) => update("location", e.target.value)} placeholder="Chapter house" />
             </div>
             <div>
               <Label className="mb-1 inline-block">Dress code</Label>

@@ -610,7 +610,7 @@ function ContactStep({
           <Input
             id="email" type="email" autoComplete="email"
             value={data.email} onChange={(e) => update("email", e.target.value)}
-            placeholder="you@email.sc.edu" className="pl-9 pr-10"
+            placeholder="you@university.edu" className="pl-9 pr-10"
           />
         </Field>
       )}
@@ -676,15 +676,19 @@ function ProfileStep({
     <div className="space-y-5">
       <Header
         eyebrow={`Step 2 of ${totalSteps - (booth ? 0 : 1)}`}
-        title={booth ? "Year & major" : "At USC"}
+        title={booth ? "Year & major" : "Your details"}
         sub={booth ? "Tap your year. Major optional." : "Tap your year, then add major and hometown."}
       />
       <Field id="year" label="Year" required error={errors.year}>
-        <div className="flex flex-wrap gap-2">
+        {/* Single-select year — ARIA radiogroup so screen readers announce the
+            selected chip, matching the age-attestation control above. */}
+        <div role="radiogroup" aria-label="Year" className="flex flex-wrap gap-2">
           {YEARS.map((y) => (
             <button
               key={y}
               type="button"
+              role="radio"
+              aria-checked={data.year === y}
               onClick={() => update("year", y)}
               className={cn(
                 "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",

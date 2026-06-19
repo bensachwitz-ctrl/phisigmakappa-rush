@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -67,9 +68,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // Returns PNM names + emails per event — officer/admin floor (API twin of the
+  // /admin layout boundary), not isAdminAuthed() alone.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   const url = new URL(req.url);
   const eventId = url.searchParams.get("eventId");
   if (!eventId) return NextResponse.json({ ok: false }, { status: 400 });

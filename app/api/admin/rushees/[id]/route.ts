@@ -17,6 +17,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 import { RUSH_STATUSES } from "@/lib/utils";
 
@@ -39,9 +40,11 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // Single-PNM detail bundles contact info, notes, votes-with-voter, and
+  // impressions — officer/admin floor (API twin of the /admin layout boundary),
+  // not isAdminAuthed() alone.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   try {
     const rush = await prisma.rush.findUnique({
       where: { id: params.id },

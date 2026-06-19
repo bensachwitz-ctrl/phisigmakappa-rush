@@ -15,9 +15,11 @@
 //         (B) through its ancestor chain; if we ever reach A, the edge would
 //         create a loop, so we 400. A brother also cannot be their own big.
 //
-// Authorization: GET stays session-readable (isAdminAuthed — any valid member
-// cookie) because the lineage forest is a member-visible roster view. The PATCH
-// WRITE, however, assigns/clears bigs and so requires the "brothers" officer
+// Authorization: GET requires an officer/admin session (guardOfficerOrAdmin —
+// the API twin of the /admin layout boundary), so a plain member-login cookie
+// can't read the lineage forest straight from the JSON the way it's bounced from
+// the /admin UI. The PATCH WRITE, however, assigns/clears bigs and so requires
+// the "brothers" officer
 // domain (guardOfficer("brothers","write") — admins/president short-circuit via
 // superAdmin); isAdminAuthed() was too weak there, letting any logged-in brother
 // rewire the family tree. The write also keeps isSameOrigin() (CSRF
@@ -26,8 +28,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
-import { guardOfficer } from "@/lib/permissions";
+import { isSameOrigin } from "@/lib/auth";
+import { guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -46,7 +48,8 @@ const FAMILY_SELECT = {
 } as const;
 
 export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   try {
     const brothers = await prisma.brother.findMany({
       orderBy: { name: "asc" },

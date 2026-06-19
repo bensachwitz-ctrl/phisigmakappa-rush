@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrotherId, isAdminAuthed } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -116,9 +117,12 @@ export async function DELETE(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // This GET returns every vote WITH the voter's identity (include: brother) —
+  // sensitive PNM data. Gate it on the coarse officer/admin floor (API twin of
+  // the /admin layout boundary), not isAdminAuthed() alone, so a plain
+  // member-login cookie can't read who voted what straight from the JSON.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   const url = new URL(req.url);
   const rushId = url.searchParams.get("rushId");
   if (!rushId) return NextResponse.json({ ok: false }, { status: 400 });

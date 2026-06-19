@@ -264,7 +264,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
 
       {/* Mobile dropdown — keeps the full section grid for small screens. */}
       {menuOpen && (
-        <div id="admin-mobile-menu" className="lg:hidden border-t border-border bg-background animate-fade-in">
+        <div id="admin-mobile-menu" className="lg:hidden border-t border-border bg-background animate-fade-in max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain">
           <nav aria-label="Admin sections (mobile)" className="container py-2 grid grid-cols-2 gap-1">
             {items.map((it) => {
               const active = it.href === activeHref;

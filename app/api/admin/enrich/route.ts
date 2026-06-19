@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
@@ -133,9 +134,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // Scraped PNM enrichment PII — officer/admin floor (API twin of the /admin
+  // layout boundary), not isAdminAuthed() alone.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   const url = new URL(req.url);
   const rushId = url.searchParams.get("rushId");
   if (!rushId) return NextResponse.json({ ok: false }, { status: 400 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,9 +14,11 @@ export const dynamic = "force-dynamic";
  * (`bigBrother`). Active members are surfaced first, then alphabetical — matching
  * the initial server-rendered order so a refresh never reshuffles the grid.
  *
- * The directory is a roster-visibility surface, so any authenticated admin user
- * (full admin OR an officer with a console session) may read it — this mirrors
- * the GET on /api/admin/brothers, which gates on isAdminAuthed() alone.
+ * The directory is a roster-visibility surface, so any officer/admin may read
+ * it (full admin OR an officer holding ≥1 OfficerAssignment) — gated by
+ * guardOfficerOrAdmin(), the API twin of the /admin layout boundary. A plain
+ * member-login cookie (valid, but no officer assignment) is 403'd here, the same
+ * way it's bounced from the /admin UI.
  */
 
 // Explicit, public-safe projection. Kept in lock-step with the `DirectoryRow`
@@ -44,9 +46,8 @@ const DIRECTORY_SELECT = {
 const ACTIVE_STATUSES = new Set(["ACTIVE", "INITIATE", "PLEDGE", "PROSPECT"]);
 
 export async function GET() {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
 
   let rows: Array<Record<string, any>> = [];
   try {

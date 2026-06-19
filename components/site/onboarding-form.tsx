@@ -175,7 +175,7 @@ export function OnboardingForm({
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="onb-email" className="mb-1.5 inline-block">Email</Label>
-              <Input id="onb-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="you@email.sc.edu" autoComplete="email" inputMode="email" />
+              <Input id="onb-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="you@university.edu" autoComplete="email" inputMode="email" />
             </div>
             <div>
               <Label htmlFor="onb-phone" className="mb-1.5 inline-block">Phone</Label>

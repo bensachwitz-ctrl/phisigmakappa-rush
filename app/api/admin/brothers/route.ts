@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getSiteConfig } from "@/lib/site-config";
-import { getCurrentOfficerPermissions, hasPermission } from "@/lib/permissions";
+import { getCurrentOfficerPermissions, hasPermission, guardOfficerOrAdmin } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,11 @@ const Schema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+  // Coarse officer/admin gate (API twin of the /admin layout boundary): the GET
+  // ships full roster PII, so a plain member-login cookie — valid, but no
+  // officer assignment — must be 403'd here just as it's bounced from the UI.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   // Explicit select — never ship passwordHash in the response. Even though
   // /api/admin/brothers is admin-only, an XSS in the admin panel or a
   // forwarded log could leak the bcrypt hash. The hash is needed only at
