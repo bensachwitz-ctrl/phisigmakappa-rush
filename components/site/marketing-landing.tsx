@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
-import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
+import { GreekstackWordmark, GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { Reveal } from "@/components/site/reveal";
 
 import { BrandGlyph } from "@/components/site/brand-glyph";
@@ -1978,14 +1978,12 @@ function BeforeAfter() {
                   className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-400/10"
                 />
                 <div className="relative flex items-center gap-3">
-                  <img
-                    src="/brand/greekstack-mark.png?v=2"
-                    alt=""
-                    width={512}
-                    height={512}
-                    decoding="async"
-                    loading="lazy"
-                    className="h-10 w-10 shrink-0 rounded-xl object-contain shadow-sm ring-1 ring-black/5"
+                  {/* Inline SVG mark (was a raw PNG that could 404 / fail to
+                      decode on mobile and show a broken-image icon). */}
+                  <GreekstackLogo
+                    title=""
+                    aria-hidden
+                    className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-black/5"
                   />
                   <div>
                     <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">

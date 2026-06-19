@@ -2243,7 +2243,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
               slop — the lockup is now just title + a quiet text-only line.
               Hierarchy: logo · name (title) · what-this-is (support). */}
           <div className="flex items-center gap-3">
-            <img src="/brand/greekstack-mark.png?v=2" className="w-10 h-10 rounded-xl object-contain shadow-md" alt="Greekstack Logo" />
+            {/* Inline SVG brand mark (was a raw PNG <img> that could 404 / fail to
+                decode on a flaky mobile connection and show a broken-image icon).
+                GreekstackLogo paints the canonical vector with no network fetch, so
+                it always renders. */}
+            <GreekstackLogo title="Greekstack" className="w-10 h-10 rounded-xl shadow-md" />
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight leading-tight">Greekstack App</h2>
               <p className="mt-0.5 text-[12px] font-semibold leading-tight text-slate-400">Interactive demo</p>

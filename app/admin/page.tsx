@@ -7,6 +7,7 @@ import { RushFunnel } from "@/components/admin/rush-funnel";
 import { RecentActivity, type RecentEntry } from "@/components/admin/recent-activity";
 import { getRecentAudit } from "@/lib/audit";
 import { getCurrentBrother } from "@/lib/auth";
+import { getCurrentOfficerPermissions, hasPermission } from "@/lib/permissions";
 import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
@@ -24,9 +25,34 @@ const GLASS_CARD =
   "ring-1 ring-[hsl(var(--primary)/0.06)] shadow-[0_1px_0_0_rgba(255,255,255,0.8)_inset,0_10px_30px_-14px_rgba(11,11,12,0.16),0_28px_56px_-32px_hsl(var(--primary)/0.20)]";
 
 export default async function AdminDashboard({ searchParams }: { searchParams?: { view?: string } }) {
-  const currentView = searchParams?.view === "alumni" ? "alumni" : "brothers";
+  // DEFENSE-IN-DEPTH RBAC (landing page). The admin layout already guarantees
+  // the caller is a super-admin OR an officer with ≥1 domain — but this landing
+  // dashboard aggregates SENSITIVE cross-domain data that not every officer is
+  // entitled to: the rush/PNM pipeline (a recruit's votes, contact info, notes
+  // and headshots → rushPipeline) and the alumni network (donations + alumni
+  // PII → alumni). A super-admin sees everything (unchanged — that's every
+  // /admin login today); a non-super-admin officer only sees the sections they
+  // actually hold, and we never even QUERY the data they can't see (data
+  // minimization), so a Treasurer can't read PNM votes or alumni gifts off the
+  // home screen. We resolve perms ONCE and reuse the flags below. We do NOT gate
+  // the page itself (that would lock a single-domain officer out of their home
+  // and could loop with the error boundary's "Back to dashboard"); instead each
+  // sensitive block renders an in-place "no access" panel.
+  const perms = await getCurrentOfficerPermissions();
+  const canSeeRush = hasPermission(perms, "rushPipeline", "read");
+  const canSeeAlumni = hasPermission(perms, "alumni", "read");
+  const canSeeDues = hasPermission(perms, "dues", "read");
+
+  const requestedView = searchParams?.view === "alumni" ? "alumni" : "brothers";
+  // If an officer lacks alumni access, never land them on the alumni view (even
+  // via ?view=alumni) — fall back to the brothers view they came for.
+  const currentView = requestedView === "alumni" && canSeeAlumni ? "alumni" : "brothers";
   let rushes: any[] = [];
   try {
+    // Only load the rush pipeline (PNM votes/notes/contact) for an officer who
+    // holds rushPipeline:read. Everyone else gets an empty set → the rush UI
+    // collapses to its "no access" fallback below.
+    if (!canSeeRush) throw new Error("skip");
     rushes = await prisma.rush.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -67,10 +93,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   try {
     // Schema has no "active" flag — every row in Brother represents an
     // active chapter member (revocations delete the row). Use total count
-    // as the participation denominator.
+    // as the participation denominator. The dues-paid headcount is a financial
+    // signal, so only compute it for an officer who holds dues:read (or a
+    // super-admin) — otherwise it stays 0 and the dues KPI reads as "—".
     [totalActiveBrothers, duesPaidCount] = await Promise.all([
       prisma.brother.count(),
-      prisma.brother.count({ where: { duesPaid: true } }),
+      canSeeDues ? prisma.brother.count({ where: { duesPaid: true } }) : Promise.resolve(0),
     ]);
   } catch {}
   try {
@@ -206,6 +234,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   let recentDonations: any[] = [];
 
   try {
+    // Alumni metrics (donations + alumni PII) are only loaded for an officer who
+    // holds alumni:read (or a super-admin). Without it, the alumni view is never
+    // rendered (currentView is forced to "brothers" above) and these stay 0.
+    if (!canSeeAlumni) throw new Error("skip");
     [totalAlumni, optedInDirectoryCount, activeAlumniPollsCount] = await Promise.all([
       prisma.alumniProfile.count(),
       prisma.alumniProfile.count({ where: { optInDirectory: true } }),
@@ -272,17 +304,23 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           >
             Brothers/Rush View
           </Link>
-          <Link
-            href="/admin?view=alumni"
-            aria-current={currentView === "alumni" ? "page" : undefined}
-            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
-              currentView === "alumni"
-                ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/60"
-            }`}
-          >
-            Alumni Network View
-          </Link>
+          {/* The Alumni Network view is gated on alumni:read — an officer
+              without it never sees the toggle (and ?view=alumni is force-folded
+              back to the brothers view above), so they can't reach alumni
+              donations/PII from the home screen. Super-admins always see it. */}
+          {canSeeAlumni && (
+            <Link
+              href="/admin?view=alumni"
+              aria-current={currentView === "alumni" ? "page" : undefined}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
+                currentView === "alumni"
+                  ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/60"
+              }`}
+            >
+              Alumni Network View
+            </Link>
+          )}
         </div>
       </div>
 
@@ -442,6 +480,29 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             </div>
           </Reveal>
 
+          {/* RBAC: the rush KPIs/consensus + funnel + roster all expose PNM data
+              (votes, notes, contact info, headshots). They render only for an
+              officer who holds rushPipeline:read (or a super-admin — every /admin
+              login today). An officer without it (e.g. Treasurer / House Manager)
+              gets a friendly in-place panel instead and keeps the Chapter tools
+              below, so they're never locked out of their home. */}
+          {!canSeeRush && (
+            <Reveal as="div" className="mb-6">
+              <div className={`${GLASS_CARD} p-8 text-center`}>
+                <div className="mx-auto mb-3 w-fit">
+                  <IconChip icon={IconDashboard} tone="muted" size="lg" />
+                </div>
+                <h2 className="text-lg font-semibold tracking-tight">Recruitment is handled by another officer</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Your officer role doesn&apos;t include the rush pipeline, so the PNM
+                  roster, votes and recruitment metrics aren&apos;t shown here. Use the
+                  chapter tools below for the areas you manage.
+                </p>
+              </div>
+            </Reveal>
+          )}
+
+          {canSeeRush && (
           <DashboardInsights
             rushes={serializable}
             totalBrothers={brotherCount}
@@ -454,11 +515,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             acceptedCount={acceptedCount}
             brandReadiness={brandReadiness}
           />
+          )}
 
           {/* Funnel + recent activity in a 2-column grid on lg screens so the
               dashboard reads top-to-bottom: KPIs → consensus → funnel + activity
               → setup checklist → roster. Stacks on mobile. */}
-          {(rushes.length > 0 || recentEntries.length > 0) && (
+          {canSeeRush && (rushes.length > 0 || recentEntries.length > 0) && (
             <div className="mb-6 grid lg:grid-cols-2 gap-4">
               {rushes.length > 0 && (
                 <Reveal delay={40} className="h-full [&>*]:h-full">
@@ -526,6 +588,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             </Reveal>
           )}
 
+          {/* The PNM roster carries the most sensitive recruit data (contact
+              info, notes, votes, headshots) — gate it on rushPipeline:read. An
+              officer without it never receives `serializable` (it's empty) and
+              never renders the table. */}
+          {canSeeRush && (
           <Roster
             initial={serializable as any}
             brotherName={me?.name || null}
@@ -540,6 +607,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               houseAddress: (cfg["contact.address"] || "").split(",")[0].trim(),
             }}
           />
+          )}
         </>
       )}
     </main>

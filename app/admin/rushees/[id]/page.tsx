@@ -6,6 +6,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RusheeDetail, type RusheeDetailData } from "@/components/admin/rushee-detail";
+import { requireOfficerPermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,12 @@ export default async function RusheeDetailPage({
 }: {
   params: { id: string };
 }) {
+  // DEFENSE-IN-DEPTH RBAC: the rushees LIST page gates on rushPipeline:read, but
+  // this detail page was reachable by any officer via direct URL — leaking a
+  // PNM's votes, attendance, and impressions. Gate it on the same domain so only
+  // a global admin or a recruitment-domain officer can open it.
+  await requireOfficerPermission("rushPipeline", "read");
+
   let rush: any = null;
   try {
     rush = await prisma.rush.findUnique({

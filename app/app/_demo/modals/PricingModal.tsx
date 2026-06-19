@@ -1,6 +1,7 @@
 import React from "react";
 import { Check, X } from "lucide-react";
 import type { DemoContext } from "../context";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
 export function renderPricingModal(ctx: DemoContext) {
   const {
@@ -14,7 +15,7 @@ export function renderPricingModal(ctx: DemoContext) {
             </button>
             <div className="space-y-1.5 border-b border-white/10 pb-3">
               <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
-                <img src="/brand/greekstack-mark.png?v=2" className="w-3.5 h-3.5 object-contain" alt="" /> Launch Greekstack App
+                <GreekstackLogo title="" aria-hidden className="w-3.5 h-3.5" /> Launch Greekstack App
               </div>
               <h3 className="text-xl font-bold text-white leading-tight">Choose Your Chapter Plan</h3>
               <p className="text-xs text-slate-400">Unleash the full white-label platform for your chapter. Cancel anytime.</p>

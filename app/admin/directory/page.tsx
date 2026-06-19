@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { DirectoryManager, type DirectoryRow } from "@/components/admin/directory-manager";
 import { IconDirectory } from "@/components/brand/icons/directory";
+import { requireOfficerPermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,13 @@ export const dynamic = "force-dynamic";
 const ACTIVE_STATUSES = new Set(["ACTIVE", "INITIATE", "PLEDGE", "PROSPECT"]);
 
 export default async function DirectoryPage() {
+  // DEFENSE-IN-DEPTH RBAC: the member directory exposes every brother's contact
+  // info (email/phone) + family tree — sensitive PII. The admin layout only
+  // checks for a valid admin session, so without this an officer lacking the
+  // brothers domain (or any holder of an isAdmin=false admin cookie) could read
+  // the full roster by direct URL. Gate on brothers:read to match /admin/brothers.
+  await requireOfficerPermission("brothers", "read");
+
   let rows: any[] = [];
   try {
     rows = await prisma.brother.findMany({

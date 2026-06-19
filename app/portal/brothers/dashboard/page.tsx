@@ -262,12 +262,19 @@ export default async function BrothersDashboardPage() {
     redirect("/portal/brothers?error=unavailable");
   }
 
+  const duesEnabled = configs.find(c => c.key === "dues.enabled")?.value === "true";
+  const duesAmountCents = parseInt(configs.find(c => c.key === "dues.amountCents")?.value || "0", 10);
   const duesConfig = {
-    enabled: configs.find(c => c.key === "dues.enabled")?.value === "true",
-    amountCents: parseInt(configs.find(c => c.key === "dues.amountCents")?.value || "0", 10),
+    enabled: duesEnabled,
+    amountCents: duesAmountCents,
     year: configs.find(c => c.key === "dues.year")?.value || "",
     label: configs.find(c => c.key === "dues.label")?.value || "Active Dues",
     stripePublishableKey: configs.find(c => c.key === "dues.stripePublishableKey")?.value || "",
+    // "Configured" = the chapter has actually set dues up: online dues is enabled
+    // AND a positive amount is set. A chapter that never touched dues (no plan, no
+    // amount) is NOT configured, so the member-facing Dues card/tab is hidden for
+    // plain members (exec/admin still see it so they can finish setup).
+    configured: duesEnabled && duesAmountCents > 0,
   };
 
   // Engagement / good-standing — computed from existing signals (no new tables).

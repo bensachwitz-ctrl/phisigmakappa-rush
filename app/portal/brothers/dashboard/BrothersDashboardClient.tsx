@@ -38,6 +38,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { isNative } from "@/lib/native-bridge";
+import { isOfficerPosition } from "@/lib/member-capabilities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -262,6 +263,8 @@ interface DuesConfig {
   year: string;
   label: string;
   stripePublishableKey: string;
+  /** True only when the chapter has actually set dues up (enabled + positive amount). */
+  configured: boolean;
 }
 
 interface MemberStanding {
@@ -572,8 +575,23 @@ export default function BrothersDashboardClient({
   const [eventList, setEventList] = useState<Event[]>(events);
   const [announcementList, setAnnouncementList] = useState<Announcement[]>(initialAnnouncements);
 
-  const isOfficer = brother.position && brother.position !== "Active Member" && brother.position.trim() !== "";
+  // RBAC: the exec/admin console must NEVER leak onto a regular member's view.
+  // Use the CANONICAL, server-shared officer test (lib/member-capabilities ->
+  // isOfficerPosition) — the same keyword gate the mobile /api/mobile/data route
+  // enforces — instead of the prior ad-hoc "position !== 'Active Member'" check,
+  // which treated ANY non-empty, non-"Active Member" string (e.g. "Member",
+  // "Brother", "New Member", a custom title) as an officer and bled the exec
+  // console onto plain members. Now only a real officer seat (President / Vice /
+  // Treasurer / Secretary / any Chair / titled officer) OR a global admin sees it.
+  const isOfficer = isOfficerPosition(brother.position);
   const showAdminConsole = isOfficer || isAdmin;
+
+  // DUES VISIBILITY: the Dues card + tab only belong on a member's view when the
+  // chapter has actually CONFIGURED dues (online dues enabled + a positive amount
+  // set). When a chapter never set dues up, a plain member should see no dues
+  // surface at all. Exec/admin still see it (gated to a "set it up" empty state)
+  // so a treasurer can finish configuration from inside the portal.
+  const showDues = duesConfig.configured || showAdminConsole;
 
   // Career board states
   const [alumniTab, setAlumniTab] = useState("directory"); // "directory" or "careers"
@@ -1127,7 +1145,9 @@ export default function BrothersDashboardClient({
               { id: "overview", label: "Overview", icon: IconActivity },
               { id: "events", label: "Events & RSVPs", icon: IconEvents },
               { id: "service", label: "Service Hours", icon: IconServiceHours },
-              { id: "dues", label: "Chapter Dues", icon: IconDues },
+              // Chapter Dues tab is hidden entirely until dues is configured (or
+              // for exec/admin, who get a "set it up" surface) — see showDues.
+              ...(showDues ? [{ id: "dues", label: "Chapter Dues", icon: IconDues }] : []),
               { id: "alumni", label: "Alumni Directory", icon: IconMembers },
               { id: "polls", label: "Chapter Polls", icon: IconPolls },
               { id: "profile", label: "My Profile", icon: IconProfile },
@@ -1854,11 +1874,43 @@ export default function BrothersDashboardClient({
             </div>
           )}
 
-          {/* TAB 4: CHAPTER DUES */}
-          {activeTab === "dues" && (
+          {/* TAB 4: CHAPTER DUES.
+              Only reachable when showDues is true. When the chapter has NOT set
+              dues up (duesConfig.configured === false) the tab is hidden from
+              plain members entirely; the only viewers who can land here are
+              exec/admin, who get a clean "not set up yet" empty state with a path
+              to configure it — never a misleading "$0.00 / blank year" card. */}
+          {activeTab === "dues" && !duesConfig.configured && (
+            <div className="animate-fade-in">
+              <div className="mx-auto max-w-xl p-8 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl text-center ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-maroon-50 text-maroon-600">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-maroon-900">Dues aren&apos;t set up yet</h3>
+                <p className="mt-2 text-sm text-maroon-600 leading-relaxed">
+                  This chapter hasn&apos;t turned on online dues. Once your treasurer
+                  sets a dues amount and connects Stripe, the dues card and online
+                  payment will appear here automatically.
+                </p>
+                {showAdminConsole && (
+                  <a
+                    href="/admin/settings#dues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-maroon-700 to-maroon-900 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] transition-all duration-200 hover:from-maroon-800 hover:to-maroon-950 active:scale-[0.98]"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Set up dues
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "dues" && duesConfig.configured && (
             <div className="space-y-6 animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
+
                 {/* Active Semester Dues Card */}
                 <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1 flex flex-col justify-between">
                   <div className="space-y-4">

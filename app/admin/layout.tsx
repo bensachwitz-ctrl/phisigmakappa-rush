@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { BillingBanner } from "@/components/admin/billing-banner";
 import { getCurrentSession } from "@/lib/auth";
+import { getOfficerPermissionsForBrother } from "@/lib/permissions";
 import { getSubdomain } from "@/lib/prisma";
 import { getEntitlement } from "@/lib/entitlement";
 import { getStripe } from "@/lib/stripe";
@@ -41,6 +42,34 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const onLoginPage = currentPath.startsWith("/admin/login");
   if (!session && !onLoginPage) {
     redirect("/admin/login");
+  }
+
+  // DEFENSE-IN-DEPTH RBAC — member-vs-exec separation at the admin boundary.
+  //
+  // The middleware + the session gate above only prove the cookie is a VALID
+  // session for this tenant — NOT that it belongs to an officer/admin. But the
+  // member-login branch (POST /api/admin/login, mode:"brother") mints the SAME
+  // `phisig_admin` cookie with isAdmin=false for any plain brother. So without
+  // this check, a regular member who signed into the member app would carry a
+  // cookie that satisfies both the middleware and the session gate and could
+  // reach EVERY /admin/* surface — including the ones that don't yet call
+  // requireOfficerPermission (the landing dashboard, audit log, officers,
+  // settings, etc.). That is a real member→exec leak, not just a UI slip.
+  //
+  // Fix: admit a request to the admin area only when the session is EITHER a
+  // chapter super-admin (isAdmin=true) OR an officer who holds at least one
+  // active OfficerAssignment (some non-empty permission domain). A plain member
+  // (zero assignments, isAdmin=false) is bounced to their own portal home — NOT
+  // back to /admin/login (that would loop, since their cookie is valid) and NOT
+  // 403'd inside the shell (a member never belongs here at all). Per-page
+  // requireOfficerPermission() gates still enforce the FINER domain split on top
+  // of this; this is the coarse "are you allowed in the building" gate.
+  if (session && !onLoginPage && !isAdmin) {
+    const perms = await getOfficerPermissionsForBrother(session.brother.id);
+    const isOfficer = perms.superAdmin || Object.keys(perms.domain || {}).length > 0;
+    if (!isOfficer) {
+      redirect("/portal");
+    }
   }
 
   // SOFT-GATE: resolve the chapter's platform-billing entitlement (fail-open —

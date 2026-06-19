@@ -5,6 +5,7 @@ import { BrotherLeaderboard, type LeaderboardBrother } from "@/components/admin/
 import { AlumniManager } from "@/components/admin/alumni-manager";
 import { getCurrentSession } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { requireOfficerPermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,17 @@ export default async function BrothersPage({
 }: {
   searchParams?: { view?: string };
 }) {
+  // DEFENSE-IN-DEPTH RBAC: the admin middleware/layout only require *a* valid
+  // admin session — so any officer who signed in via /api/admin/login (an
+  // isAdmin=false admin cookie) would otherwise reach this member-management
+  // surface (full roster + dues config + alumni) by direct URL regardless of
+  // their officer domain. Gate the page on the "brothers" domain so only a
+  // global admin (superAdmin) or an officer actually granted brother access
+  // (President / VP / Secretary / Treasurer / Recruitment / Marshal) can load
+  // it; a House/Social/Scholarship chair — or a plain member — is rejected with
+  // a 403 instead of seeing the roster. Mirrors the gate on /admin/treasury.
+  await requireOfficerPermission("brothers", "read");
+
   const currentView = searchParams?.view === "alumni" ? "alumni" : "brothers";
 
   let brothers: any[] = [];

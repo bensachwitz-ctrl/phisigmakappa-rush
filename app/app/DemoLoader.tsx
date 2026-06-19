@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { ComponentProps } from "react";
 import type MobileAppClientType from "./MobileAppClient";
 import NativeBridge from "./NativeBridge";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
 // Lazy/dynamic boundary for the flagship interactive demo.
 //
@@ -26,10 +27,11 @@ const MobileAppClient = dynamic(() => import("./MobileAppClient"), {
       aria-label="Loading interactive demo"
     >
       <div className="flex flex-col items-center gap-4">
-        <img
-          src="/brand/greekstack-mark.png?v=2"
-          className="w-12 h-12 rounded-xl object-contain opacity-90 motion-safe:animate-pulse"
-          alt="Greekstack"
+        {/* Inline SVG mark (no network fetch) so the loading screen brand never
+            shows a broken-image icon if the PNG fails to load on mobile. */}
+        <GreekstackLogo
+          title="Greekstack"
+          className="w-12 h-12 rounded-xl opacity-90 motion-safe:animate-pulse"
         />
         <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
           <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-blue-500/80 to-sky-400/80 motion-safe:animate-pulse" />
