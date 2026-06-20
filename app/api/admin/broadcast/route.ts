@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
@@ -28,8 +29,9 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
   // Broadcast can fan out SMS + email to the whole chapter / rushee list.
   // Once Twilio + Resend keys are set in prod, a member could otherwise
-  // spam every brother. Admin-only.
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  // spam every brother. Admins or officers holding announcements:write.
+  const denied = await guardOfficer("announcements", "write");
+  if (denied) return denied;
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }

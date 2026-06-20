@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
+import { isAdminAuthed, getCurrentBrotherId } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -33,7 +34,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("announcements", "write");
+  if (denied) return denied;
   const brotherId = getCurrentBrotherId();
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
@@ -80,7 +82,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("announcements", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => null);
   const PatchSchema = Schema.partial().extend({ id: z.string().min(1) });
   const parsed = PatchSchema.safeParse(body);
@@ -108,7 +111,8 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("announcements", "write");
+  if (denied) return denied;
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
   const victim = await prisma.announcement.findUnique({

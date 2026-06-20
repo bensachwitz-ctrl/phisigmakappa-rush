@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
 import { getSiteConfig } from "@/lib/site-config";
@@ -125,7 +126,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("alumni", "write");
+  if (denied) return denied;
 
   const body = await req.json().catch(() => ({}));
   const parsed = InviteSchema.safeParse(body);
@@ -206,7 +208,8 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("alumni", "write");
+  if (denied) return denied;
   const body = await req.json().catch(() => ({}));
   const id = body?.id;
   if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });

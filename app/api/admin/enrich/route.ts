@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const runtime = "nodejs";
@@ -68,10 +68,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   // Tavily API costs money per call (1k free / month, then paid). Members
-  // shouldn't be able to fire enrichment lookups; admin-only.
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  // shouldn't be able to fire enrichment lookups; admins or officers holding
+  // rushPipeline:write.
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
 
   let body: any;
   try { body = await req.json(); } catch {

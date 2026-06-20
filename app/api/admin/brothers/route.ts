@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getSiteConfig } from "@/lib/site-config";
-import { getCurrentOfficerPermissions, hasPermission, guardOfficerOrAdmin } from "@/lib/permissions";
+import { getCurrentOfficerPermissions, hasPermission, guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,7 +69,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   const parsed = Schema.safeParse(body);
@@ -252,7 +253,8 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  const denied = await guardOfficer("brothers", "write");
+  if (denied) return denied;
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
   // Snapshot name + position for the audit trail before cascading delete.

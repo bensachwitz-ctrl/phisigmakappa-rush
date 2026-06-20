@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 import { RUSH_STATUSES } from "@/lib/utils";
 import { audit } from "@/lib/audit";
 
@@ -41,11 +41,10 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   // Status changes (ACCEPTED / DROPPED / BID_EXTENDED) and notes are
-  // chapter business decisions — admin-only. Members vote on rushees but
-  // don't change their status.
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  // chapter business decisions — admins or officers holding rushPipeline:write.
+  // Members vote on rushees but don't change their status.
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
   try {
     const body = await req.json();
     const data = PatchSchema.parse(body);
@@ -124,9 +123,8 @@ export async function DELETE(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id } = DeleteSchema.parse(body);
