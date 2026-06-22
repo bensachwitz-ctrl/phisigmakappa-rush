@@ -615,9 +615,14 @@ export default function DashboardClient({
           return [...filtered, data.vouch];
         });
         setVouchingPnm(null);
+        push({ title: "Vouch saved", description: "Your character note was shared with the recruitment chair.", variant: "success" });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        push({ title: "Couldn't save your vouch", description: data.error || "Please try again.", variant: "destructive" });
       }
     } catch (err) {
       console.error(err);
+      push({ title: "Couldn't save your vouch", description: "Network error — please try again.", variant: "destructive" });
     } finally {
       setSubmittingVouch(false);
     }
@@ -642,9 +647,14 @@ export default function DashboardClient({
             if (vouchingPnm?.id === rushId) {
               setVouchingPnm(null);
             }
+            push({ title: "Vouch revoked", description: "Your character note was removed.", variant: "success" });
+          } else {
+            const data = await res.json().catch(() => ({}));
+            push({ title: "Couldn't revoke your vouch", description: data.error || "Please try again.", variant: "destructive" });
           }
         } catch (err) {
           console.error(err);
+          push({ title: "Couldn't revoke your vouch", description: "Network error — please try again.", variant: "destructive" });
         }
       },
     });
@@ -686,9 +696,16 @@ export default function DashboardClient({
             };
           })
         );
+      } else {
+        // Without this, a failed vote (closed poll, 500, validation) left the
+        // UI unchanged and gave the alumnus zero feedback — they'd think the tap
+        // did nothing. Surface the failure so they can retry.
+        const data = await res.json().catch(() => ({}));
+        push({ title: "Couldn't record your vote", description: data.error || "Please try again.", variant: "destructive" });
       }
     } catch (err) {
       console.error(err);
+      push({ title: "Couldn't record your vote", description: "Network error — please try again.", variant: "destructive" });
     } finally {
       setVotingOnPollId(null);
     }

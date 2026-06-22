@@ -209,8 +209,12 @@
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 28px -6px rgba(200, 16, 46, 0.30); }
-  50% { box-shadow: 0 0 40px -4px rgba(200, 16, 46, 0.55); }
+  /* Brand-tracking glow — uses the per-chapter --primary HSL triple injected by
+     buildBrandThemeStyle() so the halo matches each chapter's color. Previously
+     hardcoded Phi Sig cardinal red, which broke white-label on non-Phi-Sig
+     deploys (a navy/gold chapter glowed garnet). */
+  0%, 100% { box-shadow: 0 0 28px -6px hsl(var(--primary) / 0.30); }
+  50% { box-shadow: 0 0 40px -4px hsl(var(--primary) / 0.55); }
 }
 
 @keyframes slide-up {
@@ -224,9 +228,11 @@
 }
 
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.5); }
-  70% { box-shadow: 0 0 0 12px rgba(200, 16, 46, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
+  /* Brand-tracking pulse ring — tied to --primary (per-chapter) instead of the
+     old hardcoded Phi Sig cardinal red, so it white-labels correctly. */
+  0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+  70% { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
 }
 
 @keyframes spotlight-in {
