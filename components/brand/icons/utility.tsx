@@ -95,3 +95,36 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** IconSearch — a magnifying glass with an accent-shaded lens. */
+export function IconSearch({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="11" cy="11" r="5.5" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="11" cy="11" r="5.5" />
+      <path d="M20 20l-5-5" />
+    </IconBase>
+  );
+}
+
+/** IconCommand — the ⌘ loop with a soft central accent box. */
+export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 9h6v6H9V9Z" fill={accent} opacity={0.16} stroke="none" />
+      <path d="M18 9a3 3 0 1 1-3-3V9h3Zm-9 0a3 3 0 1 0 3-3V9H9Zm0 6a3 3 0 1 0 3 3V15H9Zm9 0a3 3 0 1 1-3 3V15h3ZM9 9h6v6H9V9Z" />
+    </IconBase>
+  );
+}
+
+/** IconHelp — a question mark with a soft accent-shaded background disk. */
+export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="8.5" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" />
+    </IconBase>
+  );
+}
