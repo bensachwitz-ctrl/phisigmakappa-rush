@@ -816,6 +816,18 @@ export default function MarketingLandingPage() {
     return () => mql.removeEventListener("change", handler);
   }, []);
 
+  React.useEffect(() => {
+    const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const htmlEl = document.documentElement;
+    htmlEl.classList.add("snap-y", "snap-mandatory", "gs-marketing-active");
+    if (!isReduced) {
+      htmlEl.classList.add("scroll-smooth");
+    }
+    return () => {
+      htmlEl.classList.remove("snap-y", "snap-mandatory", "scroll-smooth", "gs-marketing-active");
+    };
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -862,17 +874,17 @@ export default function MarketingLandingPage() {
         <ScrollProgressBar />
         <SiteNav />
         <main id="main" className="relative z-10">
-          <Hero />
-          <GlyphMarquee />
-          <DemoShowcase />
-          <HowItWorks />
-          <Features />
-          <BeforeAfter />
-          <PracticeShowcase />
-          <Proof />
-          <Pricing />
-          <Faq />
-          <FinalCta />
+          <div className="snap-start snap-always"><Hero /></div>
+          <div className="snap-start snap-always"><GlyphMarquee /></div>
+          <div className="snap-start snap-always"><DemoShowcase /></div>
+          <div className="snap-start snap-always"><HowItWorks /></div>
+          <div className="snap-start snap-always"><Features /></div>
+          <div className="snap-start snap-always"><BeforeAfter /></div>
+          <div className="snap-start snap-always"><PracticeShowcase /></div>
+          <div className="snap-start snap-always"><Proof /></div>
+          <div className="snap-start snap-always"><Pricing /></div>
+          <div className="snap-start snap-always"><Faq /></div>
+          <div className="snap-start snap-always"><FinalCta /></div>
         </main>
         <SiteFooter />
       </div>
@@ -890,6 +902,12 @@ export default function MarketingLandingPage() {
 
       {/* 3D scrolling container. Each major section is pinned, fades and scales from depth, then zooms past. */}
       <div ref={containerRef} className="relative h-[650vh]">
+        {/* Scroll snap helper points for 3D slides */}
+        <div className="absolute top-0 h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[180vh] h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[360vh] h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[540vh] h-screen w-full snap-start snap-always pointer-events-none" />
+
         <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center [perspective:1200px] [transform-style:preserve-3d]">
           
           {/* Giant Greek Stack background logo */}
@@ -975,13 +993,13 @@ export default function MarketingLandingPage() {
 
       {/* Narrative continuation scrolling normally below the 3D container */}
       <main id="main" className="relative z-10 bg-white border-t border-border/40">
-        <GlyphMarquee />
-        <DemoShowcase />
-        <BeforeAfter />
-        <PracticeShowcase />
-        <Proof />
-        <Faq />
-        <FinalCta />
+        <div className="snap-start snap-always"><GlyphMarquee /></div>
+        <div className="snap-start snap-always"><DemoShowcase /></div>
+        <div className="snap-start snap-always"><BeforeAfter /></div>
+        <div className="snap-start snap-always"><PracticeShowcase /></div>
+        <div className="snap-start snap-always"><Proof /></div>
+        <div className="snap-start snap-always"><Faq /></div>
+        <div className="snap-start snap-always"><FinalCta /></div>
       </main>
 
       <SiteFooter />
