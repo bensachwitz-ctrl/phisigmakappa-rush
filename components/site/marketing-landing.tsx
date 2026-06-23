@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion, useInView } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useInView, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
@@ -804,41 +804,186 @@ const FAQS: { q: string; a: string }[] = [
 
 
 export default function MarketingLandingPage() {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  // 3D scrolling transforms driven by scroll progress
+  // 1. Hero Zoom
+  const heroScale = useTransform(scrollYProgress, [0, 0.22], [1, 6]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
+  const heroZ = useTransform(scrollYProgress, [0, 0.22], [0, 800]);
+  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => latest < 0.2 ? "auto" : "none");
+
+  // Giant background logo zoom (3D feel)
+  const logoScale = useTransform(scrollYProgress, [0, 0.25], [1, 10]);
+  const logoOpacity = useTransform(scrollYProgress, [0.02, 0.22], [1, 0]);
+  const logoZ = useTransform(scrollYProgress, [0, 0.25], [0, 1200]);
+
+  // 2. How It Works Stage
+  const howItWorksScale = useTransform(scrollYProgress, [0.18, 0.32, 0.42, 0.52], [0.4, 1, 1, 4]);
+  const howItWorksOpacity = useTransform(scrollYProgress, [0.18, 0.28, 0.45, 0.52], [0, 1, 1, 0]);
+  const howItWorksZ = useTransform(scrollYProgress, [0.18, 0.32, 0.42, 0.52], [-650, 0, 0, 800]);
+  const howItWorksPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.18 && latest < 0.48) ? "auto" : "none");
+
+  // 3. Features Stage
+  const featuresScale = useTransform(scrollYProgress, [0.46, 0.58, 0.68, 0.78], [0.4, 1, 1, 4]);
+  const featuresOpacity = useTransform(scrollYProgress, [0.46, 0.54, 0.72, 0.78], [0, 1, 1, 0]);
+  const featuresZ = useTransform(scrollYProgress, [0.46, 0.58, 0.68, 0.78], [-650, 0, 0, 800]);
+  const featuresPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.48 && latest < 0.74) ? "auto" : "none");
+
+  // 4. Pricing Stage
+  const pricingScale = useTransform(scrollYProgress, [0.72, 0.84, 0.92, 0.98], [0.4, 1, 1, 4]);
+  const pricingOpacity = useTransform(scrollYProgress, [0.72, 0.80, 0.94, 0.98], [0, 1, 1, 0]);
+  const pricingZ = useTransform(scrollYProgress, [0.72, 0.84, 0.92, 0.98], [-650, 0, 0, 800]);
+  const pricingPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.74 && latest < 0.98) ? "auto" : "none");
+
+  if (reduce || isMobile) {
+    // Accessible flat layout for reduced motion / mobile screens
+    return (
+      <div className="relative min-h-screen text-foreground antialiased selection:bg-blue-500/20">
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-[-10] bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
+        />
+        <ScrollProgressBar />
+        <SiteNav />
+        <main id="main" className="relative z-10">
+          <Hero />
+          <GlyphMarquee />
+          <DemoShowcase />
+          <HowItWorks />
+          <Features />
+          <BeforeAfter />
+          <PracticeShowcase />
+          <Proof />
+          <Pricing />
+          <Faq />
+          <FinalCta />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen text-foreground antialiased selection:bg-blue-500/20">
-      {/* Tinted base wash — replaces the flat-white background so the page never
-          reads as plain: a soft blue radial up top fading to white, then a faint
-          blue floor. Fixed page-background layer at z-0 (owner round-8 z-stack:
-          bg z-0 → letters z-1 → content z-2+). */}
       <div
         aria-hidden="true"
         className="fixed inset-0 z-[-10] bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
       />
-      {/* Drifting Greek letters are rendered globally by app/layout.tsx —
-          no local instance needed here. The field sits at z-[-5], behind
-          the page wash (z-[-10]) and all cards/text (z-10). */}
       <ScrollProgressBar />
       <SiteNav />
-      {/* NARRATIVE ORDER — each scroll beat answers the next natural question:
-          Hero ("what is this?") → GlyphMarquee ("can I trust it?") →
-          DemoShowcase ("show me — as MY chapter") → HowItWorks ("how do I get
-          it?") → Features ("what's included?") → BeforeAfter ("why switch?") →
-          Proof ("who's behind it / what do I get?") → Pricing ("what does it
-          cost?") → Faq (last objections) → FinalCta (close). The interactive
-          demo + launch paths recur tastefully at the end of every major beat. */}
-      <main id="main" className="relative z-10">
-        <Hero />
+
+      {/* 3D scrolling container. Each major section is pinned, fades and scales from depth, then zooms past. */}
+      <div ref={containerRef} className="relative h-[650vh]">
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center [perspective:1200px] [transform-style:preserve-3d]">
+          
+          {/* Giant Greek Stack background logo */}
+          <motion.div
+            style={{
+              scale: logoScale,
+              opacity: logoOpacity,
+              z: logoZ,
+            }}
+            className="absolute inset-0 flex justify-center items-center pointer-events-none"
+          >
+            <div className="opacity-15 text-blue-600 w-96 h-96 flex items-center justify-center">
+              <GreekstackLogo className="w-full h-full" />
+            </div>
+          </motion.div>
+
+          {/* 1. Hero overlay */}
+          <motion.div
+            style={{
+              scale: heroScale,
+              opacity: heroOpacity,
+              z: heroZ,
+              pointerEvents: heroPointerEvents as any,
+              transformStyle: "preserve-3d",
+            }}
+            className="absolute inset-0 flex flex-col justify-center items-center"
+          >
+            <div className="w-full h-full overflow-y-auto">
+              <Hero />
+            </div>
+          </motion.div>
+
+          {/* 2. How It Works overlay */}
+          <motion.div
+            style={{
+              scale: howItWorksScale,
+              opacity: howItWorksOpacity,
+              z: howItWorksZ,
+              pointerEvents: howItWorksPointerEvents as any,
+              transformStyle: "preserve-3d",
+            }}
+            className="absolute inset-0 flex flex-col justify-center items-center overflow-y-auto pt-16"
+          >
+            <div className="w-full max-w-5xl px-4 py-8">
+              <HowItWorks />
+            </div>
+          </motion.div>
+
+          {/* 3. Features overlay */}
+          <motion.div
+            style={{
+              scale: featuresScale,
+              opacity: featuresOpacity,
+              z: featuresZ,
+              pointerEvents: featuresPointerEvents as any,
+              transformStyle: "preserve-3d",
+            }}
+            className="absolute inset-0 flex flex-col justify-center items-center overflow-y-auto pt-16"
+          >
+            <div className="w-full max-w-6xl px-4 py-8">
+              <Features />
+            </div>
+          </motion.div>
+
+          {/* 4. Pricing overlay */}
+          <motion.div
+            style={{
+              scale: pricingScale,
+              opacity: pricingOpacity,
+              z: pricingZ,
+              pointerEvents: pricingPointerEvents as any,
+              transformStyle: "preserve-3d",
+            }}
+            className="absolute inset-0 flex flex-col justify-center items-center overflow-y-auto pt-16"
+          >
+            <div className="w-full max-w-6xl px-4 py-8">
+              <Pricing />
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+
+      {/* Narrative continuation scrolling normally below the 3D container */}
+      <main id="main" className="relative z-10 bg-white border-t border-border/40">
         <GlyphMarquee />
         <DemoShowcase />
-        <HowItWorks />
-        <Features />
         <BeforeAfter />
         <PracticeShowcase />
         <Proof />
-        <Pricing />
         <Faq />
         <FinalCta />
       </main>
+
       <SiteFooter />
     </div>
   );
