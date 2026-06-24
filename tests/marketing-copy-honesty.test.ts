@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 // ── Marketing copy honesty (anti-fabrication) ───────────────────────────────
@@ -10,20 +10,39 @@ import { resolve } from "node:path";
 // (schema.prisma header lists PaymentPlan/PaymentPlanInstallment/
 // MemberPaymentProfile as intentionally excluded). Dues reminders are a MANUAL
 // officer-triggered broadcast (app/api/mobile/exec/dues-reminder/route.ts), not
-// an automated cron. So the landing + feature previews must never claim any of:
+// an automated cron. Officer-election SEATING is also a MANUAL action: closing
+// an election (app/api/admin/elections/[id]/close) only sets status=CLOSED — a
+// separate "Seat winners" officer action (app/api/admin/elections/[id]/
+// seat-winners) is what creates the OfficerAssignment rows. NOTHING seats
+// winners automatically "the moment voting closes"; the honest claim is the
+// real one-tap flow ("after voting closes, one tap seats every winner"). So the
+// landing + feature previews + in-app demo surfaces must never claim any of:
 //   • "self-reconciling" / "reconciled against ... dues automatically"
+//   • "reconciled ledger" / "tracks spend in real time" (treasury is hand-logged)
 //   • "payment plan(s)"
 //   • "automatic reminders" / "late tracking" / "then let it run"
+//   • "auto-seat(ed) ... on close" / "seated ... automatically" / "the moment
+//     voting closes ... seated" (election seating is a separate manual tap)
 // A future copy edit that reintroduces any of these fabricated capabilities must
 // fail the gate. Static source-pin (matches the repo's other marketing tests).
 
 const ROOT = resolve(__dirname, "..");
+
+// Every demo surface advertises features too; gate them like the marketing page
+// so an overclaim added to any surface (not just SpotlightSurface) fails here.
+const DEMO_SURFACES_DIR = "app/app/_demo/surfaces";
+const demoSurfaceFiles = readdirSync(resolve(ROOT, DEMO_SURFACES_DIR))
+  .filter((f) => f.endsWith(".tsx"))
+  .map((f) => `${DEMO_SURFACES_DIR}/${f}`);
+
 const FILES = [
   "components/site/marketing-landing.tsx",
   "components/site/feature-previews.tsx",
   // The in-app demo also advertises features; it must not claim the same
-  // unbuilt dues/treasury capabilities the marketing page used to.
+  // unbuilt dues/treasury/elections capabilities the marketing page used to.
   "app/app/_demo/mock-data.ts",
+  // ...and every demo SURFACE (SpotlightSurface, etc.) is gate-pinned too.
+  ...demoSurfaceFiles,
 ];
 
 // Each forbidden claim → the real reason it would be a fabrication.
@@ -33,12 +52,20 @@ const FORBIDDEN: { pattern: RegExp; why: string }[] = [
   { pattern: /reconciled against incoming dues/i, why: "no dues→treasury linkage exists" },
   { pattern: /auto-?reconcil/i, why: "no automatic reconciliation is implemented" },
   { pattern: /ledger reconciles itself/i, why: "the ledger does not reconcile itself" },
+  { pattern: /reconciled ledger/i, why: "the ledger is hand-logged; nothing reconciles it (M2)" },
+  { pattern: /tracks spend in real time/i, why: "BudgetLine.actualCents is hand-entered; no real-time spend tracking (M2)" },
   { pattern: /payment plan/i, why: "PaymentPlan is intentionally not modeled (schema.prisma)" },
   { pattern: /automatic reminder/i, why: "dues reminders are manual officer-triggered, not automatic" },
   { pattern: /late tracking/i, why: "no member-dues overdue/late tracking is implemented" },
+  // ── Election seating is a SEPARATE manual officer action (M1) ──────────────
+  { pattern: /auto-?seat/i, why: "election seating is a separate manual 'Seat winners' tap, not automatic (M1)" },
+  { pattern: /seated\s+(?:\w+\s+){0,4}automatically/i, why: "winners are not seated automatically; seating is a manual tap (M1)" },
+  { pattern: /automatically\s+seat/i, why: "winners are not seated automatically; seating is a manual tap (M1)" },
+  { pattern: /the moment voting closes[^.]*seat/i, why: "close only sets status=CLOSED; seating is a separate manual action (M1)" },
+  { pattern: /seated[^.]*(?:on|upon)\s+(?:ballot\s+)?clos/i, why: "seating does not happen on close; it is a separate manual tap (M1)" },
 ];
 
-describe("marketing copy honesty — no fabricated dues/treasury capabilities", () => {
+describe("marketing copy honesty — no fabricated dues/treasury/elections capabilities", () => {
   for (const rel of FILES) {
     const src = readFileSync(resolve(ROOT, rel), "utf8");
     for (const { pattern, why } of FORBIDDEN) {
@@ -47,6 +74,37 @@ describe("marketing copy honesty — no fabricated dues/treasury capabilities", 
       });
     }
   }
+});
+
+// ── H — the alumni "Donate & Support" panel must not claim a platform fee the
+// checkout doesn't charge. app/api/alumni/donate/checkout/route.ts applies $0
+// application_fee_amount by default (a positive fee is set ONLY when an admin
+// configured dues.platformFeePct > 0 AND the chapter is Connect charges-ready),
+// and the panel's "Total Charged" line shows exactly the donation amount with
+// nothing added. A copy edit that re-asserts a fixed "5% platform fee" (or any
+// "we take a __% platform fee") would contradict both the code and the adjacent
+// Total-Charged line — pin it so it can't regress.
+describe("donation panel honesty — no fee the checkout does not charge (H)", () => {
+  const dash = readFileSync(
+    resolve(ROOT, "app/portal/alumni/dashboard/DashboardClient.tsx"),
+    "utf8",
+  );
+
+  it("does not claim a 5% platform fee", () => {
+    expect(/5%\s*platform fee/i.test(dash)).toBe(false);
+  });
+
+  it("does not claim we 'take' any fixed-percent platform fee on donations", () => {
+    // "we take a N% platform fee" / "take a 5 % platform fee" etc.
+    expect(/take\s+a?\s*\d+\s*%?\s*platform fee/i.test(dash)).toBe(false);
+  });
+
+  it("the donation summary still shows a single Total Charged = donation amount (no added fee row)", () => {
+    // The summary block charges exactly the donation amount; if a fee were ever
+    // wired into THIS panel, this anchor + the claims above would need to change
+    // together — keeping copy and charge in lockstep.
+    expect(dash).toContain("Total Charged:");
+  });
 });
 
 describe("marketing copy honesty — the honest replacements are present", () => {

@@ -294,9 +294,9 @@ function PreviewElections() {
         })}
       </div>
       <p className="mt-2.5 text-[10px] leading-relaxed text-muted-foreground">
-        {userVote !== null 
-          ? "You cast a vote! Real elections automatically seat the winner into the role upon ballot closure."
-          : "Voting closed → the winner was seated into the President role automatically."}
+        {userVote !== null
+          ? "You cast a vote! After voting closes, one tap seats every winner straight into their officer role — no manual data entry."
+          : "Voting closed → one tap seated the winner straight into the President role."}
       </p>
     </div>
   );
@@ -459,13 +459,13 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-officers",
     eyebrow: "Elections",
     title: "Officer elections",
-    outcome: "Run a clean, secret-ballot election — and the winners are seated into their roles automatically.",
-    desc: "Run secret-ballot officer elections right in the app. Ballots are anonymous, votes tally live, and winners are seated into their officer roles automatically.",
-    long: "Hold your whole officer election in one place. Build the ballot, open voting to active members, and let votes tally in real time. Ballots are anonymous by design — the system never stores who voted for whom — and the moment voting closes, the winners are seated straight into their officer roles, with access and permissions applied for you.",
+    outcome: "Run a clean, secret-ballot election — then seat every winner into their role with one tap.",
+    desc: "Run secret-ballot officer elections right in the app. Ballots are anonymous, votes tally live, and after voting closes one tap seats the winners into their officer roles.",
+    long: "Hold your whole officer election in one place. Build the ballot, open voting to active members, and let votes tally in real time. Ballots are anonymous by design — the system never stores who voted for whom. When voting closes, review the tally and tap once to seat every winner straight into their officer role, with access and permissions applied for you — no spreadsheet, no manual data entry.",
     bullets: [
       "Truly secret ballot — voter identity is never tied to a vote",
       "Live tallies with a clear winner per seat (ties flagged, never guessed)",
-      "Winners auto-seated into their officer roles on close",
+      "One tap seats every winner into their officer role (ties & zero-ballot seats skipped)",
       "Full audit trail of the election, kept separate from how anyone voted",
     ],
     preview: <PreviewElections />,
@@ -755,7 +755,7 @@ const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconTreasury, label: "Treasury — budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
-  { icon: IconRoles, label: "Secret-ballot officer elections that auto-seat the winners" },
+  { icon: IconRoles, label: "Secret-ballot officer elections — seat every winner with one tap" },
   { icon: IconComms, label: "Chapter announcements broadcast to your whole roster" },
   { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
   { icon: IconAlumniNetwork, label: "Alumni directory & Stripe donation flows" },

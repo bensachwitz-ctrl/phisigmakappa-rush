@@ -81,8 +81,8 @@ export function renderSpotlight(ctx: DemoContext) {
                   <div className="shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
                     style={{ backgroundColor: selectedBrand.primaryColor + '0a', borderColor: selectedBrand.primaryColor + '22', color: '#334155' }}>
                     <span className="font-bold" style={{ color: selectedBrand.primaryColor }}>What this does · </span>
-                    {spotlight === "elections" && "Run secret-ballot officer elections in-app. Every active gets one anonymous vote per seat; the platform tallies live and auto-seats the winners when voting closes."}
-                    {spotlight === "treasury" && "Your treasurer's back office: chapter balance, dues collected vs. outstanding, a line-item budget that tracks spend in real time, and a reconciled ledger."}
+                    {spotlight === "elections" && "Run secret-ballot officer elections in-app. Every active gets one anonymous vote per seat; the platform tallies live, and after voting closes one tap seats every winner straight into their officer role — no manual data entry."}
+                    {spotlight === "treasury" && "Your treasurer's back office: chapter balance, dues collected vs. outstanding, a line-item budget you log spend against, plus categorized expense tracking."}
                     {spotlight === "qr" && "Generate a QR for any rush event. A PNM scans it and either checks in or fills a quick form, and they drop straight into your recruitment pipeline. Try it below."}
                     {spotlight === "giving" && "Turn graduated brothers into a recurring base. Run branded campaigns with a live goal meter; donations clear through Stripe straight to your chapter."}
                     {spotlight === "theme" && "Your letters, colors, and crest: the entire platform re-skins to your chapter in seconds. Tap a brand to watch every surface change live."}
