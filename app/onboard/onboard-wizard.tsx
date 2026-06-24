@@ -1658,10 +1658,21 @@ export default function OnboardWizard() {
 
               {!isLastStep ? (
                 <div className="flex items-center gap-3">
-                  {/* MONTHLY-only: launch card-free (true free trial). Makes the
-                      "no card required to launch" promise real; yearly omits this
-                      because it bills $800 today. */}
-                  {/* Card details are now fully mandatory for monthly plan. Skip card setup option removed. */}
+                  {/* MONTHLY-only: launch card-free (a true free trial). The API
+                      creates a trialing subscription with NO payment method, so the
+                      "no card required to launch" promise on the marketing site is
+                      literally true. Yearly omits this because it bills $800 today. */}
+                  {step === "payment" && plan === "monthly" && (
+                    <Button
+                      type="button"
+                      variant="glass"
+                      onClick={skipPayment}
+                      disabled={busy}
+                      className="text-slate-200 transition-transform hover:-translate-x-0.5"
+                    >
+                      Skip — start free without a card
+                    </Button>
+                  )}
                   <Magnetic strength={14} radius={80}>
                     <ShimmerBorder rounded="rounded-full">
                       <Button
@@ -2246,7 +2257,7 @@ function PricingStep({
         <span>
           {collectDues
             ? "Your dues-share chapter goes live today. No card required. Reach out to Ben after launch to configure dues payments."
-            : "First month free. Card setup is required at signup to start your 30-day trial. You won't be charged today."
+            : "First month free — add a card now, or skip and add it later. You won't be charged today."
           }
         </span>
       </p>
@@ -2796,7 +2807,7 @@ function PaymentStep({
         <p className="text-[11px] text-slate-400 leading-relaxed">
           {plan === "yearly"
             ? "Your card will be charged $800 today for the full year (all rush fees included). Cancel anytime from your admin panel."
-            : "Your card will not be charged today (first month is 100% free, but card setup is required up front). Billed at $50/month + $200 per rush cycle starting next month. Cancel anytime from your admin panel."}
+            : "Your card won't be charged today (first month is 100% free; adding a card now is optional). Billed at $50/month + $200 per rush cycle starting next month. Cancel anytime from your admin panel."}
         </p>
       </div>
 
