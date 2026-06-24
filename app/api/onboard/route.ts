@@ -13,6 +13,7 @@ import path from "path";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { platformSubscriptionDescription } from "@/lib/platform-billing";
+import { resolveTemplateId } from "@/components/site/templates/template-orders";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -93,6 +94,9 @@ export async function POST(req: Request) {
     // Pricing method + live-edited hero copy from the upgraded wizard.
     plan: rawPlan,
     heroHeadline, heroTagline,
+    // Hero template the founder picked + previewed on the mockup step. Validated
+    // through resolveTemplateId below so only a real TemplateId is ever persisted.
+    template: rawTemplate,
     // Lifted promo/discount code from the wizard.
     promoCode: rawPromoCode,
     paymentMethodId,
@@ -315,6 +319,14 @@ export async function POST(req: Request) {
       "brand.primaryHex": (primaryColor || "#2563eb").trim(),
       "brand.primaryDarkHex": (darkColor || "#1e40af").trim(),
       "brand.primarySoftHex": (softColor || "#eff6ff").trim(),
+      // Hero template chosen + previewed in the wizard. resolveTemplateId coerces
+      // any unknown/forged value to "classic" (the renderer's own default), so the
+      // launched site always renders a REAL template that matches the preview —
+      // never a dropped choice that silently defaults. (Stored even for "classic"
+      // so the key is present-and-explicit from day one.)
+      "website.template": resolveTemplateId(
+        typeof rawTemplate === "string" ? rawTemplate.trim() : undefined,
+      ),
       // Chapter logo (optional). Seeded EMPTY so a fresh chapter gets the auto-
       // generated brand-tinted shield until they upload their own crest in
       // /admin/setup or /admin/settings → Brand. If the signup wizard captured

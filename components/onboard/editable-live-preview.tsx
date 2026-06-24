@@ -14,6 +14,7 @@ import {
 } from "@/components/brand/icons/onboarding-wizard";
 import { Tilt3DCard } from "@/components/site/anim";
 import { cn } from "@/lib/utils";
+import type { TemplateId } from "@/components/site/templates/types";
 
 /**
  * EDITABLE LIVE PREVIEW — the "design your site while you watch it" surface of
@@ -60,7 +61,7 @@ export function EditableLivePreview({
   heroTagline,
   onHeroTagline,
   subdomain,
-  templateId = "floating",
+  templateId = "classic",
   orientation = "centered",
   chapterLogo = null,
   chapterHero = null,
@@ -83,22 +84,43 @@ export function EditableLivePreview({
   heroTagline: string;
   onHeroTagline: (v: string) => void;
   subdomain: string;
-  templateId?: "floating" | "neon" | "classic" | "minimal";
+  /**
+   * The template to preview. CRITICAL: this is the SAME TemplateId union the
+   * public renderer supports (classic | modern | bold). The preview's per-
+   * template treatment below mirrors each real hero variant so what the founder
+   * sees here is what publishes — never a preview-only template the renderer
+   * silently coerces back to Classic.
+   */
+  templateId?: TemplateId;
   orientation?: "centered" | "split-left" | "split-right";
   chapterLogo?: string | null;
   chapterHero?: string | null;
 }) {
   const reduce = useReducedMotion();
 
-  const isNeon = templateId === "neon";
+  // Template signatures mirror the three REAL hero variants:
+  //   • classic — centered crest hero on a brand-light wash (HeroClassic)
+  //   • modern  — asymmetric split (copy + crest side-by-side) with the GOLD
+  //               accent band that is the Modern template's visual signature
+  //               (HeroSplit, bg-brand-secondary band)
+  //   • bold    — full-bleed dark banner, centered poster headline, the dark
+  //               brand floor (HeroBanner)
   const isClassic = templateId === "classic";
-  const isMinimal = templateId === "minimal";
-  const isFloating = templateId === "floating";
+  const isModern = templateId === "modern";
+  const isBold = templateId === "bold";
 
-  const heroFontClass = isClassic ? "font-serif" : isMinimal ? "font-mono" : "font-sans";
+  // Bold leads with a serif poster headline; Modern/Classic use the clean sans.
+  const heroFontClass = isBold ? "font-serif" : "font-sans";
 
-  const neonTextShadow = isNeon ? { textShadow: `0 0 5px ${primaryColor}, 0 0 15px ${primaryColor}` } : undefined;
-  const neonCrestStyle = isNeon ? { boxShadow: `0 0 15px ${primaryColor}, inset 0 0 8px ${primaryColor}` } : undefined;
+  // Modern forces a split layout (its defining trait); Bold is always centered
+  // (poster). Classic honors the orientation control the founder picks.
+  const effectiveOrientation: "centered" | "split-left" | "split-right" = isModern
+    ? orientation === "centered"
+      ? "split-left"
+      : orientation
+    : isBold
+      ? "centered"
+      : orientation;
 
   const displayName = fraternityName.trim() || "Your Chapter";
   const displaySchool = schoolName.trim() || "Your University";
@@ -193,12 +215,32 @@ export function EditableLivePreview({
               style={{
                 background: chapterHero
                   ? `linear-gradient(to bottom, rgba(11, 16, 32, 0.4), rgba(11, 16, 32, 0.85)), url(${chapterHero}) center/cover no-repeat`
-                  : `radial-gradient(120% 90% at 50% -10%, ${primaryColor}33, transparent 60%), linear-gradient(160deg, ${darkColor} 0%, #0b1020 70%)`,
+                  : isBold
+                    ? // Bold Banner — full-bleed DEEP brand floor (mirrors HeroBanner's
+                      // dark scrim) so the poster headline reads white over it.
+                      `radial-gradient(120% 90% at 50% 0%, ${primaryColor}40, transparent 55%), linear-gradient(160deg, ${darkColor} 0%, #0b1020 90%)`
+                    : isModern
+                      ? // Modern Split — light brand wash (HeroSplit's clean surface).
+                        `radial-gradient(120% 120% at 0% 0%, ${primaryColor}1f, transparent 55%), linear-gradient(160deg, ${softColor} 0%, #ffffff 80%)`
+                      : // Classic Crest — brand aurora wash over a light surface.
+                        `radial-gradient(120% 90% at 50% -10%, ${primaryColor}33, transparent 60%), linear-gradient(160deg, ${darkColor} 0%, #0b1020 70%)`,
                 transition: colorTween,
               }}
             >
-              {/* Floating Letters Template */}
-              {isFloating && !reduce && (
+              {/* Modern Split signature — the GOLD accent band along the top edge
+                  (the secondary/accent color), mirroring HeroSplit's
+                  bg-brand-secondary band. This is the Modern template's tell. */}
+              {isModern && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-1.5"
+                  style={{ background: softColor, opacity: 0.95, transition: colorTween }}
+                />
+              )}
+
+              {/* Classic Crest signature — the drifting brand-letter field behind
+                  the centered crest (mirrors HeroClassic's FloatingSymbols). */}
+              {isClassic && !reduce && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
                   {(greekLetters.trim() || "ΦΣΚ")
                     .split("")
@@ -236,9 +278,11 @@ export function EditableLivePreview({
                 </div>
               )}
 
-              {/* Layout orientations: centered vs split */}
+              {/* Layout orientations: centered vs split (Modern is always split,
+                  Bold always centered — resolved into effectiveOrientation). */}
               {(() => {
-                const isSplit = orientation === "split-left" || orientation === "split-right";
+                const isSplit =
+                  effectiveOrientation === "split-left" || effectiveOrientation === "split-right";
                 return (
                   <div className={cn(
                     "flex flex-col gap-6 relative z-10",
@@ -247,14 +291,13 @@ export function EditableLivePreview({
                     {/* Crest / Logo Side */}
                     <div className={cn(
                       "flex shrink-0 items-center justify-center",
-                      isSplit ? (orientation === "split-left" ? "sm:order-2" : "sm:order-1") : "mx-auto"
+                      isSplit ? (effectiveOrientation === "split-left" ? "sm:order-2" : "sm:order-1") : "mx-auto"
                     )}>
                       {chapterLogo ? (
                         <img
                           src={chapterLogo}
                           alt="Chapter Logo"
                           className="h-16 w-16 object-contain rounded-xl ring-1 ring-white/10 shadow-lg"
-                          style={neonCrestStyle}
                         />
                       ) : (
                         <AnimatePresence mode="popLayout" initial={false}>
@@ -271,7 +314,6 @@ export function EditableLivePreview({
                               background: `linear-gradient(160deg, ${primaryColor}, ${darkColor})`,
                               color: "#fff",
                               transition: colorTween,
-                              ...neonCrestStyle,
                             }}
                           >
                             {glyphs}
@@ -283,14 +325,14 @@ export function EditableLivePreview({
                     {/* Text / Actions Side */}
                     <div className={cn(
                       "flex-1 min-w-0",
-                      isSplit ? (orientation === "split-left" ? "text-left sm:order-1" : "text-right sm:order-2") : "text-center"
+                      isSplit ? (effectiveOrientation === "split-left" ? "text-left sm:order-1" : "text-right sm:order-2") : "text-center"
                     )}>
                       <p
                         className={cn(
                           "text-[11px] font-semibold uppercase tracking-[0.22em]",
-                          isMinimal ? "font-mono" : isClassic ? "font-serif" : "font-sans"
+                          isBold ? "font-serif" : "font-sans"
                         )}
-                        style={{ color: softColor, transition: colorTween, ...neonTextShadow }}
+                        style={{ color: isModern ? primaryColor : softColor, transition: colorTween }}
                       >
                         {displaySchool}
                         {schoolShort.trim() ? ` · ${schoolShort.trim()}` : ""}
@@ -302,11 +344,13 @@ export function EditableLivePreview({
                         onChange={onFraternityName}
                         placeholder={displayName}
                         className={cn(
-                          "mt-1.5 text-xl font-extrabold leading-tight text-white",
+                          "mt-1.5 text-xl font-extrabold leading-tight",
+                          // Modern is a LIGHT surface (HeroSplit) → dark copy;
+                          // Classic/Bold are dark surfaces → white copy.
+                          isModern ? "text-slate-900" : "text-white",
                           heroFontClass
                         )}
-                        align={isSplit ? (orientation === "split-left" ? "left" : "right") : "center"}
-                        style={neonTextShadow}
+                        align={isSplit ? (effectiveOrientation === "split-left" ? "left" : "right") : "center"}
                       />
 
                       <HeroEditable
@@ -315,8 +359,8 @@ export function EditableLivePreview({
                         onChange={onHeroHeadline}
                         placeholder={headlinePlaceholder}
                         className={cn("mt-1 text-sm font-semibold", heroFontClass)}
-                        style={{ color: softColor, transition: colorTween, ...neonTextShadow }}
-                        align={isSplit ? (orientation === "split-left" ? "left" : "right") : "center"}
+                        style={{ color: isModern ? darkColor : softColor, transition: colorTween }}
+                        align={isSplit ? (effectiveOrientation === "split-left" ? "left" : "right") : "center"}
                       />
 
                       <HeroEditable
@@ -325,24 +369,24 @@ export function EditableLivePreview({
                         onChange={onHeroTagline}
                         placeholder={taglinePlaceholder}
                         className={cn(
-                          "mt-2 text-[11px] leading-relaxed text-white/70",
+                          "mt-2 text-[11px] leading-relaxed",
+                          isModern ? "text-slate-600" : "text-white/70",
                           isSplit ? "" : "mx-auto max-w-[18rem]",
                           heroFontClass
                         )}
-                        align={isSplit ? (orientation === "split-left" ? "left" : "right") : "center"}
+                        align={isSplit ? (effectiveOrientation === "split-left" ? "left" : "right") : "center"}
                         multiline
                       />
 
                       <div className={cn(
                         "mt-5 flex",
-                        isSplit ? (orientation === "split-left" ? "justify-start" : "justify-end") : "justify-center"
+                        isSplit ? (effectiveOrientation === "split-left" ? "justify-start" : "justify-end") : "justify-center"
                       )}>
                         <span
                           className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white shadow-md ring-1 ring-white/20"
                           style={{
                             background: primaryColor,
                             transition: colorTween,
-                            boxShadow: isNeon ? `0 0 10px ${primaryColor}` : undefined,
                           }}
                         >
                           <IconSubdomain className="h-3.5 w-3.5" /> Start Recruitment

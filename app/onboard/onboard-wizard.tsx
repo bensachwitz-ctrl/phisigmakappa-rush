@@ -24,6 +24,8 @@ import {
 import { Magnetic, Reveal3D, FloatingOrbs, Spotlight, ShimmerBorder } from "@/components/site/anim";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { shade, type GreekOrg } from "@/lib/greek-orgs";
+import { TEMPLATE_META } from "@/components/site/templates/template-orders";
+import type { TemplateId } from "@/components/site/templates/types";
 import { captureEvent } from "@/lib/posthog";
 import {
   IconBranding, IconAdmin, IconLaunch, IconSpark,
@@ -289,8 +291,11 @@ export default function OnboardWizard() {
   const [chapterLogo, setChapterLogo] = React.useState<string | null>(null);
   const [chapterHero, setChapterHero] = React.useState<string | null>(null);
 
-  // Mockup Tweak states
-  const [mockupTemplate, setMockupTemplate] = React.useState<"floating" | "neon" | "classic" | "minimal">("floating");
+  // Mockup Tweak states. mockupTemplate is a REAL TemplateId (classic | modern |
+  // bold) — the same union the public renderer supports — so the template the
+  // founder previews here is exactly what /api/onboard provisions and the live
+  // site renders. Defaults to "classic" (the renderer's own default/fallback).
+  const [mockupTemplate, setMockupTemplate] = React.useState<TemplateId>("classic");
   const [mockupOrientation, setMockupOrientation] = React.useState<"centered" | "split-left" | "split-right">("centered");
 
   // Admin State
@@ -689,6 +694,11 @@ export default function OnboardWizard() {
           adminName,
           adminEmail,
           adminPassword,
+          // The hero template the founder picked + previewed live on the mockup
+          // step. A real TemplateId (classic | modern | bold); persisted to
+          // cfg["website.template"] by /api/onboard so the launched site renders
+          // the chosen template (preview == published).
+          template: mockupTemplate,
           // Pricing method chosen on the pricing step → persisted to the Tenant.
           plan,
           // Hero copy the founder edited live on the preview (empty = keep the
@@ -1849,8 +1859,8 @@ function MockupTweakStep({
   setPrimaryColor: (v: string) => void;
   setDarkColor: (v: string) => void;
   setSoftColor: (v: string) => void;
-  template: "floating" | "neon" | "classic" | "minimal";
-  setTemplate: (v: "floating" | "neon" | "classic" | "minimal") => void;
+  template: TemplateId;
+  setTemplate: (v: TemplateId) => void;
   orientation: "centered" | "split-left" | "split-right";
   setOrientation: (v: "centered" | "split-left" | "split-right") => void;
 }) {
@@ -1877,23 +1887,26 @@ function MockupTweakStep({
         </p>
       </div>
 
-      {/* Template Animation Options */}
+      {/* Template Options — sourced from TEMPLATE_META, the SAME single source of
+          truth the public renderer reads, so the picker can only offer the three
+          real templates (Classic Crest / Modern Split / Bold Banner) and the
+          previewed choice is exactly what launches. */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Hero Template</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {(["floating", "neon", "classic", "minimal"] as const).map((t) => (
+        <div className="grid grid-cols-3 gap-2">
+          {TEMPLATE_META.map((tpl) => (
             <button
-              key={t}
+              key={tpl.id}
               type="button"
-              aria-pressed={template === t}
-              onClick={() => setTemplate(t)}
-              className={`min-h-11 p-2.5 rounded-xl border text-[11px] font-bold capitalize transition flex flex-col items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                template === t
+              aria-pressed={template === tpl.id}
+              onClick={() => setTemplate(tpl.id)}
+              className={`min-h-11 p-2.5 rounded-xl border text-[11px] font-bold transition flex flex-col items-center justify-center gap-1 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                template === tpl.id
                   ? "border-sky-500 bg-sky-500/10 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]"
                   : "border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-white"
               }`}
             >
-              <span>{t === "floating" ? "Floating 3D" : t === "minimal" ? "Minimal Clean" : t}</span>
+              <span>{tpl.name}</span>
             </button>
           ))}
         </div>

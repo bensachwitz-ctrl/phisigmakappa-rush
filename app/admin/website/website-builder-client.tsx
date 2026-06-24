@@ -353,20 +353,38 @@ export function WebsiteBuilderClient({
 
     const prompt = tweakPrompt.toLowerCase();
 
-    if (prompt.includes("neon") || prompt.includes("glow") || prompt.includes("shadow")) {
-      setTemplate("neon" as any);
-      setPrimaryHex("#38bdf8");
-      setSecondaryHex("#ec4899");
-    } else if (prompt.includes("classic") || prompt.includes("traditional") || prompt.includes("serif")) {
-      setTemplate("classic" as any);
+    // Keyword → REAL template id (classic | modern | bold). The matcher can only
+    // ever stage a template the public renderer actually supports — no `as any`,
+    // so a fake id can never compile in here and silently publish as Classic.
+    if (
+      prompt.includes("bold") ||
+      prompt.includes("banner") ||
+      prompt.includes("poster") ||
+      prompt.includes("neon") ||
+      prompt.includes("glow")
+    ) {
+      setTemplate("bold");
+      setPrimaryHex("#0f172a");
+      setSecondaryHex("#38bdf8");
+    } else if (
+      prompt.includes("modern") ||
+      prompt.includes("split") ||
+      prompt.includes("clean") ||
+      prompt.includes("minimal") ||
+      prompt.includes("simple")
+    ) {
+      setTemplate("modern");
+      setPrimaryHex("#2563eb");
+      setSecondaryHex("#f59e0b");
+    } else if (
+      prompt.includes("classic") ||
+      prompt.includes("traditional") ||
+      prompt.includes("serif") ||
+      prompt.includes("crest")
+    ) {
+      setTemplate("classic");
       setPrimaryHex("#800000");
       setSecondaryHex("#d4af37");
-    } else if (prompt.includes("minimal") || prompt.includes("clean") || prompt.includes("simple")) {
-      setTemplate("minimal" as any);
-      setPrimaryHex("#0f172a");
-      setSecondaryHex("#64748b");
-    } else if (prompt.includes("float") || prompt.includes("particle") || prompt.includes("animation")) {
-      setTemplate("floating" as any);
     }
 
     if (prompt.includes("left") || prompt.includes("split left")) {
@@ -678,7 +696,7 @@ export function WebsiteBuilderClient({
                   <div>
                     <h2 className="text-lg font-semibold tracking-tight">Quick Style Presets</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Type a few style words (like &ldquo;neon&rdquo;, &ldquo;classic&rdquo;, &ldquo;minimal&rdquo;, &ldquo;green&rdquo;, or &ldquo;split left&rdquo;) and we&apos;ll stage a matching template and color preset for you. You can fine-tune everything by hand below.
+                      Type a few style words (like &ldquo;classic&rdquo;, &ldquo;modern&rdquo;, &ldquo;bold&rdquo;, &ldquo;green&rdquo;, or &ldquo;split left&rdquo;) and we&apos;ll stage a matching template and color preset for you. You can fine-tune everything by hand below.
                     </p>
                   </div>
 
@@ -689,7 +707,7 @@ export function WebsiteBuilderClient({
                     <textarea
                       value={tweakPrompt}
                       onChange={(e) => setTweakPrompt(e.target.value)}
-                      placeholder="e.g., sleek dark neon template with bright blue highlights and a split left layout"
+                      placeholder="e.g., bold dark banner with bright blue highlights and a split left layout"
                       className="w-full h-24 rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
                     />
                     <Button
@@ -724,13 +742,20 @@ export function WebsiteBuilderClient({
                         <label className="text-xs font-semibold text-slate-500">Template Style</label>
                         <select
                           value={template}
-                          onChange={(e: any) => setTemplate(e.target.value)}
+                          // Coerce through resolveTemplateId so the staged value is
+                          // ALWAYS a real TemplateId the renderer supports.
+                          onChange={(e) => setTemplate(resolveTemplateId(e.target.value))}
                           className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
                         >
-                          <option value="floating">Floating Letters</option>
-                          <option value="neon">Neon Glow</option>
-                          <option value="classic">Classic Serif</option>
-                          <option value="minimal">Minimalist Line</option>
+                          {/* Options sourced from TEMPLATE_META — the SAME single
+                              source of truth the public renderer reads, so the
+                              dropdown can never drift to a template that doesn't
+                              exist. */}
+                          {TEMPLATE_META.map((tpl) => (
+                            <option key={tpl.id} value={tpl.id}>
+                              {tpl.name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -804,7 +829,7 @@ export function WebsiteBuilderClient({
                     heroTagline={tagline}
                     onHeroTagline={setTagline}
                     subdomain={initialConfig["subdomain"] || "usc"}
-                    templateId={template as any}
+                    templateId={template}
                     orientation={orientation}
                     chapterLogo={logo}
                     chapterHero={hero}
