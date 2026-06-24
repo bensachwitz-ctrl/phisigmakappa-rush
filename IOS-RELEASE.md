@@ -44,10 +44,11 @@ success/failure (`bensachwitz@gmail.com`).
 ## One-time owner setup
 
 You do this once. Two required buckets: (A) Apple Developer / App Store Connect,
-(B) Codemagic secrets. Budget ~30–45 min. (C) push (APNs) is **NOT required for
-v1** — the shipped bundled shell does not use push (the push capability +
-entitlement were removed; see Info.plist / App.entitlements). Section C is kept
-only as reference for a future build that actually wires push.
+(B) Codemagic secrets. Budget ~30–45 min. There is **no push bucket** — the
+shipped bundled shell does not use push notifications at all (no push capability,
+no `aps-environment` entitlement, no APNs server piece; see Info.plist /
+App.entitlements / `codemagic.yaml`). See "Push notifications" below for what a
+future push build would need.
 
 ### A. Apple Developer + App Store Connect
 
@@ -94,27 +95,25 @@ creates on first run) both from the App Store Connect API key. You only need:
    secrets are no longer used — automatic signing derives the cert + profile from
    the API key, so you can leave them unset.
 
-### C. Push notifications (APNs)
+## Push notifications
 
-1. ✅ **DONE (2026-06-10)** — an APNs Auth Key exists: **Key ID `Q58634GVP5`**
-   (name "claude", APNs enabled, Team-scoped), downloaded to
-   `C:\Users\Bensa\.keys\apple\AuthKey_Q58634GVP5.p8` (local only — never
-   commit). **Team ID `QFC852BYB6`.**
-   ⚠️ The key's APNs Environment is currently **Sandbox-only** in the portal —
-   edit the key (Certificates → Keys → claude) to allow Production before
-   sending production pushes.
-2. The same team-scoped .p8 works for every app on the team (BCG today, GS
-   later) — no per-app registration needed; the `apns-topic` header selects
-   the app.
-3. Set the backend env vars (wherever GS server runs — Vercel) so
-   `/api/mobile/push/register` tokens can actually be pushed:
-   - `APNS_KEY_ID=Q58634GVP5`, `APNS_TEAM_ID=QFC852BYB6`,
-     `APNS_PRIVATE_KEY` (the `.p8` contents — paste from the local file),
-     `APNS_TOPIC=com.greekstack.app`.
-   > The device-token capture + tenant-bound storage is already built
-   > (`app/api/mobile/push/register/route.ts`, stored per-tenant in `SiteConfig`).
-   > Wiring the actual *send* (a small APNs client) is the only remaining
-   > server-side piece and is independent of shipping the app to TestFlight.
+**Push is NOT built and is NOT part of this release.** The shipped bundled shell
+(`mobile-shell/index.html`) never registers for or consumes push, so:
+
+- The committed `App.entitlements` / `Info.plist` omit the push entitlement and
+  the `remote-notification` background mode (and `codemagic.yaml` strips them if a
+  `cap add ios` regeneration ever re-adds them) — to avoid an Apple Guideline
+  2.3.1 "unused capability" flag.
+- There is **no** device-token register route (`app/api/mobile/push/register`
+  does not exist) and **no** APNs send client on the server.
+- The App ID does **not** need Push Notifications enabled (see section A).
+
+A future build that genuinely wires push would need ALL of the following, none of
+which exist today: re-add the push entitlement + background mode together;
+enable Push Notifications on the `com.greekstack.app` App ID; build a device-token
+register route with tenant-bound storage; create an APNs Auth Key (`.p8`) and set
+the APNs backend env vars; and write a small APNs send client. Until that work is
+done, treat push as out of scope.
 
 ---
 
@@ -186,8 +185,9 @@ all three hosts in `App.entitlements` resolve to the same Vercel deployment).
 The `paths` cover the member app surface (`/app/*`) plus the short-link (`/r/*`)
 and public (`/public/*`) namespaces reserved for future deep links. Until the
 file is deployed, universal links simply fall back to opening in the browser —
-the app still ships and works fine. Push-notification deep links use the
-`greekstack://` custom scheme and need no AASA.
+the app still ships and works fine. (The app also registers a `greekstack://`
+custom scheme for direct deep links, which needs no AASA. Push is not used, so
+there are no push-notification deep links.)
 
 ---
 
@@ -198,7 +198,11 @@ the app still ships and works fine. Push-notification deep links use the
 2. Fill the listing from `ios/AppStore/` (metadata is drafted there) and upload
    the screenshots per `ios/AppStore/SCREENSHOT-PLAN.md`.
 3. Answer App Privacy + the export-compliance question (no non-exempt
-   encryption → "No").
+   encryption → "No"). The App Privacy answers must match the committed
+   `ios/App/App/PrivacyInfo.xcprivacy` (no tracking, no collected-data types,
+   UserDefaults required-reason `CA92.1` only) — the binary ships **no** tracking
+   SDK, so answer **Tracking: No**. The full questionnaire walkthrough is in
+   `ios/AppStore/SUBMISSION-CHECKLIST.md` § 3.
 4. Submit for review. Follow `ios/AppStore/SUBMISSION-CHECKLIST.md`.
 
 ---
@@ -231,11 +235,14 @@ secrets, cutting first-time setup from ~45 min to ~10 min.
   `APP_STORE_CONNECT_PRIVATE_KEY_B64` is malformed. Re-check the three
   `APP_STORE_CONNECT_*` vars.
 - **"Provisioning profile doesn't match"** → the App ID `com.greekstack.app` must
-  have **Push Notifications + Associated Domains** enabled before the first
-  fetch; if you toggled a capability after a profile was created, delete the
-  stale profile in the portal and re-run (the build re-creates it).
-- **"aps-environment not allowed"** → enable Push Notifications on the App ID;
-  the next build re-fetches a profile that includes it.
+  have **Associated Domains** enabled before the first fetch (push is NOT used, so
+  do NOT enable Push Notifications); if you toggled a capability after a profile
+  was created, delete the stale profile in the portal and re-run (the build
+  re-creates it).
+- **"aps-environment not allowed"** → this should not occur (push is not used).
+  The committed entitlements omit `aps-environment` and the build strips any
+  leftover; if it appears, a `cap add ios` regeneration re-added push — re-run so
+  the strip step removes it. Do NOT "fix" it by enabling Push on the App ID.
 - **Build number already exists** → ASC rejects a duplicate (version, build).
   Re-tag with a new patch version (`v1.0.1`) — the build number auto-increments.
 - **App appears as iPad-compatible / asks for iPad screenshots** → confirm
