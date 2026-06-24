@@ -32,7 +32,7 @@ type ExportRun = {
 // Mirror HQ_EXPORT_TYPES from lib/hq-exports.ts.
 const EXPORT_TYPES = [
   { value: "membership", label: "Membership Roster", desc: "Every active/initiate/pledge brother." },
-  { value: "academic", label: "Academic Standing", desc: "GPA & standing per member." },
+  { value: "academic", label: "Academic Standing", desc: "Academic standing & study hours per member." },
   { value: "financial", label: "Financial Summary", desc: "Dues assessed / paid / outstanding." },
   { value: "philanthropy", label: "Philanthropy Hours", desc: "Approved service-hour totals." },
   { value: "annual_report", label: "Annual Chapter Report", desc: "One-page HTML summary." },

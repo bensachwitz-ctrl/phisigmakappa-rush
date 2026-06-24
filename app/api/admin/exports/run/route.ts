@@ -145,24 +145,22 @@ async function buildExport(exportType: HqExportType, termCode: string) {
       return buildMembershipExport({ termCode, brothers: brothers as any });
     }
     case "academic": {
-      // Brain W2 had a dedicated AcademicTerm model that this merge does not
-      // include — the R43 fork persists per-brother academic standing on
-      // Brother.academicStanding only. We surface what's available and leave
-      // gpaTerm / gpaCumulative / creditHours null so the export still builds.
+      // The R43 fork persists per-brother academic STANDING + STUDY HOURS only
+      // (Brother.academicStanding / Brother.studyHours). There is no per-member
+      // GPA or credit-hour field, so the export carries exactly what we store —
+      // no hollow blank GPA columns.
       const brothers = await prisma.brother.findMany({
         where: { status: { in: ["ACTIVE", "INITIATE", "PLEDGE"] } },
         orderBy: { name: "asc" },
-        select: { id: true, name: true, academicStanding: true },
+        select: { id: true, name: true, academicStanding: true, studyHours: true },
       });
       return buildAcademicExport({
         termCode,
         rows: brothers.map((b) => ({
           memberId: b.id,
           memberName: b.name,
-          gpaTerm: null,
-          gpaCumulative: null,
-          creditHours: null,
           standing: (b.academicStanding || "").toLowerCase() || null,
+          studyHours: b.studyHours ?? null,
         })),
       });
     }

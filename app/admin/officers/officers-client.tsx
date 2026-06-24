@@ -68,7 +68,7 @@ const DOMAINS: Array<{ key: DomainKey; label: string; hint: string }> = [
   { key: "events", label: "Events", hint: "Calendar + RSVPs" },
   { key: "announcements", label: "Announcements", hint: "Chapter news posts" },
   { key: "dues", label: "Dues", hint: "Member dues ledger" },
-  { key: "academic", label: "Academic", hint: "GPA + study hours" },
+  { key: "academic", label: "Academic", hint: "Academic standing + study hours" },
   { key: "house", label: "House", hint: "Rooms, chores, maintenance" },
   { key: "risk", label: "Risk", hint: "Incident reports + FIPG reviews" },
   { key: "service", label: "Service", hint: "Philanthropy + service hours" },

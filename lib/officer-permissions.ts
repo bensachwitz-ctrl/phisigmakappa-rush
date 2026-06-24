@@ -160,7 +160,7 @@ export const DEFAULT_OFFICER_CATALOG: OfficerSeed[] = [
   {
     title: "Scholarship Chair",
     slug: "scholarship-chair",
-    description: "GPA + study hours + tutor matching.",
+    description: "Academic standing + study hours.",
     sortOrder: 90,
     permissions: perms([
       r("brothers"), w("academic"),

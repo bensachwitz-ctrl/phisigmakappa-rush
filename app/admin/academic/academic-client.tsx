@@ -156,7 +156,7 @@ export function AcademicClient({
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Academic Monitoring</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track brother GPA rosters, academic standings, and log study hours.
+            Track academic standing per member and log study hours.
           </p>
         </div>
         {!canWrite && (

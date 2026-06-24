@@ -55,7 +55,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "nav-meetings", group: "Navigate", icon: IconMeetings, label: "Meetings", href: "/admin/meetings", synonyms: ["minutes", "agenda", "attendance", "chapter meeting", "quorum"] },
       { id: "nav-calendar", group: "Navigate", icon: IconCalendarTool, label: "Calendar", href: "/admin/calendar", synonyms: ["schedule", "month", "agenda", "upcoming", "events", "meetings", "dates"] },
       { id: "nav-risk", group: "Navigate", icon: IconRiskDesk, label: "Risk Desk / Incidents", href: "/admin/risk", synonyms: ["hazing", "incident", "report", "safety"] },
-      { id: "nav-academic", group: "Navigate", icon: IconAcademic, label: "Academic", href: "/admin/academic", synonyms: ["gpa", "grades", "study hours", "scholarship"] },
+      { id: "nav-academic", group: "Navigate", icon: IconAcademic, label: "Academic", href: "/admin/academic", synonyms: ["academic standing", "probation", "study hours", "scholarship"] },
       { id: "nav-chores", group: "Navigate", icon: IconChores, label: "Chores / House", href: "/admin/chores", synonyms: ["tasks", "duties", "house", "cleaning", "checklist"] },
       { id: "nav-service", group: "Navigate", icon: IconService, label: "Service hours", href: "/admin/service", synonyms: ["philanthropy", "volunteer", "community", "hours"] },
       { id: "nav-polls", group: "Navigate", icon: IconBallot, label: "Polls", href: "/admin/polls", synonyms: ["vote", "decision"] },

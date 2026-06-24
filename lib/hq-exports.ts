@@ -84,27 +84,29 @@ export function buildMembershipExport(input: {
   };
 }
 
-/** Academic standing — GPA / standing per member per term. */
+/**
+ * Academic standing per member — the chapter stores academic STANDING
+ * (good/probation/etc.) and STUDY HOURS only. It does NOT store per-member
+ * GPA or credit hours, so this export intentionally carries neither: a blank
+ * "GPA" column would be a hollow promise. Relabel/extend only when the model
+ * actually persists those values.
+ */
 export function buildAcademicExport(input: {
   termCode: string;
   rows: Array<{
     memberId: string;
     memberName: string;
-    gpaTerm: number | string | null;
-    gpaCumulative: number | string | null;
-    creditHours?: number | null;
     standing?: string | null;
+    studyHours?: number | null;
   }>;
 }): ExportFile {
-  const header = csvLine(["Member ID", "Member Name", "Term GPA", "Cumulative GPA", "Credit Hours", "Standing", "Term"]);
+  const header = csvLine(["Member ID", "Member Name", "Academic Standing", "Study Hours", "Term"]);
   const rows = input.rows.map((r) =>
     csvLine([
       r.memberId,
       r.memberName,
-      r.gpaTerm == null ? "" : String(r.gpaTerm),
-      r.gpaCumulative == null ? "" : String(r.gpaCumulative),
-      r.creditHours ?? "",
       r.standing ?? "",
+      r.studyHours ?? "",
       input.termCode,
     ])
   );
