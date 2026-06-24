@@ -30,7 +30,15 @@ const config: CapacitorConfig = {
   webDir: 'mobile-shell', // bundled native client (ships in the binary) — see mobile-shell/index.html
   ios: {
     contentInset: 'never', // app manages safe-areas in CSS via env(safe-area-inset-*)
-    limitsNavigationsToAppBoundDomains: true,
+    // App-bound-domains restriction is intentionally DISABLED. The app must open
+    // external Stripe Checkout (checkout.stripe.com) for dues/donations in the
+    // system browser / web view, and that host is NOT one of our own
+    // WKAppBoundDomains (the repo declares no WKAppBoundDomains array and does not
+    // ship @capacitor/browser). With the limit ON, navigation to Stripe Checkout
+    // would be blocked. Transport security is UNCHANGED: ATS stays fully on
+    // (NSAllowsArbitraryLoads=false in Info.plist), so all traffic is still
+    // HTTPS-pinned — only the app-bound-domains *navigation* gate is relaxed.
+    limitsNavigationsToAppBoundDomains: false,
     backgroundColor: '#0b1220',
     // Identifies our requests server-side so the mobile APIs can recognise the
     // native shell (defense-in-depth alongside Capacitor.isNativePlatform()).
