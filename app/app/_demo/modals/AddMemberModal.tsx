@@ -1,5 +1,10 @@
 import React from "react";
-import { X, Phone, Crown } from "lucide-react";
+import {
+  IconClose,
+  IconCrown,
+  IconPhone,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderAddMemberModal(ctx: DemoContext) {
@@ -29,11 +34,11 @@ export function renderAddMemberModal(ctx: DemoContext) {
               <div className="bg-white rounded-t-[32px] border border-slate-100 p-5 w-full grow space-y-4 shadow-2xl animate-scale-in text-left overflow-y-auto lg:grow-0 lg:w-full lg:max-w-xs lg:rounded-3xl lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-1.5">
-                    <Crown className="w-4 h-4 text-amber-500" />
+                    <IconCrown className="w-4 h-4 text-amber-500" />
                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Add New Member</h4>
                   </div>
                   <button onClick={() => setShowAddMemberModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
-                    <X className="w-3.5 h-3.5" />
+                    <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 

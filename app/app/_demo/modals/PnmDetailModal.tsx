@@ -1,5 +1,10 @@
 import React from "react";
-import { School, X, Vote } from "lucide-react";
+import {
+  IconBallot,
+  IconClose,
+  IconSchool,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderPnmDetail(ctx: DemoContext) {
@@ -39,7 +44,7 @@ export function renderPnmDetail(ctx: DemoContext) {
                         onClick={() => setSelectedPnm(null)}
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                       >
-                        <X className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </button>
                     </div>
 

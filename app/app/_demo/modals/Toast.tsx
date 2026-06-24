@@ -1,5 +1,10 @@
 import React from "react";
-import { Check, X, Info } from "lucide-react";
+import {
+  IconCheck,
+  IconClose,
+  IconInfo,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderToast(ctx: DemoContext) {
@@ -20,11 +25,11 @@ export function renderToast(ctx: DemoContext) {
                   }}
                 >
                   {toast.type === "success" ? (
-                    <Check className="w-4 h-4" />
+                    <IconCheck className="w-4 h-4" />
                   ) : toast.type === "error" ? (
-                    <X className="w-4 h-4" />
+                    <IconClose className="w-4 h-4" />
                   ) : (
-                    <Info className="w-4 h-4" />
+                    <IconInfo className="w-4 h-4" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

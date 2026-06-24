@@ -1,5 +1,10 @@
 import React from "react";
-import { Lock, Check, X } from "lucide-react";
+import {
+  IconCheck,
+  IconClose,
+  IconLock,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderForgotPasswordModal(ctx: DemoContext) {
@@ -19,18 +24,18 @@ export function renderForgotPasswordModal(ctx: DemoContext) {
               <div className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in text-left" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-1.5">
-                    <Lock className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
+                    <IconLock className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Reset Password</h4>
                   </div>
                   <button onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
-                    <X className="w-3.5 h-3.5" />
+                    <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 
                 {forgotSuccess ? (
                   <div className="text-center py-6 space-y-2">
                     <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm mx-auto animate-bounce">
-                      <Check className="w-5 h-5" />
+                      <IconCheck className="w-5 h-5" />
                     </div>
                     <h5 className="font-bold text-slate-900 text-xs">Reset Link Dispatched!</h5>
                     <p className="text-[12px] text-slate-500">Check your email for instructions to choose a new password.</p>

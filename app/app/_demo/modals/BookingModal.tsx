@@ -1,5 +1,10 @@
 import React from "react";
-import { Calendar, Check, X } from "lucide-react";
+import {
+  IconCalendar,
+  IconCheck,
+  IconClose,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderBookingModal(ctx: DemoContext) {
@@ -68,11 +73,11 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowBookingModal(false)}>
       <div className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-md space-y-5 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => setShowBookingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
-          <X className="w-4 h-4" />
+          <IconClose className="w-4 h-4" />
         </button>
         <div className="space-y-1.5 border-b border-white/10 pb-3">
           <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
-            <Calendar className="w-3.5 h-3.5" /> Book walkthrough
+            <IconCalendar className="w-3.5 h-3.5" /> Book walkthrough
           </div>
           <h3 className="text-lg font-bold text-white leading-tight">Schedule a Call with Ben</h3>
           <p className="text-xs text-slate-400">Pick a time to walk through the custom options for your chapter.</p>
@@ -81,7 +86,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
         {bookingSubmitted ? (
           <div className="text-center py-8 space-y-3">
             <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-sm mx-auto animate-bounce">
-              <Check className="w-6 h-6" />
+              <IconCheck className="w-6 h-6" />
             </div>
             <h4 className="font-bold text-white text-sm">Meeting Requested!</h4>
             <p className="text-xs text-slate-400 max-w-xs mx-auto">
@@ -176,7 +181,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
               type="submit"
               className="w-full py-3 text-xs font-bold text-slate-950 rounded-xl bg-gradient-to-r from-blue-400 to-sky-400 hover:opacity-95 shadow-lg flex items-center justify-center gap-1.5 transition"
             >
-              <Calendar className="w-4 h-4" /> Confirm Booking
+              <IconCalendar className="w-4 h-4" /> Confirm Booking
             </button>
           </form>
         )}

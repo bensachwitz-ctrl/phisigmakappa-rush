@@ -1,5 +1,13 @@
 import React from "react";
-import { Check, X, Info, Phone, AlertCircle, Briefcase } from "lucide-react";
+import {
+  IconAlert,
+  IconBriefcase,
+  IconCheck,
+  IconClose,
+  IconInfo,
+  IconPhone,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderPostJobModal(ctx: DemoContext) {
@@ -41,7 +49,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                   <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[88%]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
+                        <IconBriefcase className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
                         <h4 className="text-sm font-bold text-slate-955">Post Career Opportunity</h4>
                       </div>
                       <button
@@ -49,14 +57,14 @@ export function renderPostJobModal(ctx: DemoContext) {
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                         type="button"
                       >
-                        <X className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </button>
                     </div>
 
                     {postJobSuccess ? (
                       <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
                         <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm animate-bounce">
-                          <Check className="w-6 h-6" />
+                          <IconCheck className="w-6 h-6" />
                         </div>
                         <h5 className="font-bold text-slate-900 text-sm">Post Shipped Successfully!</h5>
                         <p className="text-xs text-slate-500">The career opportunity is now live in active feeds and listings.</p>
@@ -189,7 +197,7 @@ export function renderPostJobModal(ctx: DemoContext) {
 
                         {postJobError && (
                           <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-1.5 text-[12px] text-red-600 leading-normal">
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                            <IconAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <span>{postJobError}</span>
                           </div>
                         )}

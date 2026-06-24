@@ -1,5 +1,10 @@
 import React from "react";
-import { User, X, Phone } from "lucide-react";
+import {
+  IconClose,
+  IconPhone,
+  IconUser,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderEditProfileModal(ctx: DemoContext) {
@@ -36,7 +41,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                   <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[88%]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
-                        <User className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
+                        <IconUser className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
                         <h4 className="text-sm font-bold text-slate-955">Update Profile Information</h4>
                       </div>
                       <button
@@ -44,7 +49,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                         type="button"
                       >
-                        <X className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </button>
                     </div>
 

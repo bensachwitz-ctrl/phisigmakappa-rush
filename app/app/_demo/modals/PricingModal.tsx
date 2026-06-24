@@ -1,5 +1,9 @@
 import React from "react";
-import { Check, X } from "lucide-react";
+import {
+  IconCheck,
+  IconClose,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
@@ -11,7 +15,7 @@ export function renderPricingModal(ctx: DemoContext) {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPricingModal(false)}>
           <div className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-2xl space-y-6 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setShowPricingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
-              <X className="w-4 h-4" />
+              <IconClose className="w-4 h-4" />
             </button>
             <div className="space-y-1.5 border-b border-white/10 pb-3">
               <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
@@ -33,9 +37,9 @@ export function renderPricingModal(ctx: DemoContext) {
                   <p className="text-[12px] text-amber-400 font-semibold">+ $200 each rush cycle</p>
                 </div>
                 <ul className="text-xs text-slate-300 space-y-2 flex-1">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" /> First month 100% free</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" /> Unlimited members & officers</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-400" /> Isolated database schema</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-blue-400" /> First month 100% free</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-blue-400" /> Unlimited members & officers</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-blue-400" /> Isolated database schema</li>
                 </ul>
                 <button
                   onClick={() => window.location.href = "/onboard"}
@@ -59,9 +63,9 @@ export function renderPricingModal(ctx: DemoContext) {
                   <p className="text-[12px] text-emerald-400 font-semibold">All rush fees included</p>
                 </div>
                 <ul className="text-xs text-slate-300 space-y-2 flex-1">
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-sky-400" /> Save $100+ annually</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-sky-400" /> No per-cycle rush fees</li>
-                  <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-sky-400" /> Premium priority support</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-sky-400" /> Save $100+ annually</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-sky-400" /> No per-cycle rush fees</li>
+                  <li className="flex items-center gap-2"><IconCheck className="w-3.5 h-3.5 text-sky-400" /> Premium priority support</li>
                 </ul>
                 <button
                   onClick={() => window.location.href = "/onboard"}

@@ -1,5 +1,10 @@
 import React from "react";
-import { Pin, Check, X } from "lucide-react";
+import {
+  IconCheck,
+  IconClose,
+  IconPin,
+} from "@/components/brand/icons";
+
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import type { DemoContext } from "../context";
 
@@ -32,14 +37,14 @@ export function renderPostAnnModal(ctx: DemoContext) {
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                         type="button"
                       >
-                        <X className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </button>
                     </div>
 
                     {postAnnSuccess ? (
                       <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
                         <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm animate-bounce">
-                          <Check className="w-6 h-6" />
+                          <IconCheck className="w-6 h-6" />
                         </div>
                         <h5 className="font-bold text-slate-900 text-sm">Announcement Published!</h5>
                         <p className="text-xs text-slate-500">The chapter update is now live on all feeds.</p>
