@@ -24,10 +24,10 @@ export function renderSpotlight(ctx: DemoContext) {
     dashboardData,
     donationCents,
     donationDone,
-    email,
     handleDonate,
     handleQrCheckIn,
     handleSelectTenant,
+    isDemo,
     myBallot,
     qrCheckedIn,
     qrMajor,
@@ -63,11 +63,21 @@ export function renderSpotlight(ctx: DemoContext) {
                         {spotlight === "giving" && "Alumni Giving"}
                         {spotlight === "theme" && "White-label Branding"}
                       </h3>
-                      <p className="text-[11px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
+                      {/* "Live interactive demo" is a SALES label — only the demo
+                          showcase may show it. A real signed-in member never sees
+                          it (the surfaces below are either wired to real data or
+                          gated to the demo). */}
+                      {isDemo && (
+                        <p className="text-[11px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
+                      )}
                     </div>
                   </div>
 
-                  {/* "What this does" callout */}
+                  {/* "What this does" callout — sales/marketing copy (some of it
+                      describes capabilities not exercised on this exact screen),
+                      so it is DEMO-ONLY. Real members get the working surface with
+                      no marketing chrome. */}
+                  {isDemo && (
                   <div className="shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
                     style={{ backgroundColor: selectedBrand.primaryColor + '0a', borderColor: selectedBrand.primaryColor + '22', color: '#334155' }}>
                     <span className="font-bold" style={{ color: selectedBrand.primaryColor }}>What this does · </span>
@@ -77,6 +87,7 @@ export function renderSpotlight(ctx: DemoContext) {
                     {spotlight === "giving" && "Turn graduated brothers into a recurring base. Run branded campaigns with a live goal meter; donations clear through Stripe straight to your chapter."}
                     {spotlight === "theme" && "Your letters, colors, and crest: the entire platform re-skins to your chapter in seconds. Tap a brand to watch every surface change live."}
                   </div>
+                  )}
 
                   <div className="flex-1 overflow-y-auto px-3 pb-4 pt-1.5 space-y-3 text-left">
                     {/* ── ELECTIONS ─────────────────────────────────────────── */}
@@ -144,6 +155,21 @@ export function renderSpotlight(ctx: DemoContext) {
                       </>
                     )}
 
+                    {/* ELECTIONS — explicit empty state. When there is no open
+                        election the surface shows an honest "nothing to vote on"
+                        message instead of a blank, data-less body. */}
+                    {spotlight === "elections" && !dashboardData?.election && (
+                      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center text-center gap-2">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                          <IconBallot className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900">No open elections</h4>
+                        <p className="text-[12px] text-slate-500 leading-relaxed max-w-[16rem]">
+                          There are no elections open for voting right now. When your chapter opens officer voting, the ballot will appear here.
+                        </p>
+                      </div>
+                    )}
+
                     {/* ── TREASURY ──────────────────────────────────────────── */}
                     {spotlight === "treasury" && dashboardData?.treasury && (
                       <>
@@ -201,7 +227,11 @@ export function renderSpotlight(ctx: DemoContext) {
                     )}
 
                     {/* ── QR RUSH CHECK-IN ──────────────────────────────────── */}
-                    {spotlight === "qr" && (
+                    {/* DEMO-ONLY: the QR check-in writes to the demo's local
+                        pipeline (no real recruitment endpoint ships yet), so the
+                        whole surface is gated to the demo — a real member never
+                        reaches a control that wouldn't persist. */}
+                    {spotlight === "qr" && isDemo && (
                       <>
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center gap-2">
                           <div className="p-3 rounded-2xl border-2 border-dashed" style={{ borderColor: selectedBrand.primaryColor + '40' }}>
@@ -242,7 +272,11 @@ export function renderSpotlight(ctx: DemoContext) {
                     )}
 
                     {/* ── ALUMNI GIVING ─────────────────────────────────────── */}
-                    {spotlight === "giving" && dashboardData?.giving && (() => {
+                    {/* DEMO-ONLY: the giving campaign meter + in-spotlight donate
+                        is a sales showcase (the real alumni-donation Stripe flow
+                        lives elsewhere); gated to the demo so a real member never
+                        sees a campaign-donate control wired only to local state. */}
+                    {spotlight === "giving" && isDemo && dashboardData?.giving && (() => {
                       const g = dashboardData.giving;
                       const pct = Math.min(100, Math.round((g.raisedCents / g.goalCents) * 100));
                       return (

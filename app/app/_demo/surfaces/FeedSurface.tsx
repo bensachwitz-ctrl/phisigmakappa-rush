@@ -20,6 +20,7 @@ export function renderFeedTab(ctx: DemoContext) {
     combinedFeed,
     dashboardData,
     expandedAnnouncementId,
+    isDemo,
     role,
     selectedBrand,
     setActiveTab,
@@ -89,7 +90,11 @@ export function renderFeedTab(ctx: DemoContext) {
                           {/* grid-flow-col + auto-cols-fr keeps every visible tool
                               on a single line no matter the role's tool count. */}
                           <div className="grid grid-flow-col auto-cols-fr gap-1.5">
-                            {role === "alumni" && (
+                            {/* GIVE is the demo giving showcase (campaign meter +
+                                in-spotlight donate is sales-only); show it ONLY in
+                                the demo so a real alumnus never opens a donate
+                                control wired only to local state. */}
+                            {role === "alumni" && isDemo && (
                               <button
                                 onClick={() => { setSpotlight("giving"); setDonationDone(false); }}
                                 className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"

@@ -341,37 +341,79 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   const [qrYear, setQrYear] = useState("Freshman");
   const [qrCheckedIn, setQrCheckedIn] = useState<string[]>([]);
 
-  // Cast a secret ballot for one seat: record the viewer's local choice and bump
-  // that candidate's tally + the chapter ballot count. Idempotent per seat.
-  const castBallot = (seatId: string, candidateId: string) => {
+  // Cast a secret ballot for one seat. Idempotent per seat.
+  //   • DEMO: mutate the local tally (no backend) so the showcase is interactive.
+  //   • REAL: POST to /api/mobile/elections/vote (tenant-bound, member-gated, one
+  //     ballot per seat enforced server-side) and replace the local election +
+  //     myBallot with the SERVER's refreshed truth — no fabricated tally.
+  const castBallot = async (seatId: string, candidateId: string) => {
     if (myBallot[seatId]) return;
-    setMyBallot((prev) => ({ ...prev, [seatId]: candidateId }));
-    setDashboardData((prev: any) => {
-      if (!prev?.election) return prev;
-      const firstVote = Object.keys(myBallot).length === 0;
-      return {
-        ...prev,
-        election: {
-          ...prev.election,
-          ballotsCast: prev.election.ballotsCast + (firstVote ? 1 : 0),
-          seats: prev.election.seats.map((s: any) =>
-            s.id !== seatId
-              ? s
-              : {
-                  ...s,
-                  candidates: s.candidates.map((c: any) =>
-                    c.id === candidateId ? { ...c, votes: c.votes + 1 } : c
-                  ),
-                }
-          ),
-        },
-      };
-    });
-    showToast("Anonymous ballot recorded. Your choice is never linked to you.", "success");
+
+    if (isDemo) {
+      setMyBallot((prev) => ({ ...prev, [seatId]: candidateId }));
+      setDashboardData((prev: any) => {
+        if (!prev?.election) return prev;
+        const firstVote = Object.keys(myBallot).length === 0;
+        return {
+          ...prev,
+          election: {
+            ...prev.election,
+            ballotsCast: prev.election.ballotsCast + (firstVote ? 1 : 0),
+            seats: prev.election.seats.map((s: any) =>
+              s.id !== seatId
+                ? s
+                : {
+                    ...s,
+                    candidates: s.candidates.map((c: any) =>
+                      c.id === candidateId ? { ...c, votes: c.votes + 1 } : c
+                    ),
+                  }
+            ),
+          },
+        };
+      });
+      showToast("Anonymous ballot recorded. Your choice is never linked to you.", "success");
+      return;
+    }
+
+    // REAL session — record the vote against the backend.
+    if (!selectedTenant || !token) return;
+    try {
+      const res = await fetch(apiUrl("/api/mobile/elections/vote"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ subdomain: selectedTenant.subdomain, seatId, candidateId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        // Adopt the server's refreshed tally + this voter's own choices.
+        setDashboardData((prev: any) =>
+          prev ? { ...prev, election: data.election, myBallot: data.myBallot } : prev,
+        );
+        setMyBallot(data.myBallot || {});
+        showToast("Anonymous ballot recorded. Your choice is never linked to you.", "success");
+      } else if (res.status === 401) {
+        handleSignOut();
+      } else if (res.status === 409) {
+        // Already voted (e.g. on another device) — sync local state to match.
+        setMyBallot((prev) => ({ ...prev, [seatId]: candidateId }));
+        showToast(data.error || "You have already voted for this seat.", "info");
+      } else {
+        showToast(data.error || "Couldn't record your vote. Try again.", "error");
+      }
+    } catch {
+      showToast("Couldn't reach the chapter to record your vote. Try again.", "error");
+    }
   };
 
-  // Add a donation to the live campaign meter.
+  // Add a donation to the live campaign meter. DEMO-ONLY: the Giving spotlight is
+  // gated to the demo (no real Stripe campaign-donation flow ships yet), so this
+  // mutates the demo's local meter and NEVER claims a real Stripe charge. On any
+  // non-demo session this is a guarded no-op (defense in depth — the surface is
+  // already isDemo-gated, but the handler must not toast a charge that did not
+  // happen either).
   const handleDonate = () => {
+    if (!isDemo) return;
     setDashboardData((prev: any) => {
       if (!prev?.giving) return prev;
       return {
@@ -388,12 +430,17 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       };
     });
     setDonationDone(true);
-    showToast(`Thank you! $${(donationCents / 100).toFixed(2)} donated via Stripe.`, "success");
+    // Demo-honest copy — this is a sample campaign, not a real Stripe charge.
+    showToast(`Thanks! $${(donationCents / 100).toFixed(2)} added to the sample campaign.`, "success");
     setTimeout(() => setDonationDone(false), 2500);
   };
 
-  // QR check-in → save a brand-new PNM into the recruitment pipeline live.
+  // QR check-in → add a brand-new PNM to the recruitment pipeline. DEMO-ONLY: the
+  // QR spotlight is gated to the demo, so this mutates the demo's local pipeline
+  // and never claims a real save. Guarded no-op on a non-demo session (defense in
+  // depth — no "added to the rush board" toast for an action that didn't persist).
   const handleQrCheckIn = () => {
+    if (!isDemo) return;
     if (!qrName.trim()) return;
     const id = `pnm-${Date.now()}`;
     const newPnm = {
@@ -649,6 +696,9 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       const data = await res.json();
       if (res.ok && data.ok) {
         setDashboardData(data);
+        if (data.myBallot && typeof data.myBallot === "object") {
+          setMyBallot(data.myBallot);
+        }
         try {
           void window.GreekStackNative?.cacheLastView?.(data);
         } catch {
@@ -684,6 +734,12 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
         const data = await res.json();
         if (res.ok && data.ok) {
           setDashboardData(data);
+          // Seed the local ballot map from the SERVER's record of this member's
+          // own cast ballots so the elections spotlight shows their "Voted" state
+          // correctly on load (the server is the source of truth, not local).
+          if (data.myBallot && typeof data.myBallot === "object") {
+            setMyBallot(data.myBallot);
+          }
           // Native shell only (no-op on web): snapshot the last good view so the
           // app can show the chapter offline on the next cold launch.
           try {

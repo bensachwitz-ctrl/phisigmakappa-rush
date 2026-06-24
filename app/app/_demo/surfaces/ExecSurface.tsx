@@ -19,6 +19,7 @@ import {
 } from "@/components/brand/icons";
 
 import { brandSecondary } from "../mock-data";
+import { apiUrl } from "@/lib/mobile-api-base";
 import type { DemoContext } from "../context";
 
 const fmt = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -39,7 +40,8 @@ const fmt = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { max
  */
 export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "announce" | "settings") {
   const {
-    dashboardData, selectedBrand, setShowAddMemberModal, handleRemoveMobileMember,
+    dashboardData, isDemo, selectedBrand, selectedTenant, token,
+    setShowAddMemberModal, handleRemoveMobileMember,
     handleSendMobileResetLink, setSpotlight, setShowPostAnnModal, showToast,
   } = ctx;
   const primary = selectedBrand.primaryColor;
@@ -119,33 +121,57 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
   // ── DUES MANAGEMENT ───────────────────────────────────────────────────────
   if (tab === "dues") {
     const t = d.treasury || {};
-    const collected = t.duesCollectedCents || 0;
-    const outstanding = t.duesOutstandingCents || 0;
-    const total = collected + outstanding;
-    const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
     return (
       <div className="space-y-3 text-left">
         <SectionHead icon={IconDues} title="Dues management" sub="Track collection across the chapter" />
 
-        <div
-          className="relative overflow-hidden rounded-2xl border p-4 text-white shadow-lg"
-          style={{ background: `linear-gradient(140deg, ${primary}, ${second})`, borderColor: primary }}
-        >
-          <span className="text-[11px] font-bold uppercase tracking-wider text-white/80">Collected this term</span>
-          <p className="mt-0.5 text-[28px] font-extrabold leading-none">{fmt(collected)}</p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full rounded-full bg-white transition-[width] duration-700" style={{ width: `${pct}%` }} />
+        {isDemo ? (
+          // DEMO: the showcase collected/outstanding/balance meter. These fields
+          // (duesCollectedCents/duesOutstandingCents/balanceCents) exist ONLY in
+          // the demo mock — the real treasury payload is a budget rollup, shown
+          // below for real officers. "Members behind" is a sample figure here.
+          (() => {
+            const collected = t.duesCollectedCents || 0;
+            const outstanding = t.duesOutstandingCents || 0;
+            const total = collected + outstanding;
+            const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
+            // Derive sample "members behind" from the sample outstanding (no real
+            // floor fabrication — a 0-outstanding demo shows 0).
+            const behind = outstanding > 0 ? Math.round(outstanding / 45000) : 0;
+            return (
+              <>
+                <div
+                  className="relative overflow-hidden rounded-2xl border p-4 text-white shadow-lg"
+                  style={{ background: `linear-gradient(140deg, ${primary}, ${second})`, borderColor: primary }}
+                >
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/80">Collected this term</span>
+                  <p className="mt-0.5 text-[28px] font-extrabold leading-none">{fmt(collected)}</p>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/25">
+                    <div className="h-full rounded-full bg-white transition-[width] duration-700" style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="mt-1.5 flex justify-between text-[12px] font-semibold text-white/90">
+                    <span>{pct}% collected</span>
+                    <span>{fmt(outstanding)} outstanding</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Stat primary={primary} label="Chapter balance" value={fmt(t.balanceCents || 0)} />
+                  <Stat primary={primary} label="Members behind" value={behind} />
+                </div>
+              </>
+            );
+          })()
+        ) : (
+          // REAL officer: show the actual treasury rollup the API returns
+          // (budgeted/actual/remaining + pending expenses) — never demo-only
+          // dues collected/outstanding fields that the real payload omits.
+          <div className="grid grid-cols-2 gap-3">
+            <Stat primary={primary} label="Budgeted this term" value={fmt(t.budgetedCents || 0)} />
+            <Stat primary={primary} label="Spent" value={fmt(t.actualCents || 0)} />
+            <Stat primary={primary} label="Remaining" value={fmt(t.remainingCents || 0)} />
+            <Stat primary={primary} label="Pending expenses" value={t.pendingExpenses || 0} />
           </div>
-          <div className="mt-1.5 flex justify-between text-[12px] font-semibold text-white/90">
-            <span>{pct}% collected</span>
-            <span>{fmt(outstanding)} outstanding</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Stat primary={primary} label="Chapter balance" value={fmt(t.balanceCents || 0)} />
-          <Stat primary={primary} label="Members behind" value={Math.max(1, Math.round(outstanding / 45000))} />
-        </div>
+        )}
 
         <button
           onClick={() => { setSpotlight("treasury"); }}
@@ -154,7 +180,28 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
           <IconWallet className="h-4 w-4" /> Open treasury & budgets <IconChevronRight className="h-4 w-4" />
         </button>
         <button
-          onClick={() => showToast("Dues reminders sent to all unpaid members.", "success")}
+          onClick={async () => {
+            if (isDemo) {
+              showToast("Demo: dues reminders would be emailed to all unpaid members.", "success");
+              return;
+            }
+            if (!selectedTenant || !token) return;
+            try {
+              const res = await fetch(apiUrl("/api/mobile/exec/dues-reminder"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ subdomain: selectedTenant.subdomain }),
+              });
+              const data = await res.json().catch(() => ({}));
+              if (res.ok && data.ok) {
+                showToast(data.message || `Reminders sent to ${data.sent ?? 0} member(s).`, "success");
+              } else {
+                showToast(data.error || "Couldn't send dues reminders. Try again.", "error");
+              }
+            } catch {
+              showToast("Couldn't reach the chapter to send reminders. Try again.", "error");
+            }
+          }}
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
           style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
         >
@@ -179,13 +226,17 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
           <Stat primary={primary} label="Active" value={active} />
         </div>
 
-        <button
-          onClick={() => setSpotlight("qr")}
-          className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
-          style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
-        >
-          <IconQrCode className="h-4 w-4" /> Open QR check-in
-        </button>
+        {/* QR check-in is the demo showcase (writes to the demo's local pipeline
+            only) — show the entry button ONLY in the demo. */}
+        {isDemo && (
+          <button
+            onClick={() => setSpotlight("qr")}
+            className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
+            style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
+          >
+            <IconQrCode className="h-4 w-4" /> Open QR check-in
+          </button>
+        )}
 
         <div className="gs-glass rounded-2xl p-1.5">
           <div className="px-2.5 pb-1.5 pt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Top prospects</div>
@@ -250,13 +301,18 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
   }
 
   // ── SETTINGS / OFFICER CONSOLE ────────────────────────────────────────────
-  const tools: { id: "elections" | "treasury" | "giving" | "theme" | "qr"; icon: any; label: string; sub: string }[] = [
+  // elections + treasury are wired to real data (officer elections ballot +
+  // /api/mobile/data treasury rollup). giving / qr / theme are demo-only
+  // showcases (campaign meter, local PNM check-in, demo chapter re-skin), so a
+  // real officer is NOT offered them here — only the demo lists all five.
+  const allTools: { id: "elections" | "treasury" | "giving" | "theme" | "qr"; icon: any; label: string; sub: string; demoOnly?: boolean }[] = [
     { id: "elections", icon: IconBallot, label: "Officer elections", sub: "Run secret-ballot voting" },
     { id: "treasury", icon: IconWallet, label: "Treasury & budgets", sub: "Balance, budget, ledger" },
-    { id: "giving", icon: IconGift, label: "Alumni giving", sub: "Branded donation campaigns" },
-    { id: "qr", icon: IconQrCode, label: "Rush QR check-in", sub: "Build the PNM list live" },
-    { id: "theme", icon: IconWhiteLabel, label: "White-label branding", sub: "Your letters & colors" },
+    { id: "giving", icon: IconGift, label: "Alumni giving", sub: "Branded donation campaigns", demoOnly: true },
+    { id: "qr", icon: IconQrCode, label: "Rush QR check-in", sub: "Build the PNM list live", demoOnly: true },
+    { id: "theme", icon: IconWhiteLabel, label: "White-label branding", sub: "Your letters & colors", demoOnly: true },
   ];
+  const tools = allTools.filter((t) => isDemo || !t.demoOnly);
   return (
     <div className="space-y-3 text-left">
       <SectionHead icon={IconShieldCheck} title="Exec console" sub="Role-scoped admin tools" />

@@ -6,6 +6,7 @@ import { getEntitlement } from "@/lib/entitlement";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { computeMemberCapabilities } from "@/lib/member-capabilities";
 import { currentPeriod } from "@/lib/treasury";
+import { buildMobileElectionView } from "@/lib/mobile-elections";
 
 export const dynamic = "force-dynamic";
 
@@ -472,6 +473,25 @@ async function handleGet(req: Request): Promise<NextResponse> {
       }
     }
 
+    // 11. MEMBER-FACING OPEN ELECTION (the Vote/Elections spotlight). Returns
+    //     the single currently-OPEN election scoped to this member's audience +
+    //     the member's OWN already-cast ballots, or null when nothing is open
+    //     (the client then renders an explicit "No open elections" empty state —
+    //     never a blank, data-less surface). Secret ballot: aggregate per-
+    //     candidate counts only; the caller's own choices are returned only to
+    //     them. Best-effort — an election-read hiccup must not break the load.
+    let election: Awaited<ReturnType<typeof buildMobileElectionView>>["election"] = null;
+    let myBallot: Record<string, string> = {};
+    try {
+      const view = await buildMobileElectionView(db, portalUser.brotherId ?? null, sess.role);
+      election = view.election;
+      myBallot = view.myBallot;
+    } catch (e) {
+      console.error("Failed to load open election (mobile):", e);
+      election = null;
+      myBallot = {};
+    }
+
     return NextResponse.json({
       ok: true,
       chapter: {
@@ -502,6 +522,10 @@ async function handleGet(req: Request): Promise<NextResponse> {
       profile,
       standing,
       dues,
+      // Member-facing open election + this member's own cast ballots (null when
+      // none open). Drives the Vote/Elections spotlight with REAL data.
+      election,
+      myBallot,
       announcements: announcements.map((a) => ({
         id: a.id,
         title: a.title,
