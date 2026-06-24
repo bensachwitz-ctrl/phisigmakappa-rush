@@ -139,21 +139,98 @@ export async function POST(req: Request) {
     const feePct = isConnectChargesReady(cfg) ? parseFloat(cfg["dues.platformFeePct"] || "0") : 0;
     const platformFeeCents =
       Number.isFinite(feePct) && feePct > 0 ? Math.round(amountCents * (feePct / 100)) : 0;
+    const donationNotes =
+      platformFeeCents > 0
+        ? `Platform fee: $${(platformFeeCents / 100).toFixed(2)}. ${notes}`
+        : notes;
 
-    // Create PENDING donation row. Only prefix the fee line when a fee is
-    // actually charged; otherwise the note is just the donor's own notes.
-    const donation = await prisma.alumniDonation.create({
-      data: {
-        alumniId,
-        amountCents, // This is the total donation amount
-        campaign,
-        notes: platformFeeCents > 0
-          ? `Platform fee: $${(platformFeeCents / 100).toFixed(2)}. ${notes}`
-          : notes,
-        status: "PENDING",
-      },
-    });
-    
+    // ── DOUBLE-CHARGE GUARD (money integrity, TOCTOU-safe) ───────────────────
+    // A double-click / two tabs / a retried fetch must NOT mint two live Stripe
+    // sessions for the same intended donation → the donor would be charged twice.
+    // Mirrors app/api/dues/checkout/route.ts: the find-recent-open-PENDING +
+    // PENDING-create runs inside a SERIALIZABLE transaction so two concurrent
+    // requests can't BOTH read "no pending row" and BOTH create one. The loser is
+    // aborted by the DB with a write-conflict (Prisma P2034) which we map to a 409.
+    //
+    // Donations (unlike dues) are intentionally repeatable, so we only collapse
+    // DUPLICATES: an open PENDING row for the SAME (alumniId, campaign) created
+    // within a short window. A genuinely new donation (different campaign, or after
+    // the window) is unaffected. When a duplicate is found we resume its existing
+    // OPEN Stripe session URL (idempotent — no new charge) rather than minting one.
+    const DUP_WINDOW_MS = 10 * 60 * 1000; // 10 min — covers retries/second tabs
+    type GuardResult =
+      | { kind: "pending"; donation: { id: string; stripeSessionId: string | null } }
+      | { kind: "created"; donation: { id: string } };
+
+    let guard: GuardResult;
+    try {
+      guard = await prisma.$transaction(
+        async (tx): Promise<GuardResult> => {
+          const since = new Date(Date.now() - DUP_WINDOW_MS);
+          const recent = await tx.alumniDonation.findFirst({
+            where: {
+              alumniId,
+              campaign,
+              status: "PENDING",
+              recordedAt: { gte: since },
+            },
+            orderBy: { recordedAt: "desc" },
+            select: { id: true, stripeSessionId: true },
+          });
+          if (recent) return { kind: "pending", donation: recent };
+
+          const created = await tx.alumniDonation.create({
+            data: {
+              alumniId,
+              amountCents, // This is the total donation amount
+              campaign,
+              notes: donationNotes,
+              status: "PENDING",
+            },
+            select: { id: true },
+          });
+          return { kind: "created", donation: created };
+        },
+        { isolationLevel: "Serializable" },
+      );
+    } catch (err: any) {
+      // Serialization conflict (Postgres 40001 → Prisma P2034): a concurrent
+      // request won the race and created the PENDING row. Treat exactly like an
+      // observed duplicate so the loser never mints a second chargeable session.
+      if (err?.code === "P2034") {
+        return NextResponse.json(
+          { ok: false, error: "A donation is already in progress. Please finish or cancel it before starting another." },
+          { status: 409 },
+        );
+      }
+      throw err;
+    }
+
+    // A recent OPEN PENDING donation for the same (alumniId, campaign) means the
+    // donor already started this checkout. Resume its existing OPEN session URL
+    // (idempotent — no new charge) when we still have it; otherwise block with a
+    // 409 rather than minting a second chargeable session.
+    if (guard.kind === "pending") {
+      if (guard.donation.stripeSessionId) {
+        try {
+          const prior = await stripe.checkout.sessions.retrieve(guard.donation.stripeSessionId);
+          if (prior && prior.status === "open" && prior.url) {
+            return NextResponse.json({ ok: true, url: prior.url });
+          }
+        } catch {
+          // Fall through to the 409 below if the prior session can't be read.
+        }
+      }
+      return NextResponse.json(
+        { ok: false, error: "A donation is already in progress. Please finish or cancel it before starting another." },
+        { status: 409 },
+      );
+    }
+
+    // guard.kind === "created": we hold a fresh PENDING donation whose ID we embed
+    // in the Stripe metadata below.
+    const donation = guard.donation;
+
     const siteUrl = getSiteUrl();
     const currency = (cfg["dues.currency"] || "usd").toLowerCase();
     // Chapter subdomain — read from the request Host so the platform's single
