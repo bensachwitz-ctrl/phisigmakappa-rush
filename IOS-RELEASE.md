@@ -166,7 +166,7 @@ all three hosts in `App.entitlements` resolve to the same Vercel deployment).
   "applinks": {
     "apps": [],
     "details": [
-      { "appID": "QFC852BYB6.com.greekstack.app", "paths": ["/app/*", "/r/*", "/public/*"] }
+      { "appID": "QFC852BYB6.com.greekstack.app", "paths": ["/app", "/app/*", "/r/*", "/public/*"] }
     ]
   }
 }
@@ -182,8 +182,9 @@ all three hosts in `App.entitlements` resolve to the same Vercel deployment).
 > (expect `content-type: application/json`) and
 > [Apple's AASA validator](https://app-site-association.cdn-apple.com/a/v1/greekstack.vercel.app).
 
-The `paths` cover the member app surface (`/app/*`) plus the short-link (`/r/*`)
-and public (`/public/*`) namespaces reserved for future deep links. Until the
+The `paths` cover the member app surface (the bare `/app` entry point and
+`/app/*`) plus the short-link (`/r/*`) and public (`/public/*`) namespaces
+reserved for future deep links. Until the
 file is deployed, universal links simply fall back to opening in the browser —
 the app still ships and works fine. (The app also registers a `greekstack://`
 custom scheme for direct deep links, which needs no AASA. Push is not used, so

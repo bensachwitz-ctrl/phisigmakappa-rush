@@ -131,6 +131,26 @@ Profile screen → "Delete account" → confirm. For a real signed-in member thi
 deletes their account and member data; in the demo it confirms and returns to the
 chapter picker. No separate website visit is required.
 
+USER-GENERATED CONTENT — REPORT + BLOCK (Guideline 1.2):
+The app shows cross-member content (officer announcements, a member/alumni
+directory, alumni career posts). Two mitigations are in place:
+  1) The structural mitigation. Each install is scoped to a single PRIVATE,
+     closed chapter that the member must authenticate into — content is never
+     public or cross-chapter. The only broadcast surface (announcements) is
+     OFFICER-ONLY: regular members cannot post to the feed, so member-to-member
+     objectionable broadcast is not possible. Member profiles/directory entries
+     are admin/self-curated, and chapter officers are the moderators (they can
+     edit/remove members and content from the admin console).
+  2) The in-app controls. Every announcement, career post, and directory member
+     row has a "Report" action that files a report to the chapter's officers
+     (recorded server-side AND delivered to admins through our notification
+     path). Every directory member row also has a "Block" control: blocking
+     hides that member's directory listing and content on the device
+     immediately (persisted across launches) and notifies an admin; it is
+     reversible from a "Blocked members" list. To exercise in the demo: open
+     Directory → tap the flag (Report) or the no-entry (Block) icon on any row,
+     or tap "Report" under any Feed card.
+
 To test a real sign-in if desired:
   Chapter/subdomain: <PROVIDE A TEST CHAPTER>
   Email: <PROVIDE A TEST MEMBER EMAIL>
@@ -140,6 +160,11 @@ DUES: tapping "Pay online with Stripe" opens the chapter's Stripe Checkout in th
 system browser. These are real-world chapter membership dues collected via the
 chapter's own Stripe account, not digital goods consumed in the app — so Apple
 IAP does not apply (Guideline 3.1.3(e)).
+
+DONATIONS: the iOS app has NO in-app donate action. Alumni see only a read-only
+record of any prior donations on their profile; making a donation is web-only
+(done on the chapter's website), so there is no in-app purchase path for
+donations to review here.
 ```
 > Fill the `<...>` test-account placeholders before submitting, OR rely on the
 > no-login demo path (recommended — guarantees the reviewer can exercise the app).

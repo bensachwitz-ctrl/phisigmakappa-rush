@@ -98,7 +98,9 @@ methods other than IAP for physical goods/services). Apple's own guidelines name
 this category directly — e.g. a GYM or CLUB MEMBERSHIP collected in-app is the
 canonical precedent, and chapter dues are the same kind of real-world membership.
 Alumni donations to the chapter are likewise external, real-world contributions,
-not digital content.
+not digital content — and note the iOS app has NO in-app donate action at all:
+alumni see only a read-only record of prior donations; making a donation is
+web-only. So the only in-app payment surface to assess is the dues Stripe link.
 
 For this reason Apple In-App Purchase is INTENTIONALLY NOT IMPLEMENTED for dues
 or donations. If the reviewer believes IAP is required, please contact us before
@@ -120,10 +122,23 @@ in the demo-access block above (fill the <...> placeholders before submitting).
       `ios/App/App/Info.plist` (and re-injected by codemagic.yaml), so ASC should
       not prompt; if it does, answer "No".
 - [ ] Content rights: you have rights to all content. Age rating **4+**.
-- [ ] Answer the UGC questions (chapter officers moderate; content is private to a
-      chapter, not public) — add the **block/report** affordance expectation if the
-      reviewer flags it (UGC apps need a way to report; chapter admins remove members
-      and content — note this if asked).
+- [ ] Answer the UGC questions truthfully. The **Guideline 1.2 mitigation is two-
+      layered** (state BOTH in the App Review notes — the block is already in
+      `LISTING.md`):
+      1. **Structural** — every install is scoped to a single PRIVATE, closed
+         chapter the member must authenticate into; content is never public or
+         cross-chapter. The only broadcast surface (announcements) is
+         **officer-only**, so member-to-member objectionable broadcast can't
+         happen; profiles/directory are admin/self-curated and chapter officers
+         are the moderators (admin console removes members + content).
+      2. **In-app controls (shipped, not promised)** — every announcement,
+         career post, and directory member row has a **Report** action, and
+         every directory member row has a **Block** control (hides that
+         member's content on-device, persisted, notifies an admin, reversible).
+         Report → POST /api/mobile/report (token-bound, self-only) which records
+         the report AND alerts chapter admins via the existing notification
+         path. This satisfies the "UGC apps need a way to report objectionable
+         content + block abusive users" requirement directly.
 
 ## 6. Submit
 - [ ] Attach the processed TestFlight build to the 1.0 version.
