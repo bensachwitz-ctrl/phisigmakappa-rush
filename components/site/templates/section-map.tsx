@@ -369,7 +369,11 @@ export function buildSectionMap(
     ),
     testimonial: (
       <>
-        {cfg["show.testimonial"] !== "false" && (
+        {/* ANTI-FABRICATION: render ONLY when the chapter has opted in AND supplied
+            a REAL quote. A blank quote hides the section entirely, so a chapter that
+            flips show.testimonial on without adding a quote shows nothing rather than
+            a canned/invented one. No fabricated author or rating is rendered. */}
+        {cfg["show.testimonial"] !== "false" && (cfg["testimonial.quote"] || "").trim() !== "" && (
       <section className="border-t border-border bg-gradient-to-b from-phisig-red-soft/40 via-background to-background">
         <div className="container section-y">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -378,9 +382,10 @@ export function buildSectionMap(
               <blockquote className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
                 &ldquo;{cfg["testimonial.quote"]}&rdquo;
               </blockquote>
+              {(cfg["testimonial.author"] || "").trim() !== "" && (
               <div className="mt-5 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-phisig-red text-white flex items-center justify-center font-semibold text-sm">
-                  {(cfg["testimonial.author"] || "A. Mitchell")
+                  {cfg["testimonial.author"]
                     .split(/\s+/)
                     .map((s) => s[0])
                     .filter(Boolean)
@@ -389,17 +394,13 @@ export function buildSectionMap(
                     .toUpperCase()}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1">
-                    {[1,2,3,4,5].map((i) => (
-                      <Star key={i} className="h-3 w-3 fill-phisig-red text-phisig-red" />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground">
                     <span className="text-foreground font-medium">{cfg["testimonial.author"]} {cfg["testimonial.classYear"]}</span>
                     {cfg["testimonial.attribution"] && (<> · {cfg["testimonial.attribution"]}</>)}
                   </p>
                 </div>
               </div>
+              )}
             </Reveal3D>
             {/* Heritage scene card — gentle scroll parallax + cursor-tracked 3D
                 tilt with a brand-colored glow. */}

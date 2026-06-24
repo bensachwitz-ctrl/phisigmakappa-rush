@@ -299,14 +299,13 @@ export const DEFAULTS = {
   // URLs per chapter via /admin/settings, then flips show.instagramFeed on.
   "feed.json": JSON.stringify([]),
 
-  // Testimonial. WHITE-LABEL: defaults EMPTY so a fresh tenant never publishes
-  // Phi Sig's real alum quote/name. A chapter-agnostic quote is used as the
-  // fallback copy (names no fraternity/chapter); author/year/attribution stay
-  // blank until the rush chair adds a real alum via /admin/settings. The
-  // section can also be hidden entirely via show.testimonial. (The avatar-
-  // initials helper falls back to "A. Mitchell" only for the monogram glyph
-  // when author is blank — no real name is rendered.)
-  "testimonial.quote": "Joining this chapter wasn't a four-year decision — it was a lifelong one. The friends I met during recruitment are the same people standing next to me at every milestone.",
+  // Testimonial. WHITE-LABEL + ANTI-FABRICATION: defaults EMPTY and HIDDEN so a
+  // fresh chapter never publishes a canned/invented quote or author. A chapter
+  // OPTS IN by adding a REAL quote + author via /admin/settings and flipping
+  // show.testimonial to "true"; the renderer also hides the section whenever the
+  // quote is blank, so turning it on without a real quote shows nothing rather
+  // than a fabricated one. No fabricated author fallback is rendered.
+  "testimonial.quote": "",
   "testimonial.author": "",
   "testimonial.classYear": "",
   "testimonial.attribution": "",
@@ -372,7 +371,11 @@ export const DEFAULTS = {
   // Phi Sig deployment sets this "true" in its DB.)
   "show.instagramFeed": "false",
   "show.timeline": "true",
-  "show.testimonial": "true",
+  // ANTI-FABRICATION: default OFF. The testimonial only appears once a chapter
+  // adds a REAL quote + author in /admin/settings AND flips this to "true". A
+  // fresh chapter never ships a canned/invented testimonial. (The canonical Phi
+  // Sig deployment sets this "true" in its DB with its own real alum quote.)
+  "show.testimonial": "false",
   "show.spotlight": "true",
   "show.eboard": "true",
   "show.faq": "true",
