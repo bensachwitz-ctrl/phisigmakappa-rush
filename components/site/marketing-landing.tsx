@@ -803,6 +803,58 @@ const FAQS: { q: string; a: string }[] = [
 
 
 
+// Floating letters metadata for 3D scroll intro
+const INTRO_LETTERS = [
+  { char: "Φ", x: "-30%", y: "-20%", startZ: -500, rot: 15 },
+  { char: "Σ", x: "25%", y: "-10%", startZ: -300, rot: -20 },
+  { char: "Κ", x: "-18%", y: "22%", startZ: -600, rot: 10 },
+  { char: "Δ", x: "28%", y: "25%", startZ: -200, rot: 35 },
+  { char: "Ψ", x: "-35%", y: "8%", startZ: -400, rot: -15 },
+  { char: "Ω", x: "32%", y: "-28%", startZ: -700, rot: 25 },
+  { char: "Θ", x: "-10%", y: "-32%", startZ: -500, rot: -10 },
+  { char: "Ξ", x: "18%", y: "30%", startZ: -300, rot: 18 },
+  { char: "Λ", x: "-25%", y: "-22%", startZ: -600, rot: -30 },
+  { char: "Π", x: "30%", y: "-20%", startZ: -400, rot: 12 },
+];
+
+interface LetterConfig {
+  char: string;
+  x: string;
+  y: string;
+  startZ: number;
+  rot: number;
+}
+
+function FloatingLetter({
+  letter,
+  scrollYProgress,
+}: {
+  letter: LetterConfig;
+  scrollYProgress: any;
+}) {
+  const letterZ = useTransform(scrollYProgress, [0, 0.12], [letter.startZ, 1200]);
+  const letterOpacity = useTransform(scrollYProgress, [0, 0.08, 0.12], [0.8, 0.8, 0]);
+  const letterScale = useTransform(scrollYProgress, [0, 0.12], [0.5, 3.5]);
+  const letterRot = useTransform(scrollYProgress, [0, 0.12], [letter.rot, letter.rot * 2]);
+
+  return (
+    <motion.div
+      style={{
+        left: `calc(50% + ${letter.x})`,
+        top: `calc(50% + ${letter.y})`,
+        z: letterZ,
+        opacity: letterOpacity,
+        scale: letterScale,
+        rotate: letterRot,
+        transformStyle: "preserve-3d",
+      }}
+      className="absolute text-blue-500/25 font-black text-7xl select-none pointer-events-none font-display"
+    >
+      {letter.char}
+    </motion.div>
+  );
+}
+
 export default function MarketingLandingPage() {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -835,15 +887,16 @@ export default function MarketingLandingPage() {
 
   // 3D scrolling transforms driven by scroll progress
   // 1. Hero Zoom
-  const heroScale = useTransform(scrollYProgress, [0, 0.22], [1, 6]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
-  const heroZ = useTransform(scrollYProgress, [0, 0.22], [0, 800]);
-  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => latest < 0.2 ? "auto" : "none");
+  const heroScale = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [0.7, 0.7, 1.0, 6, 8]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.08, 0.14, 0.18, 0.22], [0, 0, 1.0, 1.0, 0]);
+  const heroZ = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [-400, -400, 0, 800, 1000]);
+  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.08 && latest < 0.18) ? "auto" : "none");
 
   // Giant background logo zoom (3D feel)
-  const logoScale = useTransform(scrollYProgress, [0, 0.25], [1, 10]);
-  const logoOpacity = useTransform(scrollYProgress, [0.02, 0.22], [1, 0]);
-  const logoZ = useTransform(scrollYProgress, [0, 0.25], [0, 1200]);
+  const logoScale = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [0.2, 1.0, 1.2, 8, 12]);
+  const logoOpacity = useTransform(scrollYProgress, [0, 0.04, 0.08, 0.16, 0.18, 0.22], [0, 0.8, 0.8, 0.15, 0.15, 0]);
+  const logoZ = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [-800, -200, 0, 1000, 1200]);
+
 
   // 2. How It Works Stage
   const howItWorksScale = useTransform(scrollYProgress, [0.18, 0.32, 0.42, 0.52], [0.4, 1, 1, 4]);
@@ -910,6 +963,11 @@ export default function MarketingLandingPage() {
 
         <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center [perspective:1200px] [transform-style:preserve-3d]">
           
+          {/* 3D Floating intro Greek letters */}
+          {!reduce && !isMobile && INTRO_LETTERS.map((letter, index) => (
+            <FloatingLetter key={index} letter={letter} scrollYProgress={scrollYProgress} />
+          ))}
+
           {/* Giant Greek Stack background logo */}
           <motion.div
             style={{
@@ -935,6 +993,18 @@ export default function MarketingLandingPage() {
             }}
             className="absolute inset-0 flex flex-col justify-center items-center"
           >
+            {/* Background Greek letters behind the tagline during the unveiling */}
+            <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none overflow-hidden">
+              <div className="absolute text-blue-500/5 font-black text-[22vw] select-none transform rotate-12 opacity-60">
+                Ω
+              </div>
+              <div className="absolute text-sky-500/5 font-black text-[18vw] select-none transform -rotate-12 translate-x-[-30%] translate-y-[20%] opacity-40">
+                Φ
+              </div>
+              <div className="absolute text-indigo-500/5 font-black text-[20vw] select-none transform rotate-[45deg] translate-x-[30%] translate-y-[-20%] opacity-40">
+                Δ
+              </div>
+            </div>
             <div className="w-full h-full overflow-y-auto">
               <Hero />
             </div>
