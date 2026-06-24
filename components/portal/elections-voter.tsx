@@ -49,7 +49,7 @@ type Election = {
   votedSeatCount: number;
 };
 
-const CARD = "bg-white/90 backdrop-blur rounded-2xl border border-maroon-100 shadow-[0_8px_30px_-18px_rgba(74,17,29,0.35)]";
+const CARD = "bg-white/90 backdrop-blur rounded-2xl border border-maroon-100 shadow-[0_8px_30px_-18px_rgba(10,24,56,0.35)]";
 
 export default function ElectionsVoter({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter();
@@ -76,10 +76,10 @@ export default function ElectionsVoter({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="min-h-screen bg-cream-50 text-maroon-950">
-      <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(74,17,29,0.25)] sticky top-0 z-20">
+      <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(10,24,56,0.25)] sticky top-0 z-20">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
               <Vote className="w-5 h-5" />
             </div>
             <div>
@@ -258,7 +258,7 @@ function ElectionCard({ election, onVoted }: { election: Election; onVoted: () =
             <button
               onClick={submit}
               disabled={submitting || readyCount === 0}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-maroon-700 to-maroon-900 px-4 py-2 text-sm font-semibold text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20 transition hover:from-maroon-800 hover:to-maroon-950 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-maroon-700 to-maroon-900 px-4 py-2 text-sm font-semibold text-cream-50 shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20 transition hover:from-maroon-800 hover:to-maroon-950 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Submit ballot

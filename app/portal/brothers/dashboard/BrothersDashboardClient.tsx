@@ -353,7 +353,7 @@ function PortalEmpty({
       <div className="relative text-maroon-700">
         <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-300/30 blur-2xl" />
         <Illustration className="h-24 w-28" aria-hidden="true" />
-        <span className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_8px_20px_-10px_rgba(74,17,29,0.45)]">
+        <span className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon-100 via-cream-100 to-cream-200 text-maroon-700 ring-1 ring-maroon-200/80 shadow-[0_8px_20px_-10px_rgba(10,24,56,0.45)]">
           <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
@@ -375,11 +375,11 @@ function PortalEmpty({
 const PORTAL_CARD =
   "rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl " +
   "ring-1 ring-maroon-900/[0.03] " +
-  "shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]";
+  "shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]";
 
 /** Hover-lift transition shared by interactive portal cards. */
 const PORTAL_LIFT =
-  "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)] hover:border-maroon-200";
+  "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(10,24,56,0.35)] hover:border-maroon-200";
 
 /** Deterministic initials from a full name (max 2 letters). */
 function initialsOf(name: string): string {
@@ -1057,12 +1057,12 @@ export default function BrothersDashboardClient({
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
         {/* Top Header / Portal Banner */}
-        <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(74,17,29,0.25)] sticky top-0 z-20">
+        <header className="bg-white/85 backdrop-blur-xl border-b border-maroon-100 px-4 sm:px-6 py-4 shadow-[0_4px_20px_-12px_rgba(10,24,56,0.25)] sticky top-0 z-20">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-500/30 blur-lg" />
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
                   <Users className="w-5 h-5" />
                 </div>
               </div>
@@ -1199,7 +1199,7 @@ export default function BrothersDashboardClient({
                       onKeyDown={onTabKeyDown}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
                         active
-                          ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
+                          ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20"
                           : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
                       }`}
                     >
@@ -1468,7 +1468,7 @@ export default function BrothersDashboardClient({
                               setActiveAnnouncement(a);
                             }
                           }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 text-left relative hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(74,17,29,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 text-left relative hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(10,24,56,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
                             a.pinned
                               ? "bg-amber-50/50 hover:bg-amber-50 border-amber-200"
                               : "bg-cream-50/30 hover:bg-cream-50 border-maroon-100"
@@ -1595,7 +1595,7 @@ export default function BrothersDashboardClient({
                     return (
                       <div
                         key={e.id}
-                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-6 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
+                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] p-6 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(10,24,56,0.35)]"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
@@ -1754,7 +1754,7 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Submit New Service Log Form */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-1">
                   <h3 className="font-bold text-maroon-900 text-lg mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-maroon-600" />
                     Log Service Hours
@@ -1839,7 +1839,7 @@ export default function BrothersDashboardClient({
                     <Button
                       type="submit"
                       disabled={submittingService}
-                      className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2 rounded-xl shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] font-semibold transition-all duration-200 active:scale-[0.98]"
+                      className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2 rounded-xl shadow-[0_8px_20px_-8px_rgba(10,24,56,0.6)] font-semibold transition-all duration-200 active:scale-[0.98]"
                     >
                       {submittingService ? "Logging Hours..." : "Submit Log"}
                     </Button>
@@ -1847,7 +1847,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Service History Table */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2 space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-2 space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5 text-maroon-600" />
@@ -1933,7 +1933,7 @@ export default function BrothersDashboardClient({
               to configure it — never a misleading "$0.00 / blank year" card. */}
           {activeTab === "dues" && !duesConfig.configured && (
             <div className="animate-fade-in">
-              <div className="mx-auto max-w-xl p-8 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl text-center ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
+              <div className="mx-auto max-w-xl p-8 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl text-center ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-maroon-50 text-maroon-600">
                   <DollarSign className="w-6 h-6" />
                 </div>
@@ -1948,7 +1948,7 @@ export default function BrothersDashboardClient({
                     href="/admin/settings#dues"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-maroon-700 to-maroon-900 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] transition-all duration-200 hover:from-maroon-800 hover:to-maroon-950 active:scale-[0.98]"
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-maroon-700 to-maroon-900 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-[0_8px_20px_-8px_rgba(10,24,56,0.6)] transition-all duration-200 hover:from-maroon-800 hover:to-maroon-950 active:scale-[0.98]"
                   >
                     <Settings className="w-4 h-4" />
                     Set up dues
@@ -1963,7 +1963,7 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Active Semester Dues Card */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1 flex flex-col justify-between">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-maroon-600" />
@@ -2025,7 +2025,7 @@ export default function BrothersDashboardClient({
                         <Button
                           onClick={handlePayDues}
                           disabled={payingDues}
-                          className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2.5 rounded-xl font-bold shadow-[0_8px_20px_-8px_rgba(74,17,29,0.6)] flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+                          className="w-full bg-gradient-to-b from-maroon-700 to-maroon-900 hover:from-maroon-800 hover:to-maroon-950 text-cream-50 py-2.5 rounded-xl font-bold shadow-[0_8px_20px_-8px_rgba(10,24,56,0.6)] flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
                         >
                           {payingDues ? (
                             <span>Redirecting to Stripe...</span>
@@ -2046,7 +2046,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Past Transactions Ledger */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2 space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-2 space-y-4">
                   <h3 className="font-bold text-maroon-900 text-lg flex items-center gap-2">
                     <Clipboard className="w-5 h-5 text-maroon-600" />
                     Chapter Payment Ledger
@@ -2131,7 +2131,7 @@ export default function BrothersDashboardClient({
               {/* Reimbursement CTA — spent your own money for the chapter? */}
               <a
                 href="/portal/brothers/reimbursements"
-                className="group flex items-center justify-between gap-4 p-5 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500"
+                className="group flex items-center justify-between gap-4 p-5 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(10,24,56,0.35)] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 rounded-xl bg-maroon-800 text-cream-50 flex items-center justify-center shadow-sm flex-shrink-0">
@@ -2229,7 +2229,7 @@ export default function BrothersDashboardClient({
                       {filteredAlumni.map((a) => (
                         <div
                           key={a.id}
-                          className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(74,17,29,0.35)]"
+                          className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-maroon-200 hover:shadow-[0_18px_40px_-20px_rgba(10,24,56,0.35)]"
                         >
                           <div className="space-y-2.5">
                             <div className="flex justify-between items-start gap-2">
@@ -2380,7 +2380,7 @@ export default function BrothersDashboardClient({
                             <div
                               key={j.id}
                               onClick={() => setExpandedJobId(isExpanded ? null : j.id)}
-                              className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-5 cursor-pointer hover:border-maroon-200 transition-all space-y-4"
+                              className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] p-5 cursor-pointer hover:border-maroon-200 transition-all space-y-4"
                             >
                               <div className="flex justify-between items-start gap-4">
                                 <div className="space-y-1">
@@ -2475,7 +2475,7 @@ export default function BrothersDashboardClient({
                     return (
                       <div
                         key={p.id}
-                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] p-6 space-y-4 flex flex-col justify-between"
+                        className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] p-6 space-y-4 flex flex-col justify-between"
                       >
                         <div className="space-y-3.5">
                           <h3 className="font-bold text-maroon-900 text-lg leading-snug">{p.question}</h3>
@@ -2557,10 +2557,10 @@ export default function BrothersDashboardClient({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Visual Preview Panel */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-1 flex flex-col items-center justify-between space-y-4">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-1 flex flex-col items-center justify-between space-y-4">
                   <div className="text-center space-y-3.5 w-full">
                     <span className="text-xs font-semibold uppercase tracking-wider text-maroon-500">Registry Headshot</span>
-                    <div className="w-32 h-32 rounded-2xl border border-maroon-100 bg-cream-50 overflow-hidden relative mx-auto flex items-center justify-center shadow-[0_10px_26px_-12px_rgba(74,17,29,0.35)]">
+                    <div className="w-32 h-32 rounded-2xl border border-maroon-100 bg-cream-50 overflow-hidden relative mx-auto flex items-center justify-center shadow-[0_10px_26px_-12px_rgba(10,24,56,0.35)]">
                       {profileForm.headshotUrl ? (
                         <img
                           src={avatarSrc(profileForm.headshotUrl, 256)}
@@ -2616,7 +2616,7 @@ export default function BrothersDashboardClient({
                 </div>
 
                 {/* Editable Profile Form */}
-                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)] md:col-span-2">
+                <div className="p-6 rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] md:col-span-2">
                   {profileError && (
                     <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs font-semibold">
                       {profileError}
