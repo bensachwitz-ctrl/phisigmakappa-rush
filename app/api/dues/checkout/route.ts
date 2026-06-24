@@ -135,34 +135,107 @@ async function handlePost(req: Request): Promise<NextResponse> {
     (cfg["chapter.fraternityName"] || "").trim() ||
     (cfg["chapter.fraternityShort"] || "").trim();
 
+  // Chapter subdomain — native callers carry it explicitly (apex-hosted, no
+  // chapter Host header); web callers derive it from the request Host. Used both
+  // for error context AND for the Stripe metadata.subdomain the single platform
+  // webhook routes each event back by.
+  const sub = actorSubdomain || getSubdomain(headers().get("host")) || "";
+
+  // ── DOUBLE-CHARGE GUARD (money integrity, TOCTOU-safe) ──────────────────────
+  // The check-then-create for the (brother, year) PENDING/PAID state runs inside a
+  // SERIALIZABLE transaction so two concurrent requests (double-click / two tabs /
+  // a retried fetch) can't BOTH read "no pending row" and BOTH create a PENDING
+  // row → two live Stripe sessions → a double charge. Under Serializable, the DB
+  // aborts the loser with a write-conflict (P2034) which we map to the same
+  // "already in progress" 409 as a normally-observed pending row. The prior
+  // in-process limiter is a coarse pre-filter only; this transaction is the real
+  // serialization boundary.
+  //   • Already PAID for this term      → { kind: "paid" }   (409)
+  //   • An existing PENDING row         → { kind: "pending", payment }
+  //   • Nothing yet → create PENDING    → { kind: "created", payment }
+  // We keep the PENDING row creation inside the txn (it has an ID to embed in
+  // Stripe metadata); the Stripe session is created AFTER the txn commits.
+  type GuardResult =
+    | { kind: "paid" }
+    | { kind: "pending"; payment: { id: string; stripeSessionId: string | null } }
+    | { kind: "created"; payment: { id: string } };
+
+  let guard: GuardResult;
+  try {
+    guard = await db.$transaction(
+      async (tx): Promise<GuardResult> => {
+        const paid = await tx.duesPayment.findFirst({
+          where: { brotherId: brother.id, year, status: "PAID" },
+          select: { id: true },
+        });
+        if (paid) return { kind: "paid" };
+
+        const pendingRow = await tx.duesPayment.findFirst({
+          where: { brotherId: brother.id, year, status: "PENDING" },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, stripeSessionId: true },
+        });
+        if (pendingRow) return { kind: "pending", payment: pendingRow };
+
+        const created = await tx.duesPayment.create({
+          data: {
+            brotherId: brother.id,
+            amountCents: totalCents,
+            currency,
+            year,
+            method: "STRIPE",
+            status: "PENDING",
+          },
+          select: { id: true },
+        });
+        return { kind: "created", payment: created };
+      },
+      { isolationLevel: "Serializable" },
+    );
+  } catch (err: any) {
+    // Serialization conflict (Postgres 40001 → Prisma P2034): a concurrent request
+    // won the race and created the PENDING row. Treat exactly like an observed
+    // pending row so the loser never mints a second chargeable session.
+    if (err?.code === "P2034") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "A dues payment is already in progress for this term. Finish or cancel it before starting another.",
+        },
+        { status: 409 },
+      );
+    }
+    errorSink(err, {
+      route: ROUTE,
+      tenant: sub || null,
+      brotherId: brother.id,
+      outcome: "create_dues_payment_failed",
+    });
+    return NextResponse.json(
+      { ok: false, error: "Could not start checkout. Try again or contact your treasurer." },
+      { status: 500 },
+    );
+  }
+
   // Already paid? Short-circuit.
-  const existing = await db.duesPayment.findFirst({
-    where: { brotherId: brother.id, year, status: "PAID" },
-  }).catch(() => null);
-  if (existing) {
+  if (guard.kind === "paid") {
     return NextResponse.json(
       { ok: false, error: `You're already marked paid for ${year}.` },
       { status: 409 },
     );
   }
 
-  // DOUBLE-CHARGE GUARD (money integrity): an in-flight PENDING session for the
-  // SAME (brother, year) means the member already started checkout. Minting a
-  // SECOND session here would let a double-click / refresh create two live
-  // PaymentIntents and charge the card twice. Reuse the existing pending
-  // session's URL when we still have it (idempotent resume); otherwise block
-  // with a clear "already in progress" message rather than creating a duplicate
-  // ledger row + a second chargeable session. (FAILED rows are NOT reused — a
-  // genuinely failed attempt should be retryable.)
-  const pending = await db.duesPayment.findFirst({
-    where: { brotherId: brother.id, year, status: "PENDING" },
-    orderBy: { createdAt: "desc" },
-  }).catch(() => null);
-  if (pending) {
-    if (pending.stripeSessionId && stripe) {
-      // Resume the SAME session if it is still open (no new charge created).
+  // An in-flight PENDING session for the SAME (brother, year) means the member
+  // already started checkout. Reuse the existing pending session's URL when we
+  // still have it (idempotent resume — no new charge); otherwise block with a
+  // clear "already in progress" message rather than minting a second chargeable
+  // session. (FAILED rows are NOT reused — a genuinely failed attempt is
+  // retryable, and a FAILED row never matches the PENDING guard above.)
+  if (guard.kind === "pending") {
+    if (guard.payment.stripeSessionId && stripe) {
       try {
-        const prior = await stripe.checkout.sessions.retrieve(pending.stripeSessionId);
+        const prior = await stripe.checkout.sessions.retrieve(guard.payment.stripeSessionId);
         if (prior && prior.status === "open" && prior.url) {
           return NextResponse.json({ ok: true, url: prior.url });
         }
@@ -180,40 +253,10 @@ async function handlePost(req: Request): Promise<NextResponse> {
     );
   }
 
-  // Create a PENDING DuesPayment first so we have an ID to embed in
-  // Stripe metadata. If session-creation throws we still have a row
-  // for forensics — admin can see "Brother X started 3 sessions and
-  // none completed; treasurer should follow up."
-  // Chapter subdomain — native callers carry it explicitly (apex-hosted, no
-  // chapter Host header); web callers derive it from the request Host. Used both
-  // for error context AND for the Stripe metadata.subdomain the single platform
-  // webhook routes each event back by.
-  const sub = actorSubdomain || getSubdomain(headers().get("host")) || "";
-
-  let payment;
-  try {
-    payment = await db.duesPayment.create({
-      data: {
-        brotherId: brother.id,
-        amountCents: totalCents,
-        currency,
-        year,
-        method: "STRIPE",
-        status: "PENDING",
-      },
-    });
-  } catch (err) {
-    errorSink(err, {
-      route: ROUTE,
-      tenant: sub || null,
-      brotherId: brother.id,
-      outcome: "create_dues_payment_failed",
-    });
-    return NextResponse.json(
-      { ok: false, error: "Could not start checkout. Try again or contact your treasurer." },
-      { status: 500 },
-    );
-  }
+  // guard.kind === "created": we hold a fresh PENDING DuesPayment whose ID we
+  // embed in the Stripe metadata below. If session-creation throws we still have a
+  // row for forensics (admin sees "started N sessions, none completed").
+  const payment = guard.payment;
 
   // Stripe Checkout Session.
   const siteUrl = getSiteUrl();

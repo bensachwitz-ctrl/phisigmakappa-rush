@@ -244,7 +244,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       prisma.poll.count({ where: { audience: "ALUMNI", closedAt: null } }),
     ]);
 
+    // Only PAID donations count as "raised" — PENDING/FAILED/REFUNDED money was
+    // never actually collected (or was given back), so summing every row would
+    // overstate donations raised (AOTY money-integrity finding).
     const donationsSum = await prisma.alumniDonation.aggregate({
+      where: { status: "PAID" },
       _sum: { amountCents: true }
     });
     totalDonationsCents = donationsSum._sum.amountCents || 0;
@@ -255,6 +259,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
     });
 
     recentDonations = await prisma.alumniDonation.findMany({
+      where: { status: "PAID" },
       orderBy: { recordedAt: "desc" },
       take: 5,
       include: { alumni: true },

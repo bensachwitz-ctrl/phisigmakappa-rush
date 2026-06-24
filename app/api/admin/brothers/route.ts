@@ -180,23 +180,43 @@ export async function PATCH(req: Request) {
       // a unified payment history regardless of channel (Stripe vs.
       // cash/check/Venmo collected at chapter meeting). Audit row is
       // DUES_PAID_MANUAL so the recent-activity feed reads cleanly.
+      //
+      // MONEY INTEGRITY: dedup the ledger row by (brotherId, year, method:MANUAL).
+      // Re-marking an already-paid brother (e.g. an admin toggles off→on→off→on)
+      // must NOT mint a second MANUAL PAID row — that would double-count dues
+      // collected. We upsert a single MANUAL row per (brother, year): reuse it if
+      // present, flipping it back to PAID; create it only if none exists.
       if (data.duesPaid === true) {
         try {
           const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
           const year = cfg["dues.year"] || "2026-fall";
           const amountCents = parseInt(cfg["dues.amountCents"] || "15000", 10) || 15000;
           const currency = (cfg["dues.currency"] || "usd").toLowerCase();
-          const manualPayment = await prisma.duesPayment.create({
-            data: {
-              brotherId: id,
-              amountCents,
-              currency,
-              year,
-              method: "MANUAL",
-              status: "PAID",
-              notes: "Marked paid manually by admin",
-            },
+          const existingManual = await prisma.duesPayment.findFirst({
+            where: { brotherId: id, year, method: "MANUAL" },
+            orderBy: { createdAt: "desc" },
           });
+          const manualPayment = existingManual
+            ? await prisma.duesPayment.update({
+                where: { id: existingManual.id },
+                data: {
+                  amountCents,
+                  currency,
+                  status: "PAID",
+                  notes: "Marked paid manually by admin",
+                },
+              })
+            : await prisma.duesPayment.create({
+                data: {
+                  brotherId: id,
+                  amountCents,
+                  currency,
+                  year,
+                  method: "MANUAL",
+                  status: "PAID",
+                  notes: "Marked paid manually by admin",
+                },
+              });
           await prisma.brother.update({
             where: { id },
             data: {
@@ -220,6 +240,29 @@ export async function PATCH(req: Request) {
           // flip already happened, so the existing UI keeps working
           // even if the ledger row fails (e.g. DuesPayment table not
           // yet migrated).
+        }
+      } else if (data.duesPaid === false) {
+        // duesPaid → false: reverse the MANUAL PAID ledger row(s) for this term so
+        // the ledger no longer claims money that's been un-marked, and clear the
+        // brother's denormalized dues mirror. Only MANUAL rows are touched — a real
+        // STRIPE PAID row is reversed exclusively by the refund webhook, never by an
+        // admin un-checking the box (that would desync the ledger from Stripe).
+        try {
+          const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+          const year = cfg["dues.year"] || "2026-fall";
+          await prisma.duesPayment.updateMany({
+            where: { brotherId: id, year, method: "MANUAL", status: "PAID" },
+            data: { status: "REFUNDED", notes: "Manual dues un-marked by admin" },
+          });
+          await prisma.brother.update({
+            where: { id },
+            data: {
+              duesPaidAt: null,
+              duesPaymentId: null,
+            },
+          });
+        } catch {
+          // Best-effort — the canonical Brother.duesPaid=false flip already happened.
         }
       }
     }

@@ -165,12 +165,20 @@ export function parseAlumniCsvRow(headers: string[], values: string[]): AlumniIn
 /**
  * Sum donations grouped by campaign. Pure — caller supplies the rows it
  * fetched from prisma.alumniDonation.findMany.
+ *
+ * MONEY INTEGRITY: only rows the chapter actually collected count toward
+ * "raised". When a row carries a `status`, anything other than PAID (PENDING /
+ * FAILED / REFUNDED) is excluded so a campaign total never claims money that was
+ * never received or was given back. Rows without a `status` field are counted
+ * (back-compat for callers that pre-filter to PAID before calling).
  */
 export function summariseDonationsByCampaign(
-  donations: Array<{ campaign?: string | null; amountCents: number }>
+  donations: Array<{ campaign?: string | null; amountCents: number; status?: string | null }>
 ): Array<{ campaign: string; totalCents: number; count: number }> {
   const map = new Map<string, { totalCents: number; count: number }>();
   for (const d of donations) {
+    // Exclude any row whose status is present and not PAID.
+    if (d.status != null && d.status !== "PAID") continue;
     const key = (d.campaign && d.campaign.trim()) || "General";
     const slot = map.get(key) ?? { totalCents: 0, count: 0 };
     slot.totalCents += d.amountCents;

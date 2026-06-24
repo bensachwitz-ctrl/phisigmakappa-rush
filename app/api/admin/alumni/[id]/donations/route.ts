@@ -48,6 +48,12 @@ export async function POST(req: Request, ctx: { params: { id: string } }) {
       amountCents,
       campaign,
       notes,
+      // A manually-logged donation is money the chapter has ALREADY collected
+      // (cash/check/Venmo recorded by the secretary), so it is PAID on creation —
+      // parallel to the manual-dues ledger row in app/api/admin/brothers. Without
+      // this it would default to PENDING and never count toward "donations raised"
+      // (the dashboard/reports only sum PAID rows after this gate fix).
+      status: "PAID",
       recordedById: recordedById || undefined,
     },
   });
