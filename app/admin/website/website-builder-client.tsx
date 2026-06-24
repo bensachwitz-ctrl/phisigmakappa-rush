@@ -670,7 +670,7 @@ export function WebsiteBuilderClient({
             </div>
           )}
 
-          {/* ── AI TWEAK BUILDER PANEL ────────────────────────────────────── */}
+          {/* ── QUICK STYLE PRESETS PANEL ─────────────────────────────────── */}
           {tab === "tweak" && (
             <div className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
