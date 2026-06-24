@@ -141,6 +141,48 @@
   }
 }
 
+/* ── Guaranteed-contrast focus indicator (UNLAYERED — wins the cascade) ──────
+   M2 FIX. The @layer base `*:focus-visible` rule above is the styled default,
+   but ~dozens of interactive controls carry per-component Tailwind overrides
+   (`focus-visible:outline-none` + `focus-visible:ring-<brand|white>`). Those
+   utilities live in @layer utilities, which — by CSS cascade-layer order, NOT
+   specificity — ALWAYS beat @layer base. So a brand-red button could replace
+   the two-band guaranteed-contrast indicator with a single same-hue ring that
+   vanishes against its own fill (defeating the round-2 fix; WCAG 2.2 1.4.11 /
+   2.4.13).
+
+   This block is intentionally OUTSIDE every @layer. Unlayered declarations win
+   over ALL layered ones, so the high-contrast indicator is re-asserted on every
+   focused control regardless of any `outline-none` / `ring-*` override:
+     • a 2px light band in the page --background separates the control from…
+     • a 2px --ring-colored outer band — always a contrasting pair on ANY fill.
+   `outline` is kept (Tailwind ring utilities only touch box-shadow, so they
+   can't strip it) as the forced-colors / box-shadow-suppressed fallback.
+
+   The declarations are marked `!important` ON PURPOSE: Tailwind v3 flattens all
+   @layer blocks at build time, so utilities and this rule end up at EQUAL
+   specificity (`:where(*)` keeps it at 0,0,0 and a `.focus-visible:ring-*`
+   utility is 0,1,0) with the utilities emitted LATER in source order — which
+   means without `!important` the per-component override would still win on
+   source order. `!important` is the correct tool for a non-negotiable a11y
+   floor (WCAG 2.2 1.4.11 / 2.4.13): per-component `focus-visible:ring-*` colors
+   are deliberately superseded so the SAME accessible indicator is used on every
+   focused control — one focus system, no surface can opt out. */
+:where(*):focus-visible {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring)) !important;
+  border-radius: 4px;
+}
+@media (forced-colors: active) {
+  :where(*):focus-visible {
+    box-shadow: none !important;
+    outline: 2px solid CanvasText !important;
+  }
+}
+
 /* Skip-to-content link — first tab stop on every page. Hidden until focused
    so it doesn't pollute sighted users' UI but is the first reachable element
    for keyboard / screen-reader users wanting to jump past the nav. */
@@ -160,8 +202,12 @@
 .skip-to-content:focus,
 .skip-to-content:focus-visible {
   top: 1rem;
-  outline: 2px solid #FFFFFF;
-  outline-offset: 2px;
+  /* Deliberate white outline on the --primary-filled skip link; `!important`
+     so it survives the guaranteed-contrast focus floor above (which is also
+     !important). The floor still layers its --background/--ring box-shadow band
+     underneath, so the skip link keeps full contrast either way. */
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 2px !important;
 }
 
 /* Section vertical padding — only two tokens. .section-y is the standard
