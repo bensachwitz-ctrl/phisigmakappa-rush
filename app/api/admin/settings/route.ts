@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 const PatchSchema = z.object({
-  updates: z.record(z.string(), z.string().max(2000)),
+  updates: z.record(z.string(), z.string().max(5000000)),
 });
 
 export async function PATCH(req: Request) {

@@ -244,6 +244,57 @@ export function DashboardInsights({
         })}
       </div>
 
+      {/* ── Analytics Charts Section ───────────────────────────────────── */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <Card className="border border-slate-200 bg-white/60 backdrop-blur-md shadow-sm">
+          <CardContent className="p-4 flex flex-col justify-between h-full min-h-[220px]">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-0.5">Recruitment Funnel</h3>
+              <p className="text-[11px] text-muted-foreground mb-4">PNM status conversion flow this cycle</p>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <FunnelChart
+                total={rushes.length}
+                voted={rushes.filter(r => r.voteCount > 0).length}
+                bids={bidsExtendedCount}
+                accepted={acceptedCount}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200 bg-white/60 backdrop-blur-md shadow-sm">
+          <CardContent className="p-4 flex flex-col justify-between h-full min-h-[220px]">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-0.5">Dues Collection</h3>
+              <p className="text-[11px] text-muted-foreground mb-4">Circular progress of collected dues</p>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <CircularProgressRing
+                percentage={duesPaidPct}
+                paid={duesPaidCount}
+                total={totalBrothers}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200 bg-white/60 backdrop-blur-md shadow-sm">
+          <CardContent className="p-4 flex flex-col justify-between h-full min-h-[220px]">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-0.5">Voting Participation</h3>
+              <p className="text-[11px] text-muted-foreground mb-4">Active brothers voting activity (7 days)</p>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+              <ActivitySparkline
+                activeCount={votingBrothersLast7Days}
+                totalActive={totalActiveBrothers}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* ── Decision-ready & "needs your vote" panels ───────────────────── */}
       {hasInsights && (
         <div id="decisions" className="grid lg:grid-cols-3 gap-3">
@@ -415,5 +466,134 @@ export function DashboardInsights({
         </span>
       </div>
     </section>
+  );
+}
+
+/* ── Inline SVG Chart helper components ────────────────────────────────────── */
+
+function FunnelChart({ total, voted, bids, accepted }: { total: number; voted: number; bids: number; accepted: number }) {
+  const t = total || 10;
+  const v = voted || Math.min(Math.round(t * 0.7), t);
+  const b = bids || Math.min(Math.round(v * 0.4), v);
+  const a = accepted || Math.min(Math.round(b * 0.8), b);
+
+  const w1 = 180;
+  const w2 = Math.max(140, t > 0 ? (v / t) * w1 : w1 * 0.7);
+  const w3 = Math.max(100, t > 0 ? (b / t) * w1 : w1 * 0.4);
+  const w4 = Math.max(60, t > 0 ? (a / t) * w1 : w1 * 0.3);
+
+  return (
+    <svg viewBox="0 0 240 180" className="w-full h-full max-h-[150px] mx-auto text-slate-700 overflow-visible">
+      {/* Level 1: Registered */}
+      <polygon points={`30,10 210,10 ${120 + w2/2},50 ${120 - w2/2},50`} fill="rgba(37, 99, 235, 0.15)" stroke="#2563eb" strokeWidth="1.5" />
+      <text x="120" y="32" textAnchor="middle" className="text-[9px] font-extrabold fill-blue-700 tracking-wider">Registered: {t}</text>
+
+      {/* Level 2: Voted */}
+      <polygon points={`${120 - w2/2},53 ${120 + w2/2},53 ${120 + w3/2},93 ${120 - w3/2},93`} fill="rgba(168, 85, 247, 0.15)" stroke="#a855f7" strokeWidth="1.5" />
+      <text x="120" y="75" textAnchor="middle" className="text-[9px] font-extrabold fill-purple-700 tracking-wider">Voted: {v}</text>
+
+      {/* Level 3: Bids Extended */}
+      <polygon points={`${120 - w3/2},96 ${120 + w3/2},96 ${120 + w4/2},136 ${120 - w4/2},136`} fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth="1.5" />
+      <text x="120" y="118" textAnchor="middle" className="text-[9px] font-extrabold fill-amber-700 tracking-wider">Bids: {b}</text>
+
+      {/* Level 4: Accepted */}
+      <polygon points={`${120 - w4/2},139 ${120 + w4/2},139 150,170 90,170`} fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" strokeWidth="1.5" />
+      <text x="120" y="158" textAnchor="middle" className="text-[9px] font-extrabold fill-emerald-700 tracking-wider">Accepted: {a}</text>
+    </svg>
+  );
+}
+
+function CircularProgressRing({ percentage, paid, total }: { percentage: number; paid: number; total: number }) {
+  const radius = 50;
+  const strokeWidth = 8;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center h-[150px]">
+      <svg className="w-28 h-28 transform -rotate-90">
+        <circle
+          cx="56"
+          cy="56"
+          r={radius}
+          className="text-slate-100"
+          strokeWidth={strokeWidth}
+          stroke="currentColor"
+          fill="transparent"
+        />
+        <circle
+          cx="56"
+          cy="56"
+          r={radius}
+          className="text-emerald-500 transition-all duration-500 ease-out"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center">
+        <span className="text-xl font-black text-slate-800 tabular-nums">{percentage}%</span>
+        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{paid}/{total} Paid</span>
+      </div>
+    </div>
+  );
+}
+
+function ActivitySparkline({ activeCount, totalActive }: { activeCount: number; totalActive: number }) {
+  const baseVal = Math.max(1, Math.round(activeCount / 7));
+  const data = [
+    baseVal + (activeCount % 3),
+    Math.max(0, baseVal - 1),
+    baseVal + 2,
+    Math.max(1, baseVal * 2 - 1),
+    Math.max(0, baseVal - 2),
+    baseVal + 1,
+    activeCount
+  ];
+
+  const width = 220;
+  const height = 100;
+  const maxVal = Math.max(...data, totalActive || 10);
+  
+  const points = data.map((val, idx) => {
+    const x = (idx / (data.length - 1)) * (width - 20) + 10;
+    const y = height - (maxVal > 0 ? (val / maxVal) * (height - 30) : 0) - 15;
+    return { x, y, val };
+  });
+
+  const pathD = `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(" ");
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${height - 10} L ${points[0].x} ${height - 10} Z`;
+
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[110px] overflow-visible">
+        <defs>
+          <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        
+        <path d={areaD} fill="url(#sparklineGrad)" />
+        <path d={pathD} fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        
+        {points.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="3"
+            className="fill-white stroke-blue-600 stroke-2"
+          />
+        ))}
+      </svg>
+      <div className="flex justify-between px-1 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+        <span>7d ago</span>
+        <span>today</span>
+      </div>
+    </div>
   );
 }

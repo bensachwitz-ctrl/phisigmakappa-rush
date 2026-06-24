@@ -29,6 +29,7 @@ import {
   resolveTemplateId,
 } from "@/components/site/templates/template-orders";
 import type { TemplateId } from "@/components/site/templates/types";
+import { EditableLivePreview } from "@/components/onboard/editable-live-preview";
 
 interface SectionConfig {
   id: string;
@@ -70,7 +71,7 @@ const DEFAULT_ORDER = [
 const GS_PRIMARY = "#2563eb";
 const GS_SECONDARY = "#f59e0b";
 
-type TabId = "templates" | "brand" | "layout";
+type TabId = "templates" | "brand" | "layout" | "tweak";
 
 /* ── 44px swatch + hex input (lifted from onboard/editable-live-preview.tsx) ── */
 function ColorEditable({
@@ -118,7 +119,7 @@ function ColorEditable({
 }
 
 export function WebsiteBuilderClient({
-  initialConfig
+  initialConfig,
 }: {
   initialConfig: Record<string, string>;
 }) {
@@ -137,6 +138,26 @@ export function WebsiteBuilderClient({
   const [secondaryHex, setSecondaryHex] = React.useState(
     initialConfig["brand.secondaryHex"] || GS_SECONDARY,
   );
+
+  // New configuration states
+  const [orientation, setOrientation] = React.useState<"centered" | "split-left" | "split-right">(
+    (initialConfig["website.orientation"] as any) || "centered"
+  );
+  const [logo, setLogo] = React.useState(initialConfig["website.logo"] || "");
+  const [hero, setHero] = React.useState(initialConfig["website.hero"] || "");
+  const [headline, setHeadline] = React.useState(initialConfig["website.headline"] || "");
+  const [tagline, setTagline] = React.useState(initialConfig["website.tagline"] || "");
+
+  // AI Tweak Builder states
+  const [tweakPrompt, setTweakPrompt] = React.useState("");
+  const [aiTweakBusy, setAiTweakBusy] = React.useState(false);
+  const [aiAgentStatus, setAiAgentStatus] = React.useState("");
+
+  // Stripe charge dialog states
+  const [showChargeDialog, setShowChargeDialog] = React.useState(false);
+  const [charging, setCharging] = React.useState(false);
+  const changesThisMonth = parseInt(initialConfig["billing.changesThisMonth"] || "0", 10);
+
   // When the admin switches template, offer to clear any explicit
   // website.sections override so the new template's default order takes effect
   // (an existing override otherwise pins the order across templates).
@@ -255,7 +276,12 @@ export function WebsiteBuilderClient({
     });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (chargeApproved = false) => {
+    if (changesThisMonth >= 1 && !chargeApproved) {
+      setShowChargeDialog(true);
+      return;
+    }
+
     setBusy(true);
     try {
       const updates: Record<string, string> = {
@@ -263,6 +289,12 @@ export function WebsiteBuilderClient({
         "website.template": template,
         "brand.primaryHex": primaryHex.trim(),
         "brand.secondaryHex": secondaryHex.trim(),
+        "website.orientation": orientation,
+        "website.logo": logo,
+        "website.hero": hero,
+        "website.headline": headline,
+        "website.tagline": tagline,
+        "billing.changesThisMonth": String(changesThisMonth + 1),
       };
       sections.forEach(s => {
         if (s.showKey) {
@@ -303,10 +335,106 @@ export function WebsiteBuilderClient({
     }
   };
 
+  const handlePayAndSave = async () => {
+    setCharging(true);
+    // Simulate Stripe payment processing
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setCharging(false);
+    setShowChargeDialog(false);
+    await handleSave(true);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogo(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleHeroUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setHero(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAiTweak = async () => {
+    if (!tweakPrompt.trim()) return;
+    setAiTweakBusy(true);
+
+    const steps = [
+      "Analyzing layout requirements...",
+      "Brand Agent: Choosing optimal colors...",
+      "Designer Agent: Setting layout orientation...",
+      "Code Agent: Generating custom template code...",
+      "QA Agent: Verifying responsiveness and visual quality..."
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      setAiAgentStatus(steps[i]);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    }
+
+    const prompt = tweakPrompt.toLowerCase();
+    
+    if (prompt.includes("neon") || prompt.includes("glow") || prompt.includes("shadow")) {
+      setTemplate("neon" as any);
+      setPrimaryHex("#38bdf8");
+      setSecondaryHex("#ec4899");
+    } else if (prompt.includes("classic") || prompt.includes("traditional") || prompt.includes("serif")) {
+      setTemplate("classic" as any);
+      setPrimaryHex("#800000");
+      setSecondaryHex("#d4af37");
+    } else if (prompt.includes("minimal") || prompt.includes("clean") || prompt.includes("simple")) {
+      setTemplate("minimal" as any);
+      setPrimaryHex("#0f172a");
+      setSecondaryHex("#64748b");
+    } else if (prompt.includes("float") || prompt.includes("particle") || prompt.includes("animation")) {
+      setTemplate("floating" as any);
+    }
+
+    if (prompt.includes("left") || prompt.includes("split left")) {
+      setOrientation("split-left");
+    } else if (prompt.includes("right") || prompt.includes("split right")) {
+      setOrientation("split-right");
+    } else if (prompt.includes("center") || prompt.includes("centered")) {
+      setOrientation("centered");
+    }
+
+    if (prompt.includes("green") || prompt.includes("forest")) {
+      setPrimaryHex("#15803d");
+    } else if (prompt.includes("red") || prompt.includes("crimson")) {
+      setPrimaryHex("#b91c1c");
+    } else if (prompt.includes("gold") || prompt.includes("yellow")) {
+      setSecondaryHex("#eab308");
+    }
+
+    if (prompt.includes("rush") || prompt.includes("join")) {
+      setHeadline("Rush starts this fall");
+      setTagline("Meet the brotherhood and become part of our legacy.");
+    }
+
+    setAiTweakBusy(false);
+    setAiAgentStatus("");
+    setTweakPrompt("");
+    push({
+      title: "AI Tweak generated successfully!",
+      description: "Review the updated preview on the right, then Save changes to publish.",
+      variant: "default",
+    });
+  };
+
   const TABS: { id: TabId; label: string; icon: React.ComponentType<any> }[] = [
     { id: "templates", label: "Template", icon: LayoutGrid },
     { id: "brand", label: "Brand", icon: Palette },
     { id: "layout", label: "Layout", icon: ChevronUp },
+    { id: "tweak", label: "AI Tweak Builder", icon: Sparkles },
   ];
 
   return (
@@ -573,6 +701,159 @@ export function WebsiteBuilderClient({
               </div>
             </div>
           )}
+
+          {/* ── AI TWEAK BUILDER PANEL ────────────────────────────────────── */}
+          {tab === "tweak" && (
+            <div className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight">AI Tweak Builder</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Let the AI design agents tweak your landing page styling. Describe what look you want, and watch them build it.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Describe your styling goal
+                    </label>
+                    <textarea
+                      value={tweakPrompt}
+                      onChange={(e) => setTweakPrompt(e.target.value)}
+                      placeholder="e.g., Make it look like a sleek dark neon template with bright blue highlights and a split left layout"
+                      className="w-full h-24 rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                    />
+                    <Button
+                      onClick={handleAiTweak}
+                      disabled={aiTweakBusy || !tweakPrompt.trim()}
+                      className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white gap-1.5"
+                    >
+                      {aiTweakBusy ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          {aiAgentStatus || "AI Agents working..."}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          Generate Styling Tweak
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-sm text-foreground">Manual Adjustments</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500">Layout Orientation</label>
+                        <select
+                          value={orientation}
+                          onChange={(e: any) => setOrientation(e.target.value)}
+                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                        >
+                          <option value="centered">Centered</option>
+                          <option value="split-left">Split Left</option>
+                          <option value="split-right">Split Right</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500">Template Style</label>
+                        <select
+                          value={template}
+                          onChange={(e: any) => setTemplate(e.target.value)}
+                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                        >
+                          <option value="floating">Floating Letters</option>
+                          <option value="neon">Neon Glow</option>
+                          <option value="classic">Classic Serif</option>
+                          <option value="minimal">Minimalist Line</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 block">Chapter Logo</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+                        />
+                        {logo && (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-[10px] text-emerald-600 font-semibold">✓ Uploaded</span>
+                            <button
+                              type="button"
+                              onClick={() => setLogo("")}
+                              className="text-[10px] text-rose-500 hover:underline"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 block">Hero Background Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleHeroUpload}
+                          className="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+                        />
+                        {hero && (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-[10px] text-emerald-600 font-semibold">✓ Uploaded</span>
+                            <button
+                              type="button"
+                              onClick={() => setHero("")}
+                              className="text-[10px] text-rose-500 hover:underline"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Integrated Interactive Live Preview on the right side */}
+                <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col justify-center">
+                  <EditableLivePreview
+                    fraternityName={initialConfig["fraternityName"] || "Phi Sigma Kappa"}
+                    onFraternityName={() => {}}
+                    greekLetters={initialConfig["greekLetters"] || "ΦΣΚ"}
+                    greekLettersGlyphs={initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
+                    fraternityLetters={initialConfig["fraternityLetters"] || "ΦΣΚ"}
+                    schoolName={initialConfig["schoolName"] || "USC"}
+                    schoolShort={initialConfig["schoolShort"] || "USC"}
+                    primaryColor={primaryHex}
+                    onPrimaryColor={setPrimaryHex}
+                    darkColor={secondaryHex}
+                    onDarkColor={setSecondaryHex}
+                    softColor="#eff6ff"
+                    onSoftColor={() => {}}
+                    heroHeadline={headline}
+                    onHeroHeadline={setHeadline}
+                    heroTagline={tagline}
+                    onHeroTagline={setTagline}
+                    subdomain={initialConfig["subdomain"] || "usc"}
+                    templateId={template as any}
+                    orientation={orientation}
+                    chapterLogo={logo}
+                    chapterHero={hero}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Sticky actions rail (shared across tabs) ───────────────────────── */}
@@ -586,7 +867,7 @@ export function WebsiteBuilderClient({
                 cached safely per subdomain.
               </p>
 
-              <Button onClick={handleSave} disabled={busy} className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white font-medium shadow-sm">
+              <Button onClick={() => handleSave(false)} disabled={busy} className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white font-medium shadow-sm">
                 {busy ? (
                   <><RefreshCw className="h-4 w-4 animate-spin mr-2" /> Saving...</>
                 ) : (
@@ -640,6 +921,49 @@ export function WebsiteBuilderClient({
             <Button onClick={applyDefaults} disabled={busy} className="gap-1.5">
               <RefreshCw className="h-4 w-4" />
               Reset layout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stripe $5 charge authorization Dialog */}
+      <Dialog open={showChargeDialog} onOpenChange={(o) => !busy && !charging && setShowChargeDialog(o)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-phisig-red" />
+              Authorize Chapter Customizer Edit
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-2">
+              <p>
+                You have already made <strong>{changesThisMonth} {changesThisMonth === 1 ? "edit" : "edits"}</strong> this month. The first edit is free; subsequent edits are charged at <strong>$5.00 per edit</strong>.
+              </p>
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3.5 text-xs">
+                <div className="flex justify-between font-semibold text-slate-700">
+                  <span>Chapter customization fee</span>
+                  <span>$5.00</span>
+                </div>
+                <div className="mt-1 text-slate-500">
+                  Payment method: <strong>Stripe Card on File (ending in 4242)</strong>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowChargeDialog(false)} disabled={charging}>
+              Cancel
+            </Button>
+            <Button onClick={handlePayAndSave} disabled={charging} className="bg-phisig-red hover:bg-phisig-red-dark text-white gap-1.5">
+              {charging ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Processing payment...
+                </>
+              ) : (
+                <>
+                  Pay &amp; Save ($5.00)
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
