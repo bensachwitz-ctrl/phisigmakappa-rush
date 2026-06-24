@@ -28,21 +28,30 @@ import { resolve } from "node:path";
 
 const ROOT = resolve(__dirname, "..");
 
-// Every demo surface advertises features too; gate them like the marketing page
-// so an overclaim added to any surface (not just SpotlightSurface) fails here.
-const DEMO_SURFACES_DIR = "app/app/_demo/surfaces";
-const demoSurfaceFiles = readdirSync(resolve(ROOT, DEMO_SURFACES_DIR))
-  .filter((f) => f.endsWith(".tsx"))
-  .map((f) => `${DEMO_SURFACES_DIR}/${f}`);
+// Every demo .tsx advertises features too; gate the WHOLE app/app/_demo tree
+// (surfaces AND modals AND backdrops) so an overclaim added to any of them —
+// not just SpotlightSurface — fails here. Recursive so a new subfolder of demo
+// copy can't slip the net. (round-3 PIN-IT: the prior glob only covered
+// _demo/surfaces/*.tsx; broaden to _demo/**/*.tsx.)
+function walkTsx(relDir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(resolve(ROOT, relDir), { withFileTypes: true })) {
+    const rel = `${relDir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...walkTsx(rel));
+    else if (entry.name.endsWith(".tsx")) out.push(rel);
+  }
+  return out;
+}
+const demoTsxFiles = walkTsx("app/app/_demo");
 
 const FILES = [
   "components/site/marketing-landing.tsx",
   "components/site/feature-previews.tsx",
   // The in-app demo also advertises features; it must not claim the same
-  // unbuilt dues/treasury/elections capabilities the marketing page used to.
+  // unbuilt dues/treasury/elections/donation capabilities the marketing page
+  // used to. mock-data.ts carries the surface copy; every demo .tsx is pinned.
   "app/app/_demo/mock-data.ts",
-  // ...and every demo SURFACE (SpotlightSurface, etc.) is gate-pinned too.
-  ...demoSurfaceFiles,
+  ...demoTsxFiles,
 ];
 
 // Each forbidden claim → the real reason it would be a fabrication.
@@ -63,6 +72,23 @@ const FORBIDDEN: { pattern: RegExp; why: string }[] = [
   { pattern: /automatically\s+seat/i, why: "winners are not seated automatically; seating is a manual tap (M1)" },
   { pattern: /the moment voting closes[^.]*seat/i, why: "close only sets status=CLOSED; seating is a separate manual action (M1)" },
   { pattern: /seated[^.]*(?:on|upon)\s+(?:ballot\s+)?clos/i, why: "seating does not happen on close; it is a separate manual tap (M1)" },
+
+  // ── round-3 (H/M1/L): donations are mode:"payment" one-time only and member
+  //   dues are member-initiated one-time Checkout. NOTE the deliberate scoping:
+  //   bare /recurring/ and /subscription/ are NOT forbidden — they are TRUE for
+  //   the platform plan (chapters' real recurring Stripe subscription to
+  //   Greekstack) and for TCPA SMS consent ("recurring … messages"). We forbid
+  //   only the DONATION/DUES-recurring overclaims and the demo-only goal meter.
+  { pattern: /recurring[\s-]*giving/i, why: "donations are one-time (mode:'payment'); no recurring giving (H)" },
+  { pattern: /recurring base/i, why: "donations are one-time; alumni are not a 'recurring base' (H)" },
+  // recurring/subscription used in DONATION or DUES context (not platform-plan):
+  { pattern: /(?:recurring|subscription|subscri\w+)\s+(?:\w+\s+){0,3}(?:donation|giving|gift|dues)/i, why: "no recurring/subscription donation or dues exist (H/L)" },
+  { pattern: /(?:donation|giving|gift|dues)\s+(?:\w+\s+){0,3}(?:recurring|subscription)/i, why: "no recurring/subscription donation or dues exist (H/L)" },
+  { pattern: /live goal meter/i, why: "the giving goal meter is demo-only (goalCents lives only in _demo) (M1)" },
+  { pattern: /goal meter/i, why: "AlumniDonation.campaign has no goal field; no goal meter is built (M1)" },
+  { pattern: /collect dues automatically/i, why: "dues are member-initiated one-time Checkout, not auto-collected (L)" },
+  { pattern: /automated dues/i, why: "dues are member-initiated one-time Checkout; nothing auto-bills members (L)" },
+  { pattern: /auto-?billing/i, why: "no member dues/donation auto-billing is implemented (L)" },
 ];
 
 describe("marketing copy honesty — no fabricated dues/treasury/elections capabilities", () => {
