@@ -31,6 +31,126 @@ export function safeHex(input: string | undefined, fallback: string): string {
 }
 
 /**
+ * Parse a validated hex color (#RGB or #RRGGBB) into an [r,g,b] triple of
+ * 0–255 integers. Input is always safeHex-validated by the caller.
+ */
+export function hexToRgb(hex: string): [number, number, number] {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+/**
+ * WCAG relative luminance of an sRGB color (0 = black, 1 = white). Uses the
+ * 0.03928 linearization threshold + 2.4 gamma from the WCAG 2.x definition.
+ */
+export function relativeLuminance([r, g, b]: [number, number, number]): number {
+  const lin = [r, g, b].map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+
+/**
+ * WCAG contrast ratio between two hex colors (1:1 .. 21:1). Order-independent.
+ */
+export function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = relativeLuminance(hexToRgb(hex1));
+  const l2 = relativeLuminance(hexToRgb(hex2));
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** Convert an [r,g,b] triple (0–255) to an [h,s,l] triple (h:0–360, s/l:0–1). */
+function rgbToHsl([r, g, b]: [number, number, number]): [number, number, number] {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  const d = max - min;
+  if (d !== 0) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case rn:
+        h = (gn - bn) / d + (gn < bn ? 6 : 0);
+        break;
+      case gn:
+        h = (bn - rn) / d + 2;
+        break;
+      default:
+        h = (rn - gn) / d + 4;
+    }
+    h /= 6;
+  }
+  return [h * 360, s, l];
+}
+
+/** Convert an [h,s,l] triple (h:0–360, s/l:0–1) to a #RRGGBB hex string. */
+function hslToHex([h, s, l]: [number, number, number]): string {
+  const hue = ((h % 360) + 360) % 360 / 360;
+  let r: number;
+  let g: number;
+  let b: number;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      let tt = t;
+      if (tt < 0) tt += 1;
+      if (tt > 1) tt -= 1;
+      if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+      if (tt < 1 / 2) return q;
+      if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, hue + 1 / 3);
+    g = hue2rgb(p, q, hue);
+    b = hue2rgb(p, q, hue - 1 / 3);
+  }
+  const toHex = (v: number) =>
+    Math.round(Math.min(255, Math.max(0, v * 255)))
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/**
+ * Guarantee an AA-passing brand primary for use as on-white text / a fillable
+ * accent on a white surface. If the supplied hex already clears 4.5:1 against
+ * white it is returned unchanged (so the platform default #2563eb — 5.17:1 — and
+ * any already-dark brand color are untouched). Otherwise the color is darkened
+ * by reducing HSL Lightness in small steps while PRESERVING HUE (and saturation)
+ * until it reaches >=4.5:1, so a light input like #FFD400 (gold) yields a darker
+ * gold rather than a grey or a hue shift.
+ */
+export function ensureAccessiblePrimary(hex: string): string {
+  const TARGET = 4.5;
+  if (contrastRatio(hex, "#ffffff") >= TARGET) return hex;
+  const [h, s, l] = rgbToHsl(hexToRgb(hex));
+  let lightness = l;
+  // Step Lightness down in 1% increments (hue + saturation held constant).
+  for (let i = 0; i < 100 && lightness > 0; i++) {
+    lightness = Math.max(0, lightness - 0.01);
+    const candidate = hslToHex([h, s, lightness]);
+    if (contrastRatio(candidate, "#ffffff") >= TARGET) return candidate;
+  }
+  // Hue-preserving fully-dark fallback (saturated black of the same hue).
+  return hslToHex([h, s, 0]);
+}
+
+/**
  * Convert a validated hex color (#RGB or #RRGGBB) to a space-separated HSL
  * triple ("351 76% 42%") for the shadcn-style `--primary` / `--ring` tokens.
  * Input is always safeHex-validated by the caller.
@@ -71,10 +191,18 @@ export function hexToHslTriple(hex: string): string {
  * the apex) resolves to the platform royal-blue + gold, identical to today.
  */
 export function buildBrandThemeStyle(cfg: Record<string, string>): string {
-  const brandPrimary = safeHex(cfg["brand.primaryHex"], BRAND_DEFAULTS.primary);
+  const rawPrimary = safeHex(cfg["brand.primaryHex"], BRAND_DEFAULTS.primary);
+  // Contrast floor: --brand-primary and the derived --primary/--ring are used as
+  // on-white text / focus accents, so a light admin pick (e.g. #FFD400 gold) is
+  // auto-darkened (hue preserved) until it clears WCAG AA (>=4.5:1) vs white. A
+  // color that already passes (the platform default #2563eb included) is left
+  // exactly as-is, so brand-default-blue / brand-secondary tests stay green.
+  const brandPrimary = ensureAccessiblePrimary(rawPrimary);
   const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], BRAND_DEFAULTS.primaryDark);
   const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], BRAND_DEFAULTS.primarySoft);
   const brandSecondary = safeHex(cfg["brand.secondaryHex"], BRAND_DEFAULTS.secondary);
+  // Derive the shadcn HSL token from the CONTRAST-CORRECTED hex so --primary /
+  // --ring track the accessible value, not the raw input.
   const brandPrimaryHsl = hexToHslTriple(brandPrimary);
   return `:root{--brand-primary:${brandPrimary};--brand-primary-dark:${brandPrimaryDark};--brand-primary-soft:${brandPrimarySoft};--brand-secondary:${brandSecondary};--primary:${brandPrimaryHsl};--ring:${brandPrimaryHsl};}`;
 }

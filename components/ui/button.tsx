@@ -44,7 +44,7 @@ const buttonVariants = cva(
           "border border-white/15 bg-white/10 text-foreground backdrop-blur-md shadow-sm hover:bg-white/20 hover:border-white/25 active:scale-[0.98]",
       },
       size: {
-        default: "h-10 px-4 py-2",
+        default: "h-11 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-12 rounded-md px-6 text-base",
         // 44px square — the Apple HIG minimum touch target (was 40px). Icon-only

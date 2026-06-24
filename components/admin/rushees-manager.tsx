@@ -521,9 +521,9 @@ export function RusheesManager({
               {acceptedNewMembers.length === 0 ? (
                 <Card>
                   <CardContent className="py-12 text-center text-muted-foreground">
-                    <UserX className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                    <UserX className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm font-semibold">No accepted new members found.</p>
-                    <p className="text-xs text-slate-400 mt-1">Once prospective members accept bids, they will show up here.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Once prospective members accept bids, they will show up here.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -577,17 +577,17 @@ export function RusheesManager({
                                       </span>
                                     )}
                                   </p>
-                                  <p className="text-[10px] text-slate-400 capitalize">{m.type} Account</p>
+                                  <p className="text-[10px] text-muted-foreground capitalize">{m.type} Account</p>
                                 </div>
                               </div>
                             </td>
                             <td className="py-3.5 px-4">
                               <p className="text-xs font-semibold">{m.phone}</p>
-                              <p className="text-[10px] text-slate-400">{m.email}</p>
+                              <p className="text-[10px] text-muted-foreground">{m.email}</p>
                             </td>
                             <td className="py-3.5 px-4">
                               <p className="text-xs font-semibold">{m.year}</p>
-                              <p className="text-[10px] text-slate-400">{m.major || "No major"}</p>
+                              <p className="text-[10px] text-muted-foreground">{m.major || "No major"}</p>
                             </td>
                             <td className="py-3.5 px-4 text-xs font-semibold text-slate-600">{m.hometown || "—"}</td>
                             <td className="py-3.5 px-4 text-center">
@@ -646,15 +646,15 @@ export function RusheesManager({
                         )}
                         <CardContent className="p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-slate-400" />
+                            <Clock className="w-4 h-4 text-muted-foreground" />
                             <div>
                               <h4 className="text-xs font-bold text-slate-900 leading-none">{s.label}</h4>
-                              <p className="text-[9px] text-slate-400 mt-1 capitalize">{s.day} Shift</p>
+                              <p className="text-[9px] text-muted-foreground mt-1 capitalize">{s.day} Shift</p>
                             </div>
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Assign Driver</Label>
+                            <Label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Assign Driver</Label>
                             <div className="flex gap-2">
                               <select
                                 value={driverId}

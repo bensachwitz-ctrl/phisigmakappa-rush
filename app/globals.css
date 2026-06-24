@@ -495,6 +495,16 @@
 }
 
 /* ─── Mobile-first touch helpers ─── */
+/* Coarse pointers (touchscreens) always get the 44px min tap target regardless
+   of viewport width — a tablet/large phone in landscape is wider than 639px but
+   still finger-driven, so the width media query alone would miss it. Mirrors the
+   max-width block below; both apply so neither path regresses. */
+@media (pointer: coarse) {
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
 @media (max-width: 639px) {
   /* Ensure all interactive elements meet 44px min tap target */
   .tap-target {
