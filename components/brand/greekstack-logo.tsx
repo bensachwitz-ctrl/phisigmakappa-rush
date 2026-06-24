@@ -4,50 +4,110 @@ import { cn } from "@/lib/utils";
 /**
  * GREEKSTACK BRAND MARK — the canonical platform glyph, rendered inline.
  * ------------------------------------------------------------------
- * The mark is the Greek temple/pediment glyph (pediment + four columns + base)
- * — the SAME geometry the product already ships for its favicon, maskable PWA
- * icon (app/maskable-icon/route.tsx), the native app icon, and the mobile-shell
- * crest (mobile-shell/index.html CREST_SVG) — recolored into the GreekStack
- * brand palette: a ROYAL-BLUE temple seated in a GOLD rounded tile.
+ * The mark is the ELEVATED CLASSICAL TEMPLE: a pediment over four columns WITH
+ * capitals + bases, a gold cornice + medallion (oculus) + architrave, a stepped
+ * stylobate, and a gold floor line. It is the SAME geometry the product ships
+ * everywhere — the favicon / web icon (app/icon.png, app/apple-icon.png), the
+ * maskable PWA icon (app/maskable-icon/route.tsx), the native iOS/Android app
+ * icon (scripts/gen-*-assets.mjs rasterize brand/greekstack-seal.svg), and the
+ * mobile-shell crest (mobile-shell/index.html CREST_SVG). The single normalized
+ * source of truth for the path data is brand/greekstack-seal.svg — every surface
+ * paints the one canonical vector, so the brand can never drift.
  *
- *   • royal-blue ink  #1d4ed8 → #2563eb  (the exact `gs-gradient-text` blues used
- *     for "stack" in the wordmark, app/globals.css)
- *   • gold tile       #FBBF24 → #F59E0B  (--brand-secondary, the platform gold)
+ * This was elevated out of "generic AI slop" (flat-rectangle columns on a muddy
+ * cream raster) into a crafted, premium VECTOR: the capitals + bases are the
+ * single biggest craft tell, and the restrained gold accents read as warm,
+ * "Greek-life" premium without shouting.
+ *
+ * TWO presentations, ONE geometry:
+ *   • LIGHT (default) — ivory tile #F7F5EE (hairline border #E2DCCB), navy
+ *     temple #16264E, gold accents #C8901C. The in-app / header / wordmark mark.
+ *   • DARK / navy seal — deep-navy tile #0B1B3A, ivory temple #F4F1E6, gold
+ *     accents #E8B53A. Matches the iOS home-screen AppIcon.
  *
  * It is drawn as a SELF-CONTAINED inline <svg> (no PNG, no Satori, no network
- * fetch) so the brand can never drift between the site header, the marketing
- * nav, the mobile client, the login/onboard surfaces, or an OG card — every
- * surface paints the one canonical vector. (The previous version pointed at
- * /brand/greekstack-mark.png, a navy-temple-on-cream tile whose cream field did
- * not match the royal-blue + gold brand; the rendered mark now matches the
- * wordmark, the maskable icon, and the native icon.)
+ * fetch), pixel-crisp at any size, on a 100-unit viewBox identical to the seal
+ * source so the rendered mark is byte-for-byte the same shape as the icon set.
  *
- * `GreekstackLogo` renders the mark at a square box driven purely by the
- * height/width utility classes (defaults to h-8 w-8), so there is ZERO layout
- * shift and no reflow. `alt`/`aria-label` semantics are preserved: decorative
- * (aria-hidden) wherever it sits beside the "Greekstack" wordmark, and exposed
- * to AT via `title` for the rare icon-only placement.
+ * `GreekstackLogo` renders at a square box driven purely by the height/width
+ * utility classes (defaults to h-8 w-8), so there is ZERO layout shift.
+ * `alt`/`aria-label` semantics are preserved via `title`.
  *
  * The exported surface — names, props, and signatures (`GreekstackLogo`,
  * `GreekstackWordmark`) — is UNCHANGED, so every existing consumer keeps working
- * without edits. `variant` is accepted and ignored for source compatibility.
+ * without edits. The legacy `variant` ("tile" | "mono") values still map to the
+ * default LIGHT tile; the new "dark"/"seal" values select the navy seal.
  */
 
-type LogoVariant = "tile" | "mono";
+/** Legacy variants ("tile" | "mono") + the navy-seal selectors ("dark" | "seal"). */
+type LogoVariant = "tile" | "mono" | "dark" | "seal" | "light";
 
-/** Royal-blue ink (temple) — the gs-gradient "stack" blues. */
-const INK = "#1d4ed8";
-const INK_DEEP = "#1e3a8a";
-/** Gold tile — the platform --brand-secondary ramp. */
-const GOLD = "#F59E0B";
-const GOLD_LIGHT = "#FBBF24";
+/** LIGHT tile palette (default) — the canonical in-app/header presentation. */
+const LIGHT = {
+  tile: "#F7F5EE",
+  border: "#E2DCCB",
+  temple: "#16264E",
+  gold: "#C8901C",
+} as const;
+
+/** DARK navy-seal palette — matches the iOS home-screen AppIcon. */
+const DARK = {
+  tile: "#0B1B3A",
+  border: "transparent",
+  temple: "#F4F1E6",
+  gold: "#E8B53A",
+} as const;
+
+/**
+ * The canonical temple geometry on the 100-unit grid (identical to
+ * brand/greekstack-seal.svg). Columns at shaft-x 23/39/55/71 (shaft w6;
+ * capitals + bases w9 centered on the shaft).
+ */
+function TempleMark({ temple, gold }: { temple: string; gold: string }) {
+  return (
+    <>
+      {/* ivory/navy temple group */}
+      <g fill={temple}>
+        {/* pediment */}
+        <path d="M16 44 L50 22 L84 44 Z" />
+        {/* entablature */}
+        <rect x="14" y="46.5" width="72" height="5" rx="1" />
+        {/* four columns — capital + shaft + base */}
+        <rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6" />
+        <rect x="23" y="54.7" width="6" height="15" />
+        <rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6" />
+        <rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6" />
+        <rect x="39" y="54.7" width="6" height="15" />
+        <rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6" />
+        <rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6" />
+        <rect x="55" y="54.7" width="6" height="15" />
+        <rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6" />
+        <rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6" />
+        <rect x="71" y="54.7" width="6" height="15" />
+        <rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6" />
+        {/* stepped stylobate (2 steps) */}
+        <rect x="18" y="72.5" width="64" height="3.2" rx="0.8" />
+        <rect x="13" y="76.2" width="74" height="3.4" rx="0.8" />
+      </g>
+      {/* restrained gold accents */}
+      <g fill={gold}>
+        {/* gold cornice under the pediment */}
+        <rect x="14" y="43.4" width="72" height="2" rx="1" />
+        {/* gold medallion (oculus) in the tympanum */}
+        <circle cx="50" cy="36" r="3" />
+        {/* gold architrave line on the entablature */}
+        <rect x="16" y="51" width="68" height="1" />
+        {/* gold floor line under the stylobate */}
+        <rect x="13" y="79.9" width="74" height="1.1" />
+      </g>
+    </>
+  );
+}
 
 export function GreekstackLogo({
   className,
   title = "Greekstack",
-  // `variant` is retained for prop-compatibility with prior callers but no
-  // longer changes the rendering — the mark is a single canonical glyph.
-  variant: _variant,
+  variant = "light",
   loading: _loading,
   ...rest
 }: {
@@ -59,12 +119,11 @@ export function GreekstackLogo({
   React.SVGProps<SVGSVGElement>,
   "className" | "title" | "viewBox" | "fill" | "xmlns"
 >) {
-  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, "");
-  const tileId = `gs-tile-${uid}`;
-  const inkId = `gs-ink-${uid}`;
+  const dark = variant === "dark" || variant === "seal";
+  const c = dark ? DARK : LIGHT;
   return (
     <svg
-      viewBox="0 0 48 48"
+      viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
@@ -72,35 +131,21 @@ export function GreekstackLogo({
       className={cn("inline-block", className || "h-8 w-8")}
       {...rest}
     >
-      <defs>
-        <linearGradient id={tileId} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={GOLD_LIGHT} />
-          <stop offset="1" stopColor={GOLD} />
-        </linearGradient>
-        <linearGradient id={inkId} x1="8" y1="6" x2="40" y2="42" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#2563eb" />
-          <stop offset="0.55" stopColor={INK} />
-          <stop offset="1" stopColor={INK_DEEP} />
-        </linearGradient>
-      </defs>
-      {/* Gold rounded tile (squircle) — the brand field. */}
-      <rect x="0" y="0" width="48" height="48" rx="11" fill={`url(#${tileId})`} />
-      {/* Royal-blue temple: pediment + entablature + four columns + stylobate.
-          Coordinates are the canonical 0..24 glyph scaled +centered (×1.5, +6px)
-          into the 48-box, so it matches the maskable/native/mobile-shell mark. */}
-      <g fill={`url(#${inkId})`}>
-        {/* pediment */}
-        <path d="M9.9 18.9 24 10.8l14.1 8.1H9.9Z" />
-        {/* entablature */}
-        <rect x="11.1" y="20.1" width="25.8" height="2.55" rx="0.75" />
-        {/* four columns */}
-        <rect x="12.9" y="23.1" width="2.85" height="9.3" rx="0.6" />
-        <rect x="18.6" y="23.1" width="2.85" height="9.3" rx="0.6" />
-        <rect x="26.55" y="23.1" width="2.85" height="9.3" rx="0.6" />
-        <rect x="32.25" y="23.1" width="2.85" height="9.3" rx="0.6" />
-        {/* stylobate / base */}
-        <rect x="11.1" y="32.85" width="25.8" height="2.85" rx="0.9" />
-      </g>
+      {/* rounded tile — the brand field (full bleed; corners read clean) */}
+      <rect x="0" y="0" width="100" height="100" rx="22" fill={c.tile} />
+      {!dark && (
+        <rect
+          x="1"
+          y="1"
+          width="98"
+          height="98"
+          rx="21"
+          fill="none"
+          stroke={c.border}
+          strokeWidth="1"
+        />
+      )}
+      <TempleMark temple={c.temple} gold={c.gold} />
     </svg>
   );
 }
