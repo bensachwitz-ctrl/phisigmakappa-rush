@@ -381,7 +381,7 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     title: "Recruitment pipeline",
     outcome: "Run your whole rush from one board — not five group chats and a spreadsheet.",
     desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS — your whole recruitment cycle in one board.",
-    long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and the moment you publish an event the platform texts rushees the schedule — with double opt-in consent captured for you.",
+    long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and you broadcast the schedule to rushees over TCPA-compliant SMS — with double opt-in consent captured for you.",
     bullets: [
       "Drag-and-drop Kanban funnel from interest → bid",
       "QR check-in that builds the PNM list automatically",
@@ -415,9 +415,9 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     desc: "Chapter budgets and expense tracking in one place — build a semester budget by line item and watch spend track against it.",
     long: "Give your treasurer a real back office. Build a semester budget by line item, log and categorize expenses, and watch spend track against budget — so the books stay current and you can hand the next treasurer a clean term instead of a shoebox of receipts.",
     bullets: [
-      "Line-item semester budgets with live spend tracking",
+      "Line-item semester budgets with logged spend per line",
       "Categorized expense logging + receipts",
-      "Per-term budgets you can roll forward each semester",
+      "Per-term budgets, with a selector to switch between terms",
       "Clean exports for the next treasurer or nationals",
     ],
     preview: <PreviewTreasury />,
