@@ -97,3 +97,41 @@ export {
   IconBallot,
 } from "./admin-nav";
 
+// iOS app-surface glyphs — bespoke set drawn for app/app/MobileAppClient + _demo.
+export {
+  IconBell,
+  IconLogOut,
+  IconLogIn,
+  IconChevronRight,
+  IconInfo,
+  IconAward,
+  IconClock,
+  IconHeart,
+  IconBriefcase,
+  IconBuilding,
+  IconThumbsUp,
+  IconKey,
+  IconXCircle,
+  IconCar,
+  IconWallet,
+  IconPieChart,
+  IconQrCode,
+  IconGift,
+  IconCalendarPlus,
+  IconWand,
+  IconMegaphone,
+} from "./mobile";
+
+// Promote select existing glyphs into the public barrel for the iOS app surface.
+export { IconUser, IconPin, IconCrown } from "./chapter";
+export {
+  IconMail,
+  IconPhone,
+  IconCalendar,
+  IconArrowLeft,
+  IconAlert,
+  IconMessage,
+  IconLock,
+} from "./contact";
+export { IconSchool } from "./onboarding-wizard";
+
