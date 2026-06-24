@@ -28,31 +28,47 @@ import { resolve } from "node:path";
 
 const ROOT = resolve(__dirname, "..");
 
-// Every demo .tsx advertises features too; gate the WHOLE app/app/_demo tree
-// (surfaces AND modals AND backdrops) so an overclaim added to any of them —
-// not just SpotlightSurface — fails here. Recursive so a new subfolder of demo
-// copy can't slip the net. (round-3 PIN-IT: the prior glob only covered
-// _demo/surfaces/*.tsx; broaden to _demo/**/*.tsx.)
-function walkTsx(relDir: string): string[] {
+// GLOB THE WHOLE MARKETING/DEMO SURFACE — not a hand-curated FILES list.
+// The prior version pinned exactly two components/site files plus the _demo
+// tree; a FUTURE marketing/demo file (a new landing section, a new admin
+// feature-advertising panel, a new demo surface) could reintroduce any of the
+// fabricated capabilities below and silently bypass the guard because it was
+// never named. We now recursively read every .tsx/.ts under the three
+// feature-advertising surfaces and assert NONE contains a forbidden phrase:
+//   • components/site/**   — the public marketing site (landing, previews, …)
+//   • app/app/_demo/**     — the in-app demo (surfaces, modals, mock copy)
+//   • components/admin/**  — admin-side marketing/feature copy (command
+//                            palette synonyms, feature blurbs, …)
+// SCOPING NOTE — deliberately NOT the whole app/components tree: the legal
+// Terms page (app/terms/page.tsx) honestly says "subscription fees … dues-share
+// percentage" (the platform plan's REAL recurring Stripe subscription), which a
+// blanket scan would false-flag against the recurring/subscription-near-dues
+// pattern. These pins target FEATURE-ADVERTISING copy, where such phrasing would
+// be a fabrication — not legal boilerplate, where it's true. The live tree is
+// already clean (grep is empty today); this only stops a future overclaim.
+const SURFACE_DIRS = ["components/site", "app/app/_demo", "components/admin"];
+function walkCopy(relDir: string): string[] {
   const out: string[] = [];
-  for (const entry of readdirSync(resolve(ROOT, relDir), { withFileTypes: true })) {
+  let entries;
+  try {
+    entries = readdirSync(resolve(ROOT, relDir), { withFileTypes: true });
+  } catch {
+    return out; // a surface dir may not exist in every checkout — skip cleanly
+  }
+  for (const entry of entries) {
     const rel = `${relDir}/${entry.name}`;
-    if (entry.isDirectory()) out.push(...walkTsx(rel));
-    else if (entry.name.endsWith(".tsx")) out.push(rel);
+    if (entry.isDirectory()) out.push(...walkCopy(rel));
+    else if (
+      (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts")) &&
+      !entry.name.endsWith(".d.ts") &&
+      !entry.name.includes(".test.")
+    ) {
+      out.push(rel);
+    }
   }
   return out;
 }
-const demoTsxFiles = walkTsx("app/app/_demo");
-
-const FILES = [
-  "components/site/marketing-landing.tsx",
-  "components/site/feature-previews.tsx",
-  // The in-app demo also advertises features; it must not claim the same
-  // unbuilt dues/treasury/elections/donation capabilities the marketing page
-  // used to. mock-data.ts carries the surface copy; every demo .tsx is pinned.
-  "app/app/_demo/mock-data.ts",
-  ...demoTsxFiles,
-];
+const FILES = SURFACE_DIRS.flatMap(walkCopy);
 
 // Each forbidden claim → the real reason it would be a fabrication.
 const FORBIDDEN: { pattern: RegExp; why: string }[] = [
@@ -92,6 +108,17 @@ const FORBIDDEN: { pattern: RegExp; why: string }[] = [
 ];
 
 describe("marketing copy honesty — no fabricated dues/treasury/elections capabilities", () => {
+  // NON-VACUOUS GUARD: if the glob ever resolves to an empty/too-small set (a
+  // moved directory, a broken walk), the per-file loop below would silently
+  // assert nothing and the gate would pass on zero coverage. Anchor on the two
+  // canonical landing files + the demo mock copy so the surface can't vanish.
+  it("globs the whole marketing/demo surface (the guard is not vacuous)", () => {
+    expect(FILES.length).toBeGreaterThan(20);
+    expect(FILES).toContain("components/site/marketing-landing.tsx");
+    expect(FILES).toContain("components/site/feature-previews.tsx");
+    expect(FILES).toContain("app/app/_demo/mock-data.ts");
+  });
+
   for (const rel of FILES) {
     const src = readFileSync(resolve(ROOT, rel), "utf8");
     for (const { pattern, why } of FORBIDDEN) {
