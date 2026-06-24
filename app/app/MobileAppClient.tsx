@@ -1,60 +1,67 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  School,
-  Search,
-  User,
-  Users,
-  Lock,
-  Bell,
-  Calendar,
-  DollarSign,
-  CreditCard,
-  Settings,
-  LogOut,
-  LogIn,
-  ChevronRight,
-  ChevronDown,
-  Pin,
-  Check,
-  X,
-  Info,
-  MapPin,
-  Award,
-  Clock,
-  Heart,
-  Mail,
-  Phone,
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle,
-  Briefcase,
-  Building2,
-  Globe,
-  ThumbsUp,
-  MessageSquare,
-  Crown,
-  KeyRound,
-  Trash2,
-  ArrowLeft,
-  XCircle,
-  Key,
-  Car,
-  Vote,
-  Wallet,
-  PieChart,
-  QrCode,
-  Gift,
-  Palette,
-  ShieldCheck,
-  TrendingUp,
-  CalendarPlus
-} from "lucide-react";
 
 import {
-  IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
-  IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark, IconGrowth, IconChapter, IconAlumni,
+  IconDashboard,
+  IconRecruitment,
+  IconMembers,
+  IconEvents,
+  IconCalendarTool,
+  IconDues,
+  IconTreasury,
+  IconLaunch,
+  IconWhiteLabel,
+  IconSecurity,
+  IconComms,
+  IconAdmin,
+  IconSpark,
+  IconGrowth,
+  IconChapter,
+  IconAlumni,
+  IconAlert,
+  IconArrowLeft,
+  IconArrowRight,
+  IconAward,
+  IconBallot,
+  IconBell,
+  IconBilling,
+  IconBriefcase,
+  IconBuilding,
+  IconCalendar,
+  IconCalendarPlus,
+  IconCar,
+  IconCheck,
+  IconCheckCircle,
+  IconChevronDown,
+  IconChevronRight,
+  IconClock,
+  IconClose,
+  IconCrown,
+  IconGift,
+  IconHeart,
+  IconInfo,
+  IconKey,
+  IconLock,
+  IconLogIn,
+  IconLogOut,
+  IconMail,
+  IconMap,
+  IconMessage,
+  IconPhone,
+  IconPieChart,
+  IconPin,
+  IconQrCode,
+  IconSchool,
+  IconSearch,
+  IconSettings,
+  IconShieldCheck,
+  IconSubdomain,
+  IconThumbsUp,
+  IconTrash,
+  IconUser,
+  IconWallet,
+  IconXCircle,
 } from "@/components/brand/icons";
 
 import {
@@ -76,7 +83,7 @@ import { GreekLetterField } from "@/components/site/greek-letter-field";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { ChapterIdentityBackdrop } from "./_demo/ChapterIdentityBackdrop";
 import { useIsDesktopViewport } from "@/hooks/use-fine-pointer";
-import type { DemoContext } from "./_demo/context";
+import type { DemoContext, QuickApplyJob } from "./_demo/context";
 import {
   buildPickerChapters,
   singleTenantPreselect,
@@ -133,7 +140,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   const [isDemo, setIsDemo] = useState(false);
 
   // Quick Apply and Career Notification states
-  const [quickApplyJob, setQuickApplyJob] = useState<any>(null);
+  const [quickApplyJob, setQuickApplyJob] = useState<QuickApplyJob | null>(null);
   const [showGoogleInternshipBanner, setShowGoogleInternshipBanner] = useState(false);
   const [quickApplySubmitting, setQuickApplySubmitting] = useState(false);
   const [quickApplyNote, setQuickApplyNote] = useState("Hi, I'm interested in this role and would love to get a referral from you.");
@@ -2146,7 +2153,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
               className="press mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-300 transition hover:text-white disabled:opacity-60"
             >
               {selectedBrand.letters} · {personaShortLabel}
-              <ChevronDown
+              <IconChevronDown
                 className={`h-3 w-3 transition-transform motion-reduce:transition-none ${showViewMenu ? "rotate-180" : ""}`}
               />
             </button>
@@ -2194,7 +2201,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       </span>
                       <span className="mt-0.5 block text-[11px] leading-tight text-slate-400">{p.sub}</span>
                     </span>
-                    {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
+                    {active && <IconCheck className="h-4 w-4 shrink-0 text-white/80" />}
                   </button>
                 );
               })}
@@ -2208,7 +2215,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             aria-label="Back to website"
             className="press flex h-9 items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 text-[12px] font-semibold text-white transition hover:bg-white/10"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <IconArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden xs:inline sm:inline">Website</span>
           </button>
           {/* Sign in — a real chapter member taps here to log into their live
@@ -2327,7 +2334,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                 </span>
                 <span className="truncate text-[13px] font-semibold text-slate-200">{selectedBrand.name}</span>
               </span>
-              <Palette className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-white" />
+              <IconWhiteLabel className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-white" />
             </button>
           </div>
 
@@ -2369,7 +2376,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       </span>
                       <span className="mt-0.5 block text-[11px] leading-tight text-slate-400">{p.sub}</span>
                     </span>
-                    {active && <Check className="h-4 w-4 shrink-0 text-white/80" />}
+                    {active && <IconCheck className="h-4 w-4 shrink-0 text-white/80" />}
                   </button>
                 );
               })}
@@ -2384,7 +2391,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             onClick={() => window.location.href = "/"}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to website
+            <IconArrowLeft className="w-3.5 h-3.5" /> Back to website
           </button>
 
           {/* Sign in — sends a real chapter member to the live login (this view is
@@ -2393,14 +2400,14 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             onClick={() => window.location.href = "/login"}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <LogIn className="w-3.5 h-3.5" /> Sign in
+            <IconLogIn className="w-3.5 h-3.5" /> Sign in
           </button>
 
           <button
             onClick={() => { setShowBookingModal(true); setBookingSubmitted(false); }}
             className="w-full py-2.5 px-4 text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <Calendar className="w-3.5 h-3.5" /> Book a meeting
+            <IconCalendar className="w-3.5 h-3.5" /> Book a meeting
           </button>
 
           <button
@@ -2494,7 +2501,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
               }}
             >
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-white shrink-0">
-                <Briefcase className="h-5 w-5" />
+                <IconBriefcase className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
@@ -2506,7 +2513,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     }}
                     className="text-slate-400 hover:text-white"
                   >
-                    <X className="h-3 w-3" />
+                    <IconClose className="h-3 w-3" />
                   </button>
                 </div>
                 <h4 className="text-xs font-bold leading-tight truncate">Google Internship Posted</h4>
@@ -2597,11 +2604,11 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                   >
                     {quickApplySubmitting ? (
                       <>
-                        <Clock className="w-3.5 h-3.5 animate-spin" /> Submitting...
+                        <IconClock className="w-3.5 h-3.5 animate-spin" /> Submitting...
                       </>
                     ) : (
                       <>
-                        <Check className="w-3.5 h-3.5" /> Submit Application
+                        <IconCheck className="w-3.5 h-3.5" /> Submit Application
                       </>
                     )}
                   </button>
@@ -2661,7 +2668,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       <span className="truncate">{dashboardData?.chapter?.name || selectedTenant.name}</span>
                     </h3>
                     <span className="flex items-center gap-1 text-[11px] font-semibold leading-tight" style={{ color: brandPrimary }}>
-                      <Palette className="h-3 w-3 shrink-0" /> Tap to change chapter
+                      <IconWhiteLabel className="h-3 w-3 shrink-0" /> Tap to change chapter
                     </span>
                   </div>
                 </button>
@@ -2724,7 +2731,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                   </div>
                 ) : error ? (
                   <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-center space-y-3">
-                    <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
+                    <IconAlert className="w-8 h-8 text-red-500 mx-auto" />
                     <p className="text-xs text-red-600">{error}</p>
                     <button
                       onClick={() => handleSignOut()}
@@ -2831,7 +2838,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                         className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
                         style={{ backgroundColor: selectedBrand.primaryColor }}
                       >
-                        <Info className="h-3.5 w-3.5" />
+                        <IconInfo className="h-3.5 w-3.5" />
                       </span>
                       <div className="min-w-0">
                         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
@@ -2863,7 +2870,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                                   className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
                                   style={{ backgroundColor: selectedBrand.primaryColor }}
                                 >
-                                  Next: {nextLabel} <ChevronRight className="h-3.5 w-3.5" />
+                                  Next: {nextLabel} <IconChevronRight className="h-3.5 w-3.5" />
                                 </button>
                               ) : (
                                 <button
@@ -2871,7 +2878,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                                   className="press inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white shadow-sm transition hover:opacity-95"
                                   style={{ backgroundColor: selectedBrand.primaryColor }}
                                 >
-                                  <Crown className="h-3.5 w-3.5" /> See the exec view
+                                  <IconCrown className="h-3.5 w-3.5" /> See the exec view
                                 </button>
                               )}
                               <button
@@ -2891,7 +2898,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       aria-label="Dismiss tip"
                       className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <IconClose className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -2914,7 +2921,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                         className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
                         style={{ backgroundColor: selectedBrand.primaryColor }}
                       >
-                        <Crown className="h-3.5 w-3.5" />
+                        <IconCrown className="h-3.5 w-3.5" />
                       </span>
                       <div className="min-w-0">
                         <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-900">
@@ -2946,7 +2953,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       aria-label="Dismiss tip"
                       className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <IconClose className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>

@@ -14,6 +14,31 @@ import type { PickerChapter } from "@/lib/app-picker";
 //
 // Types intentionally mirror the original component (lots of `any`) so the
 // extraction introduces no new type errors.
+
+/**
+ * A career/job posting shown in the careers feed and opened in the Quick Apply
+ * referral sheet. Matches the shape produced by the careers mock-data seed
+ * (see ./mock-data.ts) and by the in-demo "Post a job" form (handlePostJob in
+ * MobileAppClient), and consumed by FeedSurface (Quick Apply button) +
+ * MobileAppClient's Quick Apply modal (title / company / location / contactName).
+ */
+export interface QuickApplyJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  contactName: string;
+  description?: string;
+  requirements?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  salary?: string;
+  postedById?: string;
+  postedByName?: string;
+  postedByRole?: string;
+  createdAt?: string;
+}
+
 export interface DemoContext {
   // ── Core selection / auth ──────────────────────────────────────────────
   tenants: Tenant[];
@@ -286,8 +311,8 @@ export interface DemoContext {
   enterDemoShowcase: () => void;
 
   // ── Quick Apply ────────────────────────────────────────────────────────
-  quickApplyJob: any | null;
-  setQuickApplyJob: React.Dispatch<React.SetStateAction<any | null>>;
+  quickApplyJob: QuickApplyJob | null;
+  setQuickApplyJob: React.Dispatch<React.SetStateAction<QuickApplyJob | null>>;
 
   // ── Derived values ─────────────────────────────────────────────────────
   allChapters: Tenant[];
