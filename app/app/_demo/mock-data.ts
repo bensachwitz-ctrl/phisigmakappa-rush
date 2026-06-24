@@ -369,7 +369,7 @@ export const DEMO_CALLOUTS: Record<
   },
   dues: {
     title: "Dues & payments",
-    body: "Members pay by card via Stripe; money lands straight in your chapter's account and the ledger reconciles itself. Payment plans and reminders run on their own.",
+    body: "Members pay by card via Stripe; money lands straight in your chapter's account and every payment posts to a live paid/unpaid ledger. When a few stragglers are left, send a one-tap reminder to just the members who haven't paid.",
   },
   directory: {
     title: "Roster & alumni network",

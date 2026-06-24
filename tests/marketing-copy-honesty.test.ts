@@ -21,6 +21,9 @@ const ROOT = resolve(__dirname, "..");
 const FILES = [
   "components/site/marketing-landing.tsx",
   "components/site/feature-previews.tsx",
+  // The in-app demo also advertises features; it must not claim the same
+  // unbuilt dues/treasury capabilities the marketing page used to.
+  "app/app/_demo/mock-data.ts",
 ];
 
 // Each forbidden claim → the real reason it would be a fabrication.
