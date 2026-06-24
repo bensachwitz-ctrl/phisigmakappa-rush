@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -14,9 +15,12 @@ const ShiftSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
+  // Returns chapter-wide PII (every pledge's + shift member's email/phone), so
+  // it needs the officer/admin floor (the API twin of the /admin layout
+  // boundary), not isAdminAuthed() alone — which any valid member-login cookie
+  // passes, letting a bounced plain member read the roster's contact details.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
 
   try {
     // 1. Fetch all sober shifts with the assigned member details

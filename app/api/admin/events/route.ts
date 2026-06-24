@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { pushEventToCalDiy } from "@/lib/events";
 
@@ -25,9 +26,12 @@ const EventSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
+  // Returns the FULL admin event list — including isPrivate events — so it needs
+  // the officer/admin floor (the API twin of the /admin layout boundary), not
+  // isAdminAuthed() alone (which any valid member-login cookie passes). Member-
+  // facing calendar surfaces read their own non-admin endpoint, not this one.
+  const denied = await guardOfficerOrAdmin();
+  if (denied) return denied;
   const events = await prisma.event.findMany({
     orderBy: { startsAt: "asc" },
   });
