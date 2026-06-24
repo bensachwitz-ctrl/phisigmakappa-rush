@@ -146,6 +146,40 @@ async function handlePost(req: Request): Promise<NextResponse> {
     );
   }
 
+  // DOUBLE-CHARGE GUARD (money integrity): an in-flight PENDING session for the
+  // SAME (brother, year) means the member already started checkout. Minting a
+  // SECOND session here would let a double-click / refresh create two live
+  // PaymentIntents and charge the card twice. Reuse the existing pending
+  // session's URL when we still have it (idempotent resume); otherwise block
+  // with a clear "already in progress" message rather than creating a duplicate
+  // ledger row + a second chargeable session. (FAILED rows are NOT reused — a
+  // genuinely failed attempt should be retryable.)
+  const pending = await db.duesPayment.findFirst({
+    where: { brotherId: brother.id, year, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+  }).catch(() => null);
+  if (pending) {
+    if (pending.stripeSessionId && stripe) {
+      // Resume the SAME session if it is still open (no new charge created).
+      try {
+        const prior = await stripe.checkout.sessions.retrieve(pending.stripeSessionId);
+        if (prior && prior.status === "open" && prior.url) {
+          return NextResponse.json({ ok: true, url: prior.url });
+        }
+      } catch {
+        // Fall through to the block below if the prior session can't be read.
+      }
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "A dues payment is already in progress for this term. Finish or cancel it before starting another.",
+      },
+      { status: 409 },
+    );
+  }
+
   // Create a PENDING DuesPayment first so we have an ID to embed in
   // Stripe metadata. If session-creation throws we still have a row
   // for forensics — admin can see "Brother X started 3 sessions and

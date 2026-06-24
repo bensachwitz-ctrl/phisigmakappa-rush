@@ -1029,7 +1029,7 @@ model AlumniDonation {
   recordedById          String?
   stripeSessionId       String?       @unique
   stripePaymentIntentId String?
-  status                String        @default("PENDING") // PENDING | PAID | FAILED
+  status                String        @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
 
   @@index([alumniId, recordedAt])
   @@index([campaign])

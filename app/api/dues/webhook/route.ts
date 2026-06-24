@@ -110,6 +110,22 @@ export async function POST(req: Request) {
         await handlePaymentFailed(db, pi, req);
         break;
       }
+      case "charge.refunded": {
+        // A dues payment or alumni donation was refunded (full or partial). We
+        // reverse the local record so the ledger never claims money the chapter
+        // gave back, and clear the brother's paid badge on a FULL refund.
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(db, charge);
+        break;
+      }
+      case "charge.dispute.created": {
+        // A cardholder opened a dispute/chargeback. Treat the funds as no longer
+        // collected: mark the payment/donation REFUNDED and clear the paid badge
+        // (defensive — the dispute may reverse the charge). Audited either way.
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDisputeCreated(db, dispute);
+        break;
+      }
       case "account.updated": {
         // Stripe Connect: a chapter's Express account capabilities changed.
         // This event carries NO metadata.subdomain (the object is an Account,
@@ -592,6 +608,177 @@ async function handleDonationCompleted(
       ipAddress: null,
     },
   }).catch(() => {});
+}
+
+/**
+ * `charge.refunded` handler — money the chapter received was given back (full or
+ * partial). Find the matching DuesPayment / AlumniDonation by the charge's
+ * payment_intent and reverse the local record:
+ *   • Dues: status → REFUNDED; on a FULL refund clear the brother's duesPaid
+ *     badge (+ the denormalized dues mirror) so standing/treasury never claim
+ *     refunded money. Partial refunds keep duesPaid but mark the row REFUNDED.
+ *   • Donation: status → REFUNDED.
+ * Idempotent: an already-REFUNDED row is a no-op on Stripe retry. Best-effort
+ * audit, never throws the webhook.
+ */
+async function handleChargeRefunded(
+  db: PrismaClient,
+  charge: Stripe.Charge,
+): Promise<void> {
+  const piId =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : charge.payment_intent?.id || null;
+  if (!piId) {
+    logger.warn("dues.webhook.refund_no_pi", { route: ROUTE, chargeId: charge.id });
+    return;
+  }
+  const fullRefund = charge.amount_refunded >= charge.amount;
+  await reverseByPaymentIntent(db, piId, fullRefund, "refund");
+}
+
+/**
+ * `charge.dispute.created` handler — a cardholder opened a chargeback. We treat
+ * the funds as no longer collected (a dispute typically pulls the money back):
+ * mark the matching dues/donation REFUNDED and, for dues, clear the paid badge
+ * (a dispute is effectively a full reversal of the captured amount). Idempotent;
+ * best-effort audit.
+ */
+async function handleDisputeCreated(
+  db: PrismaClient,
+  dispute: Stripe.Dispute,
+): Promise<void> {
+  const piId =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : dispute.payment_intent?.id || null;
+  if (!piId) {
+    logger.warn("dues.webhook.dispute_no_pi", { route: ROUTE, disputeId: dispute.id });
+    return;
+  }
+  // A dispute reverses the whole captured charge → treat as a full reversal.
+  await reverseByPaymentIntent(db, piId, true, "dispute");
+}
+
+/**
+ * Shared reversal: locate the dues payment OR alumni donation by its Stripe
+ * PaymentIntent id and set it REFUNDED. For a FULL dues reversal, also clear the
+ * brother's duesPaid badge + the denormalized dues mirror. Idempotent + audited.
+ */
+async function reverseByPaymentIntent(
+  db: PrismaClient,
+  paymentIntentId: string,
+  full: boolean,
+  cause: "refund" | "dispute",
+): Promise<void> {
+  // 1. Dues payment?
+  const payment = await db.duesPayment
+    .findFirst({ where: { stripePaymentIntentId: paymentIntentId } })
+    .catch(() => null);
+
+  if (payment) {
+    if (payment.status === "REFUNDED") return; // idempotent
+
+    const note = cause === "dispute" ? "Chargeback/dispute opened" : "Refunded via Stripe";
+
+    if (full) {
+      // Full reversal: row REFUNDED + clear the brother's paid badge & mirror.
+      await db.$transaction([
+        db.duesPayment.update({
+          where: { id: payment.id },
+          data: { status: "REFUNDED", notes: note },
+        }),
+        db.brother.update({
+          where: { id: payment.brotherId },
+          data: {
+            duesPaid: false,
+            duesPaidAt: null,
+            duesPaymentId: null,
+          },
+        }),
+      ]).catch(async () => {
+        // If the brother update fails (e.g. row gone), still mark the payment.
+        await db.duesPayment
+          .update({ where: { id: payment.id }, data: { status: "REFUNDED", notes: note } })
+          .catch(() => {});
+      });
+    } else {
+      // Partial refund: mark the row but keep the brother's paid badge (they
+      // still paid for the term; treasurer reconciles the partial difference).
+      await db.duesPayment
+        .update({ where: { id: payment.id }, data: { status: "REFUNDED", notes: note } })
+        .catch(() => {});
+    }
+
+    const brother = await db.brother
+      .findUnique({ where: { id: payment.brotherId }, select: { name: true } })
+      .catch(() => null);
+
+    await db.auditLog
+      .create({
+        data: {
+          actorId: null,
+          actorName: "stripe-webhook",
+          action: cause === "dispute" ? "DUES_DISPUTED" : "DUES_REFUNDED",
+          subjectType: "Brother",
+          subjectId: payment.brotherId,
+          subjectName: brother?.name || null,
+          details: `$${(payment.amountCents / 100).toFixed(2)} — ${note}${full ? " (full)" : " (partial)"} · ${payment.year}`,
+          ipAddress: null,
+        },
+      })
+      .catch(() => {});
+
+    logger.info("dues.reversed", {
+      route: ROUTE,
+      outcome: cause === "dispute" ? "disputed" : "refunded",
+      full,
+      amountCents: payment.amountCents,
+    });
+    return;
+  }
+
+  // 2. Alumni donation?
+  const donation = await db.alumniDonation
+    .findFirst({ where: { stripePaymentIntentId: paymentIntentId } })
+    .catch(() => null);
+
+  if (donation) {
+    if (donation.status === "REFUNDED") return; // idempotent
+    const note = cause === "dispute" ? "Chargeback/dispute opened" : "Refunded via Stripe";
+    await db.alumniDonation
+      .update({ where: { id: donation.id }, data: { status: "REFUNDED", notes: note } })
+      .catch(() => {});
+
+    const alum = await db.alumniProfile
+      .findUnique({ where: { id: donation.alumniId }, select: { fullName: true } })
+      .catch(() => null);
+
+    await db.auditLog
+      .create({
+        data: {
+          actorId: null,
+          actorName: "stripe-webhook",
+          action: cause === "dispute" ? "ALUMNI_DONATION_DISPUTED" : "ALUMNI_DONATION_REFUNDED",
+          subjectType: "AlumniProfile",
+          subjectId: donation.alumniId,
+          subjectName: alum?.fullName || null,
+          details: `$${(donation.amountCents / 100).toFixed(2)} — ${note} · campaign: ${donation.campaign || "General"}`,
+          ipAddress: null,
+        },
+      })
+      .catch(() => {});
+
+    logger.info("alumni.donation.reversed", {
+      route: ROUTE,
+      outcome: cause === "dispute" ? "disputed" : "refunded",
+      amountCents: donation.amountCents,
+    });
+    return;
+  }
+
+  // Neither matched — unknown PI (test event or out-of-band charge). Log only.
+  logger.warn("dues.webhook.reversal_unknown_pi", { route: ROUTE, paymentIntentId, cause });
 }
 
 /**
