@@ -53,7 +53,7 @@ describe("marketing comparison section — honesty (no fabricated features)", ()
     "Branded chapter website + your own subdomain": /subdomain/i,
     "Member & alumni roster, always current": /roster|directory/i,
     "Online dues by card, paid to your account": /dues/i,
-    "Self-reconciling treasury & budgets": /treasury|budget/i,
+    "Chapter treasury, budgets & expense tracking": /treasury|budget/i,
     "Recruitment pipeline + PNM QR check-in": /recruitment|QR check-in|PNM/i,
     "Secret-ballot officer elections": /secret ballot|election/i,
     "Events, RSVP & attendance tracking": /RSVP|attendance/i,

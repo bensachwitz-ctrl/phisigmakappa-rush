@@ -191,12 +191,12 @@ export function PreviewRecruitment() {
   );
 }
 
-/* ── Automated dues — a Stripe-powered dues ledger ─────────────────────────── */
+/* ── Online dues — a Stripe-powered dues ledger ────────────────────────────── */
 export function PreviewDues() {
   const [duesPaid, setDuesPaid] = React.useState<Record<number, string>>({
     0: "Paid",
     1: "Paid",
-    2: "Plan",
+    2: "Due",
     3: "Due",
   });
   const [collected, setCollected] = React.useState(18.4);
@@ -217,13 +217,12 @@ export function PreviewDues() {
   const rows = [
     { id: 0, g: "ΑΒ", name: "Alex Mercer", status: duesPaid[0], tone: duesPaid[0] === "Paid" ? "emerald" as const : "blue" as const },
     { id: 1, g: "ΓΔ", name: "John Doe", status: duesPaid[1], tone: duesPaid[1] === "Paid" ? "emerald" as const : "blue" as const },
-    { id: 2, g: "ΕΖ", name: "Sam Smith", status: duesPaid[2], tone: "gold" as const },
+    { id: 2, g: "ΕΖ", name: "Sam Smith", status: duesPaid[2], tone: duesPaid[2] === "Paid" ? "emerald" as const : "blue" as const },
     { id: 3, g: "ΗΘ", name: "Jack Jones", status: duesPaid[3], tone: duesPaid[3] === "Paid" ? "emerald" as const : "blue" as const },
   ];
 
   const statusCls: Record<string, string> = {
     Paid: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20",
-    Plan: "border-amber-400/30 bg-amber-400/10 text-amber-700 cursor-not-allowed",
     Due: "border-blue-500/20 bg-blue-500/10 text-blue-700 hover:bg-blue-500/20",
   };
 
@@ -232,7 +231,7 @@ export function PreviewDues() {
   return (
     <Panel className="ring-1 ring-emerald-500/10">
       <MiniHeader title="Dues Collection" badge={`${pct}% Collected`} />
-      <DemoHint>Click "Due" status tags to reconcile payments via Stripe instantly.</DemoHint>
+      <DemoHint>Click a "Due" status tag to mark that member paid and watch the ledger update.</DemoHint>
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-xl border border-border bg-secondary/30 p-2.5">
           <span className="block text-[9px] uppercase font-bold text-muted-foreground">Collected</span>
@@ -249,11 +248,10 @@ export function PreviewDues() {
             key={r.id}
             className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5 shadow-sm"
           >
-            <Avatar glyph={r.g} tone={r.tone === "emerald" ? "emerald" : r.tone === "gold" ? "gold" : "blue"} />
+            <Avatar glyph={r.g} tone={r.tone === "emerald" ? "emerald" : "blue"} />
             <span className="text-[11px] font-bold text-foreground flex-1">{r.name}</span>
             <button
               onClick={() => handlePay(r.id)}
-              disabled={r.status === "Plan"}
               className={
                 "rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 " + statusCls[r.status]
               }
@@ -732,7 +730,7 @@ export function PreviewTreasury() {
   const [ledger, setLedger] = React.useState([
     { id: 0, desc: "Paintball deposit", amount: 450, type: "Expense", cat: "Social Events" },
     { id: 1, desc: "Rush shirts order", amount: 850, type: "Expense", cat: "Recruitment" },
-    { id: 2, desc: "Dues reconciliation", amount: 1200, type: "Income", cat: "Dues" },
+    { id: 2, desc: "Dues deposit", amount: 1200, type: "Income", cat: "Dues" },
   ]);
 
   const handleLogExpense = () => {
