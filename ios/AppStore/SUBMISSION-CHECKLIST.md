@@ -38,7 +38,9 @@ is automated by `codemagic.yaml` (see `IOS-RELEASE.md`).
 - [ ] Primary category **Education**, secondary **Social Networking**.
 - [ ] Support URL `https://greekstack.com/support` — **page must be live**.
 - [ ] Privacy Policy URL `https://greekstack.com/privacy` — **page must be live**.
-- [ ] Screenshots uploaded for 6.9"/6.7" (per `SCREENSHOT-PLAN.md`); 6.5" optional.
+- [ ] Screenshots uploaded for 6.9" (required) + 6.5" (secondary) — matching the
+      on-disk `screenshots/6.9/` and `screenshots/6.5/` folders (per
+      `SCREENSHOT-PLAN.md`). 6.9" covers the 6.7" slot (Apple down-scales).
 - [ ] App icon shows (pulled from the build's asset catalog — 1024 icon is in the
       binary; ASC also wants a 1024 marketing icon, auto-derived from the build).
 - [ ] Copyright "2026 Greek Stack".
@@ -66,6 +68,51 @@ Answer truthfully. Greek Stack collects, scoped to the member's chapter:
       (DELETE /api/mobile/account). Confirm the review note documents it.
 - [ ] Contact first/last name, phone, email for the reviewer.
 - [ ] Notes pasted (the demo-access + account-deletion block from `LISTING.md`).
+- [ ] **App Review Notes — external dues payment** pasted (next section). This
+      pre-empts the most likely first-pass rejection: a reviewer mis-classifying
+      the in-app dues link as IAP-required digital content.
+
+## 4a. App Review Notes — external dues payment (paste into ASC → App Review Information → Notes)
+
+> Paste this VERBATIM, appended to the demo-access + account-deletion block from
+> `LISTING.md`. It states the Greek Stack dues/donations external-payment position
+> for the reviewer so the in-app "Pay online with Stripe" action is not
+> mis-classified as in-app digital content requiring Apple IAP.
+
+```
+EXTERNAL PAYMENT — CHAPTER DUES & DONATIONS (Guidelines 3.1.3(e) / 3.1.5):
+
+Chapter dues are a REAL-WORLD MEMBERSHIP OBLIGATION paid TO AN EXTERNAL
+ORGANIZATION — the student's fraternity/sorority chapter — for their membership
+in that physical, off-app organization (chapter meetings, housing, events,
+brotherhood/sisterhood). They are NOT in-app digital content, digital services,
+or features consumed within the app. Paying or not paying dues does not unlock,
+gate, or enable ANY functionality in the app — every screen works the same
+whether dues are paid or unpaid.
+
+Because dues are a good/service used OUTSIDE the app, they are expressly permitted
+to be collected by an external mechanism under Guideline 3.1.3(e) "Goods and
+Services Outside the App," and the in-app link opening the chapter's Stripe
+Checkout in the system browser is permitted under 3.1.5 (apps may use purchase
+methods other than IAP for physical goods/services). Apple's own guidelines name
+this category directly — e.g. a GYM or CLUB MEMBERSHIP collected in-app is the
+canonical precedent, and chapter dues are the same kind of real-world membership.
+Alumni donations to the chapter are likewise external, real-world contributions,
+not digital content.
+
+For this reason Apple In-App Purchase is INTENTIONALLY NOT IMPLEMENTED for dues
+or donations. If the reviewer believes IAP is required, please contact us before
+rejecting — we are confident this falls under 3.1.3(e)/3.1.5, and we would prefer
+to clarify. We will NOT switch to IAP unless Apple explicitly insists; if so, note
+that a manual treasurer payment path already exists (the in-app dues action
+returns a "pay via your chapter treasurer" message when online dues are not
+configured), so dues can be settled out-of-band without IAP either way.
+
+NO-LOGIN DEMO (no account needed): on the first screen tap "See the live demo —
+no sign in" to exercise every surface, including Dues → "Pay online with Stripe".
+To test a real sign-in if desired, use the test chapter/email/password provided
+in the demo-access block above (fill the <...> placeholders before submitting).
+```
 
 ## 5. Version & compliance
 - [ ] Export Compliance: uses only standard HTTPS/TLS → **No** non-exempt
