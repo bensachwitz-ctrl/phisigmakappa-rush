@@ -275,13 +275,17 @@ describe("dues webhook — refunds & disputes", () => {
 
     const res = await POST(webhookReq());
     expect(res.status).toBe(200);
-    // The donation row was updated, but NEVER to REFUNDED — status is untouched
-    // (stays PAID) and only notes were written.
+    // The donation row was updated exactly once, with notes only — NEVER to
+    // REFUNDED. status is left untouched (stays PAID) so it still counts in totals.
     expect(mocks.donationUpdate).toHaveBeenCalledTimes(1);
-    const updateArg = mocks.donationUpdate.mock.calls[0][0] as any;
-    expect(updateArg.where).toEqual({ id: "ad_2" });
-    expect(updateArg.data.status).toBeUndefined(); // status NOT set → stays PAID
-    expect(updateArg.data.notes).toMatch(/partial refund/i);
+    expect(mocks.donationUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "ad_2" },
+      data: expect.objectContaining({ notes: expect.stringMatching(/partial refund/i) }),
+    }));
+    // Prove status was NOT set to REFUNDED on that update (would drop it from totals).
+    expect(mocks.donationUpdate).not.toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "REFUNDED" }),
+    }));
     // Audited as a PARTIAL refund, not a full one.
     expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ action: "ALUMNI_DONATION_PARTIALLY_REFUNDED" }),
