@@ -80,6 +80,18 @@ These need NO owner action — verified live by a runtime trace on 2026-06-24:
   source-map upload `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN`)
 - Fully inert with both blank. Set in Vercel only.
 
+### 8. iOS universal links — Apple Developer Team ID (optional override)
+- **Var:** `APPLE_TEAM_ID`
+- The AASA file (`/.well-known/apple-app-site-association`, served by
+  `app/.well-known/apple-app-site-association/route.ts`) reads the Apple
+  Developer Team ID from this var to build the `appID`
+  (`<APPLE_TEAM_ID>.com.greekstack.app`). It defaults to the on-hand team id
+  **`QFC852BYB6`** (account BENJAMIN FRANCIS SACHWITZ), so universal links work
+  with no owner action. Set `APPLE_TEAM_ID` only to override/pin a different
+  team id. If it is set to an EMPTY value the route returns **404** (honest
+  inert — never serves a broken/placeholder association iOS would cache).
+- **Get it:** Apple Developer portal → Membership → Team ID.
+
 ---
 
 ## 🐳 Local Docker services — go LIVE once Docker is up

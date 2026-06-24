@@ -152,10 +152,14 @@ tapping a chapter link open the app (instead of Safari), iOS fetches an
 **apple-app-site-association** (AASA) file over HTTPS at the domain root, served
 as `application/json` with **no** `.json` extension.
 
-**✅ This file is now committed** at `public/.well-known/apple-app-site-association`
-and served as `application/json` (the content-type is forced in `next.config.js`
-→ `headers()`, since the extension-less file would otherwise be served as
-octet-stream and rejected by iOS). After a deploy it is reachable at:
+**✅ This file is now served by a route handler** at
+`app/.well-known/apple-app-site-association/route.ts` (it replaced the former
+static `public/.well-known/apple-app-site-association` file). The route sets its
+own `Content-Type: application/json` + `Cache-Control: public, max-age=3600`, so
+the extension-less path no longer relies on a `next.config.js` header override.
+The Apple Developer Team ID is read from the **`APPLE_TEAM_ID`** env var
+(default: the on-hand `QFC852BYB6`) rather than being hardcoded in a committed
+file. After a deploy it is reachable at:
 
 `https://greekstack.vercel.app/.well-known/apple-app-site-association`
 (and at `https://greekstack.com/...` once the custom domain is pointed at Vercel —
@@ -166,18 +170,19 @@ all three hosts in `App.entitlements` resolve to the same Vercel deployment).
   "applinks": {
     "apps": [],
     "details": [
-      { "appID": "QFC852BYB6.com.greekstack.app", "paths": ["/app", "/app/*", "/r/*", "/public/*"] }
+      { "appID": "<APPLE_TEAM_ID>.com.greekstack.app", "paths": ["/app", "/app/*", "/r/*", "/public/*"] }
     ]
   }
 }
 ```
 
-> ✅ **DONE (2026-06-10):** the `<TEAMID>` placeholder has been replaced with the
-> real **Apple Developer Team ID `QFC852BYB6`** (read from Apple Developer portal
-> → Membership, account BENJAMIN FRANCIS SACHWITZ). The full `appID` is
-> `QFC852BYB6.com.greekstack.app`. Takes effect on the next deploy. The 1-hour
-> `Cache-Control` on the file means the change propagates quickly. You can verify
-> with
+> ✅ **Team ID is `QFC852BYB6`** (Apple Developer portal → Membership, account
+> BENJAMIN FRANCIS SACHWITZ) — it is the route's built-in default, so universal
+> links work out of the box. To override (or pin it explicitly), set
+> **`APPLE_TEAM_ID`** in Vercel → Environment Variables (see OWNER-KEYS-NEEDED.md).
+> If `APPLE_TEAM_ID` is ever set to an empty value the route returns **404**
+> (honest inert — never a placeholder/broken `appID` iOS would cache). The 1-hour
+> `Cache-Control` means a change propagates quickly. Verify with
 > `curl -sI https://greekstack.vercel.app/.well-known/apple-app-site-association`
 > (expect `content-type: application/json`) and
 > [Apple's AASA validator](https://app-site-association.cdn-apple.com/a/v1/greekstack.vercel.app).

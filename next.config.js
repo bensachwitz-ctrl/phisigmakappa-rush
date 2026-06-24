@@ -120,20 +120,12 @@ const nextConfig = {
       ? " https://*.sentry.io https://*.ingest.sentry.io"
       : "";
     return [
-      {
-        // Apple universal-links association file. Lives at
-        // public/.well-known/apple-app-site-association with NO .json extension
-        // (Apple fetches it by that exact path). Because it has no extension,
-        // the static handler would serve it as application/octet-stream and iOS
-        // would reject it — so we force application/json here. iOS reads it over
-        // HTTPS at the apex (greekstack.vercel.app) + the custom domains declared
-        // in App.entitlements. Short cache so a TEAMID/paths edit propagates.
-        source: '/.well-known/apple-app-site-association',
-        headers: [
-          { key: 'Content-Type', value: 'application/json' },
-          { key: 'Cache-Control', value: 'public, max-age=3600' },
-        ],
-      },
+      // NOTE: the Apple universal-links association file
+      // (/.well-known/apple-app-site-association) is now served by a route
+      // handler (app/.well-known/apple-app-site-association/route.ts) that reads
+      // the team id from APPLE_TEAM_ID and sets its own Content-Type +
+      // Cache-Control. The former static-file header override here was removed
+      // along with the static public/ file.
       {
         // Brand image assets (chapter logos, coats of arms) are content-hashed
         // by filename — when an asset changes, the chapter ships a new file at
