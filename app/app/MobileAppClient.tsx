@@ -3040,7 +3040,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                               )}
                               <button
                                 onClick={() => setCalloutDismissed(true)}
-                                className="text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                                className="text-[12px] font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
                               >
                                 Turn off tips
                               </button>
@@ -3053,7 +3053,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     <button
                       onClick={() => setCalloutVisible(false)}
                       aria-label="Dismiss tip"
-                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                      className="absolute right-0.5 top-0.5 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                     >
                       <IconClose className="h-3.5 w-3.5" />
                     </button>
@@ -3098,7 +3098,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                           </button>
                           <button
                             onClick={() => setExecTipSeen(true)}
-                            className="text-[12px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+                            className="text-[12px] font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
                           >
                             Keep exploring
                           </button>
@@ -3108,7 +3108,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     <button
                       onClick={() => setExecTipSeen(true)}
                       aria-label="Dismiss tip"
-                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                      className="absolute right-0.5 top-0.5 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                     >
                       <IconClose className="h-3.5 w-3.5" />
                     </button>
@@ -3144,7 +3144,12 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                       onClick={() => setActiveTab(n.id)}
                       aria-current={active ? "page" : undefined}
                       className="press relative z-10 flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-2xl transition-colors"
-                      style={{ color: active ? brandPrimary : "#94A3B8" }}
+                      // a11y (AA): inactive label uses slate-500 (#64748b = 4.76:1 on
+                      // white), not slate-400 (#94A3B8 = 2.56:1, fails AA). This is the
+                      // App Store deliverable's PRIMARY nav; the 11px-bold label is below
+                      // the large-text exception so it must clear 4.5:1. Active/inactive
+                      // hierarchy still reads via brand color + strokeWidth + sliding pill.
+                      style={{ color: active ? brandPrimary : "#64748b" }}
                     >
                       <Icon className="h-5 w-5 shrink-0" strokeWidth={active ? 2.4 : 2} />
                       <span className="text-[11px] font-bold leading-none">{n.label}</span>

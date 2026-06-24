@@ -102,4 +102,19 @@ Answer truthfully. Greek Stack collects, scoped to the member's chapter:
   donations) are real-world fraternity/sorority memberships processed via the
   chapter's Stripe in the system browser, not in-app digital goods → Apple IAP is
   not required and is intentionally not added. Keep dues/donation checkout external.
-- **Dead URLs** — make sure `/support` and `/privacy` resolve before submitting.
+  This is the single most likely first-submission rejection vector, so HARDEN it:
+  - [ ] Paste the **App Review notes block** from `LISTING.md` ("App Review notes")
+        **verbatim** into App Store Connect → App Review Information → Notes. The
+        last paragraph states the 3.1.3(e) position explicitly for the reviewer.
+  - [ ] Confirm the dues screen copy frames the charge as **real-world chapter
+        membership dues** ("Active chapter dues" / "your dues are unpaid"), and
+        contains **no language that "unlocks" app content/features on payment**
+        (which would pull it under 3.1.1 IAP). Current copy in `mobile-shell/
+        index.html` paintDues() complies — re-verify after any copy edit.
+  - [ ] Fallback if a reviewer insists on IAP: the **manual treasurer payment
+        path already exists** (dues/checkout returns 503 → "Pay via your
+        treasurer"), so dues can be marked paid out-of-band without IAP. Cite it
+        if challenged rather than retrofitting IAP under time pressure.
+- **Dead URLs** — make sure `/support`, `/privacy`, and `/terms` resolve before
+  submitting (they are now linked in-app from the Profile screen footer, so a
+  dead URL there is a visible, reviewer-facing break, not just a listing field).

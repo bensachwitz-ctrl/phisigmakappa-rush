@@ -1056,7 +1056,21 @@
       dz.appendChild(del);
       main.appendChild(dz);
 
-      main.appendChild(el('<p class="small" style="text-align:center;margin-top:14px">Greek Stack · bundled app</p>'));
+      // ── Legal — in-app links to Privacy / Terms / Support (Apple polish) ─────
+      // Apple wants a reachable Privacy Policy and, for an app handling member PII
+      // + payments, an in-app legal link is expected. The Next app already serves
+      // /privacy, /terms, /support, so we build the URLs off the SAME origin the
+      // app talks to (API_BASE — the live deploy, custom-domain or vercel) and
+      // open them in the system browser via openExternal (SFSafariViewController).
+      var legal = el('<div class="legal" style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:14px"></div>');
+      [["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Support", "/support"]].forEach(function (lk) {
+        var a = el('<button class="linklike" type="button" style="background:none;border:0;padding:6px 2px;font-size:13px;color:#475569;text-decoration:underline;text-underline-offset:2px;cursor:pointer;min-height:44px">' + esc(lk[0]) + '</button>');
+        a.onclick = function () { haptic(); openExternal(API_BASE + lk[1]); };
+        legal.appendChild(a);
+      });
+      main.appendChild(legal);
+
+      main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">Greek Stack · bundled app</p>'));
     }
 
     // ── OFFICER: Roster (add / remove / reset — persists to the server) ───────

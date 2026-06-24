@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		App-level privacy manifest (Apple, required since May 2024).
+		Greek Stack does NOT track users (no IDFA, no cross-app tracking) and the
+		bundled shell collects no data through Apple's privacy-nutrition categories
+		on-device. The one required-reason API in play is UserDefaults, reached via
+		@capacitor/preferences (session token + last-view cache); declared with
+		reason CA92.1 = "Access info from same app, to read/write user defaults".
+		Keep this in sync if a future build adds a required-reason API or any data
+		collection. (config block source of truth: capacitor.config.ts)
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
