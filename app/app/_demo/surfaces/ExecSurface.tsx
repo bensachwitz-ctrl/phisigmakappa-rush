@@ -1,8 +1,23 @@
 import React from "react";
 import {
-  Users, UserPlus, Trash2, KeyRound, DollarSign, TrendingUp, Vote, Wallet,
-  Gift, Palette, QrCode, Megaphone, Pin, ShieldCheck, ArrowRight, ChevronRight,
-} from "lucide-react";
+  IconAddMember,
+  IconArrowRight,
+  IconBallot,
+  IconChevronRight,
+  IconDues,
+  IconGift,
+  IconGrowth,
+  IconKey,
+  IconMegaphone,
+  IconMembers,
+  IconPin,
+  IconQrCode,
+  IconShieldCheck,
+  IconTrash,
+  IconWallet,
+  IconWhiteLabel,
+} from "@/components/brand/icons";
+
 import { brandSecondary } from "../mock-data";
 import type { DemoContext } from "../context";
 
@@ -53,7 +68,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const alumni = d.roster?.alumni || [];
     return (
       <div className="space-y-3 text-left">
-        <SectionHead icon={Users} title="Roster" sub="Manage your chapter's members" />
+        <SectionHead icon={IconMembers} title="Roster" sub="Manage your chapter's members" />
 
         <div className="grid grid-cols-2 gap-3">
           <Stat primary={primary} label="Active members" value={actives.length} />
@@ -65,7 +80,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
           style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
         >
-          <UserPlus className="h-4 w-4" /> Add member
+          <IconAddMember className="h-4 w-4" /> Add member
         </button>
 
         <div className="gs-glass rounded-2xl p-1.5">
@@ -83,14 +98,14 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                     className="press flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:text-slate-800"
                     aria-label={`Send reset link to ${b.name}`}
                   >
-                    <KeyRound className="h-4 w-4" />
+                    <IconKey className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleRemoveMobileMember(b.id, b.name, "actives")}
                     className="press flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-500 transition hover:bg-rose-100"
                     aria-label={`Remove ${b.name}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <IconTrash className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -110,7 +125,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
     return (
       <div className="space-y-3 text-left">
-        <SectionHead icon={DollarSign} title="Dues management" sub="Track collection across the chapter" />
+        <SectionHead icon={IconDues} title="Dues management" sub="Track collection across the chapter" />
 
         <div
           className="relative overflow-hidden rounded-2xl border p-4 text-white shadow-lg"
@@ -136,14 +151,14 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
           onClick={() => { setSpotlight("treasury"); }}
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-[14px] font-bold text-slate-800 shadow-sm transition hover:border-slate-300"
         >
-          <Wallet className="h-4 w-4" /> Open treasury & budgets <ChevronRight className="h-4 w-4" />
+          <IconWallet className="h-4 w-4" /> Open treasury & budgets <IconChevronRight className="h-4 w-4" />
         </button>
         <button
           onClick={() => showToast("Dues reminders sent to all unpaid members.", "success")}
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
           style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
         >
-          <TrendingUp className="h-4 w-4" /> Send dues reminders
+          <IconGrowth className="h-4 w-4" /> Send dues reminders
         </button>
       </div>
     );
@@ -156,7 +171,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const active = pnms.filter((p: any) => p.status === "ACTIVE").length;
     return (
       <div className="space-y-3 text-left">
-        <SectionHead icon={TrendingUp} title="Recruitment pipeline" sub="Manage rush from one board" />
+        <SectionHead icon={IconGrowth} title="Recruitment pipeline" sub="Manage rush from one board" />
 
         <div className="grid grid-cols-3 gap-2.5">
           <Stat primary={primary} label="In pipeline" value={pnms.length} />
@@ -169,7 +184,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
           style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
         >
-          <QrCode className="h-4 w-4" /> Open QR check-in
+          <IconQrCode className="h-4 w-4" /> Open QR check-in
         </button>
 
         <div className="gs-glass rounded-2xl p-1.5">
@@ -204,14 +219,14 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
     const anns = d.announcements || [];
     return (
       <div className="space-y-3 text-left">
-        <SectionHead icon={Megaphone} title="Announcements" sub="Broadcast to the whole chapter" />
+        <SectionHead icon={IconMegaphone} title="Announcements" sub="Broadcast to the whole chapter" />
 
         <button
           onClick={() => setShowPostAnnModal(true)}
           className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99]"
           style={{ background: `linear-gradient(135deg, ${primary}, ${second})` }}
         >
-          <Megaphone className="h-4 w-4" /> Post announcement
+          <IconMegaphone className="h-4 w-4" /> Post announcement
         </button>
 
         <div className="space-y-2">
@@ -221,7 +236,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                 <h4 className="text-[14px] font-bold leading-snug text-slate-900">{a.title}</h4>
                 {a.pinned && (
                   <span className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold" style={{ backgroundColor: primary + "14", color: primary }}>
-                    <Pin className="h-3 w-3" /> Pinned
+                    <IconPin className="h-3 w-3" /> Pinned
                   </span>
                 )}
               </div>
@@ -236,15 +251,15 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
 
   // ── SETTINGS / OFFICER CONSOLE ────────────────────────────────────────────
   const tools: { id: "elections" | "treasury" | "giving" | "theme" | "qr"; icon: any; label: string; sub: string }[] = [
-    { id: "elections", icon: Vote, label: "Officer elections", sub: "Run secret-ballot voting" },
-    { id: "treasury", icon: Wallet, label: "Treasury & budgets", sub: "Balance, budget, ledger" },
-    { id: "giving", icon: Gift, label: "Alumni giving", sub: "Branded donation campaigns" },
-    { id: "qr", icon: QrCode, label: "Rush QR check-in", sub: "Build the PNM list live" },
-    { id: "theme", icon: Palette, label: "White-label branding", sub: "Your letters & colors" },
+    { id: "elections", icon: IconBallot, label: "Officer elections", sub: "Run secret-ballot voting" },
+    { id: "treasury", icon: IconWallet, label: "Treasury & budgets", sub: "Balance, budget, ledger" },
+    { id: "giving", icon: IconGift, label: "Alumni giving", sub: "Branded donation campaigns" },
+    { id: "qr", icon: IconQrCode, label: "Rush QR check-in", sub: "Build the PNM list live" },
+    { id: "theme", icon: IconWhiteLabel, label: "White-label branding", sub: "Your letters & colors" },
   ];
   return (
     <div className="space-y-3 text-left">
-      <SectionHead icon={ShieldCheck} title="Exec console" sub="Role-scoped admin tools" />
+      <SectionHead icon={IconShieldCheck} title="Exec console" sub="Role-scoped admin tools" />
       <div className="space-y-2">
         {tools.map((t) => (
           <button
@@ -264,7 +279,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                 <span className="block truncate text-[12px] text-slate-500">{t.sub}</span>
               </span>
             </span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+            <IconArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
           </button>
         ))}
       </div>

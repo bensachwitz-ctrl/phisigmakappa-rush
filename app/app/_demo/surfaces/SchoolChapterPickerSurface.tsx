@@ -1,5 +1,10 @@
 import React from "react";
-import { Search, ChevronRight, GraduationCap, ArrowLeft } from "lucide-react";
+import {
+  IconArrowLeft,
+  IconChevronRight,
+  IconGraduation,
+  IconSearch,
+} from "@/components/brand/icons";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { searchSchools } from "@/lib/schools";
 import {
@@ -143,7 +148,7 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
               aria-label="Back to schools"
               className="inline-flex min-h-[44px] items-center gap-1 rounded-full bg-white/10 px-3 text-xs font-semibold text-white/90 transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 motion-reduce:transition-none"
             >
-              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Schools
+              <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Schools
             </button>
           )}
         </div>
@@ -167,7 +172,7 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
       {/* ── Search (school step only) ────────────────────────────────────── */}
       {pickerStep === "school" && (
         <div className="relative shrink-0 px-6 pb-3">
-          <Search
+          <IconSearch
             className="pointer-events-none absolute left-9 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
           />
@@ -213,7 +218,7 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
           className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-slate-200 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 motion-reduce:transition-none"
         >
           Just exploring? See a live demo
-          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          <IconChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -243,7 +248,7 @@ function SchoolList({
           style={{ background: `linear-gradient(140deg, ${GS_BLUE}, ${GS_GOLD})` }}
           aria-hidden="true"
         >
-          <GraduationCap className="h-6 w-6" />
+          <IconGraduation className="h-6 w-6" />
         </span>
         <p className="text-sm font-semibold text-white">
           {query ? "No chapters there yet" : "No chapters yet"}
@@ -271,7 +276,7 @@ function SchoolList({
               style={{ background: `linear-gradient(140deg, ${GS_BLUE}, ${GS_BLUE_DEEP})` }}
               aria-hidden="true"
             >
-              <GraduationCap className="h-5 w-5" />
+              <IconGraduation className="h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold text-white">{g.school}</span>
@@ -279,7 +284,7 @@ function SchoolList({
                 {g.chapters.length} chapter{g.chapters.length === 1 ? "" : "s"}
               </span>
             </span>
-            <ChevronRight
+            <IconChevronRight
               className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white motion-reduce:transition-none"
               aria-hidden="true"
             />
@@ -304,7 +309,7 @@ function SchoolList({
                   style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
                   aria-hidden="true"
                 >
-                  <GraduationCap className="h-4 w-4" />
+                  <IconGraduation className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-semibold text-slate-300">
@@ -384,7 +389,7 @@ function ChapterList({
                   {c.brand.letters} · {c.school || "Greekstack chapter"}
                 </span>
               </span>
-              <ChevronRight
+              <IconChevronRight
                 className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white motion-reduce:transition-none"
                 aria-hidden="true"
               />

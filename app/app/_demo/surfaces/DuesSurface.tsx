@@ -1,5 +1,12 @@
 import React from "react";
-import { DollarSign, CreditCard, Heart, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  IconAlert,
+  IconBilling,
+  IconCheckCircle,
+  IconDues,
+  IconHeart,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderDuesTab(ctx: DemoContext) {
@@ -23,7 +30,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
                                   style={{ backgroundColor: selectedBrand.primaryColor + '12', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                                 >
-                                  <DollarSign className="w-5 h-5" />
+                                  <IconDues className="w-5 h-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold block leading-none">
@@ -40,11 +47,11 @@ export function renderDuesTab(ctx: DemoContext) {
 
                               {dashboardData?.dues?.isPaid ? (
                                 <div className="inline-flex w-full items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1.5 rounded-xl text-[12px] font-bold">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Dues settled
+                                  <IconCheckCircle className="w-4 h-4 text-emerald-600" /> Dues settled
                                 </div>
                               ) : (
                                 <div className="inline-flex w-full items-center justify-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100 px-3 py-1.5 rounded-xl text-[12px] font-bold">
-                                  <AlertCircle className="w-4 h-4 text-amber-500" /> Action required · Unpaid
+                                  <IconAlert className="w-4 h-4 text-amber-500" /> Action required · Unpaid
                                 </div>
                               )}
 
@@ -63,7 +70,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                     </>
                                   ) : (
                                     <>
-                                      <CreditCard className="h-4 w-4" /> Pay online with Stripe
+                                      <IconBilling className="h-4 w-4" /> Pay online with Stripe
                                     </>
                                   )}
                                 </button>
@@ -111,7 +118,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
                                   style={{ backgroundColor: selectedBrand.primaryColor + '12', borderColor: selectedBrand.primaryColor + '20', color: selectedBrand.primaryColor }}
                                 >
-                                  <Heart className="w-5 h-5 fill-current" />
+                                  <IconHeart className="w-5 h-5 fill-current" />
                                 </div>
                                 <div className="min-w-0">
                                   <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold block leading-none">Alumni giving</span>

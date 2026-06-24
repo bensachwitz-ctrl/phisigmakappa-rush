@@ -1,5 +1,20 @@
 import React from "react";
-import { Check, Info, Heart, CheckCircle2, Crown, ArrowLeft, Vote, Wallet, PieChart, QrCode, Gift, Palette, ShieldCheck } from "lucide-react";
+import {
+  IconArrowLeft,
+  IconBallot,
+  IconCheck,
+  IconCheckCircle,
+  IconCrown,
+  IconGift,
+  IconHeart,
+  IconInfo,
+  IconPieChart,
+  IconQrCode,
+  IconShieldCheck,
+  IconWallet,
+  IconWhiteLabel,
+} from "@/components/brand/icons";
+
 import { FRATERNITY_BRANDS } from "../mock-data";
 import type { DemoContext } from "../context";
 
@@ -38,7 +53,7 @@ export function renderSpotlight(ctx: DemoContext) {
                       className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition shrink-0"
                       aria-label="Back"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <IconArrowLeft className="w-4 h-4" />
                     </button>
                     <div className="min-w-0">
                       <h3 className="text-sm font-bold text-slate-900 leading-tight">
@@ -88,9 +103,9 @@ export function renderSpotlight(ctx: DemoContext) {
                             <div key={seat.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 space-y-2.5">
                               <div className="flex items-center justify-between">
                                 <h5 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                                  <Crown className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> {seat.title}
+                                  <IconCrown className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> {seat.title}
                                 </h5>
-                                {voted && <span className="text-[11px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><Check className="w-2.5 h-2.5" /> Voted</span>}
+                                {voted && <span className="text-[11px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><IconCheck className="w-2.5 h-2.5" /> Voted</span>}
                               </div>
                               {seat.candidates.map((c: any) => {
                                 const pct = Math.round((c.votes / total) * 100);
@@ -147,7 +162,7 @@ export function renderSpotlight(ctx: DemoContext) {
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
                           <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                            <PieChart className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Semester budget
+                            <IconPieChart className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Semester budget
                           </h5>
                           {dashboardData.treasury.budget.map((b: any) => {
                             const pct = Math.min(100, Math.round((b.spentCents / b.plannedCents) * 100));
@@ -168,7 +183,7 @@ export function renderSpotlight(ctx: DemoContext) {
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2">
                           <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                            <Wallet className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Recent ledger
+                            <IconWallet className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Recent ledger
                           </h5>
                           {dashboardData.treasury.ledger.map((t: any) => (
                             <div key={t.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
@@ -190,7 +205,7 @@ export function renderSpotlight(ctx: DemoContext) {
                       <>
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center gap-2">
                           <div className="p-3 rounded-2xl border-2 border-dashed" style={{ borderColor: selectedBrand.primaryColor + '40' }}>
-                            <QrCode className="w-20 h-20" style={{ color: selectedBrand.primaryColor }} strokeWidth={1.25} />
+                            <IconQrCode className="w-20 h-20" style={{ color: selectedBrand.primaryColor }} strokeWidth={1.25} />
                           </div>
                           <p className="text-[12px] text-slate-500 leading-relaxed">PNMs scan this at <span className="font-bold text-slate-700">Fall Info Session</span> to check in. New faces fill the form below.</p>
                         </div>
@@ -211,13 +226,13 @@ export function renderSpotlight(ctx: DemoContext) {
                             className="w-full py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-1.5"
                             style={{ backgroundColor: selectedBrand.primaryColor }}
                           >
-                            <CheckCircle2 className="w-4 h-4" /> Check in to pipeline
+                            <IconCheckCircle className="w-4 h-4" /> Check in to pipeline
                           </button>
                         </div>
 
                         {qrCheckedIn.length > 0 && (
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
-                            <h5 className="text-[12px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
+                            <h5 className="text-[12px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><IconCheck className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
                             {qrCheckedIn.map((n, i) => (
                               <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[11px] text-slate-400">→ added to rush board</span></p>
                             ))}
@@ -234,7 +249,7 @@ export function renderSpotlight(ctx: DemoContext) {
                         <>
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 space-y-3">
                             <div className="flex items-center gap-2">
-                              <Heart className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
+                              <IconHeart className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
                               <h4 className="text-xs font-bold text-slate-900">{g.campaign}</h4>
                             </div>
                             <div>
@@ -265,7 +280,7 @@ export function renderSpotlight(ctx: DemoContext) {
                               className="w-full py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-[0.98] flex items-center justify-center gap-1.5"
                               style={{ backgroundColor: donationDone ? "#059669" : selectedBrand.primaryColor }}
                             >
-                              {donationDone ? <><Check className="w-4 h-4" /> Thank you!</> : <><Gift className="w-4 h-4" /> Donate ${(donationCents / 100).toFixed(0)} via Stripe</>}
+                              {donationDone ? <><IconCheck className="w-4 h-4" /> Thank you!</> : <><IconGift className="w-4 h-4" /> Donate ${(donationCents / 100).toFixed(0)} via Stripe</>}
                             </button>
                           </div>
 
@@ -302,7 +317,7 @@ export function renderSpotlight(ctx: DemoContext) {
 
                         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-2.5">
                           <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                            <Palette className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand and watch it re-skin
+                            <IconWhiteLabel className="w-3.5 h-3.5" style={{ color: selectedBrand.primaryColor }} /> Switch chapter brand and watch it re-skin
                           </h5>
                           <div className="grid grid-cols-2 gap-2">
                             {tenants.slice(0, 6).map((t) => {
@@ -327,7 +342,7 @@ export function renderSpotlight(ctx: DemoContext) {
                             })}
                           </div>
                           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-2">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <IconShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             Every page, email, and member portal re-skins instantly — no rebuild, no developer.
                           </div>
                         </div>

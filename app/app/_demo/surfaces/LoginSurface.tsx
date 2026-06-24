@@ -1,5 +1,10 @@
 import React from "react";
-import { ChevronRight, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  IconAlert,
+  IconArrowRight,
+  IconChevronRight,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 /** A short, ALL-CAPS school label for the chapter pill ("USC", "CLEMSON"…),
@@ -45,7 +50,7 @@ export function renderLogin(ctx: DemoContext) {
                   aria-label="Back to chapter picker"
                   className="text-xs text-slate-600 hover:text-slate-900 flex min-h-[44px] items-center gap-1 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
                 >
-                  <ChevronRight className="w-3 h-3 rotate-180" aria-hidden="true" /> Back to Chapters
+                  <IconChevronRight className="w-3 h-3 rotate-180" aria-hidden="true" /> Back to Chapters
                 </button>
                 <div 
                   className="w-2.5 h-2.5 rounded-full"
@@ -132,7 +137,7 @@ export function renderLogin(ctx: DemoContext) {
 
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 text-[11px] text-red-600 leading-normal">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <IconAlert className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>{error}</span>
                   </div>
                 )}
@@ -147,7 +152,7 @@ export function renderLogin(ctx: DemoContext) {
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      Enter Dashboard <ArrowRight className="w-3.5 h-3.5" />
+                      Enter Dashboard <IconArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>

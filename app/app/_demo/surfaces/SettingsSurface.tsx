@@ -1,5 +1,13 @@
 import React from "react";
-import { School, User, LogOut, Crown, KeyRound, Trash2 } from "lucide-react";
+import {
+  IconCrown,
+  IconKey,
+  IconLogOut,
+  IconSchool,
+  IconTrash,
+  IconUser,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderSettingsTab(ctx: DemoContext) {
@@ -95,7 +103,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                           <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3 shadow-sm">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                               <div className="flex items-center gap-1.5">
-                                <Crown className="w-4 h-4 text-amber-500" />
+                                <IconCrown className="w-4 h-4 text-amber-500" />
                                 <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Presidential Admin</h4>
                               </div>
                               <button
@@ -123,7 +131,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                         className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition"
                                         title="Send Reset Link"
                                       >
-                                        <KeyRound className="w-3.5 h-3.5" />
+                                        <IconKey className="w-3.5 h-3.5" />
                                       </button>
                                       {b.id !== "demo-brother-id" && (
                                         <button
@@ -131,7 +139,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                                           className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition"
                                           title="Remove Member"
                                         >
-                                          <Trash2 className="w-3.5 h-3.5" />
+                                          <IconTrash className="w-3.5 h-3.5" />
                                         </button>
                                       )}
                                     </div>
@@ -154,14 +162,14 @@ export function renderSettingsTab(ctx: DemoContext) {
                                         className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition"
                                         title="Send Reset Link"
                                       >
-                                        <KeyRound className="w-3.5 h-3.5" />
+                                        <IconKey className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => handleRemoveMobileMember(al.id, al.name, "alumni")}
                                         className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition"
                                         title="Remove Member"
                                       >
-                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <IconTrash className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
@@ -184,7 +192,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                             }}
                             className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
                           >
-                            <School className="w-4 h-4 text-slate-500" /> Switch Chapter Organization
+                            <IconSchool className="w-4 h-4 text-slate-500" /> Switch Chapter Organization
                           </button>
                           <button
                             type="button"
@@ -197,7 +205,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                             }}
                             className="w-full py-2.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
                           >
-                            <LogOut className="w-4 h-4 text-red-500" /> Logout Securely
+                            <IconLogOut className="w-4 h-4 text-red-500" /> Logout Securely
                           </button>
                         </div>
 
@@ -226,7 +234,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                               </>
                             ) : (
                               <>
-                                <Trash2 className="h-4 w-4" /> Delete account
+                                <IconTrash className="h-4 w-4" /> Delete account
                               </>
                             )}
                           </button>

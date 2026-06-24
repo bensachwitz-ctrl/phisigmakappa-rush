@@ -1,5 +1,16 @@
 import React from "react";
-import { ChevronDown, Pin, Mail, Phone, Briefcase, Gift, Lock, Crown, Vote } from "lucide-react";
+import {
+  IconBallot,
+  IconBriefcase,
+  IconChevronDown,
+  IconCrown,
+  IconGift,
+  IconLock,
+  IconMail,
+  IconPhone,
+  IconPin,
+} from "@/components/brand/icons";
+
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import { isOfficerPosition } from "../mock-data";
 import type { DemoContext } from "../context";
@@ -87,7 +98,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                   className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
                                   style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                                 >
-                                  <Gift className="h-4 w-4" />
+                                  <IconGift className="h-4 w-4" />
                                 </span>
                                 <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Give</span>
                               </button>
@@ -101,7 +112,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                   className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
                                   style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                                 >
-                                  <Vote className="h-4 w-4" />
+                                  <IconBallot className="h-4 w-4" />
                                 </span>
                                 <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Vote</span>
                               </button>
@@ -117,7 +128,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                     className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm"
                                     style={{ background: `linear-gradient(140deg, ${selectedBrand.primaryColor}, ${selectedBrand.primaryColor}cc)` }}
                                   >
-                                    <Crown className="h-4 w-4" />
+                                    <IconCrown className="h-4 w-4" />
                                   </span>
                                   <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-700">Exec tools</span>
                                 </button>
@@ -128,7 +139,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                   className="press gs-glass flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 p-1.5 text-center transition hover:-translate-y-0.5 motion-reduce:transform-none"
                                 >
                                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                    <Lock className="h-4 w-4" />
+                                    <IconLock className="h-4 w-4" />
                                   </span>
                                   <span className="w-full truncate text-[11px] font-bold leading-tight text-slate-500">Exec tools</span>
                                 </button>
@@ -165,12 +176,12 @@ export function renderFeedTab(ctx: DemoContext) {
                                       <div className="flex items-center gap-1.5 flex-wrap">
                                         {isCareer ? (
                                           <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0 rounded">
-                                            <Briefcase className="w-2.5 h-2.5" /> Career
+                                            <IconBriefcase className="w-2.5 h-2.5" /> Career
                                           </span>
                                         ) : (
                                           item.pinned && (
                                             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0 rounded">
-                                              <Pin className="w-2.5 h-2.5" /> Pinned
+                                              <IconPin className="w-2.5 h-2.5" /> Pinned
                                             </span>
                                           )
                                         )}
@@ -217,14 +228,14 @@ export function renderFeedTab(ctx: DemoContext) {
                                               href={`mailto:${item.contactEmail}?subject=Referral Inquiry: ${item.title}`}
                                               className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition"
                                             >
-                                              <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
+                                              <IconMail className="w-3 h-3 text-slate-500" /> Email Referrer
                                             </a>
                                             {item.contactPhone && (
                                               <a
                                                 href={`tel:${item.contactPhone}`}
                                                 className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition shrink-0"
                                               >
-                                                <Phone className="w-3 h-3" />
+                                                <IconPhone className="w-3 h-3" />
                                               </a>
                                             )}
                                           </div>
@@ -236,7 +247,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                             }}
                                             className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition shadow-sm"
                                           >
-                                            <Briefcase className="w-3 h-3" /> Quick Apply
+                                            <IconBriefcase className="w-3 h-3" /> Quick Apply
                                           </button>
                                         </div>
                                       </div>
@@ -245,7 +256,7 @@ export function renderFeedTab(ctx: DemoContext) {
 
                                   <div className="flex items-center justify-end text-[11px] text-slate-400 mt-1">
                                     <span className="flex items-center gap-0.5">
-                                      {isExpanded ? "Less" : "More"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                      {isExpanded ? "Less" : "More"} <IconChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                     </span>
                                   </div>
                                 </div>

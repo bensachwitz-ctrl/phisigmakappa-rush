@@ -1,5 +1,13 @@
 import React from "react";
-import { Search, ChevronRight, Clock, XCircle, Key, Car } from "lucide-react";
+import {
+  IconCar,
+  IconChevronRight,
+  IconClock,
+  IconKey,
+  IconSearch,
+  IconXCircle,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 import { isOfficerPosition } from "../mock-data";
 
@@ -51,7 +59,7 @@ export function renderRushTab(ctx: DemoContext) {
                           {/* Search & Filters */}
                           <div className="space-y-2 shrink-0">
                             <div className="relative">
-                              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                              <IconSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                               <input
                                 type="text"
                                 placeholder="Search PNM name or major..."
@@ -70,7 +78,7 @@ export function renderRushTab(ctx: DemoContext) {
                                 }}
                                 className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[12px] font-black flex items-center justify-center gap-1 transition shadow-sm"
                               >
-                                <XCircle className="w-3.5 h-3.5 text-red-400" /> Close Rush Season
+                                <IconXCircle className="w-3.5 h-3.5 text-red-400" /> Close Rush Season
                               </button>
                             )}
 
@@ -143,7 +151,7 @@ export function renderRushTab(ctx: DemoContext) {
                                       </span>
                                       <span className="text-[11px] text-slate-400 block">{p.votesCount} votes</span>
                                     </div>
-                                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition" />
+                                    <IconChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition" />
                                   </div>
                                 </button>
                               ));
@@ -173,7 +181,7 @@ export function renderRushTab(ctx: DemoContext) {
                           <div className="p-3 bg-slate-950 text-slate-200 rounded-2xl border border-white/5 space-y-2 shadow-inner shrink-0">
                             <div className="flex items-center justify-between">
                               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-emerald-400" /> Time Simulator
+                                <IconClock className="w-3 h-3 text-emerald-400" /> Time Simulator
                               </span>
                               <span className="text-[12px] font-black text-white bg-white/10 px-2 py-0.5 rounded">
                                 {simulatedDay} @ {simulatedHour === 22 ? "10:00 PM" : simulatedHour === 23 ? "11:00 PM" : simulatedHour === 0 ? "12:00 AM" : "1:00 AM"}
@@ -261,7 +269,7 @@ export function renderRushTab(ctx: DemoContext) {
                                           {p.name}
                                           {p.isDriverNow && (
                                             <span className="inline-flex items-center gap-0.5 bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-bold px-1 rounded">
-                                              <Key className="w-2 h-2" /> DRIVING
+                                              <IconKey className="w-2 h-2" /> DRIVING
                                             </span>
                                           )}
                                         </h5>
@@ -273,7 +281,7 @@ export function renderRushTab(ctx: DemoContext) {
                                     <div className="shrink-0">
                                       {p.isDriverNow ? (
                                         <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                                          <Car className="w-3.5 h-3.5" />
+                                          <IconCar className="w-3.5 h-3.5" />
                                         </div>
                                       ) : (
                                         <span className="text-[11px] font-bold text-slate-400 block">Standby</span>
@@ -305,7 +313,7 @@ export function renderRushTab(ctx: DemoContext) {
                                   }`}>
                                     <div className="flex justify-between items-center mb-1.5">
                                       <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
-                                        <Clock className="w-3.5 h-3.5 text-slate-400" /> {s.label}
+                                        <IconClock className="w-3.5 h-3.5 text-slate-400" /> {s.label}
                                       </span>
                                       {isCurrentShift && (
                                         <span className="text-[11px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full select-none">Active Now</span>

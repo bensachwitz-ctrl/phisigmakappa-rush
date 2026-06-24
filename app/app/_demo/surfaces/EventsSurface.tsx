@@ -1,5 +1,13 @@
 import React from "react";
-import { Calendar, Check, MapPin, Award, Clock, CalendarPlus } from "lucide-react";
+import {
+  IconAward,
+  IconCalendar,
+  IconCalendarPlus,
+  IconCheck,
+  IconClock,
+  IconMap,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderEventsTab(ctx: DemoContext) {
@@ -15,7 +23,7 @@ export function renderEventsTab(ctx: DemoContext) {
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between px-1 shrink-0">
                           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter calendar
+                            <IconCalendar className="w-3 h-3" style={{ color: selectedBrand.primaryColor }} /> Chapter calendar
                           </h3>
                         </div>
 
@@ -50,14 +58,14 @@ export function renderEventsTab(ctx: DemoContext) {
                                     <h4 className="text-[13px] font-bold text-slate-900 mt-1 leading-tight">{e.name}</h4>
                                     <div className="mt-1 flex flex-wrap items-center gap-y-0.5 gap-x-2.5 text-[11px] text-slate-500">
                                       <span className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3 shrink-0" />
+                                        <IconClock className="w-3 h-3 shrink-0" />
                                         {starts.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                                       </span>
                                       {e.location && (
-                                        <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3 shrink-0" /> {e.location}</span>
+                                        <span className="flex items-center gap-1 truncate"><IconMap className="w-3 h-3 shrink-0" /> {e.location}</span>
                                       )}
                                       {e.dressCode && (
-                                        <span className="flex items-center gap-1"><Award className="w-3 h-3 shrink-0" /> {e.dressCode}</span>
+                                        <span className="flex items-center gap-1"><IconAward className="w-3 h-3 shrink-0" /> {e.dressCode}</span>
                                       )}
                                     </div>
                                   </div>
@@ -80,7 +88,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                           : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isGoing && <Check className="h-3 w-3" />} Going
+                                      {isGoing && <IconCheck className="h-3 w-3" />} Going
                                     </button>
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
@@ -91,7 +99,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                           : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isMaybe && <Check className="h-3 w-3" />} Maybe
+                                      {isMaybe && <IconCheck className="h-3 w-3" />} Maybe
                                     </button>
                                     <button
                                       disabled={rsvpSubmittingId === e.id}
@@ -102,7 +110,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                           : "border border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-900"
                                       }`}
                                     >
-                                      {isNotGoing && <Check className="h-3 w-3" />} Decline
+                                      {isNotGoing && <IconCheck className="h-3 w-3" />} Decline
                                     </button>
                                   </div>
                                 )}
@@ -113,7 +121,7 @@ export function renderEventsTab(ctx: DemoContext) {
                                   className="press flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border text-[12px] font-bold transition"
                                   style={{ color: selectedBrand.primaryColor, borderColor: selectedBrand.primaryColor + '30', backgroundColor: selectedBrand.primaryColor + '0a' }}
                                 >
-                                  <CalendarPlus className="h-3.5 w-3.5" /> Add to calendar
+                                  <IconCalendarPlus className="h-3.5 w-3.5" /> Add to calendar
                                 </button>
                               </div>
                             );

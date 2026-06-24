@@ -1,5 +1,13 @@
 import React from "react";
-import { Search, ChevronDown, Mail, Phone, Briefcase, Building2 } from "lucide-react";
+import {
+  IconBriefcase,
+  IconBuilding,
+  IconChevronDown,
+  IconMail,
+  IconPhone,
+  IconSearch,
+} from "@/components/brand/icons";
+
 import type { DemoContext } from "../context";
 
 export function renderDirectoryTab(ctx: DemoContext) {
@@ -53,7 +61,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                         {/* Search field */}
                         <div className="relative shrink-0">
-                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <IconSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                           <input
                             type="text"
                             placeholder={
@@ -117,7 +125,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                         href={`mailto:${b.email}`}
                                         className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition"
                                       >
-                                        <Mail className="w-3.5 h-3.5" />
+                                        <IconMail className="w-3.5 h-3.5" />
                                       </a>
                                     )}
                                     {b.phone && (
@@ -125,7 +133,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                         href={`tel:${b.phone}`}
                                         className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition"
                                       >
-                                        <Phone className="w-3.5 h-3.5" />
+                                        <IconPhone className="w-3.5 h-3.5" />
                                       </a>
                                     )}
                                   </div>
@@ -179,7 +187,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                           href={`mailto:${al.email}`}
                                           className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition"
                                         >
-                                          <Mail className="w-3.5 h-3.5" />
+                                          <IconMail className="w-3.5 h-3.5" />
                                         </a>
                                       )}
                                       {al.phone && (
@@ -187,7 +195,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                           href={`tel:${al.phone}`}
                                           className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition"
                                         >
-                                          <Phone className="w-3.5 h-3.5" />
+                                          <IconPhone className="w-3.5 h-3.5" />
                                         </a>
                                       )}
                                     </div>
@@ -195,7 +203,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                                   {al.jobTitle && (
                                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-xl text-[12px] text-slate-700">
-                                      <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <IconBriefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                       <span className="font-semibold text-slate-800 truncate max-w-[240px]">
                                         {al.jobTitle} at {al.employer || "Private Company"}
                                       </span>
@@ -215,7 +223,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                 className="press flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl text-xs font-bold text-white shadow-md transition active:scale-[0.98]"
                                 style={{ backgroundColor: selectedBrand.primaryColor }}
                               >
-                                <Briefcase className="w-3.5 h-3.5" /> Post job / internship
+                                <IconBriefcase className="w-3.5 h-3.5" /> Post job / internship
                               </button>
 
                               {/* Careers List */}
@@ -248,7 +256,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                       <div className="flex items-start justify-between gap-3">
                                         <div>
                                           <div className="flex items-center gap-1.5">
-                                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <IconBuilding className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                             <span className="text-xs font-bold text-slate-900 leading-tight">{j.title}</span>
                                           </div>
                                           <span className="text-[12px] text-slate-500 mt-1 block">
@@ -285,14 +293,14 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                                 href={`mailto:${j.contactEmail}?subject=Greekstack Career: ${j.title}`}
                                                 className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[11px] font-bold text-center text-slate-800 flex items-center justify-center gap-1 transition shadow-sm"
                                               >
-                                                <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
+                                                <IconMail className="w-3 h-3 text-slate-500" /> Email Referrer
                                               </a>
                                               {j.contactPhone && (
                                                 <a
                                                   href={`tel:${j.contactPhone}`}
                                                   className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition shadow-sm"
                                                 >
-                                                  <Phone className="w-3 h-3" />
+                                                  <IconPhone className="w-3 h-3" />
                                                 </a>
                                               )}
                                             </div>
@@ -303,7 +311,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                       <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-50">
                                         <span>Shared by {j.postedByName}</span>
                                         <span className="flex items-center gap-0.5">
-                                          {isExpanded ? "Collapse Details" : "View Details"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                          {isExpanded ? "Collapse Details" : "View Details"} <IconChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                         </span>
                                       </div>
                                     </div>

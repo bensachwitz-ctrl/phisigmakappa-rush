@@ -1,5 +1,15 @@
 import React from "react";
-import { Search, ChevronRight, AlertCircle, Palette, ArrowRight, Wand2, Sparkles, Rocket } from "lucide-react";
+import {
+  IconAlert,
+  IconArrowRight,
+  IconChevronRight,
+  IconLaunch,
+  IconSearch,
+  IconSpark,
+  IconWand,
+  IconWhiteLabel,
+} from "@/components/brand/icons";
+
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import {
   FRATERNITY_BRANDS,
@@ -115,7 +125,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               chooserMode === "pick" ? "text-slate-900" : "text-slate-500"
             }`}
           >
-            <Search className="h-4 w-4" aria-hidden="true" /> Pick one
+            <IconSearch className="h-4 w-4" aria-hidden="true" /> Pick one
           </button>
           <button
             onClick={() => setChooserMode("create")}
@@ -124,7 +134,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               chooserMode === "create" ? "text-slate-900" : "text-slate-500"
             }`}
           >
-            <Wand2 className="h-4 w-4" aria-hidden="true" /> Create yours
+            <IconWand className="h-4 w-4" aria-hidden="true" /> Create yours
           </button>
         </div>
       </div>
@@ -175,7 +185,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
           </div>
 
           <div className="relative mb-2.5 shrink-0">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <IconSearch className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Or search any chapter or school..."
@@ -225,13 +235,13 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                    <IconChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
                   </button>
                 );
               })
             ) : (
               <div className="py-12 text-center text-slate-400">
-                <AlertCircle className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                <IconAlert className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                 <p className="text-[13px]">No chapters match. Try “Create yours”.</p>
               </div>
             )}
@@ -255,7 +265,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600"
               aria-hidden="true"
             >
-              <Sparkles className="h-4 w-4" />
+              <IconSpark className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[12px] font-bold text-blue-900">Preview only — not a real login</p>
@@ -352,8 +362,8 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900 motion-reduce:transition-none motion-reduce:active:scale-100"
             style={{ background: `linear-gradient(135deg, ${customPrimary}, ${customSecondary})` }}
           >
-            <Palette className="h-4 w-4" aria-hidden="true" /> Preview this chapter{" "}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <IconWhiteLabel className="h-4 w-4" aria-hidden="true" /> Preview this chapter{" "}
+            <IconArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
 
           {/* Explicit path to a REAL chapter — distinct from the preview above so
@@ -362,7 +372,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             href="/onboard"
             className="press flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-[13px] font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 motion-reduce:transition-none"
           >
-            <Rocket className="h-4 w-4 text-blue-600" aria-hidden="true" /> Launch my real chapter
+            <IconLaunch className="h-4 w-4 text-blue-600" aria-hidden="true" /> Launch my real chapter
           </a>
         </div>
       )}

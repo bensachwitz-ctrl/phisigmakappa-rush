@@ -1,5 +1,11 @@
 import React from "react";
-import { AlertTriangle, Clock, CreditCard, X, ArrowRight } from "lucide-react";
+import {
+  IconAlert,
+  IconArrowRight,
+  IconBilling,
+  IconClock,
+  IconClose,
+} from "@/components/brand/icons";
 import { resolveBillingTone } from "@/lib/billing-banner-tone";
 
 /**
@@ -66,7 +72,7 @@ export function MobileBillingBanner({
   if (dismissed) return null;
 
   const isDanger = tone.severity === "danger";
-  const Icon = isDanger ? AlertTriangle : tone.key === "inactive" ? CreditCard : Clock;
+  const Icon = isDanger ? IconAlert : tone.key === "inactive" ? IconBilling : IconClock;
 
   function dismiss() {
     setDismissed(true);
@@ -112,7 +118,7 @@ export function MobileBillingBanner({
             }`}
           >
             {tone.ctaLabel}
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
         ) : (
           <p className="mt-1.5 text-[11px] font-medium text-slate-500">
@@ -130,7 +136,7 @@ export function MobileBillingBanner({
             : "text-amber-500 hover:bg-amber-100 hover:text-amber-700 focus-visible:ring-amber-300"
         }`}
       >
-        <X className="h-4 w-4" aria-hidden="true" />
+        <IconClose className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
