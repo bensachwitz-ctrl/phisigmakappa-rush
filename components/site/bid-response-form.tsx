@@ -177,7 +177,7 @@ export function BidResponseForm({
               placeholder={pnmName}
               className="border-slate-300 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 font-medium"
             />
-            <p className="text-[10px] text-slate-400 italic">
+            <p className="text-xs text-slate-600 italic">
               Entering your name above acts as your legally binding digital signature under the ESIGN Act.
             </p>
           </div>

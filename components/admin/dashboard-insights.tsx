@@ -590,7 +590,7 @@ function ActivitySparkline({ activeCount, totalActive }: { activeCount: number; 
           />
         ))}
       </svg>
-      <div className="flex justify-between px-1 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+      <div className="flex justify-between px-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         <span>7d ago</span>
         <span>today</span>
       </div>
