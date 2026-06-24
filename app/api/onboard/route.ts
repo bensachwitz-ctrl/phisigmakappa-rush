@@ -437,7 +437,7 @@ export async function POST(req: Request) {
       // the freshly-created schema is dropped and the subdomain frees up cleanly.
       if (normalizedPlan === "yearly" && !cardProvided) {
         throw new OnboardClientError(
-          "A payment method is required to launch on the Annual plan ($800/year, billed today). Choose Monthly to start free without a card.",
+          `A payment method is required to launch on the Annual plan (billed immediately, no trial). Choose the Monthly plan to start your first month free with no card required.`,
           400,
         );
       }
