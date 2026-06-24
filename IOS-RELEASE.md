@@ -11,8 +11,11 @@ Chapter picker → themed login → per-chapter dashboard (Feed, Events, Rush, D
 Directory, Profile, and an officer/Exec view), plus a no-login demo. Because the
 primary UI is bundled (not a webview wrapper pointed at the website), this clears
 the Apple Guideline 4.2 "minimum functionality / just a website" risk the old
-`server.url` carried. Native value (push, haptics, biometric session, deep links,
+`server.url` carried. Native value (haptics, biometric session, deep links,
 offline cache) is wired in `lib/native-bridge.ts` and stays inert on the web.
+Push notifications are intentionally NOT wired — the bundled shell declares no
+push capability or `aps-environment` entitlement (Apple 2.3.1: only ship
+capabilities actually used).
 
 The iOS binary is built on **Codemagic's macOS runners** (`codemagic.yaml`).
 **It cannot be built on Windows** — Windows is only used to generate/maintain the
@@ -120,13 +123,15 @@ creates on first run) both from the App Store Connect API key. You only need:
 1. `npm ci` (installs `@capacitor/*` on the Mac).
 2. Uses the **committed** `ios/App` project (only regenerates with `cap add ios`
    if somehow missing).
-3. `npx cap sync ios` — resolves the plugin Swift packages (push, preferences,
-   app, haptics, splash-screen, status-bar) and copies the boot shell.
+3. `npx cap sync ios` — resolves the plugin Swift packages (preferences, app,
+   haptics, splash-screen, status-bar — NO push) and copies the boot shell.
 4. Sets `MARKETING_VERSION` from the tag (`v1.0.0` → `1.0.0`) + a monotonic
    `CURRENT_PROJECT_VERSION` (Codemagic build number + 100).
 5. Flips the **Release** config to Manual style (so xcodebuild honors the
    explicit fetched profile) + iPhone Distribution identity.
-6. Re-asserts the push entitlement (committed in `App.entitlements`).
+6. Strips any push leftovers (`aps-environment` / push `UIBackgroundModes`) that a
+   fallback `cap add ios` regeneration could have re-added — push is NOT used, so
+   the committed `App.entitlements`/`Info.plist` omit it and this keeps it that way.
 7. **Automatic signing**: `app-store-connect fetch-signing-files
    com.greekstack.app --type IOS_APP_STORE --create` fetches/creates the App
    Store distribution cert + profile from the ASC API key, `keychain

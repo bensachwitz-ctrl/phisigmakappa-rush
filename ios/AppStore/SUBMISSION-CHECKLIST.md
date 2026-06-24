@@ -10,8 +10,10 @@ is automated by `codemagic.yaml` (see `IOS-RELEASE.md`).
       shipped bundled shell does not use push, so the capability/entitlement are
       intentionally omitted (Apple 2.3.1 — declare only what's used).
 - [ ] App record created in App Store Connect (name "Greek Stack", bundle id above).
-- [ ] Distribution cert (.p12) + App Store provisioning profile created.
-- [ ] App Store Connect API key (.p8) created (App Manager role).
+- [ ] App Store Connect API key (.p8) created (App Manager role). The pipeline uses
+      AUTOMATIC signing — it fetches/creates the distribution cert + App Store
+      provisioning profile from this API key alone (no manual `.p12` or
+      `.mobileprovision` to create or upload).
 - [ ] Codemagic `greekstack_ios` secret group populated (see IOS-RELEASE.md table).
 
 ## 1. Ship a build to TestFlight

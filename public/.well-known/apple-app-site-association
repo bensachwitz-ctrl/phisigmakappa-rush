@@ -5,6 +5,7 @@
       {
         "appID": "QFC852BYB6.com.greekstack.app",
         "paths": [
+          "/app",
           "/app/*",
           "/r/*",
           "/public/*"

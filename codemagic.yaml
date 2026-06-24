@@ -1,20 +1,27 @@
 # Codemagic CI/CD — Greek Stack companion iOS app → TestFlight.
 #
-# Mirrors the proven DailyTool / Bar Crawl Golf pipeline. Greek Stack differs in
-# ONE way: it is a hosted Next.js SSR app, so the companion does NOT bundle a
-# static export — capacitor.config.ts points server.url at
-# https://greekstack.vercel.app/app and the native shell loads that. The build
-# here therefore just generates the iOS project from the bundled boot shell
-# (webDir: mobile-shell), signs it, archives it, and ships to TestFlight.
+# Mirrors the proven DailyTool / Bar Crawl Golf pipeline. The Greek Stack
+# companion BUNDLES its member UI in the binary: capacitor.config.ts sets
+# webDir: 'mobile-shell' and intentionally has NO server.url, so Capacitor serves
+# the bundled client from capacitor://localhost (an installed app, not a hosted-
+# site wrapper). It talks to each chapter's backend over the tenant-bound mobile
+# APIs at an absolute, configurable API base (NEXT_PUBLIC_GS_API_BASE, default
+# https://greekstack.vercel.app). The build here generates the iOS project,
+# copies the bundled mobile-shell into it, signs, archives, and ships to
+# TestFlight.
 #
 # Codemagic auto-detects this file at the repo root once the greek-stack GitHub
 # repo is connected. It defines one workflow that, on a `v*` git tag:
 #   1. Spins up a Mac Mini M2 runner
 #   2. npm ci  (installs @capacitor/* from package.json on the Mac)
-#   3. npx cap add ios   (generates ios/App/* from webDir: mobile-shell)
-#   4. npx cap sync ios  (installs native plugin pods: push, preferences, etc.)
+#   3. npx cap add ios   (regenerates ios/App/* ONLY if the project is absent;
+#                          a committed ios/ project is reused as-is)
+#   4. npx cap sync ios  (copies mobile-shell/ into the app + installs the native
+#                          plugin pods actually used: preferences, splash, etc.
+#                          — NO push; the bundled shell does not use push)
 #   5. Sets MARKETING_VERSION from the tag (v1.2.3 → 1.2.3) + a monotonic build #
-#   6. Patches Info.plist (push entitlement note) + iPhone-only device family
+#   6. Patches Info.plist (strips any push/aps-environment leftovers — push is NOT
+#      used) + iPhone-only device family
 #   7. AUTOMATIC SIGNING: fetches (and creates if missing) the App Store
 #      distribution cert + provisioning profile via the App Store Connect API key
 #      alone — `app-store-connect fetch-signing-files` + `keychain
