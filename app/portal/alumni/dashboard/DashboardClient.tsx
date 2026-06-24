@@ -1961,7 +1961,7 @@ export default function DashboardClient({
               <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(74,17,29,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Donate &amp; Support Chapter</h2>
                 <p className="text-sm text-maroon-700">
-                  Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and we take a 5% platform fee on all online donations.
+                  Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and you&apos;re charged exactly the amount you enter &mdash; no platform fee is added on top.
                 </p>
               </div>
 
