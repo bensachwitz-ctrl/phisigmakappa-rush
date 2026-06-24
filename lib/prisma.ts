@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { normalizeSubdomain } from "./reserved-subdomains";
+import { getSubdomain as getSubdomainShared, getLeadingLabel } from "./tenant-host";
 
 // The central database client pointing to the default public schema
 export const centralDb = new PrismaClient({
@@ -23,33 +24,9 @@ if (!globalForPrisma.prismaClients) {
  * old host resolve to a bogus `greeklifesystems` tenant schema.
  */
 export function getSubdomain(host: string | null): string | null {
-  if (!host) return null;
-
-  const hostWithoutPort = host.split(":")[0].toLowerCase();
-  if (
-    hostWithoutPort === "localhost" ||
-    hostWithoutPort === "greekstack" ||
-    hostWithoutPort === "greekstack.vercel.app" ||
-    hostWithoutPort === "greeklifesystems" || // legacy apex alias
-    hostWithoutPort === "greeklifesystems.vercel.app" || // legacy apex alias
-    hostWithoutPort === "greek-life-systems.vercel.app" || // legacy apex alias
-    hostWithoutPort === "www"
-  ) {
-    return null;
-  }
-
-  const cleanHost = host
-    .replace(".localhost:3000", "")
-    .replace(".localhost:3001", "")
-    .replace(".greekstack.vercel.app", "")
-    .replace(".greeklifesystems.vercel.app", "")
-    .replace(".greek-life-systems.vercel.app", "")
-    .trim();
-
-  if (!cleanHost || cleanHost === "www" || cleanHost === "greekstack" || cleanHost === "greeklifesystems") {
-    return null;
-  }
-  return cleanHost.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+  // Delegates to the single edge-safe source (lib/tenant-host) so the apex set
+  // and strip list can never drift between the Node and Edge parsers.
+  return getSubdomainShared(host);
 }
 
 /**
@@ -66,35 +43,12 @@ export function getSubdomain(host: string | null): string | null {
  * apex / unknown hosts, mirroring getSubdomain's apex handling.
  */
 export function getRegistrySubdomain(host: string | null): string | null {
-  if (!host) return null;
-
-  const hostWithoutPort = host.split(":")[0].toLowerCase();
-  if (
-    hostWithoutPort === "localhost" ||
-    hostWithoutPort === "greekstack" ||
-    hostWithoutPort === "greekstack.vercel.app" ||
-    hostWithoutPort === "greeklifesystems" || // legacy apex alias
-    hostWithoutPort === "greeklifesystems.vercel.app" || // legacy apex alias
-    hostWithoutPort === "greek-life-systems.vercel.app" || // legacy apex alias
-    hostWithoutPort === "www"
-  ) {
-    return null;
-  }
-
-  const cleanHost = host
-    .replace(".localhost:3000", "")
-    .replace(".localhost:3001", "")
-    .replace(".greekstack.vercel.app", "")
-    .replace(".greeklifesystems.vercel.app", "")
-    .replace(".greek-life-systems.vercel.app", "")
-    .trim();
-
-  if (!cleanHost || cleanHost === "www" || cleanHost === "greekstack" || cleanHost === "greeklifesystems") {
-    return null;
-  }
-  // Hyphen-preserving normalization — IDENTICAL to how the registry value was
-  // written, so the lookup key round-trips for hyphenated subdomains.
-  const key = normalizeSubdomain(cleanHost);
+  // Same apex/strip handling as getSubdomain (via the shared source), but keeps
+  // interior hyphens via normalizeSubdomain so the key round-trips to the
+  // central registry value (e.g. "phi-sig" stays "phi-sig", never "phi_sig").
+  const label = getLeadingLabel(host);
+  if (!label) return null;
+  const key = normalizeSubdomain(label);
   return key || null;
 }
 

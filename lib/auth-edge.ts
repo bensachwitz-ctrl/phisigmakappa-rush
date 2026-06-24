@@ -3,6 +3,8 @@
 // with a PER-TENANT key derived from the root secret + the request's subdomain,
 // so a cookie minted on chapter A is cryptographically rejected on chapter B.
 
+import { getSubdomain as getSubdomainEdge } from "./tenant-host";
+
 const enc = new TextEncoder();
 const DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me";
 
@@ -35,36 +37,10 @@ function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
-/**
- * Edge-safe mirror of lib/prisma.getSubdomain — MUST stay in sync with it so the
- * tenant tag computed here matches the one used when the token was minted.
- */
-function getSubdomainEdge(host: string | null): string | null {
-  if (!host) return null;
-  const hostWithoutPort = host.split(":")[0].toLowerCase();
-  if (
-    hostWithoutPort === "localhost" ||
-    hostWithoutPort === "greekstack" ||
-    hostWithoutPort === "greekstack.vercel.app" ||
-    hostWithoutPort === "greeklifesystems" ||
-    hostWithoutPort === "greeklifesystems.vercel.app" ||
-    hostWithoutPort === "greek-life-systems.vercel.app" ||
-    hostWithoutPort === "www"
-  ) {
-    return null;
-  }
-  const cleanHost = host
-    .replace(".localhost:3000", "")
-    .replace(".localhost:3001", "")
-    .replace(".greekstack.vercel.app", "")
-    .replace(".greeklifesystems.vercel.app", "")
-    .replace(".greek-life-systems.vercel.app", "")
-    .trim();
-  if (!cleanHost || cleanHost === "www" || cleanHost === "greekstack" || cleanHost === "greeklifesystems") {
-    return null;
-  }
-  return cleanHost.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
-}
+// The tenant tag (getSubdomainEdge) now comes from the shared edge-safe source
+// lib/tenant-host — the exact same function lib/prisma.getSubdomain delegates to
+// — so the tag computed here can never drift from the one used when the token
+// was minted (a drift would silently break cross-runtime session verification).
 
 const MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
