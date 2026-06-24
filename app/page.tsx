@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { getSubdomain, isTenantActive } from "@/lib/prisma";
+import { getSubdomain, getRegistrySubdomain, isTenantActive } from "@/lib/prisma";
 import MarketingLandingPage from "@/components/site/marketing-landing";
 import ChapterLandingPage, { generateMetadata as generateChapterMetadata } from "@/components/site/chapter-landing";
 
@@ -80,9 +80,12 @@ export default async function Page({
 
   // Enforce the registry's isActive flag: a suspended chapter (toggled off in
   // the platform console) serves a neutral "not active" page instead of its
-  // site. Resilient by design — isTenantActive returns true on any registry
-  // error, so a live chapter never goes dark from a transient lookup failure.
-  const active = await isTenantActive(subdomain);
+  // site. The lookup MUST use the hyphen-preserving registry key — getSubdomain
+  // above returns the schema form ("phi_sig"), which never matches a hyphenated
+  // registry row ("phi-sig"), so a suspended hyphenated chapter would wrongly
+  // keep serving. Resilient by design — isTenantActive returns true on any
+  // registry error, so a live chapter never goes dark from a transient failure.
+  const active = await isTenantActive(getRegistrySubdomain(host) ?? subdomain);
   if (!active) {
     return <ChapterInactivePage />;
   }

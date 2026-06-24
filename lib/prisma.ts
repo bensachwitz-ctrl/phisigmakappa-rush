@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { normalizeSubdomain } from "./reserved-subdomains";
 
 // The central database client pointing to the default public schema
 export const centralDb = new PrismaClient({
@@ -49,6 +50,52 @@ export function getSubdomain(host: string | null): string | null {
     return null;
   }
   return cleanHost.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+}
+
+/**
+ * Resolve a host to the REGISTRY subdomain key — the EXACT form stored in
+ * public."Tenant".subdomain. The central registry is written with
+ * normalizeSubdomain() (app/api/onboard/route.ts + lib/provision.ts), which
+ * PRESERVES interior hyphens ("phi-sig" stays "phi-sig"). getSubdomain() above,
+ * by contrast, collapses every non-alphanumeric to "_" because its job is to
+ * build the Postgres SCHEMA name ("schema_phi_sig") — a bare hyphen is illegal
+ * in an unquoted identifier. Those two forms diverge for any hyphenated
+ * subdomain, so a registry lookup (suspension / login resolution) MUST use this
+ * hyphen-preserving key, never the schema form, or it silently misses the row
+ * (e.g. a suspended "phi-sig" chapter would keep serving). Returns null on the
+ * apex / unknown hosts, mirroring getSubdomain's apex handling.
+ */
+export function getRegistrySubdomain(host: string | null): string | null {
+  if (!host) return null;
+
+  const hostWithoutPort = host.split(":")[0].toLowerCase();
+  if (
+    hostWithoutPort === "localhost" ||
+    hostWithoutPort === "greekstack" ||
+    hostWithoutPort === "greekstack.vercel.app" ||
+    hostWithoutPort === "greeklifesystems" || // legacy apex alias
+    hostWithoutPort === "greeklifesystems.vercel.app" || // legacy apex alias
+    hostWithoutPort === "greek-life-systems.vercel.app" || // legacy apex alias
+    hostWithoutPort === "www"
+  ) {
+    return null;
+  }
+
+  const cleanHost = host
+    .replace(".localhost:3000", "")
+    .replace(".localhost:3001", "")
+    .replace(".greekstack.vercel.app", "")
+    .replace(".greeklifesystems.vercel.app", "")
+    .replace(".greek-life-systems.vercel.app", "")
+    .trim();
+
+  if (!cleanHost || cleanHost === "www" || cleanHost === "greekstack" || cleanHost === "greeklifesystems") {
+    return null;
+  }
+  // Hyphen-preserving normalization — IDENTICAL to how the registry value was
+  // written, so the lookup key round-trips for hyphenated subdomains.
+  const key = normalizeSubdomain(cleanHost);
+  return key || null;
 }
 
 /**
@@ -140,10 +187,16 @@ export interface TenantRecord {
  * console is the single place a chapter is intentionally suspended.
  */
 export async function isTenantActive(subdomain: string): Promise<boolean> {
-  if (!subdomain) return true;
+  // Normalize to the EXACT registry key form (hyphen-preserving) so a hyphenated
+  // subdomain resolves the same row it was provisioned under. Callers may hand us
+  // a raw host label or the value from getRegistrySubdomain(); both collapse to
+  // the stored key here. (Passing the schema form "phi_sig" would miss the
+  // "phi-sig" row — see getRegistrySubdomain — so prefer that resolver upstream.)
+  const key = normalizeSubdomain(subdomain);
+  if (!key) return true;
   try {
     const row = await centralDb.tenant.findUnique({
-      where: { subdomain },
+      where: { subdomain: key },
       select: { isActive: true },
     });
     if (!row) return true; // unprovisioned / legacy → serve

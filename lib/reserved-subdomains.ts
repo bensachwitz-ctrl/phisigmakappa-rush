@@ -16,7 +16,9 @@
 
 /**
  * Reserved subdomains that can never be claimed by self-serve signup.
- * Mirrors the `RESERVED` set inlined in app/api/onboard/route.ts verbatim.
+ * SINGLE SOURCE OF TRUTH: app/api/onboard/route.ts and app/api/onboard/check
+ * both IMPORT this set (no inline copy exists anymore — see the L3 refactor), so
+ * there is nothing here to "mirror"; edit the denylist only in this one place.
  */
 export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
   "www", "greekstack", "greeklifesystems", "greek-life-systems", "apex", "_apex",
