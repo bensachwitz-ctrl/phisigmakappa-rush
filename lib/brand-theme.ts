@@ -198,7 +198,14 @@ export function buildBrandThemeStyle(cfg: Record<string, string>): string {
   // color that already passes (the platform default #2563eb included) is left
   // exactly as-is, so brand-default-blue / brand-secondary tests stay green.
   const brandPrimary = ensureAccessiblePrimary(rawPrimary);
-  const brandPrimaryDark = safeHex(cfg["brand.primaryDarkHex"], BRAND_DEFAULTS.primaryDark);
+  // --brand-primary-dark is bound (tailwind.config.ts) to text-maroon-400, which
+  // is used as on-white INFORMATIONAL TEXT in ~20 portal spots, so it must clear
+  // WCAG AA (>=4.5:1) just like --brand-primary. Floor the admin's "Primary dark"
+  // pick through the same hue-preserving guard (the platform default #1e40af —
+  // ~8.6:1 — and any already-dark pick pass untouched).
+  const brandPrimaryDark = ensureAccessiblePrimary(
+    safeHex(cfg["brand.primaryDarkHex"], BRAND_DEFAULTS.primaryDark),
+  );
   const brandPrimarySoft = safeHex(cfg["brand.primarySoftHex"], BRAND_DEFAULTS.primarySoft);
   const brandSecondary = safeHex(cfg["brand.secondaryHex"], BRAND_DEFAULTS.secondary);
   // Derive the shadcn HSL token from the CONTRAST-CORRECTED hex so --primary /

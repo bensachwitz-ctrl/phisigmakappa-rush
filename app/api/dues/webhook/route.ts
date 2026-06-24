@@ -880,6 +880,11 @@ async function reverseByPaymentIntent(
     } else {
       // Partial refund: mark the row but keep the brother's paid badge (they
       // still paid for the term; treasurer reconciles the partial difference).
+      // INTENTIONAL UI STATE: this leaves the payment row showing status
+      // REFUNDED while the brother's `duesPaid` badge stays TRUE. That pairing
+      // is correct, not a bug — a partial refund does not un-pay the term, so
+      // the member remains "paid" while the ledger row records the partial
+      // give-back. Only a FULL refund (the branch above) clears the badge.
       await db.duesPayment
         .update({ where: { id: payment.id }, data: { status: "REFUNDED", notes: note } })
         .catch(() => {});
