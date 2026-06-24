@@ -373,7 +373,7 @@ export const DEMO_CALLOUTS: Record<
   },
   directory: {
     title: "Roster & alumni network",
-    body: "A searchable directory of actives and alumni by class year, plus gated alumni onboarding and Stripe giving flows that turn graduated brothers into a recurring base.",
+    body: "A searchable directory of actives and alumni by class year, plus gated alumni onboarding and Stripe giving flows that make it easy for graduated brothers to give back.",
   },
   settings: {
     title: "Your profile",

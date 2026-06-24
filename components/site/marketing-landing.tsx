@@ -523,13 +523,13 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-alumni",
     eyebrow: "Alumni",
     title: "Alumni & donations",
-    outcome: "Turn graduated brothers into a recurring giving base, not a dead email list.",
-    desc: "An alumni directory, gated onboarding, and Stripe donation flows that turn graduated brothers into a recurring giving base.",
-    long: "Turn graduated brothers into a living network and a recurring giving base. A searchable alumni directory, secure gated onboarding, and Stripe-powered donation flows make it easy to stay connected and easy for alumni to give back.",
+    outcome: "Keep graduated brothers connected and giving, not a dead email list.",
+    desc: "An alumni directory, gated onboarding, and Stripe donation flows that make it easy for alumni to give back.",
+    long: "Turn graduated brothers into a living network. A searchable alumni directory, secure gated onboarding, and Stripe-powered donation flows make it easy to stay connected and easy for alumni to give back.",
     bullets: [
       "Searchable alumni directory by class year",
       "Secure single-use onboarding invites",
-      "Stripe donation + recurring-giving flows",
+      "Stripe donation flows tagged by campaign",
       "Giving totals and engagement at a glance",
     ],
     preview: <PreviewAlumni />,
@@ -604,7 +604,7 @@ const STATS: {
    brand promise. Kept short + punchy; the SSR markup shows the settled line. */
 const HERO_PHRASES = [
   "Run rush & recruitment.",
-  "Collect dues automatically.",
+  "Collect dues online.",
   "Manage your officer access.",
   "Cast secret ballots & elections.",
   "Track chapter scholarship.",
@@ -751,7 +751,7 @@ const PLANS: Plan[] = [
    Shown once beneath the three cards so the comparison stays clean. */
 const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
   { icon: IconRecruitment, label: "Recruitment pipeline — QR check-in, Kanban funnel & anonymous voting" },
-  { icon: IconPayout, label: "Automated dues with Stripe Connect treasurer payouts" },
+  { icon: IconPayout, label: "Online dues with Stripe Connect treasurer payouts" },
   { icon: IconTreasury, label: "Treasury — budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
@@ -1416,7 +1416,7 @@ function Hero() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-foreground/80 animate-slide-up [animation-delay:200ms] sm:text-lg">
-            Stop chasing dues in the group chat. Greekstack runs recruitment, automated dues,
+            Stop chasing dues in the group chat. Greekstack runs recruitment, online dues,
             events, officer access, and alumni giving on one branded site — re-skinned to your
             letters and colors, live the same day.
           </p>
