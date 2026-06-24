@@ -59,12 +59,16 @@ export function EmptyState({
   secondaryAction?: EmptyAction;
   tone?: "phisig-red" | "emerald" | "amber" | "blue";
 }) {
+  // WCAG 2.2 1.4.11/2.4.13: the focus ring must contrast with the button fill.
+  // A red ring on a red fill (the old ring-phisig-red/40 on bg-phisig-red) is
+  // invisible. Use a dark, high-contrast ring (ring-foreground) + a white
+  // ring-offset on every tone so the focus indicator reads on any colored fill.
   const primaryClass = cn(
-    "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-    tone === "phisig-red" && "bg-phisig-red text-white hover:bg-phisig-red-dark focus-visible:ring-phisig-red/40",
-    tone === "emerald" && "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500/40",
-    tone === "amber" && "bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber-500/40",
-    tone === "blue" && "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500/40",
+    "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
+    tone === "phisig-red" && "bg-phisig-red text-white hover:bg-phisig-red-dark",
+    tone === "emerald" && "bg-emerald-600 text-white hover:bg-emerald-700",
+    tone === "amber" && "bg-amber-500 text-white hover:bg-amber-600",
+    tone === "blue" && "bg-blue-600 text-white hover:bg-blue-700",
   );
   const secondaryClass = "text-sm text-muted-foreground hover:text-foreground";
   return (

@@ -103,13 +103,30 @@
   }
 
   /* Visible focus rings on every interactive element for keyboard +
-     assistive-tech users. Tailwind's default :focus-visible is invisible
-     against many of our cardinal-red surfaces; this forces a 2px cardinal
-     ring with 2px white offset so it pops on any background. */
+     assistive-tech users (WCAG 2.2 1.4.11 non-text contrast + 2.4.13 focus
+     appearance). --ring tracks the per-chapter --primary (set in lib/brand-
+     theme.ts), so on a red-filled active control the ring hue can equal the
+     fill — invisible. To guarantee a contrasting indicator on ANY background
+     WITHOUT depending on --ring differing from --primary, we layer a box-shadow:
+     a light ring in the page --background sits BETWEEN the control and the
+     --ring-colored outer ring, so the focus indicator is always separated from
+     the fill by a high-contrast band. The 2px outline is kept as a fallback for
+     forced-colors / box-shadow-suppressing modes. */
   *:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
     border-radius: 4px;
+  }
+  /* Forced-colors (Windows High Contrast): let the OS draw the focus ring with
+     its own guaranteed-contrast color instead of our box-shadow. */
+  @media (forced-colors: active) {
+    *:focus-visible {
+      box-shadow: none;
+      outline: 2px solid CanvasText;
+    }
   }
 
   /* Honor users who set prefers-reduced-motion at the OS level — kill

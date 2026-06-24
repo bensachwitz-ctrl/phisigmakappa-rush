@@ -99,13 +99,40 @@ export function Tilt3DCard({
     py.set(0);
   }, [hovering, px, py]);
 
+  // Keyboard a11y: when the card is interactive (onClick), it must be reachable
+  // and operable by keyboard like a real button. Enter/Space activate it. These
+  // props are spread into BOTH the static and the 3D branch below so an
+  // interactive Tilt3DCard is never mouse-only. Non-interactive cards (no
+  // onClick) get none of these — they stay plain, non-focusable containers.
+  const interactiveProps = onClick
+    ? {
+        role: "button" as const,
+        tabIndex: 0,
+        onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        },
+      }
+    : {};
+
   // No reduced motion AND no fine pointer ⇒ flat, static card (phones/touch).
   if (reduce || !finePointer) {
-    return <div className={cn(onClick && "cursor-pointer", className)} onClick={onClick}>{children}</div>;
+    return (
+      <div className={cn(onClick && "cursor-pointer", className)} onClick={onClick} {...interactiveProps}>
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div style={{ perspective: 1000 }} className={cn("[transform-style:preserve-3d]", onClick && "cursor-pointer", className)} onClick={onClick}>
+    <div
+      style={{ perspective: 1000 }}
+      className={cn("[transform-style:preserve-3d]", onClick && "cursor-pointer", className)}
+      onClick={onClick}
+      {...interactiveProps}
+    >
       <motion.div
         ref={ref}
         onPointerMove={onMove}
