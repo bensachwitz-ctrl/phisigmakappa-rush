@@ -132,6 +132,26 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   const [user, setUser] = useState<any>(null);
   const [isDemo, setIsDemo] = useState(false);
 
+  // Quick Apply and Career Notification states
+  const [quickApplyJob, setQuickApplyJob] = useState<any>(null);
+  const [showGoogleInternshipBanner, setShowGoogleInternshipBanner] = useState(false);
+  const [quickApplySubmitting, setQuickApplySubmitting] = useState(false);
+  const [quickApplyNote, setQuickApplyNote] = useState("Hi, I'm interested in this role and would love to get a referral from you.");
+
+  // The sample career-referral banner is a DEMO-ONLY showcase prop — it
+  // illustrates the careers/referrals surface with a canned example. It must
+  // never appear for a real signed-in member (that would be a fabricated job
+  // posting), so it is gated strictly to demo mode.
+  useEffect(() => {
+    if (isDemo && token) {
+      const timer = setTimeout(() => {
+        setShowGoogleInternshipBanner(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    setShowGoogleInternshipBanner(false);
+  }, [token, isDemo]);
+
   // ── iOS cold-start School → Chapter picker (entry mode) ───────────────────
   // entryMode decides what the FIRST screen is on mount:
   //   "picker"   — cold start (no ?demo, no saved session): the new
@@ -1835,6 +1855,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     searchQuery, setSearchQuery, role, setRole, email, setEmail, password, setPassword,
     token, setToken, user, setUser, isDemo, setIsDemo,
     viewRole, setViewRole,
+    quickApplyJob, setQuickApplyJob,
     // Server-enforced exec gate mirror (demo OR capabilities.exec). Computed
     // inline so the surfaces can render/enable officer-only writes only when the
     // server cleared this session; every write is ALSO re-gated server-side.
@@ -2028,12 +2049,10 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     ...(duesVisible ? [{ id: "dues" as TabId, icon: IconDues, label: "Dues" }] : []),
     { id: "directory", icon: IconWhiteLabel, label: "Network" },
   ];
-  // Alumni never see the rush pipeline in the real product — their fifth slot
-  // is their own profile (Settings renders the alumni profile view).
   const alumniNav: { id: TabId; icon: any; label: string }[] = [
     { id: "feed", icon: IconComms, label: "Feed" },
     { id: "events", icon: IconEvents, label: "Events" },
-    { id: "dues", icon: IconSpark, label: "Giving" },
+    ...(duesVisible ? [{ id: "dues" as TabId, icon: IconSpark, label: "Giving" }] : []),
     { id: "directory", icon: IconWhiteLabel, label: "Network" },
     { id: "settings", icon: IconChapter, label: "Profile" },
   ];
@@ -2041,7 +2060,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     { id: "feed", icon: IconMembers, label: "Roster" },
     { id: "events", icon: IconComms, label: "Announce" },
     { id: "rush", icon: IconGrowth, label: "Rush" },
-    { id: "dues", icon: IconDues, label: "Dues" },
+    ...(duesVisible ? [{ id: "dues" as TabId, icon: IconDues, label: "Dues" }] : []),
     { id: "directory", icon: IconSecurity, label: "Console" },
   ];
   const navItems = viewRole === "exec" ? execNav : role === "alumni" ? alumniNav : memberNav;
@@ -2460,6 +2479,136 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
 
           {/* Custom Sleek Confirmation Modal */}
           {confirmModal && renderConfirmModal(ctx)}
+
+          {/* iOS-style Alert Banner */}
+          {showGoogleInternshipBanner && (
+            <div
+              className="absolute top-2 left-2 right-2 z-[999] p-3 rounded-2xl bg-slate-900/95 text-white border border-white/10 shadow-2xl flex gap-3 items-center cursor-pointer animate-spring-in select-none"
+              onClick={() => {
+                setShowGoogleInternshipBanner(false);
+                setActiveTab("feed");
+                const googleJob = combinedFeed.find((f: any) => f.feedType === "career" && f.company?.toLowerCase().includes("google"));
+                if (googleJob) {
+                  setExpandedAnnouncementId(googleJob.id);
+                }
+              }}
+            >
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-white shrink-0">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wide">New Opportunity</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowGoogleInternshipBanner(false);
+                    }}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <h4 className="text-xs font-bold leading-tight truncate">Google Internship Posted</h4>
+                <p className="text-[10px] text-slate-300 leading-none mt-0.5">Click to view referral details &amp; quick apply</p>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Apply Modal */}
+          {quickApplyJob && (
+            <div className="absolute inset-0 bg-black/60 z-[998] flex items-end justify-center animate-fade-in" onClick={() => setQuickApplyJob(null)}>
+              <div className="w-full bg-white rounded-t-[32px] p-6 space-y-4 max-h-[85%] overflow-y-auto animate-slide-up shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto" />
+                
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                    Quick Apply referral
+                  </span>
+                  <h3 className="text-base font-black text-slate-900 tracking-tight leading-tight">
+                    {quickApplyJob.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-semibold">{quickApplyJob.company} · {quickApplyJob.location}</p>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Full Name</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={dashboardData?.profile?.name || "Member"}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+                    <input
+                      type="email"
+                      disabled
+                      value={dashboardData?.profile?.email || email || "member@usc.edu"}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Phone Number</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={editPhone || "(213) 555-0199"}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Cover Note for {quickApplyJob.contactName}</label>
+                    <textarea
+                      value={quickApplyNote}
+                      onChange={(e) => setQuickApplyNote(e.target.value)}
+                      className="w-full h-20 rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-3 text-center">
+                    <span className="text-[11px] font-semibold text-slate-500">📄 resume_pdf_exported.pdf (Attached)</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => setQuickApplyJob(null)}
+                    disabled={quickApplySubmitting}
+                    className="flex-1 py-3 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setQuickApplySubmitting(true);
+                      await new Promise((resolve) => setTimeout(resolve, 1200));
+                      setQuickApplySubmitting(false);
+                      setQuickApplyJob(null);
+                      showToast(`Application successfully sent to ${quickApplyJob.contactName}!`, "success");
+                    }}
+                    disabled={quickApplySubmitting}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-md"
+                  >
+                    {quickApplySubmitting ? (
+                      <>
+                        <Clock className="w-3.5 h-3.5 animate-spin" /> Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" /> Submit Application
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Custom Forgot Password Overlay Modal */}
           {showForgotPassword && renderForgotPasswordModal(ctx)}

@@ -149,13 +149,14 @@ function ProvisioningOverlay({
 
 const ALL_STEPS = [
   { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — first month free, cancel anytime." },
-  { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then make it yours in the live preview." },
+  { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then upload assets." },
+  { id: "mockup", label: "Template & Colors", icon: IconCrest, blurb: "Pick a hero template, layout, and color theme — preview it live before launch." },
   { id: "admin", label: "Admin Login", icon: IconAdmin, blurb: "Create your chapter's administrator account — this is how you'll sign in." },
   { id: "payment", label: "Payment Method", icon: IconCoins, blurb: "Add your billing details to start your free first month." },
   { id: "launch", label: "Launch", icon: IconLaunch, blurb: "Go live in seconds — then optionally grab a hand from the owner." },
 ] as const;
 
-type StepId = "pricing" | "chapter" | "admin" | "payment" | "launch";
+type StepId = "pricing" | "chapter" | "mockup" | "admin" | "payment" | "launch";
 
 export default function OnboardWizard() {
   const router = useRouter();
@@ -280,6 +281,17 @@ export default function OnboardWizard() {
   const [schoolInstagramHandle, setSchoolInstagramHandle] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [cityState, setCityState] = React.useState("");
+
+  // New social media links & uploaded image states
+  const [tiktokUrl, setTiktokUrl] = React.useState("");
+  const [twitterHandle, setTwitterHandle] = React.useState("");
+  const [websiteUrl, setWebsiteUrl] = React.useState("");
+  const [chapterLogo, setChapterLogo] = React.useState<string | null>(null);
+  const [chapterHero, setChapterHero] = React.useState<string | null>(null);
+
+  // Mockup Tweak states
+  const [mockupTemplate, setMockupTemplate] = React.useState<"floating" | "neon" | "classic" | "minimal">("floating");
+  const [mockupOrientation, setMockupOrientation] = React.useState<"centered" | "split-left" | "split-right">("centered");
 
   // Admin State
   const [adminName, setAdminName] = React.useState("");
@@ -1287,8 +1299,73 @@ export default function OnboardWizard() {
                           <WField label="Recruitment phone" value={rushPhone} onChange={setRushPhone} placeholder="(803) 555-0195" type="tel" inputMode="tel" autoComplete="tel" />
                           <WField label="Instagram handle" value={instagramHandle} onChange={setInstagramHandle} placeholder="@yourchapter" autoCapitalize="off" />
                           <WField label="Instagram URL" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://www.instagram.com/yourchapter/" type="url" inputMode="url" autoCapitalize="off" />
+                          <WField label="TikTok URL" value={tiktokUrl} onChange={setTiktokUrl} placeholder="https://www.tiktok.com/@yourchapter" type="url" inputMode="url" autoCapitalize="off" />
+                          <WField label="Twitter/X Handle" value={twitterHandle} onChange={setTwitterHandle} placeholder="@yourchapter" autoCapitalize="off" />
+                          <WField label="Website URL" value={websiteUrl} onChange={setWebsiteUrl} placeholder="https://yourchapter.com" type="url" inputMode="url" autoCapitalize="off" />
                           <WField label="Chapter house address" value={address} onChange={setAddress} placeholder="1525 College Street" />
                           <WField label="City, state & ZIP" value={cityState} onChange={setCityState} placeholder="Columbia, SC 29208" />
+
+                          {/* Image Upload Zone */}
+                          <div className="sm:col-span-2 space-y-2">
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Upload Assets</label>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              {/* Logo Upload */}
+                              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.01] p-3 text-center space-y-2">
+                                <span className="block text-[10px] font-bold uppercase text-slate-400">Chapter Logo / Crest</span>
+                                {chapterLogo ? (
+                                  <div className="relative mx-auto h-12 w-12 rounded-lg overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center">
+                                    <img src={chapterLogo} alt="Logo preview" className="h-full w-full object-contain" />
+                                    <button type="button" onClick={() => setChapterLogo(null)} className="absolute top-0 right-0 bg-rose-500/80 text-white rounded-bl p-0.5 text-[9px] font-bold">X</button>
+                                  </div>
+                                ) : (
+                                  <label className="cursor-pointer inline-flex items-center justify-center px-3 py-1.5 border border-white/10 bg-white/[0.04] text-[10px] font-bold text-slate-200 rounded-lg hover:bg-white/[0.08] transition">
+                                    Choose Logo
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => setChapterLogo(reader.result as string);
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                              {/* Hero Photo Upload */}
+                              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.01] p-3 text-center space-y-2">
+                                <span className="block text-[10px] font-bold uppercase text-slate-400">Chapter Hero Photo</span>
+                                {chapterHero ? (
+                                  <div className="relative mx-auto h-12 w-24 rounded-lg overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center">
+                                    <img src={chapterHero} alt="Hero preview" className="h-full w-full object-cover" />
+                                    <button type="button" onClick={() => setChapterHero(null)} className="absolute top-0 right-0 bg-rose-500/80 text-white rounded-bl p-0.5 text-[9px] font-bold">X</button>
+                                  </div>
+                                ) : (
+                                  <label className="cursor-pointer inline-flex items-center justify-center px-3 py-1.5 border border-white/10 bg-white/[0.04] text-[10px] font-bold text-slate-200 rounded-lg hover:bg-white/[0.08] transition">
+                                    Choose Hero Photo
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => setChapterHero(reader.result as string);
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1368,6 +1445,21 @@ export default function OnboardWizard() {
                   setPromoError={setPromoError}
                   appliedCode={appliedCode}
                   setAppliedCode={setAppliedCode}
+                />
+              )}
+
+              {step === "mockup" && (
+                <MockupTweakStep
+                  primaryColor={primaryColor}
+                  darkColor={darkColor}
+                  softColor={softColor}
+                  setPrimaryColor={setPrimaryColor}
+                  setDarkColor={setDarkColor}
+                  setSoftColor={setSoftColor}
+                  template={mockupTemplate}
+                  setTemplate={setMockupTemplate}
+                  orientation={mockupOrientation}
+                  setOrientation={setMockupOrientation}
                 />
               )}
 
@@ -1569,16 +1661,7 @@ export default function OnboardWizard() {
                   {/* MONTHLY-only: launch card-free (true free trial). Makes the
                       "no card required to launch" promise real; yearly omits this
                       because it bills $800 today. */}
-                  {step === "payment" && plan === "monthly" && !paymentMethodId && (
-                    <button
-                      type="button"
-                      onClick={skipPayment}
-                      disabled={busy}
-                      className="text-sm font-semibold text-slate-300 underline-offset-4 transition-colors hover:text-white hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
-                    >
-                      Skip — start free without a card
-                    </button>
-                  )}
+                  {/* Card details are now fully mandatory for monthly plan. Skip card setup option removed. */}
                   <Magnetic strength={14} radius={80}>
                     <ShimmerBorder rounded="rounded-full">
                       <Button
@@ -1625,7 +1708,7 @@ export default function OnboardWizard() {
         {/* Live preview — fully editable in real time (colors, name, hero copy).
             Only mounted on the Chapter stage, where the founder is actively
             shaping their site; it animates in/out with the stage change. */}
-        {step === "chapter" && (
+        {(step === "chapter" || step === "mockup") && (
           <EditableLivePreview
             fraternityName={fraternityName}
             onFraternityName={setFraternityName}
@@ -1645,6 +1728,10 @@ export default function OnboardWizard() {
             heroTagline={heroTagline}
             onHeroTagline={setHeroTagline}
             subdomain={subdomain}
+            templateId={mockupTemplate}
+            orientation={mockupOrientation}
+            chapterLogo={chapterLogo}
+            chapterHero={chapterHero}
           />
         )}
       </div>
@@ -1709,6 +1796,160 @@ function customBuildHref(): string {
  * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
  * so it's keyboard + screen-reader navigable.
  */
+/* ───────────────────────────── MockupTweakStep ───────────────────────────── */
+// A straightforward "pick a template & colors" step. The user chooses a hero
+// animation template, a layout orientation, and a color theme — all applied
+// instantly to the live preview. No AI, no agents: every control here is a
+// direct, honest preference toggle.
+
+// Named color themes shown as one-tap swatches. Each maps to the same
+// primary/dark/soft trio the rest of the wizard persists. The default keeps
+// GreekStack's royal-blue + gold identity; the rest are on-brand neutrals.
+const COLOR_THEMES: {
+  id: string;
+  label: string;
+  primary: string;
+  dark: string;
+  soft: string;
+}[] = [
+  { id: "royal", label: "Royal Blue", primary: "#2563eb", dark: "#1e40af", soft: "#eff6ff" },
+  { id: "gold", label: "Gold", primary: "#ca8a04", dark: "#854d0e", soft: "#fefce8" },
+  { id: "sky", label: "Sky", primary: "#0284c7", dark: "#0369a1", soft: "#f0f9ff" },
+  { id: "slate", label: "Slate", primary: "#0f172a", dark: "#020617", soft: "#f8fafc" },
+  { id: "emerald", label: "Emerald", primary: "#059669", dark: "#065f46", soft: "#ecfdf5" },
+  { id: "crimson", label: "Crimson", primary: "#b91c1c", dark: "#7f1d1d", soft: "#fef2f2" },
+];
+
+function MockupTweakStep({
+  primaryColor,
+  darkColor,
+  softColor,
+  setPrimaryColor,
+  setDarkColor,
+  setSoftColor,
+  template,
+  setTemplate,
+  orientation,
+  setOrientation,
+}: {
+  primaryColor: string;
+  darkColor: string;
+  softColor: string;
+  setPrimaryColor: (v: string) => void;
+  setDarkColor: (v: string) => void;
+  setSoftColor: (v: string) => void;
+  template: "floating" | "neon" | "classic" | "minimal";
+  setTemplate: (v: "floating" | "neon" | "classic" | "minimal") => void;
+  orientation: "centered" | "split-left" | "split-right";
+  setOrientation: (v: "centered" | "split-left" | "split-right") => void;
+}) {
+  // The currently-selected theme is whichever swatch matches the live primary
+  // color (or "custom" if the user picked a one-off color elsewhere).
+  const activeTheme = COLOR_THEMES.find((t) => t.primary.toLowerCase() === primaryColor.toLowerCase());
+
+  const applyTheme = (t: (typeof COLOR_THEMES)[number]) => {
+    setPrimaryColor(t.primary);
+    setDarkColor(t.dark);
+    setSoftColor(t.soft);
+    try {
+      window.GreekStackNative?.hapticImpact?.("light");
+    } catch {}
+  };
+
+  return (
+    <div className="space-y-6 animate-soft-enter">
+      <div className="space-y-1">
+        <h3 className="text-lg font-bold text-white">Pick a template &amp; colors</h3>
+        <p className="text-xs text-slate-400">
+          Choose a hero style, layout, and color theme. Everything updates the
+          live preview instantly — you can fine-tune it any time after launch.
+        </p>
+      </div>
+
+      {/* Template Animation Options */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Hero Template</label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(["floating", "neon", "classic", "minimal"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              aria-pressed={template === t}
+              onClick={() => setTemplate(t)}
+              className={`min-h-11 p-2.5 rounded-xl border text-[11px] font-bold capitalize transition flex flex-col items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                template === t
+                  ? "border-sky-500 bg-sky-500/10 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                  : "border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-white"
+              }`}
+            >
+              <span>{t === "floating" ? "Floating 3D" : t === "minimal" ? "Minimal Clean" : t}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Orientation Options */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Layout Orientation</label>
+        <div className="grid grid-cols-3 gap-2">
+          {(["centered", "split-left", "split-right"] as const).map((o) => (
+            <button
+              key={o}
+              type="button"
+              aria-pressed={orientation === o}
+              onClick={() => setOrientation(o)}
+              className={`min-h-11 p-2.5 rounded-xl border text-[11px] font-bold capitalize transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                orientation === o
+                  ? "border-sky-500 bg-sky-500/10 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                  : "border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-white"
+              }`}
+            >
+              {o.replace("-", " ")}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Color Theme Swatches */}
+      <div className="space-y-2 pt-2 border-t border-white/5">
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block">Color Theme</label>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {COLOR_THEMES.map((t) => {
+            const selected = activeTheme?.id === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={selected}
+                aria-label={`${t.label} color theme`}
+                onClick={() => applyTheme(t)}
+                className={`min-h-11 flex flex-col items-center justify-center gap-1.5 rounded-xl border p-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                  selected
+                    ? "border-sky-500 bg-sky-500/10 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                    : "border-white/10 bg-white/[0.02] hover:border-white/25"
+                }`}
+              >
+                <span
+                  className="h-5 w-5 rounded-full ring-1 ring-white/20"
+                  style={{ background: t.primary }}
+                  aria-hidden="true"
+                />
+                <span className={`text-[10px] font-bold ${selected ? "text-white" : "text-slate-400"}`}>
+                  {t.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] leading-relaxed text-slate-500">
+          Want an exact brand color? You set your hex values on the previous
+          step — these swatches are quick starting points.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function PricingStep({
   plan,
   onChange,
@@ -2547,7 +2788,7 @@ function PaymentStep({
 
       <div className="space-y-2">
         <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Card Details{plan === "monthly" ? " (optional)" : ""}
+          Card Details
         </Label>
         <div className="rounded-xl border border-white/10 bg-slate-900/60 p-4 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
           <div ref={containerRef} id="card-element" className="w-full min-h-[20px]" />
@@ -2555,7 +2796,7 @@ function PaymentStep({
         <p className="text-[11px] text-slate-400 leading-relaxed">
           {plan === "yearly"
             ? "Your card will be charged $800 today for the full year (all rush fees included). Cancel anytime from your admin panel."
-            : "Your card will not be charged today (first month is 100% free). Prefer to add it later? You can launch now without a card and add one before your free month ends — cancel anytime from your admin panel."}
+            : "Your card will not be charged today (first month is 100% free, but card setup is required up front). Billed at $50/month + $200 per rush cycle starting next month. Cancel anytime from your admin panel."}
         </p>
       </div>
 
