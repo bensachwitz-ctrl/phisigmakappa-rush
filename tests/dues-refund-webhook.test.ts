@@ -47,7 +47,14 @@ vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => {}) }));
 vi.mock("@/lib/email", () => ({ sendEmail: vi.fn(async () => ({ ok: true })) }));
 vi.mock("@/lib/email-template", () => ({ renderEmail: () => "<html></html>", renderEmailText: () => "text" }));
 vi.mock("@/lib/chapter-identity", () => ({ chapterIdentityFromCfg: () => ({ fraternityName: "Alpha", chapterAttribution: "Alpha", schoolName: "" }) }));
-vi.mock("@/lib/platform-billing", () => ({ DUES_INTRO_FEE_USED_KEY: "dues.introFeeUsed" }));
+vi.mock("@/lib/platform-billing", () => ({
+  DUES_INTRO_FEE_USED_KEY: "dues.introFeeUsed",
+  // The webhook now imports this shared helper (used on the PAID-success path,
+  // not the refund/dispute paths this suite exercises). Provide a no-op that
+  // reports "did not flip" so the import resolves and a future PAID-path test
+  // here doesn't hit `undefined is not a function`.
+  markDuesIntroFeeUsedFromSession: vi.fn(async () => false),
+}));
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }, errorSink: vi.fn() }));
 vi.mock("@/lib/dues-receipt", () => ({ generateAndUploadDuesReceipt: vi.fn(async () => null) }));
 
