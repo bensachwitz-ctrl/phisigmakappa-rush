@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { avatarSrc } from "@/lib/image-url";
 import {
@@ -543,6 +543,9 @@ export default function BrothersDashboardClient({
   isAdmin,
 }: BrothersDashboardClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  // Roving-tabindex focus targets for the WAI-ARIA dashboard tablist.
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const { push } = useToast();
   // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
   // under /portal/brothers stay as-is — only visible labels re-genders per org.
@@ -1139,9 +1142,14 @@ export default function BrothersDashboardClient({
         {/* Dashboard Content Container */}
         <div className="max-w-6xl mx-auto px-4 py-6">
           
-          {/* R45 Navigation tabs row */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {[
+          {/* R45 Navigation tabs row — WAI-ARIA tabs pattern. In-page tabs use
+              role="tab" + aria-selected + aria-controls and roving tabindex with
+              ArrowLeft/Right; the panel below is one role="tabpanel" labelled by
+              the active tab. The "Officer Elections" entry is NOT a tab — it
+              navigates to a separate route, so it stays a plain link-button with
+              aria-current="page" and is excluded from the roving keyboard set. */}
+          {(() => {
+            const inPageTabs = [
               { id: "overview", label: "Overview", icon: IconActivity },
               { id: "events", label: "Events & RSVPs", icon: IconEvents },
               { id: "service", label: "Service Hours", icon: IconServiceHours },
@@ -1151,29 +1159,72 @@ export default function BrothersDashboardClient({
               { id: "alumni", label: "Alumni Directory", icon: IconMembers },
               { id: "polls", label: "Chapter Polls", icon: IconPolls },
               { id: "profile", label: "My Profile", icon: IconProfile },
-              // Standalone pages (not tab-panels) route via router.push instead
-              // of flipping the active tab.
-              { id: "elections", label: "Officer Elections", icon: IconElections, href: "/portal/brothers/elections" },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
+            ];
+            const onTabKeyDown = (e: React.KeyboardEvent) => {
+              const idx = inPageTabs.findIndex((t) => t.id === activeTab);
+              // If the active tab isn't an in-page tab (shouldn't happen), start at 0.
+              const cur = idx < 0 ? 0 : idx;
+              let next = cur;
+              if (e.key === "ArrowRight") next = (cur + 1) % inPageTabs.length;
+              else if (e.key === "ArrowLeft") next = (cur - 1 + inPageTabs.length) % inPageTabs.length;
+              else if (e.key === "Home") next = 0;
+              else if (e.key === "End") next = inPageTabs.length - 1;
+              else return;
+              e.preventDefault();
+              const t = inPageTabs[next];
+              setActiveTab(t.id);
+              tabRefs.current[t.id]?.focus();
+            };
+            return (
+              <div
+                role="tablist"
+                aria-label="Dashboard sections"
+                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {inPageTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const active = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      ref={(el) => { tabRefs.current[tab.id] = el; }}
+                      type="button"
+                      role="tab"
+                      id={`dashtab-${tab.id}`}
+                      aria-selected={active}
+                      aria-controls="dashboard-tabpanel"
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setActiveTab(tab.id)}
+                      onKeyDown={onTabKeyDown}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                        active
+                          ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
+                          : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 transition-transform duration-300 ${active ? "" : "group-hover:scale-110"}`} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+                {/* Navigates to a standalone route — a link, not a tab. */}
                 <button
-                  key={tab.id}
-                  onClick={() => (tab.href ? router.push(tab.href) : setActiveTab(tab.id))}
-                  aria-current={active ? "page" : undefined}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
-                    active
-                      ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
-                      : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
-                  }`}
+                  type="button"
+                  onClick={() => router.push("/portal/brothers/elections")}
+                  aria-current={pathname === "/portal/brothers/elections" ? "page" : undefined}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
                 >
-                  <Icon className={`w-4 h-4 transition-transform duration-300 ${active ? "" : "group-hover:scale-110"}`} />
-                  {tab.label}
+                  <IconElections className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                  Officer Elections
                 </button>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })()}
+
+          {/* Single tab panel — content swaps by activeTab; labelled by the
+              active tab so SR users hear which section they're in. */}
+          <div role="tabpanel" id="dashboard-tabpanel" aria-labelledby={`dashtab-${activeTab}`}>
 
           {/* TAB CONTENT COMPONENT ROUTING */}
 
@@ -2679,6 +2730,7 @@ export default function BrothersDashboardClient({
               </div>
             </div>
           )}
+          </div>{/* /role="tabpanel" */}
 
         </div>
       </div>

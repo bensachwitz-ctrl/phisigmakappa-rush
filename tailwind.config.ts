@@ -116,7 +116,12 @@ const config: Config = {
           100: '#dbe7fe',  // hairline borders / dividers
           200: '#bcd2fb',  // soft borders / chips
           300: '#93b4f8',
-          400: '#5e8af0',
+          // 400 → brand-DARK ramp (AA fix): the old fixed #5e8af0 is only ~3.30:1
+          // on white and was used as informational text in ~20 portal spots, which
+          // fails WCAG AA (4.5:1). Bind it to --brand-primary-dark (the AA-floored
+          // dark token, ~6.7:1 default) so every text-maroon-400 clears AA while
+          // icon/placeholder/decorative uses simply pick up the brand-dark hue.
+          400: 'var(--brand-primary-dark, #1d4ed8)',
           // 500–700: the live brand band — follows the chapter's school color.
           500: 'var(--brand-primary, #2563eb)',
           600: 'var(--brand-primary, #2563eb)',

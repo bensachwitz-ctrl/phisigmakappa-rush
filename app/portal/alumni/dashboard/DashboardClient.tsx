@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Users, 
@@ -330,6 +330,8 @@ export default function DashboardClient({
   // stay /portal/* — only visible labels re-genders for sororities / pro orgs.
   const { fraternityName, terms } = useChapterIdentity();
   const [activeTab, setActiveTab] = useState("overview");
+  // Roving-tabindex focus targets for the WAI-ARIA dashboard tablist.
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Confirm dialog state (replaces window.confirm) — mirrors the admin
   // meetings-client pattern: a designed Radix dialog instead of a raw browser
@@ -785,8 +787,8 @@ export default function DashboardClient({
 
         {/* Inner Navigation Tabs */}
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {[
+          {(() => {
+            const tabs = [
               { id: "overview", label: "Overview", icon: IconActivity },
               { id: "profile", label: "My Profile", icon: IconProfile },
               { id: "pnms", label: "Hometown PNMs", icon: IconMap },
@@ -795,28 +797,60 @@ export default function DashboardClient({
               { id: "polls", label: "Surveys & Polls", icon: IconPolls },
               { id: "events", label: "Events Calendar", icon: IconEvents },
               { id: "donate", label: "Donate & Support", icon: IconGiving },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  aria-current={active ? "page" : undefined}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
-                    active
-                      ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
-                      : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+            ];
+            const onTabKeyDown = (e: React.KeyboardEvent) => {
+              const idx = tabs.findIndex((t) => t.id === activeTab);
+              const cur = idx < 0 ? 0 : idx;
+              let next = cur;
+              if (e.key === "ArrowRight") next = (cur + 1) % tabs.length;
+              else if (e.key === "ArrowLeft") next = (cur - 1 + tabs.length) % tabs.length;
+              else if (e.key === "Home") next = 0;
+              else if (e.key === "End") next = tabs.length - 1;
+              else return;
+              e.preventDefault();
+              const t = tabs[next];
+              setActiveTab(t.id);
+              tabRefs.current[t.id]?.focus();
+            };
+            return (
+              <div
+                role="tablist"
+                aria-label="Alumni dashboard sections"
+                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const active = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      ref={(el) => { tabRefs.current[tab.id] = el; }}
+                      type="button"
+                      role="tab"
+                      id={`alumtab-${tab.id}`}
+                      aria-selected={active}
+                      aria-controls="alumni-tabpanel"
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setActiveTab(tab.id)}
+                      onKeyDown={onTabKeyDown}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                        active
+                          ? "bg-gradient-to-b from-maroon-700 to-maroon-900 text-cream-50 shadow-[0_6px_16px_-6px_rgba(74,17,29,0.6)] ring-1 ring-maroon-900/20"
+                          : "text-maroon-700 hover:bg-white hover:text-maroon-900 hover:shadow-sm hover:-translate-y-px"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
-          {/* TAB CONTENTS */}
+          {/* TAB CONTENTS — single panel labelled by the active tab. */}
+          <div role="tabpanel" id="alumni-tabpanel" aria-labelledby={`alumtab-${activeTab}`}>
 
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
@@ -2030,6 +2064,7 @@ export default function DashboardClient({
               </div>
             </div>
           )}
+          </div>{/* /role="tabpanel" */}
         </div>
       </div>
 
