@@ -250,29 +250,48 @@ async function handleInvoiceEvent(
 
   let status: string;
   let trialEndsAt: Date | null = null;
-  let stripeSubscriptionId: string | undefined = subId || undefined;
+  // Only set the subscription-id mirror AFTER we have proven (via retrieve) that
+  // this subscription is the chapter's MAIN plan and not a rush_cycle. Until then
+  // it stays undefined so a retrieve failure can't stamp an unverified id onto
+  // the main plan columns.
+  let stripeSubscriptionId: string | undefined = undefined;
 
   if (subId) {
+    let sub: Stripe.Subscription;
     try {
-      const sub = await stripe.subscriptions.retrieve(subId);
-      // RUSH-CYCLE GUARD (retrieve-based) — a rush invoice resolved here must
-      // not mirror the rush subscription's state onto the main plan columns.
-      if (isRushCycle(sub.metadata)) {
-        logger.info("platform.billing.rush_invoice_event_skipped", {
-          route: ROUTE,
-          invoiceId: invoice.id,
-          kind,
-        });
-        return;
-      }
-      status = narrowStatus(sub.status);
-      trialEndsAt = trialEndDate(sub);
-      stripeSubscriptionId = sub.id;
-    } catch {
-      // Couldn't fetch — fall back to a conservative status from the event kind.
-      status = kind === "paid" ? "active" : "past_due";
+      sub = await stripe.subscriptions.retrieve(subId);
+    } catch (err) {
+      // CORRUPTION GUARD — we could NOT confirm whether this subscription is the
+      // chapter's main plan or a separate rush_cycle. Writing subId +
+      // event-derived status onto the MAIN plan columns now would corrupt a
+      // chapter whose invoice actually belonged to its rush subscription (the
+      // pre-rush-guard mirror bug). Instead, mutate NOTHING and re-raise so the
+      // POST handler returns 500 → Stripe retries the delivery, by which point
+      // the retrieve typically succeeds and the rush guard can run.
+      errorSink(err, {
+        route: ROUTE,
+        invoiceId: invoice.id ?? undefined,
+        kind,
+        outcome: "subscription_retrieve_failed_mirror_skipped",
+      });
+      throw err;
     }
+    // RUSH-CYCLE GUARD (retrieve-based) — a rush invoice resolved here must
+    // not mirror the rush subscription's state onto the main plan columns.
+    if (isRushCycle(sub.metadata)) {
+      logger.info("platform.billing.rush_invoice_event_skipped", {
+        route: ROUTE,
+        invoiceId: invoice.id,
+        kind,
+      });
+      return;
+    }
+    status = narrowStatus(sub.status);
+    trialEndsAt = trialEndDate(sub);
+    stripeSubscriptionId = sub.id;
   } else {
+    // No subscription on the invoice (e.g. a one-off charge) — safe to mirror a
+    // conservative status from the event kind without touching subscription id.
     status = kind === "paid" ? "active" : "past_due";
   }
 

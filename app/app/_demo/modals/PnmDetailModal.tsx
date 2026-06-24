@@ -53,20 +53,20 @@ export function renderPnmDetail(ctx: DemoContext) {
                       {/* Details specs */}
                       <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Hometown</span>
+                          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Hometown</span>
                           <p className="font-semibold text-slate-800 mt-0.5">{selectedPnm.hometown}</p>
                         </div>
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Major & School Year</span>
+                          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Major & School Year</span>
                           <p className="font-semibold text-slate-800 mt-0.5">{selectedPnm.year} • {selectedPnm.major}</p>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">High School</span>
+                          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">High School</span>
                           <p className="font-semibold text-slate-800 mt-0.5">{selectedPnm.highSchoolInfo || "Not specified"}</p>
                         </div>
                         {selectedPnm.backgroundInfo && (
                           <div className="col-span-2 border-t border-slate-200/60 pt-2">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Vibe & Background</span>
+                            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Vibe & Background</span>
                             <p className="text-slate-600 leading-relaxed mt-1">{selectedPnm.backgroundInfo}</p>
                           </div>
                         )}
@@ -74,7 +74,7 @@ export function renderPnmDetail(ctx: DemoContext) {
 
                       {/* Interactive Voting Board */}
                       <div className="space-y-2 pt-2">
-                        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">Submit Your Rush Vote</span>
+                        <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">Submit Your Rush Vote</span>
                         
                         <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 justify-between gap-1">
                           {([-2, -1, 0, 1, 2] as const).map((score) => {
@@ -97,13 +97,13 @@ export function renderPnmDetail(ctx: DemoContext) {
                             );
                           })}
                         </div>
-                        <p className="text-[11px] text-slate-400 text-center">Votes count towards running averages: {selectedPnm.votesAverage} ({selectedPnm.votesCount} ballots cast)</p>
+                        <p className="text-[11px] text-slate-500 text-center">Votes count towards running averages: {selectedPnm.votesAverage} ({selectedPnm.votesCount} ballots cast)</p>
                       </div>
 
                       {/* Dynamic door scanner check-in */}
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl mt-1">
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">Attendance Log</span>
+                          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">Attendance Log</span>
                           <p className="text-xs font-bold text-slate-800 mt-0.5">Checked in at {selectedPnm.attendanceCount} events</p>
                         </div>
                         <button
@@ -117,7 +117,7 @@ export function renderPnmDetail(ctx: DemoContext) {
 
                       {/* Impression feed */}
                       <div className="space-y-2.5 pt-2">
-                        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">Brother Vibe Impressions Note</span>
+                        <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">Brother Vibe Impressions Note</span>
                         
                         {/* Feed */}
                         <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
@@ -134,7 +134,7 @@ export function renderPnmDetail(ctx: DemoContext) {
                               </div>
                             ))
                           ) : (
-                            <div className="text-center py-4 text-slate-400">No notes recorded yet.</div>
+                            <div className="text-center py-4 text-slate-500">No notes recorded yet.</div>
                           )}
                         </div>
 

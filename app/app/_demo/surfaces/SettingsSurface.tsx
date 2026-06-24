@@ -118,7 +118,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                             <div className="space-y-3 max-h-[180px] overflow-y-auto pr-1">
                               {/* Actives */}
                               <div className="space-y-1.5">
-                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Actives ({dashboardData?.roster?.actives?.length || 0})</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Actives ({dashboardData?.roster?.actives?.length || 0})</span>
                                 {(dashboardData?.roster?.actives || []).map((b: any) => (
                                   <div key={b.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">
@@ -149,7 +149,7 @@ export function renderSettingsTab(ctx: DemoContext) {
                               
                               {/* Alumni */}
                               <div className="space-y-1.5 pt-1">
-                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Alumni ({dashboardData?.roster?.alumni?.length || 0})</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Alumni ({dashboardData?.roster?.alumni?.length || 0})</span>
                                 {(dashboardData?.roster?.alumni || []).map((al: any) => (
                                   <div key={al.id} className="p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 text-[12px]">
                                     <div className="min-w-0">

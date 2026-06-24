@@ -54,7 +54,7 @@ THEMED TO YOUR CHAPTER
 Greek Stack is multitenant: when you sign in, the entire app re-skins to your organization's letters, colors, and brand. It's your chapter's system, not a generic template.
 
 YOUR ACCOUNT, YOUR CONTROL
-Sign in once and unlock with Face ID or Touch ID. You can delete your account and member data at any time from the Profile screen. Your data is scoped to your chapter.
+You can delete your account and member data at any time from the Profile screen. Your data is scoped to your chapter.
 
 Greek Stack pairs with the Greek Stack web platform (greekstack.com). Your chapter's admin sets up the chapter site; members and alumni just sign in here.
 
@@ -90,11 +90,14 @@ https://greekstack.com/privacy
 ## Pricing & availability
 - **App price:** Free (the chapter pays for the Greek Stack platform on the web;
   the app itself is a free companion).
-- **In-app purchases:** None in the app. Dues/payments are handled via the chapter's
-  Stripe (web checkout / external), not Apple IAP — this is a "reader"/companion to a
-  paid web service, which is the correct model (no IAP required for chapter dues, as
-  they are real-world memberships, not digital content consumed in-app). Confirm with
-  current App Review guidelines 3.1.3(e) "Goods and Services Outside the App".
+- **In-app purchases:** None. Chapter dues and alumni donations are processed through
+  the chapter's own Stripe (the checkout opens in the system browser), not Apple IAP.
+  Apple IAP is NOT required and is intentionally not added: chapter dues are payment
+  for a **real-world membership** in the fraternity/sorority — a good/service used
+  outside the app — which is expressly permitted to be sold via an external mechanism
+  under **App Review Guideline 3.1.3(e) "Goods and Services Outside the App."** (IAP
+  applies only to digital content/services consumed within the app; chapter
+  membership is not that.) This is a deliberate, documented compliance position.
 - **Availability:** United States (expand later as chapters onboard).
 
 ## Age rating
@@ -108,7 +111,7 @@ truthfully (moderation = chapter officers; content is not public).
 Greek Stack is a companion app for the Greek Stack web platform. The member
 experience is BUNDLED in the binary (it is not a webview wrapper pointed at a
 website); it talks to each chapter's backend over our HTTPS APIs and adds native
-features (Face/Touch ID unlock, haptics, deep links, offline cache).
+features (haptics, universal/deep links, offline cache).
 
 NO-LOGIN DEMO for review (no account needed):
 On the first screen, tap "See the live demo — no sign in." The app loads a fully

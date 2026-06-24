@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrotherId } from "@/lib/auth";
-import { guardOfficer } from "@/lib/permissions";
+import { guardOfficer, withAdminArea } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -23,14 +23,19 @@ const Schema = z.object({
   channels: z.string().regex(ChannelsRegex).default("inapp"),
 });
 
-export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
+// GET returns EVERY announcement row — including EBOARD-audience and
+// draft/scheduled entries — so it must use the officer/admin floor, not
+// isAdminAuthed() alone (which any valid tenant cookie passes, including a plain
+// member's). withAdminArea() does the isAdminAuthed() 401 pre-check AND the
+// guardOfficerOrAdmin() 403 floor (the documented coarse admit decision from the
+// /admin layout) before this handler runs, so a member cookie now gets 403.
+export const GET = withAdminArea(async () => {
   const announcements = await prisma.announcement.findMany({
     orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
     include: { author: { select: { id: true, name: true } } },
   });
   return NextResponse.json({ announcements });
-}
+});
 
 export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });

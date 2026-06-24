@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed } from "@/lib/auth";
+import { withOfficer } from "@/lib/permissions";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 import { getResendConfig } from "@/lib/messaging-config";
@@ -65,11 +65,13 @@ function esc2(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-export async function POST(req: Request) {
-  if (!isAdminAuthed()) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
-
+// Sending a branded rush blast costs Resend credits and emails every selected
+// PNM, so this is gated like /api/admin/enrich: the withOfficer wrapper does the
+// isAdminAuthed() 401 pre-check AND the officer/admin floor
+// (guardOfficer("rushPipeline","write")) before the handler runs. A plain member
+// cookie (adminFlag=0, zero assignments) — valid for the tenant but not an
+// officer — is now 403'd instead of being able to fire the blast.
+export const POST = withOfficer("rushPipeline", "write", async (req: Request) => {
   let payload: z.infer<typeof PayloadSchema>;
   try {
     payload = PayloadSchema.parse(await req.json());
@@ -161,4 +163,4 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ ok: true, sent, failed, results });
-}
+});

@@ -127,7 +127,7 @@ export function renderEventsTab(ctx: DemoContext) {
                             );
                           })
                         ) : (
-                          <div className="p-8 bg-white border border-slate-100 rounded-2xl text-center text-xs text-slate-400 shadow-sm">
+                          <div className="p-8 bg-white border border-slate-100 rounded-2xl text-center text-xs text-slate-500 shadow-sm">
                             No upcoming events on the schedule.
                           </div>
                         )}

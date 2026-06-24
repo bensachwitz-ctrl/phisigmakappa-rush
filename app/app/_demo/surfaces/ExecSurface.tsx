@@ -292,7 +292,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                 )}
               </div>
               <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-slate-600">{a.body}</p>
-              <p className="mt-2 text-[11px] font-semibold text-slate-400">{a.authorName} · {a.authorRole}</p>
+              <p className="mt-2 text-[11px] font-semibold text-slate-500">{a.authorName} · {a.authorRole}</p>
             </div>
           ))}
         </div>
@@ -335,7 +335,7 @@ export function renderExec(ctx: DemoContext, tab: "roster" | "dues" | "rush" | "
                 <span className="block truncate text-[12px] text-slate-500">{t.sub}</span>
               </span>
             </span>
-            <IconArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+            <IconArrowRight className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
           </button>
         ))}
       </div>

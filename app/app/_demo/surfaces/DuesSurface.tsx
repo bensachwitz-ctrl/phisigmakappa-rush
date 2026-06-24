@@ -39,7 +39,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   <h2 className="text-[22px] font-black leading-tight text-slate-900">
                                     ${((dashboardData?.dues?.config?.amountCents || 0) / 100).toLocaleString([], { minimumFractionDigits: 2 })}
                                   </h2>
-                                  <span className="text-[11px] text-slate-400 block leading-none">
+                                  <span className="text-[11px] text-slate-500 block leading-none">
                                     {dashboardData?.dues?.config?.year || "Active semester"}
                                   </span>
                                 </div>
@@ -88,7 +88,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   <div key={p.id} className="p-3 bg-white rounded-xl border border-slate-100 flex items-center justify-between text-xs shadow-sm">
                                     <div>
                                       <p className="font-bold text-slate-900">Dues Assessment: {p.year}</p>
-                                      <span className="text-[11px] text-slate-400">
+                                      <span className="text-[11px] text-slate-500">
                                         Channel: {p.method} • {new Date(p.createdAt).toLocaleDateString()}
                                       </span>
                                     </div>
@@ -103,7 +103,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   </div>
                                 ))
                               ) : (
-                                <div className="p-6 bg-white border border-slate-100 rounded-xl text-center text-xs text-slate-400 shadow-sm">
+                                <div className="p-6 bg-white border border-slate-100 rounded-xl text-center text-xs text-slate-500 shadow-sm">
                                   No transaction logs found.
                                 </div>
                               )}
@@ -150,7 +150,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   <div key={d.id} className="p-3 bg-white rounded-xl border border-slate-100 flex items-center justify-between text-xs shadow-sm">
                                     <div>
                                       <p className="font-bold text-slate-900">{d.campaign || "General Fund"}</p>
-                                      <span className="text-[11px] text-slate-400">
+                                      <span className="text-[11px] text-slate-500">
                                         {new Date(d.recordedAt).toLocaleDateString()}
                                       </span>
                                     </div>
@@ -160,7 +160,7 @@ export function renderDuesTab(ctx: DemoContext) {
                                   </div>
                                 ))
                               ) : (
-                                <div className="p-6 bg-white border border-slate-100 rounded-xl text-center text-xs text-slate-400 shadow-sm">
+                                <div className="p-6 bg-white border border-slate-100 rounded-xl text-center text-xs text-slate-500 shadow-sm">
                                   No donation history recorded.
                                 </div>
                               )}

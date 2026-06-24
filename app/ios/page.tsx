@@ -5,12 +5,12 @@ import { getSubdomain } from "@/lib/prisma";
 import { resolveTestFlightUrl } from "@/lib/ios-app";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { 
-  Smartphone, 
-  Download, 
-  ArrowLeft, 
-  Bell, 
-  Fingerprint, 
-  WifiOff, 
+  Smartphone,
+  Download,
+  ArrowLeft,
+  Bell,
+  Link2,
+  WifiOff,
   CheckCircle2, 
   QrCode,
   ShieldCheck,
@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHost();
   const title = "iOS App — Greekstack";
   const description =
-    "Download the companion Greekstack iOS app for push notifications, biometrics, and offline access.";
+    "Download the companion Greekstack iOS app for fast native access, deep links, and offline-ready chapter data.";
   return {
     title,
     description,
@@ -132,9 +132,13 @@ export default async function IosPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 flex justify-center">
-              {/* iPhone Visual Mockup */}
-              <div className="relative w-64 h-[480px] rounded-[42px] border-4 border-slate-700 bg-slate-950 p-2.5 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] ring-1 ring-white/10 flex flex-col justify-between overflow-hidden">
+            <div className="lg:col-span-5 flex flex-col items-center justify-center gap-3">
+              {/* iPhone Visual Mockup — a decorative illustration of the app, not
+                  live data. Hidden from assistive tech and captioned below so the
+                  sample figures never read as a real member's stats. */}
+              <div
+                aria-hidden="true"
+                className="relative w-64 h-[480px] rounded-[42px] border-4 border-slate-700 bg-slate-950 p-2.5 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] ring-1 ring-white/10 flex flex-col justify-between overflow-hidden">
                 {/* Dynamic Island */}
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-30 flex items-center justify-center">
                   <div className="w-2.5 h-2.5 bg-slate-900 rounded-full absolute right-3" />
@@ -207,6 +211,7 @@ export default async function IosPage() {
                   </div>
                 </div>
               </div>
+              <p className="text-[11px] text-slate-400">Illustration — not live data.</p>
             </div>
           </div>
         </div>
@@ -220,21 +225,16 @@ export default async function IosPage() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-3">
-            <FeatureCard
-              icon={<Bell className="h-6 w-6 text-blue-600" />}
-              title="Push Notifications"
-              description="Never miss a chapter update, calendar changes, or rush announcement. Push notifications route you instantly to target pages."
-            />
-            <FeatureCard
-              icon={<Fingerprint className="h-6 w-6 text-emerald-600" />}
-              title="Biometric Security"
-              description="Sign in securely with Face ID or Touch ID. Keep your private chapter roster and dues ledger locked behind secure local hardware."
-            />
+          <div className="grid gap-6 sm:grid-cols-2">
             <FeatureCard
               icon={<WifiOff className="h-6 w-6 text-amber-600" />}
               title="Offline Resilience"
               description="Launches instantly and displays cached data even in basement chapter rooms, campus library basements, or areas with poor cellular service."
+            />
+            <FeatureCard
+              icon={<Link2 className="h-6 w-6 text-blue-600" />}
+              title="Native Speed & Deep Links"
+              description="Tactile haptics on every action, instant launch, and universal links that open the right page in the app — a faster, more polished feel than the mobile web."
             />
           </div>
         </section>
@@ -274,8 +274,8 @@ export default async function IosPage() {
             />
             <StepItem
               number="4"
-              title="Enable Push & Biometrics"
-              description="When prompted, authorize Push Notifications. Go to Settings in the app and toggle Face ID / Touch ID to enable biometric unlock convenience."
+              title="Make it yours"
+              description="That's it — you're in. The app responds with native haptics, opens shared links straight to the right page, and keeps your chapter's data cached so it loads instantly even when you're offline."
             />
           </div>
         </section>

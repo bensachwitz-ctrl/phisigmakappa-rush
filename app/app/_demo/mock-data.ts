@@ -5,6 +5,8 @@
 // MobileAppClient.tsx — no behavior change; this is the single source of mock
 // data the orchestrator and its surfaces read from.
 
+import { ensureAccessiblePrimary } from "@/lib/brand-theme";
+
 export interface Tenant {
   id: string;
   subdomain: string;
@@ -38,7 +40,13 @@ export interface FraternityBrand {
   crestUrl?: string;
 }
 
-export const FRATERNITY_BRANDS: FraternityBrand[] = [
+// Raw preset palette as authored. The exported FRATERNITY_BRANDS below runs each
+// preset's primaryColor through the SAME WCAG-AA contrast floor the live theme
+// uses (ensureAccessiblePrimary), because every demo surface paints text-white
+// on `style={{ backgroundColor: brand.primaryColor }}`. A too-light preset (e.g.
+// Beta's #1A82E2 at 3.94:1) would fail AA under white; flooring at the source
+// means all ~35 consumers inherit a safe fill with zero per-site changes.
+const RAW_FRATERNITY_BRANDS: FraternityBrand[] = [
   {
     id: "phi-sig",
     name: "Phi Sigma Kappa",
@@ -112,6 +120,20 @@ export const FRATERNITY_BRANDS: FraternityBrand[] = [
     crestUrl: "/brand/crests/beta.svg"
   }
 ];
+
+/** AA-floor a brand's primaryColor (the fill behind white text on every demo
+ *  surface) and re-derive its hover tone from the floored value. Idempotent for
+ *  colors that already pass 4.5:1 vs white. Hue is preserved by
+ *  ensureAccessiblePrimary, so a light-but-on-brand pick just gets darker. */
+function aaFloorBrand(b: FraternityBrand): FraternityBrand {
+  const primaryColor = ensureAccessiblePrimary(b.primaryColor);
+  if (primaryColor === b.primaryColor) return b;
+  return { ...b, primaryColor, primaryHover: darkenHex(primaryColor, 0.16) };
+}
+
+/** Public preset list — every primaryColor is guaranteed AA (>=4.5:1) vs white
+ *  so white text painted on it (buttons, avatars, badges) is always legible. */
+export const FRATERNITY_BRANDS: FraternityBrand[] = RAW_FRATERNITY_BRANDS.map(aaFloorBrand);
 
 // ── Brand color utilities ──────────────────────────────────────────────────
 // Shared helpers so the demo can build a fully-themed brand from arbitrary
@@ -290,7 +312,12 @@ export function makeCustomBrand(input: {
   primaryColor: string;
   secondaryColor?: string;
 }): FraternityBrand {
-  const primary = /^#([0-9a-fA-F]{6})$/.test(input.primaryColor.trim()) ? input.primaryColor.trim() : "#6366F1";
+  const rawPrimary = /^#([0-9a-fA-F]{6})$/.test(input.primaryColor.trim()) ? input.primaryColor.trim() : "#6366F1";
+  // WCAG-AA contrast floor: every demo surface paints text-white on this color,
+  // so a light founder pick (e.g. #fbbf24 amber at ~1.7:1) is auto-darkened —
+  // hue preserved — until it clears 4.5:1 vs white. Already-dark picks (and the
+  // #6366F1 fallback after flooring) pass through legible.
+  const primary = ensureAccessiblePrimary(rawPrimary);
   return {
     id: "custom",
     name: input.name.trim() || "Your Chapter",

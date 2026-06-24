@@ -146,7 +146,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               moment. Tapping any one re-skins the WHOLE app to that brand's
               letters + colors instantly. */}
           <div className="mb-3 shrink-0">
-            <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Tap your organization
             </span>
             <div className="grid grid-cols-3 gap-2">
@@ -185,13 +185,13 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
           </div>
 
           <div className="relative mb-2.5 shrink-0">
-            <IconSearch className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <IconSearch className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               placeholder="Or search any chapter or school..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-500"
             />
           </div>
 
@@ -235,12 +235,12 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
                         </span>
                       </div>
                     </div>
-                    <IconChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                    <IconChevronRight className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
                   </button>
                 );
               })
             ) : (
-              <div className="py-12 text-center text-slate-400">
+              <div className="py-12 text-center text-slate-500">
                 <IconAlert className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                 <p className="text-[13px]">No chapters match. Try “Create yours”.</p>
               </div>
@@ -295,12 +295,12 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             <div className="flex items-center gap-3">
               <div
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[19px] font-extrabold text-white shadow-md"
-                style={{ background: `linear-gradient(140deg, ${customPrimary}, ${customSecondary})` }}
+                style={{ background: `linear-gradient(140deg, ${previewBrand.primaryColor}, ${previewBrand.secondaryColor})` }}
               >
                 {previewLetters}
               </div>
               <div className="min-w-0">
-                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: customPrimary }}>
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: previewBrand.primaryColor }}>
                   <BrandGlyphIcon name="branding" className="h-3 w-3" /> Tailored for you
                 </span>
                 <h3 className="mt-0.5 truncate text-[16px] font-extrabold text-slate-900">{customName.trim() || "Your Chapter"}</h3>
@@ -318,7 +318,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="e.g. Kappa Delta, Beta Chapter"
-              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-500"
             />
           </Field>
 
@@ -327,7 +327,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               value={customLetters}
               onChange={(e) => setCustomLetters(e.target.value)}
               placeholder="Kappa Delta"
-              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-500"
             />
             <div className="mt-2 flex flex-wrap gap-1.5">
               {["Φ", "Σ", "Κ", "Α", "Δ", "Θ", "Π", "Ω", "Χ", "Λ"].map((g) => (
@@ -349,7 +349,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
               value={customSchool}
               onChange={(e) => setCustomSchool(e.target.value)}
               placeholder="University of South Carolina"
-              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400"
+              className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-500"
             />
           </Field>
 
@@ -360,7 +360,7 @@ export function renderChapterChooser(ctx: DemoContext, opts?: { overlay?: boolea
             onClick={applyCustomChapter}
             aria-label="Preview this chapter in the demo (does not sign you in)"
             className="press flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900 motion-reduce:transition-none motion-reduce:active:scale-100"
-            style={{ background: `linear-gradient(135deg, ${customPrimary}, ${customSecondary})` }}
+            style={{ background: `linear-gradient(135deg, ${previewBrand.primaryColor}, ${previewBrand.secondaryColor})` }}
           >
             <IconWhiteLabel className="h-4 w-4" aria-hidden="true" /> Preview this chapter{" "}
             <IconArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -385,7 +385,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</label>
-        {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
+        {hint && <span className="text-[11px] text-slate-500">{hint}</span>}
       </div>
       {children}
     </div>
@@ -420,7 +420,7 @@ function ColorField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#512888"
-          className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400"
+          className="brand-focus w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 font-mono text-[13px] text-slate-900 outline-none transition placeholder:text-slate-500"
         />
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">

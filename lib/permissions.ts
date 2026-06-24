@@ -14,6 +14,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
 import {
   DomainKey,
   OfficerPermissions,
@@ -166,4 +167,59 @@ export async function guardOfficerOrAdmin(): Promise<NextResponse | null> {
     );
   }
   return null;
+}
+
+// ── Shared route-handler wrappers ────────────────────────────────────────────
+//
+// The two officer-floor highs (send-email + announcements GET both gating on
+// isAdminAuthed() alone — true for ANY tenant cookie, including a plain member's)
+// came from copy-pasting a handler and forgetting to add the second-line floor.
+// These wrappers perform the whole floor ONCE so a new handler can't forget it:
+//
+//   1. isAdminAuthed() 401 pre-check (valid tenant-bound cookie at all), then
+//   2. the officer/admin (or per-domain) 403 floor.
+//
+// Usage:
+//   export const GET  = withAdminArea(async (req) => { … });             // coarse
+//   export const POST = withOfficer("announcements", "write", async (req) => …); // fine
+//
+// The wrapped handler runs only after the floor passes; a denial short-circuits
+// with the correct 401/403 JSON the bare-handler versions produce.
+
+type RouteHandler = (req: Request) => Promise<Response> | Response;
+
+/**
+ * Coarse admin-area floor (isAdminAuthed 401 → guardOfficerOrAdmin 403) applied
+ * before the handler. Mirrors the app/admin/layout.tsx boundary for JSON routes
+ * that expose chapter-wide PII / internal info but have no finer per-domain gate.
+ */
+export function withAdminArea(handler: RouteHandler): RouteHandler {
+  return async (req: Request) => {
+    if (!isAdminAuthed()) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+    const denied = await guardOfficerOrAdmin();
+    if (denied) return denied;
+    return handler(req);
+  };
+}
+
+/**
+ * Fine-grained officer floor (isAdminAuthed 401 → guardOfficer(domain,action)
+ * 403) applied before the handler. Admins pass via SUPER_ADMIN_PERMISSIONS; an
+ * officer holding the domain's access passes too; a plain member is 403'd.
+ */
+export function withOfficer(
+  domain: DomainKey,
+  action: "read" | "write",
+  handler: RouteHandler,
+): RouteHandler {
+  return async (req: Request) => {
+    if (!isAdminAuthed()) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const denied = await guardOfficer(domain, action);
+    if (denied) return denied;
+    return handler(req);
+  };
 }

@@ -68,7 +68,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           it (the surfaces below are either wired to real data or
                           gated to the demo). */}
                       {isDemo && (
-                        <p className="text-[11px] text-slate-400 uppercase tracking-wider">Live interactive demo</p>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-wider">Live interactive demo</p>
                       )}
                     </div>
                   </div>
@@ -103,7 +103,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           </div>
                           <div className="text-right">
                             <span className="text-base font-black text-slate-900">{dashboardData.election.ballotsCast}/{dashboardData.election.totalEligible}</span>
-                            <p className="text-[11px] text-slate-400 uppercase tracking-wider">Ballots cast</p>
+                            <p className="text-[11px] text-slate-500 uppercase tracking-wider">Ballots cast</p>
                           </div>
                         </div>
 
@@ -136,7 +136,7 @@ export function renderSpotlight(ctx: DemoContext) {
                                     )}
                                     <div className="relative flex items-center justify-between gap-2">
                                       <div className="min-w-0">
-                                        <p className="text-[11px] font-bold text-slate-900">{c.name} <span className="text-[11px] font-medium text-slate-400">· {c.year}</span></p>
+                                        <p className="text-[11px] font-bold text-slate-900">{c.name} <span className="text-[11px] font-medium text-slate-500">· {c.year}</span></p>
                                         <p className="text-[11px] text-slate-500 truncate">{c.blurb}</p>
                                       </div>
                                       {voted ? (
@@ -148,7 +148,7 @@ export function renderSpotlight(ctx: DemoContext) {
                                   </button>
                                 );
                               })}
-                              {!voted && <p className="text-[11px] text-slate-400 text-center pt-0.5">Your ballot is anonymous. Tap a candidate to cast it.</p>}
+                              {!voted && <p className="text-[11px] text-slate-500 text-center pt-0.5">Your ballot is anonymous. Tap a candidate to cast it.</p>}
                             </div>
                           );
                         })}
@@ -160,7 +160,7 @@ export function renderSpotlight(ctx: DemoContext) {
                         message instead of a blank, data-less body. */}
                     {spotlight === "elections" && !dashboardData?.election && (
                       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center text-center gap-2">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-500">
                           <IconBallot className="w-6 h-6" />
                         </div>
                         <h4 className="text-sm font-bold text-slate-900">No open elections</h4>
@@ -181,7 +181,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           ].map((s) => (
                             <div key={s.label} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-2.5 text-center">
                               <p className={`text-[13px] font-black ${s.color}`}>${(s.cents / 100).toLocaleString()}</p>
-                              <p className="text-[11px] text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</p>
+                              <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">{s.label}</p>
                             </div>
                           ))}
                         </div>
@@ -215,7 +215,7 @@ export function renderSpotlight(ctx: DemoContext) {
                             <div key={t.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
                               <div className="min-w-0">
                                 <p className="text-[12px] font-semibold text-slate-800 truncate">{t.label}</p>
-                                <p className="text-[11px] text-slate-400">{new Date(t.date).toLocaleDateString([], { month: "short", day: "numeric" })}</p>
+                                <p className="text-[11px] text-slate-500">{new Date(t.date).toLocaleDateString([], { month: "short", day: "numeric" })}</p>
                               </div>
                               <span className={`text-[11px] font-bold shrink-0 ${t.kind === "in" ? "text-emerald-600" : "text-slate-700"}`}>
                                 {t.kind === "in" ? "+" : "−"}${Math.abs(t.amountCents / 100).toLocaleString()}
@@ -264,7 +264,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-3.5 space-y-1.5">
                             <h5 className="text-[12px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5"><IconCheck className="w-3.5 h-3.5" /> Just checked in ({qrCheckedIn.length})</h5>
                             {qrCheckedIn.map((n, i) => (
-                              <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[11px] text-slate-400">→ added to rush board</span></p>
+                              <p key={i} className="text-[11px] text-slate-700 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {n} <span className="text-[11px] text-slate-500">→ added to rush board</span></p>
                             ))}
                           </div>
                         )}
@@ -294,7 +294,7 @@ export function renderSpotlight(ctx: DemoContext) {
                               <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: selectedBrand.primaryColor }} />
                               </div>
-                              <p className="text-[11px] text-slate-400 mt-1.5">{g.donorCount} donors</p>
+                              <p className="text-[11px] text-slate-500 mt-1.5">{g.donorCount} donors</p>
                             </div>
                           </div>
 
@@ -341,7 +341,7 @@ export function renderSpotlight(ctx: DemoContext) {
                           </div>
                           <div>
                             <h4 className="text-sm font-bold text-slate-900">{selectedBrand.name}</h4>
-                            <p className="text-[11px] text-slate-400 uppercase tracking-wider mt-0.5">{selectedTenant?.subdomain || "yourchapter"}.greekstack.app</p>
+                            <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">{selectedTenant?.subdomain || "yourchapter"}.greekstack.app</p>
                           </div>
                           <div className="flex items-center justify-center gap-1.5">
                             <span className="w-5 h-5 rounded-full border border-slate-200" style={{ backgroundColor: selectedBrand.primaryColor }} />

@@ -1115,7 +1115,7 @@ export default function BrothersDashboardClient({
                     </span>
                   </h4>
                   <p className="text-xs text-cream-200/90 max-w-2xl mt-1 leading-normal">
-                    Get real-time push notifications for events and announcements, unlock instantly with Face ID / Touch ID, and enjoy full offline access to your chapter roster and calendar.
+                    Native speed with tactile haptics, universal links that open straight to the right page, and full offline access to your chapter roster and calendar.
                   </p>
                 </div>
               </div>

@@ -120,7 +120,7 @@ export function renderPostJobModal(ctx: DemoContext) {
                         </div>
 
                         <div className="border-t border-slate-100 pt-3 space-y-3">
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Contact & Referral Info</span>
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Contact & Referral Info</span>
                           
                           <div className="grid grid-cols-2 gap-3">
                             <div>

@@ -31,7 +31,7 @@ is automated by `codemagic.yaml` (see `IOS-RELEASE.md`).
   - [ ] Dues → "Pay online with Stripe" opens Stripe Checkout in the browser.
   - [ ] Profile → "Delete account" → confirm works (test with a throwaway
         member account; it signs out and returns to the picker).
-  - [ ] Haptics fire on tab switches / actions; Face ID prompt (if enabled).
+  - [ ] Haptics fire on tab switches / actions; universal links open the right page.
 
 ## 2. Listing (App Store Connect → Version 1.0 → Prepare for Submission)
 - [ ] Name, subtitle, promo text, description, keywords from `LISTING.md`.
@@ -87,8 +87,8 @@ Answer truthfully. Greek Stack collects, scoped to the member's chapter:
 ## Common rejection avoiders (Greek Stack-specific)
 - **4.2 minimum functionality / "just a website"** — mitigated: the member UI is
   BUNDLED in the binary (`webDir: mobile-shell/`, no `server.url`), not a webview
-  wrapper pointed at the site, and adds native value (Face/Touch ID, haptics,
-  deep links, offline cache — `lib/native-bridge.ts`). The review note explains this.
+  wrapper pointed at the site, and adds native value (haptics, universal/deep
+  links, offline cache — `lib/native-bridge.ts`). The review note explains this.
 - **5.1.1 privacy / sign-in** — the no-login demo ("See the live demo — no sign in")
   lets the reviewer exercise the whole app without an account; sign-in is only for a
   member's real chapter.
@@ -98,6 +98,8 @@ Answer truthfully. Greek Stack collects, scoped to the member's chapter:
 - **2.3 / 2.3.1 accurate metadata** — the listing, screenshots, and review note all
   describe the SHIPPED bundled binary's real surfaces (no over-claimed features). The
   app declares no camera/photo permission because it uses neither.
-- **3.1.1 IAP** — chapter dues are real-world memberships processed via Stripe,
-  not in-app digital goods → no Apple IAP required. Keep dues checkout external.
+- **3.1.3(e) Goods & Services Outside the App** — chapter dues (and alumni
+  donations) are real-world fraternity/sorority memberships processed via the
+  chapter's Stripe in the system browser, not in-app digital goods → Apple IAP is
+  not required and is intentionally not added. Keep dues/donation checkout external.
 - **Dead URLs** — make sure `/support` and `/privacy` resolve before submitting.

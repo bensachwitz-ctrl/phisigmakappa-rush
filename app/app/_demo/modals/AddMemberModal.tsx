@@ -37,14 +37,14 @@ export function renderAddMemberModal(ctx: DemoContext) {
                     <IconCrown className="w-4 h-4 text-amber-500" />
                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Add New Member</h4>
                   </div>
-                  <button onClick={() => setShowAddMemberModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
+                  <button onClick={() => setShowAddMemberModal(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
                     <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 
                 <form onSubmit={handleAddMobileMember} className="space-y-3">
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Full Name</label>
+                    <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Full Name</label>
                     <input
                       type="text"
                       required
@@ -56,7 +56,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
                   
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
+                    <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       required
@@ -68,7 +68,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
+                    <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Phone Number</label>
                     <input
                       type="text"
                       value={newMemberPhone}
@@ -79,7 +79,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Chapter Roster Role</label>
+                    <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Chapter Roster Role</label>
                     <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                       <button
                         type="button"
@@ -104,7 +104,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
 
                   {newMemberRole === "actives" ? (
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Officer Position (Optional)</label>
+                      <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Officer Position (Optional)</label>
                       <input
                         type="text"
                         value={newMemberPosition}
@@ -115,7 +115,7 @@ export function renderAddMemberModal(ctx: DemoContext) {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Graduation Year</label>
+                      <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Graduation Year</label>
                       <input
                         type="number"
                         value={newMemberGradYear}

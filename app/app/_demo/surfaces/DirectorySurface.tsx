@@ -61,7 +61,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                         {/* Search field */}
                         <div className="relative shrink-0">
-                          <IconSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <IconSearch className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                           <input
                             type="text"
                             placeholder={
@@ -96,7 +96,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                               
                               if (list.length === 0) {
                                 return (
-                                  <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 shadow-sm">
+                                  <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-500 shadow-sm">
                                     No brothers found matching query.
                                   </div>
                                 );
@@ -157,7 +157,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                               if (list.length === 0) {
                                 return (
-                                  <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 shadow-sm">
+                                  <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-500 shadow-sm">
                                     No matching alumni found.
                                   </div>
                                 );
@@ -203,7 +203,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                                   {al.jobTitle && (
                                     <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-xl text-[12px] text-slate-700">
-                                      <IconBriefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <IconBriefcase className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                       <span className="font-semibold text-slate-800 truncate max-w-[240px]">
                                         {al.jobTitle} at {al.employer || "Private Company"}
                                       </span>
@@ -239,7 +239,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
 
                                 if (list.length === 0) {
                                   return (
-                                    <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-400 shadow-sm">
+                                    <div className="text-center py-12 bg-white border border-slate-100 rounded-2xl text-xs text-slate-500 shadow-sm">
                                       No openings listed.
                                     </div>
                                   );
@@ -256,7 +256,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                       <div className="flex items-start justify-between gap-3">
                                         <div>
                                           <div className="flex items-center gap-1.5">
-                                            <IconBuilding className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <IconBuilding className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                             <span className="text-xs font-bold text-slate-900 leading-tight">{j.title}</span>
                                           </div>
                                           <span className="text-[12px] text-slate-500 mt-1 block">
@@ -308,7 +308,7 @@ export function renderDirectoryTab(ctx: DemoContext) {
                                         </div>
                                       )}
 
-                                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-50">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-50">
                                         <span>Shared by {j.postedByName}</span>
                                         <span className="flex items-center gap-0.5">
                                           {isExpanded ? "Collapse Details" : "View Details"} <IconChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />

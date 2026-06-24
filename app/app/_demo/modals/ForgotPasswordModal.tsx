@@ -27,7 +27,7 @@ export function renderForgotPasswordModal(ctx: DemoContext) {
                     <IconLock className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Reset Password</h4>
                   </div>
-                  <button onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
+                  <button onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
                     <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -46,7 +46,7 @@ export function renderForgotPasswordModal(ctx: DemoContext) {
                       Enter your email address below. We'll send you a link to reset your account password.
                     </p>
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
+                      <label className="block text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wider">Email Address</label>
                       <input
                         type="email"
                         required

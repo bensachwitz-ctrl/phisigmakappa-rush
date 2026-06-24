@@ -194,11 +194,11 @@ export function renderFeedTab(ctx: DemoContext) {
                                           {item.title}
                                         </h4>
                                       </div>
-                                      <span className="mt-0.5 block text-[11px] text-slate-400">
+                                      <span className="mt-0.5 block text-[11px] text-slate-500">
                                         {item.postedByName || item.authorName} · {item.postedByRole || item.authorRole}
                                       </span>
                                     </div>
-                                    <span className="text-[11px] text-slate-400 shrink-0">
+                                    <span className="text-[11px] text-slate-500 shrink-0">
                                       {new Date(item.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
                                     </span>
                                   </div>
@@ -259,7 +259,7 @@ export function renderFeedTab(ctx: DemoContext) {
                                     </div>
                                   )}
 
-                                  <div className="flex items-center justify-end text-[11px] text-slate-400 mt-1">
+                                  <div className="flex items-center justify-end text-[11px] text-slate-500 mt-1">
                                     <span className="flex items-center gap-0.5">
                                       {isExpanded ? "Less" : "More"} <IconChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                     </span>
@@ -268,7 +268,7 @@ export function renderFeedTab(ctx: DemoContext) {
                               );
                             })
                           ) : (
-                            <div className="p-8 bg-white border border-slate-100 rounded-2xl text-center text-xs text-slate-400 shadow-sm">
+                            <div className="p-8 bg-white border border-slate-100 rounded-2xl text-center text-xs text-slate-500 shadow-sm">
                               No feed updates available.
                             </div>
                           )}
