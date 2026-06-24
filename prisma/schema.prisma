@@ -1094,12 +1094,51 @@ model PortalUser {
   // verify so a forwarded link can't be replayed.
   magicToken          String?   @unique
   magicTokenExpiresAt DateTime?
+  // Set true the moment an OTP-reset session is issued and cleared once the
+  // member chooses a new password. While true the portal forces the
+  // "create new password" step before any app surface is reachable — so an
+  // OTP-issued session can ONLY be used to reset, never to browse the app.
+  mustReset    Boolean   @default(false)
   createdAt    DateTime  @default(now())
   lastLoginAt  DateTime?
+
+  resetCodes   PortalPasswordReset[]
 
   @@index([role])
   @@index([brotherId])
   @@index([alumniId])
+}
+
+// One-time-CODE password reset (PHASE-3 OTP flow). Distinct from the legacy
+// magic-LINK fields above: that token is a long random secret stored verbatim;
+// this is a short HUMAN-TYPED 6-digit code, so we store ONLY its HMAC hash
+// (lib/otp.ts) — never the plaintext. Each row is single-use (usedAt) and
+// short-lived (expiresAt ~10 min). Rows live in the per-tenant schema, so a
+// code is structurally scoped to one chapter; the hash is additionally bound to
+// the tenant key so it can't validate elsewhere even if the row leaked.
+model PortalPasswordReset {
+  id           String    @id @default(cuid())
+  portalUserId String
+  // HMAC-SHA256(code) keyed by the server secret + tenant. NOT the plaintext.
+  codeHash     String
+  // Snapshot of the target email/role at issue time (for audit + safe lookup).
+  email        String
+  role         String
+  expiresAt    DateTime
+  // Set the instant the code is redeemed → single-use. A used row can never be
+  // redeemed again (see lib/otp.isOtpRedeemable).
+  usedAt       DateTime?
+  // Source IP at request time — supports abuse forensics + the DB-backed
+  // per-account attempt count (belt-and-suspenders with the in-memory limiter).
+  requestIp    String?
+  attempts     Int       @default(0)
+  createdAt    DateTime  @default(now())
+
+  portalUser   PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+
+  @@index([portalUserId, createdAt])
+  @@index([email, role])
+  @@index([expiresAt])
 }
 
 // W2-style dues ledger for Stripe Connect destination charges. Lives
