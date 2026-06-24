@@ -933,6 +933,7 @@ export default function MarketingLandingPage() {
           <div className="snap-start snap-always"><HowItWorks /></div>
           <div className="snap-start snap-always"><Features /></div>
           <div className="snap-start snap-always"><BeforeAfter /></div>
+          <div className="snap-start snap-always"><Comparison /></div>
           <div className="snap-start snap-always"><PracticeShowcase /></div>
           <div className="snap-start snap-always"><Proof /></div>
           <div className="snap-start snap-always"><Pricing /></div>
@@ -1066,6 +1067,7 @@ export default function MarketingLandingPage() {
         <div className="snap-start snap-always"><GlyphMarquee /></div>
         <div className="snap-start snap-always"><DemoShowcase /></div>
         <div className="snap-start snap-always"><BeforeAfter /></div>
+        <div className="snap-start snap-always"><Comparison /></div>
         <div className="snap-start snap-always"><PracticeShowcase /></div>
         <div className="snap-start snap-always"><Proof /></div>
         <div className="snap-start snap-always"><Faq /></div>
@@ -2107,6 +2109,35 @@ const BEFORE_TOOLS: { label: string; tilt: string }[] = [
   { label: "A shared Google Drive", tilt: "sm:-rotate-2 sm:-translate-y-0.5" },
 ];
 
+/* Squarespace-style "all-in-one" comparison rows. Each row is a capability the
+   chapter NEEDS, the separate tool they'd otherwise stitch together for it
+   ("piecing it together"), and whether Greekstack includes it. HONEST by design:
+   every `greek:true` row maps to a feature that actually ships (cross-checked
+   against the FEATURES array above — recruitment, dues, treasury, events,
+   roles, elections, announcements, roster, white-label, alumni) — no fabricated
+   capabilities, and the "piecing it together" column names real, common tools.
+   `piecemeal` is the honest status of the DIY route for that capability:
+   "missing" (✗ — there's no good DIY tool for it), or "paid"/"separate" ($ — it
+   exists but is yet another separate, often-paid subscription). */
+type ComparisonRow = {
+  capability: string;
+  pieced: string; // the separate tool(s) a chapter uses today
+  piecemeal: "missing" | "paid" | "separate";
+};
+const COMPARISON_ROWS: ComparisonRow[] = [
+  { capability: "Branded chapter website + your own subdomain", pieced: "Linktree / Wix (separate site builder)", piecemeal: "paid" },
+  { capability: "Member & alumni roster, always current", pieced: "A shared spreadsheet", piecemeal: "separate" },
+  { capability: "Online dues by card, paid to your account", pieced: "Venmo / Zelle (manual reconciliation)", piecemeal: "separate" },
+  { capability: "Self-reconciling treasury & budgets", pieced: "Another spreadsheet", piecemeal: "missing" },
+  { capability: "Recruitment pipeline + PNM QR check-in", pieced: "Google Forms + a group chat", piecemeal: "missing" },
+  { capability: "Secret-ballot officer elections", pieced: "Google Forms (not anonymous)", piecemeal: "missing" },
+  { capability: "Events, RSVP & attendance tracking", pieced: "GroupMe + a calendar", piecemeal: "separate" },
+  { capability: "Chapter announcements to every member", pieced: "GroupMe", piecemeal: "separate" },
+  { capability: "Per-officer role-based access & handoff", pieced: "Shared logins / nobody owns it", piecemeal: "missing" },
+  { capability: "Alumni directory + Stripe donations", pieced: "A mailing list + a donation form", piecemeal: "paid" },
+  { capability: "One login your whole chapter shares", pieced: "Six logins that don't talk", piecemeal: "missing" },
+];
+
 /* A tasteful "before vs after" beat: the tangle of tools chapters juggle today
    (muted, scattered chips) collapses — across a gradient arrow — into ONE
    cohesive, glowing Greekstack card that replaces them all. Sits between
@@ -2273,6 +2304,131 @@ function BeforeAfter() {
             className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
           >
             Or poke around the demo first
+            <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ────────────────────────── All-in-one comparison ────────────────────────── */
+
+/* Squarespace-style feature comparison: "Greek Stack (everything included)" vs
+   "Piecing it together" across the real capabilities a chapter needs. Honest —
+   every Greek Stack ✓ maps to a shipped feature (see COMPARISON_ROWS note); the
+   DIY column shows ✗ (no good tool) or $ (yet another separate/paid app). On
+   theme (royal-blue + gold), and mobile-friendly: a real <table> on sm+, and a
+   stacked per-row card layout under sm so nothing overflows at 375px. */
+function Comparison() {
+  return (
+    <section
+      id="compare"
+      aria-label="Greek Stack vs piecing it together"
+      className="relative scroll-mt-20 overflow-hidden border-t border-border py-12 sm:py-28"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.06)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+            Everything included
+          </span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            One subscription vs <span className="gs-gradient-text">piecing it together</span>
+          </h2>
+          <p className="mt-4 text-pretty text-foreground/80">
+            Every tool below is a job your chapter already does. Greek Stack includes all of them on
+            one branded site — instead of a stack of separate apps that don&apos;t talk to each other.
+          </p>
+        </Reveal>
+
+        <Reveal delay={80} className="mx-auto mt-12 max-w-4xl">
+          <ShimmerBorder inline={false} rounded="rounded-3xl" className="p-[1.5px]">
+            <div className="overflow-hidden rounded-[calc(1.5rem-1.5px)] gs-glass">
+              {/* Column header band — Greek Stack (gold-accented, the winner) vs the DIY route. */}
+              <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr] items-stretch border-b border-border/70 bg-card/60 text-center sm:grid-cols-[1.6fr_1fr_1fr]">
+                <div className="flex items-center px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:px-6 sm:text-xs">
+                  What your chapter needs
+                </div>
+                <div className="flex flex-col items-center justify-center gap-0.5 border-l border-border/70 bg-gradient-to-b from-amber-400/10 to-transparent px-2 py-3.5 sm:px-4">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-blue-800 sm:text-sm">Greek Stack</span>
+                  <span className="text-[9px] font-medium text-amber-700 sm:text-[10px]">all included</span>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-0.5 border-l border-border/70 px-2 py-3.5 sm:px-4">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground sm:text-sm">Piecing it together</span>
+                  <span className="text-[9px] font-medium text-muted-foreground/80 sm:text-[10px]">6+ separate apps</span>
+                </div>
+              </div>
+
+              {/* Rows */}
+              <ul className="divide-y divide-border/60">
+                {COMPARISON_ROWS.map((row) => (
+                  <li
+                    key={row.capability}
+                    className="grid grid-cols-[1.4fr_0.8fr_0.8fr] items-center sm:grid-cols-[1.6fr_1fr_1fr]"
+                  >
+                    <div className="px-4 py-3.5 text-left sm:px-6">
+                      <p className="text-[13px] font-medium leading-snug text-foreground sm:text-sm">{row.capability}</p>
+                      {/* The specific DIY tool — shown inline under the capability on mobile
+                          (where the 3rd column is tight), and again in the 3rd column on sm+. */}
+                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground sm:hidden">{row.pieced}</p>
+                    </div>
+                    <div className="flex items-center justify-center border-l border-border/60 bg-gradient-to-b from-amber-400/[0.04] to-transparent px-2 py-3.5">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-sm">
+                        <IconCheck className="h-4 w-4" />
+                        <span className="sr-only">Included in Greek Stack</span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center gap-1 border-l border-border/60 px-2 py-3.5 text-center">
+                      {row.piecemeal === "missing" ? (
+                        <>
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground/80">
+                            <IconClose className="h-4 w-4" />
+                            <span className="sr-only">No good standalone tool</span>
+                          </span>
+                          <span className="hidden text-[10px] leading-tight text-muted-foreground sm:block">{row.pieced}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-amber-500/40 bg-amber-400/10 px-1.5 text-sm font-bold text-amber-700">
+                            $
+                            <span className="sr-only">Yet another separate or paid app</span>
+                          </span>
+                          <span className="hidden text-[10px] leading-tight text-muted-foreground sm:block">{row.pieced}</span>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Honest footnote — no fabricated pricing, just the structural truth. */}
+              <p className="border-t border-border/60 bg-card/40 px-4 py-3 text-center text-[11px] leading-relaxed text-muted-foreground sm:px-6">
+                <span className="font-semibold text-amber-700">$</span> = a separate app, often its own paid
+                subscription. <IconClose className="inline h-3 w-3 align-[-1px] text-muted-foreground/70" /> = no
+                good standalone tool — chapters just go without. Greek Stack replaces the whole stack for one price.
+              </p>
+            </div>
+          </ShimmerBorder>
+        </Reveal>
+
+        <Reveal delay={140} className="mt-12 flex flex-col items-center justify-center gap-3">
+          <Magnetic>
+            <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
+              <Link href="/onboard">
+                Get everything in one place — first month free
+                <IconArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+          </Magnetic>
+          <Link
+            href="/app?demo=true"
+            className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
+          >
+            Or explore the demo first
             <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
         </Reveal>
