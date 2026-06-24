@@ -2859,7 +2859,7 @@ export default function BrothersDashboardClient({
                           key={opt.status}
                           type="button"
                           onClick={() => setRsvpStatus(opt.status as any)}
-                          className={`p-2.5 rounded-xl border text-xs font-bold text-center transition ${
+                          className={`flex min-h-[44px] items-center justify-center p-2.5 rounded-xl border text-xs font-bold text-center transition ${
                             isSel ? `${opt.color} ring-2 ring-maroon-500` : "bg-cream-50/50 border-maroon-100 text-maroon-600 hover:bg-cream-50"
                           }`}
                         >

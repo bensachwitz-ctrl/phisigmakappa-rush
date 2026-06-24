@@ -244,9 +244,9 @@ export function RiskClient({
             className="pl-9"
           />
         </div>
-        <div className="grid grid-cols-3 gap-2 shrink-0">
+        <div className="grid grid-cols-3 gap-2 sm:shrink-0">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-full sm:w-[120px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -260,7 +260,7 @@ export function RiskClient({
           </Select>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-full sm:w-[120px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -273,7 +273,7 @@ export function RiskClient({
           </Select>
 
           <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-full sm:w-[120px]">
               <SelectValue placeholder="Severity" />
             </SelectTrigger>
             <SelectContent>
