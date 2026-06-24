@@ -45,23 +45,37 @@ function withCors(req: Request, res: NextResponse): NextResponse {
  * online dues are not configured. Caller (BrothersManager) shows the
  * message + tells the brother to pay manually via the treasurer.
  *
- * Rate-limited 5/min/brother in-process — a brother who clicks the
- * button 50× in a panic shouldn't create 50 PENDING ledger rows or
- * spam Stripe's session API. In-memory is enough for v1; a multi-
- * instance Vercel deploy would want a Redis-backed limiter eventually.
+ * Rate-limited 5/min/brother — a brother who clicks the button 50× in
+ * a panic shouldn't create 50 PENDING ledger rows or spam Stripe's
+ * session API. Backed by the tenant's RushSubmitLog table (the SAME
+ * DB-count pattern app/api/upload-headshot uses) so the cap is shared
+ * across instances, not a per-process Map that reset on every cold
+ * start. Zero new infra / no migration; the brotherId is the throttle
+ * key (stored in the generic `email` column), the window/ceiling are
+ * unchanged (5/min) so single-instance behavior is identical.
  */
-const checkoutAttempts = new Map<string, number[]>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 5;
+const RATE_STATUS = "DUES_CHECKOUT"; // RushSubmitLog discriminator for this route
 
-function checkRateLimit(brotherId: string): boolean {
-  const now = Date.now();
-  const prior = checkoutAttempts.get(brotherId) || [];
-  const recent = prior.filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return false;
-  recent.push(now);
-  checkoutAttempts.set(brotherId, recent);
-  return true;
+// DB-backed 5/min/brother check on the TENANT client. Counts this brother's
+// recent attempts in the shared RushSubmitLog table and records one row per
+// attempt. Fail-open on a DB error so a glitch never blocks a real payment.
+async function checkRateLimit(
+  db: { rushSubmitLog: { count: Function; create: Function } },
+  brotherId: string,
+): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - RATE_WINDOW_MS);
+    const recent = await db.rushSubmitLog.count({
+      where: { email: brotherId, status: RATE_STATUS, createdAt: { gte: since } },
+    });
+    if (recent >= RATE_LIMIT) return false;
+    db.rushSubmitLog.create({ data: { email: brotherId, status: RATE_STATUS } }).catch(() => {});
+    return true;
+  } catch {
+    return true; // fail open — never lock a legitimate dues payment out
+  }
 }
 
 export async function POST(req: Request) {
@@ -89,8 +103,8 @@ async function handlePost(req: Request): Promise<NextResponse> {
   }
   const { brother, db, cfg, subdomain: actorSubdomain, transport } = actor;
 
-  // Rate-limit before any DB / Stripe work.
-  if (!checkRateLimit(brother.id)) {
+  // Rate-limit before any Stripe work (DB-backed, on the resolved tenant client).
+  if (!(await checkRateLimit(db, brother.id))) {
     return NextResponse.json(
       { ok: false, error: "Too many checkout attempts. Please wait a minute and try again." },
       { status: 429, headers: { "Retry-After": "60" } },

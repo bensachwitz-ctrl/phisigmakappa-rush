@@ -26,33 +26,19 @@ const DonationSchema = z.object({
   notes: z.string().max(1000).optional().default(""),
 });
 
-// ── Per-IP rate limit (in-memory bucket) ─────────────────────────────────────
-// Mirrors the intent of app/api/rush/route.ts (windowed per-IP cap + 429 +
-// Retry-After) to stop unbounded PENDING-row / live-Stripe-session creation if a
-// session is ever replayed or scripted. We use an in-memory bucket (same shape
-// as lib/incident.ts) rather than a DB log table so this fix stays self-contained
-// to one file and needs no schema migration. A process restart resets the bucket,
-// which is acceptable at chapter scale and behind the auth gate below.
+// ── Per-IP rate limit (DB-backed, cross-instance) ────────────────────────────
+// Caps unbounded PENDING-row / live-Stripe-session creation if a session is ever
+// replayed or scripted. Previously this used an in-memory Map bucket that RESET
+// per-process — useless across a multi-instance Vercel deploy. We now use the
+// SAME DB-count pattern app/api/upload-headshot already uses: count this IP's
+// recent attempts in the shared RushSubmitLog table (an existing table — zero new
+// infra / no migration) and record one row per attempt. The window/ceiling are
+// unchanged (10/IP/hour) so single-instance behavior is identical; the only
+// difference is the count is now shared across instances. Fail-open on a DB error
+// so a glitch never blocks a legitimate donation.
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const RATE_MAX = 10; // ~10 checkout attempts per IP per hour
-const RATE_BUCKETS = new Map<string, { count: number; resetAt: number }>();
-
-function checkDonationRateLimit(
-  ipKey: string,
-  now = Date.now()
-): { ok: true } | { ok: false; retryAfterMs: number } {
-  const k = ipKey || "unknown";
-  const bucket = RATE_BUCKETS.get(k);
-  if (!bucket || bucket.resetAt < now) {
-    RATE_BUCKETS.set(k, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return { ok: true };
-  }
-  if (bucket.count >= RATE_MAX) {
-    return { ok: false, retryAfterMs: bucket.resetAt - now };
-  }
-  bucket.count += 1;
-  return { ok: true };
-}
+const RATE_STATUS = "DONATE_CHECKOUT"; // RushSubmitLog discriminator for this route
 
 export async function POST(req: Request) {
   try {
@@ -89,17 +75,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Alumni profile not found" }, { status: 404 });
     }
 
-    // ── Per-IP rate limit ────────────────────────────────────────────────────
+    // ── Per-IP rate limit (DB-backed; see RATE_* above) ──────────────────────
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "unknown";
-    const rl = checkDonationRateLimit(ip);
-    if (!rl.ok) {
-      return NextResponse.json(
-        { ok: false, error: "Too many donation attempts. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
-      );
+    if (ip !== "unknown") {
+      try {
+        const since = new Date(Date.now() - RATE_WINDOW_MS);
+        const recent = await prisma.rushSubmitLog.count({
+          where: { ipAddress: ip, status: RATE_STATUS, createdAt: { gte: since } },
+        });
+        if (recent >= RATE_MAX) {
+          return NextResponse.json(
+            { ok: false, error: "Too many donation attempts. Please try again later." },
+            { status: 429, headers: { "Retry-After": String(Math.ceil(RATE_WINDOW_MS / 1000)) } }
+          );
+        }
+        // Record this attempt (best-effort; a failed log must not block the donor).
+        prisma.rushSubmitLog.create({ data: { ipAddress: ip, status: RATE_STATUS } }).catch(() => {});
+      } catch {
+        // Fail open on a DB error so a glitch doesn't break a legitimate donation.
+      }
     }
 
     const body = await req.json().catch(() => ({}));

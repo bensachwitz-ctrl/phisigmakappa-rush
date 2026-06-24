@@ -19,18 +19,26 @@ const ROUTE = "/api/onboard/check";
 
 // Modest per-IP rate limit. This endpoint fires on every debounced keystroke in
 // the wizard, so the ceiling is generous, but it still caps a script hammering
-// the registry to enumerate taken subdomains. In-memory is fine for a single
-// instance; a multi-instance deploy would back this with Redis.
-const checkAttempts = new Map<string, number[]>();
+// the registry to enumerate taken subdomains. Backed by the central RushSubmitLog
+// table (the SAME DB-count pattern app/api/upload-headshot uses) so the cap is
+// shared across instances rather than a per-process Map that reset on every cold
+// start. Zero new infra / no migration; window/ceiling unchanged (60/min) so
+// single-instance behavior is identical. Fail-open on a DB error.
 const CHECK_WINDOW_MS = 60 * 1000; // 1m
 const CHECK_LIMIT = 60; // ~1 req/s sustained, comfortably above debounced typing
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (checkAttempts.get(ip) || []).filter((t) => now - t < CHECK_WINDOW_MS);
-  if (recent.length >= CHECK_LIMIT) return true;
-  recent.push(now);
-  checkAttempts.set(ip, recent);
-  return false;
+const CHECK_STATUS = "ONBOARD_CHECK"; // RushSubmitLog discriminator for this route
+async function isRateLimited(ip: string): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - CHECK_WINDOW_MS);
+    const recent = await centralDb.rushSubmitLog.count({
+      where: { ipAddress: ip, status: CHECK_STATUS, createdAt: { gte: since } },
+    });
+    if (recent >= CHECK_LIMIT) return true;
+    centralDb.rushSubmitLog.create({ data: { ipAddress: ip, status: CHECK_STATUS } }).catch(() => {});
+    return false;
+  } catch {
+    return false; // fail open — never block a real signup on a registry hiccup
+  }
 }
 
 type CheckResult = {
@@ -43,7 +51,7 @@ export async function GET(req: Request) {
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
     "unknown";
-  if (ip !== "unknown" && isRateLimited(ip)) {
+  if (ip !== "unknown" && (await isRateLimited(ip))) {
     return NextResponse.json(
       { available: false, reason: "invalid" } satisfies CheckResult,
       { status: 429, headers: { "Retry-After": "30" } },
