@@ -241,7 +241,7 @@ describe("dues webhook — refunds & disputes", () => {
     }));
   });
 
-  it("refund of an alumni donation → donation REFUNDED (no brother touch)", async () => {
+  it("FULL refund of an alumni donation → donation REFUNDED (no brother touch)", async () => {
     mocks.constructEvent.mockReturnValue({
       type: "charge.refunded",
       data: { object: { id: "ch_5", payment_intent: "pi_5", amount: 5000, amount_refunded: 5000, metadata: { subdomain: "alpha" } } },
@@ -259,5 +259,33 @@ describe("dues webhook — refunds & disputes", () => {
     expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ action: "ALUMNI_DONATION_REFUNDED" }),
     }));
+  });
+
+  it("PARTIAL refund of an alumni donation → donation STAYS PAID (counts in 'donations raised')", async () => {
+    // M3: a partial refund must NOT mark the whole donation REFUNDED, which would
+    // drop the full amount from PAID-only "donations raised" totals (app/admin/
+    // page.tsx sums alumniDonation where status === "PAID"). The row keeps PAID;
+    // the partial amount is recorded in notes and audited as a partial refund.
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.refunded",
+      data: { object: { id: "ch_6", payment_intent: "pi_6", amount: 5000, amount_refunded: 1500, metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue(null); // not a dues payment
+    mocks.donationFindFirst.mockResolvedValue({ id: "ad_2", alumniId: "a2", amountCents: 5000, campaign: "Annual", status: "PAID" });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    // The donation row was updated, but NEVER to REFUNDED — status is untouched
+    // (stays PAID) and only notes were written.
+    expect(mocks.donationUpdate).toHaveBeenCalledTimes(1);
+    const updateArg = mocks.donationUpdate.mock.calls[0][0] as any;
+    expect(updateArg.where).toEqual({ id: "ad_2" });
+    expect(updateArg.data.status).toBeUndefined(); // status NOT set → stays PAID
+    expect(updateArg.data.notes).toMatch(/partial refund/i);
+    // Audited as a PARTIAL refund, not a full one.
+    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ action: "ALUMNI_DONATION_PARTIALLY_REFUNDED" }),
+    }));
+    expect(mocks.brotherUpdate).not.toHaveBeenCalled();
   });
 });

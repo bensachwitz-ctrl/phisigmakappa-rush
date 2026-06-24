@@ -637,7 +637,7 @@ async function handleChargeRefunded(
     return;
   }
   const fullRefund = charge.amount_refunded >= charge.amount;
-  await reverseByPaymentIntent(db, piId, fullRefund, "refund");
+  await reverseByPaymentIntent(db, piId, fullRefund, "refund", charge.amount_refunded);
 }
 
 /**
@@ -808,14 +808,23 @@ async function restorePaidByPaymentIntent(
 
 /**
  * Shared reversal: locate the dues payment OR alumni donation by its Stripe
- * PaymentIntent id and set it REFUNDED. For a FULL dues reversal, also clear the
- * brother's duesPaid badge + the denormalized dues mirror. Idempotent + audited.
+ * PaymentIntent id. For a FULL reversal, set it REFUNDED (and, for dues, clear the
+ * brother's duesPaid badge + the denormalized dues mirror). For a PARTIAL refund:
+ *   • Dues: the row is still marked REFUNDED but the brother's paid badge stays
+ *     (they paid for the term; treasurer reconciles the partial difference).
+ *   • Donation: the row stays PAID (so the partial does NOT drop the whole gift
+ *     out of PAID-only "donations raised" totals); the partial amount is recorded
+ *     in notes instead. A subsequent full refund still escalates it to REFUNDED.
+ * `refundedCents` is the cumulative amount refunded so far (Stripe's
+ * charge.amount_refunded); used only to annotate a partial donation refund.
+ * Idempotent + audited.
  */
 async function reverseByPaymentIntent(
   db: PrismaClient,
   paymentIntentId: string,
   full: boolean,
   cause: "refund" | "dispute",
+  refundedCents?: number,
 ): Promise<void> {
   // 1. Dues payment?
   const payment = await db.duesPayment
@@ -910,7 +919,52 @@ async function reverseByPaymentIntent(
     .catch(() => null);
 
   if (donation) {
+    // Already fully reversed → nothing to do (true duplicate event).
     if (donation.status === "REFUNDED") return; // idempotent
+
+    // PARTIAL REFUND (refund cause only; a dispute is always a full reversal):
+    // keep the donation PAID so the partial does NOT drop the entire gift out of
+    // PAID-only "donations raised" totals. Record the partial amount in notes
+    // instead, and audit it as a partial. A later FULL refund re-enters here with
+    // full=true and escalates the row to REFUNDED.
+    if (!full && cause === "refund") {
+      const partialNote =
+        typeof refundedCents === "number" && refundedCents > 0
+          ? `Partial refund of $${(refundedCents / 100).toFixed(2)} via Stripe (donation remains PAID)`
+          : "Partial refund via Stripe (donation remains PAID)";
+      await db.alumniDonation
+        .update({ where: { id: donation.id }, data: { notes: partialNote } })
+        .catch(() => {});
+
+      const alumP = await db.alumniProfile
+        .findUnique({ where: { id: donation.alumniId }, select: { fullName: true } })
+        .catch(() => null);
+
+      await db.auditLog
+        .create({
+          data: {
+            actorId: null,
+            actorName: "stripe-webhook",
+            action: "ALUMNI_DONATION_PARTIALLY_REFUNDED",
+            subjectType: "AlumniProfile",
+            subjectId: donation.alumniId,
+            subjectName: alumP?.fullName || null,
+            details: `$${(donation.amountCents / 100).toFixed(2)} — ${partialNote} · campaign: ${donation.campaign || "General"}`,
+            ipAddress: null,
+          },
+        })
+        .catch(() => {});
+
+      logger.info("alumni.donation.partially_refunded", {
+        route: ROUTE,
+        outcome: "partial_refund",
+        amountCents: donation.amountCents,
+        refundedCents: refundedCents ?? null,
+      });
+      return;
+    }
+
+    // FULL reversal (full refund OR dispute) → mark REFUNDED.
     const note = cause === "dispute" ? "Chargeback/dispute opened" : "Refunded via Stripe";
     await db.alumniDonation
       .update({ where: { id: donation.id }, data: { status: "REFUNDED", notes: note } })
