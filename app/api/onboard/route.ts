@@ -41,18 +41,34 @@ class OnboardClientError extends Error {
 
 // Per-IP rate limit on tenant creation. Each provisioning spins up a Postgres
 // schema + ~42 tables, so an open/unauth endpoint is a cheap way to exhaust the
-// database. In-memory is fine for a single instance; a multi-instance deploy
-// would want a Redis-backed limiter.
-const onboardAttempts = new Map<string, number[]>();
+// database. DB-BACKED + CROSS-INSTANCE: the prior in-memory Map<string,number[]>
+// reset per serverless process, so on a multi-instance Vercel deploy the 5/IP/hr
+// ceiling never held (each instance had its own empty bucket → provisioning
+// DoS). We now count this IP's recent rows in the shared central public
+// "OnboardAttempt" table and record one row per attempt — the SAME DB-count
+// pattern app/api/alumni/donate/checkout uses against RushSubmitLog. The window
+// + ceiling are unchanged so single-instance behavior is identical; the count is
+// just shared now. FAIL-OPEN on any DB error so a glitch never blocks a
+// legitimate signup (the durable fail-hard schema/Stripe rollback below is
+// unaffected). The OnboardAttempt table is self-healed by ensureTenantRegistry.
 const ONBOARD_WINDOW_MS = 60 * 60 * 1000; // 1h
 const ONBOARD_LIMIT = 5;
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (onboardAttempts.get(ip) || []).filter((t) => now - t < ONBOARD_WINDOW_MS);
-  if (recent.length >= ONBOARD_LIMIT) return true;
-  recent.push(now);
-  onboardAttempts.set(ip, recent);
-  return false;
+async function isRateLimited(ip: string): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - ONBOARD_WINDOW_MS);
+    const recent = await centralDb.onboardAttempt.count({
+      where: { ipAddress: ip, createdAt: { gte: since } },
+    });
+    if (recent >= ONBOARD_LIMIT) return true;
+    // Record this attempt. Awaited (not fire-and-forget) so a concurrent burst
+    // from one IP can't all read the same pre-insert count; a failed insert
+    // still falls through to "not limited" via the catch (fail-open).
+    await centralDb.onboardAttempt.create({ data: { ipAddress: ip } });
+    return false;
+  } catch {
+    // Fail open on a DB/bootstrap error so a transient glitch can't block signup.
+    return false;
+  }
 }
 
 /** Escape caller-supplied plain strings before interpolating into welcome-email HTML. */
@@ -70,7 +86,18 @@ export async function POST(req: Request) {
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
     "unknown";
-  if (ip !== "unknown" && isRateLimited(ip)) {
+  // Ensure the central registry + OnboardAttempt rate-limit table exist BEFORE
+  // the DB-backed limiter reads them (process-memoized DDL — at most one round-
+  // trip per instance). A bootstrap failure must not 500 the signup here: the
+  // limiter fails open on error, and the main try below calls ensureTenantRegistry
+  // again (idempotent) and surfaces any real DDL failure through its own rollback.
+  try {
+    await ensureTenantRegistry();
+  } catch {
+    // Swallow — the limiter fails open below, and provisioning re-runs (and
+    // re-reports) the bootstrap inside the main try/catch.
+  }
+  if (ip !== "unknown" && (await isRateLimited(ip))) {
     return NextResponse.json(
       { ok: false, error: "Too many chapters created from this network. Try again in an hour." },
       { status: 429, headers: { "Retry-After": "3600" } },

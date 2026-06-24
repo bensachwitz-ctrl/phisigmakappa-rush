@@ -51,6 +51,18 @@ async function runBootstrap(): Promise<void> {
   await centralDb.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "Tenant_stripeCustomerId_idx" ON public."Tenant"("stripeCustomerId");`,
   );
+  // Durable per-IP rate-limit log for /api/onboard. The onboard limiter counts
+  // recent rows here (shared across serverless instances) instead of an in-
+  // memory Map that reset per process. Self-heal the table + its (ipAddress,
+  // createdAt) index the same way as the Tenant registry, so a fresh deploy that
+  // never ran `prisma db push` against public still rate-limits from the first
+  // signup. Idempotent (IF NOT EXISTS); a no-op once db push created it.
+  await centralDb.$executeRawUnsafe(
+    `CREATE TABLE IF NOT EXISTS public."OnboardAttempt" ("id" TEXT NOT NULL, "ipAddress" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "OnboardAttempt_pkey" PRIMARY KEY ("id"));`,
+  );
+  await centralDb.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "OnboardAttempt_ipAddress_createdAt_idx" ON public."OnboardAttempt"("ipAddress", "createdAt");`,
+  );
 }
 
 /**

@@ -1183,6 +1183,24 @@ model AlumniVouch {
   @@index([alumniId])
 }
 
+// Durable, cross-instance rate-limit log for /api/onboard (tenant provisioning).
+// Lives in the CENTRAL public schema alongside Tenant (the onboard route writes
+// via centralDb, not a tenant client) so the per-IP count is SHARED across every
+// serverless instance — the prior in-memory Map<string,number[]> reset per
+// process and was useless on a multi-instance Vercel deploy, leaving the open,
+// unauth provisioning endpoint (each call spins up a Postgres schema + ~42
+// tables) trivially floodable. One row per attempt, indexed on (ipAddress,
+// createdAt) for the 1-hour window check. Mirrors the DB-count pattern the
+// donation checkout limiter uses against RushSubmitLog. Rows are short-lived; a
+// periodic prune (or TTL) can drop anything older than ~24h.
+model OnboardAttempt {
+  id        String   @id @default(cuid())
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([ipAddress, createdAt])
+}
+
 model Tenant {
   id            String   @id @default(cuid())
   subdomain     String   @unique
