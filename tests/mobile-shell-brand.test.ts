@@ -48,6 +48,35 @@ describe("bundled iOS shell — brand parity (no 7-color hash)", () => {
 });
 
 /**
+ * The mobile-shell crest must be the ELEVATED canonical temple (capitals +
+ * bases + gold accents + stepped stylobate), identical geometry to the seal
+ * SVGs / <GreekstackLogo> / the maskable icon — NOT the old flat-rectangle
+ * 0-24 temple the owner flagged as "AI slop". (Cross-surface geometry parity is
+ * pinned exhaustively in brand-mark-geometry.test.ts; this guards the SHELL.)
+ */
+describe("bundled iOS shell — elevated temple crest geometry", () => {
+  it("both crests (boot SVG + CREST_SVG string) use the 100-unit grid, not 0-24", () => {
+    // Two occurrences: the boot-screen inline SVG + the topbar CREST_SVG string.
+    const matches = SHELL.match(/M16 44 L50 22 L84 44 Z/g) || [];
+    expect(matches.length).toBe(2);
+    // The old flat-column geometry must be gone.
+    expect(SHELL).not.toContain("M2.6 8.6 12 3.2l9.4 5.4H2.6Z");
+  });
+
+  it("the crest columns have capitals + bases (not plain rectangles)", () => {
+    // Leftmost column: capital y52.5 + base y69.7 (×2 — boot + CREST_SVG).
+    expect((SHELL.match(/y="52\.5" width="9" height="2\.2"/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect((SHELL.match(/y="69\.7" width="9" height="2\.3"/g) || []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("the crest carries the gold accents (cornice + medallion + floor)", () => {
+    expect(SHELL).toContain("#E8B53A"); // the crest gold accent fill
+    expect((SHELL.match(/cx="50" cy="36" r="3"/g) || []).length).toBe(2); // medallion ×2
+    expect((SHELL.match(/y="43\.4" width="72" height="2"/g) || []).length).toBe(2); // cornice ×2
+  });
+});
+
+/**
  * Evaluate the shell's pure brand helpers (safeHex / darken / brandFor) in a VM
  * sandbox to prove RUNTIME behavior, not just the presence of source strings.
  */

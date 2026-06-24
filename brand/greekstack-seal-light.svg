@@ -6,7 +6,9 @@
   color presentation differs. Used to rasterize app/icon.png + app/apple-icon.png
   (the favicon / PWA / "Add to Home Screen" web icon) via scripts/gen-web-icons.mjs.
 
-  Light palette:  tile #F7F5EE (border #E2DCCB) · temple #16264E · gold #C8901C
+  Light palette:  tile #F7F5EE (border #E2DCCB) · temple #16264E · gold #A8780F
+  (gold darkened from #C8901C so it clears AA 3:1 as a graphical object against
+  the ivory tile, 3.59:1, hue preserved)
 
   Same 100-unit geometry as the navy seal — keep both files in lockstep with
   components/brand/greekstack-logo.tsx and every other surface.
@@ -34,8 +36,8 @@
     <rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>
     <rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>
   </g>
-  <!-- restrained gold accents -->
-  <g fill="#C8901C">
+  <!-- restrained gold accents (AA-floored on ivory) -->
+  <g fill="#A8780F">
     <rect x="14" y="43.4" width="72" height="2" rx="1"/>
     <circle cx="50" cy="36" r="3"/>
     <rect x="16" y="51" width="68" height="1"/>

@@ -40,4 +40,4 @@ async function build() {
 }
 
 await build();
-console.log("Done. Light tile #F7F5EE / navy temple #16264E / gold #C8901C");
+console.log("Done. Light tile #F7F5EE / navy temple #16264E / gold #A8780F");

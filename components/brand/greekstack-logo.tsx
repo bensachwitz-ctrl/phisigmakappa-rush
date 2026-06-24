@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils";
  *
  * TWO presentations, ONE geometry:
  *   • LIGHT (default) — ivory tile #F7F5EE (hairline border #E2DCCB), navy
- *     temple #16264E, gold accents #C8901C. The in-app / header / wordmark mark.
+ *     temple #16264E, gold accents #A8780F (AA-floored 3.59:1 on ivory). The
+ *     in-app / header / wordmark mark.
  *   • DARK / navy seal — deep-navy tile #0B1B3A, ivory temple #F4F1E6, gold
  *     accents #E8B53A. Matches the iOS home-screen AppIcon.
  *
@@ -47,7 +48,7 @@ const LIGHT = {
   tile: "#F7F5EE",
   border: "#E2DCCB",
   temple: "#16264E",
-  gold: "#C8901C",
+  gold: "#A8780F",
 } as const;
 
 /** DARK navy-seal palette — matches the iOS home-screen AppIcon. */
