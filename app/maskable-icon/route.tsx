@@ -43,11 +43,13 @@ export async function GET() {
   const onApex = getSubdomain(host) === null;
 
   // ── APEX: the neutral bespoke GreekStack temple mark ────────────────────────
-  // Navy pediment + four columns (the canonical GreekStack glyph) reversed in a
-  // warm gold disc, centered inside the maskable safe zone.
+  // The canonical elevated temple (capitals + bases + gold cornice/medallion/
+  // architrave/floor + stepped stylobate) reversed in a warm gold disc, centered
+  // inside the maskable safe zone. SAME geometry as brand/greekstack-seal.svg,
+  // <GreekstackLogo>, app/icon.png, and the mobile-shell crest — one mark.
   if (onApex) {
-    const NAVY = "#0F2350"; // brand deep navy ink
-    const GOLD = "#F59E0B"; // brand gold
+    const NAVY = "#0F2350"; // brand deep navy ink (temple)
+    const GOLD = "#E8B53A"; // brand gold (restrained accents)
     return new ImageResponse(
       (
         <div
@@ -66,25 +68,48 @@ export async function GET() {
               width: 360,
               height: 360,
               borderRadius: 360,
-              background: `linear-gradient(150deg, #FBBF24 0%, ${GOLD} 100%)`,
+              background: `linear-gradient(150deg, #FBBF24 0%, #F59E0B 100%)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            {/* bespoke GreekStack temple: pediment + four columns + base */}
-            <svg width="210" height="210" viewBox="0 0 24 24" fill="none">
-              {/* pediment */}
-              <path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill={NAVY} />
-              {/* entablature */}
-              <rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill={NAVY} />
-              {/* four columns */}
-              <rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill={NAVY} />
-              <rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill={NAVY} />
-              <rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill={NAVY} />
-              <rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill={NAVY} />
-              {/* stylobate / base */}
-              <rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill={NAVY} />
+            {/* canonical elevated temple, drawn on the 100-unit grid (the seal
+                geometry) and centered in the disc. Navy temple + gold accents;
+                the medallion/cornice/floor gold reads against the navy. */}
+            <svg width="248" height="248" viewBox="0 0 100 100" fill="none">
+              <g fill={NAVY}>
+                {/* pediment */}
+                <path d="M16 44 L50 22 L84 44 Z" />
+                {/* entablature */}
+                <rect x="14" y="46.5" width="72" height="5" rx="1" />
+                {/* four columns — capital + shaft + base */}
+                <rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6" />
+                <rect x="23" y="54.7" width="6" height="15" />
+                <rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6" />
+                <rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6" />
+                <rect x="39" y="54.7" width="6" height="15" />
+                <rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6" />
+                <rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6" />
+                <rect x="55" y="54.7" width="6" height="15" />
+                <rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6" />
+                <rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6" />
+                <rect x="71" y="54.7" width="6" height="15" />
+                <rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6" />
+                {/* stepped stylobate (2 steps) */}
+                <rect x="18" y="72.5" width="64" height="3.2" rx="0.8" />
+                <rect x="13" y="76.2" width="74" height="3.4" rx="0.8" />
+              </g>
+              <g fill={GOLD}>
+                {/* gold cornice under the pediment */}
+                <rect x="14" y="43.4" width="72" height="2" rx="1" />
+                {/* gold medallion (oculus) in the tympanum */}
+                <circle cx="50" cy="36" r="3" />
+                {/* gold architrave line on the entablature */}
+                <rect x="16" y="51" width="68" height="1" />
+                {/* gold floor line under the stylobate */}
+                <rect x="13" y="79.9" width="74" height="1.1" />
+              </g>
             </svg>
           </div>
         </div>

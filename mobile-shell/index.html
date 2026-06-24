@@ -187,17 +187,37 @@
     <div class="center" id="boot">
       <div>
         <div class="crest-disc" aria-hidden="true">
-          <!-- Canonical GreekStack temple: pediment + four columns + base (navy on gold).
-               Identical geometry to app/maskable-icon/route.tsx so the bundled app, the
-               website PWA icon, and the native app icon all read as one mark. -->
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>
-            <rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>
-            <rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>
+          <!-- Canonical GreekStack ELEVATED temple: pediment + gold cornice +
+               medallion + architrave + four columns WITH capitals + bases +
+               stepped stylobate + gold floor (navy temple + gold accents on the
+               gold disc). Identical 100-unit geometry to brand/greekstack-seal.svg,
+               app/maskable-icon/route.tsx, and <GreekstackLogo> so the bundled
+               app, the website PWA icon, and the native app icon are one mark. -->
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#0F2350">
+              <path d="M16 44 L50 22 L84 44 Z"/>
+              <rect x="14" y="46.5" width="72" height="5" rx="1"/>
+              <rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="23" y="54.7" width="6" height="15"/>
+              <rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="39" y="54.7" width="6" height="15"/>
+              <rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="55" y="54.7" width="6" height="15"/>
+              <rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="71" y="54.7" width="6" height="15"/>
+              <rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>
+              <rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>
+            </g>
+            <g fill="#E8B53A">
+              <rect x="14" y="43.4" width="72" height="2" rx="1"/>
+              <circle cx="50" cy="36" r="3"/>
+              <rect x="16" y="51" width="68" height="1"/>
+              <rect x="13" y="79.9" width="74" height="1.1"/>
+            </g>
           </svg>
         </div>
         <div class="wordmark">Greek<span class="grad">stack</span></div>
@@ -247,17 +267,37 @@
     }
 
     // ── Brand glyphs (inline SVG, matching the website's bespoke icon set) ──
-    // The canonical GreekStack temple crest (navy on transparent — sits in a gold
-    // disc). Same geometry as app/maskable-icon/route.tsx + the native app icon.
+    // The canonical GreekStack ELEVATED temple crest (navy temple + gold accents
+    // on transparent — sits in a gold disc). SAME 100-unit geometry as
+    // brand/greekstack-seal.svg, app/maskable-icon/route.tsx, <GreekstackLogo>,
+    // and the native app icon: capitals + bases + gold cornice/medallion/
+    // architrave/floor + stepped stylobate.
     var CREST_SVG =
-      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>' +
-        '<rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>' +
-        '<rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>' +
+      '<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<g fill="#0F2350">' +
+          '<path d="M16 44 L50 22 L84 44 Z"/>' +
+          '<rect x="14" y="46.5" width="72" height="5" rx="1"/>' +
+          '<rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="23" y="54.7" width="6" height="15"/>' +
+          '<rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="39" y="54.7" width="6" height="15"/>' +
+          '<rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="55" y="54.7" width="6" height="15"/>' +
+          '<rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="71" y="54.7" width="6" height="15"/>' +
+          '<rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>' +
+          '<rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>' +
+        '</g>' +
+        '<g fill="#E8B53A">' +
+          '<rect x="14" y="43.4" width="72" height="2" rx="1"/>' +
+          '<circle cx="50" cy="36" r="3"/>' +
+          '<rect x="16" y="51" width="68" height="1"/>' +
+          '<rect x="13" y="79.9" width="74" height="1.1"/>' +
+        '</g>' +
       '</svg>';
 
     // Tab-nav glyphs — bespoke 24×24 line icons in the website's icon language
