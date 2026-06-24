@@ -211,21 +211,33 @@ export function renderFeedTab(ctx: DemoContext) {
                                       <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
                                         <span className="font-bold text-slate-600 uppercase text-[11px] block">Referral Contacts</span>
                                         <p className="text-slate-800 font-medium text-xs">{item.contactName}</p>
-                                        <div className="flex gap-2 pt-1.5">
-                                          <a
-                                            href={`mailto:${item.contactEmail}?subject=Referral Inquiry: ${item.title}`}
-                                            className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition"
-                                          >
-                                            <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
-                                          </a>
-                                          {item.contactPhone && (
+                                        <div className="flex flex-col gap-2 pt-1.5">
+                                          <div className="flex gap-2 w-full">
                                             <a
-                                              href={`tel:${item.contactPhone}`}
-                                              className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition"
+                                              href={`mailto:${item.contactEmail}?subject=Referral Inquiry: ${item.title}`}
+                                              className="flex-1 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition"
                                             >
-                                              <Phone className="w-3 h-3" />
+                                              <Mail className="w-3 h-3 text-slate-500" /> Email Referrer
                                             </a>
-                                          )}
+                                            {item.contactPhone && (
+                                              <a
+                                                href={`tel:${item.contactPhone}`}
+                                                className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition shrink-0"
+                                              >
+                                                <Phone className="w-3 h-3" />
+                                              </a>
+                                            )}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              ctx.setQuickApplyJob(item);
+                                            }}
+                                            className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold text-center flex items-center justify-center gap-1 transition shadow-sm"
+                                          >
+                                            <Briefcase className="w-3 h-3" /> Quick Apply
+                                          </button>
                                         </div>
                                       </div>
                                     </div>

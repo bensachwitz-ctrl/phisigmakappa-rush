@@ -285,6 +285,10 @@ export interface DemoContext {
   /** "Just exploring? See a live demo" — enters the showcase (?demo flow). */
   enterDemoShowcase: () => void;
 
+  // ── Quick Apply ────────────────────────────────────────────────────────
+  quickApplyJob: any | null;
+  setQuickApplyJob: React.Dispatch<React.SetStateAction<any | null>>;
+
   // ── Derived values ─────────────────────────────────────────────────────
   allChapters: Tenant[];
   filteredChapters: Tenant[];
