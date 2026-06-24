@@ -712,6 +712,7 @@
    overflow. Pairs with overflow-wrap below. */
 .gs-hero-h1{font-size:clamp(1.9rem,7.2vw,3.75rem);line-height:1.06;}
 .gs-hero-h1,.gs-hero-h1 *{overflow-wrap:break-word;word-break:break-word;}
+/* LARGE TEXT ONLY (decorative wordmark/stat >=24px) — fails WCAG AA 1.4.3 at body size; do not pair with text-xs/text-sm */
 .gs-gold-text{background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .gs-sheen{position:relative;overflow:hidden;}
 .gs-sheen::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);pointer-events:none;}
