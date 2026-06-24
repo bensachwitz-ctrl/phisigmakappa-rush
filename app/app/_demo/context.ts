@@ -328,7 +328,9 @@ export interface DemoContext {
   handlePostJob: (e: React.FormEvent) => Promise<void>;
   resetJobForm: () => void;
   handlePostAnnouncement: (e: React.FormEvent) => void;
-  handleSaveProfile: (e: React.FormEvent) => void;
+  handleSaveProfile: (e: React.FormEvent) => Promise<void> | void;
+  /** True while a real /api/mobile/account profile save is in flight. */
+  savingProfile: boolean;
   handleSimulateStripePay: () => void;
   /** Real dues checkout: POST /api/dues/checkout → open the Stripe URL (demo falls back to the simulation). */
   handleStartDuesCheckout: () => Promise<void> | void;

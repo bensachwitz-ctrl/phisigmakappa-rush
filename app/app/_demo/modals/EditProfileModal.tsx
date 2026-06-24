@@ -20,6 +20,7 @@ export function renderEditProfileModal(ctx: DemoContext) {
     editState,
     editYear,
     handleSaveProfile,
+    savingProfile,
     role,
     selectedBrand,
     setEditBio,
@@ -182,10 +183,11 @@ export function renderEditProfileModal(ctx: DemoContext) {
 
                       <button
                         type="submit"
-                        className="w-full py-2.5 text-white rounded-lg text-xs font-bold shadow-md transition active:scale-[0.98]"
+                        disabled={savingProfile}
+                        className="w-full py-2.5 text-white rounded-lg text-xs font-bold shadow-md transition active:scale-[0.98] disabled:opacity-60"
                         style={{ backgroundColor: selectedBrand.primaryColor }}
                       >
-                        Save & Sync Profile
+                        {savingProfile ? "Saving…" : "Save & Sync Profile"}
                       </button>
                     </form>
                   </div>

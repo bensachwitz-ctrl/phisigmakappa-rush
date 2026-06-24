@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, centralDb, getTenantClient } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
-import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getChapterIdentity, chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 import { rateLimit, recordRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// CORS preflight for the bundled native app. The native shell calls this cross-
+// origin (apex-hosted backend, Capacitor origin) before login (no token yet) with
+// a Content-Type header, so the WebView fires an OPTIONS preflight. The web app is
+// same-origin and never preflights — it sees no CORS header and behaves exactly as
+// before.
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
 
 // Per-IP + per-account throttle on reset requests: ~10 / hour. Without it, this
 // open endpoint can be used to (a) hammer the mail provider / flood a victim's
@@ -21,6 +37,10 @@ function baseUrl(req: Request) {
 }
 
 export async function POST(req: Request) {
+  return withCors(req, await handlePost(req));
+}
+
+async function handlePost(req: Request): Promise<NextResponse> {
   let body: any;
   try {
     body = await req.json();
@@ -37,6 +57,25 @@ export async function POST(req: Request) {
 
   if (role !== "brother" && role !== "alumni") {
     return NextResponse.json({ error: "Invalid portal role." }, { status: 400 });
+  }
+
+  // TENANT RESOLUTION. The web app posts no subdomain and resolves the chapter via
+  // the Host-proxy `prisma` (unchanged). The bundled native shell is apex-hosted
+  // (no chapter Host header), so it carries the chapter `subdomain` in the body;
+  // we bind an explicit tenant client for it. Either way `db` is the chapter's DB.
+  const bodySubdomain = String(body.subdomain || "").trim().toLowerCase();
+  let db = prisma;
+  if (bodySubdomain) {
+    const tenant = await centralDb.tenant
+      .findUnique({ where: { subdomain: bodySubdomain } })
+      .catch(() => null);
+    if (!tenant) {
+      return NextResponse.json({ error: "Chapter not found." }, { status: 404 });
+    }
+    if (!tenant.isActive) {
+      return NextResponse.json({ error: "This chapter is inactive." }, { status: 403 });
+    }
+    db = getTenantClient(bodySubdomain);
   }
 
   // Per-IP + per-account rate limit. We key BOTH on the source IP (blocks a
@@ -60,7 +99,7 @@ export async function POST(req: Request) {
   recordRateLimit(acctKey, RESET_REQUEST_LIMIT);
 
   // Find PortalUser
-  const portalUser = await prisma.portalUser.findFirst({
+  const portalUser = await db.portalUser.findFirst({
     where: {
       email: { equals: email, mode: "insensitive" },
       role: role,
@@ -70,7 +109,7 @@ export async function POST(req: Request) {
   if (!portalUser) {
     // Check if they are in the database but not onboarded yet
     if (role === "brother") {
-      const brother = await prisma.brother.findFirst({
+      const brother = await db.brother.findFirst({
         where: { email: { equals: email, mode: "insensitive" } },
       });
       if (brother) {
@@ -80,7 +119,7 @@ export async function POST(req: Request) {
       }
     } else {
       // In prisma, the model is AlumniProfile
-      const alum = await prisma.alumniProfile.findFirst({
+      const alum = await db.alumniProfile.findFirst({
         where: { email: { equals: email, mode: "insensitive" } },
       });
       if (alum) {
@@ -101,7 +140,7 @@ export async function POST(req: Request) {
   const token = crypto.randomBytes(24).toString("base64url");
   const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
 
-  await prisma.portalUser.update({
+  await db.portalUser.update({
     where: { id: portalUser.id },
     data: {
       magicToken: token,
@@ -109,14 +148,34 @@ export async function POST(req: Request) {
     },
   });
 
-  const base = baseUrl(req);
+  // Reset link host: web derives it from the request origin (unchanged). The
+  // native call is apex-hosted, so we build the chapter's canonical subdomain
+  // origin explicitly (mirrors app/api/mobile/exec/reset) so the link lands on a
+  // host that actually serves THIS chapter's reset page.
+  const base = bodySubdomain
+    ? (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/+$/, "") ||
+      `https://${bodySubdomain}.greekstack.vercel.app`
+    : baseUrl(req);
   const link = `${base}/portal/reset-password?token=${token}`;
-  
+
   // Try sending branded email
   try {
-    const identity = await getChapterIdentity();
-    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-    const brandHex = cfg["brand.primaryHex"] || "";
+    // Chapter identity: on the native (subdomain) path read it from THIS tenant's
+    // siteConfig (getChapterIdentity/getSiteConfig are Host-proxied → wrong on an
+    // apex call). On the web path keep the existing Host-proxied helpers.
+    let identity;
+    let brandHex = "";
+    if (bodySubdomain) {
+      const rows = await db.siteConfig.findMany().catch(() => [] as { key: string; value: string }[]);
+      const cfg: Record<string, string> = {};
+      for (const r of rows) cfg[r.key] = r.value;
+      identity = chapterIdentityFromCfg(cfg);
+      brandHex = cfg["brand.primaryHex"] || "";
+    } else {
+      identity = await getChapterIdentity();
+      const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+      brandHex = cfg["brand.primaryHex"] || "";
+    }
 
     const html = renderEmail({
       brandHex,

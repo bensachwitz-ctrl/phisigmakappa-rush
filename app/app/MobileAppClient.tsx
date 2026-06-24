@@ -1406,46 +1406,81 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     }, 1000);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const [savingProfile, setSavingProfile] = useState(false);
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dashboardData) return;
 
     const isAlum = role === "alumni";
-    const updatedProfile = {
-      ...dashboardData.profile,
-      phone: editPhone,
-      hometown: editHometown,
-      year: editYear,
-      major: editMajor,
-      ...(isAlum ? {
-        employer: editCompany,
-        jobTitle: editJobTitle,
-        city: editCity,
-        state: editState,
-        bio: editBio,
-        linkedinUrl: editLinkedIn,
-      } : {})
+
+    // The optimistic local mutation applied to dashboardData on success — shared
+    // by the demo path (local-only) and the real path (after the server confirms).
+    const applyLocal = () => {
+      const updatedProfile = {
+        ...dashboardData.profile,
+        phone: editPhone,
+        hometown: editHometown,
+        year: editYear,
+        major: editMajor,
+        ...(isAlum ? {
+          employer: editCompany,
+          jobTitle: editJobTitle,
+          city: editCity,
+          state: editState,
+          bio: editBio,
+          linkedinUrl: editLinkedIn,
+        } : {})
+      };
+
+      let updatedRoster = { ...dashboardData.roster };
+      if (!isAlum) {
+        updatedRoster.actives = (updatedRoster.actives || []).map((b: any) =>
+          b.id === dashboardData.profile.id
+            ? { ...b, phone: editPhone, year: editYear, major: editMajor }
+            : b,
+        );
+      } else {
+        updatedRoster.alumni = (updatedRoster.alumni || []).map((al: any) =>
+          al.id === dashboardData.profile.id
+            ? {
+                ...al,
+                phone: editPhone,
+                employer: editCompany,
+                jobTitle: editJobTitle,
+                city: editCity,
+                state: editState,
+                bio: editBio,
+                linkedinUrl: editLinkedIn,
+              }
+            : al,
+        );
+      }
+
+      setDashboardData((prev: any) => ({
+        ...prev,
+        profile: updatedProfile,
+        roster: updatedRoster,
+      }));
     };
 
-    // Update in actives roster or alumni roster list so it is reflected in Directory instantly!
-    let updatedRoster = { ...dashboardData.roster };
-    if (!isAlum) {
-      updatedRoster.actives = (updatedRoster.actives || []).map((b: any) => {
-        if (b.id === dashboardData.profile.id) {
-          return {
-            ...b,
-            phone: editPhone,
-            year: editYear,
-            major: editMajor,
-          };
-        }
-        return b;
-      });
-    } else {
-      updatedRoster.alumni = (updatedRoster.alumni || []).map((al: any) => {
-        if (al.id === dashboardData.profile.id) {
-          return {
-            ...al,
+    // DEMO: local-only showcase (honest — there is no real backend session). The
+    // toast is fine because nothing is claimed to persist server-side.
+    if (isDemo) {
+      applyLocal();
+      showToast("Profile updated successfully!", "success");
+      setShowEditProfileModal(false);
+      return;
+    }
+
+    // REAL member: persist via the wired endpoint. Success toast ONLY on res.ok;
+    // a fabricated "updated" toast for a write that never happened is exactly the
+    // anti-fabrication failure this is fixing. Only safe self-editable fields are
+    // sent — the server independently rejects anything else.
+    if (!selectedTenant || !token) return;
+    setSavingProfile(true);
+    try {
+      const payload: Record<string, string> = isAlum
+        ? {
             phone: editPhone,
             employer: editCompany,
             jobTitle: editJobTitle,
@@ -1453,20 +1488,34 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             state: editState,
             bio: editBio,
             linkedinUrl: editLinkedIn,
+          }
+        : {
+            phone: editPhone,
+            year: editYear,
+            major: editMajor,
+            hometown: editHometown,
           };
-        }
-        return al;
+      const res = await fetch(apiUrl("/api/mobile/account"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ subdomain: selectedTenant.subdomain, ...payload }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        applyLocal();
+        showToast("Profile updated successfully!", "success");
+        setShowEditProfileModal(false);
+      } else {
+        showToast(data.error || "Couldn't save your profile. Try again.", "error");
+      }
+    } catch {
+      showToast("Network error saving your profile. Try again.", "error");
+    } finally {
+      setSavingProfile(false);
     }
-
-    setDashboardData((prev: any) => ({
-      ...prev,
-      profile: updatedProfile,
-      roster: updatedRoster,
-    }));
-
-    showToast("Profile updated successfully!", "success");
-    setShowEditProfileModal(false);
   };
 
   // Simulated Stripe Payment process
@@ -1636,8 +1685,15 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     showToast("Vibe note added to PNM card.", "success");
   };
 
-  // Simulate Check-In door scanner
+  // Simulate Check-In door scanner — DEMO ONLY. For a real member there is no
+  // persistence pipeline behind this, so claiming "Checked in successfully!" would
+  // fabricate a result. Gate it to demo with an honest info toast otherwise
+  // (mirrors handlePnmVote / handleAddImpression).
   const handleSimulateCheckIn = (pnmId: string) => {
+    if (!isDemo) {
+      showToast("Door check-in is available in offline demo mode.", "info");
+      return;
+    }
     setDashboardData((prev: any) => {
       if (!prev || !prev.pnms) return prev;
       const updatedPnms = prev.pnms.map((p: any) => {
@@ -1658,21 +1714,66 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     showToast("Checked in successfully! Attendance count updated.", "success");
   };
 
-  // Forgot password handler (Mobile)
-  const handleMobileForgotSubmit = (e: React.FormEvent) => {
+  // Forgot password handler (Mobile) — wired to the REAL rate-limited endpoint
+  // POST /api/portal/forgot-password. The endpoint is anti-enumeration (it always
+  // returns ok:true when the email shape is valid, whether or not an account
+  // exists), so success is shown ONLY on res.ok — never a setTimeout that fakes a
+  // "sent" toast for a request that never happened. Demo sessions have no real
+  // backend, so they keep the local-only confirmation, honestly framed.
+  const handleMobileForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) return;
-    setForgotLoading(true);
-    setTimeout(() => {
-      setForgotLoading(false);
-      setForgotSuccess(true);
-      showToast("Password reset link sent!", "success");
+
+    if (isDemo) {
+      setForgotLoading(true);
       setTimeout(() => {
-        setForgotSuccess(false);
-        setShowForgotPassword(false);
-        setForgotEmail("");
-      }, 1500);
-    }, 1000);
+        setForgotLoading(false);
+        setForgotSuccess(true);
+        showToast("Demo mode: reset link not actually sent.", "info");
+        setTimeout(() => {
+          setForgotSuccess(false);
+          setShowForgotPassword(false);
+          setForgotEmail("");
+        }, 1500);
+      }, 600);
+      return;
+    }
+
+    if (!selectedTenant) {
+      showToast("Select your chapter first.", "error");
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const res = await fetch(apiUrl("/api/portal/forgot-password"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: selectedTenant.subdomain,
+          email: forgotEmail.trim().toLowerCase(),
+          role,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setForgotSuccess(true);
+        showToast(
+          "If your email is registered, a password reset link has been sent.",
+          "success",
+        );
+        setTimeout(() => {
+          setForgotSuccess(false);
+          setShowForgotPassword(false);
+          setForgotEmail("");
+        }, 1500);
+      } else {
+        showToast(data.error || "Couldn't send a reset link. Try again.", "error");
+      }
+    } catch {
+      showToast("Network error sending the reset link. Try again.", "error");
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   // Presidential Admin: Add member
@@ -1969,7 +2070,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     pickerChapters, hasRealChapters, handlePickPickerChapter, enterDemoShowcase,
     allChapters, filteredChapters, combinedFeed,
     handleSelectTenant, handleSignIn, handleSignOut, handleAddToCalendar, handleRsvp,
-    handlePostJob, resetJobForm, handlePostAnnouncement, handleSaveProfile,
+    handlePostJob, resetJobForm, handlePostAnnouncement, handleSaveProfile, savingProfile,
     handleSimulateStripePay, handleStartDuesCheckout, duesCheckoutLoading,
     handlePnmVote, handleAddImpression, handleSimulateCheckIn,
     handleMobileForgotSubmit, handleAddMobileMember, handleRemoveMobileMember,
