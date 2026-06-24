@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GREEKSTACK CANONICAL IDENTITY MARK — navy seal (iOS / Android AppIcon source).
+  ===========================================================================
+  The elevated CLASSICAL TEMPLE: a pediment over four columns WITH capitals +
+  bases, a gold cornice + gold medallion (oculus) + gold architrave, and a
+  stepped stylobate over a gold floor line. This is the ONE canonical vector —
+  every surface (the React <GreekstackLogo>, the maskable PWA icon, the
+  mobile-shell crest, the favicon/in-app icon) renders the SAME geometry; only
+  the color presentation changes (navy seal here; light tile elsewhere).
+
+  Normalized geometry (1024 box = 100-unit box × 10.24). Temple fills y22..81,
+  centered at cx=50. Columns at shaft-x = 23, 39, 55, 71 (shaft w6; capitals +
+  bases w9 centered on the shaft). Keep in lockstep with:
+    • components/brand/greekstack-logo.tsx  (48-box, ×0.48)
+    • app/maskable-icon/route.tsx           (apex temple, 100-box safe zone)
+    • mobile-shell/index.html               (boot crest + CREST_SVG, 100-box)
+    • scripts/gen-ios-assets.mjs / gen-android-assets.mjs (rasterize THIS file)
+
+  Navy seal palette:  tile #0B1B3A · temple #F4F1E6 · gold accents #E8B53A
+  (App Store icons are flattened opaque + alpha-stripped by the generator; the
+  tile here is a full-bleed rounded rect so the corners read clean before iOS
+  applies its own mask.)
+-->
+<svg width="1024" height="1024" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Greekstack">
+  <!-- Navy tile (full bleed; rounded for in-app/preview, masked by iOS) -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#0B1B3A"/>
+  <!-- ivory temple group -->
+  <g fill="#F4F1E6">
+    <!-- pediment -->
+    <path d="M16 44 L50 22 L84 44 Z"/>
+    <!-- entablature -->
+    <rect x="14" y="46.5" width="72" height="5" rx="1"/>
+    <!-- columns: capital + shaft + base, ×4 -->
+    <rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+    <rect x="23" y="54.7" width="6" height="15"/>
+    <rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+    <rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+    <rect x="39" y="54.7" width="6" height="15"/>
+    <rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+    <rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+    <rect x="55" y="54.7" width="6" height="15"/>
+    <rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+    <rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+    <rect x="71" y="54.7" width="6" height="15"/>
+    <rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+    <!-- stepped stylobate (2 steps) -->
+    <rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>
+    <rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>
+  </g>
+  <!-- restrained gold accents -->
+  <g fill="#E8B53A">
+    <!-- gold cornice under the pediment -->
+    <rect x="14" y="43.4" width="72" height="2" rx="1"/>
+    <!-- gold medallion (oculus) in the tympanum -->
+    <circle cx="50" cy="36" r="3"/>
+    <!-- gold architrave line on the entablature -->
+    <rect x="16" y="51" width="68" height="1"/>
+    <!-- gold floor line under the stylobate -->
+    <rect x="13" y="79.9" width="74" height="1.1"/>
+  </g>
+</svg>
