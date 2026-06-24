@@ -60,10 +60,20 @@
 
     --radius: 0.625rem;
 
+    /* CLASSICAL TYPE SYSTEM fallbacks. The real faces are loaded + bound on
+       <html> by next/font (app/layout.tsx): --font-sans=Inter, --font-display=
+       Cinzel (Trajan-inscription Roman capitals), --font-serif=Cormorant Garamond.
+       These :root values are the graceful fallback stack used before the web font
+       loads (display:swap) and anywhere the variable class isn't applied. The
+       next/font variable class on <html> wins the cascade, so these never shadow
+       the real faces. */
     --font-sans: "Inter", "ui-sans-serif", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    /* True display serif stack — no longer collapses to Inter. Picks up
-       Iowan/Garamond on Apple, Source Serif on Linux, Cambria/Times elsewhere. */
-    --font-display: ui-serif, "Iowan Old Style", "Apple Garamond", "Source Serif Pro", Cambria, "Times New Roman", serif;
+    /* Display = inscriptional Roman capitals (Cinzel). Fallback to a serif so
+       headings never collapse to Inter while Cinzel loads. */
+    --font-display: "Cinzel", "Trajan Pro", "Optima", ui-serif, "Times New Roman", Georgia, serif;
+    /* Serif accent = classical garalde (Cormorant Garamond). Fallback to the
+       system Garamond/old-style serifs. */
+    --font-serif: "Cormorant Garamond", "Iowan Old Style", "Apple Garamond", "Source Serif Pro", Cambria, "Times New Roman", serif;
   }
 }
 
@@ -83,9 +93,19 @@
     -webkit-font-smoothing: antialiased;
     overflow-x: clip;
   }
-  /* H1 ships heavier than H2 so the size+weight pair gives unambiguous
-     hierarchy even at small breakpoints where the size diff alone is
-     barely one stop. Round-3 designer feedback flagged "H1=H2 weight". */
+  /* CLASSICAL VOICE — every heading renders in the Cinzel display face
+     (Trajan-inscription Roman capitals) so the brand character carries through
+     the ENTIRE site (marketing, admin, member portal, onboarding, login) from
+     one rule, without touching hundreds of call-sites. Body copy, data tables,
+     and form fields stay on --font-sans (Inter) for legibility. A heading that
+     must read as dense data (rare) can opt back with `font-sans`.
+     Slight positive tracking suits inscriptional capitals; H1 stays heavier
+     than H2 so the size+weight pair gives unambiguous hierarchy even at small
+     breakpoints (round-3 designer feedback flagged "H1=H2 weight"). */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
   h1 {
     @apply font-bold tracking-tight;
   }

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Cinzel, Cormorant_Garamond } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
@@ -67,6 +67,30 @@ function resolveMetadataBase(host: string | null): URL {
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+// CLASSICAL TYPE SYSTEM — the Greek/Roman brand voice.
+// • Cinzel (OFL) — Trajan-inscription Roman capitals. The DISPLAY face for the
+//   wordmark, headings, nav brand, CTA labels, and login titles. Self-hosted via
+//   next/font (no layout shift, no external request). Exposed as --font-display
+//   (also consumed by the Tailwind `font-display` utility).
+// • Cormorant Garamond (OFL) — an elegant classical serif for taglines, intro
+//   copy, and brand accents. Exposed as --font-serif (Tailwind `font-serif`).
+// Inter stays the body/data face (--font-sans) so dense tables + forms keep full
+// legibility; the classical faces carry the brand + content moments only.
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -499,7 +523,10 @@ export default async function RootLayout({
   // (admin via lib/auth.ts, member portals via lib/portal-auth.ts) — there is no
   // third-party / social sign-in provider to wrap the tree in.
   const tree = (
-    <html lang="en" className={inter.variable}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${cinzel.variable} ${cormorant.variable}`}
+    >
       <head>
         <script
           type="application/ld+json"

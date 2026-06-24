@@ -159,7 +159,11 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
-        display: ["var(--font-display)", "ui-serif", "Georgia"],
+        // Cinzel — Trajan-inscription Roman capitals (the classical DISPLAY face).
+        // Wordmark, headings, nav brand, CTA labels, login titles.
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
+        // Cormorant Garamond — elegant classical serif for taglines + intro copy.
+        serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
       keyframes: {
         "accordion-down": {
