@@ -149,3 +149,127 @@ describe("marketing copy honesty — the honest replacements are present", () =>
     expect(landing).toContain("Chapter treasury, budgets & expense tracking");
   });
 });
+
+// ── round-4 (M2) ACADEMICS HONESTY — no per-member GPA / credit hours ────────
+// The chapter stores per-member academicStanding (string) + studyHours (int)
+// ONLY (prisma schema Brother model). There is NO per-member GPA field and NO
+// credit-hour field, so the academic CSV export must NOT emit "Term GPA" /
+// "Cumulative GPA" / "Credit Hours" columns, and academic-module copy must NOT
+// promise GPA tracking the model can't deliver. (A single chapter-AGGREGATE
+// stats.gpa marketing number IS stored in SiteConfig and is legitimate — that
+// is NOT what these pins forbid; they target only the per-member academic
+// surfaces below.) Non-vacuous: the old strings ("Term GPA", "GPA + study
+// hours", "GPA & standing per member", "Track brother GPA rosters") would all
+// have failed these; the honest replacements pass.
+describe("academics honesty — no per-member GPA / credit-hours on surfaces that can't store them (M2)", () => {
+  const ACADEMIC_SURFACES: { rel: string; forbid: RegExp[] }[] = [
+    {
+      rel: "lib/hq-exports.ts",
+      // The buildAcademicExport header line must not name GPA / credit hours.
+      forbid: [/Term GPA/i, /Cumulative GPA/i, /Credit Hours/i],
+    },
+    {
+      rel: "app/api/admin/exports/run/route.ts",
+      // The academic export case must not pass gpaTerm / gpaCumulative / creditHours.
+      forbid: [/gpaTerm/, /gpaCumulative/, /creditHours/],
+    },
+    {
+      rel: "app/admin/academic/academic-client.tsx",
+      forbid: [/\bGPA\b/],
+    },
+    {
+      rel: "app/admin/exports/exports-client.tsx",
+      // The academic export option desc must not promise GPA per member.
+      forbid: [/GPA (?:&|and) standing per member/i, /GPA per member/i],
+    },
+    {
+      rel: "app/admin/officers/officers-client.tsx",
+      // The academic DOMAIN hint must not say "GPA + study hours".
+      forbid: [/GPA \+ study hours/i],
+    },
+    {
+      rel: "components/admin/command-palette.tsx",
+      // The academic nav synonyms must not advertise "gpa" / "grades".
+      forbid: [/"gpa"/i, /"grades"/i],
+    },
+  ];
+
+  for (const { rel, forbid } of ACADEMIC_SURFACES) {
+    const src = readFileSync(resolve(ROOT, rel), "utf8");
+    for (const pattern of forbid) {
+      it(`${rel} does not promise per-member GPA/credit-hours (/${pattern.source}/)`, () => {
+        expect(
+          pattern.test(src),
+          `Found a per-member GPA/credit-hours promise matching ${pattern} in ${rel}; the model stores only academicStanding + studyHours.`,
+        ).toBe(false);
+      });
+    }
+  }
+
+  it("the academic export header names the real columns (Academic Standing + Study Hours)", () => {
+    const src = readFileSync(resolve(ROOT, "lib/hq-exports.ts"), "utf8");
+    expect(src).toContain("Academic Standing");
+    expect(src).toContain("Study Hours");
+  });
+});
+
+// ── round-4 (low) "tutor matching" is unbuilt — no role advertises it ────────
+// lib/officer-permissions.ts Scholarship Chair previously claimed "tutor
+// matching"; no tutor/matching model or route exists. Forbid it across the
+// permissions catalog so a copy edit can't reintroduce the unbuilt claim.
+describe("officer-permissions honesty — no unbuilt 'tutor matching' (low)", () => {
+  const perms = readFileSync(resolve(ROOT, "lib/officer-permissions.ts"), "utf8");
+  it("no role description claims tutor matching", () => {
+    expect(/tutor\s+match/i.test(perms)).toBe(false);
+  });
+});
+
+// ── round-4 (M1) DEAD-CONTROL PIN — the mobile dues-reminder button is wired ──
+// The shipped mobile binary (mobile-shell/index.html) had a button that fired a
+// fake-success toast ("Dues reminders sent to all unpaid members.") with NO
+// network call. It must instead POST to the real, officer-gated endpoint and
+// report the server's honest result. Pin: the real path is called, and the old
+// fabricated toast string is gone. Non-vacuous (the old string would fail #2).
+describe("mobile dead-control honesty — dues-reminder button hits the real endpoint (M1)", () => {
+  const shell = readFileSync(resolve(ROOT, "mobile-shell/index.html"), "utf8");
+
+  it("the dues-reminder button POSTs to /api/mobile/exec/dues-reminder", () => {
+    expect(shell).toContain('authPost("/api/mobile/exec/dues-reminder"');
+  });
+
+  it("no longer fires the fabricated 'sent to all unpaid members' toast", () => {
+    expect(/Dues reminders sent to all unpaid members/i.test(shell)).toBe(false);
+  });
+
+  it("the real endpoint route still exists (the button is not wired to a ghost)", () => {
+    // readFileSync throws if the route file is missing → the test fails loudly.
+    const route = readFileSync(
+      resolve(ROOT, "app/api/mobile/exec/dues-reminder/route.ts"),
+      "utf8",
+    );
+    expect(route).toContain("export async function POST");
+  });
+});
+
+// ── round-4 (M4) BLUE-REBRAND PIN — no maroon drop-shadows under blue UI ──────
+// The portal dashboards + elections voter were rebranded maroon→blue (the
+// maroon-*/cream-* Tailwind ramps are rebound to brand CSS vars), but their
+// inline arbitrary box-shadows kept raw rgba(74,17,29,a) — a reddish-brown halo
+// under blue elements. They were retinted to rgba(10,24,56,a) (deep navy).
+// Guard every rebranded component so a maroon shadow can't creep back in.
+describe("blue-rebrand honesty — no maroon (rgba(74,17,29)) shadows under blue-brand UI (M4)", () => {
+  const REBRANDED = [
+    "app/portal/alumni/dashboard/DashboardClient.tsx",
+    "app/portal/brothers/dashboard/BrothersDashboardClient.tsx",
+    "components/portal/elections-voter.tsx",
+  ];
+  for (const rel of REBRANDED) {
+    const src = readFileSync(resolve(ROOT, rel), "utf8");
+    it(`${rel} has no hardcoded maroon rgba(74,17,29) shadow`, () => {
+      expect(
+        /rgba\(\s*74\s*,\s*17\s*,\s*29/.test(src),
+        `Found a maroon rgba(74,17,29) shadow in ${rel}; retint to the blue brand (rgba(10,24,56,a)).`,
+      ).toBe(false);
+    });
+  }
+});

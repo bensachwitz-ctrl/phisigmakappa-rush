@@ -86,10 +86,11 @@ export function buildMembershipExport(input: {
 
 /**
  * Academic standing per member — the chapter stores academic STANDING
- * (good/probation/etc.) and STUDY HOURS only. It does NOT store per-member
- * GPA or credit hours, so this export intentionally carries neither: a blank
- * "GPA" column would be a hollow promise. Relabel/extend only when the model
- * actually persists those values.
+ * (good/probation/etc.) and STUDY HOURS only (Brother.academicStanding /
+ * Brother.studyHours). It persists no per-member grade-point or credit-load
+ * value, so this export carries exactly those two fields and nothing more — a
+ * blank grade column would be a hollow promise. Relabel/extend only if and when
+ * the model actually persists such a value.
  */
 export function buildAcademicExport(input: {
   termCode: string;

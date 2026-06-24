@@ -24,6 +24,13 @@ function emittedBrandPrimary(style: string): string {
   return m[1];
 }
 
+// Pull the emitted --brand-primary-dark hex out of the inline :root{…} style.
+function emittedBrandPrimaryDark(style: string): string {
+  const m = style.match(/--brand-primary-dark:(#[0-9a-fA-F]{3,6});/);
+  if (!m) throw new Error(`no --brand-primary-dark in style: ${style}`);
+  return m[1];
+}
+
 // Hue (0–360) of a hex, used only to assert the gold stays gold.
 function hueOf(hex: string): number {
   const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
@@ -85,5 +92,26 @@ describe("buildBrandThemeStyle emits an AA-passing --brand-primary", () => {
     // #500000 (Texas A&M maroon) is ~15.7:1 vs white → untouched.
     const style = buildBrandThemeStyle({ "brand.primaryHex": "#500000" });
     expect(style).toContain("--brand-primary:#500000;");
+  });
+});
+
+// ── round-4 (low) — --brand-primary-dark is ALSO AA-floored ──────────────────
+// --brand-primary-dark is bound (tailwind.config.ts) to text-maroon-400, used as
+// on-white informational text in ~20 portal spots, so a light "Primary dark"
+// pick must be auto-darkened just like --brand-primary. Previously it bypassed
+// the floor (raw safeHex) — pin the guard so a too-light dark pick can't ship as
+// failing-AA text.
+describe("buildBrandThemeStyle emits an AA-passing --brand-primary-dark (low)", () => {
+  it("a too-light 'Primary dark' pick (#FFD400) is corrected to AA in the emitted token", () => {
+    const style = buildBrandThemeStyle({ "brand.primaryDarkHex": "#FFD400" });
+    const dark = emittedBrandPrimaryDark(style);
+    expect(contrastRatio(dark, WHITE)).toBeGreaterThanOrEqual(4.5);
+    expect(dark.toLowerCase()).not.toBe("#ffd400");
+  });
+
+  it("the platform default primary-dark (#1e40af) already passes and is emitted unchanged", () => {
+    expect(contrastRatio("#1e40af", WHITE)).toBeGreaterThanOrEqual(4.5);
+    const style = buildBrandThemeStyle({});
+    expect(style).toContain("--brand-primary-dark:#1e40af;");
   });
 });
