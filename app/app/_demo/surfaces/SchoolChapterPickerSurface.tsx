@@ -5,7 +5,7 @@ import {
   IconGraduation,
   IconSearch,
 } from "@/components/brand/icons";
-import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { searchSchools } from "@/lib/schools";
 import {
   groupPickerBySchool,
@@ -132,26 +132,40 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
         style={{ backgroundColor: `${GS_GOLD}1a` }}
       />
 
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="relative shrink-0 px-6 pb-4 pt-7">
-        <div className="flex items-center justify-between">
-          {/* GS wordmark on the dark shell: override the --foreground token to
-              white so the "Greek" half reads light ("stack" keeps its gradient
-              via gs-gradient-text). */}
-          <span style={{ ["--foreground" as string]: "0 0% 100%" }}>
-            <GreekstackWordmark size="sm" />
-          </span>
-          {pickerStep === "chapter" && (
-            <button
-              type="button"
-              onClick={onBackToSchools}
-              aria-label="Back to schools"
-              className="inline-flex min-h-[44px] items-center gap-1 rounded-full bg-white/10 px-3 text-xs font-semibold text-white/90 transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 motion-reduce:transition-none"
-            >
-              <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Schools
-            </button>
-          )}
+      {/* ── Header — CENTERED lockup: the elevated TEMPLE SEAL with the
+              "Greekstack" wordmark directly UNDER it (replaces the old top-left
+              wordmark per the owner's PHASE-3 screen). The back-to-schools
+              control floats top-left so the lockup stays centered. ───────── */}
+      <div className="relative shrink-0 px-6 pb-4 pt-7 text-center">
+        {pickerStep === "chapter" && (
+          <button
+            type="button"
+            onClick={onBackToSchools}
+            aria-label="Back to schools"
+            className="absolute left-6 top-7 inline-flex min-h-[44px] items-center gap-1 rounded-full bg-white/10 px-3 text-xs font-semibold text-white/90 transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 motion-reduce:transition-none"
+          >
+            <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Schools
+          </button>
+        )}
+
+        {/* Centered elevated temple seal (navy) + soft brand halo. */}
+        <div className="relative mx-auto inline-flex">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 rounded-2xl blur-xl"
+            style={{ background: `radial-gradient(60% 60% at 50% 50%, ${GS_GOLD}33, transparent 70%)` }}
+          />
+          <GreekstackLogo
+            variant="seal"
+            title="Greekstack"
+            className="h-14 w-14 rounded-2xl ring-1 ring-white/10 shadow-[0_12px_30px_-12px_rgba(0,0,0,0.7)] motion-safe:animate-scale-in"
+          />
         </div>
+        {/* "Greekstack" wordmark directly under the seal (Cinzel caps, gold STACK). */}
+        <p className="mt-3 font-display text-lg font-bold uppercase leading-none tracking-[0.16em]">
+          <span className="text-white">Greek</span>
+          <span style={{ color: GS_GOLD }}>stack</span>
+        </p>
 
         <p
           className="mt-5 text-[11px] font-extrabold uppercase leading-none tracking-[0.22em]"
@@ -162,7 +176,7 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
         <h1 className="mt-2 text-balance text-[26px] font-bold leading-[1.1] tracking-tight text-white">
           {pickerStep === "school" ? "Welcome back." : "Pick your chapter"}
         </h1>
-        <p className="mt-1.5 max-w-[18rem] text-pretty text-[13px] leading-relaxed text-slate-300">
+        <p className="mx-auto mt-1.5 max-w-[18rem] text-pretty text-[13px] leading-relaxed text-slate-300">
           {pickerStep === "school"
             ? "Choose your school, then your chapter. We'll take you to the right sign-in."
             : "Tap your chapter to sign in to its branded app."}

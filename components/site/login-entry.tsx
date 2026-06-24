@@ -140,6 +140,12 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
               className="h-16 w-16 rounded-2xl shadow-[0_12px_30px_-12px_rgba(11,27,58,0.6)] ring-1 ring-white/10 motion-safe:animate-scale-in"
             />
           </div>
+          {/* "Greekstack" wordmark directly UNDER the seal — the centered lockup
+              the owner's PHASE-3 screen specifies (Cinzel caps, gold STACK). */}
+          <p className="mb-3 font-display text-xl font-bold uppercase leading-none tracking-[0.16em]">
+            <span className="text-foreground">Greek</span>
+            <span className="gs-gold-text">stack</span>
+          </p>
           {/* Greek-key (meander) divider — the instantly-recognizable Greek-life
               motif (backed by .gs-greek-key in globals.css; static, decorative). */}
           <span
