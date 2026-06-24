@@ -6,14 +6,13 @@
 // signup could squat "admin", "api", "webhook", a name that shadows platform
 // routing, or (via a "xn--" punycode prefix / double-hyphen) a homograph host.
 //
-// SYNC CONTRACT: these rules MUST agree with the FINAL-submit validation in
-// app/api/onboard/route.ts. The live availability check (app/api/onboard/check)
-// imports from here so the inline "available / taken / reserved / invalid"
-// hint the user sees while typing matches exactly what the final POST enforces.
-// app/api/onboard/route.ts currently inlines an identical RESERVED set + the
-// same format regex + the same `--`/length guards; that file is owned by
-// another agent, so this module is a faithful mirror, not its importer. If the
-// denylist or format rule changes in ONE place, change it in BOTH.
+// SINGLE SOURCE OF TRUTH: this module is the ONE place the denylist + format
+// rules live. BOTH the live availability check (app/api/onboard/check) AND the
+// FINAL-submit validation (app/api/onboard/route.ts) import checkSubdomainFormat
+// + RESERVED_SUBDOMAINS from here, so the "available / taken / reserved /
+// invalid" hint the user sees while typing matches exactly what the final POST
+// enforces — no inline copy to drift out of sync. tests/reserved-subdomain.test
+// also asserts a deep-equality / behavior match so any divergence fails the gate.
 
 /**
  * Reserved subdomains that can never be claimed by self-serve signup.
@@ -28,6 +27,9 @@ export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
   "billing", "stripe", "webhook", "webhooks", "internal", "system", "root",
   "support", "help", "docs", "blog", "about", "pricing", "demo", "onboard",
   "signup", "register", "account", "accounts", "settings", "config", "null",
+  // "public" is a loaded Postgres identifier (the default schema) — never let a
+  // self-serve signup claim it as a subdomain / tenant schema name.
+  "public",
 ]);
 
 /**

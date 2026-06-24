@@ -14,6 +14,7 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { platformSubscriptionDescription } from "@/lib/platform-billing";
 import { resolveTemplateId } from "@/components/site/templates/template-orders";
+import { normalizeSubdomain, checkSubdomainFormat } from "@/lib/reserved-subdomains";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -102,32 +103,15 @@ export async function POST(req: Request) {
     paymentMethodId,
   } = body;
 
-  const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-
-  // Reserved-subdomain denylist + format guard. A provisioned subdomain becomes
-  // a live host (sub.greekstack.vercel.app) AND a Postgres schema, so
-  // platform/route names and common service hostnames must never be claimable —
-  // otherwise a self-serve signup could squat "admin", "api", "webhook", a name
-  // that shadows platform routing, or (via punycode "xn--") a homograph host.
-  const RESERVED = new Set([
-    "www", "greekstack", "greeklifesystems", "greek-life-systems", "apex", "_apex",
-    "admin", "api", "app", "apps", "dashboard", "portal", "auth", "login",
-    "mail", "email", "smtp", "imap", "ftp", "ns", "ns1", "ns2", "dns",
-    "static", "assets", "cdn", "img", "images", "media", "files", "uploads",
-    "vercel", "next", "_next", "status", "health", "test", "staging", "dev",
-    "billing", "stripe", "webhook", "webhooks", "internal", "system", "root",
-    "support", "help", "docs", "blog", "about", "pricing", "demo", "onboard",
-    "signup", "register", "account", "accounts", "settings", "config", "null",
-  ]);
-  // 3–63 chars, start/end alphanumeric, hyphens allowed only in the middle.
-  const validFormat = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(subdomain);
-  if (
-    !subdomain ||
-    subdomain.length < 3 ||
-    !validFormat ||
-    subdomain.includes("--") || // blocks "xn--" punycode + double-hyphen abuse
-    RESERVED.has(subdomain)
-  ) {
+  // SINGLE SOURCE OF TRUTH: normalize + validate via lib/reserved-subdomains so
+  // the FINAL-submit guard here, the live availability check (app/api/onboard/
+  // check), and the typing hint all enforce the SAME denylist + format rules —
+  // no inline copy to drift. A provisioned subdomain becomes a live host
+  // (sub.greekstack.vercel.app) AND a Postgres schema, so platform/route names
+  // and common service hostnames ("admin", "api", "webhook", "public", a
+  // punycode "xn--" homograph) must never be self-serve claimable.
+  const subdomain = normalizeSubdomain(rawSubdomain);
+  if (checkSubdomainFormat(subdomain) !== null) {
     return NextResponse.json(
       { ok: false, error: "That subdomain is invalid or reserved — please choose another." },
       { status: 400 },

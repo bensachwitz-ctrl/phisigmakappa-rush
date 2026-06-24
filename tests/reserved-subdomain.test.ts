@@ -1,45 +1,27 @@
 import { describe, it, expect } from "vitest";
+import {
+  RESERVED_SUBDOMAINS,
+  checkSubdomainFormat,
+  normalizeSubdomain,
+} from "@/lib/reserved-subdomains";
 
 // ---------------------------------------------------------------------------
-// Reserved-subdomain guard from app/api/onboard/route.ts.
+// Reserved-subdomain guard — SINGLE SOURCE OF TRUTH (lib/reserved-subdomains.ts).
 //
-// The provisioning route validates a requested subdomain INLINE (not exported),
-// so per the brief we REPLICATE the exact predicate here and pin its behavior.
+// app/api/onboard/route.ts (final submit) and app/api/onboard/check/route.ts
+// (live availability) BOTH import checkSubdomainFormat + RESERVED_SUBDOMAINS from
+// this module — there is no longer an inline copy in the route to drift. We test
+// the lib directly so these assertions ARE the contract both routes enforce.
+//
 // A provisioned subdomain becomes BOTH a live host (sub.greekstack.vercel.app)
 // AND a Postgres schema, so platform/route names, service hostnames, punycode
-// homographs, and too-short labels must be unclaimable by self-serve signup.
-//
-// SOURCE OF TRUTH: app/api/onboard/route.ts (RESERVED set + validFormat regex +
-// length/double-hyphen guards). If that route changes, update this mirror — a
-// failure here flags drift between the test's copy and the route.
+// homographs, the loaded "public" schema identifier, and too-short labels must
+// be unclaimable by self-serve signup.
 // ---------------------------------------------------------------------------
 
-// --- verbatim copy of the route's RESERVED denylist ---
-const RESERVED = new Set([
-  "www", "greekstack", "greeklifesystems", "greek-life-systems", "apex", "_apex",
-  "admin", "api", "app", "apps", "dashboard", "portal", "auth", "login",
-  "mail", "email", "smtp", "imap", "ftp", "ns", "ns1", "ns2", "dns",
-  "static", "assets", "cdn", "img", "images", "media", "files", "uploads",
-  "vercel", "next", "_next", "status", "health", "test", "staging", "dev",
-  "billing", "stripe", "webhook", "webhooks", "internal", "system", "root",
-  "support", "help", "docs", "blog", "about", "pricing", "demo", "onboard",
-  "signup", "register", "account", "accounts", "settings", "config", "null",
-]);
-
-// --- verbatim copy of the route's sanitize + validation predicate ---
+// Helper mirroring how the routes use the lib: normalize, then format/denylist.
 function isAcceptableSubdomain(rawSubdomain: string): boolean {
-  const subdomain = (rawSubdomain || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-  const validFormat = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(subdomain);
-  if (
-    !subdomain ||
-    subdomain.length < 3 ||
-    !validFormat ||
-    subdomain.includes("--") ||
-    RESERVED.has(subdomain)
-  ) {
-    return false;
-  }
-  return true;
+  return checkSubdomainFormat(normalizeSubdomain(rawSubdomain)) === null;
 }
 
 describe("reserved-subdomain guard — rejects reserved platform/service names", () => {
@@ -55,6 +37,11 @@ describe("reserved-subdomain guard — rejects reserved platform/service names",
       expect(isAcceptableSubdomain(r)).toBe(false);
     }
   });
+
+  it('rejects "public" — the loaded Postgres default-schema identifier (L3)', () => {
+    expect(RESERVED_SUBDOMAINS.has("public")).toBe(true);
+    expect(isAcceptableSubdomain("public")).toBe(false);
+  });
 });
 
 describe("reserved-subdomain guard — format rules", () => {
@@ -69,7 +56,6 @@ describe("reserved-subdomain guard — format rules", () => {
   });
 
   it("rejects a label that would start or end with a hyphen", () => {
-    // Leading/trailing hyphen survives the [a-z0-9-] sanitize but fails validFormat.
     expect(isAcceptableSubdomain("-abc")).toBe(false);
     expect(isAcceptableSubdomain("abc-")).toBe(false);
   });
@@ -77,6 +63,13 @@ describe("reserved-subdomain guard — format rules", () => {
   it("rejects an empty / whitespace-only request", () => {
     expect(isAcceptableSubdomain("")).toBe(false);
     expect(isAcceptableSubdomain("   ")).toBe(false);
+  });
+
+  it("checkSubdomainFormat returns the most actionable reason", () => {
+    expect(checkSubdomainFormat("ab")).toBe("invalid");      // too short
+    expect(checkSubdomainFormat("admin")).toBe("reserved");  // well-formed but denied
+    expect(checkSubdomainFormat("public")).toBe("reserved"); // L3
+    expect(checkSubdomainFormat("phisig")).toBe(null);       // OK
   });
 });
 
@@ -92,7 +85,26 @@ describe("reserved-subdomain guard — accepts a legitimate chapter subdomain", 
   });
 
   it("normalizes case + strips illegal chars before validating", () => {
-    // "Phi Sig!" → "phisig" after lowercase + strip → acceptable.
-    expect(isAcceptableSubdomain("Phi Sig!")).toBe(true);
+    expect(isAcceptableSubdomain("Phi Sig!")).toBe(true); // → "phisig"
   });
+});
+
+// ── Drift guard: the two onboard routes must keep importing from this module ──
+// (No inline RESERVED copy may reappear in either route.) A source-pin catches a
+// future regression where someone re-inlines the denylist and lets it drift.
+describe("reserved-subdomain guard — onboard routes use the single source", () => {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const { resolve } = require("node:path") as typeof import("node:path");
+  const ROOT = resolve(__dirname, "..");
+
+  for (const rel of ["app/api/onboard/route.ts", "app/api/onboard/check/route.ts"]) {
+    const src = readFileSync(resolve(ROOT, rel), "utf8");
+    it(`${rel} imports checkSubdomainFormat from lib/reserved-subdomains`, () => {
+      expect(src).toMatch(/from\s+["']@\/lib\/reserved-subdomains["']/);
+      expect(src).toContain("checkSubdomainFormat");
+    });
+    it(`${rel} does not re-inline a local RESERVED Set`, () => {
+      expect(src).not.toMatch(/const\s+RESERVED\s*=\s*new Set/);
+    });
+  }
 });
