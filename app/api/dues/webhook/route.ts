@@ -8,7 +8,7 @@ import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
-import { DUES_INTRO_FEE_USED_KEY } from "@/lib/platform-billing";
+import { markDuesIntroFeeUsedFromSession } from "@/lib/platform-billing";
 import { logger, errorSink } from "@/lib/logger";
 import { generateAndUploadDuesReceipt } from "@/lib/dues-receipt";
 
@@ -382,25 +382,20 @@ async function markIntroFeeUsedIfDuesPercentage(
   db: PrismaClient,
   session: Stripe.Checkout.Session,
 ): Promise<void> {
-  try {
+  // Delegate to the SHARED helper so the webhook and the reconcile cron apply
+  // the exact same intro-fee consumption (the cron previously omitted this,
+  // locking dropped-webhook chapters at 1.5% forever). Logging stays here so the
+  // webhook's ops line is unchanged.
+  const flipped = await markDuesIntroFeeUsedFromSession(db, session, (e) =>
+    errorSink(e, { route: ROUTE, outcome: "mark_intro_fee_used_failed" }),
+  );
+  if (flipped) {
     const meta = (session.metadata as Record<string, string> | null) || null;
-    if (!meta || meta.platformPlan !== "dues_percentage") return;
-    // Already consumed (the checkout saw it as used) → nothing to write.
-    if (meta.introFeeUsed === "true") return;
-
-    await db.siteConfig.upsert({
-      where: { key: DUES_INTRO_FEE_USED_KEY },
-      update: { value: "true" },
-      create: { key: DUES_INTRO_FEE_USED_KEY, value: "true" },
-    });
-
     logger.info("dues.intro_fee.consumed", {
       route: ROUTE,
-      tenant: meta.subdomain || null,
+      tenant: meta?.subdomain || null,
       outcome: "intro_fee_marked_used",
     });
-  } catch (e) {
-    errorSink(e, { route: ROUTE, outcome: "mark_intro_fee_used_failed" });
   }
 }
 

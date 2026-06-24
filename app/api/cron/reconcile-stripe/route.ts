@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { forEachTenant } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { logger, errorSink } from "@/lib/logger";
+import { markDuesIntroFeeUsedFromSession } from "@/lib/platform-billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -208,6 +209,29 @@ async function reconcileTenant(
             },
           }),
         ]);
+
+        // Consume the dues_percentage intro fee — the SAME PAID-side effect the
+        // webhook applies (markDuesIntroFeeUsedFromSession). Without this, a
+        // chapter whose FIRST dues payment is confirmed by this safety-net cron
+        // (a dropped webhook — exactly why the cron exists) would never flip
+        // dues.introFeeUsed and would be billed the 1.5% intro rate forever.
+        // Best-effort + idempotent inside the helper; reads the plan signal from
+        // the session metadata stamped at checkout.
+        const introFlipped = await markDuesIntroFeeUsedFromSession(db, s, (e) =>
+          errorSink(e, {
+            route: ROUTE,
+            kind: "dues",
+            paymentId: payment.id,
+            outcome: "mark_intro_fee_used_failed",
+          }),
+        );
+        if (introFlipped) {
+          logger.info("dues.intro_fee.consumed", {
+            route: ROUTE,
+            paymentId: payment.id,
+            outcome: "intro_fee_marked_used_reconcile",
+          });
+        }
 
         const brother = await db.brother.findUnique({
           where: { id: payment.brotherId },

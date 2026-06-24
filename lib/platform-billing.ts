@@ -212,6 +212,63 @@ export function duesPlatformFeePct(
   return introUsed ? DUES_STANDARD_FEE_PCT : DUES_INTRO_FEE_PCT;
 }
 
+/**
+ * Minimal structural shape of the tenant Prisma client this helper needs — just
+ * `siteConfig.upsert`. Keeps this lib decoupled from a concrete PrismaClient
+ * import while accepting BOTH the webhook's tenant client and the cron's `db`.
+ */
+type SiteConfigUpserter = {
+  siteConfig: {
+    upsert: (args: {
+      where: { key: string };
+      update: { value: string };
+      create: { key: string; value: string };
+    }) => Promise<unknown>;
+  };
+};
+
+/**
+ * Consume the dues_percentage intro fee on a chapter's FIRST successful dues
+ * payment. SHARED by BOTH the webhook (/api/dues/webhook) and the reconcile-
+ * stripe safety-net cron so the two paths apply the SAME PAID-side effect — a
+ * dues payment first confirmed by the cron (a dropped webhook, exactly the
+ * cron's purpose) must still flip the flag, or the chapter would be billed the
+ * 1.5% intro rate forever (permanent platform under-collection).
+ *
+ * The plan signal rides in the Checkout session metadata (`platformPlan ===
+ * "dues_percentage"`, with `introFeeUsed` snapshotted at checkout) — Stripe
+ * POSTs the webhook with no Host, and the cron resolves the tenant by schema,
+ * so metadata is the authoritative, already-routed signal in both paths.
+ *
+ * Idempotent (upsert to "true") + best-effort: any DB failure is swallowed and
+ * surfaced via the caller-supplied `onError` so a confirmed payment is never
+ * re-driven. Returns true only when it actually flipped the flag (so the caller
+ * can log the consumption). No-op (returns false) for any non-dues_percentage
+ * session, an already-consumed session, or on error.
+ */
+export async function markDuesIntroFeeUsedFromSession(
+  db: SiteConfigUpserter,
+  session: Stripe.Checkout.Session,
+  onError?: (e: unknown) => void,
+): Promise<boolean> {
+  try {
+    const meta = (session.metadata as Record<string, string> | null) || null;
+    if (!meta || meta.platformPlan !== "dues_percentage") return false;
+    // Already consumed (the checkout snapshotted it as used) → nothing to write.
+    if (meta.introFeeUsed === "true") return false;
+
+    await db.siteConfig.upsert({
+      where: { key: DUES_INTRO_FEE_USED_KEY },
+      update: { value: "true" },
+      create: { key: DUES_INTRO_FEE_USED_KEY, value: "true" },
+    });
+    return true;
+  } catch (e) {
+    onError?.(e);
+    return false;
+  }
+}
+
 /** Human-facing plan name (page + checkout line item). */
 export function planDisplayName(plan: string | null | undefined): string {
   switch (normalizePlan(plan)) {

@@ -9,6 +9,7 @@ import {
   buildFinancialExport,
   buildMembershipExport,
   buildPhilanthropyExport,
+  dedupePaidByBrotherYear,
   isHqExportType,
   type HqExportType,
 } from "@/lib/hq-exports";
@@ -175,6 +176,13 @@ async function buildExport(exportType: HqExportType, termCode: string) {
         where: { year: { contains: termCode.toLowerCase().split("-")[0] } },
         include: { brother: { select: { id: true, name: true } } },
       });
+      // MONEY INTEGRITY (council): a brother can end up with MORE THAN ONE PAID
+      // row for a year (e.g. a Stripe payment + a stray MANUAL mark). Summing all
+      // PAID rows would overstate dues collected. Dedup to ONE PAID row per
+      // (brotherId, year) BEFORE summing so a brother is counted at most once as
+      // paid. (The source toggle is also fixed to not mint the duplicate, but this
+      // guards any historical/edge duplicate rows.)
+      const dedupedPaid = dedupePaidByBrotherYear(payments);
       const perMember = new Map<
         string,
         { memberId: string; memberName: string; amountAssessedCents: number; amountPaidCents: number; status: string }
@@ -188,7 +196,9 @@ async function buildExport(exportType: HqExportType, termCode: string) {
           status: p.status,
         };
         slot.amountAssessedCents += p.amountCents;
-        if (p.status === "PAID") slot.amountPaidCents += p.amountCents;
+        // Count the PAID amount from the deduped set (one paid row per brother/
+        // year) rather than re-summing every PAID row.
+        if (dedupedPaid.has(p.id)) slot.amountPaidCents += p.amountCents;
         slot.status = p.status;
         perMember.set(p.brotherId, slot);
       }
@@ -228,8 +238,11 @@ async function buildExport(exportType: HqExportType, termCode: string) {
       // chapterGpa as optional and degrades gracefully.
       const chapterGpa: number | undefined = undefined;
       const duesAssessedCents = payments.reduce((s, p) => s + p.amountCents, 0);
+      // Dedup to one PAID row per (brotherId, year) so a brother with a duplicate
+      // PAID row (Stripe + stray MANUAL) is not double-counted in dues collected.
+      const annualDedupedPaid = dedupePaidByBrotherYear(payments);
       const duesCollectedCents = payments
-        .filter((p) => p.status === "PAID")
+        .filter((p) => annualDedupedPaid.has(p.id))
         .reduce((s, p) => s + p.amountCents, 0);
       const serviceHoursTotal = hourLogs.reduce((s, h) => s + Number(h.hoursLogged), 0);
       const philanthropyRaisedDollars = parseFloat((cfg["philanthropy.raisedAmount"] || "0").replace(/[^0-9.]/g, ""));

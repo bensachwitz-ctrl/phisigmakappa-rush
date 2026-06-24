@@ -192,49 +192,81 @@ export async function PATCH(req: Request) {
           const year = cfg["dues.year"] || "2026-fall";
           const amountCents = parseInt(cfg["dues.amountCents"] || "15000", 10) || 15000;
           const currency = (cfg["dues.currency"] || "usd").toLowerCase();
-          const existingManual = await prisma.duesPayment.findFirst({
-            where: { brotherId: id, year, method: "MANUAL" },
+          // MONEY INTEGRITY (council): a brother who already paid via Stripe has a
+          // STRIPE/PAID row. The old existence check was scoped to method:MANUAL
+          // only, so toggling dues OFF (reverses MANUAL only) then ON would mint a
+          // SECOND PAID row (MANUAL) alongside the STRIPE one — and the exports sum
+          // ALL PAID rows per year, double-counting that brother. Guard FIRST on
+          // ANY existing PAID row for (brother, year) regardless of method: if the
+          // brother is already paid (via Stripe OR a prior manual mark), do NOT
+          // create a duplicate. Only mirror the canonical Brother dues fields off
+          // the existing PAID row so the denormalized state stays correct.
+          const existingPaid = await prisma.duesPayment.findFirst({
+            where: { brotherId: id, year, status: "PAID" },
             orderBy: { createdAt: "desc" },
           });
-          const manualPayment = existingManual
-            ? await prisma.duesPayment.update({
-                where: { id: existingManual.id },
-                data: {
-                  amountCents,
-                  currency,
-                  status: "PAID",
-                  notes: "Marked paid manually by admin",
-                },
-              })
-            : await prisma.duesPayment.create({
-                data: {
-                  brotherId: id,
-                  amountCents,
-                  currency,
-                  year,
-                  method: "MANUAL",
-                  status: "PAID",
-                  notes: "Marked paid manually by admin",
-                },
-              });
-          await prisma.brother.update({
-            where: { id },
-            data: {
-              duesPaidAt: new Date(),
-              duesPaymentMethod: "MANUAL",
-              duesPaymentId: manualPayment.id,
-              duesAmountCents: amountCents,
-              duesYear: year,
-            },
-          });
-          await audit({
-            action: "DUES_PAID_MANUAL",
-            subjectType: "Brother",
-            subjectId: id,
-            subjectName: updated.name,
-            details: `$${(amountCents / 100).toFixed(2)} — ${year} (marked paid by admin)`,
-            req,
-          });
+          if (existingPaid) {
+            // Already paid for this year — re-sync the Brother mirror to the real
+            // paid row (its method/amount), never a second ledger entry.
+            await prisma.brother.update({
+              where: { id },
+              data: {
+                duesPaidAt: existingPaid.createdAt ?? new Date(),
+                duesPaymentMethod: existingPaid.method,
+                duesPaymentId: existingPaid.id,
+                duesAmountCents: existingPaid.amountCents,
+                duesYear: year,
+              },
+            });
+          } else {
+            // No PAID row yet → upsert a single MANUAL row per (brother, year):
+            // reuse a prior non-PAID MANUAL row if present (e.g. a REFUNDED one
+            // from a previous un-mark), else create one. This still never mints a
+            // duplicate because the ANY-PAID guard above already returned.
+            const existingManual = await prisma.duesPayment.findFirst({
+              where: { brotherId: id, year, method: "MANUAL" },
+              orderBy: { createdAt: "desc" },
+            });
+            const manualPayment = existingManual
+              ? await prisma.duesPayment.update({
+                  where: { id: existingManual.id },
+                  data: {
+                    amountCents,
+                    currency,
+                    status: "PAID",
+                    notes: "Marked paid manually by admin",
+                  },
+                })
+              : await prisma.duesPayment.create({
+                  data: {
+                    brotherId: id,
+                    amountCents,
+                    currency,
+                    year,
+                    method: "MANUAL",
+                    status: "PAID",
+                    notes: "Marked paid manually by admin",
+                  },
+                });
+            await prisma.brother.update({
+              where: { id },
+              data: {
+                duesPaidAt: new Date(),
+                duesPaymentMethod: "MANUAL",
+                duesPaymentId: manualPayment.id,
+                duesAmountCents: amountCents,
+                duesYear: year,
+              },
+            });
+            await audit({
+              action: "DUES_PAID_MANUAL",
+              subjectType: "Brother",
+              subjectId: id,
+              subjectName: updated.name,
+              details: `$${(amountCents / 100).toFixed(2)} — ${year} (marked paid by admin)`,
+              req,
+            });
+          }
         } catch {
           // Ledger write is best-effort — the canonical Brother.duesPaid
           // flip already happened, so the existing UI keeps working

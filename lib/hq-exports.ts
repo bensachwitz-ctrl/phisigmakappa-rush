@@ -232,3 +232,46 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+// ── PAID-dues dedup (money-integrity) ─────────────────────────────────────────
+// A brother can end up with MORE THAN ONE PAID DuesPayment row for a single
+// (brotherId, year) — e.g. a Stripe payment plus a stray MANUAL "marked paid"
+// row. The financial + annual-report exports sum PAID amounts, so a duplicate
+// would OVERSTATE dues collected. This selects exactly ONE PAID row per
+// (brotherId, year) — the FIRST by createdAt (earliest real payment), STRIPE
+// preferred on a createdAt tie since it's the authoritative cardholder charge —
+// and returns the SET of row ids to count. Non-PAID rows are never included.
+//
+// Pure + prisma-free so it's trivially unit-testable; callers pass already-
+// fetched rows. Source toggles are independently fixed to not mint duplicates;
+// this guards any historical/edge duplicate that already exists in the ledger.
+export type PaidDedupRow = {
+  id: string;
+  brotherId: string;
+  year: string;
+  status: string;
+  method: string;
+  createdAt: Date;
+};
+
+export function dedupePaidByBrotherYear<T extends PaidDedupRow>(rows: T[]): Set<string> {
+  const winnerByKey = new Map<string, T>();
+  for (const r of rows) {
+    if (r.status !== "PAID") continue;
+    const key = `${r.brotherId}::${r.year}`;
+    const cur = winnerByKey.get(key);
+    if (!cur) {
+      winnerByKey.set(key, r);
+      continue;
+    }
+    const rTime = r.createdAt instanceof Date ? r.createdAt.getTime() : new Date(r.createdAt).getTime();
+    const curTime =
+      cur.createdAt instanceof Date ? cur.createdAt.getTime() : new Date(cur.createdAt).getTime();
+    if (rTime < curTime) {
+      winnerByKey.set(key, r); // earlier payment wins
+    } else if (rTime === curTime && r.method === "STRIPE" && cur.method !== "STRIPE") {
+      winnerByKey.set(key, r); // tie → the authoritative Stripe charge wins
+    }
+  }
+  return new Set([...winnerByKey.values()].map((r) => r.id));
+}
