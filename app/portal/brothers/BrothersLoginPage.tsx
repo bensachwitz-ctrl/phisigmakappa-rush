@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { Users, ArrowLeft, Mail, Lock, LogIn } from "lucide-react";
+import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
+import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 
 // Brothers portal sign-in is email/password ONLY — chapter-scoped credentials
 // issued by an e-board officer. No third-party / social sign-in.
@@ -95,22 +96,29 @@ export default function BrothersLoginPage() {
             Back to portals
           </Link>
 
-          {/* Frosted, layered card — a hairline ring + soft ambient shadow lift
-              it off the page for a premium, finished feel. Chapter-themed
-              (maroon = the white-label brand token), not the apex palette. */}
+          {/* Premium classical card — the ELEVATED TEMPLE seal, a Cinzel title +
+              Cormorant subhead, and a hairline ring + soft ambient shadow that
+              lift it off the page. Chapter-themed (the navy/gold brand ramp),
+              not a plain default form. */}
           <div className="relative rounded-2xl border border-maroon-100 bg-white/95 backdrop-blur-sm p-6 sm:p-8 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_18px_40px_-20px_rgba(80,0,20,0.35)] ring-1 ring-maroon-900/5 space-y-6">
             <div className="text-center">
-              <div className="relative inline-flex mb-3">
-                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-400/30 blur-xl" />
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-maroon-650 to-maroon-900 text-cream-50 shadow-md ring-1 ring-maroon-900/10">
-                  <Users className="w-6 h-6" />
-                </span>
+              {/* The classical temple seal (navy), centered, with a soft brand
+                  halo + a gentle entrance (reduced-motion-safe). */}
+              <div className="relative inline-flex mb-4">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-400/30 blur-xl" />
+                <GreekstackLogo
+                  variant="seal"
+                  title="Sign in"
+                  className="h-14 w-14 rounded-2xl shadow-[0_10px_26px_-12px_rgba(11,27,58,0.6)] ring-1 ring-white/10 motion-safe:animate-scale-in"
+                />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-maroon-900">
-                {showForgot ? "Forgot Password" : "Brothers Sign In"}
+              {/* Cinzel inscriptional caps — the classical brand voice. */}
+              <h1 className="font-display text-2xl font-bold uppercase tracking-[0.06em] text-maroon-900">
+                {showForgot ? "Reset Access" : "Welcome Back"}
               </h1>
-              <p className="text-xs text-maroon-600 mt-1">
-                {showForgot ? "Recover your chapter portal credentials" : "Access your chapter dashboard & tools"}
+              {/* Cormorant serif subhead — elegant classical accent. */}
+              <p className="font-serif text-base italic text-maroon-600 mt-1.5">
+                {showForgot ? "Recover your chapter portal credentials" : "Sign in to your chapter dashboard & tools"}
               </p>
             </div>
 
@@ -147,7 +155,7 @@ export default function BrothersLoginPage() {
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
+                      className="w-full pl-10 pr-4 py-2.5 bg-maroon-50 border border-maroon-200 rounded-xl focus:outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 text-sm text-maroon-900 transition"
                     />
                   </div>
                 </div>
@@ -156,9 +164,9 @@ export default function BrothersLoginPage() {
                   <Button
                     type="submit"
                     disabled={forgotLoading}
-                    className="w-full bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-sm font-semibold transition"
+                    className="w-full min-h-[48px] bg-gradient-to-b from-cream-300 to-brand-secondary text-maroon-950 hover:from-cream-200 hover:to-cream-300 flex items-center justify-center gap-1.5 py-3 rounded-xl shadow-[0_8px_22px_-8px_rgba(168,120,15,0.6),inset_0_1px_0_0_rgba(255,255,255,0.5)] font-display font-bold uppercase tracking-[0.12em] transition"
                   >
-                    {forgotLoading ? "Sending Link..." : "Send Reset Link"}
+                    {forgotLoading ? "Sending Link…" : "Send Reset Link"}
                   </Button>
                   <Button
                     type="button"
@@ -202,7 +210,7 @@ export default function BrothersLoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
+                      className="w-full pl-10 pr-4 py-2.5 bg-maroon-50 border border-maroon-200 rounded-xl focus:outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 text-sm text-maroon-900 transition"
                     />
                   </div>
                 </div>
@@ -230,7 +238,7 @@ export default function BrothersLoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-16 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
+                      className="w-full pl-10 pr-16 py-2.5 bg-maroon-50 border border-maroon-200 rounded-xl focus:outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 text-sm text-maroon-900 transition"
                     />
                     <button
                       type="button"
@@ -244,19 +252,13 @@ export default function BrothersLoginPage() {
                   </div>
                 </div>
 
+                {/* Gold primary "ENTER" — Cinzel caps; the premium classical CTA. */}
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full min-h-[44px] bg-maroon-800 hover:bg-maroon-900 text-cream-50 flex items-center justify-center gap-1.5 py-2.5 rounded-xl shadow-sm font-semibold transition"
+                  className="w-full min-h-[48px] bg-gradient-to-b from-cream-300 to-brand-secondary text-maroon-950 hover:from-cream-200 hover:to-cream-300 flex items-center justify-center gap-1.5 py-3 rounded-xl shadow-[0_8px_22px_-8px_rgba(168,120,15,0.6),inset_0_1px_0_0_rgba(255,255,255,0.5)] font-display font-bold uppercase tracking-[0.14em] transition"
                 >
-                  {loading ? (
-                    <span>Signing In...</span>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4" />
-                      Sign In
-                    </>
-                  )}
+                  {loading ? <span>Signing In…</span> : <span>Enter</span>}
                 </Button>
               </form>
             )}

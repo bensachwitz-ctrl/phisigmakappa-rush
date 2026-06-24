@@ -25,7 +25,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
+import { GreekstackLogo, GreekstackWordmark } from "@/components/brand/greekstack-logo";
 
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import { Button } from "@/components/ui/button";
@@ -124,24 +124,40 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
         id="main-content"
         className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-20 pt-8 sm:pt-12"
       >
-        {/* ── Heading ───────────────────────────────────────────────── */}
+        {/* ── Heading — premium classical lockup ─────────────────────── */}
         <div className="text-center">
+          {/* The elevated TEMPLE seal (navy), centered, with a soft brand halo —
+              the classical brand anchor for the sign-in. Gentle entrance, reduced-
+              motion-safe (animate-scale-in self-disables under reduce). */}
+          <div className="relative mx-auto mb-5 inline-flex">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 rounded-[28px] bg-gradient-to-br from-blue-500/25 to-amber-400/20 blur-xl"
+            />
+            <GreekstackLogo
+              variant="seal"
+              title="Greekstack"
+              className="h-16 w-16 rounded-2xl shadow-[0_12px_30px_-12px_rgba(11,27,58,0.6)] ring-1 ring-white/10 motion-safe:animate-scale-in"
+            />
+          </div>
           {/* Greek-key (meander) divider — the instantly-recognizable Greek-life
               motif (backed by .gs-greek-key in globals.css; static, decorative). */}
           <span
             aria-hidden="true"
-            className="pointer-events-none gs-greek-key mx-auto mb-5 w-28"
+            className="pointer-events-none gs-greek-key mx-auto mb-4 w-24"
           />
-          {/* Bold, tracked-out subheader — matches the apex marketing site's
-              treatment so the sign-in entrance reads as the same premium brand. */}
-          <p className="flex flex-wrap items-center justify-center gap-x-[0.4em] text-xs font-extrabold uppercase leading-none tracking-[0.2em] text-slate-900 sm:text-sm">
+          {/* Cinzel eyebrow — inscriptional Roman caps set the classical voice. */}
+          <p className="flex flex-wrap items-center justify-center gap-x-[0.4em] font-display text-[11px] font-semibold uppercase leading-none tracking-[0.28em] text-slate-900 sm:text-xs">
             <span>Sign in to your</span>
-            <span className="gs-gradient-text">chapter</span>
+            <span className="gs-gold-text">chapter</span>
           </p>
-          <h1 className="mt-4 text-balance text-3xl font-bold leading-[1.08] tracking-tight sm:text-4xl">
-            Welcome back.
+          {/* H1 inherits the Cinzel display face site-wide; caps + tracking make
+              the classical "WELCOME BACK" inscription. */}
+          <h1 className="mt-4 text-balance text-3xl font-bold uppercase leading-[1.1] tracking-[0.06em] sm:text-4xl">
+            Welcome back
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {/* Cormorant serif subhead — the elegant classical accent voice. */}
+          <p className="mx-auto mt-3 max-w-md text-pretty font-serif text-base italic leading-relaxed text-muted-foreground sm:text-lg">
             Find your chapter, then choose your portal. We&apos;ll take you to the
             right sign-in.
           </p>
@@ -243,9 +259,9 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
               the next required choice. We never pass `disabled` to the anchor. */}
           <div className="mt-7">
             {continueHref ? (
-              <Button asChild variant="platform" size="xl" className="gs-sheen w-full">
+              <Button asChild variant="platform" size="xl" className="gs-sheen w-full font-display uppercase tracking-[0.12em]">
                 <a href={continueHref} className="group/btn">
-                  Continue to sign in
+                  Enter
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                 </a>
               </Button>
@@ -255,7 +271,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
                 variant="platform"
                 size="xl"
                 disabled
-                className="w-full"
+                className="w-full font-display uppercase tracking-[0.1em]"
               >
                 {selected ? "Choose a portal to continue" : "Select your chapter to continue"}
               </Button>

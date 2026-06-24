@@ -152,25 +152,29 @@ export function GreekstackLogo({
 }
 
 /**
- * GREEKSTACK WORDMARK LOCKUP — the inline mark + "Greekstack".
+ * GREEKSTACK WORDMARK LOCKUP — the inline temple mark + "GREEKSTACK".
  *
- * The "Greek" reads in the foreground ink and "stack" in the platform gradient,
- * so the name itself encodes the brand split. Premium, confident tracking with
- * a hair of negative letter-spacing; the mark and type scale together so the
- * lockup stays optically balanced at every size, with mark-to-text spacing tuned
- * per preset.
+ * The name is set in CINZEL (Trajan-inscription Roman capitals — the classical
+ * display face) as all-caps with confident inscriptional letter-spacing, so the
+ * wordmark itself reads as the Greek/Roman brand voice. "GREEK" reads in the
+ * foreground ink and "STACK" in the platform gold gradient, so the name encodes
+ * the brand split. The mark and type scale together so the lockup stays optically
+ * balanced at every size, with mark-to-text spacing tuned per preset.
  *
  * Props (unchanged signature — safe for all existing consumers):
  *   • size       — preset that scales BOTH the mark and the type together.
- *   • variant    — "default" (gradient "stack") | "mono" (single-ink, footer-safe).
+ *   • variant    — "default" (gold "STACK") | "mono" (single-ink, footer-safe).
  *   • className   — wrapper overrides.
+ *   • tagline    — optional Cormorant italic tagline under the rule
+ *                  ("Run your chapter with dignity."). Off by default so every
+ *                  existing call-site is byte-identical except for the typeface.
  *   • markClassName / textClassName — escape hatches for fine control.
  */
 const SIZE_MAP = {
-  sm: { mark: "h-7 w-7", text: "text-base", gap: "gap-2" },
-  md: { mark: "h-8 w-8", text: "text-xl", gap: "gap-2.5" },
-  lg: { mark: "h-10 w-10", text: "text-2xl", gap: "gap-3" },
-  xl: { mark: "h-12 w-12", text: "text-3xl", gap: "gap-3.5" },
+  sm: { mark: "h-7 w-7", text: "text-sm", gap: "gap-2", tag: "text-[10px]" },
+  md: { mark: "h-8 w-8", text: "text-lg", gap: "gap-2.5", tag: "text-[11px]" },
+  lg: { mark: "h-10 w-10", text: "text-xl", gap: "gap-3", tag: "text-xs" },
+  xl: { mark: "h-12 w-12", text: "text-2xl", gap: "gap-3.5", tag: "text-sm" },
 } as const;
 
 export function GreekstackWordmark({
@@ -179,6 +183,7 @@ export function GreekstackWordmark({
   variant = "default",
   markClassName,
   textClassName,
+  tagline = false,
   title = "Greekstack",
 }: {
   className?: string;
@@ -186,28 +191,46 @@ export function GreekstackWordmark({
   variant?: "default" | "mono";
   markClassName?: string;
   textClassName?: string;
+  /** When true (or a string), shows the Cormorant italic tagline under a gold rule. */
+  tagline?: boolean | string;
   title?: string;
 }) {
   const s = SIZE_MAP[size];
   const mono = variant === "mono";
+  const taglineText =
+    typeof tagline === "string" ? tagline : "Run your chapter with dignity.";
   return (
     <span className={cn("inline-flex items-center", s.gap, className)}>
       <GreekstackLogo title={title} className={markClassName || s.mark} />
-      <span
-        className={cn(
-          // -0.02em tracking + tight leading = a settled, premium wordmark.
-          "font-bold leading-none tracking-[-0.02em]",
-          textClassName || s.text
-        )}
-      >
-        {mono ? (
-          <span>Greekstack</span>
-        ) : (
+      <span className="inline-flex flex-col leading-none">
+        <span
+          className={cn(
+            // Cinzel caps with inscriptional tracking = the classical wordmark.
+            "font-display font-bold uppercase leading-none tracking-[0.08em]",
+            textClassName || s.text
+          )}
+        >
+          {mono ? (
+            <span>Greekstack</span>
+          ) : (
+            <>
+              <span className="text-foreground">Greek</span>
+              <span className="gs-gold-text">stack</span>
+            </>
+          )}
+        </span>
+        {tagline ? (
           <>
-            <span className="text-foreground">Greek</span>
-            <span className="gs-gradient-text">stack</span>
+            {/* gold hairline rule under the wordmark */}
+            <span
+              aria-hidden="true"
+              className="mt-1 h-px w-full bg-gradient-to-r from-amber-500/70 via-amber-400/40 to-transparent"
+            />
+            <span className="mt-0.5 font-serif italic text-muted-foreground">
+              <span className={s.tag}>{taglineText}</span>
+            </span>
           </>
-        )}
+        ) : null}
       </span>
     </span>
   );

@@ -111,14 +111,17 @@ export default function PlatformLoginPage() {
             <IconChip icon={IconShieldCheck} tone="platform" size="lg" />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#2563eb] via-[#0ea5e9] to-[#38bdf8] bg-clip-text text-transparent">
-              Greekstack
+            {/* Cinzel caps wordmark — "GREEK" ink + "STACK" gold, the classical
+                brand split carried onto the operator console. */}
+            <span className="font-display text-xl font-bold uppercase tracking-[0.08em]">
+              <span className="text-slate-900">Greek</span>
+              <span className="gs-gold-text">stack</span>
             </span>
           </div>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="mt-3 text-2xl font-bold uppercase tracking-[0.06em] text-slate-900">
             Platform console
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 font-serif text-base italic text-slate-500">
             Operator access only. Enter the platform password.
           </p>
         </div>
@@ -156,7 +159,7 @@ export default function PlatformLoginPage() {
                 disabled={busy}
                 size="lg"
                 variant="platform"
-                className="gs-sheen w-full"
+                className="gs-sheen w-full font-display uppercase tracking-[0.12em]"
               >
                 {busy ? (
                   <>

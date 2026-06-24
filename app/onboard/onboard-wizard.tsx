@@ -852,9 +852,9 @@ export default function OnboardWizard() {
                 title="Greekstack"
                 className="h-7 w-7 transition-transform duration-300 ease-gs-spring group-hover:rotate-[-6deg] group-hover:scale-105"
               />
-              <span className="text-base font-bold leading-none tracking-[-0.02em]">
+              <span className="font-display text-base font-bold uppercase leading-none tracking-[0.08em]">
                 <span className="text-white">Greek</span>
-                <span className="gs-gradient-text">stack</span>
+                <span className="gs-gold-text">stack</span>
               </span>
             </Link>
             <span className="ml-1 hidden h-3.5 w-px bg-white/15 sm:inline-block" aria-hidden="true" />

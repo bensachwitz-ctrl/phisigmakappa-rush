@@ -113,9 +113,11 @@ export default function LoginClient() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <GreekstackWordmark size="lg" className="justify-center" />
-            <h1 className="mt-6 text-2xl font-semibold tracking-tight">Sign in</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {mode === "admin" ? "Chapter admin (e-board only)" : "Active brothers"}
+            {/* Cinzel inscriptional caps + Cormorant serif subhead — the classical
+                brand voice carried onto the operator sign-in. */}
+            <h1 className="mt-6 text-2xl font-bold uppercase tracking-[0.06em]">Welcome back</h1>
+            <p className="mt-1.5 font-serif text-base italic text-muted-foreground">
+              {mode === "admin" ? "Chapter admin — e-board only" : "Active brothers"}
             </p>
           </div>
 
@@ -244,8 +246,14 @@ export default function LoginClient() {
                   </>
                 )}
 
-                <Button type="submit" disabled={busy} size="lg" className="w-full">
-                  {busy ? (<><Loader2 className="h-4 w-4 animate-spin" /> Signing in…</>) : "Sign in"}
+                <Button
+                  type="submit"
+                  disabled={busy}
+                  variant="platform"
+                  size="lg"
+                  className="w-full font-display uppercase tracking-[0.12em]"
+                >
+                  {busy ? (<><Loader2 className="h-4 w-4 animate-spin" /> Signing in…</>) : "Enter"}
                 </Button>
               </form>
             </CardContent>
