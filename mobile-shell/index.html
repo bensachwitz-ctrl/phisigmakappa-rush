@@ -1227,7 +1227,20 @@
         '</div>'
       ));
       var remind = el('<button class="btn">Send dues reminders</button>');
-      remind.onclick = function () { haptic(); toast("Dues reminders sent to all unpaid members.", "ok"); };
+      remind.onclick = async function () {
+        haptic();
+        // Demo mode never hits the network — say so plainly, no fake count.
+        if (isDemo()) { toast("Dues reminders sent to unpaid members. (Demo)", "ok"); return; }
+        remind.disabled = true; remind.textContent = "Sending reminders…";
+        // REAL action: the server finds unpaid active members with an email,
+        // emails each a branded reminder, and returns the HONEST sent count.
+        var res = await authPost("/api/mobile/exec/dues-reminder", {});
+        if (res.ok) toast((res.data && res.data.message) || "Dues reminders sent.", "ok");
+        else if (res.status === 403) toast("Only chapter officers can send dues reminders.", "err");
+        else if (res.status === 409) toast((res.data && res.data.error) || "Online dues aren't enabled for this chapter.", "err");
+        else toast((res.data && res.data.error) || "Couldn't send dues reminders. Try again shortly.", "err");
+        remind.disabled = false; remind.textContent = "Send dues reminders";
+      };
       main.appendChild(remind);
     }
 
