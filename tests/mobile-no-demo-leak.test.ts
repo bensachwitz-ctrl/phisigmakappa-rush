@@ -28,6 +28,7 @@ const spotlight = read("app/app/_demo/surfaces/SpotlightSurface.tsx");
 const feed = read("app/app/_demo/surfaces/FeedSurface.tsx");
 const exec = read("app/app/_demo/surfaces/ExecSurface.tsx");
 const client = read("app/app/MobileAppClient.tsx");
+const websiteBuilder = read("app/admin/website/website-builder-client.tsx");
 
 describe("mobile: no demo leak on real-user paths", () => {
   it("'Live interactive demo' label is gated behind isDemo (never shown to real members)", () => {
@@ -99,5 +100,76 @@ describe("mobile: no demo leak on real-user paths", () => {
     expect(idx).toBeGreaterThan(-1);
     const fn = client.slice(idx, idx + 500);
     expect(fn).toMatch(/if\s*\(\s*!isDemo\s*\)\s*return/);
+  });
+
+  // ── AOTY re-run: the guard above passed 11/11 yet missed THREE real-user
+  // fabrications. These pin the now-fixed handlers so a regression fails loudly.
+
+  it("handleSaveProfile wires a real endpoint for non-demo and only toasts success on res.ok", () => {
+    const idx = client.indexOf("const handleSaveProfile");
+    expect(idx).toBeGreaterThan(-1);
+    const fn = client.slice(idx, idx + 3600);
+    // Demo path is local-only; the real path POSTs the wired endpoint.
+    expect(fn).toMatch(/if\s*\(\s*isDemo\s*\)/);
+    expect(fn).toContain("/api/mobile/account");
+    // Success only when the server confirms — never an unconditional toast.
+    expect(fn).toMatch(/res\.ok\s*&&\s*data\.ok/);
+    // The old unconditional fabricated success is no longer the ONLY toast: an
+    // explicit failure toast must exist on the non-ok / network-error paths.
+    expect(fn).toMatch(/sav(e|ing) your profile/);
+    expect(fn).toMatch(/"error"\)/);
+  });
+
+  it("handleMobileForgotSubmit calls the real forgot-password endpoint (no fake setTimeout 'sent')", () => {
+    const idx = client.indexOf("const handleMobileForgotSubmit");
+    expect(idx).toBeGreaterThan(-1);
+    const fn = client.slice(idx, idx + 1800);
+    expect(fn).toContain("/api/portal/forgot-password");
+    expect(fn).toMatch(/res\.ok\s*&&\s*data\.ok/);
+    // The old fabricated wording must be gone everywhere in the client.
+    expect(client).not.toContain("Password reset link sent!");
+  });
+
+  it("handleSimulateCheckIn is a guarded no-op for real users (no fake 'Checked in' toast)", () => {
+    const idx = client.indexOf("const handleSimulateCheckIn");
+    expect(idx).toBeGreaterThan(-1);
+    const fn = client.slice(idx, idx + 1100);
+    expect(fn).toMatch(/if\s*\(\s*!isDemo\s*\)/);
+    // The success toast must be reachable ONLY after the demo guard (i.e. the
+    // guard's early-return/info-toast precedes the "Checked in" success toast).
+    const guardIdx = fn.search(/if\s*\(\s*!isDemo\s*\)/);
+    const successIdx = fn.indexOf("Checked in successfully");
+    expect(successIdx).toBeGreaterThan(-1);
+    expect(guardIdx).toBeLessThan(successIdx);
+  });
+});
+
+// ── ANTI-FABRICATION: admin Website Builder ──────────────────────────────────
+// The builder previously charged a SHAM $5.00 "Stripe" fee (a setTimeout, no
+// paymentIntent) and advertised fake "AI design agents" that were really a
+// keyword→preset matcher. Static-assert all of that sham text is gone so it can
+// never be reintroduced.
+describe("website builder: no sham charge or fake AI agents", () => {
+  it("contains none of the fabricated strings", () => {
+    expect(websiteBuilder).not.toContain("Simulate Stripe");
+    expect(websiteBuilder).not.toContain("$5.00 per edit");
+    expect(websiteBuilder).not.toContain("$5.00");
+    expect(websiteBuilder).not.toContain("AI design agents");
+    expect(websiteBuilder).not.toContain("Pay & Save");
+    expect(websiteBuilder).not.toContain("Pay &amp; Save");
+    // Fake per-agent status theater.
+    expect(websiteBuilder).not.toContain("Brand Agent:");
+    expect(websiteBuilder).not.toContain("Code Agent:");
+    expect(websiteBuilder).not.toContain("QA Agent");
+    expect(websiteBuilder).not.toContain("watch them build it");
+    expect(websiteBuilder).not.toContain("AI Tweak generated");
+  });
+
+  it("re-labels the panel honestly as style presets (no AI/agents claim)", () => {
+    expect(websiteBuilder).toContain("Quick Style Presets");
+    expect(websiteBuilder).toContain("Style preset applied");
+    // No leftover charge dialog state machinery.
+    expect(websiteBuilder).not.toContain("showChargeDialog");
+    expect(websiteBuilder).not.toContain("handlePayAndSave");
   });
 });

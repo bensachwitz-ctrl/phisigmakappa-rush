@@ -110,17 +110,110 @@ describe("dues webhook — refunds & disputes", () => {
     expect(mocks.brotherUpdate).not.toHaveBeenCalled();
   });
 
-  it("refund is idempotent — already-REFUNDED row is a no-op", async () => {
+  it("refund is idempotent — a true duplicate (already REFUNDED, badge already cleared) is a no-op", async () => {
     mocks.constructEvent.mockReturnValue({
       type: "charge.refunded",
       data: { object: { id: "ch_3", payment_intent: "pi_3", amount: 15000, amount_refunded: 15000, metadata: { subdomain: "alpha" } } },
     });
     mocks.duesFindFirst.mockResolvedValue({ id: "dp_3", brotherId: "b3", amountCents: 15000, year: "2026-fall", status: "REFUNDED" });
+    // Badge already cleared → genuine replay → no-op.
+    mocks.brotherFindUnique.mockResolvedValue({ duesPaid: false });
 
     const res = await POST(webhookReq());
     expect(res.status).toBe(200);
     expect(mocks.duesUpdate).not.toHaveBeenCalled();
     expect(mocks.brotherUpdate).not.toHaveBeenCalled();
+  });
+
+  it("partial-then-remainder: a now-FULL refund on an already-REFUNDED row STILL clears a brother who is still duesPaid", async () => {
+    // The first (partial) refund already set the row REFUNDED but left duesPaid.
+    // The remainder refund arrives full (amount_refunded == amount). The escalation-
+    // aware guard must re-run the badge-clear instead of bailing on "already REFUNDED".
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.refunded",
+      data: { object: { id: "ch_rem", payment_intent: "pi_rem", amount: 15000, amount_refunded: 15000, metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue({ id: "dp_rem", brotherId: "b_rem", amountCents: 15000, year: "2026-fall", status: "REFUNDED" });
+    // Brother is STILL marked paid (the partial left the badge on) → must be cleared.
+    mocks.brotherFindUnique.mockResolvedValue({ duesPaid: true });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    // Badge cleared via the $transaction even though the row was already REFUNDED.
+    expect(mocks.txn).toHaveBeenCalledTimes(1);
+    expect(mocks.brotherUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "b_rem" },
+      data: expect.objectContaining({ duesPaid: false }),
+    }));
+  });
+
+  it("partial refund AFTER a row is already REFUNDED is a no-op (no escalation)", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.refunded",
+      data: { object: { id: "ch_p2", payment_intent: "pi_p2", amount: 15000, amount_refunded: 5000, metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue({ id: "dp_p2", brotherId: "b_p2", amountCents: 15000, year: "2026-fall", status: "REFUNDED" });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    expect(mocks.duesUpdate).not.toHaveBeenCalled();
+    expect(mocks.brotherUpdate).not.toHaveBeenCalled();
+  });
+
+  it("dispute WON → DuesPayment restored to PAID and brother badge re-set", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.dispute.closed",
+      data: { object: { id: "dp_won", status: "won", payment_intent: "pi_won", metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue({ id: "dp_w1", brotherId: "bw1", amountCents: 15000, year: "2026-fall", status: "REFUNDED" });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    expect(mocks.duesUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "dp_w1" },
+      data: expect.objectContaining({ status: "PAID" }),
+    }));
+    expect(mocks.brotherUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "bw1" },
+      data: expect.objectContaining({ duesPaid: true }),
+    }));
+    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ action: "DUES_DISPUTE_WON" }),
+    }));
+  });
+
+  it("dispute LOST → no restore (stays REFUNDED, no money movement)", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.dispute.closed",
+      data: { object: { id: "dp_lost", status: "lost", payment_intent: "pi_lost", metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue({ id: "dp_l1", brotherId: "bl1", amountCents: 15000, year: "2026-fall", status: "REFUNDED" });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    // A lost dispute closing must not touch the row or the brother.
+    expect(mocks.duesUpdate).not.toHaveBeenCalled();
+    expect(mocks.brotherUpdate).not.toHaveBeenCalled();
+  });
+
+  it("dispute WON on an alumni donation → donation restored to PAID", async () => {
+    mocks.constructEvent.mockReturnValue({
+      type: "charge.dispute.closed",
+      data: { object: { id: "ad_won", status: "won", payment_intent: "pi_adwon", metadata: { subdomain: "alpha" } } },
+    });
+    mocks.duesFindFirst.mockResolvedValue(null); // not a dues payment
+    mocks.donationFindFirst.mockResolvedValue({ id: "ad_1", alumniId: "a1", amountCents: 5000, campaign: "Annual", status: "REFUNDED" });
+
+    const res = await POST(webhookReq());
+    expect(res.status).toBe(200);
+    expect(mocks.donationUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "ad_1" },
+      data: expect.objectContaining({ status: "PAID" }),
+    }));
+    expect(mocks.brotherUpdate).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ action: "ALUMNI_DONATION_DISPUTE_WON" }),
+    }));
   });
 
   it("dispute → DuesPayment REFUNDED and brother badge cleared (treated as full reversal)", async () => {

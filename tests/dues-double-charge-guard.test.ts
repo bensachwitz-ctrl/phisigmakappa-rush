@@ -69,9 +69,15 @@ const CFG = {
 };
 
 function duesDb() {
-  return {
+  const surface = {
     duesPayment: { findFirst: mocks.findFirst, create: mocks.create, update: mocks.update },
   } as any;
+  // The route now runs the PAID/PENDING check + PENDING create inside a
+  // Serializable $transaction (TOCTOU double-charge guard). Mock $transaction to
+  // invoke the callback with a `tx` that exposes the SAME duesPayment surface, so
+  // the existing findFirst/create ordering + call-count assertions still hold.
+  surface.$transaction = vi.fn(async (fn: any, _opts?: unknown) => fn(surface));
+  return surface;
 }
 
 function req(body: unknown = {}) {
@@ -148,5 +154,21 @@ describe("dues checkout double-charge guard", () => {
     expect(json.url).toBe("https://checkout.stripe/cs_new");
     expect(mocks.sessionsCreate).toHaveBeenCalledTimes(1);
     expect(mocks.create).toHaveBeenCalledTimes(1); // exactly one PENDING row
+  });
+
+  it("TOCTOU: a Serializable write-conflict (P2034) from a concurrent request → 409, no second session", async () => {
+    // Both checks pass (no PAID, no PENDING) but the create races a concurrent
+    // request; the DB aborts the loser with a serialization conflict. The route
+    // must map P2034 to the same "already in progress" 409 — never a 2nd session.
+    mocks.findFirst
+      .mockResolvedValueOnce(null) // PAID check
+      .mockResolvedValueOnce(null); // PENDING check
+    mocks.create.mockRejectedValueOnce(Object.assign(new Error("write conflict"), { code: "P2034" }));
+    const res = await POST(req({ subdomain: "alpha" }));
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.ok).toBe(false);
+    // Crucially: no Stripe session was minted on the losing request.
+    expect(mocks.sessionsCreate).not.toHaveBeenCalled();
   });
 });
