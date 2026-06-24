@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import type { PrismaClient } from "@prisma/client";
 import { prisma, getTenantClient, forEachTenant } from "@/lib/prisma";
-import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
@@ -28,9 +27,15 @@ const ROUTE = "/api/dues/webhook";
  *
  *   1. Verifies the signature with the platform's GLOBAL signing secret
  *      `process.env.STRIPE_WEBHOOK_SECRET` (the single webhook endpoint Stripe
- *      delivers ALL chapters' events to). If that env is unset we FALL BACK
- *      to the legacy per-chapter `dues.stripeWebhookSecret` (resolved via the
- *      Host proxy) for backward compatibility. Neither configured → 503.
+ *      delivers ALL chapters' events to). This is the SOLE source of truth.
+ *      Stripe POSTs here server-to-server with NO chapter subdomain on the Host,
+ *      so the old per-chapter `dues.stripeWebhookSecret` fallback resolved
+ *      through the Host proxy to the EMPTY public schema — it could never read a
+ *      real chapter secret and only ever fail signature verification. Worse, on
+ *      a misconfigured deploy it could silently read the wrong public-schema
+ *      value instead of failing loudly. The fallback is removed: if the global
+ *      env is unset we FAIL CLOSED with a clear 503 rather than verifying
+ *      against a secret that can never be right.
  *
  *   2. Routes the event to the correct tenant by reading
  *      `event.data.object.metadata.subdomain` (stamped at checkout time) and
@@ -54,16 +59,12 @@ export async function POST(req: Request) {
     );
   }
 
-  // SIGNATURE SECRET resolution. Prefer the platform's single GLOBAL endpoint
-  // secret (new model). Fall back to the legacy per-chapter secret read via
-  // the Host proxy so existing single-tenant deploys keep verifying.
-  let webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
-  if (!webhookSecret) {
-    const cfg = await getSiteConfig().catch(
-      () => ({}) as Record<string, string>,
-    );
-    webhookSecret = cfg["dues.stripeWebhookSecret"] || "";
-  }
+  // SIGNATURE SECRET — the platform's single GLOBAL endpoint secret is the SOLE
+  // source of truth. Stripe POSTs here with no chapter subdomain, so a per-
+  // chapter secret read through the Host proxy would resolve to the empty public
+  // schema and never verify; requiring the global env makes the contract honest
+  // and fails CLOSED (503) when unconfigured rather than reading a wrong secret.
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
   if (!webhookSecret) {
     return NextResponse.json(
       { ok: false, error: "Webhook secret not configured" },
