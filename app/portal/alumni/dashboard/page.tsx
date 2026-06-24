@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/portal-auth";
+import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
 import DashboardClient from "./DashboardClient";
 import type { Metadata } from "next";
 
@@ -24,6 +24,13 @@ export default async function AlumniDashboardPage() {
   const sess = requireRole("alumni");
   if (!sess) {
     redirect("/portal/alumni");
+  }
+
+  // PHASE-3 OTP gate: an OTP-verified session is flagged mustReset and may only
+  // reach the "create new password" step until the password is set.
+  const resetTo = await portalMustResetRedirect();
+  if (resetTo) {
+    redirect(resetTo);
   }
 
   // Load the alumnus profile (+ donations). Wrapped so a DB connectivity

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPortalSession } from "@/lib/portal-auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 import AlumniLoginPage from "./AlumniLoginPage";
 
 export const dynamic = "force-dynamic";
@@ -25,5 +26,12 @@ export default async function AlumniPortalRootPage() {
     redirect("/portal/alumni/dashboard");
   }
 
-  return <AlumniLoginPage />;
+  const identity = await getChapterIdentity().catch(() => null);
+
+  return (
+    <AlumniLoginPage
+      chapterName={identity?.chapterAttribution || null}
+      schoolName={identity?.schoolName || null}
+    />
+  );
 }

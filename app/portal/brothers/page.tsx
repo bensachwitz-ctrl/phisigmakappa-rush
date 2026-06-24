@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPortalSession } from "@/lib/portal-auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { getChapterIdentity } from "@/lib/chapter-identity";
 import BrothersLoginPage from "./BrothersLoginPage";
 import type { Metadata } from "next";
 
@@ -28,5 +29,13 @@ export default async function BrothersPortalRootPage() {
     redirect("/portal/brothers/dashboard");
   }
 
-  return <BrothersLoginPage />;
+  // Identity for the centered lockup subline ("{School} · {Chapter}").
+  const identity = await getChapterIdentity().catch(() => null);
+
+  return (
+    <BrothersLoginPage
+      chapterName={identity?.chapterAttribution || null}
+      schoolName={identity?.schoolName || null}
+    />
+  );
 }

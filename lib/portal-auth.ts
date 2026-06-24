@@ -289,6 +289,36 @@ export function requireRole(
 }
 
 /**
+ * PHASE-3 OTP gate. After an OTP code is verified (/api/portal/reset/verify) the
+ * member holds a real portal session but their PortalUser carries mustReset=true.
+ * Such a session must be able to reach ONLY the "create new password" step —
+ * never the app. This helper returns the reset-redirect path when the current
+ * session's user is in the must-reset state, or null when they're clear to
+ * proceed. Server-component callers do:
+ *
+ *   const reset = await portalMustResetRedirect();
+ *   if (reset) redirect(reset);
+ *
+ * Returns null on any error / no session (the caller's own role guard handles
+ * the unauthenticated case) so a transient DB hiccup never locks a normal member
+ * out of their dashboard.
+ */
+export async function portalMustResetRedirect(): Promise<string | null> {
+  const sess = getPortalSession();
+  if (!sess) return null;
+  try {
+    const user = await prisma.portalUser.findUnique({
+      where: { id: sess.userId },
+      select: { mustReset: true },
+    });
+    if (user?.mustReset) return "/portal/reset-password?step=new";
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Generate a magic-link token. Single-use; expires in 30 minutes. The token
  * gets emailed; the consumer hits /api/portal/<role>/verify?token=... to
  * exchange it for a session cookie. We store the token + expiry on the

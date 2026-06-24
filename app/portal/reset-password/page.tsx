@@ -19,6 +19,12 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
+  // Two reset modes share this screen:
+  //  • "link" — legacy magic-LINK reset (?token=...), POSTs to /reset-password.
+  //  • "otp"  — PHASE-3: the member already verified an emailed CODE and holds a
+  //    mustReset session (?step=new, no token); POSTs to /reset/complete, which
+  //    is authenticated by that session cookie (no token in the URL).
+  const isOtp = !token && searchParams.get("step") === "new";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,7 +36,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError("");
 
-    if (!token) {
+    if (!token && !isOtp) {
       setError("No reset token provided. Please request a new password reset link.");
       return;
     }
@@ -48,17 +54,35 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/portal/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
+      const res = isOtp
+        ? await fetch("/api/portal/reset/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password, confirm: confirmPassword }),
+          })
+        : await fetch("/api/portal/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, password }),
+          });
 
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to reset password. The link may have expired.");
       } else {
         setSuccess(true);
+        // OTP path: the session is now a normal (non-mustReset) session, so send
+        // the member straight into the app after a beat.
+        if (isOtp && data.role) {
+          const dest =
+            data.role === "alumni"
+              ? "/portal/alumni/dashboard"
+              : "/portal/brothers/dashboard";
+          setTimeout(() => {
+            router.push(dest);
+            router.refresh();
+          }, 1200);
+        }
       }
     } catch (err) {
       setError("A connection error occurred. Please try again.");
@@ -125,7 +149,7 @@ export default function ResetPasswordPage() {
                   </Link>
                 </div>
               </div>
-            ) : !token ? (
+            ) : !token && !isOtp ? (
               <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>

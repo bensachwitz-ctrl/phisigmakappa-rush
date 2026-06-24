@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/portal-auth";
+import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
 import BrothersDashboardClient from "./BrothersDashboardClient";
 import type { Metadata } from "next";
@@ -22,6 +22,13 @@ export default async function BrothersDashboardPage() {
   const sess = requireRole("brother");
   if (!sess) {
     redirect("/portal/brothers");
+  }
+
+  // PHASE-3 OTP gate: a session created by verifying a reset code is flagged
+  // mustReset and can only reach the "create new password" step until done.
+  const resetTo = await portalMustResetRedirect();
+  if (resetTo) {
+    redirect(resetTo);
   }
 
   let brother;

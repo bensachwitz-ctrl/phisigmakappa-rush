@@ -9,11 +9,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { PortalForgotOtpFlow } from "@/components/portal/forgot-password-otp";
 
 // Brothers portal sign-in is email/password ONLY — chapter-scoped credentials
 // issued by an e-board officer. No third-party / social sign-in.
 
-export default function BrothersLoginPage() {
+export interface BrothersLoginPageProps {
+  /** "{Fraternity} {SchoolShort}" lockup line under the seal (e.g. "Phi Sig USC"). */
+  chapterName?: string | null;
+  /** Full school name for the "{School} · {Chapter}" subline. */
+  schoolName?: string | null;
+}
+
+export default function BrothersLoginPage({ chapterName, schoolName }: BrothersLoginPageProps = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,12 +29,8 @@ export default function BrothersLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Forgot password flow states
+  // Forgot password: now the inline OTP flow (email → code → new password).
   const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotError, setForgotError] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,33 +58,6 @@ export default function BrothersLoginPage() {
     }
   };
 
-  const handleForgotSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setForgotError("");
-    setForgotSuccess("");
-    setForgotLoading(true);
-
-    try {
-      const res = await fetch("/api/portal/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, role: "brother" }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setForgotError(data.error || "Failed to process request. Please try again.");
-      } else {
-        setForgotSuccess(data.message || "A password reset link has been sent to your email.");
-        setForgotEmail("");
-      }
-    } catch (err) {
-      setForgotError("A connection error occurred. Please try again.");
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between relative overflow-hidden">
       <FloatingSymbols />
@@ -104,85 +81,47 @@ export default function BrothersLoginPage() {
             <div className="text-center">
               {/* The classical temple seal (navy), centered, with a soft brand
                   halo + a gentle entrance (reduced-motion-safe). */}
-              <div className="relative inline-flex mb-4">
+              <div className="relative inline-flex mb-3">
                 <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-maroon-400/30 blur-xl" />
                 <GreekstackLogo
                   variant="seal"
-                  title="Sign in"
+                  title="Greekstack"
                   className="h-14 w-14 rounded-2xl shadow-[0_10px_26px_-12px_rgba(11,27,58,0.6)] ring-1 ring-white/10 motion-safe:animate-scale-in"
                 />
               </div>
-              {/* Cinzel inscriptional caps — the classical brand voice. */}
-              <h1 className="font-display text-2xl font-bold uppercase tracking-[0.06em] text-maroon-900">
-                {showForgot ? "Reset Access" : "Welcome Back"}
-              </h1>
-              {/* Cormorant serif subhead — elegant classical accent. */}
-              <p className="font-serif text-base italic text-maroon-600 mt-1.5">
-                {showForgot ? "Recover your chapter portal credentials" : "Sign in to your chapter dashboard & tools"}
+              {/* "Greekstack" wordmark directly UNDER the seal — the centered
+                  lockup the owner's screen specifies (Cinzel caps, gold STACK). */}
+              <p className="font-display text-base font-bold uppercase leading-none tracking-[0.16em]">
+                <span className="text-maroon-900">Greek</span>
+                <span className="gs-gold-text">stack</span>
               </p>
+              {/* "{School} · {Chapter}" — which chapter this sign-in belongs to. */}
+              {(chapterName || schoolName) && (
+                <p className="mt-2 font-serif text-sm italic text-maroon-600">
+                  {[schoolName, chapterName].filter(Boolean).join(" · ")}
+                </p>
+              )}
             </div>
 
             {showForgot ? (
-              <form onSubmit={handleForgotSubmit} className="space-y-4">
-                <p className="text-xs text-maroon-600 leading-relaxed text-center px-1">
-                  Enter your registered email address and we will dispatch a secure password reset link to your inbox.
-                </p>
-
-                {forgotError && (
-                  <div role="alert" aria-live="assertive" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs">
-                    {forgotError}
-                  </div>
-                )}
-
-                {forgotSuccess && (
-                  <div role="status" aria-live="polite" className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs text-center font-medium">
-                    {forgotSuccess}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-maroon-400" />
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      autoCapitalize="off"
-                      required
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-2.5 bg-maroon-50 border border-maroon-200 rounded-xl focus:outline-none focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/30 text-sm text-maroon-900 transition"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="w-full min-h-[48px] bg-gradient-to-b from-cream-300 to-brand-secondary text-maroon-950 hover:from-cream-200 hover:to-cream-300 flex items-center justify-center gap-1.5 py-3 rounded-xl shadow-[0_8px_22px_-8px_rgba(168,120,15,0.6),inset_0_1px_0_0_rgba(255,255,255,0.5)] font-display font-bold uppercase tracking-[0.12em] transition"
-                  >
-                    {forgotLoading ? "Sending Link…" : "Send Reset Link"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setShowForgot(false);
-                      setForgotError("");
-                      setForgotSuccess("");
-                    }}
-                    className="w-full text-maroon-800 hover:text-maroon-900 hover:bg-cream-50 rounded-xl py-2 font-semibold text-xs transition"
-                  >
-                    Back to Sign In
-                  </Button>
-                </div>
-              </form>
+              <PortalForgotOtpFlow
+                role="brother"
+                dashboardHref="/portal/brothers/dashboard"
+                onBack={() => setShowForgot(false)}
+              />
             ) : (
+              <div className="text-center -mt-2">
+                {/* Cinzel inscriptional caps — the classical brand voice. */}
+                <h1 className="font-display text-2xl font-bold uppercase tracking-[0.06em] text-maroon-900">
+                  Welcome Back
+                </h1>
+                <p className="font-serif text-base italic text-maroon-600 mt-1.5">
+                  Sign in to your chapter dashboard &amp; tools
+                </p>
+              </div>
+            )}
+
+            {!showForgot && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <div
@@ -263,12 +202,14 @@ export default function BrothersLoginPage() {
               </form>
             )}
 
-            <div className="border-t border-maroon-100 pt-4 text-center">
-              <p className="text-xs text-maroon-700 mb-2">Haven&apos;t activated your account yet?</p>
-              <p className="text-[11px] text-maroon-500 leading-normal px-2">
-                Active brothers must be invited by an e-board officer. Check your email or text message for your personal activation link, or contact the Chapter Secretary.
-              </p>
-            </div>
+            {!showForgot && (
+              <div className="border-t border-maroon-100 pt-4 text-center">
+                <p className="text-xs text-maroon-700 mb-2">Haven&apos;t activated your account yet?</p>
+                <p className="text-[11px] text-maroon-500 leading-normal px-2">
+                  Active brothers must be invited by an e-board officer. Check your email or text message for your personal activation link, or contact the Chapter Secretary.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Cohesion with the apex sign-in entry: let a member who landed on the
