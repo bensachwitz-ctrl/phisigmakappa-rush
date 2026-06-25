@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { DraftWithAI } from "@/components/admin/draft-with-ai";
 
 type Announcement = {
   id: string;
@@ -264,7 +265,14 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Chapter meeting moved to Tuesday" />
             </div>
             <div>
-              <Label className="mb-1 inline-block">Body</Label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <Label className="inline-block">Body</Label>
+                <DraftWithAI
+                  type="announcement"
+                  disabled={busy}
+                  onDraft={(text) => setForm((f) => ({ ...f, body: text }))}
+                />
+              </div>
               <Textarea
                 value={form.body}
                 onChange={(e) => setForm({ ...form, body: e.target.value })}

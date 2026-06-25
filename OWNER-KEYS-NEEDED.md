@@ -92,6 +92,22 @@ These need NO owner action — verified live by a runtime trace on 2026-06-24:
   inert — never serves a broken/placeholder association iOS would cache).
 - **Get it:** Apple Developer portal → Membership → Team ID.
 
+### 9. AI draft assistant — free LLM keys (optional, INERT by default)
+- **Vars:** `NVIDIA_NIM_API_KEY` (primary), `OPENROUTER_API_KEY` (fallback)
+- Powers the chapter-officer **"Draft with AI"** button on the announcement/
+  message composer (`components/admin/draft-with-ai.tsx` → `POST /api/ai/draft`).
+  The model picker (`lib/ai/draft.ts`) is **free-first**: NVIDIA NIM's free
+  catalog, then OpenRouter `:free` models, walking the chain on
+  402/403/429/5xx. The route is auth-gated (`isAdminAuthed` 401 →
+  `guardOfficer("announcements","write")` 403), per-IP rate-limited, and reads
+  the keys **server-side only** (never echoed to the client).
+- **Inert without keys:** with NEITHER var set, the route returns an honest
+  **503 `ai-not-configured`** and the composer button is disabled with an
+  "AI drafting unavailable" tooltip. No key = no AI, **no gate impact, no cost**.
+  It **never fabricates** a draft when the upstream fails.
+- **Get it:** NVIDIA NIM free tier at https://build.nvidia.com ; OpenRouter key
+  at https://openrouter.ai/keys (use `:free` models). Either one alone enables it.
+
 ---
 
 ## 🐳 Local Docker services — go LIVE once Docker is up
