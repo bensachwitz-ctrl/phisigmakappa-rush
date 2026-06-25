@@ -95,3 +95,50 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** SignOut — a door with an exit arrow. */
+export function IconSignOut({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke={accent} opacity={0.4} />
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </IconBase>
+  );
+}
+
+/** Help — a question mark inside a circle. */
+export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="10" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
+/** Command — the mac command key symbol (⌘). */
+export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" fill={accent} opacity={0.16} stroke="none" />
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+    </IconBase>
+  );
+}
+
+/** Grid — a 2x2 layout grid. */
+export function IconGrid({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" fill={accent} opacity={0.16} stroke="none" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+    </IconBase>
+  );
+}

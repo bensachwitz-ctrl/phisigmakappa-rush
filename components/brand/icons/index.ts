@@ -55,6 +55,10 @@ export {
   IconMenu,
   IconClose,
   IconShieldCheck,
+  IconSignOut,
+  IconHelp,
+  IconCommand,
+  IconGrid,
 } from "./utility";
 
 // Custom tool-specific glyphs.
