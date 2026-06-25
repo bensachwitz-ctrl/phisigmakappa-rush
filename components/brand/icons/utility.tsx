@@ -95,3 +95,52 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** SignOut — an arrow leaving a framed doorway. */
+export function IconSignOut({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      {/* accent: door frame fill */}
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4v16Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      {/* breakout arrow */}
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </IconBase>
+  );
+}
+
+/** Help — a circled question mark with an accent-filled disc. */
+export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="9" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" strokeWidth={2.5} />
+    </IconBase>
+  );
+}
+
+/** Command — the mac command symbol with a central accent fill. */
+export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="9" y="9" width="6" height="6" fill={accent} opacity={0.16} stroke="none" />
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+    </IconBase>
+  );
+}
+
+/** Grid — a 2x2 layout grid with accent fills in opposing corners. */
+export function IconGrid({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="14" y="3" width="7" height="7" rx="1.5" fill={accent} opacity={0.2} stroke="none" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" fill={accent} opacity={0.2} stroke="none" />
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    </IconBase>
+  );
+}
