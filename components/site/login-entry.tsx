@@ -38,7 +38,6 @@ import {
   Check,
   Users,
   GraduationCap,
-  Building2,
   ShieldCheck,
   ExternalLink,
   School as SchoolIcon,
@@ -52,6 +51,23 @@ import {
   type ChapterRouteTarget,
   type PortalKind,
 } from "@/lib/login-routing";
+import { marketingSiteUrl, marketingSiteLabel } from "@/lib/sales-contact";
+
+/**
+ * A short, classical MONOGRAM (1-2 letters) for the medallion avatar, derived
+ * from a chapter or school name (e.g. "Greekstack University" → "GU", "Phi
+ * Sigma Kappa" → "PS"). Falls back to the first alpha char, then a temple-ish
+ * dot. Pure + deterministic.
+ */
+function monogramFor(name: string | null | undefined): string {
+  const words = (name || "")
+    .replace(/\[[^\]]*\]/g, " ") // drop "[Demo]" etc.
+    .split(/\s+/)
+    .filter((w) => /[a-z0-9]/i.test(w));
+  if (words.length === 0) return "GS";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
 
 export interface LoginEntryProps {
   /** Active chapters from the central Tenant registry (server-fetched). */
@@ -310,6 +326,10 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
               Contact us
             </Link>
           </p>
+          {/* Website link — a tasteful gold serif link to the marketing site
+              that OPENS in a new tab (web). A gold-key hairline frames it as a
+              classical footer accent. */}
+          <MarketingSiteLink />
         </div>
       </main>
     </div>
@@ -421,10 +441,11 @@ function ChapterPicker({
 }) {
   return (
     <div className="mt-4">
-      {/* Search box */}
+      {/* Search box — refined classical field: ivory surface, gold hairline,
+          gold focus ring, serif (Cormorant) placeholder. */}
       <div className="relative">
         <Search
-          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-700/70"
           aria-hidden="true"
         />
         <input
@@ -439,7 +460,7 @@ function ChapterPicker({
               : "Search chapters…"
           }
           aria-label="Search for your school or chapter"
-          className="w-full rounded-xl border border-border bg-background/80 py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+          className="w-full rounded-xl border border-amber-600/30 bg-[#f4f1e6]/80 py-2.5 pl-10 pr-4 font-serif text-base italic text-[#16264e] shadow-sm outline-none transition placeholder:font-serif placeholder:italic placeholder:text-[#16264e]/45 focus:border-amber-500 focus:ring-2 focus:ring-amber-400/40"
         />
       </div>
 
@@ -453,41 +474,46 @@ function ChapterPicker({
           <div className="space-y-4">
             {groups.map((group) => (
               <div key={group.school}>
-                <div className="mb-1.5 flex items-center gap-1.5 px-1">
+                {/* School group header — Cinzel inscriptional caps + a gold
+                    school icon, the classical section voice. */}
+                <div className="mb-2 flex items-center gap-1.5 px-1">
                   <SchoolIcon
-                    className="h-3.5 w-3.5 text-muted-foreground"
+                    className="h-3.5 w-3.5 text-amber-700/80"
                     aria-hidden="true"
                   />
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  <h3 className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-[#16264e]/70">
                     {group.school}
                   </h3>
                 </div>
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {group.chapters.map((c) => (
                     <li key={c.subdomain}>
                       <button
                         type="button"
                         onClick={() => onPick(c)}
-                        className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-3.5 py-3 text-left transition-all duration-200 hover:-translate-y-px hover:border-blue-500/50 hover:bg-background hover:shadow-[0_10px_24px_-14px_rgba(37,99,235,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-[0.99]"
+                        className="gs-architrave-card group flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 pt-4 text-left transition-all duration-200 ease-gs-spring hover:-translate-y-px hover:border-amber-500/55 hover:shadow-[0_14px_30px_-16px_rgba(200,144,28,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                       >
+                        {/* Classical MEDALLION (gold ring + navy fill + serif
+                            monogram) — replaces the flat building chip. */}
                         <span
-                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600/10 to-sky-500/10 text-blue-700 ring-1 ring-inset ring-blue-600/15"
+                          className="gs-medallion h-10 w-10 font-display text-[13px] font-semibold leading-none tracking-[0.04em]"
                           aria-hidden="true"
                         >
-                          <Building2 className="h-4.5 w-4.5" />
+                          {monogramFor(c.name || c.school || c.subdomain)}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-foreground">
+                          {/* Chapter NAME in the display (Cinzel) face. */}
+                          <span className="block truncate font-display text-[15px] font-semibold tracking-[0.01em] text-[#16264e]">
                             {c.name || c.subdomain}
                           </span>
                           {c.school ? (
-                            <span className="block truncate text-xs text-muted-foreground">
+                            <span className="block truncate font-serif text-[13px] italic text-[#16264e]/70">
                               {c.school}
                             </span>
                           ) : null}
                         </span>
                         <ArrowRight
-                          className="h-4 w-4 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600"
+                          className="h-4 w-4 shrink-0 text-amber-700/70 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-amber-600 motion-reduce:transition-none"
                           aria-hidden="true"
                         />
                       </button>
@@ -515,18 +541,19 @@ function SelectedChapterRow({
 }) {
   const dest = chapterDestinationLabel(chapter, currentHost);
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-xl border border-blue-500/30 bg-blue-50/60 px-3.5 py-3">
+    <div className="gs-architrave-card mt-4 flex items-center gap-3 rounded-2xl px-3.5 py-3 pt-4">
+      {/* Classical medallion confirms the selected chapter on-theme. */}
       <span
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#0ea5e9] text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.6)]"
+        className="gs-medallion h-11 w-11 font-display text-sm font-semibold leading-none tracking-[0.04em]"
         aria-hidden="true"
       >
-        <Building2 className="h-5 w-5" />
+        {monogramFor(chapter.name || chapter.school || chapter.subdomain)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-foreground">
+        <p className="truncate font-display text-[15px] font-semibold tracking-[0.01em] text-[#16264e]">
           {chapter.name || chapter.subdomain}
         </p>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate font-serif text-[13px] italic text-[#16264e]/70">
           {chapter.school ? `${chapter.school} · ` : ""}
           {dest}
         </p>
@@ -534,7 +561,7 @@ function SelectedChapterRow({
       <button
         type="button"
         onClick={onChange}
-        className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+        className="shrink-0 rounded-lg px-2.5 py-1.5 font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-amber-700 transition hover:bg-amber-100/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
       >
         Change
       </button>
@@ -642,19 +669,19 @@ function EmptyState({
   query?: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-background/50 px-5 py-8 text-center">
+    <div className="rounded-2xl border border-dashed border-amber-600/30 bg-[#f4f1e6]/50 px-5 py-8 text-center">
       <span
-        className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 text-blue-700"
+        className="gs-medallion mx-auto mb-3 h-12 w-12"
         aria-hidden="true"
       >
         <IconSpark className="h-5 w-5" />
       </span>
-      <p className="text-sm font-semibold text-foreground">
+      <p className="font-display text-sm font-semibold uppercase tracking-[0.08em] text-[#16264e]">
         {variant === "no-match"
           ? "Don’t see your chapter?"
           : "No chapters here yet"}
       </p>
-      <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-muted-foreground">
+      <p className="mx-auto mt-1.5 max-w-xs font-serif text-[13px] italic leading-relaxed text-[#16264e]/70">
         {variant === "no-match" ? (
           <>
             We couldn&apos;t find a chapter matching
@@ -698,6 +725,35 @@ function NewChapterCta() {
           <ExternalLink className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </Button>
+    </div>
+  );
+}
+
+/** The tasteful gold serif "greekstack.com" website link — opens the marketing
+ *  apex in a new tab. On the web a plain anchor (target=_blank + rel) is the
+ *  honest, robust open; the constant is resolved from NEXT_PUBLIC_SITE_URL. A
+ *  thin gold greek-key hairline frames it as a classical footer accent. */
+function MarketingSiteLink() {
+  const href = marketingSiteUrl();
+  const label = marketingSiteLabel();
+  return (
+    <div className="flex flex-col items-center gap-2 pt-1">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none gs-greek-key gs-greek-key--gold w-20"
+      />
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 font-serif text-base italic text-amber-700 underline-offset-4 transition hover:text-amber-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+      >
+        Visit {label}
+        <ExternalLink
+          className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      </a>
     </div>
   );
 }
