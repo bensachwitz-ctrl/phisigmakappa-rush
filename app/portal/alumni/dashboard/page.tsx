@@ -83,8 +83,19 @@ export default async function AlumniDashboardPage() {
   // resolved profile (it's the same id) so it stays in scope after the try.
   const alumniId = alumniProfile.id;
 
+  // ── Dashboard data load ────────────────────────────────────────────────────
+  // GATE-3 FIX 5: every query below was previously UNGUARDED, so a single
+  // transient DB error — or a tenant whose schema predates one of these tables —
+  // threw past the graceful redirect above and dumped the alumnus onto the
+  // generic error boundary (inconsistent with the profile+donations load above,
+  // which is already try/caught). Wrap the whole load so ANY failure degrades to
+  // the same graceful "?error=unavailable" redirect. Next's redirect() throws a
+  // NEXT_REDIRECT control signal, so re-throw those untouched (isNextSignal).
+  let brothers, alumniNetwork, allPnms, vouches, polls, events,
+    announcements, jobPostings;
+  try {
   // Fetch active undergraduate brothers roster
-  const brothers = await prisma.brother.findMany({
+  brothers = await prisma.brother.findMany({
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -100,7 +111,7 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch all alumni who opted into directory
-  const alumniNetwork = await prisma.alumniProfile.findMany({
+  alumniNetwork = await prisma.alumniProfile.findMany({
     where: { optInDirectory: true },
     orderBy: { graduationYear: "desc" },
     select: {
@@ -121,7 +132,7 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch all active PNMs in rush
-  const allPnms = await prisma.rush.findMany({
+  allPnms = await prisma.rush.findMany({
     where: { status: "ACTIVE" },
     orderBy: { name: "asc" },
     select: {
@@ -136,7 +147,7 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch existing vouches by this alumnus
-  const vouches = await prisma.alumniVouch.findMany({
+  vouches = await prisma.alumniVouch.findMany({
     where: { alumniId },
   });
 
@@ -144,7 +155,7 @@ export default async function AlumniDashboardPage() {
   // too (mirrors the events query above which is audience IN [ALL, ALUMNI]),
   // so a poll created for the whole chapter reaches alumni, not only
   // alumni-exclusive ones.
-  const polls = await prisma.poll.findMany({
+  polls = await prisma.poll.findMany({
     where: {
       audience: { in: ["ALUMNI", "ALL"] },
       closedAt: null,
@@ -163,7 +174,7 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch events visible to alumni
-  const events = await prisma.event.findMany({
+  events = await prisma.event.findMany({
     where: {
       audience: { in: ["ALL", "ALUMNI"] },
       startsAt: { gte: new Date() },
@@ -182,7 +193,7 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch pinned & recent announcements for Alumni
-  const announcements = await prisma.announcement.findMany({
+  announcements = await prisma.announcement.findMany({
     where: {
       audience: { in: ["ALUMNI", "ALL"] },
       status: "sent"
@@ -227,9 +238,14 @@ export default async function AlumniDashboardPage() {
   });
 
   // Fetch career opportunities / job postings
-  const jobPostings = await prisma.jobPosting.findMany({
+  jobPostings = await prisma.jobPosting.findMany({
     orderBy: { createdAt: "desc" }
   });
+  } catch (err) {
+    if (isNextSignal(err)) throw err;
+    console.error("[alumni dashboard] data load failed:", err);
+    redirect("/portal/alumni?error=unavailable");
+  }
 
   // Collapse type definition safety
   const formattedAlumni = {
