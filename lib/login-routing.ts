@@ -155,19 +155,23 @@ function normalizeCustomDomain(domain: string): string | null {
  *
  * Resolution order:
  *   1. Already on the chapter's own host (subdomain matches, or custom domain
- *      matches the current host) → relative `/portal/<kind>/login` (reuse the
+ *      matches the current host) → relative `/portal/<kind>` (reuse the
  *      live host + any existing cookies).
- *   2. Custom `domain` set on the tenant → `https://<domain>/portal/<kind>/login`.
- *   3. `subdomain` + a resolvable apex origin → `<scheme>://<sub>.<apexHost>/portal/<kind>/login`.
- *   4. Fallback → relative `/portal/<kind>/login` on the current host (correct for
+ *   2. Custom `domain` set on the tenant → `https://<domain>/portal/<kind>`.
+ *   3. `subdomain` + a resolvable apex origin → `<scheme>://<sub>.<apexHost>/portal/<kind>`.
+ *   4. Fallback → relative `/portal/<kind>` on the current host (correct for
  *      a single-tenant deploy that has no working subdomain split).
+ *
+ * NOTE: the destination is the portal's PAGE route `/portal/<kind>` (which renders
+ * the login form), NOT `/portal/<kind>/login` — the latter is a POST-only API route
+ * (app/api/portal/<kind>/login) with no page, so navigating there 404s.
  */
 export function buildChapterLoginUrl(
   chapter: ChapterRouteTarget,
   kind: PortalKind,
   currentHost?: string | null,
 ): string {
-  const path = `/portal/${kind}/login`;
+  const path = `/portal/${kind}`;
   const sub = (chapter.subdomain || "").toLowerCase();
   const customHost = chapter.domain ? normalizeCustomDomain(chapter.domain) : null;
 
