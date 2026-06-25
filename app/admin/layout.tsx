@@ -64,11 +64,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // 403'd inside the shell (a member never belongs here at all). Per-page
   // requireOfficerPermission() gates still enforce the FINER domain split on top
   // of this; this is the coarse "are you allowed in the building" gate.
+  // GATE-3 FIX 4: for a NON-ADMIN officer, the set of domains they can READ —
+  // used to hide admin-nav links they'd only get an "access required" card from.
+  // Left undefined for admins (AdminNav then shows every link). superAdmin (which
+  // the perms helper never returns for a non-isAdmin session, but guard anyway)
+  // would mean "all", so we leave it undefined in that case too.
+  let readableDomains: string[] | undefined;
   if (session && !onLoginPage && !isAdmin) {
     const perms = await getOfficerPermissionsForBrother(session.brother.id);
     const isOfficer = perms.superAdmin || Object.keys(perms.domain || {}).length > 0;
     if (!isOfficer) {
       redirect("/portal");
+    }
+    if (!perms.superAdmin) {
+      readableDomains = Object.entries(perms.domain || {})
+        .filter(([, access]) => access === "read" || access === "write")
+        .map(([domain]) => domain);
     }
   }
 
@@ -132,7 +143,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       {cookieScript}
-      <AdminShell isAdmin={isAdmin} banner={banner}>
+      <AdminShell isAdmin={isAdmin} readableDomains={readableDomains} banner={banner}>
         {children}
       </AdminShell>
     </>

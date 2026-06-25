@@ -1,12 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { ChoresClient } from "./chores-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChoresPage() {
-  // Read permission for chores/house catalog is "house" domain
-  await requireOfficerPermission("house", "read");
+  // Read permission for chores/house catalog is "house" domain.
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("house", "read");
+  if (!canRead) return <OfficerAccessRequired title="Chores" permission="House" />;
   const { allowed: canWrite } = await checkOfficerPermission("house", "write");
 
   // Fetch recurring chores tasks

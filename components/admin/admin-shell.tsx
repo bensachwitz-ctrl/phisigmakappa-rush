@@ -7,10 +7,15 @@ import { CommandPalette, CommandPaletteLauncher } from "@/components/admin/comma
 export function AdminShell({
   children,
   isAdmin = false,
+  readableDomains,
   banner = null,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
+  /** GATE-3 FIX 4: per-domain READ permissions a NON-ADMIN officer holds, passed
+   *  through to AdminNav so domain links they can't read are hidden. Ignored for
+   *  admins (who see every link). */
+  readableDomains?: string[];
   /** Optional soft-gate billing banner rendered above the nav. Self-hides on the
    *  login screen and when entitled/dismissed (the banner decides internally). */
   banner?: React.ReactNode;
@@ -50,7 +55,7 @@ export function AdminShell({
           admin dismissed it this session. It never blocks the app. */}
       <div className="relative z-10">
         {!isLogin && banner}
-        {!isLogin && <AdminNav isAdmin={isAdmin} />}
+        {!isLogin && <AdminNav isAdmin={isAdmin} readableDomains={readableDomains} />}
         {/* CommandPalette mounts itself globally and listens for ⌘K / Ctrl+K
             at the window level. Renders nothing visible until opened. Skipped
             on the login screen so a misfired keypress doesn't open a palette

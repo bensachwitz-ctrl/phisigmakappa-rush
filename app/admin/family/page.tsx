@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { getSiteConfig } from "@/lib/site-config";
 import { FamilyManager, type FamilyBrother } from "@/components/admin/family-manager";
 import { IconFamily } from "@/components/brand/icons/family";
@@ -22,7 +23,9 @@ export const dynamic = "force-dynamic";
  * open the admin family console by direct URL. Mirrors the meetings page.
  */
 export default async function FamilyPage() {
-  await requireOfficerPermission("brothers", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("brothers", "read");
+  if (!canRead) return <OfficerAccessRequired title="Big/Little" permission="Brothers" />;
   let brothers: FamilyBrother[] = [];
   try {
     const rows = await prisma.brother.findMany({

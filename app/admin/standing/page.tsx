@@ -1,4 +1,5 @@
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { loadRosterStandings } from "@/lib/points-server";
 import { getSiteConfig } from "@/lib/site-config";
 import { StandingClient } from "./standing-client";
@@ -17,7 +18,9 @@ export const dynamic = "force-dynamic";
  * (SUPER_ADMIN_PERMISSIONS) satisfies.
  */
 export default async function StandingPage() {
-  await requireOfficerPermission("siteSettings", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("siteSettings", "read");
+  if (!canRead) return <OfficerAccessRequired title="Standing" permission="Site Settings" />;
   const { allowed: canEdit } = await checkOfficerPermission("siteSettings", "write");
 
   const { config, rows } = await loadRosterStandings();

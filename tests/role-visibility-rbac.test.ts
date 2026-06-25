@@ -682,3 +682,83 @@ describe("brothers dashboard admin shortcuts (GATE-3 FIX 2) — no dead /admin/*
     expect(/path:\s*"\/admin\/rush"/.test(SRC)).toBe(false);
   });
 });
+
+// ── GATE-3 FIX 4 — admin nav domain-gating + graceful page access ─────────────
+// (a) NAV: a non-admin officer must only see domain links they can actually READ
+//     — the old filter (`!adminOnly || isAdmin`) showed every non-adminOnly tab,
+//     so an officer without a domain clicked into a page that THREW a 403 and
+//     crashed app/admin/error.tsx. The nav now also filters by the officer's
+//     readable domains.
+// (b) PAGES: the 10 domain pages converted their READ gate from the throwing
+//     requireOfficerPermission(domain,"read") to the non-throwing
+//     checkOfficerPermission + the shared <OfficerAccessRequired/> card (the
+//     app/admin/elections template) — no crash boundary on a permission gap.
+describe("admin nav domain-gating + graceful page access (GATE-3 FIX 4)", () => {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const { resolve } = require("node:path") as typeof import("node:path");
+  const root = (...p: string[]) => resolve(__dirname, "..", ...p);
+
+  // The exact admit predicate AdminNav applies per item (mirrors the component).
+  const navItemVisible = (
+    item: { adminOnly: boolean; domain?: string },
+    isAdmin: boolean,
+    readable: Set<string>,
+  ): boolean => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (isAdmin || !item.domain) return true;
+    return readable.has(item.domain);
+  };
+
+  it("hides a domain link a non-admin officer cannot read", () => {
+    // A Treasurer holds dues/payments + brothers:read, NOT academic.
+    const readable = new Set(["dues", "payments", "brothers"]);
+    expect(navItemVisible({ adminOnly: false, domain: "academic" }, false, readable)).toBe(false);
+    // …but DOES see a domain they hold.
+    expect(navItemVisible({ adminOnly: false, domain: "brothers" }, false, readable)).toBe(true);
+  });
+
+  it("always shows ungated links (landing/polls/help) to any officer", () => {
+    expect(navItemVisible({ adminOnly: false }, false, new Set())).toBe(true);
+  });
+
+  it("shows EVERY link to a real admin regardless of the readable set", () => {
+    expect(navItemVisible({ adminOnly: true, domain: "dues" }, true, new Set())).toBe(true);
+    expect(navItemVisible({ adminOnly: false, domain: "academic" }, true, new Set())).toBe(true);
+  });
+
+  it("still hides adminOnly links from a non-admin officer even if (somehow) in the readable set", () => {
+    // adminOnly is the hard floor — it short-circuits before the domain check.
+    expect(navItemVisible({ adminOnly: true, domain: "dues" }, false, new Set(["dues"]))).toBe(false);
+  });
+
+  it("the admin-nav source actually filters by readableDomains (not just isAdmin)", () => {
+    const nav = readFileSync(root("components/admin/admin-nav.tsx"), "utf8");
+    expect(nav).toMatch(/readableDomains/);
+    expect(nav).toMatch(/readable\.has\(it\.domain\)/);
+  });
+
+  // Each domain page (a) drops the throwing requireOfficerPermission, (b) uses
+  // the non-throwing checkOfficerPermission, and (c) renders the graceful card.
+  const DOMAIN_PAGES = [
+    "academic", "directory", "risk", "standing", "service",
+    "library", "meetings", "chores", "calendar", "family",
+  ];
+  for (const d of DOMAIN_PAGES) {
+    const src = readFileSync(root("app/admin", d, "page.tsx"), "utf8");
+    it(`app/admin/${d}/page.tsx gates READ gracefully (no thrown requireOfficerPermission read)`, () => {
+      // No throwing read gate remains…
+      expect(/requireOfficerPermission\(/.test(src)).toBe(false);
+      // …replaced by the non-throwing check + the shared access-required card.
+      expect(src).toMatch(/checkOfficerPermission\(/);
+      expect(src).toMatch(/OfficerAccessRequired/);
+      expect(src).toMatch(/if \(!canRead\) return <OfficerAccessRequired/);
+    });
+  }
+
+  it("the shared OfficerAccessRequired card exists and mirrors the elections template", () => {
+    const card = readFileSync(root("components/admin/officer-access-required.tsx"), "utf8");
+    expect(card).toMatch(/ShieldAlert/);
+    expect(card).toMatch(/access required/i);
+    expect(card).toMatch(/Back to dashboard/);
+  });
+});

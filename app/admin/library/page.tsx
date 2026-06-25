@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { LibraryClient } from "./library-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function LibraryPage() {
-  await requireOfficerPermission("documents", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("documents", "read");
+  if (!canRead) return <OfficerAccessRequired title="Library" permission="Documents" />;
   const { allowed: canWrite } = await checkOfficerPermission("documents", "write");
 
   const documents = await prisma.document.findMany({

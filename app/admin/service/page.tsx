@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { ServiceClient } from "./service-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function ServicePage() {
-  await requireOfficerPermission("service", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("service", "read");
+  if (!canRead) return <OfficerAccessRequired title="Service" permission="Service" />;
   const { allowed: canWrite } = await checkOfficerPermission("service", "write");
 
   // Pending (submitted) service-hour submissions — the default approval queue.

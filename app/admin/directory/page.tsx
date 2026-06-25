@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { getSiteConfig } from "@/lib/site-config";
 import { DirectoryManager, type DirectoryRow } from "@/components/admin/directory-manager";
 import { IconDirectory } from "@/components/brand/icons/directory";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,9 @@ export default async function DirectoryPage() {
   // checks for a valid admin session, so without this an officer lacking the
   // brothers domain (or any holder of an isAdmin=false admin cookie) could read
   // the full roster by direct URL. Gate on brothers:read to match /admin/brothers.
-  await requireOfficerPermission("brothers", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("brothers", "read");
+  if (!canRead) return <OfficerAccessRequired title="Directory" permission="Brothers" />;
 
   let rows: any[] = [];
   try {

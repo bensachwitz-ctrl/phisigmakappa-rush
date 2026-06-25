@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { MeetingsClient } from "./meetings-client";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +8,9 @@ export const dynamic = "force-dynamic";
 export default async function MeetingsPage() {
   // Attendance/meeting management lives under the "brothers" domain — the same
   // gate the /api/admin/meetings routes enforce (read to view, write to mutate).
-  await requireOfficerPermission("brothers", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("brothers", "read");
+  if (!canRead) return <OfficerAccessRequired title="Meetings" permission="Brothers" />;
   const { allowed: canWrite } = await checkOfficerPermission("brothers", "write");
 
   // Meeting list with attendance counts (mirrors GET /api/admin/meetings).

@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission, checkOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { RiskClient } from "./risk-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function RiskPage() {
-  await requireOfficerPermission("risk", "read");
+  // GATE-3 FIX 4: graceful read gate (card, not a thrown 403).
+  const { allowed: canRead } = await checkOfficerPermission("risk", "read");
+  if (!canRead) return <OfficerAccessRequired title="Risk Desk" permission="Risk" />;
   const { allowed: canWrite } = await checkOfficerPermission("risk", "write");
 
   // Fetch incident reports + the investigator list. Wrapped so a transient DB

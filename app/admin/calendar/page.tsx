@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { requireOfficerPermission } from "@/lib/permissions";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { CalendarView, type CalendarItem } from "@/components/admin/calendar-view";
 
 export const dynamic = "force-dynamic";
@@ -13,18 +14,18 @@ export const dynamic = "force-dynamic";
  *   2. ChapterMeeting  → source "meeting"  → href /admin/meetings
  *   3. the dues deadline from SiteConfig   → source "dues"    → href /admin/settings
  *
- * Auth is gated EXACTLY like the events/meetings admin pages: the meetings page
- * calls `requireOfficerPermission("brothers", "read")`; this calendar's primary
- * payload is the chapter's events, so it gates on the semantically-aligned
- * "events" domain (SUPER_ADMIN passes via the same helper). The throw is
- * wrap-safe — Next renders the standard 403 boundary, identical to /admin/meetings.
+ * Auth is gated like the events/meetings admin pages on the "events" domain
+ * (SUPER_ADMIN passes via the same helper). GATE-3 FIX 4: gated GRACEFULLY with
+ * checkOfficerPermission — a signed-in officer lacking the events domain gets the
+ * "access required" card instead of a thrown 403 crashing into app/admin/error.tsx.
  *
  * Every DB read is wrapped so a transient blip degrades to an empty timeline
  * (the client renders its empty-state) instead of a 500.
  */
 export default async function AdminCalendarPage() {
   // Gate first — mirrors the events/meetings server-page auth pattern.
-  await requireOfficerPermission("events", "read");
+  const { allowed: canRead } = await checkOfficerPermission("events", "read");
+  if (!canRead) return <OfficerAccessRequired title="Calendar" permission="Events" />;
 
   const items: CalendarItem[] = [];
 

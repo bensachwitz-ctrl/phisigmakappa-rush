@@ -37,40 +37,47 @@ type NavItem = {
   /** "primary" pins the item to the slim desktop bar; "more" tucks it into the
    *  "More" dropdown. Everything still appears in the mobile grid regardless. */
   group: "primary" | "more";
+  /** GATE-3 FIX 4: the officer permission domain whose READ a non-admin officer
+   *  must hold for this destination to be reachable. Omitted for the landing
+   *  dashboard / polls / help (no single per-domain read gate — they self-scope
+   *  or are always open). Used to HIDE links a non-admin officer can't read so
+   *  they never click into the "access required" card. Admins (isAdmin) see all. */
+  domain?: string;
 };
 
 // The six highest-traffic officer destinations stay pinned to the desktop bar;
 // the rest collapse into a tidy "More" dropdown so the bar never overflows even
 // with 16 sections. The mobile menu (below) keeps listing all of them in a grid.
+// `domain` mirrors each page's checkOfficerPermission(domain,"read") gate.
 const ITEMS: NavItem[] = [
   { href: "/admin", label: "Rush", icon: IconDashboard, adminOnly: false, group: "primary" },
   { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: true, group: "primary" },
-  { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary" },
-  { href: "/admin/directory", label: "Directory", icon: IconDirectory, adminOnly: false, group: "more" },
-  { href: "/admin/standing", label: "Standing", icon: IconStanding, adminOnly: false, group: "more" },
-  { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: true, group: "more" },
-  { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary" },
-  { href: "/admin/meetings", label: "Meetings", icon: IconMeetings, adminOnly: false, group: "primary" },
-  { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more" },
-  { href: "/admin/risk", label: "Risk Desk", icon: IconRiskDesk, adminOnly: false, group: "primary" },
+  { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary", domain: "brothers" },
+  { href: "/admin/directory", label: "Directory", icon: IconDirectory, adminOnly: false, group: "more", domain: "brothers" },
+  { href: "/admin/standing", label: "Standing", icon: IconStanding, adminOnly: false, group: "more", domain: "siteSettings" },
+  { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: true, group: "more", domain: "brothers" },
+  { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary", domain: "events" },
+  { href: "/admin/meetings", label: "Meetings", icon: IconMeetings, adminOnly: false, group: "primary", domain: "brothers" },
+  { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more", domain: "events" },
+  { href: "/admin/risk", label: "Risk Desk", icon: IconRiskDesk, adminOnly: false, group: "primary", domain: "risk" },
 
-  { href: "/admin/academic", label: "Academic", icon: IconAcademic, adminOnly: false, group: "more" },
-  { href: "/admin/chores", label: "Chores", icon: IconChores, adminOnly: false, group: "more" },
+  { href: "/admin/academic", label: "Academic", icon: IconAcademic, adminOnly: false, group: "more", domain: "academic" },
+  { href: "/admin/chores", label: "Chores", icon: IconChores, adminOnly: false, group: "more", domain: "house" },
   { href: "/admin/polls", label: "Polls", icon: IconBallot, adminOnly: false, group: "more" },
-  { href: "/admin/elections", label: "Elections", icon: IconElections, adminOnly: false, group: "more" },
-  { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: true, group: "more" },
-  { href: "/admin/service", label: "Service", icon: IconService, adminOnly: false, group: "more" },
+  { href: "/admin/elections", label: "Elections", icon: IconElections, adminOnly: false, group: "more", domain: "elections" },
+  { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: true, group: "more", domain: "announcements" },
+  { href: "/admin/service", label: "Service", icon: IconService, adminOnly: false, group: "more", domain: "service" },
   { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
-  { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more" },
+  { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more", domain: "documents" },
   { href: "/admin/exports", label: "Exports", icon: IconExports, adminOnly: true, group: "more" },
-  { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: true, group: "more" },
-  { href: "/admin/dues/connect", label: "Payouts", icon: IconPayouts, adminOnly: true, group: "more" },
-  { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: true, group: "more" },
+  { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: true, group: "more", domain: "dues" },
+  { href: "/admin/dues/connect", label: "Payouts", icon: IconPayouts, adminOnly: true, group: "more", domain: "payments" },
+  { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: true, group: "more", domain: "payments" },
   { href: "/admin/billing", label: "Billing", icon: IconBilling, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: IconAuditLog, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },
-  { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more" },
-  { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more" },
+  { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more", domain: "siteSettings" },
+  { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more", domain: "siteSettings" },
   { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
 ];
 
@@ -95,11 +102,34 @@ function bestActiveHref(pathname: string, items: NavItem[]): string | null {
   return best;
 }
 
-export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
+export function AdminNav({
+  isAdmin = true,
+  readableDomains,
+}: {
+  isAdmin?: boolean;
+  /** GATE-3 FIX 4: the per-domain READ permissions a NON-ADMIN officer holds.
+   *  Links whose `domain` is not in this set are hidden so an officer never sees
+   *  a tab they'd only get an "access required" card from. Ignored for admins
+   *  (who see everything). `undefined` = no filtering (back-compat / admin). */
+  readableDomains?: string[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const items = ITEMS.filter((it) => !it.adminOnly || isAdmin);
+  // Domain set the viewer can read; admins implicitly read every domain.
+  const readable = React.useMemo(
+    () => new Set(readableDomains || []),
+    [readableDomains],
+  );
+  const items = ITEMS.filter((it) => {
+    // adminOnly items require real admin access.
+    if (it.adminOnly && !isAdmin) return false;
+    // Admins (and items with no per-domain read gate) are always shown.
+    if (isAdmin || !it.domain) return true;
+    // A non-admin officer only sees a domain link they can actually read —
+    // otherwise the tab would dead-end on the "access required" card.
+    return readable.has(it.domain);
+  });
 
   const primaryItems = items.filter((it) => it.group === "primary");
   // "Help" gets its own dedicated affordance on desktop, so keep it out of the
