@@ -46,6 +46,21 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // GATE-3 FIX 6: the OTP completion endpoint (/api/portal/reset/complete →
+    // lib/otp.ts validateNewPassword) additionally requires a letter AND a
+    // number. Mirror that rule client-side for the OTP branch so the requirement
+    // is shown BEFORE submit, not as a confusing post-submit server rejection.
+    // The token-link branch (/api/portal/reset-password) only requires 8 chars,
+    // so we don't over-restrict it.
+    if (isOtp && !/[a-zA-Z]/.test(password)) {
+      setError("Password must contain a letter.");
+      return;
+    }
+    if (isOtp && !/[0-9]/.test(password)) {
+      setError("Password must contain a number.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -168,9 +183,17 @@ export default function ResetPasswordPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 8 characters"
+                    placeholder={isOtp ? "8+ chars, with a letter & a number" : "Min 8 characters"}
+                    aria-describedby="reset-pw-hint"
                     className="w-full px-4 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-sm text-maroon-900"
                   />
+                  {/* GATE-3 FIX 6: show the real rule inline, BEFORE submit. The OTP
+                      completion endpoint also requires a letter + a number. */}
+                  <p id="reset-pw-hint" className="mt-1 text-[11px] text-maroon-500">
+                    {isOtp
+                      ? "At least 8 characters, including a letter and a number."
+                      : "At least 8 characters."}
+                  </p>
                 </div>
 
                 <div>

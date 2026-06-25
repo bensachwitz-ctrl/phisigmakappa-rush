@@ -178,3 +178,47 @@ describe("new-password strength gate (post-OTP reset)", () => {
     expect(validateNewPassword("1234567890").ok).toBe(false);
   });
 });
+
+// ── GATE-3 FIX 6 — OTP reset password-rule parity (client mirrors server) ─────
+// The server (lib/otp.ts validateNewPassword, enforced by
+// /api/portal/reset/complete) requires >= 8 chars AND a letter AND a number, but
+// the OTP reset CLIENTS (components/portal/forgot-password-otp.tsx and the OTP
+// branch of app/portal/reset-password/page.tsx) used to accept any 8+ chars —
+// producing a confusing post-submit rejection. The clients now mirror the rule
+// (and surface it inline before submit). Static source-pin: the client check +
+// inline copy match validateNewPassword's three predicates. NON-VACUOUS: the
+// pre-fix clients had only a `length < 8` check and a "Min 8 characters"
+// placeholder, which would fail the letter/number asserts below.
+describe("OTP reset client password-rule parity (GATE-3 FIX 6)", () => {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const { resolve } = require("node:path") as typeof import("node:path");
+  const read = (rel: string) =>
+    readFileSync(resolve(__dirname, "..", rel), "utf8");
+
+  // Cross-check: the model rule we mirror is exactly letter + number + >=8.
+  it("the SERVER rule is the one we mirror (letter + number + >=8)", () => {
+    expect(validateNewPassword("aaaaaaaa1").ok).toBe(true); // letter+number+8 ok
+    expect(validateNewPassword("aaaaaaaaa").ok).toBe(false); // no number
+    expect(validateNewPassword("111111111").ok).toBe(false); // no letter
+    expect(validateNewPassword("abc1").ok).toBe(false); // too short
+  });
+
+  for (const rel of [
+    "components/portal/forgot-password-otp.tsx",
+    "app/portal/reset-password/page.tsx",
+  ]) {
+    const src = read(rel);
+    it(`${rel} enforces a letter before submit (mirrors validateNewPassword)`, () => {
+      expect(src).toMatch(/\/\[a-zA-Z\]\/\.test\(password\)/);
+      expect(src).toMatch(/must contain a letter/i);
+    });
+    it(`${rel} enforces a number before submit (mirrors validateNewPassword)`, () => {
+      expect(src).toMatch(/\/\[0-9\]\/\.test\(password\)/);
+      expect(src).toMatch(/must contain a number/i);
+    });
+    it(`${rel} surfaces the rule inline + no stale "Min 8 characters"-only OTP placeholder`, () => {
+      // The OTP-facing copy names the letter+number requirement, not just length.
+      expect(src).toMatch(/letter and a number/i);
+    });
+  }
+});

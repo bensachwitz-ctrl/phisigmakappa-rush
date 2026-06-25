@@ -106,8 +106,20 @@ export function PortalForgotOtpFlow({ role, onBack, dashboardHref }: PortalForgo
   async function submitPassword(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    // GATE-3 FIX 6: mirror the SERVER rule (lib/otp.ts validateNewPassword,
+    // enforced by /api/portal/reset/complete) client-side so the user sees the
+    // requirement BEFORE submit instead of a confusing post-submit rejection:
+    // >= 8 chars AND at least one letter AND at least one number.
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password)) {
+      setError("Password must contain a letter.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must contain a number.");
       return;
     }
     if (password !== confirm) {
@@ -249,7 +261,8 @@ export function PortalForgotOtpFlow({ role, onBack, dashboardHref }: PortalForgo
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 8 characters"
+                placeholder="8+ chars, with a letter & a number"
+                aria-describedby="otp-new-hint"
                 className={`${FIELD} pr-16`}
               />
               <button
@@ -262,6 +275,11 @@ export function PortalForgotOtpFlow({ role, onBack, dashboardHref }: PortalForgo
                 {showPw ? "Hide" : "Show"}
               </button>
             </div>
+            {/* GATE-3 FIX 6: surface the SERVER rule inline, BEFORE submit, so the
+                requirement is never a surprise post-submit rejection. */}
+            <p id="otp-new-hint" className="mt-1 text-[11px] text-maroon-500">
+              At least 8 characters, including a letter and a number.
+            </p>
           </div>
           <div>
             <label htmlFor="otp-confirm" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
