@@ -177,6 +177,50 @@ describe("marketing copy honesty — the honest replacements are present", () =>
   });
 });
 
+// ── GATE-3 FIX 3 — officer RBAC honesty (no live web per-officer admin split) ─
+// The per-officer WEB admin domain-split is NOT delivered: app/api/admin/login
+// mints isAdmin=true (super-admin) for every web admin, so requireOfficerPermission
+// scoping never fires on the web admin console today (tests/role-visibility-rbac
+// calls the isAdmin=false officer branch "forward-looking"). The officer RBAC
+// model + per-domain permissions DO exist and are enforced on the portal + API,
+// but the marketing copy must NOT present an absolute, fully-delivered "every
+// officer sees exactly what they should, nothing more" web guarantee. Pin the
+// softened, honest framing. Non-vacuous: the pre-fix copy ("everyone sees exactly
+// what they should, nothing more" / "a Recruitment chair never sees the treasury")
+// would have failed the forbidden patterns below.
+describe("officer RBAC copy honesty (GATE-3 FIX 3) — no live web per-officer-split overclaim", () => {
+  const landing = readFileSync(resolve(ROOT, "components/site/marketing-landing.tsx"), "utf8");
+
+  const FORBIDDEN_RBAC = [
+    {
+      pattern: /everyone sees exactly what they should, nothing more/i,
+      why: "absolute 'nothing more' guarantee implies a fully-delivered per-officer web split (web admin = super-admin today)",
+    },
+    {
+      pattern: /never sees the treasury/i,
+      why: "implies an absolute, delivered web access wall the web admin console does not enforce today",
+    },
+    {
+      pattern: /sees exactly their job\s*—\s*nothing more/i,
+      why: "absolute 'nothing more' web guarantee — not delivered on the web admin console",
+    },
+  ];
+
+  for (const { pattern, why } of FORBIDDEN_RBAC) {
+    it(`landing does not overclaim officer RBAC with /${pattern.source}/ (${why})`, () => {
+      expect(
+        pattern.test(landing),
+        `Found an officer-RBAC overclaim matching ${pattern}: ${why}. The per-officer WEB admin split is not delivered (web admin login mints isAdmin=true).`,
+      ).toBe(false);
+    });
+  }
+
+  it("keeps the HONEST, softened RBAC framing (preset roles + tailorable per-domain permissions)", () => {
+    expect(landing).toMatch(/preset permissions you can tailor per officer/i);
+    expect(landing).toMatch(/Per-domain read\/write permissions you can tailor/i);
+  });
+});
+
 // ── round-4 (M2) ACADEMICS HONESTY — no per-member GPA / credit hours ────────
 // The chapter stores per-member academicStanding (string) + studyHours (int)
 // ONLY (prisma schema Brother model). There is NO per-member GPA field and NO

@@ -377,7 +377,7 @@ export const DEMO_CALLOUTS: Record<
   },
   settings: {
     title: "Your profile",
-    body: "Each member manages their own profile, privacy, and notifications. Officers get role-scoped access so everyone sees exactly their job, nothing more.",
+    body: "Each member manages their own profile, privacy, and notifications. Officers get role-scoped access built around their job, with per-domain permissions you can tailor.",
   },
 };
 
