@@ -11,11 +11,7 @@ import { useToast } from "@/components/ui/toast";
 // Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
 // LUCIDE→BESPOKE TODO at the foot of this file). CheckCircle2 + ArrowRight were
 // migrated to the bespoke utility set (IconCheckCircle / IconArrowRight) below.
-import {
-  ChevronRight, ChevronLeft, Loader2, Building2, Rocket,
-  AlertCircle, UserPlus, Database, Trash2, Wand2,
-  Upload, Image as ImageIcon,
-} from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { imageSrc } from "@/lib/image-url";
 
@@ -33,7 +29,19 @@ import {
   IconLaunch,
   IconCheckCircle,
   IconArrowRight,
+  IconChevronRight,
+  IconChevronLeft,
+  IconSpinner,
+  IconBuilding,
+  IconRocket,
+  IconAlertCircle,
+  IconUserPlus,
+  IconDatabase,
+  IconWand,
+  IconUpload,
+  IconImage,
 } from "@/components/brand/icons";
+import { IconTrash } from "@/components/brand/icons/onboarding";
 type Cfg = Record<string, string>;
 
 const STEPS = [
@@ -206,7 +214,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
             <>
               <div className="rounded-xl border border-border bg-secondary/30 p-4">
                 <Label className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium">
-                  <ImageIcon className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Chapter logo (optional)
+                  <IconImage className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Chapter logo (optional)
                 </Label>
                 <p className="text-xs text-muted-foreground mb-3">
                   Upload your crest or logo (square / transparent PNG works best). It appears in the
@@ -294,7 +302,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                 </Link>
                 <Link href="/admin/settings" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Advanced settings
+                    <IconBuilding className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Advanced settings
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">Hero photos, stats, FAQ, timeline, executive board, all editable.</p>
                 </Link>
@@ -319,16 +327,16 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               onClick={goPrev}
               disabled={stepIndex === 0}
             >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" /> Back
+              <IconChevronLeft className="h-4 w-4" aria-hidden="true" /> Back
             </Button>
             {!isLastStep ? (
               <Button onClick={saveAndContinue} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-                Save &amp; continue <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                {busy ? <IconSpinner className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                Save &amp; continue <IconChevronRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             ) : (
               <Button onClick={saveAndContinue} disabled={busy} variant="default">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Rocket className="h-4 w-4" aria-hidden="true" />}
+                {busy ? <IconSpinner className="h-4 w-4 animate-spin" aria-hidden="true" /> : <IconRocket className="h-4 w-4" aria-hidden="true" />}
                 Mark setup complete
               </Button>
             )}
@@ -488,7 +496,7 @@ function WLogo({
         />
         <div className="flex gap-2">
           <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={uploading}>
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Upload className="h-3.5 w-3.5" aria-hidden="true" />}
+            {uploading ? <IconSpinner className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <IconUpload className="h-3.5 w-3.5" aria-hidden="true" />}
             {uploading ? "Uploading…" : "Upload logo"}
           </Button>
           {value && (
@@ -670,7 +678,7 @@ export function FirstRunCard({
           className="group flex items-center gap-3 rounded-xl border border-phisig-red/20 bg-white/70 p-3 transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.55)]">
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            <IconUserPlus className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold tracking-tight">Invite your e-board</p>
@@ -684,7 +692,7 @@ export function FirstRunCard({
         {/* Load sample data — instant populated value for a new admin. */}
         <div className="flex items-center gap-3 rounded-xl border border-phisig-red/15 bg-white/70 p-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-phisig-red-soft text-phisig-red shrink-0 ring-1 ring-phisig-red/15">
-            <Database className="h-4 w-4" aria-hidden="true" />
+            <IconDatabase className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold tracking-tight">Load sample data</p>
@@ -699,9 +707,9 @@ export function FirstRunCard({
             className="shrink-0"
           >
             {sampleBusy === "seed" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              <IconSpinner className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <IconWand className="h-3.5 w-3.5" aria-hidden="true" />
             )}
             Load
           </Button>
@@ -726,7 +734,7 @@ export function FirstRunCard({
               </span>
             ) : (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700 shrink-0 mt-px ring-1 ring-amber-200">
-                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                <IconAlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
             )}
             <div className="flex-1 min-w-0">
@@ -753,7 +761,7 @@ export function FirstRunCard({
           href="/admin/setup"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-phisig-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 rounded"
         >
-          <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+          <IconWand className="h-3.5 w-3.5" aria-hidden="true" />
           {brandSetupComplete ? "Review chapter setup wizard" : "Resume full setup wizard"}
           <IconArrowRight className="h-3 w-3" aria-hidden="true" />
         </Link>
@@ -764,9 +772,9 @@ export function FirstRunCard({
           className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/20 rounded"
         >
           {sampleBusy === "clear" ? (
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+            <IconSpinner className="h-3 w-3 animate-spin" aria-hidden="true" />
           ) : (
-            <Trash2 className="h-3 w-3" aria-hidden="true" />
+            <IconTrash className="h-3 w-3" aria-hidden="true" />
           )}
           Clear sample data
         </button>

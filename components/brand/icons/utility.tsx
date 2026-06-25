@@ -95,3 +95,128 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** ChevronLeft — a leftward chevron with a soft accent echo. */
+export function IconChevronLeft({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M15 18.5l-7-7 7-7" stroke={accent} opacity={0.28} strokeWidth={3.5} />
+      <path d="M15 18l-6-6 6-6" />
+    </IconBase>
+  );
+}
+
+/** ChevronRight — a rightward chevron with a soft accent echo. */
+export function IconChevronRight({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 18.5l7-7-7-7" stroke={accent} opacity={0.28} strokeWidth={3.5} />
+      <path d="M9 18l6-6-6-6" />
+    </IconBase>
+  );
+}
+
+/** Spinner — an animating loading ring with an accent sweep. */
+export function IconSpinner({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke={accent} opacity={0.4} strokeWidth={3} />
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </IconBase>
+  );
+}
+
+/** AlertCircle — a warning ring with a soft accent fill. */
+export function IconAlertCircle({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="10" fill={accent} opacity={0.14} stroke="none" />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v4M12 16h.01" />
+    </IconBase>
+  );
+}
+
+/** Database — stacked discs with an accent fill in the top platter. */
+export function IconDatabase({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <ellipse cx="12" cy="5" rx="9" ry="3" fill={accent} opacity={0.16} stroke="none" />
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+      <path d="M3 12A9 3 0 0 0 21 12" />
+    </IconBase>
+  );
+}
+
+/** Wand — a magic wand with accent sparkles. */
+export function IconWand({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9" stroke={accent} opacity={0.4} strokeWidth={2} />
+      <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72M14 7l3 3" />
+    </IconBase>
+  );
+}
+
+/** Upload — a tray and upward arrow with a soft accent tray fill. */
+export function IconUpload({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M17 8l-5-5-5 5M12 3v12" />
+    </IconBase>
+  );
+}
+
+/** Image — a framed picture with an accent sun/moon. */
+export function IconImage({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="9" cy="9" r="2.5" fill={accent} opacity={0.3} stroke="none" />
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </IconBase>
+  );
+}
+
+/** Building — a skyline profile with accent window tint. */
+export function IconBuilding({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+      <path d="M10 6h4M10 10h4M10 14h4M10 18h4" />
+    </IconBase>
+  );
+}
+
+/** Rocket — a spaceship in flight with accent thrust/flame. */
+export function IconRocket({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke={accent} opacity={0.3} strokeWidth={3} />
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </IconBase>
+  );
+}
+
+/** UserPlus — a person profile with an accent plus badge. */
+export function IconUserPlus({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="9" cy="7" r="4" fill={accent} opacity={0.16} stroke="none" />
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" stroke={accent} opacity={0.3} strokeWidth={3} />
+      <path d="M19 8v6M22 11h-6" />
+    </IconBase>
+  );
+}
