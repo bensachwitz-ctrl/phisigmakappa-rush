@@ -118,12 +118,12 @@ interface Meeting {
     meetingId: string;
     memberId: string;
     status: string;
-    checkedInAt: any;
+    checkedInAt: string | Date | null;
     excuseReason: string | null;
     excuseApprovedById: string | null;
     notes: string | null;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: string | Date;
+    updatedAt: string | Date;
   } | null;
 }
 
