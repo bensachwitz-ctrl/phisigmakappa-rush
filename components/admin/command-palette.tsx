@@ -5,12 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Dialog, DialogContent, DialogTitle,
 } from "@/components/ui/dialog";
-// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
-// LUCIDE→BESPOKE TODO at the foot of this file). `ExternalLink` was migrated to
-// the bespoke `IconExternal` below.
-import {
-  HelpCircle, Search, Command,
-} from "lucide-react";
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark,
@@ -18,7 +12,7 @@ import {
   // palette matches the always-on nav's made-for-Greek-life icon family.
   IconDirectory, IconFamilyTree, IconMeetings, IconRiskDesk, IconAcademic,
   IconChores, IconService, IconBallot, IconLibrary, IconAuditLog, IconExports,
-  IconPayouts, IconBilling, IconArrowRight,
+  IconPayouts, IconBilling, IconArrowRight, IconSearch, IconCommand, IconHelp,
   // Bespoke "open off-site / new tab" glyph for the External command row.
   IconExternal,
 } from "@/components/brand/icons";
@@ -79,7 +73,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "act-digest", group: "Actions", icon: IconAuditLog, label: "Weekly digest (JSON)", href: "/api/admin/digest", adminOnly: true },
       // External
       { id: "ext-home", group: "External", icon: IconExternal, label: "View public homepage", href: "/", synonyms: ["site", "live", "public"] },
-      { id: "ext-help", group: "Help", icon: HelpCircle, label: "Open admin handbook (Help)", href: "/admin/help", synonyms: ["docs", "how"] },
+      { id: "ext-help", group: "Help", icon: IconHelp, label: "Open admin handbook (Help)", href: "/admin/help", synonyms: ["docs", "how"] },
     ];
     return base.filter((c) => !c.adminOnly || isAdmin);
   }, [isAdmin]);
@@ -184,7 +178,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
         <DialogTitle className="sr-only">Command palette</DialogTitle>
         <div className="border-b border-border">
           <div className="flex items-center gap-2 px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+            <IconSearch className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
             <input
               ref={inputRef}
               value={q}
@@ -241,7 +235,7 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
         </div>
         <div className="border-t border-border px-3 py-2 flex items-center justify-between text-[10px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <Command className="h-3 w-3" aria-hidden="true" />
+            <IconCommand className="h-3 w-3" aria-hidden="true" />
             <kbd className="rounded border border-border bg-secondary px-1">↑↓</kbd> to navigate
             <kbd className="rounded border border-border bg-secondary px-1 ml-1.5">↵</kbd> to open
           </span>
@@ -265,20 +259,9 @@ export function CommandPaletteLauncher({ onOpen }: { onOpen: () => void }) {
       aria-label="Open command palette (Cmd+K)"
       className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] right-4 z-40 flex sm:hidden items-center gap-1.5 rounded-full bg-foreground/90 text-background px-3 py-2 text-xs font-medium shadow-lg hover:bg-foreground transition-colors"
     >
-      <Command className="h-3 w-3" aria-hidden="true" />
+      <IconCommand className="h-3 w-3" aria-hidden="true" />
       <kbd className="text-[10px]">⌘K</kbd>
     </button>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LUCIDE → BESPOKE TODO (⌘K palette)
-// ─────────────────────────────────────────────────────────────────────────────
-// Every navigate/action command ROW glyph + the External row are bespoke. The
-// remaining raw lucide here are palette CHROME with no bespoke equivalent yet
-// and are left as-is rather than force a weak match (size/aria unchanged):
-//   • Search     — the search-field leading glyph
-//   • Command    — the ⌘ hint in the input + footer + mobile launcher
-//   • HelpCircle — the Help command row + handbook entry
-// Next pass: draw IconSearch / IconCommand / IconHelp in the bespoke design
-// language (components/brand/icons/icon-base.tsx) and swap these three.

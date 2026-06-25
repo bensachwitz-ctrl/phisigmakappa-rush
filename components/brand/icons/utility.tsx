@@ -95,3 +95,36 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
+
+/** Search — a magnifying glass with a faint accent filled glass. */
+export function IconSearch({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="11" cy="11" r="8" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </IconBase>
+  );
+}
+
+/** Command — the ⌘ symbol with a soft accent echo. */
+export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" stroke={accent} opacity={0.28} strokeWidth={3.5} />
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+    </IconBase>
+  );
+}
+
+/** Help — a question mark in a ring with an accent-filled disc. */
+export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="10" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" />
+    </IconBase>
+  );
+}

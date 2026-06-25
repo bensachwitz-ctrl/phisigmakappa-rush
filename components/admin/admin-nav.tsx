@@ -13,7 +13,7 @@ import {
 // LUCIDE→BESPOKE TODO at the foot of this file). Menu/X/ChevronDown/ExternalLink
 // were migrated to the bespoke utility set below.
 import {
-  LogOut, HelpCircle, Command, LayoutGrid,
+  LogOut, LayoutGrid,
 } from "lucide-react";
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
@@ -22,7 +22,7 @@ import {
   // always-on officer chrome reads as ONE cohesive made-for-Greek-life set.
   IconDirectory, IconStanding, IconFamilyTree, IconMeetings, IconRiskDesk,
   IconAcademic, IconChores, IconBallot, IconElections, IconService, IconLibrary,
-  IconExports, IconPayouts, IconBilling, IconAuditLog,
+  IconExports, IconPayouts, IconBilling, IconAuditLog, IconCommand, IconHelp,
   // Bespoke UI-utility glyphs replacing the former raw-lucide chrome (menu/close/
   // chevron/external) so even the nav's mechanical affordances are on-brand.
   IconMenu, IconClose, IconChevronDown, IconExternal,
@@ -71,7 +71,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more" },
   { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more" },
-  { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
+  { href: "/admin/help", label: "Help", icon: IconHelp, adminOnly: false, group: "more" },
 ];
 
 /** Does `href` match `pathname` as an exact hit or a path-segment prefix? */
@@ -219,7 +219,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
             title="Open command palette (⌘K)"
             aria-label="Open command palette"
           >
-            <Command className="h-3.5 w-3.5" />
+            <IconCommand className="h-3.5 w-3.5" />
             Quick jump
             <kbd className="ml-1 rounded border border-border bg-secondary px-1 text-[10px]">⌘K</kbd>
           </button>
@@ -230,7 +230,7 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
             className="lg:hidden inline-flex items-center gap-1 text-muted-foreground hover:text-phisig-red px-2 py-1 rounded-md text-xs"
             title="Help"
           >
-            <HelpCircle className="h-4 w-4" />
+            <IconHelp className="h-4 w-4" />
             <span className="hidden sm:inline">Help</span>
           </Link>
 
@@ -304,8 +304,6 @@ export function AdminNav({ isAdmin = true }: { isAdmin?: boolean }) {
 // lucide imports here have NO sensible bespoke equivalent yet and are LEFT AS-IS
 // rather than force a weak match (each keeps identical size/aria/onClick):
 //   • LogOut    — sign-out action (mobile menu + outline button)
-//   • HelpCircle— mobile Help affordance
-//   • Command   — ⌘K "Quick jump" hint chip
 //   • LayoutGrid— the "More" overflow trigger's default (non-active) glyph
-// Next pass: draw IconSignOut / IconHelp / IconCommand / IconGrid in the bespoke
-// design language (see components/brand/icons/icon-base.tsx) and swap these four.
+// Next pass: draw IconSignOut / IconGrid in the bespoke
+// design language (see components/brand/icons/icon-base.tsx) and swap these two.
