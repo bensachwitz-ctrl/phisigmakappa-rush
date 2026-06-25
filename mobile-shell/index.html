@@ -1630,6 +1630,96 @@
       return bar;
     }
 
+    // ── Universal-link deep linking ───────────────────────────────────────────
+    // The app ADVERTISES universal links (AASA /app + /app/*; entitlements
+    // applinks:greekstack.com; the promo banner "open straight to the right
+    // page"). Tapping https://greekstack.com/app?chapter=<sub>[&tab=<tab>]
+    // (or /app/<tab>?chapter=<sub>) must route the app to that chapter + tab.
+    // We parse BOTH the cold-start launch URL (App.getLaunchUrl) and live
+    // foreground opens (App.addListener('appUrlOpen')). All no-ops on web /
+    // when the plugin is absent. The valid member tabs the link may target.
+    var DEEP_LINK_TABS = ["feed", "events", "rush", "dues", "directory", "elections", "profile"];
+
+    /**
+     * Parse a deep-link URL → { chapter, tab } (either may be null). Accepts the
+     * advertised /app[?chapter=&tab=] and /app/<tab>?chapter= forms, on any of
+     * our hosts or the capacitor://localhost scheme. Defensive: never throws.
+     */
+    function parseDeepLink(url) {
+      if (!url) return { chapter: null, tab: null };
+      var u;
+      try { u = new URL(url); } catch (e) { return { chapter: null, tab: null }; }
+      var path = (u.pathname || "").replace(/\/+$/, ""); // trim trailing slash
+      // Only the /app namespace carries member routing (matches AASA /app, /app/*).
+      var inApp = path === "/app" || path.indexOf("/app/") === 0;
+      if (!inApp) return { chapter: null, tab: null };
+      var chapter = (u.searchParams.get("chapter") || "").trim().toLowerCase() || null;
+      // tab from ?tab= first, else the path segment after /app/.
+      var tab = (u.searchParams.get("tab") || "").trim().toLowerCase() || null;
+      if (!tab && path.indexOf("/app/") === 0) {
+        tab = path.slice("/app/".length).split("/")[0].toLowerCase() || null;
+      }
+      if (tab && DEEP_LINK_TABS.indexOf(tab) === -1) tab = null; // ignore unknown tabs
+      // Only allow clean DNS-label subdomains (mirrors the web routing guard).
+      if (chapter && !/^[a-z0-9][a-z0-9-]*$/.test(chapter)) chapter = null;
+      return { chapter: chapter, tab: tab };
+    }
+
+    /**
+     * Route an incoming deep link. Returns true when it took over navigation.
+     *   • No chapter → not handled (caller falls back to normal boot/no-op).
+     *   • Already signed into THAT chapter → switch to the requested tab (if any)
+     *     and show the dashboard.
+     *   • Otherwise → preselect that chapter at its login (or, if it isn't in the
+     *     registry, drop the user on the picker rather than a dead end).
+     */
+    function routeDeepLink(link) {
+      if (!link || !link.chapter) return false;
+      var sub = link.chapter;
+      // Honor the requested tab on the next dashboard paint (validated above).
+      if (link.tab) S.tab = link.tab;
+      // Already authenticated for this exact chapter → just re-route in place.
+      if (S.session && S.session.token && S.session.subdomain === sub && !isDemo()) {
+        showDashboard();
+        return true;
+      }
+      // Find the chapter in the registry so we can theme + go straight to login.
+      var match = (S.chapters || []).filter(function (c) { return c.subdomain === sub; })[0];
+      if (match) {
+        if (match.demo) { enterDemo(); return true; }
+        applyBrand(match);
+        showLogin(match);
+        return true;
+      }
+      // Unknown chapter (not provisioned / typo) → the picker, never a dead end.
+      pickerSchool = null;
+      showPicker();
+      return true;
+    }
+
+    // Register the live foreground deep-link listener once (native only). A link
+    // tapped while the app is already running arrives here.
+    function registerDeepLinkListener() {
+      var App = plugin("App");
+      if (!App || typeof App.addListener !== "function") return;
+      try {
+        App.addListener("appUrlOpen", function (event) {
+          var parsed = parseDeepLink(event && event.url);
+          if (parsed.chapter) { haptic(); routeDeepLink(parsed); }
+        });
+      } catch (e) {}
+    }
+
+    // Read the cold-start launch URL (the app was OPENED by a universal link).
+    async function getColdStartDeepLink() {
+      var App = plugin("App");
+      if (!App || typeof App.getLaunchUrl !== "function") return { chapter: null, tab: null };
+      try {
+        var r = await App.getLaunchUrl();
+        return parseDeepLink(r && r.url);
+      } catch (e) { return { chapter: null, tab: null }; }
+    }
+
     // ── Boot ────────────────────────────────────────────────────────────────
     (async function boot() {
       hideSplash();
@@ -1640,14 +1730,25 @@
       var saved = await restoreSession();
       // 2) Load the chapter registry (for the picker, and to refresh tenant meta).
       S.chapters = await getRegistry();
+      // 2a) Wire the live deep-link listener + read any cold-start launch URL so a
+      //     universal-link tap opens straight to the right chapter/page (the
+      //     capability the AASA + entitlements + promo banner advertise).
+      registerDeepLinkListener();
+      var coldLink = await getColdStartDeepLink();
       if (saved && saved.token && saved.subdomain) {
         // Re-bind tenant from the (possibly refreshed) registry, else trust saved.
         var match = S.chapters.filter(function (c) { return c.subdomain === saved.subdomain; })[0];
         saved.tenant = match || saved.tenant || { subdomain: saved.subdomain, name: saved.subdomain, school: "" };
         S.session = saved; S.demo = false;
+        // A cold-start deep link overrides the default "resume my dashboard": it
+        // may target a DIFFERENT chapter (→ login there) or just a tab on this one.
+        if (coldLink.chapter && routeDeepLink(coldLink)) return;
         showDashboard();
         return;
       }
+      // No saved session: a cold-start deep link still routes to that chapter's
+      // login (or the picker if it isn't provisioned); otherwise the picker.
+      if (coldLink.chapter && routeDeepLink(coldLink)) return;
       showPicker();
     })();
   })();
