@@ -28,8 +28,8 @@
 
     NO-LOGIN DEMO: the built-in "Demo Chapter" loads a fully interactive,
     READ-ONLY sample dashboard (no credentials) so a reviewer / cold-start user
-    can see the whole app — Feed, Events, Rush, Dues, Directory, Profile, and an
-    officer/Exec view — without an account.
+    can see the whole app — Feed, Events, Rush, Dues, Directory, Vote, Profile,
+    and an officer/Exec view — without an account.
 
     This bundled client mirrors the richer React member surface
     (app/app/MobileAppClient.tsx) as closely as a dependency-free static client
@@ -388,6 +388,13 @@
         '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
           '<circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/>' +
           '<path d="M6.4 6.4l11.2 11.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' +
+        '</svg>',
+      vote:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M5 11.5l2.5-7a1.5 1.5 0 0 1 1.4-1h6.2a1.5 1.5 0 0 1 1.4 1l2.5 7" fill="var(--accent)" opacity=".16"/>' +
+          '<path d="M5 11.5l2.5-7a1.5 1.5 0 0 1 1.4-1h6.2a1.5 1.5 0 0 1 1.4 1l2.5 7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<rect x="3.5" y="11.5" width="17" height="6.5" rx="1.8" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M9 8.5l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>' +
         '</svg>'
     };
 
@@ -560,12 +567,29 @@
           { id: "pnm2", name: "Chris Nolan", major: "Accounting", year: "Sophomore", status: "BID_EXTENDED", votesCount: 12 },
           { id: "pnm3", name: "Aaron Diaz", major: "Political Sci.", year: "Freshman", status: "ACTIVE", votesCount: 5 },
           { id: "pnm4", name: "Sam Whitfield", major: "Undeclared", year: "Freshman", status: "ACTIVE", votesCount: 3 }
-        ]
+        ],
+        // Demo open election so the no-login showcase exercises the Vote tab +
+        // spotlight (same shape lib/mobile-elections returns). myBallot is empty
+        // so the demo starts unvoted; casting locally fills it in.
+        election: {
+          id: "el-demo", title: "Spring 2026 Officer Elections", ballotsCast: 18, totalEligible: 42,
+          seats: [
+            { id: "seat-pres", title: "President", candidates: [
+              { id: "cand-1", name: "Alex Mercer", year: "Senior", blurb: "Two terms on exec; ran the best rush in chapter history.", votes: 11 },
+              { id: "cand-2", name: "Daniel Cho", year: "Junior", blurb: "Treasurer; wants a transparent budget and bigger philanthropy.", votes: 7 }
+            ] },
+            { id: "seat-trea", title: "Treasurer", candidates: [
+              { id: "cand-3", name: "Ethan Park", year: "Sophomore", blurb: "Will move dues fully online and cut late payments.", votes: 9 },
+              { id: "cand-4", name: "Jordan Lee", year: "Sophomore", blurb: "Detail-oriented; clean books and on-time reimbursements.", votes: 9 }
+            ] }
+          ]
+        },
+        myBallot: {}
       };
     }
 
     // ── App state ──────────────────────────────────────────────────────────
-    // tab ∈ feed/events/rush/dues/directory/profile; view ∈ member/exec.
+    // tab ∈ feed/events/rush/dues/directory/elections/profile; view ∈ member/exec.
     var S = { chapters: [], session: null, tenant: null, data: null, tab: "feed", view: "member", demo: false, blocked: {} };
     var K = { session: "gs.session", lastView: "gs.lastView", blocked: "gs.blocked" };
 
@@ -576,6 +600,11 @@
     // ALSO re-gated server-side, so this is purely which UI is offered.
     function execAllowed() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.exec === true); }
     function duesEnabled() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.duesEnabled === true); }
+    // True only when the chapter has a currently-OPEN election the signed-in
+    // brother can vote in (the server returns election:null otherwise). Drives
+    // the member "Vote" tab + the feed spotlight so the surface only appears when
+    // there's a real ballot — never an empty, data-less tab.
+    function electionOpen() { return !!(S.data && S.data.election && (S.data.election.seats || []).length); }
 
     // ── Network ─────────────────────────────────────────────────────────────
     async function getRegistry() {
@@ -955,6 +984,7 @@
         else if (S.tab === "rush") paintRush(main, d);
         else if (S.tab === "dues") paintDues(main, d);
         else if (S.tab === "directory") paintDirectory(main, d);
+        else if (S.tab === "elections") paintElections(main, d);
         else paintProfile(main, d);
       }
 
@@ -965,6 +995,31 @@
 
     // ── MEMBER: Feed ──────────────────────────────────────────────────────────
     function paintFeed(main, d) {
+      // Open-election SPOTLIGHT — surfaces the live ballot at the top of the feed
+      // so a member can't miss it, and taps straight into the Vote tab. Only
+      // shown while an election is open (electionOpen); no dead control otherwise.
+      if (electionOpen()) {
+        var ev = d.election;
+        var seatCount = (ev.seats || []).length;
+        var votedCount = Object.keys(d.myBallot || {}).length;
+        var done = seatCount > 0 && votedCount >= seatCount;
+        var spot = el(
+          '<div class="card" style="border-color:var(--brand);background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 10%,var(--bg2)),var(--bg2))">' +
+            '<span class="pill brand">' + (done ? "Voted" : "Election open") + "</span>" +
+            '<div class="h">' + esc(ev.title) + "</div>" +
+            '<div class="b">' + (done
+              ? "Thanks for voting. You can review the ballot any time."
+              : (votedCount > 0
+                  ? ("You've voted in " + votedCount + " of " + seatCount + " race" + (seatCount === 1 ? "" : "s") + " — finish your ballot.")
+                  : ("Cast your secret ballot in " + seatCount + " race" + (seatCount === 1 ? "" : "s") + "."))) +
+            "</div>" +
+          "</div>"
+        );
+        var go = el('<button class="btn" style="margin-top:2px">' + (done ? "Review ballot" : "Open ballot") + "</button>");
+        go.onclick = function () { haptic(); S.tab = "elections"; paintDashboard(false); };
+        spot.appendChild(go);
+        main.appendChild(spot);
+      }
       main.appendChild(el('<h2 class="section">Announcements</h2>'));
       var anns = d.announcements || [];
       if (!anns.length) { main.appendChild(el('<div class="empty">No announcements yet.</div>')); return; }
@@ -1098,6 +1153,103 @@
         ));
       });
     }
+
+    // ── MEMBER: Elections (secret-ballot voting) ──────────────────────────────
+    // Mirrors the web ElectionsVoter contract: one ballot per SEAT, secret (the
+    // server returns aggregate per-candidate counts + this member's OWN choices
+    // in d.myBallot), idempotent (a seat already voted shows a locked "Voted"
+    // state, no re-cast). Casts via authPost("/api/mobile/elections/vote",
+    // {seatId, candidateId}) and adopts the refreshed {election, myBallot} the
+    // route returns so the tally + voted state update without a full reload.
+    function paintElections(main, d) {
+      var ev = d.election;
+      main.appendChild(el('<h2 class="section">Elections</h2>'));
+      // Empty state — the tab is normally hidden when nothing is open, but if it
+      // is reached with no live ballot (e.g. the election just closed) show an
+      // explicit empty state, never a blank surface.
+      if (!ev || !(ev.seats || []).length) {
+        main.appendChild(el('<div class="empty">No open elections right now. You\'ll see the ballot here the moment voting opens.</div>'));
+        return;
+      }
+      var myBallot = d.myBallot || {};
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">' + esc(ev.title) + '</div>' +
+          '<div class="v" style="font-size:22px">' + (ev.ballotsCast || 0) + ' cast</div>' +
+          '<div style="font-size:12px;opacity:.85;margin-top:4px">Secret ballot · ' + (ev.totalEligible || 0) + ' eligible voters</div>' +
+        '</div>'
+      ));
+
+      ev.seats.forEach(function (seat) {
+        var votedFor = myBallot[seat.id] || null;
+        var card = el('<div class="card"></div>');
+        card.appendChild(el('<div class="h">' + esc(seat.title) + (votedFor ? ' <span class="pill brand" style="margin-left:6px">Voted</span>' : "") + "</div>"));
+        (seat.candidates || []).forEach(function (c) {
+          var isMine = votedFor === c.id;
+          var row = el(
+            '<div class="row" style="cursor:' + (votedFor ? "default" : "pointer") + ';' + (isMine ? "border-color:var(--brand)" : "") + '">' +
+              '<div class="meta"><div class="name">' + esc(c.name) + (isMine ? ' <span style="color:var(--brand)">✓ Your vote</span>' : "") + "</div>" +
+                '<div class="school">' + esc([c.year, c.blurb].filter(Boolean).join(" · ")) + "</div></div>" +
+              '<span class="pill muted" style="margin:0">' + (c.votes || 0) + " vote" + ((c.votes || 0) === 1 ? "" : "s") + "</span>" +
+            "</div>"
+          );
+          // Only an UNVOTED seat is tappable (one ballot per seat; the server is
+          // the real guard, the UI just prevents an obvious double-tap).
+          if (!votedFor) {
+            row.onclick = function () { haptic(); castBallot(seat, c, row); };
+          }
+          card.appendChild(row);
+        });
+        if (!votedFor) {
+          card.appendChild(el('<div class="small" style="margin-top:8px;color:var(--muted)">Tap a candidate to cast your secret ballot. You can vote once per race.</div>'));
+        }
+        main.appendChild(card);
+      });
+    }
+
+    // Cast one secret ballot for a seat, then adopt the refreshed view the vote
+    // route returns (new tally + this member's choices) and repaint.
+    async function castBallot(seat, candidate, row) {
+      var ok = await confirmDialog({
+        title: "Confirm your vote",
+        message: 'Vote for ' + (candidate.name) + ' as ' + (seat.title) + '? Your ballot is secret and can\'t be changed.',
+        confirmText: "Cast ballot"
+      });
+      if (!ok) return;
+      if (isDemo()) {
+        // Demo: reflect the vote locally so the flow is fully exercised offline.
+        S.data.myBallot = Object.assign({}, S.data.myBallot, mapEntry(seat.id, candidate.id));
+        var cand = (seat.candidates || []).filter(function (x) { return x.id === candidate.id; })[0];
+        if (cand) cand.votes = (cand.votes || 0) + 1;
+        S.data.election.ballotsCast = (S.data.election.ballotsCast || 0) + 1;
+        toast("Vote recorded. Thanks for voting!", "ok");
+        paintDashboard(false);
+        return;
+      }
+      if (row) { row.style.opacity = "0.6"; row.style.pointerEvents = "none"; }
+      try {
+        var res = await authPost("/api/mobile/elections/vote", { seatId: seat.id, candidateId: candidate.id });
+        if (res.ok && res.data) {
+          // Adopt the authoritative refreshed view (tally + myBallot).
+          S.data.election = res.data.election;
+          S.data.myBallot = res.data.myBallot || {};
+          toast("Vote recorded. Thanks for voting!", "ok");
+          paintDashboard(false);
+        } else if (res.status === 409) {
+          toast(res.data.error || "You've already voted for this race.", "info");
+          refetchDashboard();
+        } else {
+          toast(res.data.error || "Couldn't record your vote. Try again.", "err");
+          if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+        }
+      } catch (e) {
+        toast("Couldn't reach the server. Try again.", "err");
+        if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+      }
+    }
+
+    // Tiny helper: a one-key object (kept ES5-friendly for the WKWebView shell).
+    function mapEntry(k, v) { var o = {}; o[k] = v; return o; }
 
     // ── MEMBER: Dues (balance + real Stripe checkout) ─────────────────────────
     function paintDues(main, d) {
@@ -1461,6 +1613,10 @@
         tabs = [["feed", "Feed", ICON.feed], ["events", "Events", ICON.events], ["rush", "Rush", ICON.rush]];
         if (duesEnabled()) tabs.push(["dues", "Dues", ICON.dues]);
         else tabs.push(["directory", "Directory", ICON.directory]);
+        // Vote tab — appears ONLY while a ballot the member can vote in is open
+        // (electionOpen). Pulled in before Profile so the live ballot is one tap
+        // away; it vanishes again the moment the election closes.
+        if (electionOpen()) tabs.push(["elections", "Vote", ICON.vote]);
         tabs.push(["profile", "Profile", ICON.profile]);
       }
       // Keep the active tab valid for the current tab set.
