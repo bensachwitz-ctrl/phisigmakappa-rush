@@ -60,7 +60,7 @@ export function AdminShell({
             at the window level. Renders nothing visible until opened. Skipped
             on the login screen so a misfired keypress doesn't open a palette
             full of admin-only routes the user can't access yet. */}
-        {!isLogin && <CommandPalette isAdmin={isAdmin} />}
+        {!isLogin && <CommandPalette isAdmin={isAdmin} readableDomains={readableDomains} />}
         {/* Floating mobile launcher so touch users can reach the palette without
             knowing the ⌘K shortcut. It triggers the exact same open mechanism. */}
         {!isLogin && <CommandPaletteLauncher onOpen={openPalette} />}

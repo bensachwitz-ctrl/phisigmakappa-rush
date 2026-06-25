@@ -12,7 +12,7 @@ import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, LayoutGrid, CalendarRange } from "lucide-react";
+import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, LayoutGrid, CalendarRange, Wallet } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -555,13 +555,20 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Chapter tools</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {/* GATE-3 FIX (money nav discovery + no dead tiles): each quick tile
+                  is shown only when the caller can actually USE it — mirroring the
+                  per-page domain gate — so a Treasurer (payments) sees Treasury but
+                  not Billing (super-admin) or Big/Little (admin-only), and a tile
+                  never dead-ends a domain-limited officer. Admins (perms.superAdmin)
+                  see every tile. `show` defaults true for ungated tiles. */}
               {[
-                { href: "/admin/treasury", label: "Treasury", sub: "Budgets, ledgers & expenses", icon: Landmark },
-                { href: "/admin/family", label: "Big/Little", sub: "Family tree & pairings", icon: Network },
-                { href: "/admin/directory", label: "Member Directory", sub: "Searchable roster", icon: BookUser },
-                { href: "/admin/calendar", label: "Calendar", sub: "Events, meetings & dues", icon: CalendarRange },
-                { href: "/admin/billing", label: "Billing", sub: "Plan & subscription", icon: CreditCard },
-              ].map((t, i) => {
+                { href: "/admin/treasury", label: "Treasury", sub: "Budgets, ledgers & expenses", icon: Landmark, show: hasPermission(perms, "payments", "read") },
+                { href: "/admin/dues", label: "Dues", sub: "Collect & track dues", icon: Wallet, show: hasPermission(perms, "dues", "read") },
+                { href: "/admin/family", label: "Big/Little", sub: "Family tree & pairings", icon: Network, show: !!perms.superAdmin },
+                { href: "/admin/directory", label: "Member Directory", sub: "Searchable roster", icon: BookUser, show: hasPermission(perms, "brothers", "read") },
+                { href: "/admin/calendar", label: "Calendar", sub: "Events, meetings & dues", icon: CalendarRange, show: hasPermission(perms, "events", "read") },
+                { href: "/admin/billing", label: "Billing", sub: "Plan & subscription", icon: CreditCard, show: !!perms.superAdmin },
+              ].filter((t) => t.show).map((t, i) => {
                 const Icon = t.icon;
                 return (
                   <Reveal key={t.href} delay={i * 60}>

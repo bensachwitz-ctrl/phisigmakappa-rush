@@ -70,9 +70,17 @@ const ITEMS: NavItem[] = [
   { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
   { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more", domain: "documents" },
   { href: "/admin/exports", label: "Exports", icon: IconExports, adminOnly: true, group: "more" },
-  { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: true, group: "more", domain: "dues" },
-  { href: "/admin/dues/connect", label: "Payouts", icon: IconPayouts, adminOnly: true, group: "more", domain: "payments" },
-  { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: true, group: "more", domain: "payments" },
+  // GATE-3 FIX (money nav discovery): the three TREASURER money surfaces are
+  // officer-reachable — Treasury (payments), Dues hub (dues), Payouts (payments)
+  // are all gated on the officer DOMAIN (page + API), so a non-admin Treasurer
+  // who holds dues+payments must DISCOVER them. They were adminOnly:true, which
+  // short-circuited before the domain filter (line ~131) and hid them from the
+  // exact officer they belong to. Dropping adminOnly lets the existing `domain`
+  // filter govern. Billing stays adminOnly (super-admin only — the platform
+  // subscription, not chapter money).
+  { href: "/admin/dues", label: "Dues", icon: IconDues, adminOnly: false, group: "more", domain: "dues" },
+  { href: "/admin/dues/connect", label: "Payouts", icon: IconPayouts, adminOnly: false, group: "more", domain: "payments" },
+  { href: "/admin/treasury", label: "Treasury", icon: IconTreasury, adminOnly: false, group: "more", domain: "payments" },
   { href: "/admin/billing", label: "Billing", icon: IconBilling, adminOnly: true, group: "more" },
   { href: "/admin/audit", label: "Audit log", icon: IconAuditLog, adminOnly: true, group: "more" },
   { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },

@@ -33,9 +33,24 @@ type Cmd = {
   // Filtered out of the command list when the viewer is a non-admin (member)
   // so we don't surface routes that will 403 them.
   adminOnly?: boolean;
+  /** GATE-3 FIX (money nav): the officer READ domain a non-admin must hold for
+   *  this command to appear (mirrors the page/API gate). When set on a
+   *  non-adminOnly command, a non-admin officer sees it only if the domain is in
+   *  their readable set — so a Treasurer (dues+payments) gets Treasury/Dues/
+   *  Payouts in ⌘K, but a non-payments officer doesn't. Ignored for admins. */
+  domain?: string;
 };
 
-export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
+export function CommandPalette({
+  isAdmin = false,
+  readableDomains,
+}: {
+  isAdmin?: boolean;
+  /** GATE-3 FIX (money nav): per-domain READ permissions a NON-ADMIN officer
+   *  holds. Domain-gated commands are shown only when their domain is readable.
+   *  Ignored for admins (who see every command). */
+  readableDomains?: string[];
+}) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
@@ -67,8 +82,12 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "nav-settings", group: "Navigate", icon: IconAdmin, label: "Site content / settings", href: "/admin/settings", synonyms: ["config", "brand", "colors", "advisor"], adminOnly: true },
       // Actions / quick jumps
       { id: "act-setup", group: "Actions", icon: IconLaunch, label: "Chapter setup wizard", href: "/admin/setup", synonyms: ["onboard", "rebrand", "configure", "white label", "white-label"], adminOnly: true },
-      { id: "act-dues-connect", group: "Actions", icon: IconPayouts, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "billing", "money", "dues"], adminOnly: true },
-      { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], adminOnly: true },
+      // GATE-3 FIX (money nav discovery): the three Treasurer money surfaces are
+      // domain-gated (payments/dues), not adminOnly — a Treasurer holding those
+      // domains must find them in ⌘K. Billing stays adminOnly (super-admin only).
+      { id: "act-dues-connect", group: "Actions", icon: IconPayouts, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "money", "dues"], domain: "payments" },
+      { id: "act-dues", group: "Actions", icon: IconPayouts, label: "Dues", href: "/admin/dues", synonyms: ["dues", "collect", "amount", "settings", "treasurer", "money"], domain: "dues" },
+      { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], domain: "payments" },
       { id: "act-billing", group: "Actions", icon: IconBilling, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
       { id: "act-exports", group: "Actions", icon: IconExports, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
       { id: "act-export-rushes", group: "Actions", icon: IconExports, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },
@@ -78,8 +97,20 @@ export function CommandPalette({ isAdmin = false }: { isAdmin?: boolean }) {
       { id: "ext-home", group: "External", icon: IconExternal, label: "View public homepage", href: "/", synonyms: ["site", "live", "public"] },
       { id: "ext-help", group: "Help", icon: IconHelp, label: "Open admin handbook (Help)", href: "/admin/help", synonyms: ["docs", "how"] },
     ];
-    return base.filter((c) => !c.adminOnly || isAdmin);
-  }, [isAdmin]);
+    const readable = new Set(readableDomains || []);
+    return base.filter((c) => {
+      // Admins see every command.
+      if (isAdmin) return true;
+      // adminOnly is the hard floor for non-admins.
+      if (c.adminOnly) return false;
+      // Domain-gated commands appear only when the officer can read that domain
+      // (so a Treasurer finds Treasury/Dues/Payouts but a non-payments officer
+      // doesn't see a command that would 403 them).
+      if (c.domain) return readable.has(c.domain);
+      // Ungated commands stay visible to any officer.
+      return true;
+    });
+  }, [isAdmin, readableDomains]);
 
   // Filter against label + synonyms (case-insensitive substring).
   const filtered = React.useMemo(() => {

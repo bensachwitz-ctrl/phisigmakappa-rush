@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import {
   Card,
   CardHeader,
@@ -29,9 +31,12 @@ export const dynamic = "force-dynamic";
  *   2. Payouts         → /admin/dues/connect    (Stripe Connect payout account)
  *   3. Member status   → /admin/brothers        (who has paid; members pay there too)
  *
- * Admin-only: everything reachable from here touches money or member records.
- * Mirrors the gate on the sibling /admin/dues/connect page (member cookie →
- * login; non-admin role → dashboard).
+ * Auth: gated on the "dues" officer domain (Treasurer holds dues:write; chapter
+ * admins pass via superAdmin). Uses the non-throwing checkOfficerPermission +
+ * the shared OfficerAccessRequired card (the GATE-3 FIX 4 pattern) so a
+ * signed-in officer who lacks dues sees a graceful card, not a 403 crash — and a
+ * Treasurer who DOES hold it can finally reach their own dues hub (it was
+ * isAdminRole()-only, which bounced every non-admin officer to /admin).
  */
 
 const CARDS: {
@@ -69,7 +74,8 @@ const CARDS: {
 
 export default async function DuesHubPage() {
   if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fdues");
-  if (!isAdminRole()) redirect("/admin");
+  const { allowed: canRead } = await checkOfficerPermission("dues", "read");
+  if (!canRead) return <OfficerAccessRequired title="Dues" permission="Dues" />;
 
   return (
     <main className="container py-8 max-w-3xl">

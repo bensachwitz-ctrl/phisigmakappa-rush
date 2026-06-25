@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { DuesConnectCard } from "@/app/admin/dues/connect-card";
 import { Banknote, ArrowLeft } from "lucide-react";
 
@@ -11,8 +13,14 @@ export const dynamic = "force-dynamic";
  * their own Stripe Express account so dues + donations pay out directly to the
  * chapter instead of the central platform balance.
  *
- * Admin-only: connecting a payout account routes real money. Mirrors the audit
- * page gate (member cookie → login; non-admin role → dashboard).
+ * Auth: connecting a payout account routes real chapter money, so it is gated on
+ * the "payments" officer domain — held ONLY by the Treasurer (payments:write)
+ * and chapter admins (superAdmin); no other officer can reach it. Uses the
+ * non-throwing checkOfficerPermission + the shared OfficerAccessRequired card so
+ * an officer lacking payments sees a graceful card (not a 403 crash), and a
+ * Treasurer can finally connect the chapter's payout account (it was
+ * isAdminRole()-only, which bounced every non-admin officer to /admin). The
+ * underlying /api/dues/connect route enforces the SAME payments:write domain.
  *
  * This page is purely the launcher/status surface — all the conditional
  * charge-routing lives in the dues/donation checkout routes and is gated on the
@@ -20,7 +28,8 @@ export const dynamic = "force-dynamic";
  */
 export default async function DuesPayoutsPage() {
   if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fdues%2Fconnect");
-  if (!isAdminRole()) redirect("/admin");
+  const { allowed: canRead } = await checkOfficerPermission("payments", "read");
+  if (!canRead) return <OfficerAccessRequired title="Payouts" permission="Payments" />;
 
   return (
     <main className="container py-8 max-w-2xl">

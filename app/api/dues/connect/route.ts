@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { isAdminRole } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
 import {
@@ -20,9 +20,13 @@ export const dynamic = "force-dynamic";
 
 /**
  * /api/dues/connect — Stripe Connect (Express) onboarding for the CURRENT
- * chapter. Admin-only. Per-chapter Connect state lives in this chapter's
- * SiteConfig; because admin requests carry the chapter Host, the request-context
- * `prisma` / `getSiteConfig` resolve to the right schema automatically.
+ * chapter. Gated on the "payments" officer domain (Treasurer + chapter admins
+ * via superAdmin) — the same domain the /admin/dues/connect page and the
+ * treasury routes use, so the Treasurer who owns chapter money can connect the
+ * payout account (not just a super-admin). Per-chapter Connect state lives in
+ * this chapter's SiteConfig; because admin requests carry the chapter Host, the
+ * request-context `prisma` / `getSiteConfig` resolve to the right schema
+ * automatically.
  *
  * This route is ADDITIVE: it only ever attaches a payout account to the chapter.
  * It never touches dues/donation collection — a chapter that never calls this
@@ -45,9 +49,8 @@ async function setCfg(key: string, value: string): Promise<void> {
 }
 
 export async function GET() {
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
 
   const stripe = getStripe();
   if (!stripe) {
@@ -105,9 +108,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  const denied = await guardOfficer("payments", "write");
+  if (denied) return denied;
 
   const stripe = getStripe();
   if (!stripe) {
