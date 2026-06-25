@@ -39,7 +39,7 @@ import { IconCalendar } from "@/components/brand/icons/onboarding-wizard";
  *  OWNER-KEYS: set NEXT_PUBLIC_SALES_EMAIL (and stand up the real support@ inbox)
  *  before launch. */
 const SALES_EMAIL =
-  (process.env.NEXT_PUBLIC_SALES_EMAIL || "support@greekstack.com").trim();
+  (process.env.NEXT_PUBLIC_SALES_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 /**
  * Responsive Cal.com booker iframe. Mirrors the apex /contact <CalEmbed>: a

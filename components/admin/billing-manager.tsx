@@ -65,7 +65,7 @@ type Plan = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
  *  inbox — NOT the founder's personal email.
  *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
  *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
-const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 /** Normalize a possibly-legacy/empty plan slug coming from the server. */
 function normPlan(plan: string | null | undefined): Plan {

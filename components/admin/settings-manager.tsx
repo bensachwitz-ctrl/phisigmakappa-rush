@@ -29,7 +29,7 @@ const ICONS = ["Crown", "Trophy", "HandHeart", "Users", "Award", "Star", "Heart"
  *  inbox — NOT the founder's personal email.
  *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
  *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
-const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 // The GET payload masks write-only secrets (Resend API key, Twilio auth token)
 // as this exact bullet string. We must NEVER let it be saved back — editing a

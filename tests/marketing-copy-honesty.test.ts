@@ -350,7 +350,7 @@ describe("blue-rebrand honesty — no maroon (rgba(74,17,29)) shadows under blue
 // admin dues-setup copy, platform invoices) must NOT surface the founder's
 // PERSONAL email (`bensachwitz@gmail.com`) or first-name/"the founder"-as-contact
 // framing ("Talk to Ben", "reach out to Ben", "Talk to the founder",
-// "setup via Ben"). The branded, env-configurable address (support@greekstack.com,
+// "setup via Ben"). The owner support address (workbenjaminsachwitz@gmail.com,
 // overridable via NEXT_PUBLIC_SUPPORT_EMAIL / SALES_CONTACT_EMAIL /
 // SUPPORT_CONTACT_EMAIL) is used instead. Static source-pin so a copy edit can't
 // regress the de-personalization. NON-VACUOUS: the pre-fix copy ("Talk to Ben",
@@ -380,7 +380,7 @@ describe("funnel de-personalization (GATE-3 FIX 1) — branded support, no found
     it(`${rel} does not surface the founder's personal email`, () => {
       expect(
         /bensachwitz@gmail\.com/i.test(src),
-        `Found bensachwitz@gmail.com in ${rel}; use the branded support address (env: NEXT_PUBLIC_SUPPORT_EMAIL / SALES_CONTACT_EMAIL / SUPPORT_CONTACT_EMAIL, default support@greekstack.com).`,
+        `Found bensachwitz@gmail.com in ${rel}; use the owner support address (env: NEXT_PUBLIC_SUPPORT_EMAIL / SALES_CONTACT_EMAIL / SUPPORT_CONTACT_EMAIL, default workbenjaminsachwitz@gmail.com).`,
       ).toBe(false);
     });
     it(`${rel} has no first-name/"the founder"-as-contact CTA framing`, () => {
@@ -411,11 +411,11 @@ describe("funnel de-personalization (GATE-3 FIX 1) — branded support, no found
     });
   }
 
-  it("the branded support address default is the brand inbox (not a personal email)", () => {
-    // Pin the canonical default in lib/sales-contact so the de-personalization
-    // has a single source of truth a future edit can't quietly repoint.
+  it("the support address default is the owner inbox and stays env-overridable", () => {
+    // Pin the canonical default in lib/sales-contact so support contact has a
+    // single source of truth a future edit can't quietly repoint.
     const sc = readFileSync(resolve(ROOT, "lib/sales-contact.ts"), "utf8");
-    expect(sc).toContain('export const DEFAULT_SUPPORT_EMAIL = "support@greekstack.com"');
+    expect(sc).toContain('export const DEFAULT_SUPPORT_EMAIL = "workbenjaminsachwitz@gmail.com"');
     expect(sc).toMatch(/NEXT_PUBLIC_SUPPORT_EMAIL/);
   });
 });

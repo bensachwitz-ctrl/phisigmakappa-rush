@@ -59,7 +59,7 @@ function requestHost(): string {
  *  OWNER-KEYS: set SALES_CONTACT_EMAIL (and stand up the real support@ inbox)
  *  before launch. */
 function salesEmail(): string {
-  return process.env.SALES_CONTACT_EMAIL || "support@greekstack.com";
+  return process.env.SALES_CONTACT_EMAIL || "workbenjaminsachwitz@gmail.com";
 }
 
 export async function generateMetadata(): Promise<Metadata> {

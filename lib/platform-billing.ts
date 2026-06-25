@@ -91,13 +91,13 @@ export const GREEKSTACK_BRAND_NAME = "Greek Stack";
 export const GREEKSTACK_SITE = "greekstack.vercel.app";
 export const GREEKSTACK_SITE_URL = "https://greekstack.vercel.app";
 /** Support contact stamped on every Greek Stack-issued invoice (PDF + hosted
- *  page). BRANDED by default (not a founder's personal email); env-configurable
- *  via SUPPORT_CONTACT_EMAIL / NEXT_PUBLIC_SUPPORT_EMAIL.
- *  OWNER-KEYS: stand up + monitor the real support@ inbox (or set the env) before launch. */
+ *  page). Defaults to the owner support inbox; env-configurable via
+ *  SUPPORT_CONTACT_EMAIL / NEXT_PUBLIC_SUPPORT_EMAIL.
+ *  OWNER-KEYS: monitor this inbox (or set the env) before launch. */
 export const GREEKSTACK_SUPPORT_EMAIL =
   process.env.SUPPORT_CONTACT_EMAIL ||
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL ||
-  "support@greekstack.com";
+  "workbenjaminsachwitz@gmail.com";
 
 /**
  * Footer line shown on every Greek Stack-issued invoice (PDF + hosted page).

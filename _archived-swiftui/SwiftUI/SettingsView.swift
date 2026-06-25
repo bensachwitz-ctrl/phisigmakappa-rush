@@ -198,7 +198,7 @@ struct SettingsView: View {
                     
                     // Support
                     Button(action: {
-                        if let url = URL(string: "mailto:support@greekstack.com?subject=Greek%20Stack%20iOS%20Help") {
+                        if let url = URL(string: "mailto:workbenjaminsachwitz@gmail.com?subject=Greek%20Stack%20iOS%20Help") {
                             UIApplication.shared.open(url)
                         }
                     }) {

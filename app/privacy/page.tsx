@@ -252,7 +252,7 @@ const PLATFORM_PRIVACY_UPDATED = "June 2026";
 /** Public, BRANDED contact address for legal/privacy correspondence. Env-configurable
  *  via NEXT_PUBLIC_SUPPORT_EMAIL; defaults to the brand inbox (not a personal email).
  *  OWNER-KEYS: stand up + monitor the real support@ inbox (or set the env) before launch. */
-const CONTACT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+const CONTACT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 function PlatformPrivacyPage() {
   return (

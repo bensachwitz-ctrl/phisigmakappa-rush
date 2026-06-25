@@ -154,7 +154,7 @@ function ProvisioningOverlay({
  *  build); defaults to the brand inbox — NOT the founder's personal email.
  *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
  *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
-const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 const ALL_STEPS = [
   { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay - first month free, cancel anytime." },

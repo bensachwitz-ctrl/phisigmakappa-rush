@@ -58,7 +58,7 @@ You can delete your account and member data at any time from the Profile screen.
 
 Greek Stack pairs with the Greek Stack web platform (greekstack.com). Your chapter's admin sets up the chapter site; members and alumni just sign in here.
 
-Questions? Visit greekstack.com or contact support@greekstack.com.
+Questions? Visit greekstack.com or contact workbenjaminsachwitz@gmail.com.
 ```
 
 ## Keywords (max 100 chars, comma-separated, no spaces after commas)

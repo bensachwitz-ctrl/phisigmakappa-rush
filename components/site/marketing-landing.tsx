@@ -91,7 +91,7 @@ type GsIcon = (props: IconProps) => React.JSX.Element;
  *  address a prospect sees and writes to.
  *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
  *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
-const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "workbenjaminsachwitz@gmail.com").trim();
 
 /* ── Bespoke glassy icon TILE (the new custom character) ──────────────────────
    Renders one of the bespoke single-family <BrandGlyph> SVG app-icons — the SAME

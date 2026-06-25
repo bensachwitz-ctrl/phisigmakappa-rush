@@ -60,7 +60,7 @@ function supportEmail(): string {
   return (
     process.env.SUPPORT_CONTACT_EMAIL ||
     process.env.SALES_CONTACT_EMAIL ||
-    "support@greekstack.com"
+    "workbenjaminsachwitz@gmail.com"
   );
 }
 

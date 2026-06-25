@@ -27,8 +27,8 @@ identity. So the owner must do these two clicks once.
    - Go to **Settings → Business → Public details / Account details**
      (direct: https://dashboard.stripe.com/settings/account)
    - **Public business name:** `Greek Stack`
-   - **Support email:** `bensachwitz@gmail.com` (or a support@ address once you
-     have one) — shows on receipts/invoices as the "questions?" contact.
+   - **Support email:** `workbenjaminsachwitz@gmail.com` (or a support@ address
+     once you have one) — shows on receipts/invoices as the "questions?" contact.
    - **Support website / Business URL:** `https://greekstack.vercel.app`
    - **Statement descriptor:** set to `GREEK STACK` (or `GREEKSTACK`) — this is
      the prefix that appears on customers' card statements. The code already

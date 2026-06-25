@@ -23,7 +23,7 @@ import { renderEmail, renderEmailText, type EmailCta } from "@/lib/email-templat
  *  `SALES_CONTACT_EMAIL` with a sane personal fallback so the form always has
  *  somewhere to deliver even before the env var is set. */
 export function salesContactEmail(): string {
-  return process.env.SALES_CONTACT_EMAIL || "bensachwitz@gmail.com";
+  return process.env.SALES_CONTACT_EMAIL || DEFAULT_SUPPORT_EMAIL;
 }
 
 /**
@@ -31,16 +31,16 @@ export function salesContactEmail(): string {
  * (footer mailto, contact copy). Env-configurable via `NEXT_PUBLIC_SUPPORT_EMAIL`
  * so the owner can point it at a real shared inbox; defaults to the brand address.
  *
- * OWNER-KEYS NOTE: the default `support@greekstack.com` inbox must be created and
- * monitored by the owner before launch — set `NEXT_PUBLIC_SUPPORT_EMAIL` if the
- * production support address differs. This is the address PROSPECTS see and email;
- * it is intentionally separate from `SALES_CONTACT_EMAIL` (the internal inbox the
- * server delivers form submissions to).
+ * OWNER-KEYS NOTE: the default `workbenjaminsachwitz@gmail.com` inbox must be
+ * monitored by the owner — set `NEXT_PUBLIC_SUPPORT_EMAIL` (and the server-side
+ * `SALES_CONTACT_EMAIL` / `SUPPORT_CONTACT_EMAIL`) if the production support
+ * address differs. This is the address PROSPECTS see and email; it is the SAME
+ * inbox `SALES_CONTACT_EMAIL` delivers form submissions to unless that env is set.
  *
- * NEXT_PUBLIC_* is inlined by Next at build, so this resolves to the brand default
+ * NEXT_PUBLIC_* is inlined by Next at build, so this resolves to this default
  * client-side unless the env var is set at build time. Pure + side-effect-free.
  */
-export const DEFAULT_SUPPORT_EMAIL = "support@greekstack.com";
+export const DEFAULT_SUPPORT_EMAIL = "workbenjaminsachwitz@gmail.com";
 export function supportEmail(): string {
   return (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL).trim();
 }

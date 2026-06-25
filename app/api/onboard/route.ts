@@ -725,8 +725,8 @@ export async function POST(req: Request) {
     // OWNER NOTIFICATION — let Ben know a new chapter just signed up so he can
     // send the promised personal follow-up. BEST-EFFORT (same contract as the
     // welcome email above): never fails provisioning. Routes to salesContactEmail()
-    // (bensachwitz@gmail.com unless SALES_CONTACT_EMAIL is set) via the shared
-    // neutral-platform sales pipeline, with replyTo set to the new admin so Ben
+    // (workbenjaminsachwitz@gmail.com unless SALES_CONTACT_EMAIL is set) via the
+    // shared neutral-platform sales pipeline, with replyTo set to the new admin so Ben
     // can reply straight from his inbox.
     try {
       const chapterDisplay = [fraternityName.trim(), (greekLetters || "").trim()]
