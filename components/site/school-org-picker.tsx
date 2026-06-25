@@ -806,7 +806,7 @@ export function OrgPicker({
               type="text"
               value={manualLetters}
               onChange={(e) => setManualLetters(e.target.value)}
-              placeholder="Greek letters (e.g. ΦΣΚ) — optional"
+              placeholder="Greek letters (e.g. ΦΣΚ) - optional"
               aria-label="Custom Greek letters"
               className="h-10 min-h-[40px] w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
             />

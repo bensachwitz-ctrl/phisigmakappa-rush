@@ -175,7 +175,7 @@ export function buildSectionMap(
               Drop your number.
             </h2>
             <p className="mt-3 text-muted-foreground text-base sm:text-lg">
-              No spam, no ceremony — about 60 seconds. We'll text the second the
+              No spam, no ceremony - about 60 seconds. We'll text the second the
               {" "}{termLabelShort} schedule drops.
             </p>
             {/* Trust signals — frosted glass chips (the section's aurora frosts
@@ -222,7 +222,7 @@ export function buildSectionMap(
           <p className="text-muted-foreground max-w-xl leading-relaxed">
             Philanthropy events, {terms.collective.toLowerCase()} before finals, the chapter formal
             (FIPG-compliant, third-party vendor, sober transportation), and dry
-            tailgates on game day. The {identity.greekLetters} chapter shows up — all year.{" "}
+            tailgates on game day. The {identity.greekLetters} chapter shows up - all year.{" "}
             <span className="text-phisig-red font-medium">{identity.tagline}</span>
           </p>
         </Reveal3D>
@@ -331,7 +331,7 @@ export function buildSectionMap(
           </div>
           <div className="space-y-4 max-w-xl">
             <p className="text-muted-foreground">
-              Full {termLabelShort} {terms.recruit.toLowerCase()} schedule drops in August. Get on the interest list above —
+              Full {termLabelShort} {terms.recruit.toLowerCase()} schedule drops in August. Get on the interest list above - 
               we&apos;ll text everyone the second it&apos;s live. Private events go out by invitation only.
             </p>
             {/* Hide calendar-subscribe CTAs while the rush schedule hasn't
@@ -426,7 +426,7 @@ export function buildSectionMap(
               Real {terms.membersLower}. Real recognition.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
-              Every month the chapter recognizes a {terms.memberLower} who's gone above and beyond — in
+              Every month the chapter recognizes a {terms.memberLower} who's gone above and beyond - in
               the classroom, in service, on the field, in leadership.{" "}
               {cfg["spotlight.bio"]}
             </p>
@@ -465,7 +465,7 @@ export function buildSectionMap(
               >
                 <SmartImage
                   src={imageSrc(cfg["spotlight.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
-                  alt={`${terms.member} of the Month — ${cfg["spotlight.name"]}`}
+                  alt={`${terms.member} of the Month - ${cfg["spotlight.name"]}`}
                   width={640}
                   height={800}
                   loading="lazy"
@@ -510,7 +510,7 @@ export function buildSectionMap(
             </div>
             <p className="text-muted-foreground max-w-xl leading-relaxed">
               The {identity.greekLetters} chapter elects its leadership annually. These are the {terms.membersLower}
-              running the show — happy to talk to anyone who wants to learn more.
+              running the show - happy to talk to anyone who wants to learn more.
             </p>
           </Reveal3D>
           {/* Leadership grid — staggered 3D reveal; each card tilts toward the
@@ -562,7 +562,7 @@ export function buildSectionMap(
             <p className="mt-3 text-xs text-muted-foreground">
               Parents and prospective members:{" "}
               <span className="font-medium text-foreground">{cfg["contact.advisorName"]}</span>
-              {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} —{" "}
+              {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} - {" "}
               <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline font-medium">
                 {cfg["contact.advisorEmail"]}
               </a>{cfg["contact.rushPhone"] && (
@@ -597,7 +597,7 @@ export function buildSectionMap(
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src="/brand/coat-of-arms-vintage.jpg"
-                  alt={`Original ${identity.fraternityName} coat of arms — engraved ${identity.foundingYear}`}
+                  alt={`Original ${identity.fraternityName} coat of arms - engraved ${identity.foundingYear}`}
                   width={84}
                   height={104}
                   loading="lazy"
@@ -687,7 +687,7 @@ export function buildSectionMap(
                     <Award className="h-3 w-3" aria-hidden="true" /> {cfg["about.caption"] || "Chapter formal"}
                   </span>
                   <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
-                    {terms.collective} you can count on — every weekend, every milestone, every year.
+                    {terms.collective} you can count on - every weekend, every milestone, every year.
                   </p>
                   <p className="mt-1 text-xs text-white/95">{identity.tagline}{cfg["contact.instagramHandle"] ? <> · {cfg["contact.instagramHandle"]}</> : null}</p>
                 </div>
@@ -784,7 +784,7 @@ export function buildSectionMap(
             <p className="mt-4 text-muted-foreground leading-relaxed">
               The {identity.fraternityName} chapter house sits at <span className="text-foreground font-medium">{titleCaseAddress(cfg["contact.address"])}</span>, close
               to campus. It&apos;s where the cookouts,
-              chapter meetings, and Bid Nights happen — and where most rushes meet the chapter
+              chapter meetings, and Bid Nights happen - and where most rushes meet the chapter
               for the first time.
             </p>
             {/* Contact tiles reveal in a stagger; each stays a real link. */}
@@ -879,7 +879,7 @@ export function buildSectionMap(
               Get on the interest list.
             </h2>
             <p className="mt-3 text-white/95 max-w-md text-base sm:text-lg leading-relaxed">
-              Sixty seconds — name, contact, profile. We'll text the second the schedule drops in August.
+              Sixty seconds - name, contact, profile. We'll text the second the schedule drops in August.
             </p>
             {/* Equal-width CTA pair — same grid system as the hero pair. */}
             <div className="mt-8 grid w-full max-w-[22rem] grid-cols-1 gap-3 md:w-fit md:max-w-none md:grid-flow-col md:auto-cols-fr">

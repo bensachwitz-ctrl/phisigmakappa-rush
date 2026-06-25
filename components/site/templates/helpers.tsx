@@ -15,10 +15,10 @@ import type { LucideIcon } from "lucide-react";
    rest of the build themes through (set per-tenant in app/layout.tsx), so a
    navy/gold or maroon chapter recolors its orbs, glows, and tilts for free.
 
-   - BRAND_ORB_COLORS: the three drifting hero orbs (FloatingOrbs `colors`).
+ - BRAND_ORB_COLORS: the three drifting hero orbs (FloatingOrbs `colors`).
      --brand-primary* are hex; a solid hex still fades cleanly to transparent
      inside the orb's radial gradient.
-   - BRAND_TILT_GLOW: the cursor-following 3D-tilt spotlight. Uses the --primary
+ - BRAND_TILT_GLOW: the cursor-following 3D-tilt spotlight. Uses the --primary
      HSL triple so we can dial the alpha down to a tasteful glow (a full-opacity
      hex would read as a harsh wash). */
 export const BRAND_ORB_COLORS = [
@@ -190,7 +190,7 @@ export function PostTile({
         // (Blob) URL keeps no srcSet, exactly as before.
         srcSet={cloud ? cloudSrcSet : isUrl ? undefined : `/api/photo/${slug}?w=480 480w, /api/photo/${slug}?w=960 960w, /api/photo/${slug}?w=1280 1280w, /api/photo/${slug}?w=1600 1600w`}
         sizes={priority ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"}
-        alt={`Chapter life — ${caption}`}
+        alt={`Chapter life - ${caption}`}
         width={640}
         height={640}
         loading={priority ? "eager" : "lazy"}

@@ -157,12 +157,12 @@ function ProvisioningOverlay({
 const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
 
 const ALL_STEPS = [
-  { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — first month free, cancel anytime." },
+  { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay - first month free, cancel anytime." },
   { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then upload assets." },
-  { id: "mockup", label: "Template & Colors", icon: IconCrest, blurb: "Pick a hero template, layout, and color theme — preview it live before launch." },
-  { id: "admin", label: "Admin Login", icon: IconAdmin, blurb: "Create your chapter's administrator account — this is how you'll sign in." },
+  { id: "mockup", label: "Template & Colors", icon: IconCrest, blurb: "Pick a hero template, layout, and color theme - preview it live before launch." },
+  { id: "admin", label: "Admin Login", icon: IconAdmin, blurb: "Create your chapter's administrator account - this is how you'll sign in." },
   { id: "payment", label: "Payment Method", icon: IconCoins, blurb: "Add your billing details to start your free first month." },
-  { id: "launch", label: "Launch", icon: IconLaunch, blurb: "Go live in seconds — then optionally grab a hand from the owner." },
+  { id: "launch", label: "Launch", icon: IconLaunch, blurb: "Go live in seconds - then optionally grab a hand from the owner." },
 ] as const;
 
 type StepId = "pricing" | "chapter" | "mockup" | "admin" | "payment" | "launch";
@@ -459,7 +459,7 @@ export default function OnboardWizard() {
         push({
           title: emailInvalid ? "Check the admin email" : "A few details needed",
           description: emailInvalid
-            ? "That admin email doesn't look right — this is the login and where the welcome email goes."
+            ? "That admin email doesn't look right - this is the login and where the welcome email goes."
             : "Admin name, email, and password are required.",
           variant: "destructive",
         });
@@ -487,10 +487,10 @@ export default function OnboardWizard() {
         ...prev,
         subdomain:
           subStatus === "taken"
-            ? "That subdomain is already taken — try another."
+            ? "That subdomain is already taken - try another."
             : subStatus === "reserved"
-            ? "That subdomain is reserved — try another."
-            : "That subdomain is invalid — try another.",
+            ? "That subdomain is reserved - try another."
+            : "That subdomain is invalid - try another.",
       }));
       push({
         title: "Subdomain unavailable",
@@ -738,7 +738,7 @@ export default function OnboardWizard() {
           setStep("chapter");
           push({
             title: taken ? "That subdomain is taken" : "Check your subdomain",
-            description: `${message} You're back on the chapter step — pick another name and relaunch.`,
+            description: `${message} You're back on the chapter step - pick another name and relaunch.`,
             variant: "destructive",
           });
           requestAnimationFrame(() => {
@@ -875,7 +875,7 @@ export default function OnboardWizard() {
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
           Answer a few quick questions and watch your fully branded website take shape in
-          real time. Hit launch and it goes live instantly — no code, no waiting.
+          real time. Hit launch and it goes live instantly - no code, no waiting.
         </p>
 
         {/* Trust strip — three quiet reassurances under the hero. AA-contrast,
@@ -1134,7 +1134,7 @@ export default function OnboardWizard() {
                           </span>
                         </div>
                         <p className="text-xs text-slate-400">
-                          We&apos;ll auto-fill your name, letters &amp; colors — edit anything after.
+                          We&apos;ll auto-fill your name, letters &amp; colors - edit anything after.
                         </p>
                       </div>
                     </div>
@@ -1147,7 +1147,7 @@ export default function OnboardWizard() {
                     {/* Tiny reassurance that picks are a starting point, not a lock-in. */}
                     <p className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
                       <IconCrest className="h-3.5 w-3.5 text-sky-300" aria-hidden="true" />
-                      Both have a &ldquo;Can&apos;t find it? Enter manually&rdquo; option — and every field stays editable below.
+                      Both have a &ldquo;Can&apos;t find it? Enter manually&rdquo; option - and every field stays editable below.
                     </p>
                   </div>
 
@@ -1393,7 +1393,7 @@ export default function OnboardWizard() {
                     <span>
                       Tip: edit your headline, name, and colors right on the live preview{" "}
                       <span className="lg:hidden">below</span>
-                      <span className="hidden lg:inline">on the right</span> — it updates instantly.
+                      <span className="hidden lg:inline">on the right</span> - it updates instantly.
                     </span>
                   </p>
                 </div>
@@ -1515,7 +1515,7 @@ export default function OnboardWizard() {
                       </p>
                       <p className="mt-1 text-sm leading-relaxed text-rose-100/80">{launchError}</p>
                       <p className="mt-1 text-sm leading-relaxed text-rose-100/70">
-                        Your answers are still here — give it another try, or our team will launch it with you.
+                        Your answers are still here - give it another try, or our team will launch it with you.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
@@ -1557,7 +1557,7 @@ export default function OnboardWizard() {
                         </p>
                         <p className="mt-1 text-sm leading-relaxed text-emerald-100/80">
                           Hit the button below and Greekstack provisions your branded site, admin
-                          dashboard, and database instantly — then takes you straight to it.
+                          dashboard, and database instantly - then takes you straight to it.
                         </p>
                       </div>
                     </div>
@@ -1568,12 +1568,12 @@ export default function OnboardWizard() {
                       <IconCheckCircle className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" /> Review &amp; confirm
                     </h3>
                     <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-2">
-                      <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "—"}</SummaryRow>
-                      <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "—"}</SummaryRow>
+                      <SummaryRow label="Chapter">{`${fraternityName} ${greekLetters}`.trim() || "-"}</SummaryRow>
+                      <SummaryRow label="School">{schoolName ? `${schoolName}${schoolShort ? ` (${schoolShort})` : ""}` : "-"}</SummaryRow>
                       <SummaryRow label="Site URL">
                         <span className="font-mono text-sky-200">{(subdomain.trim() || "your-chapter")}.greekstack.vercel.app</span>
                       </SummaryRow>
-                      <SummaryRow label="Admin">{adminEmail || "—"}</SummaryRow>
+                      <SummaryRow label="Admin">{adminEmail || "-"}</SummaryRow>
                       <SummaryRow label="Plan">{PLAN_SUMMARY[plan]}</SummaryRow>
                       {plan !== "custom" && paymentMethodId && (
                         <SummaryRow label="Payment">
@@ -1595,14 +1595,14 @@ export default function OnboardWizard() {
                     <span>
                       {plan === "custom" || plan === "dues_percentage" ? (
                         <>
-                          No card required now — you&apos;re launching on the{" "}
+                          No card required now - you&apos;re launching on the{" "}
                           <span className="font-semibold text-white">
                             {plan === "custom" ? "Custom plan" : "Dues-Share plan"}
                           </span>.
                         </>
                       ) : plan === "monthly" && !paymentMethodId ? (
                         <>
-                          No card required — you&apos;re launching free on the{" "}
+                          No card required - you&apos;re launching free on the{" "}
                           <span className="font-semibold text-white">
                             Monthly Plan (first month free)
                           </span>. Add a card in Admin → Billing before your free month ends.
@@ -1637,7 +1637,7 @@ export default function OnboardWizard() {
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-white">Want it fully customized?</p>
                         <p className="truncate text-xs text-slate-300">
-                          Talk to our team about a custom build + pricing — tailored to exactly how your
+                          Talk to our team about a custom build + pricing - tailored to exactly how your
                           chapter runs.
                         </p>
                       </div>
@@ -1687,7 +1687,7 @@ export default function OnboardWizard() {
                       disabled={busy}
                       className="text-slate-200 transition-transform hover:-translate-x-0.5"
                     >
-                      Skip — start free without a card
+                      Skip - start free without a card
                     </Button>
                   )}
                   <Magnetic strength={14} radius={80}>
@@ -1789,11 +1789,11 @@ type PlanId = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
    "dues_percentage" are kept only for round-trip safety on already-persisted
    values and map to the closest current label. */
 const PLAN_SUMMARY: Record<PlanId, string> = {
-  monthly: "Monthly — first month free, then $50/mo + $200 per rush cycle",
-  yearly: "Annual — $800/year (includes all rush fees)",
-  semester: "Monthly — first month free, then $50/mo + $200 per rush cycle",
-  dues_percentage: "Dues-Share — no monthly fee, percentage on dues collected",
-  custom: "Custom — tailored quote",
+  monthly: "Monthly - first month free, then $50/mo + $200 per rush cycle",
+  yearly: "Annual - $800/year (includes all rush fees)",
+  semester: "Monthly - first month free, then $50/mo + $200 per rush cycle",
+  dues_percentage: "Dues-Share - no monthly fee, percentage on dues collected",
+  custom: "Custom - tailored quote",
 };
 
 /* Where the "Talk to our team about a custom build" CTAs point. Prefer the owner's
@@ -1890,7 +1890,7 @@ function MockupTweakStep({
         <h3 className="text-lg font-bold text-white">Pick a template &amp; colors</h3>
         <p className="text-xs text-slate-400">
           Choose a hero style, layout, and color theme. Everything updates the
-          live preview instantly — you can fine-tune it any time after launch.
+          live preview instantly - you can fine-tune it any time after launch.
         </p>
       </div>
 
@@ -1974,7 +1974,7 @@ function MockupTweakStep({
         </div>
         <p className="text-[11px] leading-relaxed text-slate-500">
           Want an exact brand color? You set your hex values on the previous
-          step — these swatches are quick starting points.
+          step - these swatches are quick starting points.
         </p>
       </div>
     </div>
@@ -2170,8 +2170,8 @@ function PricingStep({
               }
               highlight={promoApplied ? "Applied: 3 months free!" : "First month free"}
               features={[
-                "Core chapter platform — recruitment, roster, events, compliance",
-                "$50/month after your free first month — cancel anytime",
+                "Core chapter platform - recruitment, roster, events, compliance",
+                "$50/month after your free first month - cancel anytime",
                 "$200 each rush cycle",
                 "Optional online dues collection (keep standard Connect keys)",
               ]}
@@ -2192,9 +2192,9 @@ function PricingStep({
               }
               highlight={promoApplied ? "Applied: $150 off first year!" : "Includes all rush fees"}
               features={[
-                "Everything in Monthly — every feature, no limits",
-                "All rush-cycle fees included — save $200 per cycle",
-                "Best value — save vs. paying monthly + rush cycles",
+                "Everything in Monthly - every feature, no limits",
+                "All rush-cycle fees included - save $200 per cycle",
+                "Best value - save vs. paying monthly + rush cycles",
                 "Optional online dues collection (keep standard Connect keys)",
               ]}
             />
@@ -2277,7 +2277,7 @@ function PricingStep({
         <span>
           {collectDues
             ? "Your dues-share chapter goes live today. No card required. Reach out to our team after launch to configure dues payments."
-            : "First month free — add a card now, or skip and add it later. You won't be charged today."
+            : "First month free - add a card now, or skip and add it later. You won't be charged today."
           }
         </span>
       </p>
@@ -2509,13 +2509,13 @@ function SubdomainStatus({
         return {
           tone: "text-rose-300",
           icon: <IconClose className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />,
-          text: "That subdomain is taken — try another.",
+          text: "That subdomain is taken - try another.",
         };
       case "reserved":
         return {
           tone: "text-rose-300",
           icon: <IconClose className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />,
-          text: "That subdomain is reserved — try another.",
+          text: "That subdomain is reserved - try another.",
         };
       case "invalid":
         return {

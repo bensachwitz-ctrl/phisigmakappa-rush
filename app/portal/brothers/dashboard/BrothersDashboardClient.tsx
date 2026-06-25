@@ -1432,7 +1432,7 @@ export default function BrothersDashboardClient({
                             <Award className="w-4 h-4 text-amber-600" />
                             <span className="text-amber-800 font-medium">
                               Grade: <strong className="text-amber-950 font-bold">{chores[0].grade}</strong>
-                              {chores[0].notes && ` — "${chores[0].notes}"`}
+                              {chores[0].notes && ` - "${chores[0].notes}"`}
                             </span>
                           </div>
                         )}
@@ -1929,7 +1929,7 @@ export default function BrothersDashboardClient({
                     <PortalEmpty
                       icon={Award}
                       title="No service hours logged yet"
-                      sub="Submit your first log on the left — get out there and support the community."
+                      sub="Submit your first log on the left - get out there and support the community."
                     />
                   )}
                 </div>
@@ -2121,7 +2121,7 @@ export default function BrothersDashboardClient({
                                     <span>Download</span>
                                   </a>
                                 ) : (
-                                  <span className="text-maroon-300 font-medium">—</span>
+                                  <span className="text-maroon-300 font-medium">-</span>
                                 )}
                               </td>
                             </tr>

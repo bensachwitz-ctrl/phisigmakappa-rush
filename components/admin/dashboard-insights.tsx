@@ -159,7 +159,7 @@ export function DashboardInsights({
     },
     {
       label: "Bid conversion",
-      value: bidsExtendedCount > 0 ? `${bidConversionPct}%` : "—",
+      value: bidsExtendedCount > 0 ? `${bidConversionPct}%` : "-",
       sub: `${acceptedCount}/${bidsExtendedCount} accepted`,
       icon: ThumbsUp,
       href: "/admin",
@@ -167,7 +167,7 @@ export function DashboardInsights({
     },
     {
       label: "Next event",
-      value: nextEvent ? new Date(nextEvent.startsAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—",
+      value: nextEvent ? new Date(nextEvent.startsAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-",
       sub: nextEvent ? nextEvent.name : "No upcoming public events",
       icon: Calendar,
       href: "/admin/events",
@@ -307,7 +307,7 @@ export function DashboardInsights({
                     <IconSpark className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <div>
-                    <h3 className="text-sm font-semibold tracking-tight">Strong consensus — bid candidates</h3>
+                    <h3 className="text-sm font-semibold tracking-tight">Strong consensus - bid candidates</h3>
                     <p className="text-[11px] text-muted-foreground">
                       ≥{DECISION_MIN_VOTES} votes · avg ≥ +{BID_RECOMMEND_AVG}
                     </p>
@@ -347,7 +347,7 @@ export function DashboardInsights({
                     <ThumbsDown className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <div>
-                    <h3 className="text-sm font-semibold tracking-tight">Strong consensus — likely drop</h3>
+                    <h3 className="text-sm font-semibold tracking-tight">Strong consensus - likely drop</h3>
                     <p className="text-[11px] text-muted-foreground">
                       ≥{DECISION_MIN_VOTES} votes · avg ≤ {DROP_RECOMMEND_AVG}
                     </p>

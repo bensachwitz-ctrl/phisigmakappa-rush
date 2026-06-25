@@ -323,7 +323,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {events.length === 0
-            ? "No events yet — add events one at a time below."
+            ? "No events yet - add events one at a time below."
             : search || categoryFilter !== "ALL" || privacyFilter !== "ALL"
             ? `${filteredEvents.length} of ${events.length} events found`
             : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
@@ -383,7 +383,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
           icon={IconSpark}
           title="No events yet"
           description={
-            "Add the chapter's first event. Pick a category (Rush, Date, Brotherhood, Chapter, Social) — each shows up color-coded on the brother calendar. Toggle Invite-only to hide it from the public website while keeping it visible to logged-in brothers."
+            "Add the chapter's first event. Pick a category (Rush, Date, Brotherhood, Chapter, Social) - each shows up color-coded on the brother calendar. Toggle Invite-only to hide it from the public website while keeping it visible to logged-in brothers."
           }
           primaryAction={{ label: "Add event", onClick: openCreate }}
         />

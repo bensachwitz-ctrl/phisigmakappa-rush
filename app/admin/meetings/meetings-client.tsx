@@ -796,7 +796,7 @@ export function MeetingsClient({
             </DialogTitle>
             <DialogDescription>
               {rosterMeeting
-                ? `${rosterMeeting.title} — ${new Date(rosterMeeting.scheduledAt).toLocaleString()}`
+                ? `${rosterMeeting.title} - ${new Date(rosterMeeting.scheduledAt).toLocaleString()}`
                 : ""}
             </DialogDescription>
           </DialogHeader>

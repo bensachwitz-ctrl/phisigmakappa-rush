@@ -269,7 +269,7 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
                 value={form.body}
                 onChange={(e) => setForm({ ...form, body: e.target.value })}
                 rows={5}
-                placeholder="Hey brothers — chapter is moved to Tuesday 7pm at the house. Bring dues if you haven't paid yet."
+                placeholder="Hey brothers - chapter is moved to Tuesday 7pm at the house. Bring dues if you haven't paid yet."
               />
             </div>
             <div className="grid grid-cols-2 gap-3">

@@ -68,7 +68,7 @@ export default async function DuesSuccessPage({
               </div>
               <h1 className="text-2xl font-semibold tracking-tight">Confirming your payment…</h1>
               <p className="text-sm text-muted-foreground">
-                Stripe is still finalizing the charge. Refresh this page in a few seconds — your dues status will update automatically.
+                Stripe is still finalizing the charge. Refresh this page in a few seconds - your dues status will update automatically.
               </p>
             </>
           ) : (

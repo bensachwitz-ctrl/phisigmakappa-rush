@@ -37,7 +37,7 @@ export default async function SettingsPage() {
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Site content</h1>
           <p className="mt-1.5 text-sm text-muted-foreground max-w-2xl">
-            Change every photo, headline, stat, and visible section on the public homepage. Click <strong>Save</strong> at the top — changes go live in seconds. No code deploy, no Vercel, no waiting.
+            Change every photo, headline, stat, and visible section on the public homepage. Click <strong>Save</strong> at the top - changes go live in seconds. No code deploy, no Vercel, no waiting.
           </p>
         </div>
         <Link

@@ -254,7 +254,7 @@ export function RusheeDetail({
               {rush.bidToken && (
                 <div className="rounded-md border border-border bg-background p-2.5 text-xs space-y-1.5">
                   <p className="text-muted-foreground">
-                    Bid link expires {rush.bidTokenExpiresAt ? format(new Date(rush.bidTokenExpiresAt), "MMM d") : "—"}
+                    Bid link expires {rush.bidTokenExpiresAt ? format(new Date(rush.bidTokenExpiresAt), "MMM d") : "-"}
                   </p>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" onClick={copyBidLink} className="flex-1">
@@ -497,7 +497,7 @@ function ImpressionPanel({
               id="impression-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="One line — what's the vibe?"
+              placeholder="One line - what's the vibe?"
               rows={2}
             />
           </div>
@@ -512,7 +512,7 @@ function ImpressionPanel({
         <ul className="mt-4 space-y-2">
           {impressions.length === 0 ? (
             <li className="text-sm text-muted-foreground">
-              No impressions yet — be the first to leave one after a rush event.
+              No impressions yet - be the first to leave one after a rush event.
             </li>
           ) : (
             impressions.map((i) => {

@@ -934,9 +934,9 @@ function EmptyBudget({ period, onAdd }: { period: string; onAdd: () => void }) {
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red mb-4">
             <Wallet className="h-6 w-6" />
           </span>
-          <h3 className="text-base font-semibold tracking-tight">No budget lines yet — add your first</h3>
+          <h3 className="text-base font-semibold tracking-tight">No budget lines yet - add your first</h3>
           <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            Build out the {period.replace("-", " ")} budget by category — social, recruitment, philanthropy, operations — then track actuals against each line.
+            Build out the {period.replace("-", " ")} budget by category - social, recruitment, philanthropy, operations - then track actuals against each line.
           </p>
           <Button onClick={onAdd} className="mt-5">
             <Plus className="h-4 w-4" /> Add first line
@@ -950,7 +950,7 @@ function EmptyBudget({ period, onAdd }: { period: string; onAdd: () => void }) {
 function EmptyExpenses({ filter }: { filter: string }) {
   const msg =
     filter === "PENDING"
-      ? "No reimbursements waiting on you. Nice — inbox zero."
+      ? "No reimbursements waiting on you. Nice - inbox zero."
       : filter === "ALL"
         ? "No reimbursement requests yet. They'll appear here as brothers submit them."
         : `No ${filter.toLowerCase()} reimbursements.`;

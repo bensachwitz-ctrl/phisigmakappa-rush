@@ -23,9 +23,9 @@ type Row = {
 
 /**
  * Client-side audit log viewer with three filters:
- *   - Free-text search across actor name, subject name, details
- *   - Subject-type chips (Rush / Brother / Event / Announcement / Broadcast / Settings)
- *   - Actor-name chips (all unique actors from the loaded slice)
+ * - Free-text search across actor name, subject name, details
+ * - Subject-type chips (Rush / Brother / Event / Announcement / Broadcast / Settings)
+ * - Actor-name chips (all unique actors from the loaded slice)
  *
  * All filtering is in-memory against the 50 server-rendered rows — keeps
  * the page snappy and avoids round-trips. If a chapter needs to search
@@ -228,15 +228,15 @@ function FilterChip({
 
 function humanAction(action: string): string {
   switch (action) {
-    case "RUSH_STATUS": return "updated PNM status —";
+    case "RUSH_STATUS": return "updated PNM status - ";
     case "RUSH_NOTES": return "edited notes on";
     case "RUSH_DELETED": return "deleted PNM";
     case "RUSH_VOTE_CAST": return "voted on";
     case "RUSH_VOTE_CHANGE": return "changed vote on";
     case "RUSH_VOTE_CLEARED": return "cleared vote on";
     case "BID_TOKEN_GENERATED": return "generated bid link for";
-    case "BID_ACCEPTED": return "accepted bid —";
-    case "BID_DECLINED": return "declined bid —";
+    case "BID_ACCEPTED": return "accepted bid - ";
+    case "BID_DECLINED": return "declined bid - ";
     case "BROTHER_CREATED": return "added brother";
     case "BROTHER_UPDATED": return "updated brother";
     case "BROTHER_DUES": return "toggled dues for";
@@ -257,7 +257,7 @@ function humanAction(action: string): string {
     case "ANNOUNCEMENT_UPDATED": return "edited announcement";
     case "ANNOUNCEMENT_DELETED": return "deleted announcement";
     case "BROADCAST_SENT": return "sent broadcast to";
-    case "SETTINGS_UPDATED": return "changed settings —";
+    case "SETTINGS_UPDATED": return "changed settings - ";
     default: return action.replace(/_/g, " ").toLowerCase();
   }
 }

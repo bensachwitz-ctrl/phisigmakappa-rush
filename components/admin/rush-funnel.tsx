@@ -59,7 +59,7 @@ export function RushFunnel({
               Rush funnel
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Where the cycle is leaking — visible drop-off between every stage
+              Where the cycle is leaking - visible drop-off between every stage
             </p>
           </div>
           {submitted > 0 && (
@@ -117,7 +117,7 @@ export function RushFunnel({
                     ) : (
                       <>
                         <TrendingUp className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-                        <span>Growth (shouldn&apos;t happen — likely status change)</span>
+                        <span>Growth (shouldn&apos;t happen - likely status change)</span>
                       </>
                     )}
                   </p>
@@ -129,7 +129,7 @@ export function RushFunnel({
 
         {submitted === 0 && (
           <p className="mt-4 text-xs text-muted-foreground text-center italic">
-            No PNMs in the funnel yet — share your public rush form URL.
+            No PNMs in the funnel yet - share your public rush form URL.
           </p>
         )}
       </CardContent>

@@ -680,7 +680,7 @@ export function PreviewRoster() {
   return (
     <Panel>
       <MiniHeader title="Chapter Roster" badge={tab === "actives" ? "32 actives" : "118 alumni"} />
-      <DemoHint>Switch between the Actives and Alumni views — one directory for the whole chapter.</DemoHint>
+      <DemoHint>Switch between the Actives and Alumni views - one directory for the whole chapter.</DemoHint>
 
       {/* Directory switcher — mirrors the in-app roster tabs */}
       <div className="mb-3 flex rounded-xl border border-border bg-secondary/40 p-1">

@@ -181,7 +181,7 @@ export function BillingManager(props: {
         <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            You&apos;re all set — thanks for subscribing. It can take a few seconds
+            You&apos;re all set - thanks for subscribing. It can take a few seconds
             for your plan status to update here.
           </span>
         </div>
@@ -229,15 +229,15 @@ export function BillingManager(props: {
                   <strong>
                     {introFeeUsed ? "3% of dues" : "1.5% of dues this semester, then 3%"}
                   </strong>{" "}
-                  — <strong>no monthly fee</strong>. Greekstack&apos;s share is
+ - <strong>no monthly fee</strong>. Greekstack&apos;s share is
                   collected automatically from each member&apos;s dues payment, so
                   there&apos;s nothing to subscribe to or manage here.
                 </span>
               </p>
               <p className="flex items-start gap-2 text-muted-foreground">
                 <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
-                Full access to every feature — your rush site, roster, dues, events,
-                and compliance trail — with no upfront or recurring cost.
+                Full access to every feature - your rush site, roster, dues, events,
+                and compliance trail - with no upfront or recurring cost.
               </p>
               <div className="mt-3 p-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.04] text-xs text-sky-800 space-y-1 bg-white/[0.02]">
                 <p className="font-bold flex items-center gap-1.5 text-foreground">
@@ -256,14 +256,14 @@ export function BillingManager(props: {
               <span>
                 Your chapter is on a <strong>custom plan</strong> arranged with our
                 team. Need to make a change or have a question about billing? Reach
-                out and we&apos;ll take care of it — your chapter stays fully online.
+                out and we&apos;ll take care of it - your chapter stays fully online.
               </span>
             </p>
           ) : !stripeConfigured ? (
             <p className="flex items-start gap-2 text-muted-foreground">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               Online billing isn&apos;t set up on this deployment yet. Your chapter
-              keeps running — reach out to Greekstack support to activate a plan.
+              keeps running - reach out to Greekstack support to activate a plan.
             </p>
           ) : isActive ? (
             <p className="flex items-start gap-2 text-emerald-700">
@@ -271,7 +271,7 @@ export function BillingManager(props: {
               <span>
                 Your subscription is <strong>active</strong>
                 {activePlan === "semester" ? " (billed every 6 months)" : ""}. Thanks
-                for being on Greekstack — manage your card, invoices, or plan anytime.
+                for being on Greekstack - manage your card, invoices, or plan anytime.
               </span>
             </p>
           ) : isPastDue ? (
@@ -279,7 +279,7 @@ export function BillingManager(props: {
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
                 Your last payment didn&apos;t go through. Update your billing to
-                keep your chapter&apos;s subscription in good standing — nothing is
+                keep your chapter&apos;s subscription in good standing - nothing is
                 interrupted in the meantime.
               </span>
             </p>
@@ -291,7 +291,7 @@ export function BillingManager(props: {
                 {typeof daysLeft === "number" && daysLeft > 0 ? (
                   <>
                     {" "}
-                    — <strong>{daysLeft} day{daysLeft === 1 ? "" : "s"} left</strong>
+ - <strong>{daysLeft} day{daysLeft === 1 ? "" : "s"} left</strong>
                     {trialDate ? ` (ends ${trialDate})` : ""}.
                   </>
                 ) : (
@@ -307,14 +307,14 @@ export function BillingManager(props: {
                 {reason === "trial_expired"
                   ? "Your free trial has ended."
                   : "Your subscription isn't active."}{" "}
-                Start a subscription to keep full access going — your chapter
+                Start a subscription to keep full access going - your chapter
                 stays online either way.
               </span>
             </p>
           ) : (
             <p className="flex items-start gap-2 text-muted-foreground">
               <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
-              Subscribe to lock in your chapter&apos;s platform — full access to
+              Subscribe to lock in your chapter&apos;s platform - full access to
               every feature for {priceLabel}.
             </p>
           )}
@@ -391,7 +391,7 @@ export function BillingManager(props: {
                 </>
               ) : (
                 <>
-                  Rush cycle — $200 each semester (billed every 6 months){" "}
+                  Rush cycle - $200 each semester (billed every 6 months){" "}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -496,25 +496,25 @@ function SwitchPlan({
   const options: { plan: Plan; label: string; icon: React.ReactNode; selfServe: boolean }[] = [
     {
       plan: "monthly",
-      label: "Monthly — $50/mo (first month free)",
+      label: "Monthly - $50/mo (first month free)",
       icon: <CreditCard className="h-4 w-4" />,
       selfServe: true,
     },
     {
       plan: "yearly",
-      label: "Yearly — $800/yr (rush included, best value)",
+      label: "Yearly - $800/yr (rush included, best value)",
       icon: <CalendarDays className="h-4 w-4" />,
       selfServe: true,
     },
     {
       plan: "dues_percentage",
-      label: "Dues % — 1.5% then 3%, no monthly fee",
+      label: "Dues % - 1.5% then 3%, no monthly fee",
       icon: <Percent className="h-4 w-4" />,
       selfServe: false,
     },
     {
       plan: "custom",
-      label: "Custom — talk to sales",
+      label: "Custom - talk to sales",
       icon: <ShieldCheck className="h-4 w-4" />,
       selfServe: false,
     },

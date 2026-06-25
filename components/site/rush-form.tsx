@@ -73,7 +73,7 @@ type StepId =
 // (TCPA / CTIA best practice — disclosure must precede phone collection).
 // The form-wide affirmative checkbox is on the final Review step.
 const SMS_PRE_DISCLOSURE =
-  "We'll text you when the Fall '26 schedule drops and as rush events approach — up to 8 messages per rush cycle, sent using automated technology. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
+  "We'll text you when the Fall '26 schedule drops and as rush events approach - up to 8 messages per rush cycle, sent using automated technology. Reply HELP for help, STOP to opt out. Msg & data rates may apply.";
 
 // The line that appears next to the express-consent checkbox on the Review step.
 // Identifies the sender by full legal name, the program, frequency, opt-out keywords,
@@ -100,7 +100,7 @@ function buildExpressConsent(identity: ChapterIdentity): string {
       .join(" ")
       .trim() || "this chapter";
   return (
-    "I am 18+ — or I am 17 and have a parent or legal guardian's permission to sign up. " +
+    "I am 18+ - or I am 17 and have a parent or legal guardian's permission to sign up. " +
     `I agree to receive recurring marketing and informational text and email recruitment/rush messages from ${org} ` +
     "sent using an automatic telephone dialing system or other automated technology. " +
     "Msg frequency varies (up to about 8 msgs per rush cycle). Msg & data rates may apply. " +
@@ -282,7 +282,7 @@ export function RushForm({
       setSubmitting(false);
       push({
         title: "You're offline",
-        description: "Reconnect and try again — your info is still typed in.",
+        description: "Reconnect and try again - your info is still typed in.",
         variant: "destructive",
       });
       return;
@@ -399,7 +399,7 @@ export function RushForm({
 
       {booth && idleSecondsLeft !== null && idleSecondsLeft <= 20 && (
         <div className="bg-phisig-red-soft border-b border-phisig-red/20 px-4 py-2 text-center text-xs text-phisig-red font-semibold">
-          Auto-clearing in {idleSecondsLeft}s — tap any field to keep going.
+          Auto-clearing in {idleSecondsLeft}s - tap any field to keep going.
         </div>
       )}
 
@@ -507,7 +507,7 @@ export function RushForm({
           </span>
           <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
           <span className="inline-flex items-center gap-1.5">
-            <IconCheckCircle className="h-3.5 w-3.5 text-phisig-red" /> Opt out anytime — reply STOP
+            <IconCheckCircle className="h-3.5 w-3.5 text-phisig-red" /> Opt out anytime - reply STOP
           </span>
           <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
           <span className="inline-flex items-center gap-1.5">
@@ -589,7 +589,7 @@ function ContactStep({
       <Header
         eyebrow={`Step 1 of ${totalSteps}`}
         title={booth ? "Name & phone" : "Drop your number"}
-        sub={booth ? "Two fields. Then year. Then you're done." : "Phone is required — that's how we'll text the schedule."}
+        sub={booth ? "Two fields. Then year. Then you're done." : "Phone is required - that's how we'll text the schedule."}
       />
       <Field id="name" label="Full name" required error={errors.name} icon={IconUser} valid={nameValid}>
         <Input
@@ -620,7 +620,7 @@ function ContactStep({
       <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
         <IconShieldCheckDuo className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px text-phisig-red align-middle" />
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
-        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission — see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
+        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission - see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
 
       {/* Age attestation — separate one-tap toggle so the consent record is
@@ -883,18 +883,18 @@ function PhotoStep({
 
 function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: number; booth: boolean }) {
   const lines = [
-    { label: "Name", value: data.name || "—" },
-    { label: "Phone", value: data.phone || "—" },
-    { label: "Year", value: data.year || "—" },
-    { label: "Major", value: data.major || "—" },
+    { label: "Name", value: data.name || "-" },
+    { label: "Phone", value: data.phone || "-" },
+    { label: "Year", value: data.year || "-" },
+    { label: "Major", value: data.major || "-" },
     ...(booth ? [] : [
-      { label: "Hometown", value: data.hometown || "—" },
-      { label: "Email", value: data.email || "—" },
+      { label: "Hometown", value: data.hometown || "-" },
+      { label: "Email", value: data.email || "-" },
     ]),
   ];
   return (
     <div className="space-y-5">
-      <Header eyebrow={`Step ${totalSteps} of ${totalSteps - (booth ? 0 : 1)}`} title={booth ? "Confirm & submit" : "Review and submit"} sub={booth ? "Tap submit — next rushee in 6 seconds." : "Quick check — anything off?"} />
+      <Header eyebrow={`Step ${totalSteps} of ${totalSteps - (booth ? 0 : 1)}`} title={booth ? "Confirm & submit" : "Review and submit"} sub={booth ? "Tap submit - next rushee in 6 seconds." : "Quick check - anything off?"} />
       <div className="rounded-xl border border-border bg-secondary/40 p-5">
         <div className="flex items-start gap-5">
           {data.headshotUrl ? (

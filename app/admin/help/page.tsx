@@ -26,25 +26,25 @@ const SECTIONS = [
     bullets: [
       "The chapter has one shared admin login distributed via the e-board's password manager.",
       "First time a brother signs in with a new name, the system creates a Brother record automatically.",
-      "To onboard a brother with year, major, headshot, and contact info, use Brothers → Invite brother — sends a one-time link they fill out themselves.",
+      "To onboard a brother with year, major, headshot, and contact info, use Brothers → Invite brother - sends a one-time link they fill out themselves.",
     ],
   },
   {
     icon: TrendingUp,
-    title: "Dashboard — decisions at a glance",
+    title: "Dashboard - decisions at a glance",
     body: (
       <>
         The top of the <Link href="/admin" className="text-phisig-red hover:underline">Rush</Link> tab now
-        shows a 6-tile insight strip plus a "Ready to decide" panel — so the e-board knows what needs
+        shows a 6-tile insight strip plus a "Ready to decide" panel - so the e-board knows what needs
         attention without scrolling the roster.
       </>
     ),
     bullets: [
       "KPI tiles: active PNMs, ready-to-decide count, vote participation %, dues collected %, bid conversion %, next event.",
-      "Strong-yes panel (green): PNMs with ≥5 votes and an average score of +1 or higher — these are bid candidates.",
-      "Strong-no panel (red): PNMs with ≥5 votes averaging -1 or lower — likely drops.",
+      "Strong-yes panel (green): PNMs with ≥5 votes and an average score of +1 or higher - these are bid candidates.",
+      "Strong-no panel (red): PNMs with ≥5 votes averaging -1 or lower - likely drops.",
       "Your unvoted PNMs (cardinal): the ones the chapter is closest to deciding that you haven't weighed in on yet.",
-      'Smart-filter chips above the roster: "Ready to decide", "Needs my vote", "Bid pending" — one tap to focus on what matters.',
+      'Smart-filter chips above the roster: "Ready to decide", "Needs my vote", "Bid pending" - one tap to focus on what matters.',
       "Rush funnel chart: Submitted → Active → Bid → Accepted with drop-off % at every step. Spot where the cycle is leaking.",
       "Recent activity feed: last 8 audit entries so you see what the chapter just did the moment you sign in.",
       "Three CSV/JSON exports: PNM roster, Brothers participation, Weekly digest (paste into Slack or the advisor email).",
@@ -55,15 +55,15 @@ const SECTIONS = [
     title: "Compare PNMs side-by-side",
     body: (
       <>
-        When the chapter has 2–4 similar PNMs and needs to pick, multi-select them on the Rush roster
-        and click <strong>Compare</strong> — a side-by-side decision view opens with 7 metrics per PNM.
+        When the chapter has 2 - 4 similar PNMs and needs to pick, multi-select them on the Rush roster
+        and click <strong>Compare</strong> - a side-by-side decision view opens with 7 metrics per PNM.
       </>
     ),
     bullets: [
-      "Select 2–4 PNMs using the row checkboxes.",
-      'Click the "Compare (N)" button in the toolbar — opens a modal with 2, 3, or 4 columns.',
+      "Select 2 - 4 PNMs using the row checkboxes.",
+      'Click the "Compare (N)" button in the toolbar - opens a modal with 2, 3, or 4 columns.',
       "Per-PNM metrics: vote average, vote count, year, major, hometown, events attended, days in cycle.",
-      "Best value per metric gets a green star — visual cue, not prescriptive.",
+      "Best value per metric gets a green star - visual cue, not prescriptive.",
       "Contact links (email + phone) at the bottom of each card for one-click outreach.",
     ],
   },
@@ -73,21 +73,21 @@ const SECTIONS = [
     body: (
       <>
         On the <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers</Link> tab
-        a leaderboard panel shows top 5 in three categories — drives healthy competition and exposes who
+        a leaderboard panel shows top 5 in three categories - drives healthy competition and exposes who
         needs a tap on the shoulder.
       </>
     ),
     bullets: [
       "Top voters: most PNM votes cast all-time.",
-      "Top RSVPs: most event RSVPs sent — proxy for engagement.",
+      "Top RSVPs: most event RSVPs sent - proxy for engagement.",
       "Top service hours: most logged service hours.",
       "Crown for #1, silver/bronze for #2/#3.",
-      "Read-only — brothers see this too, which is the point (visible motivation > admin shaming).",
+      "Read-only - brothers see this too, which is the point (visible motivation > admin shaming).",
     ],
   },
   {
     icon: ScrollText,
-    title: "Audit log — chapter governance trail",
+    title: "Audit log - chapter governance trail",
     body: (
       <>
         Every status change, vote, dues toggle, broadcast, event create/delete, announcement, and settings
@@ -106,27 +106,27 @@ const SECTIONS = [
   },
   {
     icon: Palette,
-    title: "Chapter setup wizard — re-brand in 5 minutes",
+    title: "Chapter setup wizard - re-brand in 5 minutes",
     body: (
       <>
         Net-new chapters spinning up the platform fill out the{" "}
         <Link href="/admin/setup" className="text-phisig-red hover:underline">5-step setup wizard</Link>{" "}
-        — fraternity, school, brand colors, contact, anti-hazing — and the whole site re-brands on the
+ - fraternity, school, brand colors, contact, anti-hazing - and the whole site re-brands on the
         next page load. Existing chapters can tweak any of it later in Site content → Chapter identity.
       </>
     ),
     bullets: [
       "Step 1: Fraternity name (full + short), Greek letters, school.",
-      "Step 2: Brand colors — paste your school's hex code; primary + dark + soft tint pickers.",
+      "Step 2: Brand colors - paste your school's hex code; primary + dark + soft tint pickers.",
       "Step 3: Rush inbox, advisor of record, chapter house address.",
       "Step 4: Anti-hazing hotline + body paragraph.",
-      "Step 5: Launch — review + next-action cards.",
+      "Step 5: Launch - review + next-action cards.",
       "Dashboard shows a 'Finish chapter setup' progress bar until ≥80% of fields are customized off USC defaults.",
     ],
   },
   {
     icon: LayoutDashboard,
-    title: "Rush — managing PNMs",
+    title: "Rush - managing PNMs",
     body: (
       <>
         The <Link href="/admin" className="text-phisig-red hover:underline">Rush</Link> tab is the heart of recruitment.
@@ -137,15 +137,15 @@ const SECTIONS = [
       "Search by name / email / hometown / major.",
       "Filter by status: Active, Dropped, Bid Extended, Accepted, Declined.",
       "Click a row → full profile with phone, year, major, hometown, headshot, notes, and the brotherhood vote breakdown.",
-      "Status pills next to each row — click to update without opening the dialog.",
+      "Status pills next to each row - click to update without opening the dialog.",
       "Vote 👍 / 👎 inline on each PNM, or open the profile for the full Strong Yes → Strong No scale.",
       "Multi-select rushes → click Email or Text to send a mass message via Resend / Twilio.",
-      "Click Export to download the full roster as a CSV — perfect for sharing with the e-board.",
+      "Click Export to download the full roster as a CSV - perfect for sharing with the e-board.",
     ],
   },
   {
     icon: Users,
-    title: "Brothers — chapter directory",
+    title: "Brothers - chapter directory",
     body: (
       <>
         The <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers</Link> tab is the active-member roster.
@@ -153,7 +153,7 @@ const SECTIONS = [
       </>
     ),
     bullets: [
-      "Click Add brother to add a new member — name, position, year, major, pledge class, contact info.",
+      "Click Add brother to add a new member - name, position, year, major, pledge class, contact info.",
       "Click the Dues badge on any card to toggle paid / unpaid (one-click).",
       "Service and study hours show on each card; bulk-update by editing brothers individually.",
       "Stats at the top show total brothers and % dues paid.",
@@ -162,7 +162,7 @@ const SECTIONS = [
   },
   {
     icon: CalendarDays,
-    title: "Events — rush + chapter calendar",
+    title: "Events - rush + chapter calendar",
     body: (
       <>
         The <Link href="/admin/events" className="text-phisig-red hover:underline">Events</Link> tab feeds the public schedule
@@ -171,36 +171,36 @@ const SECTIONS = [
       </>
     ),
     bullets: [
-      "Click Add event to create — name, start/end time, location, dress code, description, category, and public/invite-only.",
-      "Pick a category (Rush / Date / Brotherhood / Chapter / Social / Other) — drives the color stripe brothers see on the calendar.",
+      "Click Add event to create - name, start/end time, location, dress code, description, category, and public/invite-only.",
+      "Pick a category (Rush / Date / Brotherhood / Chapter / Social / Other) - drives the color stripe brothers see on the calendar.",
       "Toggle Invite-only to hide from the public site while keeping it visible to logged-in brothers.",
-      "Click Edit on any event to update — RSVPs are preserved on edit.",
-      "Click Attendance on any event to mark who showed up — search PNMs and toggle check-marks.",
-      "Brothers RSVP from /admin/events — Going / Maybe / Not going. Click an event to see the full breakdown including who hasn't responded yet.",
+      "Click Edit on any event to update - RSVPs are preserved on edit.",
+      "Click Attendance on any event to mark who showed up - search PNMs and toggle check-marks.",
+      "Brothers RSVP from /admin/events - Going / Maybe / Not going. Click an event to see the full breakdown including who hasn't responded yet.",
     ],
   },
   {
     icon: Megaphone,
-    title: "News — chapter announcements",
+    title: "News - chapter announcements",
     body: (
       <>
-        The <Link href="/admin/announcements" className="text-phisig-red hover:underline">News</Link> tab is for chapter-wide updates —
+        The <Link href="/admin/announcements" className="text-phisig-red hover:underline">News</Link> tab is for chapter-wide updates - 
         meeting reminders, philanthropy events, dues deadlines.
       </>
     ),
     bullets: [
-      "Click New announcement — title, body, audience (Everyone / Brothers / Rushes / E-board), pin to top.",
+      "Click New announcement - title, body, audience (Everyone / Brothers / Rushes / E-board), pin to top.",
       "Click the pin icon on any announcement to pin it (pinned ones bubble to the top).",
-      "Click Broadcast to send a text or email blast to everyone, brothers only, or rushes only — uses your Twilio + Resend creds.",
+      "Click Broadcast to send a text or email blast to everyone, brothers only, or rushes only - uses your Twilio + Resend creds.",
       "Edit / delete any announcement at any time.",
     ],
   },
   {
     icon: Settings,
-    title: "Site — content control",
+    title: "Site - content control",
     body: (
       <>
-        The <Link href="/admin/settings" className="text-phisig-red hover:underline">Site</Link> tab controls everything on the public homepage —
+        The <Link href="/admin/settings" className="text-phisig-red hover:underline">Site</Link> tab controls everything on the public homepage - 
         photos, copy, stats. No code, no Vercel.
       </>
     ),
@@ -210,7 +210,7 @@ const SECTIONS = [
       "About-section photo: change the slug + caption + crop position (top / center / lower) if a new photo crops weird.",
       "Hero copy: edit the eyebrow badge text and the subline paragraph.",
       "Stats: change the headline numbers (60+ brothers, 3.45 GPA, etc.).",
-      "Click Save when done — the sticky bar at the top tracks unsaved changes.",
+      "Click Save when done - the sticky bar at the top tracks unsaved changes.",
     ],
   },
 ];
@@ -223,9 +223,9 @@ const COMMON_TASKS = [
       "Brothers tab → click Invite brother.",
       "Pick channel: Email, Text, or Copy link.",
       "Type their name (optional) + their email or phone.",
-      "Click Send — they get a one-time link.",
+      "Click Send - they get a one-time link.",
       "They open it, fill out year/major/pledge class/headshot, and submit.",
-      "Their profile lands in the Brothers directory automatically — no manual data entry.",
+      "Their profile lands in the Brothers directory automatically - no manual data entry.",
     ],
   },
   {
@@ -233,7 +233,7 @@ const COMMON_TASKS = [
     title: "Drop the rush schedule",
     steps: [
       "Go to Events tab.",
-      "Click Add event for each rush event — fill in name, date/time, location, dress code, and category (Rush / Brotherhood / Social / etc.).",
+      "Click Add event for each rush event - fill in name, date/time, location, dress code, and category (Rush / Brotherhood / Social / etc.).",
       "Toggle Invite-only on the formal and Bid Night so they don't appear on the public page.",
       "Brothers will see all events (public + invite-only) on their calendar with RSVP buttons.",
       "Public homepage schedule updates instantly with each new event.",
@@ -267,7 +267,7 @@ const COMMON_TASKS = [
       "Go to Events.",
       "Click Attendance on the event card.",
       "Search by name and toggle check-marks for everyone who showed up.",
-      "Closes as you click — every toggle saves instantly.",
+      "Closes as you click - every toggle saves instantly.",
     ],
   },
   {
@@ -285,17 +285,17 @@ const COMMON_TASKS = [
     title: "Send the weekly chapter digest",
     steps: [
       "Go to Rush.",
-      "Click 'Weekly digest (JSON)' in the Jump-to row under the KPI tiles — opens the live snapshot.",
+      "Click 'Weekly digest (JSON)' in the Jump-to row under the KPI tiles - opens the live snapshot.",
       "Either copy the JSON into a Slack message, OR paste the highlights into the advisor's weekly email.",
       "Want it formatted? Click 'Brothers CSV' for the engagement roster (votes-cast / RSVPs / dues / last-seen) and paste into your meeting deck.",
-      "Pro tip: pin /api/admin/digest as a bookmark — it's auth-gated so only signed-in admins can open it.",
+      "Pro tip: pin /api/admin/digest as a bookmark - it's auth-gated so only signed-in admins can open it.",
     ],
   },
   {
     icon: ThumbsUp,
     title: "Decide bids fast (with consensus thresholds)",
     steps: [
-      "Open Rush — the dashboard now shows a green 'Strong consensus — bid candidates' panel.",
+      "Open Rush - the dashboard now shows a green 'Strong consensus - bid candidates' panel.",
       "Each PNM listed there has ≥5 votes with an average of +1 or higher. Confident bid.",
       "Click a name → opens the PNM profile with full vote breakdown so you can sanity-check.",
       "Change status to Bid Extended. Use the bulk Email button to send the bid template.",
@@ -310,7 +310,7 @@ const COMMON_TASKS = [
       "Go to Site tab.",
       "Paste the slug into Hero Tile 1 / 2 / 3 (or Spotlight, or About).",
       "Watch the preview update.",
-      "Click Save — homepage updates instantly.",
+      "Click Save - homepage updates instantly.",
     ],
   },
 ];
@@ -326,7 +326,7 @@ export default function HelpPage() {
           How to run the chapter from this site.
         </h1>
         <p className="mt-2 text-muted-foreground max-w-2xl">
-          Everything the rush chair, social chair, and e-board need to know — under 5 minutes of reading.
+          Everything the rush chair, social chair, and e-board need to know - under 5 minutes of reading.
           Bookmark this page.
         </p>
       </div>

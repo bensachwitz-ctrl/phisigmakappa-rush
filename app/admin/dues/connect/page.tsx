@@ -47,7 +47,7 @@ export default async function DuesPayoutsPage() {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Payouts</h1>
         <p className="mt-1.5 text-sm text-muted-foreground max-w-prose">
           Connect your chapter&apos;s bank account through Stripe to receive dues
-          and donation payments directly. This is optional — if you skip it,
+          and donation payments directly. This is optional - if you skip it,
           payments are collected centrally and reconciled to your chapter
           manually, exactly as before.
         </p>

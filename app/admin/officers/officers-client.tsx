@@ -531,7 +531,7 @@ export function OfficersClient({
                         </TableCell>
                         <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
                           {new Date(a.startDate).toLocaleDateString()}
-                          {a.endDate ? ` – ${new Date(a.endDate).toLocaleDateString()}` : " – present"}
+                          {a.endDate ? ` - ${new Date(a.endDate).toLocaleDateString()}` : " - present"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -568,7 +568,7 @@ export function OfficersClient({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-phisig-red" />
-              Edit permissions{editPosition ? ` — ${editPosition.title}` : ""}
+              Edit permissions{editPosition ? ` - ${editPosition.title}` : ""}
             </DialogTitle>
             <DialogDescription>
               Set the access level for each domain. “Read &amp; write” lets the officer change data;

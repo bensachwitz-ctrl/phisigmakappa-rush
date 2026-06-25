@@ -155,7 +155,7 @@ export function ExportsClient({
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">HQ Exports</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Generate national headquarters reports — membership, academic, financial, philanthropy, and the annual chapter report.
+              Generate national headquarters reports - membership, academic, financial, philanthropy, and the annual chapter report.
             </p>
           </div>
         </div>

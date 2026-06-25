@@ -268,7 +268,7 @@ export function OnboardingForm({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Set your sign-in</p>
               <p id="onb-pw-help" className="mt-1 text-xs text-muted-foreground">
-                Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Pick a password you'll remember — it's the only way back into your account.
+                Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Pick a password you'll remember - it's the only way back into your account.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -306,7 +306,7 @@ export function OnboardingForm({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Zero-Tolerance Anti-Hazing Agreement</p>
               <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-                Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history — never humiliation, intimidation, or harm.
+                Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history - never humiliation, intimidation, or harm.
               </p>
             </div>
             

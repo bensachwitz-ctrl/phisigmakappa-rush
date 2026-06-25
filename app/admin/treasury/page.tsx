@@ -99,7 +99,7 @@ export default async function TreasuryPage({
             Treasury
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track the chapter budget and clear reimbursements — plan vs. actual by category, and a queue for every receipt brothers submit.
+            Track the chapter budget and clear reimbursements - plan vs. actual by category, and a queue for every receipt brothers submit.
           </p>
         </div>
       </div>

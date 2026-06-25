@@ -245,7 +245,7 @@ function CreateElectionDialog({
               onChange={(e) => setAnonymous(e.target.checked)}
               className="h-4 w-4 rounded border-border"
             />
-            <span>Secret ballot (recommended — never records who voted for whom)</span>
+            <span>Secret ballot (recommended - never records who voted for whom)</span>
           </label>
 
           <DialogFooter>

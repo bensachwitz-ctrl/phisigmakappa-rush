@@ -251,7 +251,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
                       aria-hidden="true"
                     />
                     <span>
-                      E-board officers are brothers — use the Brother portal. Full
+                      E-board officers are brothers - use the Brother portal. Full
                       admin access lives behind it.
                     </span>
                   </p>
@@ -659,7 +659,7 @@ function EmptyState({
           <>
             We couldn&apos;t find a chapter matching
             {query ? <span className="font-medium"> “{query.trim()}”</span> : " that"}.
-            It might be coming soon — let&apos;s talk.
+            It might be coming soon - let&apos;s talk.
           </>
         ) : (
           <>Your chapter might be on the way. Tell us who you are and we&apos;ll get you set up.</>
@@ -688,7 +688,7 @@ function NewChapterCta() {
             New chapter? Launch your own site.
           </p>
           <p className="text-xs text-muted-foreground">
-            Your branded chapter platform, live the same day — free to start.
+            Your branded chapter platform, live the same day - free to start.
           </p>
         </div>
       </div>

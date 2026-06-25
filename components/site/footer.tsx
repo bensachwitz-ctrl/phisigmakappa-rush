@@ -78,7 +78,7 @@ export function PublicFooterView({ cfg }: { cfg: Record<string, string> }) {
           <p className="mt-3 text-xs text-muted-foreground max-w-sm">
             <span className="font-medium text-foreground">Chapter advisor:</span>{" "}
             {cfg["contact.advisorName"]}
-            {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} —{" "}
+            {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} - {" "}
             <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">{cfg["contact.advisorEmail"]}</a>.
           </p>
         </div>

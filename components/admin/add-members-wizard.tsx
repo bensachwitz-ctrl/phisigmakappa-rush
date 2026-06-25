@@ -78,7 +78,7 @@ type FieldDef = {
 
 const BROTHER_FIELDS: FieldDef[] = [
   { key: "name", label: "Full name", placeholder: "Mark Laughery", required: true, half: true },
-  { key: "position", label: "Position", placeholder: "President / Treasurer / —", half: true },
+  { key: "position", label: "Position", placeholder: "President / Treasurer / - ", half: true },
   { key: "email", label: "Email", placeholder: "name@email.edu", type: "email", half: true },
   { key: "phone", label: "Phone", placeholder: "(803) 555-0142", type: "tel", half: true },
   { key: "year", label: "Year", placeholder: "Junior", half: true },
@@ -191,7 +191,7 @@ function validateBulkRow(row: BulkRow, type: MemberType): string | null {
     const gy = String(row.graduationYear || "").trim();
     if (gy) {
       const n = Number(gy);
-      if (!Number.isInteger(n) || n < 1900 || n > 2100) return "Grad year 1900–2100";
+      if (!Number.isInteger(n) || n < 1900 || n > 2100) return "Grad year 1900 - 2100";
     }
   }
   return null;
@@ -270,7 +270,7 @@ export function AddMembersWizard({
     if (fd.type === "number" && v) {
       const n = Number(v);
       if (!Number.isInteger(n)) return "Enter a whole number";
-      if (fd.key === "graduationYear" && (n < 1900 || n > 2100)) return "Year 1900–2100";
+      if (fd.key === "graduationYear" && (n < 1900 || n > 2100)) return "Year 1900 - 2100";
     }
     return null;
   }
@@ -758,7 +758,7 @@ function BulkForm({
       {/* Paste box */}
       <div>
         <Label htmlFor="bulk-paste" className="mb-1 inline-block">
-          Paste rows — one per line ({cols.map((c) => c.label).join(", ")})
+          Paste rows - one per line ({cols.map((c) => c.label).join(", ")})
         </Label>
         <Textarea
           id="bulk-paste"
@@ -921,7 +921,7 @@ function ReviewStep({
                   <tr key={r._rid} className="border-t border-border">
                     {bulkColumns.map((c) => (
                       <td key={c.key} className="px-3 py-1.5 truncate max-w-[180px]">
-                        {String(r[c.key] ?? "") || <span className="text-muted-foreground">—</span>}
+                        {String(r[c.key] ?? "") || <span className="text-muted-foreground">-</span>}
                       </td>
                     ))}
                   </tr>

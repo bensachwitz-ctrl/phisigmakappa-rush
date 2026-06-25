@@ -361,7 +361,7 @@ export function RusheesManager({
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isRushActive 
-              ? `Track every prospective new member for ${chapterName} — filter, bulk-text, and send bids.`
+              ? `Track every prospective new member for ${chapterName} - filter, bulk-text, and send bids.`
               : `Manage associate members and coordinate the weekly sober driver night schedules for ${chapterName}.`
             }
           </p>
@@ -589,7 +589,7 @@ export function RusheesManager({
                               <p className="text-xs font-semibold">{m.year}</p>
                               <p className="text-[10px] text-muted-foreground">{m.major || "No major"}</p>
                             </td>
-                            <td className="py-3.5 px-4 text-xs font-semibold text-slate-600">{m.hometown || "—"}</td>
+                            <td className="py-3.5 px-4 text-xs font-semibold text-slate-600">{m.hometown || "-"}</td>
                             <td className="py-3.5 px-4 text-center">
                               {onDuty ? (
                                 <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0 gap-1 select-none">
@@ -764,8 +764,8 @@ function RusheeTable({
                   </div>
                 </td>
                 <td className="py-3 px-4 text-sm">
-                  <p>{r.year || <span className="text-muted-foreground">—</span>}</p>
-                  <p className="text-xs text-muted-foreground">{r.major || "—"}</p>
+                  <p>{r.year || <span className="text-muted-foreground">-</span>}</p>
+                  <p className="text-xs text-muted-foreground">{r.major || "-"}</p>
                 </td>
                 <td className="py-3 px-4 text-sm tabular-nums">{r.phone}</td>
                 <td className="py-3 px-4 text-center font-medium">
@@ -781,7 +781,7 @@ function RusheeTable({
                       {r.lastImpressionTone}
                     </span>
                   ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">-</span>
                   )}
                 </td>
                 <td className="py-3 px-4">
@@ -941,7 +941,7 @@ function AddPnmDialog({
         <DialogHeader>
           <DialogTitle>Add a PNM</DialogTitle>
           <DialogDescription>
-            Add someone manually — they'll show up alongside PNMs who signed up via the public form.
+            Add someone manually - they'll show up alongside PNMs who signed up via the public form.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
@@ -1045,7 +1045,7 @@ function BulkTextSheet({
       if (!res.ok || !json.ok) throw new Error(json?.error || "Send failed");
       push({
         title: `Sent ${json.sent ?? ids.length}`,
-        description: json.mode === "mock" ? "Twilio not configured — logged only." : undefined,
+        description: json.mode === "mock" ? "Twilio not configured - logged only." : undefined,
         variant: "success",
       });
       onOpenChange(false);
@@ -1063,7 +1063,7 @@ function BulkTextSheet({
         <DialogHeader>
           <DialogTitle>Bulk text PNMs</DialogTitle>
           <DialogDescription>
-            Pick recipients and write a short message — we'll personalize with their first name.
+            Pick recipients and write a short message - we'll personalize with their first name.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
@@ -1072,11 +1072,11 @@ function BulkTextSheet({
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Hey — heads up, brotherhood event tonight at 8 at the house. Hope to see you there."
+              placeholder="Hey - heads up, brotherhood event tonight at 8 at the house. Hope to see you there."
               rows={3}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              We'll prefix with "Hey {`{first name}`} —" automatically.
+              We'll prefix with "Hey {`{first name}`} - " automatically.
             </p>
           </div>
           <div className="flex items-center justify-between gap-3">

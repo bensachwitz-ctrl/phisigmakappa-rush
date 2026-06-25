@@ -100,7 +100,7 @@ export function EventQrDialog({
         <div className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
             PNMs scan this at <span className="font-medium text-foreground">{eventName}</span> to
-            check in — returning faces by phone, new ones fill a quick form and
+            check in - returning faces by phone, new ones fill a quick form and
             drop into your pipeline.
           </p>
 

@@ -246,7 +246,7 @@ function PreviewElections() {
       {/* Anonymity reassurance line — the load-bearing promise of the feature. */}
       <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/[0.06] px-2.5 py-1.5">
         <IconShieldCheck className="h-3.5 w-3.5 shrink-0 text-blue-700" />
-        <span className="text-[10px] font-medium text-blue-800">Secret ballot — votes aren&apos;t linked to voters</span>
+        <span className="text-[10px] font-medium text-blue-800">Secret ballot - votes aren&apos;t linked to voters</span>
       </div>
 
       <p className="mt-2 flex items-center gap-1.5 text-[9px] font-medium italic text-blue-600/90"><IconCursorTap className="h-3 w-3 shrink-0 not-italic" /><span>Tap a candidate row below to cast a simulated anonymous vote.</span></p>
@@ -303,7 +303,7 @@ function PreviewElections() {
       </div>
       <p className="mt-2.5 text-[10px] leading-relaxed text-muted-foreground">
         {userVote !== null
-          ? "You cast a vote! After voting closes, one tap seats every winner straight into their officer role — no manual data entry."
+          ? "You cast a vote! After voting closes, one tap seats every winner straight into their officer role - no manual data entry."
           : "Voting closed → one tap seated the winner straight into the President role."}
       </p>
     </div>
@@ -387,9 +387,9 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-recruitment",
     eyebrow: "Recruitment",
     title: "Recruitment pipeline",
-    outcome: "Run your whole rush from one board — not five group chats and a spreadsheet.",
-    desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS — your whole recruitment cycle in one board.",
-    long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and you broadcast the schedule to rushees over TCPA-compliant SMS — with double opt-in consent captured for you.",
+    outcome: "Run your whole rush from one board - not five group chats and a spreadsheet.",
+    desc: "A Kanban rush funnel, QR check-in for PNMs, anonymous brother voting, and double-opt-in SMS - your whole recruitment cycle in one board.",
+    long: "Run every recruitment cycle from a single drag-and-drop board. PNMs check in at events with a QR code, brothers vote anonymously, and you broadcast the schedule to rushees over TCPA-compliant SMS - with double opt-in consent captured for you.",
     bullets: [
       "Drag-and-drop Kanban funnel from interest → bid",
       "QR check-in that builds the PNM list automatically",
@@ -404,11 +404,11 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     eyebrow: "Finance",
     title: "Online dues",
     outcome: "Get paid on time without nagging anyone in the group chat.",
-    desc: "Stripe-powered dues with treasurer payouts and a live paid/unpaid ledger — collected without the group-chat nagging.",
+    desc: "Stripe-powered dues with treasurer payouts and a live paid/unpaid ledger - collected without the group-chat nagging.",
     long: "Stop chasing dues in the group chat. Members pay by card, money lands straight in your chapter's connected Stripe account, and every payment posts to your ledger so you always know who's paid. When a few stragglers are left, send a one-tap reminder to just the members who haven't paid yet.",
     bullets: [
       "Card payments via Stripe Connect, paid out to your account",
-      "Live paid/unpaid ledger — always know who owes what",
+      "Live paid/unpaid ledger - always know who owes what",
       "One-tap reminders to members who haven't paid",
       "No Greekstack markup on top of Stripe's standard rate",
     ],
@@ -420,8 +420,8 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     eyebrow: "Treasury",
     title: "Treasury & budgets",
     outcome: "Hand the next treasurer clean books instead of a shoebox of receipts.",
-    desc: "Chapter budgets and expense tracking in one place — build a semester budget by line item and watch spend track against it.",
-    long: "Give your treasurer a real back office. Build a semester budget by line item, log and categorize expenses, and watch spend track against budget — so the books stay current and you can hand the next treasurer a clean term instead of a shoebox of receipts.",
+    desc: "Chapter budgets and expense tracking in one place - build a semester budget by line item and watch spend track against it.",
+    long: "Give your treasurer a real back office. Build a semester budget by line item, log and categorize expenses, and watch spend track against budget - so the books stay current and you can hand the next treasurer a clean term instead of a shoebox of receipts.",
     bullets: [
       "Line-item semester budgets with logged spend per line",
       "Categorized expense logging + receipts",
@@ -435,7 +435,7 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-events",
     eyebrow: "Calendar",
     title: "Events & calendar",
-    outcome: "Know who's actually coming — and who hit their required hours.",
+    outcome: "Know who's actually coming - and who hit their required hours.",
     desc: "Meetings, socials, and service hours with RSVP, roster check-in, and one-click Google Calendar sync.",
     long: "Every meeting, social, mixer, and service event in one shared calendar. Members RSVP, you take attendance with a tap, and required-event tracking rolls up automatically. One click syncs the whole calendar to Google, iCloud, or Outlook.",
     bullets: [
@@ -452,7 +452,7 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     eyebrow: "Permissions",
     title: "Officer roles & access",
     outcome: "Scope each officer's access to their role, and hand the board off cleanly each year.",
-    desc: "Role-based access for President, Treasurer, Recruitment, Risk, and more — preset permissions you can tailor per officer.",
+    desc: "Role-based access for President, Treasurer, Recruitment, Risk, and more - preset permissions you can tailor per officer.",
     long: "Assign each officer a preset role (or tailor the per-domain permissions), and the chapter portal scopes what they can read and write. Permissions hand off cleanly to a new e-board each year, with a full audit trail of officer actions.",
     bullets: [
       "Preset roles: President, Treasurer, Recruitment, Risk & more",
@@ -467,11 +467,11 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-officers",
     eyebrow: "Elections",
     title: "Officer elections",
-    outcome: "Run a clean, secret-ballot election — then seat every winner into their role with one tap.",
+    outcome: "Run a clean, secret-ballot election - then seat every winner into their role with one tap.",
     desc: "Run secret-ballot officer elections right in the app. Ballots are anonymous, votes tally live, and after voting closes one tap seats the winners into their officer roles.",
-    long: "Hold your whole officer election in one place. Build the ballot, open voting to active members, and let votes tally in real time. Ballots are anonymous by design — the system never stores who voted for whom. When voting closes, review the tally and tap once to seat every winner straight into their officer role, with access and permissions applied for you — no spreadsheet, no manual data entry.",
+    long: "Hold your whole officer election in one place. Build the ballot, open voting to active members, and let votes tally in real time. Ballots are anonymous by design - the system never stores who voted for whom. When voting closes, review the tally and tap once to seat every winner straight into their officer role, with access and permissions applied for you - no spreadsheet, no manual data entry.",
     bullets: [
-      "Truly secret ballot — voter identity is never tied to a vote",
+      "Truly secret ballot - voter identity is never tied to a vote",
       "Live tallies with a clear winner per seat (ties flagged, never guessed)",
       "One tap seats every winner into their officer role (ties & zero-ballot seats skipped)",
       "Full audit trail of the election, kept separate from how anyone voted",
@@ -483,12 +483,12 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-announcements",
     eyebrow: "Community",
     title: "Chapter announcements",
-    outcome: "Get chapter news to everyone in one place — not buried in a group chat.",
-    desc: "Officer-broadcast announcements built right in — post once and the whole chapter sees it on their dashboard, tied to your roster.",
-    long: "Keep the whole chapter informed from one place. Officers post announcements that land on every member's dashboard — pinned when it matters — tied to your actual roster, so the right people always see the latest chapter news without digging through a side group chat.",
+    outcome: "Get chapter news to everyone in one place - not buried in a group chat.",
+    desc: "Officer-broadcast announcements built right in - post once and the whole chapter sees it on their dashboard, tied to your roster.",
+    long: "Keep the whole chapter informed from one place. Officers post announcements that land on every member's dashboard - pinned when it matters - tied to your actual roster, so the right people always see the latest chapter news without digging through a side group chat.",
     bullets: [
       "Officer-broadcast announcements with pinning",
-      "Tied to your roster — new members see them automatically",
+      "Tied to your roster - new members see them automatically",
       "Lands on every member's portal dashboard",
       "Posted by officers, read on web or mobile",
     ],
@@ -499,9 +499,9 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "gl-brotherhood",
     eyebrow: "Members",
     title: "Members & roster",
-    outcome: "One living roster — every member's profile and contact info, always current.",
-    desc: "A searchable chapter directory with actives and alumni views, member profiles, and a built-in careers board — the single source of truth your officers share.",
-    long: "Retire the roster spreadsheet. Every member lives in one searchable directory — actives and alumni side by side — with profiles, contact info, and standing always current. New members are added in seconds, and the built-in careers board turns your network into real jobs and internships.",
+    outcome: "One living roster - every member's profile and contact info, always current.",
+    desc: "A searchable chapter directory with actives and alumni views, member profiles, and a built-in careers board - the single source of truth your officers share.",
+    long: "Retire the roster spreadsheet. Every member lives in one searchable directory - actives and alumni side by side - with profiles, contact info, and standing always current. New members are added in seconds, and the built-in careers board turns your network into real jobs and internships.",
     bullets: [
       "Searchable directory of actives and alumni",
       "Member profiles with contact info and standing",
@@ -515,9 +515,9 @@ const FEATURES: (FeatureDetail & { outcome: string })[] = [
     img: "feat-branding",
     eyebrow: "Branding",
     title: "White-label branding",
-    outcome: "It looks like your chapter's own site — your letters, colors, and subdomain.",
-    desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds — no rebuild, no developer.",
-    long: "It's your chapter's platform, not ours. Drop in your letters, colors, and crest and the entire site — every page, email, member portal, and your own subdomain — re-skins instantly. No rebuild, no agency, no developer required.",
+    outcome: "It looks like your chapter's own site - your letters, colors, and subdomain.",
+    desc: "Your letters, colors, crest, and custom subdomain. The whole platform re-skins to your chapter in seconds - no rebuild, no developer.",
+    long: "It's your chapter's platform, not ours. Drop in your letters, colors, and crest and the entire site - every page, email, member portal, and your own subdomain - re-skins instantly. No rebuild, no agency, no developer required.",
     bullets: [
       "Your letters, colors & crest applied site-wide",
       "Custom subdomain for your chapter",
@@ -556,14 +556,14 @@ const LAUNCH_DAY: { icon: GsIcon; img: string; eyebrow: string; title: string; d
     img: "gl-bid",
     eyebrow: "Instant demo",
     title: "See your chapter in one click",
-    desc: "Load realistic sample data — PNMs, dues, events, and members — to explore everything populated, then clear it with one click before you go live. No throwaway typing to kick the tires.",
+    desc: "Load realistic sample data - PNMs, dues, events, and members - to explore everything populated, then clear it with one click before you go live. No throwaway typing to kick the tires.",
   },
   {
     icon: IconCheckCircle,
     img: "feat-branding",
     eyebrow: "Guided setup",
     title: "Live the same day",
-    desc: "A single guided checklist walks you from sign-up to a fully-branded, live site the same day — so a non-technical officer can get the whole chapter set up on day one.",
+    desc: "A single guided checklist walks you from sign-up to a fully-branded, live site the same day - so a non-technical officer can get the whole chapter set up on day one.",
   },
 ];
 
@@ -573,7 +573,7 @@ const STEPS: { icon: GsIcon; img: string; step: string; title: string; desc: str
     img: "gl-bid",
     step: "01",
     title: "Sign up",
-    desc: "Create your account and claim a chapter subdomain. Your first month is free — set up in a minute, no card required to launch.",
+    desc: "Create your account and claim a chapter subdomain. Your first month is free - set up in a minute, no card required to launch.",
   },
   {
     icon: IconWhiteLabel,
@@ -605,7 +605,7 @@ const STATS: {
   { value: 30, suffix: "-day free trial", label: "To get started (card required for subscription plans)" },
   { value: 10, suffix: " tools", label: "Recruitment to alumni, in one login" },
   { display: "Same-day", label: "From sign-up to a live, branded site" },
-  { value: 0, prefix: "$", label: "Per-seat fees — unlimited members & officers" },
+  { value: 0, prefix: "$", label: "Per-seat fees - unlimited members & officers" },
 ];
 
 /* The value props the hero headline types through before settling on the
@@ -641,7 +641,7 @@ const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
   { icon: IconPayout, label: "Stripe-powered payouts" },
   { icon: IconSecurity, label: "Tenant-isolated data" },
   { icon: IconShieldCheck, label: "TCPA / A2P 10DLC compliant" },
-  { icon: IconUnlimited, label: "Unlimited members — never per-seat" },
+  { icon: IconUnlimited, label: "Unlimited members - never per-seat" },
   { icon: IconSubdomain, label: "Custom subdomain per chapter" },
   { icon: IconMembers, label: "Fraternities & sororities" },
   { icon: IconRoles, label: "IFC · Panhellenic · NPHC" },
@@ -699,7 +699,7 @@ const PLANS: Plan[] = [
     priceNote: "1.5% then 3% on dues collected",
     tagline: "Waive all monthly platform fees and pay only as you collect.",
     highlights: [
-      "No monthly platform fee — ever",
+      "No monthly platform fee - ever",
       "1.5% fee on your first dues cycle",
       "3% standard fee on subsequent cycles",
       "No setup cost & no card required to start",
@@ -719,7 +719,7 @@ const PLANS: Plan[] = [
       "Free for the first month",
       "$50/month after the first month",
       "$200 each rush cycle",
-      "Unlimited members & officers — never per-seat",
+      "Unlimited members & officers - never per-seat",
     ],
     billing: {
       monthly: {
@@ -751,23 +751,23 @@ const PLANS: Plan[] = [
       "Custom pricing built around what you actually need",
     ],
     cta: { label: "Talk to our team about a custom build", href: "/contact#book" },
-    fineprint: "We scope it with you first — no surprise fees",
+    fineprint: "We scope it with you first - no surprise fees",
   },
 ];
 
 /* What EVERY method includes — the load-bearing capabilities a buyer checks for.
    Shown once beneath the three cards so the comparison stays clean. */
 const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
-  { icon: IconRecruitment, label: "Recruitment pipeline — QR check-in, Kanban funnel & anonymous voting" },
+  { icon: IconRecruitment, label: "Recruitment pipeline - QR check-in, Kanban funnel & anonymous voting" },
   { icon: IconPayout, label: "Online dues with Stripe Connect treasurer payouts" },
-  { icon: IconTreasury, label: "Treasury — budgets, ledgers & expense tracking" },
+  { icon: IconTreasury, label: "Treasury - budgets, ledgers & expense tracking" },
   { icon: IconEvents, label: "Events, meetings & calendar with RSVP and roster check-in" },
   { icon: IconMembers, label: "Member portal & officer role-based access (RBAC)" },
-  { icon: IconRoles, label: "Secret-ballot officer elections — seat every winner with one tap" },
+  { icon: IconRoles, label: "Secret-ballot officer elections - seat every winner with one tap" },
   { icon: IconComms, label: "Chapter announcements broadcast to your whole roster" },
-  { icon: IconWhiteLabel, label: "White-label branding — your letters, colors & subdomain" },
+  { icon: IconWhiteLabel, label: "White-label branding - your letters, colors & subdomain" },
   { icon: IconAlumniNetwork, label: "Alumni directory & Stripe donation flows" },
-  { icon: IconUnlimited, label: "Unlimited members & officers — never priced per seat" },
+  { icon: IconUnlimited, label: "Unlimited members & officers - never priced per seat" },
   { icon: IconShieldCheck, label: "TCPA-compliant SMS, isolated tenant data & no-markup processing" },
 ];
 
@@ -777,35 +777,35 @@ const PLAN_INCLUDES: { icon: GsIcon; label: string }[] = [
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Is our chapter's data isolated from other chapters?",
-    a: "Yes. Every chapter gets its own isolated database schema — your roster, dues records, and recruitment data are walled off from every other chapter on the platform. Officer access is further scoped by role-based permissions, so a Treasurer and a Recruitment chair only ever see what their job requires.",
+    a: "Yes. Every chapter gets its own isolated database schema - your roster, dues records, and recruitment data are walled off from every other chapter on the platform. Officer access is further scoped by role-based permissions, so a Treasurer and a Recruitment chair only ever see what their job requires.",
   },
   {
     q: "How do you handle TCPA and A2P 10DLC SMS compliance?",
-    a: "Compliance is built in, not bolted on. Every PNM opt-in is double opt-in with a timestamped consent receipt (verbatim ATDS language, IP, and user-agent stamped) for the legally-required 4-year recordkeeping. We enforce CTIA STOP/HELP/START keyword handling and an 8am–9pm recipient-local quiet-hours gate so no one gets paged at 3am. A2P 10DLC brand registration is handled at the platform level so individual chapters don't each file with the carriers.",
+    a: "Compliance is built in, not bolted on. Every PNM opt-in is double opt-in with a timestamped consent receipt (verbatim ATDS language, IP, and user-agent stamped) for the legally-required 4-year recordkeeping. We enforce CTIA STOP/HELP/START keyword handling and an 8am - 9pm recipient-local quiet-hours gate so no one gets paged at 3am. A2P 10DLC brand registration is handled at the platform level so individual chapters don't each file with the carriers.",
   },
   {
     q: "What does it cost to process dues and donations?",
-    a: "First month free, then $50/mo + $200 per rush cycle — or $800/year (rush fees included). Subscription plans require card setup at signup to start your free trial. Alternatively, you can choose our Dues-Share plan to waive the monthly platform fee entirely, paying a simple percentage (1.5% intro, then 3%) on dues collected online (no card required to sign up). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly — we don't add any platform markup.",
+    a: "First month free, then $50/mo + $200 per rush cycle - or $800/year (rush fees included). Subscription plans require card setup at signup to start your free trial. Alternatively, you can choose our Dues-Share plan to waive the monthly platform fee entirely, paying a simple percentage (1.5% intro, then 3%) on dues collected online (no card required to sign up). Card processing runs on Stripe at its standard rate (currently 2.9% + 30¢ per transaction) directly - we don't add any platform markup.",
   },
   {
     q: "How does the white-label branding actually work?",
-    a: "You drop in your letters, colors, and crest from the admin panel and the entire platform re-skins to your chapter in seconds — every page, email, member portal, and your own custom subdomain. There's no rebuild and no developer required; it's your brand front-to-back, never ours.",
+    a: "You drop in your letters, colors, and crest from the admin panel and the entire platform re-skins to your chapter in seconds - every page, email, member portal, and your own custom subdomain. There's no rebuild and no developer required; it's your brand front-to-back, never ours.",
   },
   {
     q: "How long does onboarding and migration take?",
-    a: "You're live in minutes, not months. Create your account, claim a subdomain, brand it, and start collecting PNMs and dues the same day — no install, no design agency, no setup fee. Your first sign-in walks you through a short checklist so a non-technical officer can get the chapter fully set up on day one.",
+    a: "You're live in minutes, not months. Create your account, claim a subdomain, brand it, and start collecting PNMs and dues the same day - no install, no design agency, no setup fee. Your first sign-in walks you through a short checklist so a non-technical officer can get the chapter fully set up on day one.",
   },
   {
     q: "Can we cancel anytime, and do we keep our data?",
-    a: "Yes to both. There are no contracts and no cancellation fees — cancel anytime from the admin panel. Your data is always yours: export your roster, PNMs (with vote sums and attendance), and dues records to CSV whenever you want, including on the way out.",
+    a: "Yes to both. There are no contracts and no cancellation fees - cancel anytime from the admin panel. Your data is always yours: export your roster, PNMs (with vote sums and attendance), and dues records to CSV whenever you want, including on the way out.",
   },
   {
     q: "Is Greekstack for fraternities or sororities?",
-    a: "Both. The platform is built for any Greek-letter organization — fraternities and sororities alike, across IFC, Panhellenic, and NPHC councils. Recruitment, dues, events, and member management work identically regardless of council, and the white-label branding makes it unmistakably your chapter.",
+    a: "Both. The platform is built for any Greek-letter organization - fraternities and sororities alike, across IFC, Panhellenic, and NPHC councils. Recruitment, dues, events, and member management work identically regardless of council, and the white-label branding makes it unmistakably your chapter.",
   },
   {
     q: "Do I have to pay anything to start?",
-    a: "No. Your first month is completely free. Paid plans require setting up a card at signup, but you won't be charged today and can cancel at any time. It includes the full product — every feature, unlimited members and officers. Alternatively, choose our Dues-Share plan which requires no card to start.",
+    a: "No. Your first month is completely free. Paid plans require setting up a card at signup, but you won't be charged today and can cancel at any time. It includes the full product - every feature, unlimited members and officers. Alternatively, choose our Dues-Share plan which requires no card to start.",
   },
 ];
 
@@ -1192,7 +1192,7 @@ function SiteNav() {
             <ShimmerBorder rounded="rounded-md">
               <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap px-3.5">
                 <Link href="/onboard" className="group/btn font-bold">
-                  <span className="hidden 2xl:inline">Launch chapter — free</span>
+                  <span className="hidden 2xl:inline">Launch chapter - free</span>
                   <span className="2xl:hidden">Launch free</span>
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5 ml-1.5 inline-flex" />
                 </Link>
@@ -1201,7 +1201,7 @@ function SiteNav() {
           </Magnetic>
           <ShimmerBorder rounded="rounded-md" className="md:hidden">
             <Button asChild variant="platform" size="sm" className="gs-sheen whitespace-nowrap">
-              <Link href="/onboard">Launch — free</Link>
+              <Link href="/onboard">Launch - free</Link>
             </Button>
           </ShimmerBorder>
 
@@ -1334,7 +1334,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
             <div className="space-y-2.5 border-t border-border px-5 py-5">
               <Button asChild variant="platform" size="lg" className="gs-sheen w-full">
                 <Link href="/onboard" onClick={onClose} className="group/btn">
-                  Launch your chapter — free
+                  Launch your chapter - free
                   <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                 </Link>
               </Button>
@@ -1425,7 +1425,7 @@ function Hero() {
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-foreground/80 animate-slide-up [animation-delay:200ms] sm:text-lg">
             Stop chasing dues in the group chat. Greekstack runs recruitment, online dues,
-            events, officer access, and alumni giving on one branded site — re-skinned to your
+            events, officer access, and alumni giving on one branded site - re-skinned to your
             letters and colors, live the same day.
           </p>
 
@@ -1466,7 +1466,7 @@ function Hero() {
               <ShimmerBorder rounded="rounded-xl" className="w-full">
                 <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full max-[400px]:px-5">
                   <Link href="/onboard" className="group/btn">
-                    Launch your chapter — free
+                    Launch your chapter - free
                     <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </Link>
                 </Button>
@@ -1509,7 +1509,7 @@ function Hero() {
               (the old duplicate links were folded into this single CTA).
               Anchored, crawlable, AA-contrast. */}
           <p className="mt-3 text-sm text-foreground/80 animate-slide-up [animation-delay:400ms]">
-            First month free, or waive fees with Dues-Share —{" "}
+            First month free, or waive fees with Dues-Share - {" "}
             <Link href="#pricing" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               see pricing
             </Link>
@@ -1796,7 +1796,7 @@ function GlyphMarquee() {
       className="border-y border-border bg-card/40 py-7"
     >
       <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        Built for every council — fraternities &amp; sororities
+        Built for every council - fraternities &amp; sororities
       </p>
       <Marquee
         duration={42}
@@ -1841,7 +1841,7 @@ function DemoShowcase() {
             Watch it become <span className="gs-gradient-text">your chapter</span>
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
-            Pick your school and letters and the entire platform re-skins to your colors —
+            Pick your school and letters and the entire platform re-skins to your colors - 
             here&apos;s that moment on loop. Then open the real demo and do it yourself.
           </p>
         </Reveal>
@@ -1857,19 +1857,19 @@ function DemoShowcase() {
             <ShimmerBorder rounded="rounded-xl" className="w-full">
               <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine w-full">
                 <Link href="/app?demo=true&pick=1" className="group/btn">
-                  Try it with your chapter<span className="hidden min-[480px]:inline"> — free demo</span>
+                  Try it with your chapter<span className="hidden min-[480px]:inline"> - free demo</span>
                   <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                 </Link>
               </Button>
             </ShimmerBorder>
           </Magnetic>
           <Button asChild variant="outline" size="lg" className="w-full border-blue-500/30 font-semibold text-blue-700 hover:bg-blue-50/50 hover:text-blue-800">
-            <Link href="/onboard">Skip ahead — launch for real</Link>
+            <Link href="/onboard">Skip ahead - launch for real</Link>
           </Button>
         </Reveal>
         <Reveal delay={160} className="mt-4 text-center">
           <p className="text-xs text-muted-foreground">
-            No sign-up, no email — the demo opens on the chapter picker so the first thing you see
+            No sign-up, no email - the demo opens on the chapter picker so the first thing you see
             is <span className="font-semibold text-foreground/80">your</span> letters.
           </p>
         </Reveal>
@@ -1912,7 +1912,7 @@ function Features() {
             One platform. Every part of <span className="gs-gradient-text">chapter operations</span>.
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
-            Recruitment to alumni giving — the tools your officers actually need, in a single
+            Recruitment to alumni giving - the tools your officers actually need, in a single
             branded system instead of a dozen spreadsheets and group chats.
           </p>
           <p className="mt-4 inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/[0.06] px-4 py-1.5 text-xs font-medium text-blue-800">
@@ -1989,7 +1989,7 @@ function Features() {
             href="/app?demo=true"
             className="group inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition-colors hover:text-blue-800"
           >
-            Every feature above is live in the interactive demo — try them
+            Every feature above is live in the interactive demo - try them
             <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
         </Reveal>
@@ -2061,7 +2061,7 @@ function FeatureCard({
       role="button"
       tabIndex={0}
       aria-haspopup="dialog"
-      aria-label={`${title} — see details and an in-app preview`}
+      aria-label={`${title} - see details and an in-app preview`}
       // Keyboard path: Enter/Space synthesize a click, which bubbles up to the
       // wrapping <Tilt3DCard onClick> — so the modal opens without a mouse.
       onKeyDown={(e) => {
@@ -2176,7 +2176,7 @@ function BeforeAfter() {
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
             Stop stitching together a spreadsheet, a group chat, and a payment app every semester.
-            Greekstack does the job of all of them — on one branded site your whole chapter logs into.
+            Greekstack does the job of all of them - on one branded site your whole chapter logs into.
           </p>
         </Reveal>
 
@@ -2195,7 +2195,7 @@ function BeforeAfter() {
                 Today
               </span>
               <p className="mt-3 text-sm font-medium text-muted-foreground">
-                A different login for every job — nothing talks to anything else.
+                A different login for every job - nothing talks to anything else.
               </p>
               {/* Scattered, desaturated chips. Each is slightly tilted + grayscale
                   so the cluster reads as "messy", and lifts level on hover. */}
@@ -2289,7 +2289,7 @@ function BeforeAfter() {
                 </ul>
                 <p className="relative mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-blue-800">
                   <IconUnlimited className="h-4 w-4 text-blue-700" />
-                  Your letters, your colors, your subdomain — never priced per seat.
+                  Your letters, your colors, your subdomain - never priced per seat.
                 </p>
               </div>
             </ShimmerBorder>
@@ -2302,7 +2302,7 @@ function BeforeAfter() {
           <Magnetic>
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
-                Make the switch — first month free
+                Make the switch - first month free
                 <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -2349,7 +2349,7 @@ function Comparison() {
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
             Every tool below is a job your chapter already does. Greek Stack includes all of them on
-            one branded site — instead of a stack of separate apps that don&apos;t talk to each other.
+            one branded site - instead of a stack of separate apps that don&apos;t talk to each other.
           </p>
         </Reveal>
 
@@ -2417,7 +2417,7 @@ function Comparison() {
               <p className="border-t border-border/60 bg-card/40 px-4 py-3 text-center text-[11px] leading-relaxed text-muted-foreground sm:px-6">
                 <span className="font-semibold text-amber-700">$</span> = a separate app, often its own paid
                 subscription. <IconClose className="inline h-3 w-3 align-[-1px] text-muted-foreground/70" /> = no
-                good standalone tool — chapters just go without. Greek Stack replaces the whole stack for one price.
+                good standalone tool - chapters just go without. Greek Stack replaces the whole stack for one price.
               </p>
             </div>
           </ShimmerBorder>
@@ -2427,7 +2427,7 @@ function Comparison() {
           <Magnetic>
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
-                Get everything in one place — first month free
+                Get everything in one place - first month free
                 <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -2476,7 +2476,7 @@ function HowItWorks() {
                 <span className="gs-gradient-text">instantly themed</span>
               </h3>
               <p className="mt-1 text-sm leading-relaxed text-foreground/80">
-                Search your campus and choose your chapter — Greekstack auto-applies your school&apos;s
+                Search your campus and choose your chapter - Greekstack auto-applies your school&apos;s
                 colors and your letters across the entire site. Fine-tune any shade after, or leave it
                 exactly as it lands.
               </p>
@@ -2523,7 +2523,7 @@ function HowItWorks() {
           <Magnetic>
             <Button asChild variant="platform" size="lg" className="gs-sheen cta-shine">
               <Link href="/onboard">
-                Launch your chapter — free
+                Launch your chapter - free
                 <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>
@@ -2754,7 +2754,7 @@ function Pricing() {
             <span className="gs-gradient-text">Waive fees or start free.</span> Then pick what fits.
           </h2>
           <p className="mt-4 text-pretty text-base text-foreground/80">
-            Waive the monthly platform fee entirely by choosing our Dues-Share plan, or start free for a month on the Platform plan ($50/month + $200 per rush cycle, or $800/year annual). Same product, same support, every feature — unlimited members, no per-seat math.
+            Waive the monthly platform fee entirely by choosing our Dues-Share plan, or start free for a month on the Platform plan ($50/month + $200 per rush cycle, or $800/year annual). Same product, same support, every feature - unlimited members, no per-seat math.
           </p>
         </Reveal>
 
@@ -2834,7 +2834,7 @@ function Pricing() {
             >
               Explore the full app in the demo
             </Link>{" "}
-            — no sign-up.
+ - no sign-up.
           </p>
         </Reveal>
       </div>
@@ -3030,8 +3030,8 @@ function Faq() {
             Everything you need to know before you <span className="gs-gradient-text">go live</span>
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
-            The real questions chapter officers ask — security, compliance, fees, and getting
-            started. Still curious? Your first month is free — launch and see it yourself.
+            The real questions chapter officers ask - security, compliance, fees, and getting
+            started. Still curious? Your first month is free - launch and see it yourself.
           </p>
         </Reveal>
 
@@ -3215,7 +3215,7 @@ function Proof() {
             Built to make officers&apos; lives easier
           </h2>
           <p className="mt-4 text-pretty text-foreground/80">
-            No setup fee, no per-seat math, no contracts — here&apos;s what every chapter starts with.
+            No setup fee, no per-seat math, no contracts - here&apos;s what every chapter starts with.
           </p>
         </Reveal>
 
@@ -3289,7 +3289,7 @@ function Proof() {
             <blockquote className="relative mx-auto mt-4 max-w-2xl text-pretty font-serif text-xl font-medium leading-relaxed text-foreground sm:text-2xl">
               &ldquo;I built Greekstack because I got tired of running rush out of a spreadsheet and a
               group chat. It&apos;s new, and I&apos;d rather earn your chapter than fake a wall of logos.
-              Talk to me directly before you commit — I&apos;ll show you exactly how it&apos;d work for you.&rdquo;
+              Talk to me directly before you commit - I&apos;ll show you exactly how it&apos;d work for you.&rdquo;
             </blockquote>
             {/* Gold meander rule — the signature line. */}
             <GreekKey className="relative mx-auto mt-6" width="w-24" gold />
@@ -3311,7 +3311,7 @@ function Proof() {
                 href="/app?demo=true"
                 className="group inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-blue-700"
               >
-                Or judge the product yourself — open the demo
+                Or judge the product yourself - open the demo
                 <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
             </div>
@@ -3364,7 +3364,7 @@ function FinalCta() {
                 <ShimmerBorder rounded="rounded-xl" className="w-full">
                   <Button asChild variant="platform" size="xl" className="gs-sheen cta-shine w-full max-[400px]:px-5">
                     <Link href="/onboard" className="group/btn">
-                      Launch your chapter — free
+                      Launch your chapter - free
                       <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                     </Link>
                   </Button>
@@ -3393,7 +3393,7 @@ function FinalCta() {
               >
                 Talk to sales
               </Link>{" "}
-              — a real person (the owner) answers.
+ - a real person (the owner) answers.
             </p>
           </Reveal>
         </AnimatedBackground>
@@ -3470,7 +3470,7 @@ function SiteFooter() {
             </p>
             <Button asChild variant="platform" size="sm" className="gs-sheen">
               <Link href="/onboard" className="group/btn">
-                Launch your chapter — free
+                Launch your chapter - free
                 <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
               </Link>
             </Button>
@@ -3535,7 +3535,7 @@ function SiteFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} Greekstack. The white-label Greek-life platform.</p>
-          <p>Built for fraternities &amp; sororities — IFC · Panhellenic · NPHC.</p>
+          <p>Built for fraternities &amp; sororities - IFC · Panhellenic · NPHC.</p>
         </div>
       </div>
     </footer>

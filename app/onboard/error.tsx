@@ -50,7 +50,7 @@ export default function OnboardError({
           Let&apos;s try that again.
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-300">
-          Something glitched while setting up your chapter — your progress wasn&apos;t lost.
+          Something glitched while setting up your chapter - your progress wasn&apos;t lost.
           Retry below, or grab a hand from Ben and he&apos;ll launch it with you.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">

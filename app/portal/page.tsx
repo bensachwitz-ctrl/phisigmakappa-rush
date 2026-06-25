@@ -29,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
   return {
-    title: `${id.greekLetters} Portal — Sign in`,
+    title: `${id.greekLetters} Portal - Sign in`,
     description: `Sign in to your ${id.greekLetters} ${id.fraternityShort} portal. Brothers and alumni each have their own dashboard.`,
   };
 }

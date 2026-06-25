@@ -53,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // description under that ceiling prevents the trailing "we'll text you when
   // the schedule drops" from showing as "...". The longer pitch lives in the
   // hero copy, which is what users see after they click.
-  const desc = `${identity.ogAlt}. ${summary} Join the rush interest list — we'll text when the schedule drops.`;
+  const desc = `${identity.ogAlt}. ${summary} Join the rush interest list - we'll text when the schedule drops.`;
   return {
     title: identity.pageTitle,
     description: desc,
@@ -99,7 +99,7 @@ function valuesDefault(terms: ChapterTerms): ValueRow[] {
   return [
     { icon: "Users", title: terms.collective, body: "Lifelong friendships built on mutual respect and showing up for each other." },
     { icon: "GraduationCap", title: "Scholarship", body: "Study halls, mentorship, and an alumni network across every field. Chapter GPA above the all-Greek average." },
-    { icon: "Heart", title: "Character", body: `We measure ${terms.membersLower} by what they do — service, integrity, and courage in conviction.` },
+    { icon: "Heart", title: "Character", body: `We measure ${terms.membersLower} by what they do - service, integrity, and courage in conviction.` },
   ];
 }
 
@@ -108,7 +108,7 @@ function valuesDefault(terms: ChapterTerms): ValueRow[] {
 // (default terms) renders the exact original copy verbatim.
 function timelineDefault(terms: ChapterTerms): TimelineRow[] {
   return [
-    { week: "Week 1", title: "Open events", body: `Cookouts, ${terms.collective.toLowerCase()} events, low-pressure hangs at the house. Show up — no commitment, no application.` },
+    { week: "Week 1", title: "Open events", body: `Cookouts, ${terms.collective.toLowerCase()} events, low-pressure hangs at the house. Show up - no commitment, no application.` },
     { week: "Week 2", title: "Closed events", body: `Invite-only smaller events. Spend more time with individual ${terms.membersLower} and start to feel out the fit.` },
     { week: "Week 3", title: "Interviews & Bid Day", body: "One-on-ones with the e-board, then bids extended. Welcome ceremony for new members." },
   ];
@@ -122,11 +122,11 @@ function timelineDefault(terms: ChapterTerms): TimelineRow[] {
 function faqDefault(terms: ChapterTerms): FaqRow[] {
   return [
     { q: "Do I need to be a freshman?", a: `Nope. We recruit freshmen, sophomores, juniors, and transfers. If you're on campus and looking for a ${terms.collective.toLowerCase()}, we want to meet you.` },
-    { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum — scholarship is one of our core principles." },
-    { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid — no surprises." },
+    { q: "Is there a GPA requirement?", a: "We expect a solid academic standing to receive a bid. Our chapter average is well above the minimum - scholarship is one of our core principles." },
+    { q: "How much does it cost?", a: "Dues cover house fees, philanthropy, formals, and chapter operations. We'll walk you through every line item before you accept a bid - no surprises." },
     { q: "Is there hazing?", a: `Zero. Our national organization and our chapter take a hard line against hazing. New-member education is built around ${terms.collective.toLowerCase()}, history, and leadership development. Concerns can be reported anonymously to our chapter advisor or to national HQ.` },
-    { q: "What's the time commitment?", a: "About 4–6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional — go as hard or as easy as you want." },
-    { q: "Can I join if I'm already in another organization?", a: `Yes — our ${terms.membersLower} are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it.` },
+    { q: "What's the time commitment?", a: "About 4 - 6 hours/week of required programming during the semester (chapter meeting, study hall, occasional service). The rest is optional - go as hard or as easy as you want." },
+    { q: "Can I join if I'm already in another organization?", a: `Yes - our ${terms.membersLower} are on sports teams, in every college, in honors, and in ROTC. The chapter adds to your campus experience, it doesn't replace it.` },
   ];
 }
 
@@ -145,7 +145,7 @@ function recentDefault(terms: ChapterTerms): RecentRow[] {
   return [
     { tag: "Philanthropy", title: "Annual fundraiser for our chosen charity", icon: "HandHeart" },
     { tag: terms.collective, title: `${terms.collective} events before finals`, icon: "Trophy" },
-    { tag: "Formals", title: "Chapter formal — third-party vendor, sober transportation", icon: "Award" },
+    { tag: "Formals", title: "Chapter formal - third-party vendor, sober transportation", icon: "Award" },
     { tag: "Service", title: "Community service throughout the semester", icon: "Heart" },
   ];
 }
@@ -167,10 +167,10 @@ function parseStat(raw: string): { num: number; prefix?: string; suffix?: string
    rest of the build themes through (set per-tenant in app/layout.tsx), so a
    navy/gold or maroon chapter recolors its orbs, glows, and tilts for free.
 
-   - BRAND_ORB_COLORS: the three drifting hero orbs (FloatingOrbs `colors`).
+ - BRAND_ORB_COLORS: the three drifting hero orbs (FloatingOrbs `colors`).
      --brand-primary* are hex; a solid hex still fades cleanly to transparent
      inside the orb's radial gradient.
-   - BRAND_TILT_GLOW: the cursor-following 3D-tilt spotlight. Uses the --primary
+ - BRAND_TILT_GLOW: the cursor-following 3D-tilt spotlight. Uses the --primary
      HSL triple so we can dial the alpha down to a tasteful glow (a full-opacity
      hex would read as a harsh wash). */
 const BRAND_ORB_COLORS = [

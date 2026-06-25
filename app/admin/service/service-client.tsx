@@ -457,7 +457,7 @@ export function ServiceClient({
                   </h3>
                   <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                     {statusFilter === "submitted"
-                      ? "Every service-hour submission has been reviewed — nothing waiting on you."
+                      ? "Every service-hour submission has been reviewed - nothing waiting on you."
                       : `No ${statusFilter} service-hour logs to show.`}
                   </p>
                 </div>

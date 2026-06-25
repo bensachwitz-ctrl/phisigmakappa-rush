@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
   return {
-    title: `Rush Portal — ${id.greekLetters}`,
+    title: `Rush Portal - ${id.greekLetters}`,
     description: `Rush portal for ${id.greekLetters} potential new members.`,
   };
 }

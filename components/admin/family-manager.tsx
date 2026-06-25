@@ -614,7 +614,7 @@ function AssignPanel({
             Their big
             {subject && (
               <span className="text-[10px] font-normal text-muted-foreground">
-                — descendants of {subject.name} are hidden to prevent loops
+ - descendants of {subject.name} are hidden to prevent loops
               </span>
             )}
           </Label>

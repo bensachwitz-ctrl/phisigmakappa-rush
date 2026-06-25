@@ -50,7 +50,7 @@ export default function AdminError({
         </h1>
 
         <p className="mx-auto mt-3 max-w-sm leading-relaxed text-muted-foreground">
-          This section hit a snag loading. Your data is safe — try again, or head
+          This section hit a snag loading. Your data is safe - try again, or head
           back to your dashboard and pick another section.
         </p>
 

@@ -121,7 +121,7 @@ export function InstagramFeed({
             src={imgFor(p.slug, 640)}
             srcSet={srcSetFor(p.slug, [320, 480, 640, 960])}
             sizes={i === 0 ? "(min-width: 1024px) 480px, 50vw" : "(min-width: 1024px) 240px, 33vw"}
-            alt={`Chapter life — ${p.caption}`}
+            alt={`Chapter life - ${p.caption}`}
             width={520}
             height={i === 0 ? 650 : 520}
             // The IG feed is ~3 viewports below the fold, so every tile is
@@ -191,7 +191,7 @@ export function InstagramStrip({
                   src={imgFor(p.slug, 320)}
                   srcSet={srcSetFor(p.slug, [320, 480, 640])}
                   sizes="(min-width: 640px) 25vw, 50vw"
-                  alt={`Chapter life — ${p.caption}`}
+                  alt={`Chapter life - ${p.caption}`}
                   width={320}
                   height={320}
                   loading="lazy"

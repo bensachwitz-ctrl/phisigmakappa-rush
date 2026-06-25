@@ -124,7 +124,7 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setInviteError("Couldn't copy — select and copy the link manually.");
+      setInviteError("Couldn't copy - select and copy the link manually.");
     }
   }
 
@@ -523,7 +523,7 @@ export function AlumniManager({ initialAlumni }: AlumniManagerProps) {
                   {inviteResult.delivery.sent
                     ? `Sent via ${inviteResult.delivery.channel}. Share the link below as a backup.`
                     : inviteResult.delivery.channel === "link"
-                      ? "Link ready — copy it and send however you like."
+                      ? "Link ready - copy it and send however you like."
                       : `Couldn't auto-send (${inviteResult.delivery.reason}). Copy the link below and send it manually.`}
                 </div>
                 <div className="flex items-center gap-2">

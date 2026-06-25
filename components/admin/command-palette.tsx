@@ -87,7 +87,7 @@ export function CommandPalette({
       // domains must find them in ⌘K. Billing stays adminOnly (super-admin only).
       { id: "act-dues-connect", group: "Actions", icon: IconPayouts, label: "Payouts / Stripe Connect", href: "/admin/dues/connect", synonyms: ["stripe", "connect", "payouts", "bank", "money", "dues"], domain: "payments" },
       { id: "act-dues", group: "Actions", icon: IconPayouts, label: "Dues", href: "/admin/dues", synonyms: ["dues", "collect", "amount", "settings", "treasurer", "money"], domain: "dues" },
-      { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury — Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], domain: "payments" },
+      { id: "act-treasury", group: "Actions", icon: IconTreasury, label: "Treasury - Budget & Expenses", href: "/admin/treasury", synonyms: ["budget", "expense", "reimbursement", "money", "finance", "treasurer", "spend", "ledger"], domain: "payments" },
       { id: "act-billing", group: "Actions", icon: IconBilling, label: "Billing & subscription", href: "/admin/billing", synonyms: ["subscription", "plan", "invoice", "upgrade", "trial", "pay", "stripe", "membership"], adminOnly: true },
       { id: "act-exports", group: "Actions", icon: IconExports, label: "HQ Exports", href: "/admin/exports", synonyms: ["download", "csv", "report", "headquarters", "nationals", "data"], adminOnly: true },
       { id: "act-export-rushes", group: "Actions", icon: IconExports, label: "Download PNM roster CSV", href: "/api/admin/export", adminOnly: true },

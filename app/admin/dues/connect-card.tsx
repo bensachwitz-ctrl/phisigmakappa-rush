@@ -24,9 +24,9 @@ import {
  * Stripe Connect payout status + onboarding launcher for the current chapter.
  *
  * Shows one of three states from GET /api/dues/connect:
- *   - Not connected  → no account yet (or Stripe not configured)
- *   - Pending        → account exists but charges_enabled is still false
- *   - Active payouts  → charges_enabled true (charges now route to the chapter)
+ * - Not connected  → no account yet (or Stripe not configured)
+ * - Pending        → account exists but charges_enabled is still false
+ * - Active payouts  → charges_enabled true (charges now route to the chapter)
  *
  * The button POSTs to /api/dues/connect and redirects the browser to the
  * returned Stripe-hosted onboarding URL. Purely additive — until a chapter
@@ -161,7 +161,7 @@ export function DuesConnectCard() {
             <span>
               Your payout account is created but setup isn&apos;t finished.
               Continue to verify your details so charges can route to you. In the
-              meantime payments still collect centrally — nothing is lost.
+              meantime payments still collect centrally - nothing is lost.
             </span>
           </p>
         ) : (

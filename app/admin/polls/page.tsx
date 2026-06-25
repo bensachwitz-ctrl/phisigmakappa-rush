@@ -23,7 +23,7 @@ export default async function AdminPollsPage() {
         <AdminPageHeader
           icon={Vote}
           title="Chapter polls"
-          subtitle="Quick votes for the chapter. Any member can post a poll; results stay anonymous (tally only — never who picked what)."
+          subtitle="Quick votes for the chapter. Any member can post a poll; results stay anonymous (tally only - never who picked what)."
         />
         <PollsFeed isAdmin={session.isAdmin} />
       </div>

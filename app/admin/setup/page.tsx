@@ -58,7 +58,7 @@ export default async function SetupPage() {
           Get your chapter live in 5 minutes.
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-          Fill out these five steps once and the entire site re-brands to your chapter — page titles,
+          Fill out these five steps once and the entire site re-brands to your chapter - page titles,
           social-share cards, footer attribution, Knowledge Panel record, email signatures, the works.
           You can come back and edit any of this later in <strong>Site content</strong>.
         </p>

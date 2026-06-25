@@ -64,7 +64,7 @@ export function CheckInForm({ code, orgName }: Props) {
       if (data.needsForm) setExpanded(true);
       setError(data.error || "Something went wrong. Try again.");
     } catch {
-      setError("Network error — check your connection and try again.");
+      setError("Network error - check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -89,7 +89,7 @@ export function CheckInForm({ code, orgName }: Props) {
           ) : (
             <>
               Checked in to <strong>{done.eventName}</strong>. Great to see you
-              back — enjoy the event.
+              back - enjoy the event.
             </>
           )}
         </p>
@@ -127,7 +127,7 @@ export function CheckInForm({ code, orgName }: Props) {
       {expanded && (
         <div className="space-y-4 rounded-xl border border-dashed border-phisig-red/30 bg-phisig-red/[0.03] p-4">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-phisig-red">
-            <UserPlus className="h-3.5 w-3.5" /> New here — tell us about you
+            <UserPlus className="h-3.5 w-3.5" /> New here - tell us about you
           </p>
           <div>
             <label htmlFor="ci-name" className="mb-1 block text-sm font-medium">

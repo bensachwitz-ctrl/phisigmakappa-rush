@@ -137,7 +137,7 @@ async function postJson(
     if (res.ok && data.ok) return { ok: true };
     return { ok: false, error: data.error || "Something went wrong. Please try again." };
   } catch {
-    return { ok: false, error: "Network error — please check your connection and try again." };
+    return { ok: false, error: "Network error - please check your connection and try again." };
   }
 }
 
@@ -179,7 +179,7 @@ export function ContactForm({ contactEmail }: { contactEmail: string }) {
     return (
       <SuccessPanel
         title="Message sent"
-        body="Thanks for reaching out — we'll get back to you by email shortly."
+        body="Thanks for reaching out - we'll get back to you by email shortly."
       />
     );
   }
@@ -320,7 +320,7 @@ export function CustomQuoteForm({ contactEmail }: { contactEmail: string }) {
     return (
       <SuccessPanel
         title="Quote request received"
-        body="We'll review what you need and email you a tailored quote — usually within a couple of business days."
+        body="We'll review what you need and email you a tailored quote - usually within a couple of business days."
       />
     );
   }
@@ -359,7 +359,7 @@ export function CustomQuoteForm({ contactEmail }: { contactEmail: string }) {
         id="q-custom"
         label="What do you want customized?"
         required
-        hint="Custom flows, integrations, branding, reporting — the more detail, the sharper the quote."
+        hint="Custom flows, integrations, branding, reporting - the more detail, the sharper the quote."
       >
         <Textarea
           id="q-custom"
@@ -372,8 +372,8 @@ export function CustomQuoteForm({ contactEmail }: { contactEmail: string }) {
         />
       </Field>
 
-      <Field id="q-budget" label="Budget" hint="Optional — a range helps us tailor scope.">
-        <Input id="q-budget" name="budget" value={form.budget} onChange={set("budget")} placeholder="e.g. $2–5k base, then monthly" />
+      <Field id="q-budget" label="Budget" hint="Optional - a range helps us tailor scope.">
+        <Input id="q-budget" name="budget" value={form.budget} onChange={set("budget")} placeholder="e.g. $2 - 5k base, then monthly" />
       </Field>
 
       <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
@@ -502,7 +502,7 @@ export function RequestCallForm({ contactEmail }: { contactEmail: string }) {
         id="call-times"
         label="Preferred times"
         required
-        hint="Day/time windows and your time zone — or a phone number to text."
+        hint="Day/time windows and your time zone - or a phone number to text."
       >
         <Textarea
           id="call-times"

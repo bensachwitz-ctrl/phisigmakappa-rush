@@ -123,17 +123,17 @@ function buildEmailTemplates(b: ChapterBrand): Record<string, { subject: string;
   return {
     blank: { subject: "", body: "" },
     invite_private: {
-      subject: "You're invited — Formal Dinner",
+      subject: "You're invited - Formal Dinner",
       body:
         `We'd like to invite you to a private formal dinner with our chapter.\n\nDate: \nLocation: \nDress code: Coat & tie\n\nPlease reply to confirm your attendance.\n\nFraternally,\n${b.chapterAttribution}`,
     },
     bid_extension: {
-      subject: `Bid Extension — ${b.chapterAttribution}`,
+      subject: `Bid Extension - ${b.chapterAttribution}`,
       body:
         `After much deliberation, the brothers of ${b.fraternityName} at ${b.schoolShort} are formally extending you a bid to join our chapter.\n\nWe're impressed by your character and want you in this brotherhood.\n\nBid night details:\nDate: \nLocation: ${b.fraternityShort} House\nTime: \n\nReply to this email to accept.\n\nFraternally,\nThe Brothers of ${b.fraternityName}`,
     },
     reminder: {
-      subject: "Reminder — upcoming rush event",
+      subject: "Reminder - upcoming rush event",
       body:
         `Quick reminder about our next rush event.\n\nDate: \nLocation: \nDress code: \n\nLooking forward to seeing you there.\n\nFraternally,\n${b.chapterAttribution}`,
     },
@@ -648,7 +648,7 @@ export function Roster({
                   </TableCell>
                   <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[260px]">
                     <div className="line-clamp-1">
-                      {[r.major, r.year, r.hometown].filter(Boolean).join(" · ") || "—"}
+                      {[r.major, r.year, r.hometown].filter(Boolean).join(" · ") || "-"}
                     </div>
                   </TableCell>
                   <TableCell data-stop>
@@ -661,7 +661,7 @@ export function Roster({
                         {r.attendanceCount}
                       </span>
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </TableCell>
                   <TableCell data-stop>
@@ -1005,8 +1005,8 @@ function RushDetail({
         <div className="grid sm:grid-cols-2 gap-4 text-sm">
           <Info icon={Mail} label="Email" value={rush.email} />
           <Info icon={Phone} label="Phone" value={rush.phone} />
-          <Info icon={MapPin} label="Hometown" value={rush.hometown || "—"} />
-          <Info icon={GraduationCap} label="Major / year" value={[rush.major, rush.year].filter(Boolean).join(" · ") || "—"} />
+          <Info icon={MapPin} label="Hometown" value={rush.hometown || "-"} />
+          <Info icon={GraduationCap} label="Major / year" value={[rush.major, rush.year].filter(Boolean).join(" · ") || "-"} />
         </div>
 
         {/* Bid response panel — visible when status is BID_EXTENDED (token
@@ -1114,7 +1114,7 @@ function BidStatusCard({ rush }: { rush: Rush }) {
       setTimeout(() => setCopied(false), 2000);
       push({ title: "Bid link copied", variant: "success" });
     } catch {
-      push({ title: "Couldn't copy — try selecting the link manually", variant: "destructive" });
+      push({ title: "Couldn't copy - try selecting the link manually", variant: "destructive" });
     }
   }
 
@@ -1155,7 +1155,7 @@ function BidStatusCard({ rush }: { rush: Rush }) {
             <Send className="h-4 w-4" />
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Bid link is live — share with {rush.name.split(" ")[0]}.</p>
+            <p className="text-sm font-semibold">Bid link is live - share with {rush.name.split(" ")[0]}.</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               One-click accept/decline. Expires in {daysLeft} day{daysLeft === 1 ? "" : "s"}. Single-use.
             </p>
@@ -1254,7 +1254,7 @@ function NotesEditor({ rush, onSaved }: { rush: Rush; onSaved: (notes: string) =
         className="mt-1"
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        placeholder="Met him at the cookout — sharp kid, played football at Spring Valley…"
+        placeholder="Met him at the cookout - sharp kid, played football at Spring Valley…"
         rows={3}
       />
       <div className="mt-2 flex justify-end">
@@ -1362,7 +1362,7 @@ function EmailComposer({
           <div>
             <Label className="mb-1 inline-block">Body</Label>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={9} placeholder="Write your message…" />
-            <p className="mt-1 text-xs text-muted-foreground">First name will be prepended automatically. Plain text — newlines preserved.</p>
+            <p className="mt-1 text-xs text-muted-foreground">First name will be prepended automatically. Plain text - newlines preserved.</p>
           </div>
         </div>
 
@@ -1498,7 +1498,7 @@ function SmsComposer({
               placeholder="Reminder: rush event tonight at 7…"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              First name is prepended automatically. Keep it short — texts above 160 chars may be split into multiple SMS.
+              First name is prepended automatically. Keep it short - texts above 160 chars may be split into multiple SMS.
             </p>
           </div>
         </div>

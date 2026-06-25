@@ -235,7 +235,7 @@ export function AcademicClient({
                     <div className="min-w-0">
                       <h3 className="text-base font-semibold tracking-tight truncate">{b.name}</h3>
                       <p className="text-xs text-muted-foreground truncate">
-                        {[b.year, b.major].filter(Boolean).join(" · ") || "—"}
+                        {[b.year, b.major].filter(Boolean).join(" · ") || "-"}
                       </p>
                       {b.pledgeClass && (
                         <p className="text-[10px] text-muted-foreground font-mono mt-0.5">

@@ -83,7 +83,7 @@ export default async function BillingPage({
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Billing</h1>
           <p className="mt-1.5 text-sm text-muted-foreground max-w-prose">
-            Manage your chapter&apos;s Greekstack subscription — the platform that
+            Manage your chapter&apos;s Greekstack subscription - the platform that
             runs your rush site, roster, dues, events, and compliance trail. This
             is separate from the dues you collect from your own members.
           </p>

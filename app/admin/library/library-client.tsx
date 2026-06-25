@@ -64,7 +64,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
 };
 
 function formatBytes(bytes: number | null): string {
-  if (bytes == null) return "—";
+  if (bytes == null) return "-";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -141,7 +141,7 @@ export function LibraryClient({
         // Pre-fill the document name from the file name if empty.
         name: f.name || (json.fileName || file.name).replace(/\.[^.]+$/, ""),
       }));
-      push({ title: "File uploaded — add details below", variant: "success" });
+      push({ title: "File uploaded - add details below", variant: "success" });
     } catch (err: any) {
       push({ title: err.message || "Upload failed", variant: "destructive" });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -249,7 +249,7 @@ export function LibraryClient({
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Document Library</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Upload and organize chapter documents — bylaws, policies, forms, and training materials.
+              Upload and organize chapter documents - bylaws, policies, forms, and training materials.
             </p>
           </div>
         </div>

@@ -105,7 +105,7 @@ export function BidResponseForm({
             id="bid-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="No pressure — anything you share helps the chapter improve next cycle."
+            placeholder="No pressure - anything you share helps the chapter improve next cycle."
             rows={3}
             maxLength={1000}
           />
@@ -145,7 +145,7 @@ export function BidResponseForm({
         <div className="rounded-lg bg-slate-50 border border-slate-100 p-4 text-xs text-slate-600 space-y-2.5 leading-relaxed">
           <p className="font-semibold text-slate-700">ZERO-TOLERANCE ANTI-HAZING WAIVER & AGREEMENT</p>
           <p>
-            Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history — never humiliation, intimidation, or harm.
+            Our national organization and our chapter strictly prohibit hazing in any form. New-member education is built around community, leadership, and chapter history - never humiliation, intimidation, or harm.
           </p>
           <p>
             By signing below, you certify that you accept this bid of membership, verify that you will not participate in, submit to, or condone hazing of any kind, and acknowledge that hazing violations lead to immediate disciplinary actions and expulsion.

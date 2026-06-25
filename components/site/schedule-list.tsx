@@ -43,7 +43,7 @@ export async function ScheduleList() {
             </h3>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
               We're locking in dates with the chapter house, the e-board, and our partner venues.
-              Sign up above and we'll text you the second every event goes live — cookouts,
+              Sign up above and we'll text you the second every event goes live - cookouts,
               tailgates, philanthropy, and Bid Night.
             </p>
             <ul className="mt-5 grid sm:grid-cols-2 gap-2 text-xs">
@@ -102,7 +102,7 @@ export async function ScheduleList() {
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays className="h-3.5 w-3.5" /> {formatTime(e.startsAt, timezone)}
-                      {e.endsAt && <> – {formatTime(e.endsAt, timezone)}</>}
+                      {e.endsAt && <> - {formatTime(e.endsAt, timezone)}</>}
                     </span>
                     {e.location && (
                       <span className="inline-flex items-center gap-1.5">

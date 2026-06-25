@@ -531,7 +531,7 @@ function CalendarHeader() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Calendar</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          One unified timeline — chapter events, meetings, and the dues deadline in a single
+          One unified timeline - chapter events, meetings, and the dues deadline in a single
           month &amp; agenda view.
         </p>
       </div>

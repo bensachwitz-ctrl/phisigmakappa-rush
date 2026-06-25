@@ -25,7 +25,7 @@ import type { ChapterRouteTarget } from "@/lib/login-routing";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sign in to your chapter — Greekstack",
+  title: "Sign in to your chapter - Greekstack",
   description:
     "Find your fraternity or sorority chapter and sign in to the Brother or Alumni portal on your branded Greekstack site.",
   robots: { index: false, follow: true },

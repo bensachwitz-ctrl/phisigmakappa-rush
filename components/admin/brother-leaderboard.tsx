@@ -60,7 +60,7 @@ export function BrotherLeaderboard({ brothers }: { brothers: LeaderboardBrother[
           </span>
           <div>
             <h3 className="text-sm font-semibold tracking-tight">Chapter engagement leaderboard</h3>
-            <p className="text-[11px] text-muted-foreground">Top 5 in each category — updates in real time</p>
+            <p className="text-[11px] text-muted-foreground">Top 5 in each category - updates in real time</p>
           </div>
         </div>
 

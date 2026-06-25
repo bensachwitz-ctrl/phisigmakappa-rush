@@ -160,7 +160,7 @@ export function StandingClient({
             <h1 className="text-3xl font-semibold tracking-tight">Engagement &amp; standing</h1>
             <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
               One motivating number per member, computed from dues, meeting attendance,
-              approved service hours, study hours, and chores. Tune what counts —
+              approved service hours, study hours, and chores. Tune what counts - 
               no extra data entry.
             </p>
           </div>

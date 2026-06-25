@@ -459,7 +459,7 @@ export function WebsiteBuilderClient({
               <div>
                 <h2 className="text-lg font-semibold tracking-tight">Choose a template</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Each template keeps every section you configure — it only changes
+                  Each template keeps every section you configure - it only changes
                   the hero style and the default section order. Classic is the
                   original layout.
                 </p>
@@ -878,7 +878,7 @@ export function WebsiteBuilderClient({
               <h3 className="font-semibold text-sm">Builder Guides</h3>
               <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
                 <li>The <strong>Template</strong> changes the hero style + default order; every section you configure carries over.</li>
-                <li>The <strong>accent (gold)</strong> color only affects the Modern and Bold templates — Classic stays on your primary color.</li>
+                <li>The <strong>accent (gold)</strong> color only affects the Modern and Bold templates - Classic stays on your primary color.</li>
                 <li>Use the <strong>Up/Down arrows</strong> on the Layout tab to fine-tune order. Sections closer to the top load first (LCP).</li>
                 <li><strong>Hero</strong> and <strong>Registration Form</strong> cannot be hidden so the site is always functional for prospects.</li>
               </ul>

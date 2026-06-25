@@ -66,7 +66,7 @@ const CARDS: {
     icon: Users,
     title: "Member dues status",
     description:
-      "Track who has paid and who is outstanding. Brothers pay their dues from this same roster — chase the stragglers from here.",
+      "Track who has paid and who is outstanding. Brothers pay their dues from this same roster - chase the stragglers from here.",
     href: "/admin/brothers",
     cta: "View member status",
   },
@@ -94,7 +94,7 @@ export default async function DuesHubPage() {
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Dues</h1>
           <p className="mt-1.5 text-sm text-muted-foreground max-w-prose">
-            Everything you need to collect dues in one place — configure the
+            Everything you need to collect dues in one place - configure the
             amount and your Stripe keys, connect a payout account, and keep an
             eye on who has paid.
           </p>

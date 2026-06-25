@@ -118,7 +118,7 @@ export function PnmCompareModal({
               {/* Compare rows */}
               <CompareRow
                 label="Vote average"
-                value={r.voteCount > 0 ? (avg >= 0 ? "+" + avg.toFixed(1) : avg.toFixed(1)) : "—"}
+                value={r.voteCount > 0 ? (avg >= 0 ? "+" + avg.toFixed(1) : avg.toFixed(1)) : "-"}
                 isLeader={r.voteCount > 0 && avg === bestAvg && rushes.length > 1}
                 tone={avg >= 1 ? "emerald" : avg <= -1 ? "rose" : "muted"}
                 icon={avg >= 1 ? ThumbsUp : avg <= -1 ? ThumbsDown : Minus}
@@ -131,17 +131,17 @@ export function PnmCompareModal({
               />
               <CompareRow
                 label="Year"
-                value={r.year || "—"}
+                value={r.year || "-"}
                 icon={GraduationCap}
               />
               <CompareRow
                 label="Major"
-                value={r.major || "—"}
+                value={r.major || "-"}
                 icon={GraduationCap}
               />
               <CompareRow
                 label="Hometown"
-                value={r.hometown || "—"}
+                value={r.hometown || "-"}
                 icon={MapPin}
               />
               <CompareRow

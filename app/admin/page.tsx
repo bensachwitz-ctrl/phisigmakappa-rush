@@ -191,7 +191,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
     {
       label: "Add a recruitment phone number",
       ok: !!cfg["contact.rushPhone"],
-      hint: "A callable phone number — parents expect more than just an email.",
+      hint: "A callable phone number - parents expect more than just an email.",
       href: "/admin/settings#contact",
     },
     {

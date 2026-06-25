@@ -397,7 +397,7 @@ export function BrothersManager({
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {[b.year, b.major].filter(Boolean).join(" · ") || "—"}
+                      {[b.year, b.major].filter(Boolean).join(" · ") || "-"}
                     </p>
                   </div>
                 </div>
@@ -607,7 +607,7 @@ export function BrothersManager({
             </div>
             <div>
               <Label className="mb-1 inline-block">Bio (optional)</Label>
-              <Textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Short bio — interests, hometown, anything brothers should know." />
+              <Textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Short bio - interests, hometown, anything brothers should know." />
             </div>
           </div>
           <DialogFooter>
@@ -693,12 +693,12 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
 
       if (channel === "email") {
         if (json.delivery?.sent) push({ title: `Email sent to ${email}`, variant: "success" });
-        else push({ title: "Email API not configured — copy the link", variant: "default" });
+        else push({ title: "Email API not configured - copy the link", variant: "default" });
       } else if (channel === "sms") {
         if (json.delivery?.sent) push({ title: `Text sent to ${phone}`, variant: "success" });
-        else push({ title: "SMS API not configured — copy the link", variant: "default" });
+        else push({ title: "SMS API not configured - copy the link", variant: "default" });
       } else {
-        push({ title: "Link generated — copy & share", variant: "success" });
+        push({ title: "Link generated - copy & share", variant: "success" });
       }
     } catch (err: any) {
       push({ title: err.message || "Send failed", variant: "destructive" });
@@ -723,7 +723,7 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
         {!link ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Send a one-time onboarding link. They'll fill in their year, major, headshot, and contact info — and land in the directory automatically.
+              Send a one-time onboarding link. They'll fill in their year, major, headshot, and contact info - and land in the directory automatically.
             </p>
 
             <div className="grid grid-cols-3 gap-2">

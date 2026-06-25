@@ -80,7 +80,7 @@ export function BillingBanner(props: {
         <Icon className={`h-4 w-4 shrink-0 ${tone.iconColor}`} aria-hidden="true" />
         <p className={`min-w-0 flex-1 ${tone.text}`}>
           <span className="font-medium">{tone.title}</span>
-          {tone.body ? <span className="hidden sm:inline"> — {tone.body}</span> : null}
+          {tone.body ? <span className="hidden sm:inline"> - {tone.body}</span> : null}
         </p>
         <Link
           href="/admin/billing"

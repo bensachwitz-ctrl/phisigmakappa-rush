@@ -272,7 +272,7 @@ export function ManageElectionClient({
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="h-3.5 w-3.5" />
           {election.anonymous
-            ? "This is a secret ballot — only vote totals are ever shown, never who voted for whom."
+            ? "This is a secret ballot - only vote totals are ever shown, never who voted for whom."
             : "Results show vote totals per candidate. Individual votes are never displayed."}
         </p>
       </div>
@@ -373,7 +373,7 @@ function SeatCard({
         {showResults && seat.tie && (
           <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            Tie for the lead — resolve it before this seat can be filled.
+            Tie for the lead - resolve it before this seat can be filled.
           </div>
         )}
 
@@ -477,7 +477,7 @@ function CandidateList({
     <div className="space-y-2">
       {seat.candidates.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No candidates yet{isDraft ? " — nominate at least one before opening voting." : "."}
+          No candidates yet{isDraft ? " - nominate at least one before opening voting." : "."}
         </p>
       ) : (
         <ul className="space-y-1.5">

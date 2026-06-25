@@ -96,7 +96,7 @@ function statusStyle(status: string): { label: string; className: string } {
       return { label: "Expelled", className: "bg-rose-50 text-rose-700 ring-rose-200" };
     default:
       return {
-        label: status ? status.charAt(0) + status.slice(1).toLowerCase() : "—",
+        label: status ? status.charAt(0) + status.slice(1).toLowerCase() : "-",
         className: "bg-zinc-100 text-zinc-600 ring-zinc-200",
       };
   }
@@ -314,7 +314,7 @@ export function DirectoryManager({ initial }: { initial: DirectoryRow[] }) {
             onChange={(v) => setSort((v as SortKey) || "name")}
             options={["name", "pledgeClass", "gradYear"]}
             renderOption={(o) =>
-              o === "name" ? "Name (A–Z)" : o === "pledgeClass" ? "Pledge class" : "Grad year"
+              o === "name" ? "Name (A - Z)" : o === "pledgeClass" ? "Pledge class" : "Grad year"
             }
             allowEmpty={false}
           />
@@ -582,14 +582,14 @@ function RosterTable({ rows }: { rows: DirectoryRow[] }) {
                       {b.position}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground/60">—</span>
+                    <span className="text-muted-foreground/60">-</span>
                   )}
                 </td>
-                <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{b.major || "—"}</td>
-                <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{b.hometown || "—"}</td>
-                <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">{b.pledgeClass || "—"}</td>
-                <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground tabular-nums">{b.gradYear || "—"}</td>
-                <td className="px-4 py-3 hidden xl:table-cell text-muted-foreground">{b.bigName || "—"}</td>
+                <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{b.major || "-"}</td>
+                <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{b.hometown || "-"}</td>
+                <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">{b.pledgeClass || "-"}</td>
+                <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground tabular-nums">{b.gradYear || "-"}</td>
+                <td className="px-4 py-3 hidden xl:table-cell text-muted-foreground">{b.bigName || "-"}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1.5">
                     {b.email && (
@@ -612,7 +612,7 @@ function RosterTable({ rows }: { rows: DirectoryRow[] }) {
                         <PhoneGlyph />
                       </a>
                     )}
-                    {!b.email && !b.phone && <span className="text-xs text-muted-foreground/50">—</span>}
+                    {!b.email && !b.phone && <span className="text-xs text-muted-foreground/50">-</span>}
                   </div>
                 </td>
               </tr>
@@ -668,7 +668,7 @@ function EmptyState({ everEmpty, onClear }: { everEmpty: boolean; onClear: () =>
         <>
           <h3 className="mt-4 text-base font-semibold tracking-tight">The directory is empty.</h3>
           <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground leading-relaxed">
-            Once brothers are added to the roster, the chapter composite shows up here — searchable,
+            Once brothers are added to the roster, the chapter composite shows up here - searchable,
             filterable, and ready to export.
           </p>
         </>

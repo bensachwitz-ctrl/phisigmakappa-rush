@@ -117,7 +117,7 @@ export default function LoginClient() {
                 brand voice carried onto the operator sign-in. */}
             <h1 className="mt-6 text-2xl font-bold uppercase tracking-[0.06em]">Welcome back</h1>
             <p className="mt-1.5 font-serif text-base italic text-muted-foreground">
-              {mode === "admin" ? "Chapter admin — e-board only" : "Active brothers"}
+              {mode === "admin" ? "Chapter admin - e-board only" : "Active brothers"}
             </p>
           </div>
 

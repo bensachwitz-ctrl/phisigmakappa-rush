@@ -38,13 +38,13 @@ type Cfg = Record<string, string>;
 
 const STEPS = [
   { id: "identity", label: "Chapter identity", icon: IconChapter,
-    blurb: "Who and where — drives page titles, footer attribution, JSON-LD." },
+    blurb: "Who and where - drives page titles, footer attribution, JSON-LD." },
   { id: "brand", label: "Brand colors", icon: IconBranding,
-    blurb: "Your organization's primary color — overrides the default brand color across your site." },
+    blurb: "Your organization's primary color - overrides the default brand color across your site." },
   { id: "contact", label: "Contact", icon: IconComms,
     blurb: "Rush inbox, advisor of record, chapter house address." },
   { id: "policy", label: "Anti-hazing", icon: IconShieldCheck,
-    blurb: "Your organization's anti-hazing / risk-management hotline — visible on Privacy, Parents, and the about page." },
+    blurb: "Your organization's anti-hazing / risk-management hotline - visible on Privacy, Parents, and the about page." },
   { id: "launch", label: "Launch", icon: IconLaunch,
     blurb: "Review and go live." },
 ] as const;
@@ -86,7 +86,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
       push({ title: "Saved", variant: "success" });
       if (!isLastStep) setStep(STEPS[stepIndex + 1].id);
     } catch {
-      push({ title: "Save failed", description: "Try again — your inputs are still in the form.", variant: "destructive" });
+      push({ title: "Save failed", description: "Try again - your inputs are still in the form.", variant: "destructive" });
     } finally {
       setBusy(false);
     }
@@ -221,7 +221,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               </div>
               <p className="text-xs text-muted-foreground">
                 Pick your school's primary hex. The platform derives a darker shade for gradient
-                stops and a soft tint for backgrounds — paste hex codes that match your school's
+                stops and a soft tint for backgrounds - paste hex codes that match your school's
                 official brand guide. Examples: USC garnet <code className="font-mono text-foreground">#73000A</code>,
                 Texas A&amp;M maroon <code className="font-mono text-foreground">#500000</code>,
                 Penn State blue <code className="font-mono text-foreground">#001E44</code>.
@@ -290,7 +290,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
                     <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" /> View your public homepage
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Opens in a new tab — confirm everything reads correctly.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Opens in a new tab - confirm everything reads correctly.</p>
                 </Link>
                 <Link href="/admin/settings" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
@@ -632,7 +632,7 @@ export function FirstRunCard({
           <p className="text-sm font-semibold tracking-tight">
             {allDone
               ? "Your chapter is live-ready"
-              : `Get your chapter live — ${remaining} step${remaining === 1 ? "" : "s"} to go`}
+              : `Get your chapter live - ${remaining} step${remaining === 1 ? "" : "s"} to go`}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {allDone

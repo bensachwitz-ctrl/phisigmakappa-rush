@@ -183,11 +183,11 @@ export function SettingsManager({
           social-share card, JSON-LD knowledge-panel record, PWA launcher,
           email signature, and footer attribution reads from these fields.
           Fill these out once and the site re-brands end-to-end. */}
-      <Section id="chapter" title="Chapter identity" eyebrow="Who and where — drives page titles, social shares, JSON-LD, footer" icon={ShieldCheck}>
+      <Section id="chapter" title="Chapter identity" eyebrow="Who and where - drives page titles, social shares, JSON-LD, footer" icon={ShieldCheck}>
         <p className="text-xs text-muted-foreground mb-4">
           These fields white-label the entire site. A net-new chapter spinning up the platform fills these
           in once on the <Link href="/admin/setup" className="text-phisig-red hover:underline font-medium">setup wizard</Link>.
-          Existing deployments can tweak any line below — changes apply on next page load.
+          Existing deployments can tweak any line below - changes apply on next page load.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Fraternity name (full)">
@@ -267,10 +267,10 @@ export function SettingsManager({
       </Section>
 
       {/* BRAND LOGO — chapter crest/logo upload (white-label) */}
-      <Section id="logo" title="Chapter logo" eyebrow="Upload your crest — replaces the auto-generated shield" icon={ImageIcon}>
+      <Section id="logo" title="Chapter logo" eyebrow="Upload your crest - replaces the auto-generated shield" icon={ImageIcon}>
         <p className="text-xs text-muted-foreground mb-4">
           Upload your chapter&apos;s logo or crest (square or transparent PNG works best). It appears in
-          the site header, footer, and login screens — replacing the auto-generated shield. Leave blank
+          the site header, footer, and login screens - replacing the auto-generated shield. Leave blank
           to keep the generated mark in your brand colors. Click <strong>Save</strong> to apply.
         </p>
         <BrandLogoInput
@@ -284,7 +284,7 @@ export function SettingsManager({
         <p className="text-xs text-muted-foreground mb-4">
           Default is Phi Sigma Kappa cardinal red <code className="font-mono text-foreground">#C8102E</code>.
           For chapters at other schools, paste your school&apos;s hex code. Format:{" "}
-          <code className="font-mono text-foreground">#RRGGBB</code>. Changes apply on next page load — no
+          <code className="font-mono text-foreground">#RRGGBB</code>. Changes apply on next page load - no
           code rebuild needed.
         </p>
         <div className="grid sm:grid-cols-3 gap-4">
@@ -352,7 +352,7 @@ export function SettingsManager({
       <Section
         id="dues"
         title="Dues collection (Stripe)"
-        eyebrow="Optional — accept dues online via Stripe Checkout"
+        eyebrow="Optional - accept dues online via Stripe Checkout"
         icon={CreditCard}
         status={
           <IntegrationStatus
@@ -370,10 +370,10 @@ export function SettingsManager({
         </div>
         <p className="text-xs text-muted-foreground mb-4">
           Leave <span className="font-mono">dues.enabled</span> as <span className="font-mono">false</span> to
-          keep manual-only mode (admin toggles a brother&apos;s dues badge — same as today). To enable
+          keep manual-only mode (admin toggles a brother&apos;s dues badge - same as today). To enable
           online payment, every chapter must (1) create a Stripe account, (2) paste the publishable
           key here, (3) set <span className="font-mono">STRIPE_SECRET_KEY</span> as a server env var
-          (Vercel dashboard — never lives in this DB), and (4) create a webhook in Stripe pointing
+          (Vercel dashboard - never lives in this DB), and (4) create a webhook in Stripe pointing
           at <span className="font-mono">/api/dues/webhook</span> and paste the signing secret here.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -389,10 +389,10 @@ export function SettingsManager({
             <Input
               value={values["dues.label"] || ""}
               onChange={(e) => set("dues.label", e.target.value)}
-              placeholder="Chapter dues — Fall 2026"
+              placeholder="Chapter dues - Fall 2026"
             />
           </Field>
-          <Field label="Amount (cents — e.g. 15000 = $150.00)">
+          <Field label="Amount (cents - e.g. 15000 = $150.00)">
             <Input
               type="number"
               min={100}
@@ -459,7 +459,7 @@ export function SettingsManager({
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
               Different from <span className="font-mono">STRIPE_SECRET_KEY</span> (the
-              server env var — never paste a secret key here). Get this from the Stripe
+              server env var - never paste a secret key here). Get this from the Stripe
               dashboard after creating a webhook pointing at <span className="font-mono">/api/dues/webhook</span>.
             </p>
           </Field>
@@ -479,7 +479,7 @@ export function SettingsManager({
       <Section
         id="resend"
         title="Email sender (Resend)"
-        eyebrow="Optional — send transactional email from your own Resend account"
+        eyebrow="Optional - send transactional email from your own Resend account"
         icon={Mail}
         status={
           <IntegrationStatus
@@ -502,7 +502,7 @@ export function SettingsManager({
           </div>
         )}
         <p className="text-xs text-muted-foreground mb-4">
-          Optional — use your chapter&apos;s own Resend account + verified domain. Leave blank to use
+          Optional - use your chapter&apos;s own Resend account + verified domain. Leave blank to use
           the platform default.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -531,7 +531,7 @@ export function SettingsManager({
       <Section
         id="twilio"
         title="SMS (Twilio)"
-        eyebrow="Optional — text from your own Twilio number"
+        eyebrow="Optional - text from your own Twilio number"
         icon={MessageSquare}
         status={
           <IntegrationStatus
@@ -556,8 +556,8 @@ export function SettingsManager({
           </div>
         )}
         <p className="text-xs text-muted-foreground mb-4">
-          Optional — your chapter&apos;s own Twilio number. Blank = platform default. Texting outside
-          8am–9pm recipient-local is blocked (TCPA).
+          Optional - your chapter&apos;s own Twilio number. Blank = platform default. Texting outside
+          8am - 9pm recipient-local is blocked (TCPA).
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Account SID">
@@ -617,7 +617,7 @@ export function SettingsManager({
       <Section title="Hero" eyebrow="Top of homepage" icon={IconSpark}>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Eyebrow badge text">
-            <Input value={values["hero.eyebrow"] || ""} onChange={(e) => set("hero.eyebrow", e.target.value)} placeholder="Fall Rush 2026 — Interest list now open" />
+            <Input value={values["hero.eyebrow"] || ""} onChange={(e) => set("hero.eyebrow", e.target.value)} placeholder="Fall Rush 2026 - Interest list now open" />
           </Field>
           <Field label="Subline / hero copy">
             <Textarea
@@ -648,7 +648,7 @@ export function SettingsManager({
       {/* E-BOARD */}
       <Section id="eboard" title="Executive board" eyebrow="5 leadership cards on homepage" icon={Crown}>
         <p className="text-xs text-muted-foreground mb-4">
-          Fill in the brothers' names and roles. Leave a row blank to hide that slot. Headshot optional — paste an Instagram slug or upload a photo.
+          Fill in the brothers' names and roles. Leave a row blank to hide that slot. Headshot optional - paste an Instagram slug or upload a photo.
         </p>
         <div className="grid lg:grid-cols-2 gap-4">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -677,12 +677,12 @@ export function SettingsManager({
       <Section id="contact" title="Contact &amp; social" eyebrow="Email, address, Instagram, advisor" icon={Mail}>
         {(values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"] || !values["contact.rushPhone"]) && (
           <div className="mb-4 rounded-xl border border-amber-300/60 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
-            <strong className="font-semibold">Heads up — visible on the public site:</strong>{" "}
+            <strong className="font-semibold">Heads up - visible on the public site:</strong>{" "}
             {values["contact.advisorName"] === "Chapter Advisor" || !values["contact.advisorName"]
               ? "Replace “Chapter Advisor” with the real advisor's full name. "
               : ""}
             {!values["contact.rushPhone"]
-              ? "Add a chapter or rush-chair phone number — parents reviewing the site expect a callable contact, not just an email."
+              ? "Add a chapter or rush-chair phone number - parents reviewing the site expect a callable contact, not just an email."
               : ""}
           </div>
         )}
@@ -693,13 +693,13 @@ export function SettingsManager({
           <Field label="Rush phone (optional)">
             <Input value={values["contact.rushPhone"] || ""} onChange={(e) => set("contact.rushPhone", e.target.value)} placeholder="(803) 555-0142" />
           </Field>
-          <Field label="Chapter advisor — name">
+          <Field label="Chapter advisor - name">
             <Input value={values["contact.advisorName"] || ""} onChange={(e) => set("contact.advisorName", e.target.value)} placeholder="Dr. Jane Doe" />
           </Field>
-          <Field label="Chapter advisor — title">
+          <Field label="Chapter advisor - title">
             <Input value={values["contact.advisorTitle"] || ""} onChange={(e) => set("contact.advisorTitle", e.target.value)} placeholder="Alumni Chapter Advisor, Gamma Triton" />
           </Field>
-          <Field label="Chapter advisor — email">
+          <Field label="Chapter advisor - email">
             <Input value={values["contact.advisorEmail"] || ""} onChange={(e) => set("contact.advisorEmail", e.target.value)} placeholder="advisor@phisig-usc.com" />
           </Field>
           <Field label="Address">
@@ -755,7 +755,7 @@ export function SettingsManager({
             { key: "body", label: "Body", placeholder: "What happens this week", textarea: true },
           ]}
           newRow={{ week: "", title: "", body: "" }}
-          rowLabel={(r) => `${r.week || "(unnamed)"} — ${r.title || "untitled"}`}
+          rowLabel={(r) => `${r.week || "(unnamed)"} - ${r.title || "untitled"}`}
         />
       </Section>
 
@@ -812,7 +812,7 @@ export function SettingsManager({
         icon={Activity}
       >
         <p className="mb-3 text-sm text-muted-foreground">
-          Add your chapter&apos;s own posts here — each row is one tile. Paste an
+          Add your chapter&apos;s own posts here - each row is one tile. Paste an
           Instagram post code (the part after <code>/p/</code> in the post URL)
           or a full image URL. Leave this empty and the section shows a branded
           crest placeholder instead. Turn the section on under{" "}
@@ -829,7 +829,7 @@ export function SettingsManager({
             { key: "objectPosition", label: "Crop (optional)", placeholder: "center 60%" },
           ]}
           newRow={{ slug: "", caption: "", tag: "", objectPosition: "" }}
-          rowLabel={(r) => `${r.tag || "(no tag)"} — ${r.caption || "no caption"}`}
+          rowLabel={(r) => `${r.tag || "(no tag)"} - ${r.caption || "no caption"}`}
         />
       </Section>
 
@@ -844,7 +844,7 @@ export function SettingsManager({
             { key: "icon", label: "Icon", placeholder: "HandHeart", iconPicker: true },
           ]}
           newRow={{ tag: "", title: "", icon: "Trophy" }}
-          rowLabel={(r) => `${r.tag || "(no tag)"} — ${r.title || "no title"}`}
+          rowLabel={(r) => `${r.tag || "(no tag)"} - ${r.title || "no title"}`}
         />
       </Section>
 
@@ -976,7 +976,7 @@ export function SettingsManager({
               placeholder={"Dean's List, Spring 2026\nLed the Polar Plunge fundraiser\nIntramural soccer captain"}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              One achievement per line — shown as the spotlight bullet list.
+              One achievement per line - shown as the spotlight bullet list.
             </p>
           </Field>
         </div>
@@ -990,7 +990,7 @@ export function SettingsManager({
             <Input value={values["about.slug"] || ""} onChange={(e) => set("about.slug", e.target.value)} placeholder="DWmioxGCaBG" />
           </Field>
           <Field label="Caption">
-            <Input value={values["about.caption"] || ""} onChange={(e) => set("about.caption", e.target.value)} placeholder="Chapter formal — FIPG-compliant" />
+            <Input value={values["about.caption"] || ""} onChange={(e) => set("about.caption", e.target.value)} placeholder="Chapter formal - FIPG-compliant" />
           </Field>
           <Field label="Image crop position (CSS object-position)">
             <Select value={values["about.objectPosition"] || "50% 50%"} onValueChange={(v) => set("about.objectPosition", v)}>
@@ -1197,7 +1197,7 @@ function SecretInput({
         // from a clean field (never appends to the bullets).
         value={isConfigured ? "" : value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={isConfigured ? "configured — leave blank to keep" : placeholder}
+        placeholder={isConfigured ? "configured - leave blank to keep" : placeholder}
         className="font-mono"
         autoComplete="off"
         spellCheck={false}
@@ -1229,7 +1229,7 @@ function PhotoCard({
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
       onChangeSlug(json.url); // store the full Vercel Blob URL as the "slug"
-      push({ title: "Photo uploaded — click Save to apply", variant: "success" });
+      push({ title: "Photo uploaded - click Save to apply", variant: "success" });
     } catch (err: any) {
       push({ title: err.message || "Upload failed", variant: "destructive" });
     } finally {
@@ -1491,7 +1491,7 @@ function BrandLogoInput({ value, onChange }: { value: string; onChange: (v: stri
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
       onChange(json.url);
-      push({ title: "Logo uploaded — click Save to apply", variant: "success" });
+      push({ title: "Logo uploaded - click Save to apply", variant: "success" });
     } catch (err: any) {
       push({ title: err.message || "Upload failed", variant: "destructive" });
     } finally {
@@ -1566,7 +1566,7 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Upload failed");
       onChange(json.url);
-      push({ title: "Photo uploaded — click Save to apply", variant: "success" });
+      push({ title: "Photo uploaded - click Save to apply", variant: "success" });
     } catch (err: any) {
       push({ title: err.message || "Upload failed", variant: "destructive" });
     } finally {
@@ -1584,7 +1584,7 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
         />
       ) : (
         <div className="h-12 w-12 rounded-full bg-secondary border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">
-          —
+ - 
         </div>
       )}
       <div className="flex-1 space-y-2">

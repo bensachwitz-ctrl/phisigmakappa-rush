@@ -100,7 +100,7 @@ export default async function DirectoryPage() {
             {directoryTitle}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            The chapter composite for {subtitleScope} — search, filter, and browse every member.
+            The chapter composite for {subtitleScope} - search, filter, and browse every member.
             Tap a card to email or call. Export the filtered roster to CSV anytime.
           </p>
         </div>

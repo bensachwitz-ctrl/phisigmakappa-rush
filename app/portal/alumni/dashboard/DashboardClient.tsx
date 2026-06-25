@@ -1142,7 +1142,7 @@ export default function DashboardClient({
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold uppercase tracking-wider text-maroon-500 mb-0.5">Email on File</span>
-                    <p className="text-sm font-semibold text-maroon-900">{alumProfile.email || "—"}</p>
+                    <p className="text-sm font-semibold text-maroon-900">{alumProfile.email || "-"}</p>
                   </div>
                   <div className="sm:col-span-2">
                     <p className="text-[11px] text-maroon-500 italic">
@@ -1278,7 +1278,7 @@ export default function DashboardClient({
                       id="alum-bio"
                       rows={5}
                       maxLength={2000}
-                      placeholder="Share a brief bio — your career, how you stay involved, and how fellow alumni can connect with you."
+                      placeholder="Share a brief bio - your career, how you stay involved, and how fellow alumni can connect with you."
                       value={profileForm.bio}
                       onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
                       className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900 resize-none leading-relaxed"
