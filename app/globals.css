@@ -877,6 +877,113 @@
   opacity: 0.3;
 }
 
+/* ── Classical MEDALLION (school/chapter avatar) ───────────────────────────
+   PHASE-4 picker polish: replaces the flat lucide/letters "chip" with a
+   crafted classical seal — a gold RING around a deep-navy fill, with the serif
+   monogram set in the display (Cinzel) face. Reads premium + on-theme instead
+   of generic. Tokens:
+     .gs-medallion         → the navy-fill + gold-ring disc (size via Tailwind
+                             height/width at the call site); monogram in font-display.
+     .gs-medallion--ivory  → ivory-fill variant (for the ivory-card light state).
+   Static (no animation) → inherently reduced-motion-safe. Decorative framing
+   only; the real label lives in adjacent text, so call sites mark it
+   aria-hidden. */
+.gs-medallion {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: #f4f1e6; /* ivory monogram on navy */
+  background:
+    radial-gradient(120% 120% at 30% 22%, #16335f 0%, #0b1b3a 62%, #081431 100%);
+  /* Gold ring drawn as a layered box-shadow so it crisply frames any size. */
+  box-shadow:
+    0 0 0 1px rgba(11, 27, 58, 0.9),
+    0 0 0 2.5px #e8b53a,
+    0 0 0 3.5px rgba(11, 27, 58, 0.55),
+    0 6px 16px -8px rgba(11, 27, 58, 0.55);
+  border-radius: 9999px;
+  /* A faint inner gold hairline for the "struck coin" depth. */
+}
+.gs-medallion::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(232, 181, 58, 0.32);
+  pointer-events: none;
+}
+.gs-medallion--ivory {
+  color: #16264e; /* navy monogram on ivory */
+  background:
+    radial-gradient(120% 120% at 30% 22%, #ffffff 0%, #f4f1e6 60%, #ece6d3 100%);
+  box-shadow:
+    0 0 0 1px rgba(226, 220, 203, 0.9),
+    0 0 0 2.5px #c8901c,
+    0 0 0 3.5px rgba(244, 241, 230, 0.6),
+    0 6px 16px -8px rgba(22, 38, 78, 0.35);
+}
+.gs-medallion--ivory::after {
+  border-color: rgba(200, 144, 28, 0.35);
+}
+
+/* ── Architrave-framed card (picker school/chapter rows) ───────────────────
+   PHASE-4 picker polish: an ivory classical "tablet" surface with a gold
+   hairline frame and a subtle gold architrave line under the top edge — the
+   restrained classical framing that turns a flat dark card into a finished,
+   on-theme one. Light (ivory) presentation for the apex web picker over the
+   near-white page. Tokens:
+     .gs-architrave-card        → ivory fill + gold hairline border + architrave.
+     .gs-architrave-card--navy  → deep-navy fill variant for the dark mobile shell.
+   The architrave is a decorative ::before gradient line; reduced-motion-safe
+   (no animation). Hover lift is handled by Tailwind utilities at the call site
+   (transform/opacity only). */
+.gs-architrave-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 241, 230, 0.92));
+  border: 1px solid rgba(200, 144, 28, 0.35);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.8) inset,
+    0 10px 24px -18px rgba(22, 38, 78, 0.35);
+}
+.gs-architrave-card::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 7px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(200, 144, 28, 0.5) 18%,
+    rgba(232, 181, 58, 0.65) 50%,
+    rgba(200, 144, 28, 0.5) 82%,
+    transparent
+  );
+  pointer-events: none;
+}
+.gs-architrave-card--navy {
+  background:
+    linear-gradient(180deg, rgba(22, 38, 78, 0.72), rgba(11, 27, 58, 0.66));
+  border-color: rgba(232, 181, 58, 0.28);
+  box-shadow:
+    0 1px 0 0 rgba(244, 241, 230, 0.08) inset,
+    0 12px 28px -18px rgba(0, 0, 0, 0.6);
+}
+.gs-architrave-card--navy::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(232, 181, 58, 0.4) 18%,
+    rgba(232, 181, 58, 0.6) 50%,
+    rgba(232, 181, 58, 0.4) 82%,
+    transparent
+  );
+}
+
 /* ── Depth helpers for the bento + mockup ─────────────────────────────────
    .gs-card-glow paints a soft inner top-edge gradient + a layered shadow that
    intensifies on hover; .gs-float-shadow grounds the hero mockup so it reads as

@@ -355,6 +355,56 @@ export function hapticNotify(type: HapticNotify = 'success'): void {
   }
 }
 
+// ── External links (open the marketing site / any URL) ───────────────────────
+
+/**
+ * Open an absolute http(s) URL in the right place for the platform:
+ *   • NATIVE shell → the Capacitor `Browser` plugin (system in-app browser),
+ *     falling back to `App.openUrl` (hands the URL to the OS) — so a link to the
+ *     marketing site never tries to navigate the bundled webview away from /app.
+ *   • WEB → a new tab via `window.open(url, "_blank", "noopener,noreferrer")`.
+ *
+ * Only opens absolute http/https URLs (guards against javascript:/data: and
+ * accidental in-app relative navigations). Safe to call unconditionally; never
+ * throws into the caller. Returns true when an open was attempted.
+ */
+export function openExternalUrl(url: string): boolean {
+  const target = (url || '').trim();
+  // Hard allow-list: only real web URLs leave the app.
+  if (!/^https?:\/\//i.test(target)) return false;
+
+  if (isNative()) {
+    const Browser = plugin('Browser');
+    if (Browser?.open) {
+      try {
+        void Browser.open({ url: target });
+        return true;
+      } catch {
+        /* fall through to App.openUrl */
+      }
+    }
+    const App = plugin('App');
+    if (App?.openUrl) {
+      try {
+        void App.openUrl({ url: target });
+        return true;
+      } catch {
+        /* fall through to window.open */
+      }
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.open(target, '_blank', 'noopener,noreferrer');
+      return true;
+    } catch {
+      /* ignore */
+    }
+  }
+  return false;
+}
+
 // ── Splash / status bar polish (native chrome) ───────────────────────────────
 
 /** Hide the native splash once the web client has booted. No-op on web. */

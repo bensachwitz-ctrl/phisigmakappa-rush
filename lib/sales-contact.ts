@@ -45,6 +45,32 @@ export function supportEmail(): string {
   return (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL).trim();
 }
 
+/** The canonical public marketing apex (the "website") shown as the
+ *  picker/login footer link. Prefers the per-deploy `NEXT_PUBLIC_SITE_URL`
+ *  (the same canonical apex lib/login-routing reads), else the brand apex.
+ *  NEXT_PUBLIC_* is inlined by Next at build, so this resolves client-side.
+ *  Pure + side-effect-free; always returns a usable absolute https URL. */
+export const DEFAULT_MARKETING_SITE_URL = "https://greekstack.com";
+export function marketingSiteUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_MARKETING_SITE_URL).trim();
+  try {
+    // Normalize to an origin (drop any path/trailing slash the env may carry).
+    return new URL(raw).origin;
+  } catch {
+    return DEFAULT_MARKETING_SITE_URL;
+  }
+}
+
+/** The bare, display label for the marketing site (host, no scheme/www) — the
+ *  tasteful "greekstack.com" text the footer link shows. */
+export function marketingSiteLabel(): string {
+  try {
+    return new URL(marketingSiteUrl()).host.replace(/^www\./, "");
+  } catch {
+    return "greekstack.com";
+  }
+}
+
 /** Minimal HTML escape for caller-supplied plain strings interpolated into the
  *  sales-notification email body. The renderEmail chrome escapes the heading /
  *  chapterName / footer note itself; the BODY html is trusted, so anything we

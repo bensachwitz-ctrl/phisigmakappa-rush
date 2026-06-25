@@ -15,6 +15,7 @@ import {
   hapticImpact,
   hapticSelection,
   hapticNotify,
+  openExternalUrl,
   navigateToDeepLink,
   type NativeSession,
 } from "@/lib/native-bridge";
@@ -47,6 +48,9 @@ declare global {
       hapticImpact: (style?: "light" | "medium" | "heavy") => void;
       hapticSelection: () => void;
       hapticNotify: (type?: "success" | "warning" | "error") => void;
+      // Open an absolute http(s) URL externally (system browser natively, new
+      // tab on web). Used by the picker's "greekstack.com" website link.
+      openExternalUrl: (url: string) => boolean;
       restoredSession?: NativeSession | null;
     };
   }
@@ -65,6 +69,7 @@ export default function NativeBridge() {
       hapticImpact,
       hapticSelection,
       hapticNotify,
+      openExternalUrl,
       restoredSession: null,
     };
 
