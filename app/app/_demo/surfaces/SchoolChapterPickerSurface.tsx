@@ -2,6 +2,7 @@ import React from "react";
 import {
   IconArrowLeft,
   IconChevronRight,
+  IconExternal,
   IconGraduation,
   IconSearch,
 } from "@/components/brand/icons";
@@ -13,6 +14,7 @@ import {
   brandSecondary,
   type PickerChapter,
 } from "@/lib/app-picker";
+import { marketingSiteUrl, marketingSiteLabel } from "@/lib/sales-contact";
 import type { DemoContext } from "../context";
 
 /**
@@ -41,6 +43,45 @@ import type { DemoContext } from "../context";
 const GS_BLUE = "#1D4ED8";
 const GS_BLUE_DEEP = "#0B2A6B";
 const GS_GOLD = "#D4AF37";
+
+// PHASE-4 classical palette — the temple-brand navy + gold the picker
+// medallions/cards are framed with (matches brand-2026-06-24 spec).
+const GS_NAVY = "#0B1B3A";
+const GS_GOLD_BRAND = "#E8B53A";
+
+/**
+ * A short, classical MONOGRAM (1-2 letters) for the medallion avatar — derived
+ * from a school or chapter name ("Greekstack University" → "GU", "Phi Sigma
+ * Kappa" → "PS"). Pure + deterministic; never empty.
+ */
+function monogramFor(name: string | null | undefined): string {
+  const words = (name || "")
+    .replace(/\[[^\]]*\]/g, " ")
+    .split(/\s+/)
+    .filter((w) => /[a-z0-9]/i.test(w));
+  if (words.length === 0) return "GS";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
+/** Open the marketing site externally (system browser on native, new tab on
+ *  web) via the published native bridge; falls back to a plain window.open so it
+ *  always OPENS even before the bridge mounts. */
+function openMarketingSite(url: string): void {
+  try {
+    if (window.GreekStackNative?.openExternalUrl) {
+      window.GreekStackNative.openExternalUrl(url);
+      return;
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch {
+    /* best-effort */
+  }
+}
 
 export function renderSchoolChapterPicker(ctx: DemoContext) {
   const {
@@ -187,7 +228,8 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
       {pickerStep === "school" && (
         <div className="relative shrink-0 px-6 pb-3">
           <IconSearch
-            className="pointer-events-none absolute left-9 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-9 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: `${GS_GOLD_BRAND}cc` }}
             aria-hidden="true"
           />
           <input
@@ -198,7 +240,16 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
             onChange={(e) => setPickerQuery(e.target.value)}
             placeholder="Search your school…"
             aria-label="Search for your school"
-            className="min-h-[44px] w-full rounded-2xl border border-white/10 bg-white/[0.06] py-3 pl-10 pr-4 text-sm text-white shadow-inner outline-none transition placeholder:text-slate-400 focus:border-white/30 focus:ring-2 focus:ring-white/20 motion-reduce:transition-none"
+            className="min-h-[44px] w-full rounded-2xl border py-3 pl-10 pr-4 font-serif text-base italic text-white shadow-inner outline-none transition placeholder:font-serif placeholder:italic placeholder:text-slate-400 focus:ring-2 motion-reduce:transition-none"
+            style={{
+              borderColor: `${GS_GOLD_BRAND}3d`,
+              backgroundColor: "rgba(244,241,230,0.06)",
+              // gold focus ring via the box-shadow the focus-visible class can't
+              // theme inline; the focus:ring-2 utility paints the outer ring,
+              // tinted gold by accentColor inheritance is unreliable, so the
+              // ring color is set on the wrapper utilities below.
+              ["--tw-ring-color" as string]: `${GS_GOLD_BRAND}40`,
+            }}
           />
         </div>
       )}
@@ -224,8 +275,11 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
         )}
       </div>
 
-      {/* ── Footer: explore the demo ─────────────────────────────────────── */}
-      <div className="relative shrink-0 border-t border-white/10 px-6 py-4 text-center">
+      {/* ── Footer: explore the demo + visit the website ─────────────────── */}
+      <div
+        className="relative shrink-0 border-t px-6 py-4 text-center"
+        style={{ borderColor: `${GS_GOLD_BRAND}1f` }}
+      >
         <button
           type="button"
           onClick={enterDemoShowcase}
@@ -234,6 +288,28 @@ export function renderSchoolChapterPicker(ctx: DemoContext) {
           Just exploring? See a live demo
           <IconChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
+        {/* Website link — a tasteful gold serif link that OPENS the marketing
+            site (system browser on native iOS via the bridge, new tab on web).
+            Gold greek-key hairline frames it as a classical footer accent. */}
+        <div className="mt-2.5 flex flex-col items-center gap-2">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none gs-greek-key gs-greek-key--gold w-20"
+          />
+          <button
+            type="button"
+            onClick={() => openMarketingSite(marketingSiteUrl())}
+            aria-label={`Visit ${marketingSiteLabel()} (opens the website)`}
+            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-3 font-serif text-base italic transition hover:underline focus-visible:outline-none focus-visible:ring-2 motion-reduce:transition-none"
+            style={{
+              color: GS_GOLD_BRAND,
+              ["--tw-ring-color" as string]: `${GS_GOLD_BRAND}55`,
+            }}
+          >
+            Visit {marketingSiteLabel()}
+            <IconExternal accent={GS_GOLD_BRAND} className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -256,18 +332,17 @@ function SchoolList({
 }) {
   if (groups.length === 0 && catalogSuggestions.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-5 py-10 text-center">
-        <span
-          className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white"
-          style={{ background: `linear-gradient(140deg, ${GS_BLUE}, ${GS_GOLD})` }}
-          aria-hidden="true"
-        >
+      <div
+        className="rounded-2xl border border-dashed px-5 py-10 text-center"
+        style={{ borderColor: `${GS_GOLD_BRAND}33`, backgroundColor: "rgba(244,241,230,0.03)" }}
+      >
+        <span className="gs-medallion mx-auto mb-3 h-12 w-12" aria-hidden="true">
           <IconGraduation className="h-6 w-6" />
         </span>
-        <p className="text-sm font-semibold text-white">
+        <p className="font-display text-sm font-semibold uppercase tracking-[0.08em] text-white">
           {query ? "No chapters there yet" : "No chapters yet"}
         </p>
-        <p className="mx-auto mt-1 max-w-[16rem] text-xs leading-relaxed text-slate-400">
+        <p className="mx-auto mt-1.5 max-w-[16rem] font-serif text-[13px] italic leading-relaxed text-slate-300/90">
           {query
             ? `We couldn't find a chapter at "${query.trim()}". It might be coming soon.`
             : "Chapters appear here as they launch."}
@@ -283,23 +358,30 @@ function SchoolList({
           <button
             type="button"
             onClick={() => onPick(g.school)}
-            className="group flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            className="gs-architrave-card gs-architrave-card--navy group flex min-h-[64px] w-full items-center gap-3 rounded-2xl px-4 py-3 pt-4 text-left transition-all duration-200 ease-gs-spring hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            style={{ ["--tw-ring-color" as string]: `${GS_GOLD_BRAND}55` }}
           >
+            {/* Classical MEDALLION (gold ring + navy fill + serif monogram) —
+                replaces the flat graduation chip the owner flagged. */}
             <span
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
-              style={{ background: `linear-gradient(140deg, ${GS_BLUE}, ${GS_BLUE_DEEP})` }}
+              className="gs-medallion h-11 w-11 font-display text-sm font-semibold leading-none tracking-[0.04em]"
               aria-hidden="true"
             >
-              <IconGraduation className="h-5 w-5" />
+              {monogramFor(g.school)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-white">{g.school}</span>
-              <span className="block truncate text-[12px] text-slate-400">
+              {/* School NAME in Cinzel (display) caps voice. */}
+              <span className="block truncate font-display text-[15px] font-semibold tracking-[0.01em] text-white">
+                {g.school}
+              </span>
+              {/* "1 chapter" sub-label in Cormorant (serif) italic. */}
+              <span className="block truncate font-serif text-[13px] italic text-slate-300/90">
                 {g.chapters.length} chapter{g.chapters.length === 1 ? "" : "s"}
               </span>
             </span>
             <IconChevronRight
-              className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white motion-reduce:transition-none"
+              className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+              style={{ color: `${GS_GOLD_BRAND}b3` }}
               aria-hidden="true"
             />
           </button>
@@ -351,7 +433,10 @@ function ChapterList({
 }) {
   if (chapters.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-5 py-10 text-center text-sm text-slate-300">
+      <div
+        className="rounded-2xl border border-dashed px-5 py-10 text-center font-serif text-[13px] italic text-slate-300/90"
+        style={{ borderColor: `${GS_GOLD_BRAND}33`, backgroundColor: "rgba(244,241,230,0.03)" }}
+      >
         No chapters at this school yet.
       </div>
     );
@@ -366,26 +451,31 @@ function ChapterList({
             <button
               type="button"
               onClick={() => onPick(c)}
-              className="group flex min-h-[64px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="gs-architrave-card gs-architrave-card--navy group flex min-h-[68px] w-full items-center gap-3 rounded-2xl px-4 py-3 pt-4 text-left transition-all duration-200 ease-gs-spring hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              style={{ ["--tw-ring-color" as string]: `${GS_GOLD_BRAND}55` }}
             >
+              {/* Medallion frame (gold ring) around the chapter's own crest /
+                  letters — keeps each fraternity's identity color while reading
+                  as a classical struck seal, not a flat chip. */}
               <span
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl text-[15px] font-extrabold text-white shadow-sm"
+                className="gs-medallion h-12 w-12 overflow-hidden font-display text-[15px] font-semibold leading-none"
                 style={{
                   background: c.brand.crestUrl
-                    ? "transparent"
+                    ? GS_NAVY
                     : `linear-gradient(140deg, ${c.brand.primaryColor}, ${sec})`,
                 }}
                 aria-hidden="true"
               >
                 {c.brand.crestUrl ? (
-                  <img src={c.brand.crestUrl} alt="" className="h-full w-full object-contain" />
+                  <img src={c.brand.crestUrl} alt="" className="h-full w-full rounded-full object-contain" />
                 ) : (
                   c.brand.letters
                 )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5">
-                  <span className="truncate text-sm font-bold text-white">
+                  {/* Chapter NAME in Cinzel (display). */}
+                  <span className="truncate font-display text-[15px] font-semibold tracking-[0.01em] text-white">
                     {(c.name || c.subdomain).replace(/\s*\[Demo\]\s*$/i, "")}
                   </span>
                   <span
@@ -399,12 +489,14 @@ function ChapterList({
                     {isDemo ? "Demo" : "Live"}
                   </span>
                 </span>
-                <span className="mt-0.5 block truncate text-[12px] text-slate-400">
+                {/* Letters · school sub-label in Cormorant (serif) italic. */}
+                <span className="mt-0.5 block truncate font-serif text-[13px] italic text-slate-300/90">
                   {c.brand.letters} · {c.school || "Greekstack chapter"}
                 </span>
               </span>
               <IconChevronRight
-                className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white motion-reduce:transition-none"
+                className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                style={{ color: `${GS_GOLD_BRAND}b3` }}
                 aria-hidden="true"
               />
             </button>
