@@ -578,23 +578,34 @@ export default function BrothersDashboardClient({
   const [eventList, setEventList] = useState<Event[]>(events);
   const [announcementList, setAnnouncementList] = useState<Announcement[]>(initialAnnouncements);
 
-  // RBAC: the exec/admin console must NEVER leak onto a regular member's view.
+  // RBAC: the exec/admin surfaces must NEVER leak onto a regular member's view.
   // Use the CANONICAL, server-shared officer test (lib/member-capabilities ->
   // isOfficerPosition) — the same keyword gate the mobile /api/mobile/data route
   // enforces — instead of the prior ad-hoc "position !== 'Active Member'" check,
   // which treated ANY non-empty, non-"Active Member" string (e.g. "Member",
   // "Brother", "New Member", a custom title) as an officer and bled the exec
-  // console onto plain members. Now only a real officer seat (President / Vice /
+  // surface onto plain members. Now only a real officer seat (President / Vice /
   // Treasurer / Secretary / any Chair / titled officer) OR a global admin sees it.
   const isOfficer = isOfficerPosition(brother.position);
-  const showAdminConsole = isOfficer || isAdmin;
+  const showExecSurface = isOfficer || isAdmin;
+
+  // DEAD-CONTROL FIX (GATE-3 FIX 2): the Quick Admin Console + every other shortcut
+  // that LINKS OUT to an /admin/* page must render ONLY for a viewer who actually
+  // holds admin access. A /portal/brothers session carries the `phisig_portal`
+  // cookie, NOT `phisig_admin`; a portal-only OFFICER (isOfficer=true, isAdmin=false)
+  // therefore CANNOT reach /admin/* — every one of those buttons just bounced them
+  // to /admin/login. We do NOT bridge a portal officer up to admin (that would
+  // weaken tenant/role isolation), so the safe default is to HIDE the dead /admin/*
+  // controls for anyone who isn't a real admin. Gate on `isAdmin` (the real
+  // `phisig_admin` capability passed from the server), not officer position.
+  const canUseAdminLinks = isAdmin;
 
   // DUES VISIBILITY: the Dues card + tab only belong on a member's view when the
   // chapter has actually CONFIGURED dues (online dues enabled + a positive amount
   // set). When a chapter never set dues up, a plain member should see no dues
   // surface at all. Exec/admin still see it (gated to a "set it up" empty state)
   // so a treasurer can finish configuration from inside the portal.
-  const showDues = duesConfig.configured || showAdminConsole;
+  const showDues = duesConfig.configured || showExecSurface;
 
   // Career board states
   const [alumniTab, setAlumniTab] = useState("directory"); // "directory" or "careers"
@@ -1234,8 +1245,10 @@ export default function BrothersDashboardClient({
               {/* Good-standing widget — your engagement score at a glance */}
               {standing && <StandingWidget standing={standing} memberName={brother.name} />}
 
-              {/* Quick Admin Console for officers/admins */}
-              {showAdminConsole && (
+              {/* Quick Admin Console — ONLY for a real admin (phisig_admin). A
+                  portal-only officer can't reach /admin/*, so these shortcuts
+                  would be dead for them; hide rather than dangle. */}
+              {canUseAdminLinks && (
                 <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-500/[0.03] to-transparent backdrop-blur-xl p-5 ring-1 ring-amber-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(217,119,6,0.15)] space-y-4 text-left animate-fade-in">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
@@ -1255,7 +1268,7 @@ export default function BrothersDashboardClient({
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     {[
-                      { label: "Manage Recruitment", icon: IconRecruitment, path: "/admin/rush", desc: "Rush pipelines & bid responses" },
+                      { label: "Manage Recruitment", icon: IconRecruitment, path: "/admin/rushees", desc: "Rush pipelines & bid responses" },
                       { label: "Chore Wheel Rotate", icon: IconSettings, path: "/admin/chores", desc: "Rotate chore schedules & grades" },
                       { label: "Treasury & Budgets", icon: IconTreasury, path: "/admin/treasury", desc: "Track chapter accounts & cashflow" },
                       { label: "Calendar & Events", icon: IconEvents, path: "/admin/events", desc: "Add & schedule chapter events" },
@@ -1573,7 +1586,7 @@ export default function BrothersDashboardClient({
                   <p className="text-xs text-maroon-600">RSVP to chapter meetings, philanthropy, socials, and recruitment.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {showAdminConsole && (
+                  {canUseAdminLinks && (
                     <Button
                       onClick={() => window.open("/admin/events", "_blank")}
                       size="sm"
@@ -1943,7 +1956,7 @@ export default function BrothersDashboardClient({
                   sets a dues amount and connects Stripe, the dues card and online
                   payment will appear here automatically.
                 </p>
-                {showAdminConsole && (
+                {canUseAdminLinks && (
                   <a
                     href="/admin/settings#dues"
                     target="_blank"

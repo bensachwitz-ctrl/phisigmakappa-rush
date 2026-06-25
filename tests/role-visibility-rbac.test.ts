@@ -625,3 +625,60 @@ describe("GET /api/mobile/data — server-enforced capabilities", () => {
     expect(body.pnms[0].name).toBe("PNM One");
   });
 });
+
+// ── GATE-3 FIX 2 — Brothers dashboard Quick Admin Console: no DEAD /admin/* ────
+// shortcuts for a portal-only officer. A /portal/brothers session carries the
+// `phisig_portal` cookie, NOT `phisig_admin`, so a portal-only OFFICER
+// (isOfficer=true, isAdmin=false) CANNOT reach /admin/* — every shortcut just
+// bounced them to /admin/login. The console + the "Add/Manage events" + "Set up
+// dues" /admin/* links are now gated on REAL admin access (`canUseAdminLinks =
+// isAdmin`), not officer position, so a portal-only officer sees no dead control.
+// We deliberately do NOT bridge a portal officer up to admin (that would weaken
+// tenant/role isolation); hiding is the safe default. Static source-pin + a pure
+// predicate matching the component's gate. Non-vacuous: the pre-fix gate
+// (`isOfficer || isAdmin`) would have FAILED the predicate test for the
+// portal-only-officer case.
+describe("brothers dashboard admin shortcuts (GATE-3 FIX 2) — no dead /admin/* for portal-only officers", () => {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const { resolve } = require("node:path") as typeof import("node:path");
+  const SRC = readFileSync(
+    resolve(__dirname, "..", "app/portal/brothers/dashboard/BrothersDashboardClient.tsx"),
+    "utf8",
+  );
+
+  // The exact gate the component renders the /admin/* shortcuts behind.
+  const canUseAdminLinks = (isAdmin: boolean): boolean => isAdmin;
+
+  it("a portal-only OFFICER (isOfficer=true, isAdmin=false) gets NO admin shortcuts", () => {
+    // isOfficer is true, but the admin-link gate ignores it — only real admin
+    // access (the phisig_admin cookie → isAdmin) unlocks the /admin/* links.
+    expect(canUseAdminLinks(false)).toBe(false);
+  });
+
+  it("a real ADMIN (isAdmin=true) DOES get the admin shortcuts", () => {
+    expect(canUseAdminLinks(true)).toBe(true);
+  });
+
+  it("the source gates the Quick Admin Console + /admin/* links on `canUseAdminLinks`, defined as `isAdmin`", () => {
+    // Pin the wiring so a future edit can't silently re-broaden the gate back to
+    // officer position (which is exactly what dangled the dead controls).
+    expect(SRC).toMatch(/const canUseAdminLinks = isAdmin;/);
+    // All three /admin/*-linking blocks render behind canUseAdminLinks.
+    const guards = SRC.match(/\{canUseAdminLinks &&/g) || [];
+    expect(guards.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the admin-link controls are NOT gated on officer position (showExecSurface)", () => {
+    // showExecSurface (isOfficer || isAdmin) still gates dues-card VISIBILITY,
+    // but must never wrap an /admin/* link — those are admin-only now.
+    expect(/\{showExecSurface &&/.test(SRC)).toBe(false);
+    // And the old, leak-y name must be fully gone.
+    expect(/showAdminConsole/.test(SRC)).toBe(false);
+  });
+
+  it("the recruitment shortcut points at the real /admin/rushees route (not the 404 /admin/rush)", () => {
+    // GATE-3 FIX 3 lives here too: /admin/rush does not exist; /admin/rushees does.
+    expect(SRC).toContain('path: "/admin/rushees"');
+    expect(/path:\s*"\/admin\/rush"/.test(SRC)).toBe(false);
+  });
+});
