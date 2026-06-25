@@ -249,6 +249,11 @@ async function ChapterPrivacyPage() {
 
 const PLATFORM_PRIVACY_UPDATED = "June 2026";
 
+/** Public, BRANDED contact address for legal/privacy correspondence. Env-configurable
+ *  via NEXT_PUBLIC_SUPPORT_EMAIL; defaults to the brand inbox (not a personal email).
+ *  OWNER-KEYS: stand up + monitor the real support@ inbox (or set the env) before launch. */
+const CONTACT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 function PlatformPrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -466,7 +471,7 @@ function PlatformPrivacyPage() {
             Because Greekstack processes member and rushee data on a chapter&apos;s behalf, we make a Data
             Processing Agreement available to subscribing chapters. To request a DPA, or to ask any
             data-protection question, email{" "}
-            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.
           </p>
         </PSection>
 
@@ -482,7 +487,7 @@ function PlatformPrivacyPage() {
           <p>
             General questions and privacy-specific requests (access, export, correction, or
             deletion):{" "}
-            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.
             See also our{" "}
             <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
           </p>
@@ -490,7 +495,7 @@ function PlatformPrivacyPage() {
 
         <p className="mt-12 text-xs text-muted-foreground">
           Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Contact:{" "}
-          <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>
         </p>
       </main>
 

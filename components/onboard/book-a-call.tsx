@@ -34,9 +34,12 @@ import { cn } from "@/lib/utils";
 import { IconCheckCircle } from "@/components/brand/icons";
 import { IconCalendar } from "@/components/brand/icons/onboarding-wizard";
 
-/** Owner sales inbox — mirrors the /contact fallback so the copy stays on-brand. */
+/** Owner sales inbox — mirrors the /contact fallback so the copy stays on-brand.
+ *  Falls back to the BRANDED support address (not a personal inbox) when unset.
+ *  OWNER-KEYS: set NEXT_PUBLIC_SALES_EMAIL (and stand up the real support@ inbox)
+ *  before launch. */
 const SALES_EMAIL =
-  (process.env.NEXT_PUBLIC_SALES_EMAIL || "bensachwitz@gmail.com").trim();
+  (process.env.NEXT_PUBLIC_SALES_EMAIL || "support@greekstack.com").trim();
 
 /**
  * Responsive Cal.com booker iframe. Mirrors the apex /contact <CalEmbed>: a

@@ -85,6 +85,14 @@ import {
 /** Custom Greekstack icon component type — drop-in replacement for lucide's LucideIcon. */
 type GsIcon = (props: IconProps) => React.JSX.Element;
 
+/** Public, BRANDED support address for the footer mailto + contact copy.
+ *  Env-configurable via NEXT_PUBLIC_SUPPORT_EMAIL (inlined by Next at build);
+ *  defaults to the brand inbox. NOT the founder's personal email — this is the
+ *  address a prospect sees and writes to.
+ *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
+ *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 /* ── Bespoke glassy icon TILE (the new custom character) ──────────────────────
    Renders one of the bespoke single-family <BrandGlyph> SVG app-icons — the SAME
    visual language as the feature-card icons. Transparent by construction (no
@@ -649,7 +657,7 @@ const TRUST_CLAIMS: { icon: GsIcon; label: string }[] = [
      2. DUES-SHARE — waive the monthly platform fee entirely and instead pay a
         small percentage on dues collected online (1.5% intro, then 3%); no card
         required to start.
-     3. CUSTOM — need something tailored? Talk to Ben about a custom build +
+     3. CUSTOM — need something tailored? Talk to our team about a custom build +
         pricing → /contact#book (the existing book-a-call path).
    There is NO semester option. Every method unlocks the entire product (same
    features, same support). CTAs route real (/onboard, /contact#book). */
@@ -697,7 +705,7 @@ const PLANS: Plan[] = [
       "No setup cost & no card required to start",
     ],
     cta: { label: "Start on Dues-Share", href: "/onboard" },
-    fineprint: "No card needed to start · setup via Ben",
+    fineprint: "No card needed to start · setup with our team",
   },
   {
     id: "platform",
@@ -742,7 +750,7 @@ const PLANS: Plan[] = [
       "Council / national integrations + custom reporting",
       "Custom pricing built around what you actually need",
     ],
-    cta: { label: "Talk to Ben about a custom build", href: "/contact#book" },
+    cta: { label: "Talk to our team about a custom build", href: "/contact#book" },
     fineprint: "We scope it with you first — no surprise fees",
   },
 ];
@@ -3293,7 +3301,7 @@ function Proof() {
                 <Button asChild variant="platform" size="lg" className="gs-sheen">
                   <Link href="/contact" className="group/btn">
                     <IconTalkToSales className="h-5 w-5" />
-                    Talk to the founder
+                    Talk to our team
                     <IconArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                   </Link>
                 </Button>
@@ -3497,10 +3505,10 @@ function SiteFooter() {
             <ul className="space-y-2.5">
               <li>
                 <a
-                  href="mailto:bensachwitz@gmail.com"
+                  href={`mailto:${SUPPORT_EMAIL}`}
                   className="link-underline text-sm font-medium text-foreground/90 transition-colors hover:text-foreground"
                 >
-                  bensachwitz@gmail.com
+                  {SUPPORT_EMAIL}
                 </a>
               </li>
               <li>
@@ -3508,7 +3516,7 @@ function SiteFooter() {
                   href="/contact"
                   className="link-underline text-sm text-foreground/80 transition-colors hover:text-foreground"
                 >
-                  Talk to the founder
+                  Talk to our team
                 </Link>
               </li>
             </ul>

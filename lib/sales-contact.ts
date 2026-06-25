@@ -26,6 +26,25 @@ export function salesContactEmail(): string {
   return process.env.SALES_CONTACT_EMAIL || "bensachwitz@gmail.com";
 }
 
+/**
+ * The PUBLIC-facing, BRANDED support address shown on the marketing funnel
+ * (footer mailto, contact copy). Env-configurable via `NEXT_PUBLIC_SUPPORT_EMAIL`
+ * so the owner can point it at a real shared inbox; defaults to the brand address.
+ *
+ * OWNER-KEYS NOTE: the default `support@greekstack.com` inbox must be created and
+ * monitored by the owner before launch — set `NEXT_PUBLIC_SUPPORT_EMAIL` if the
+ * production support address differs. This is the address PROSPECTS see and email;
+ * it is intentionally separate from `SALES_CONTACT_EMAIL` (the internal inbox the
+ * server delivers form submissions to).
+ *
+ * NEXT_PUBLIC_* is inlined by Next at build, so this resolves to the brand default
+ * client-side unless the env var is set at build time. Pure + side-effect-free.
+ */
+export const DEFAULT_SUPPORT_EMAIL = "support@greekstack.com";
+export function supportEmail(): string {
+  return (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL).trim();
+}
+
 /** Minimal HTML escape for caller-supplied plain strings interpolated into the
  *  sales-notification email body. The renderEmail chrome escapes the heading /
  *  chapterName / footer note itself; the BODY html is trusted, so anything we

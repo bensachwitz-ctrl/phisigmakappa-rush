@@ -67,7 +67,7 @@ export default function OnboardError({
             size="lg"
             className="press border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
           >
-            <Link href="/contact#book">Talk to Ben</Link>
+            <Link href="/contact#book">Talk to our team</Link>
           </Button>
         </div>
         {error.digest && (

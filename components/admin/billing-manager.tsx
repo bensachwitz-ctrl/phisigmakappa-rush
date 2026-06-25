@@ -60,6 +60,13 @@ type Reason =
 
 type Plan = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
 
+/** Public, BRANDED support address shown in admin dues-setup copy. Env-configurable
+ *  via NEXT_PUBLIC_SUPPORT_EMAIL (inlined by Next at build); defaults to the brand
+ *  inbox — NOT the founder's personal email.
+ *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
+ *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 /** Normalize a possibly-legacy/empty plan slug coming from the server. */
 function normPlan(plan: string | null | undefined): Plan {
   const p = (plan || "").trim().toLowerCase();
@@ -238,7 +245,7 @@ export function BillingManager(props: {
                   Dues Setup Required
                 </p>
                 <p className="text-muted-foreground">
-                  To set up your specific dues payments and amount, please reach out to Ben at <a href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup" className="underline font-semibold hover:text-foreground">bensachwitz@gmail.com</a>.
+                  To set up your specific dues payments and amount, please reach out to our team at <a href={`mailto:${SUPPORT_EMAIL}?subject=Greek%20Stack%20Dues%20Setup`} className="underline font-semibold hover:text-foreground">{SUPPORT_EMAIL}</a>.
                 </p>
               </div>
             </div>
@@ -412,7 +419,7 @@ export function BillingManager(props: {
                 return;
               }
               if (p === "dues_percentage") {
-                window.location.href = "mailto:bensachwitz@gmail.com?subject=Switch%20to%20Dues%20Percentage%20Plan";
+                window.location.href = `mailto:${SUPPORT_EMAIL}?subject=Switch%20to%20Dues%20Percentage%20Plan`;
                 return;
               }
               void go("checkout", p);

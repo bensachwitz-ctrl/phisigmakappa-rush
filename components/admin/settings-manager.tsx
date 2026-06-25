@@ -24,6 +24,13 @@ import Link from "next/link";
 import { IconSpark } from "@/components/brand/icons";
 const ICONS = ["Crown", "Trophy", "HandHeart", "Users", "Award", "Star", "Heart", "GraduationCap", "BookOpen", "Music", "Building2", "Flame", "ShieldCheck"];
 
+/** Public, BRANDED support address shown in admin dues-setup copy. Env-configurable
+ *  via NEXT_PUBLIC_SUPPORT_EMAIL (inlined by Next at build); defaults to the brand
+ *  inbox — NOT the founder's personal email.
+ *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
+ *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 // The GET payload masks write-only secrets (Resend API key, Twilio auth token)
 // as this exact bullet string. We must NEVER let it be saved back — editing a
 // secret has to start from an empty input so an admin can't accidentally store
@@ -358,7 +365,7 @@ export function SettingsManager({
           <p className="font-bold text-foreground mb-1">💡 Save on Your Platform Fee!</p>
           <span>
             If you collect dues online via Greek Stack, you can waive your monthly $50/mo platform subscription fee! Under this plan, we just take a percentage of dues collected. 
-            To activate this, please <a href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup" className="underline font-semibold text-foreground hover:text-emerald-500 transition-colors">reach out to Ben</a> to configure your specific dues payments and amount.
+            To activate this, please <a href={`mailto:${SUPPORT_EMAIL}?subject=Greek%20Stack%20Dues%20Setup`} className="underline font-semibold text-foreground hover:text-emerald-500 transition-colors">reach out to our team</a> to configure your specific dues payments and amount.
           </span>
         </div>
         <p className="text-xs text-muted-foreground mb-4">

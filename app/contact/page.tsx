@@ -53,9 +53,13 @@ function requestHost(): string {
   }
 }
 
-/** Owner sales inbox — mirrors the lib/sales-contact contract. */
+/** Owner sales inbox — mirrors the lib/sales-contact contract. Falls back to the
+ *  BRANDED support address (not a personal inbox) when the env var is unset, so
+ *  the public funnel never surfaces a founder's personal email.
+ *  OWNER-KEYS: set SALES_CONTACT_EMAIL (and stand up the real support@ inbox)
+ *  before launch. */
 function salesEmail(): string {
-  return process.env.SALES_CONTACT_EMAIL || "bensachwitz@gmail.com";
+  return process.env.SALES_CONTACT_EMAIL || "support@greekstack.com";
 }
 
 export async function generateMetadata(): Promise<Metadata> {

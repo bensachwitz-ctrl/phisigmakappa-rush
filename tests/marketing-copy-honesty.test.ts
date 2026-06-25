@@ -300,3 +300,78 @@ describe("blue-rebrand honesty — no maroon (rgba(74,17,29)) shadows under blue
     });
   }
 });
+
+// ── GATE-3 FIX 1 — de-personalized public funnel + branded support ────────────
+// The public funnel (marketing landing, onboarding, legal pages, in-app demo,
+// admin dues-setup copy, platform invoices) must NOT surface the founder's
+// PERSONAL email (`bensachwitz@gmail.com`) or first-name/"the founder"-as-contact
+// framing ("Talk to Ben", "reach out to Ben", "Talk to the founder",
+// "setup via Ben"). The branded, env-configurable address (support@greekstack.com,
+// overridable via NEXT_PUBLIC_SUPPORT_EMAIL / SALES_CONTACT_EMAIL /
+// SUPPORT_CONTACT_EMAIL) is used instead. Static source-pin so a copy edit can't
+// regress the de-personalization. NON-VACUOUS: the pre-fix copy ("Talk to Ben",
+// the hard-coded bensachwitz mailto, "Talk to the founder") would have failed
+// every one of these; the branded replacements pass.
+describe("funnel de-personalization (GATE-3 FIX 1) — branded support, no founder personal contact", () => {
+  // Every user-facing funnel/legal/demo/admin-copy surface touched by the fix.
+  // `bensachwitz@gmail.com` must appear in NONE of them (rendered or as a
+  // fallback default — the defaults were all rebranded too).
+  const FUNNEL_SURFACES = [
+    "components/site/marketing-landing.tsx",
+    "app/onboard/onboard-wizard.tsx",
+    "app/onboard/error.tsx",
+    "components/onboard/book-a-call.tsx",
+    "components/admin/billing-manager.tsx",
+    "components/admin/settings-manager.tsx",
+    "app/contact/page.tsx",
+    "app/support/page.tsx",
+    "app/privacy/page.tsx",
+    "app/terms/page.tsx",
+    "app/app/_demo/modals/BookingModal.tsx",
+    "lib/platform-billing.ts",
+  ];
+
+  for (const rel of FUNNEL_SURFACES) {
+    const src = readFileSync(resolve(ROOT, rel), "utf8");
+    it(`${rel} does not surface the founder's personal email`, () => {
+      expect(
+        /bensachwitz@gmail\.com/i.test(src),
+        `Found bensachwitz@gmail.com in ${rel}; use the branded support address (env: NEXT_PUBLIC_SUPPORT_EMAIL / SALES_CONTACT_EMAIL / SUPPORT_CONTACT_EMAIL, default support@greekstack.com).`,
+      ).toBe(false);
+    });
+    it(`${rel} has no first-name/"the founder"-as-contact CTA framing`, () => {
+      // CONTACT framing only — "Talk to Ben" / "reach out to Ben" / "with Ben" /
+      // "Talk to the founder". (Code comments still describing the owner's Cal
+      // link are not rendered; this scans for the rendered CTA phrasings.)
+      const FORBIDDEN_CONTACT = [
+        /Talk to Ben\b/i,
+        /reach out to Ben\b/i,
+        /(?:with|to) Ben\b(?!\w)/i,
+        /Talk to the founder/i,
+        /setup via Ben/i,
+        /Call with Ben\b/i,
+      ];
+      for (const pat of FORBIDDEN_CONTACT) {
+        // Skip lines that are pure code comments (//, * , /*) so the internal
+        // routing comments ("→ talk to Ben") don't false-flag — only rendered
+        // copy matters here.
+        const rendered = src
+          .split("\n")
+          .filter((ln) => !/^\s*(?:\/\/|\*|\/\*)/.test(ln))
+          .join("\n");
+        expect(
+          pat.test(rendered),
+          `Found founder-first-name/"the founder" contact framing matching ${pat} in ${rel}; use brand/role voice ("Talk to our team" / "Greekstack support").`,
+        ).toBe(false);
+      }
+    });
+  }
+
+  it("the branded support address default is the brand inbox (not a personal email)", () => {
+    // Pin the canonical default in lib/sales-contact so the de-personalization
+    // has a single source of truth a future edit can't quietly repoint.
+    const sc = readFileSync(resolve(ROOT, "lib/sales-contact.ts"), "utf8");
+    expect(sc).toContain('export const DEFAULT_SUPPORT_EMAIL = "support@greekstack.com"');
+    expect(sc).toMatch(/NEXT_PUBLIC_SUPPORT_EMAIL/);
+  });
+});

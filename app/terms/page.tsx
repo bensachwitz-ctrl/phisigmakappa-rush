@@ -23,6 +23,11 @@ export const dynamic = "force-dynamic";
 // Effective date is rendered in copy; bump when the terms materially change.
 const EFFECTIVE_DATE = "June 2026";
 
+/** Public, BRANDED contact address for legal notices. Env-configurable via
+ *  NEXT_PUBLIC_SUPPORT_EMAIL; defaults to the brand inbox (not a personal email).
+ *  OWNER-KEYS: stand up + monitor the real support@ inbox (or set the env) before launch. */
+const CONTACT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 function requestHost(): string {
   try {
     const h = headers();
@@ -321,13 +326,13 @@ export default async function TermsPage() {
         <Section title="15. Contact">
           <p>
             General questions and legal notices: email{" "}
-            <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>.
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.
           </p>
         </Section>
 
         <p className="mt-12 text-xs text-muted-foreground">
           Effective date: {EFFECTIVE_DATE} · Greekstack — the white-label Greek-life platform · Contact:{" "}
-          <a href="mailto:bensachwitz@gmail.com" className="text-blue-600 hover:underline">bensachwitz@gmail.com</a>{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>{" "}
           · See also our{" "}
           <Link href="/privacy" className="text-blue-600 hover:underline">privacy policy</Link>.
         </p>

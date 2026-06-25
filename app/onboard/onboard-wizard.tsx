@@ -149,6 +149,13 @@ function ProvisioningOverlay({
   );
 }
 
+/** Public, BRANDED support address shown in the onboarding funnel (dues-setup
+ *  CTA). Env-configurable via NEXT_PUBLIC_SUPPORT_EMAIL (inlined by Next at
+ *  build); defaults to the brand inbox — NOT the founder's personal email.
+ *  OWNER-KEYS: the owner must stand up + monitor the real support@ inbox (or set
+ *  NEXT_PUBLIC_SUPPORT_EMAIL to the production address) before launch. */
+const SUPPORT_EMAIL = (process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@greekstack.com").trim();
+
 const ALL_STEPS = [
   { id: "pricing", label: "Pricing", icon: IconPricing, blurb: "Choose how you'd like to pay — first month free, cancel anytime." },
   { id: "chapter", label: "Your Chapter", icon: IconCrest, blurb: "Pick your school & organization to auto-theme everything, then upload assets." },
@@ -181,7 +188,7 @@ export default function OnboardWizard() {
   const [launched, setLaunched] = React.useState(false);
   const [liveUrl, setLiveUrl] = React.useState("");
   // Inline launch-failure message (non-subdomain errors) so the finish line shows
-  // a recoverable card with Retry + Talk-to-Ben, not just a transient toast.
+  // a recoverable card with Retry + Talk-to-our-team, not just a transient toast.
   const [launchError, setLaunchError] = React.useState<string | null>(null);
   // Heading of the active step — focused on each transition so keyboard/screen-
   // reader users land on the new step's title instead of being stranded.
@@ -265,7 +272,7 @@ export default function OnboardWizard() {
   // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
   //   "monthly" — Base, FIRST MONTH FREE, then $50/mo + $200 per rush cycle
   //   "yearly"  — Annual, $800/year, INCLUDES all rush-cycle fees (best value)
-  //   "custom"  — Custom build (a "talk to Ben" path → the book-a-call/Cal link)
+  //   "custom"  — Custom build (a "talk to our team" path → the book-a-call/Cal link)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
   // skips straight through still lands on the most generous, no-card option.
   // ("semester" / "dues_percentage" are retained in the persisted union ONLY for
@@ -1508,7 +1515,7 @@ export default function OnboardWizard() {
                       </p>
                       <p className="mt-1 text-sm leading-relaxed text-rose-100/80">{launchError}</p>
                       <p className="mt-1 text-sm leading-relaxed text-rose-100/70">
-                        Your answers are still here — give it another try, or have Ben launch it with you.
+                        Your answers are still here — give it another try, or our team will launch it with you.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
@@ -1526,7 +1533,7 @@ export default function OnboardWizard() {
                           variant="outline"
                           className="press border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
                         >
-                          <a href="/contact#book">Talk to Ben</a>
+                          <a href="/contact#book">Talk to Greekstack support</a>
                         </Button>
                       </div>
                     </div>
@@ -1611,7 +1618,7 @@ export default function OnboardWizard() {
                     </span>
                   </p>
 
-                  {/* ── Want it fully customized? → talk to Ben ───────────────────
+                  {/* ── Want it fully customized? → talk to our team ──────────────
                       A clear path to a tailored build + custom pricing, routed to
                       the book-a-call (Cal.com) link when configured, else the apex
                       custom-quote form. Distinct from the no-pressure "book a hand
@@ -1630,13 +1637,13 @@ export default function OnboardWizard() {
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-white">Want it fully customized?</p>
                         <p className="truncate text-xs text-slate-300">
-                          Talk to Ben about a custom build + pricing — tailored to exactly how your
+                          Talk to our team about a custom build + pricing — tailored to exactly how your
                           chapter runs.
                         </p>
                       </div>
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-100 ring-1 ring-amber-400/25">
-                      Talk to Ben
+                      Talk to our team
                       <IconExternal className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
                   </a>
@@ -1789,12 +1796,12 @@ const PLAN_SUMMARY: Record<PlanId, string> = {
   custom: "Custom — tailored quote",
 };
 
-/* Where the "Talk to Ben about a custom build" CTAs point. Prefer the owner's
+/* Where the "Talk to our team about a custom build" CTAs point. Prefer the owner's
    Cal.com book-a-call link (NEXT_PUBLIC_CAL_LINK, inlined by Next at build) so
-   the prospect can grab time with Ben directly; fall back to the apex custom-quote
-   form (/contact#custom) when no Cal link is configured, so the button is never
-   dead. The env value is the "handle/event" slug (e.g. "ben/30min") OR an absolute
-   URL; we normalize to a full cal.com URL. */
+   the prospect can grab time with the team directly; fall back to the apex
+   custom-quote form (/contact#custom) when no Cal link is configured, so the
+   button is never dead. The env value is the "handle/event" slug (e.g.
+   "team/30min") OR an absolute URL; we normalize to a full cal.com URL. */
 function customBuildHref(): string {
   const raw = (process.env.NEXT_PUBLIC_CAL_LINK || "").trim();
   if (!raw) return "/contact#custom";
@@ -1807,7 +1814,7 @@ function customBuildHref(): string {
  *   • Monthly — first month free, then $50/mo + $200 per rush cycle
  *   • Annual  — $800/year, which INCLUDES every rush-cycle fee (best value)
  * presented as two big radio cards, plus a link out to a "Custom" build that
- * opens a conversation with Ben (the Cal.com book-a-call link when configured,
+ * opens a conversation with the team (the Cal.com book-a-call link when configured,
  * else the apex /contact#custom form). NOTHING here collects a card — the founder
  * launches first (first month free) and sets up payment later. Pricing mirrors
  * the marketing landing page exactly so a prospect never sees two different
@@ -2082,7 +2089,7 @@ function PricingStep({
                 </span>
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                Accept credit/debit card payments from brothers. <strong>Waives the monthly platform fee</strong> completely! Greek Stack will only take a percentage transaction fee. (Requires custom setup with Ben).
+                Accept credit/debit card payments from brothers. <strong>Waives the monthly platform fee</strong> completely! Greek Stack will only take a percentage transaction fee. (Requires custom setup with our team).
               </p>
             </div>
           </label>
@@ -2128,13 +2135,13 @@ function PricingStep({
                   Action Required
                 </p>
                 <p>
-                  To set up your specific dues payments and amount, you will need to reach out to Ben to configure it.
+                  To set up your specific dues payments and amount, you will need to reach out to our team to configure it.
                 </p>
                 <a
-                  href="mailto:bensachwitz@gmail.com?subject=Greek%20Stack%20Dues%20Setup"
+                  href={`mailto:${SUPPORT_EMAIL}?subject=Greek%20Stack%20Dues%20Setup`}
                   className="inline-flex items-center gap-1 font-bold text-sky-300 hover:text-white underline"
                 >
-                  Email bensachwitz@gmail.com to configure <IconExternal className="h-3 w-3" />
+                  Email {SUPPORT_EMAIL} to configure <IconExternal className="h-3 w-3" />
                 </a>
               </div>
             </div>
@@ -2234,7 +2241,7 @@ function PricingStep({
         </div>
       )}
 
-      {/* ── Custom (link out → talk to Ben) ── */}
+      {/* ── Custom (link out → talk to our team) ── */}
       <a
         href={customBuildHref()}
         target={customBuildHref().startsWith("http") ? "_blank" : undefined}
@@ -2249,17 +2256,17 @@ function PricingStep({
             <p className="flex items-center gap-1.5 text-sm font-bold text-white">
               Want it fully customized?
               <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                Talk to Ben
+                Talk to our team
               </span>
             </p>
             <p className="truncate text-xs text-slate-400">
-              Multi-chapter, councils, or a tailored build &amp; pricing? Ben will put together a
+              Multi-chapter, councils, or a tailored build &amp; pricing? Our team will put together a
               custom plan.
             </p>
           </div>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-sky-200">
-          Talk to Ben
+          Talk to our team
           <IconExternal className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
       </a>
@@ -2269,7 +2276,7 @@ function PricingStep({
         <IconSecurity className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
         <span>
           {collectDues
-            ? "Your dues-share chapter goes live today. No card required. Reach out to Ben after launch to configure dues payments."
+            ? "Your dues-share chapter goes live today. No card required. Reach out to our team after launch to configure dues payments."
             : "First month free — add a card now, or skip and add it later. You won't be charged today."
           }
         </span>

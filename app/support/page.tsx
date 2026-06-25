@@ -52,12 +52,15 @@ function requestHost(): string {
 }
 
 /** Support inbox — prefer a dedicated support address, else the sales inbox,
- *  else a personal fallback so the page always works. */
+ *  else the BRANDED support address (not a personal inbox) so the page always
+ *  works without surfacing a founder's personal email.
+ *  OWNER-KEYS: set SUPPORT_CONTACT_EMAIL (and stand up the real support@ inbox)
+ *  before launch. */
 function supportEmail(): string {
   return (
     process.env.SUPPORT_CONTACT_EMAIL ||
     process.env.SALES_CONTACT_EMAIL ||
-    "bensachwitz@gmail.com"
+    "support@greekstack.com"
   );
 }
 

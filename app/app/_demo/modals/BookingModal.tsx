@@ -79,7 +79,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
           <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
             <IconCalendar className="w-3.5 h-3.5" /> Book walkthrough
           </div>
-          <h3 className="text-lg font-bold text-white leading-tight">Schedule a Call with Ben</h3>
+          <h3 className="text-lg font-bold text-white leading-tight">Schedule a Call with Our Team</h3>
           <p className="text-xs text-slate-400">Pick a time to walk through the custom options for your chapter.</p>
         </div>
 
