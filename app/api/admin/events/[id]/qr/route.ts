@@ -14,6 +14,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 function makeCode(len = 8): string {
   let out = "";
   for (let i = 0; i < len; i++) {
-    out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+    out += CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)];
   }
   return out;
 }
