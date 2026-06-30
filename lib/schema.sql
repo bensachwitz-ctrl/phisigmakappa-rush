@@ -1181,3 +1181,46 @@ CREATE INDEX "SoberDriverShift_memberId_idx" ON "SoberDriverShift"("memberId");
 -- AddForeignKey
 ALTER TABLE "SoberDriverShift" ADD CONSTRAINT "SoberDriverShift_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Brother"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- ── Section-builder foundation (Section + SectionContent) ───────────────────
+-- Structured persistence for the public chapter-site section layout + per-section
+-- content overrides. ADDITIVE + INERT: the landing page reads these tables only
+-- when rows exist; with zero rows it falls back byte-for-byte to the legacy
+-- SiteConfig-driven render. IF NOT EXISTS so re-running this DDL against a tenant
+-- schema created by an older copy is a clean no-op.
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "Section" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 100,
+    "visible" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Section_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "SectionContent" (
+    "id" TEXT NOT NULL,
+    "sectionId" TEXT NOT NULL,
+    "field" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SectionContent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "Section_key_key" ON "Section"("key");
+CREATE INDEX IF NOT EXISTS "Section_sortOrder_idx" ON "Section"("sortOrder");
+CREATE UNIQUE INDEX IF NOT EXISTS "SectionContent_sectionId_field_key" ON "SectionContent"("sectionId", "field");
+CREATE INDEX IF NOT EXISTS "SectionContent_sectionId_idx" ON "SectionContent"("sectionId");
+
+-- AddForeignKey. The provisioning runner (lib/provision.ts) splits this DDL on
+-- ";" and swallows "already exists" errors, so a plain ADD CONSTRAINT is the
+-- re-run-safe pattern used throughout this file (a DO/$$ block would be shredded
+-- by the naive split). On a fresh schema this runs once; on a re-run it raises
+-- "already exists" which the runner ignores.
+ALTER TABLE "SectionContent" ADD CONSTRAINT "SectionContent_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "Section"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

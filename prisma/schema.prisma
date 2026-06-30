@@ -661,6 +661,58 @@ model SiteConfig {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+// ── Section-builder foundation (white-label site generator, ADDITIVE) ────────
+// Structured persistence for the public chapter-site section layout + per-section
+// content overrides. This is the typed successor to the JSON-string approach the
+// landing page has used (cfg["website.sections"] + the *.json repeaters in
+// SiteConfig) — it does NOT replace it. The renderer
+// (components/site/chapter-landing.tsx) reads a Section row set ONLY when one
+// exists for the tenant; with zero Section rows it falls back, byte-for-byte, to
+// the legacy SiteConfig defaults, so an un-migrated tenant is pixel-identical.
+//
+// `key`     — the section id ("hero" | "stats" | "values" | … ), matching the
+//             keys the renderer's buildSectionMap() produces. @unique so a tenant
+//             has at most one row per section.
+// `sortOrder` — explicit render order (ascending). Replaces the position implied
+//             by the website.sections JSON array.
+// `visible` — per-section visibility (replaces the show.* SiteConfig toggles for
+//             tenants that have adopted the structured table; the renderer keeps
+//             honoring show.* when no Section rows exist).
+//
+// Lives in the per-tenant schema (same as SiteConfig), so it is structurally
+// scoped to one chapter — no tenantId column needed.
+model Section {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  sortOrder Int      @default(100)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  contents SectionContent[]
+
+  @@index([sortOrder])
+}
+
+// Per-section editable content overrides, stored as field key/value pairs so a
+// section can carry an arbitrary, forward-compatible set of editable fields
+// (headline, eyebrow, body, ctaLabel, …) without a schema change per field. A
+// `(sectionId, field)` pair is unique so each field has one current value. When
+// a tenant has NO SectionContent rows for a section, the renderer falls back to
+// the existing SiteConfig-driven copy — the override is strictly additive.
+model SectionContent {
+  id        String   @id @default(cuid())
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  field     String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([sectionId, field])
+  @@index([sectionId])
+}
+
 model Vote {
   id        String   @id @default(cuid())
   rushId    String

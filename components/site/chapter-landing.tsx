@@ -35,6 +35,10 @@ import {
   resolveTemplateId,
 } from "@/components/site/templates/template-config";
 import type { SectionContext } from "@/components/site/templates/types";
+// Structured section-builder order (Section table). Returns null when a tenant
+// has not adopted the structured store, so the legacy SiteConfig render is
+// preserved byte-for-byte. Additive — never changes an un-customized page.
+import { getStructuredOrder } from "@/lib/section-builder";
 
 
 export const dynamic = "force-dynamic";
@@ -358,13 +362,32 @@ export default async function ChapterLandingPage({
   // "reset order to template default" action to clear it). TEMPLATE_ORDER.classic
   // is byte-identical to the legacy inline defaultOrder, so Classic is unchanged.
   const defaultOrder = TEMPLATE_ORDER[template];
-  const order = parseJsonArray<string>(cfg["website.sections"], defaultOrder);
+  // Structured section-builder order (Section table) takes precedence WHEN a
+  // tenant has adopted it. getStructuredOrder() returns null when the tenant has
+  // no Section rows OR the table doesn't exist yet (pre-migration / un-customized),
+  // in which case we fall back to the EXACT legacy SiteConfig render below — so an
+  // un-adopted chapter is byte-for-byte identical to before this feature shipped.
+  const structuredOrder = await getStructuredOrder();
+  const order = structuredOrder ?? parseJsonArray<string>(cfg["website.sections"], defaultOrder);
   const validOrder = order.filter((key) => key in sectionMap);
-  defaultOrder.forEach((key) => {
-    if (!validOrder.includes(key)) {
-      validOrder.push(key);
-    }
-  });
+  if (structuredOrder) {
+    // STRUCTURED MODE: an omitted section is an INTENTIONALLY hidden section, so
+    // we must NOT re-append the rest of the template default (that would un-hide
+    // what the admin turned off). We only defensively guarantee the two sections
+    // the builder never lets you remove — the hero and the sign-up form — so the
+    // public site can never render without a header or a way to register.
+    ["hero", "register"].forEach((key) => {
+      if (key in sectionMap && !validOrder.includes(key)) validOrder.unshift(key);
+    });
+  } else {
+    // LEGACY MODE (byte-identical): re-append any default section missing from the
+    // saved order so a partial website.sections override still renders everything.
+    defaultOrder.forEach((key) => {
+      if (!validOrder.includes(key)) {
+        validOrder.push(key);
+      }
+    });
+  }
   return (
     <main id="main-content" className="relative min-h-screen overflow-x-clip">
       <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />

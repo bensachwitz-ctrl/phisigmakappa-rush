@@ -53,6 +53,23 @@ export const TEMPLATE_ORDER: Record<TemplateId, string[]> = {
   ],
 };
 
+/**
+ * The full set of section keys any template can render — the union of every
+ * TEMPLATE_ORDER. Single source of truth for validating a section key coming
+ * from the admin section-builder API (/api/admin/website/[section]) so an
+ * unknown/typo key can never be persisted into the structured Section store.
+ * Derived from TEMPLATE_ORDER so adding a section to a template's order
+ * automatically widens the allow-list — they can never drift.
+ */
+export const KNOWN_SECTION_KEYS: readonly string[] = Array.from(
+  new Set(Object.values(TEMPLATE_ORDER).flat()),
+);
+
+/** True when `key` is a section the renderer knows how to build. */
+export function isKnownSectionKey(key: string): boolean {
+  return KNOWN_SECTION_KEYS.includes(key);
+}
+
 export type TemplateMeta = {
   id: TemplateId;
   name: string;
