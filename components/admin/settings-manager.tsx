@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { imageSrc } from "@/lib/image-url";
+import { cleanUrl } from "@/lib/utils";
 import {
   Save, Loader2, Image as ImageIcon, Star, Crown, RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
   FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
@@ -280,10 +281,15 @@ export function SettingsManager({
       </Section>
 
       {/* BRAND COLORS — chapter-level theme override (white-label) */}
-      <Section title="Brand colors" eyebrow="Override the cardinal-red default with your school color" icon={IconSpark}>
+      <Section title="Brand colors" eyebrow="Set your chapter's primary color" icon={IconSpark}>
         <p className="text-xs text-muted-foreground mb-4">
-          Default is Phi Sigma Kappa cardinal red <code className="font-mono text-foreground">#C8102E</code>.
-          For chapters at other schools, paste your school&apos;s hex code. Format:{" "}
+          {/* WHITE-LABEL: name the PLATFORM default (royal blue), never a specific
+              chapter's color. Mirrors DEFAULTS["brand.primaryHex"] in
+              lib/site-config.ts (#2563eb) so the help text can't drift from the
+              real default. */}
+          The platform default is Greek Stack royal blue{" "}
+          <code className="font-mono text-foreground">#2563EB</code>. Paste your
+          school&apos;s hex code to theme the whole site. Format:{" "}
           <code className="font-mono text-foreground">#RRGGBB</code>. Changes apply on next page load - no
           code rebuild needed.
         </p>
@@ -712,10 +718,10 @@ export function SettingsManager({
             <Input value={values["contact.mapsUrl"] || ""} onChange={(e) => set("contact.mapsUrl", e.target.value)} placeholder="https://maps.google.com/?q=…" />
           </Field>
           <Field label="Instagram handle">
-            <Input value={values["contact.instagramHandle"] || ""} onChange={(e) => set("contact.instagramHandle", e.target.value)} placeholder="@phisig_usc" />
+            <Input value={values["contact.instagramHandle"] || ""} onChange={(e) => set("contact.instagramHandle", e.target.value)} placeholder="@yourchapter" />
           </Field>
           <Field label="Instagram URL">
-            <Input value={values["contact.instagramUrl"] || ""} onChange={(e) => set("contact.instagramUrl", e.target.value)} placeholder="https://www.instagram.com/phisig_usc/" />
+            <Input value={values["contact.instagramUrl"] || ""} onChange={(e) => set("contact.instagramUrl", e.target.value)} placeholder="https://www.instagram.com/yourchapter/" />
           </Field>
         </div>
       </Section>
@@ -886,7 +892,7 @@ export function SettingsManager({
       {/* ABOUT history paragraph + anti-hazing body */}
       <Section title="Long-form copy" eyebrow="History paragraph + anti-hazing block body" icon={FileText}>
         <div className="space-y-4">
-          <Field label="About-section history paragraph (Founded 1873 / Gamma Triton 1975 etc.)">
+          <Field label="About-section history paragraph (your founding year, chapter charter, etc.)">
             <Textarea
               value={values["about.history"] || ""}
               onChange={(e) => set("about.history", e.target.value)}
@@ -923,11 +929,31 @@ export function SettingsManager({
       {/* HERO PHOTOS */}
       <Section title="Hero photo collage" eyebrow="3 tiles in the hero (right side)" icon={ImageIcon}>
         <p className="text-xs text-muted-foreground mb-4">
-          Each tile shows a real Instagram post from{" "}
-          <Link href="https://www.instagram.com/phisig_usc/" target="_blank" className="text-phisig-red hover:underline inline-flex items-center gap-1">
-            @phisig_usc <ExternalLink className="h-3 w-3" />
-          </Link>
-          . Find a post on Instagram, copy the slug from the URL (the part after <code className="text-foreground">/p/</code>), and paste it below.
+          {/* WHITE-LABEL: link to THIS chapter's own Instagram (set in the Contact
+              section above), never a hardcoded reference account. Falls back to
+              generic guidance when the chapter hasn't set its handle yet, so a
+              fresh tenant never sees another chapter's @handle. */}
+          {values["contact.instagramUrl"] || values["contact.instagramHandle"] ? (
+            <>
+              Each tile shows a real Instagram post from{" "}
+              <Link
+                href={cleanUrl(values["contact.instagramUrl"]) || `https://www.instagram.com/${(values["contact.instagramHandle"] || "").replace(/^@/, "")}/`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-phisig-red hover:underline inline-flex items-center gap-1"
+              >
+                {values["contact.instagramHandle"] || "your chapter Instagram"} <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </Link>
+              . Find a post on Instagram, copy the slug from the URL (the part after <code className="text-foreground">/p/</code>), and paste it below.
+            </>
+          ) : (
+            <>
+              Each tile shows a real Instagram post from your chapter&apos;s account.
+              Set your Instagram handle in the Contact section above, then find a
+              post, copy the slug from its URL (the part after{" "}
+              <code className="text-foreground">/p/</code>), and paste it below.
+            </>
+          )}
         </p>
         <div className="grid lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((n) => (
@@ -940,6 +966,7 @@ export function SettingsManager({
               onChangeSlug={(v) => set(`hero.tile${n}.slug`, v)}
               onChangeCaption={(v) => set(`hero.tile${n}.caption`, v)}
               onChangeIcon={(v) => set(`hero.tile${n}.icon`, v)}
+              handle={values["contact.instagramHandle"]}
             />
           ))}
         </div>
@@ -980,7 +1007,7 @@ export function SettingsManager({
             </p>
           </Field>
         </div>
-        <PhotoPreview slug={values["spotlight.slug"]} className="mt-4" />
+        <PhotoPreview slug={values["spotlight.slug"]} handle={values["contact.instagramHandle"]} className="mt-4" />
       </Section>
 
       {/* ABOUT */}
@@ -1006,7 +1033,7 @@ export function SettingsManager({
             </Select>
           </Field>
         </div>
-        <PhotoPreview slug={values["about.slug"]} objectPosition={values["about.objectPosition"]} className="mt-4" />
+        <PhotoPreview slug={values["about.slug"]} objectPosition={values["about.objectPosition"]} handle={values["contact.instagramHandle"]} className="mt-4" />
       </Section>
 
       {/* STATS — value + label + subtitle, all admin-editable */}
@@ -1212,10 +1239,11 @@ function SecretInput({
 }
 
 function PhotoCard({
-  title, slug, caption, icon, onChangeSlug, onChangeCaption, onChangeIcon,
+  title, slug, caption, icon, onChangeSlug, onChangeCaption, onChangeIcon, handle,
 }: {
   title: string; slug: string; caption: string; icon: string;
   onChangeSlug: (v: string) => void; onChangeCaption: (v: string) => void; onChangeIcon: (v: string) => void;
+  handle?: string;
 }) {
   const { push } = useToast();
   const [uploading, setUploading] = React.useState(false);
@@ -1240,7 +1268,7 @@ function PhotoCard({
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</p>
-      <PhotoPreview slug={slug} />
+      <PhotoPreview slug={slug} handle={handle} />
       <label className="block cursor-pointer">
         <input
           type="file"
@@ -1619,8 +1647,12 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
   );
 }
 
-function PhotoPreview({ slug, className, objectPosition }: { slug?: string; className?: string; objectPosition?: string }) {
+function PhotoPreview({ slug, className, objectPosition, handle }: { slug?: string; className?: string; objectPosition?: string; handle?: string }) {
   if (!slug) return <div className={`aspect-[4/3] rounded-xl bg-secondary border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground ${className ?? ""}`}>No slug yet</div>;
+  // WHITE-LABEL: the corner badge shows THIS chapter's Instagram handle, and is
+  // omitted entirely when the chapter hasn't set one — never a hardcoded
+  // reference account leaking onto every tenant's photo preview.
+  const cleanHandle = handle ? (handle.startsWith("@") ? handle : `@${handle}`) : "";
   return (
     <Link
       href={`https://www.instagram.com/p/${slug}/`}
@@ -1634,9 +1666,11 @@ function PhotoPreview({ slug, className, objectPosition }: { slug?: string; clas
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: objectPosition || "50% 50%" }}
       />
-      <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-phisig-red font-semibold">
-        @phisig_usc <ExternalLink className="h-2.5 w-2.5" />
-      </span>
+      {cleanHandle && (
+        <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-phisig-red font-semibold">
+          {cleanHandle} <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
+        </span>
+      )}
     </Link>
   );
 }

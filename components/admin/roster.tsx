@@ -160,14 +160,17 @@ export function Roster({
   // the USC reference defaults. New callers pass cfg-derived values.
   chapterBrand?: ChapterBrand;
 }) {
-  // Brand fallback: matches the lib/site-config DEFAULTS so the email/SMS
-  // templates always render with the Phi Sig USC reference if cfg unset.
+  // Brand fallback: WHITE-LABEL-neutral, mirroring the now-blank
+  // lib/site-config DEFAULTS (chapter.* default to ""). Real callers pass
+  // cfg-derived values; this last-resort literal must never leak a specific
+  // chapter's name/school/address into an email or SMS for a tenant that
+  // hasn't finished setup.
   const brand: ChapterBrand = chapterBrand ?? {
-    fraternityName: "Phi Sigma Kappa",
-    fraternityShort: "Phi Sig",
-    schoolShort: "USC",
-    chapterAttribution: "Phi Sig USC",
-    houseAddress: "1525 College St",
+    fraternityName: "Your Chapter",
+    fraternityShort: "Your Chapter",
+    schoolShort: "",
+    chapterAttribution: "Your Chapter",
+    houseAddress: "",
   };
   // Deps are the SPECIFIC brand fields each template reads — NOT the whole
   // `brand` object. `brand` is a fresh literal every render when chapterBrand is

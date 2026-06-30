@@ -286,7 +286,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                 </p>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <Link href="/" target="_blank" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
+                <Link href="/" target="_blank" rel="noreferrer noopener" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
                     <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" /> View your public homepage
                   </p>

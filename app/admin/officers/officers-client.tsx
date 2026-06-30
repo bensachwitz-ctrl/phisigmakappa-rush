@@ -398,8 +398,9 @@ export function OfficersClient({
               <div className="space-y-1.5">
                 <p className="text-base font-semibold">No officer positions yet</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                  Seed the 13 standard Phi Sigma Kappa positions (President, Treasurer, Recruitment
-                  Chair, …) with sensible default permissions. You can fine-tune any of them afterward.
+                  Seed the standard chapter positions (President, Treasurer, Recruitment
+                  Chair, …) with sensible default permissions. You can rename, add, or fine-tune
+                  any of them afterward.
                 </p>
               </div>
               <Button onClick={seedDefaults} disabled={seeding}>
