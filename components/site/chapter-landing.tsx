@@ -67,11 +67,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: `${summary} Get on the rush interest list.`,
       type: "website",
       url: "/",
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: identity.ogAlt }],
     },
     twitter: {
       card: "summary_large_image",
       title: identity.pageTitle,
       description: summary,
+      images: ["/twitter-image"],
     },
   };
 }

@@ -14,9 +14,24 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
+  const title = `Schedule an Event — ${id.greekLetters}`;
+  const description = `Schedule a rush coffee chat, alumni mentorship slot, or meeting with the active brothers of ${id.fraternityName} at ${id.schoolShort}.`;
   return {
-    title: `Schedule an Event — ${id.greekLetters}`,
-    description: `Schedule a rush coffee chat, alumni mentorship slot, or meeting with the active brothers of ${id.fraternityName} at ${id.schoolShort}.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: "/schedule",
+      type: "website",
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: id.ogAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/twitter-image"],
+    },
   };
 }
 

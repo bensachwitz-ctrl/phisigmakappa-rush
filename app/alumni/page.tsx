@@ -24,9 +24,24 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
+  const title = `${id.greekLetters} Alumni Network — ${id.fraternityName}`;
+  const description = `Stay connected with ${id.greekLetters} alumni. See who's where, what they're doing, and how to reach them.`;
   return {
-    title: `${id.greekLetters} Alumni Network — ${id.fraternityName}`,
-    description: `Stay connected with ${id.greekLetters} alumni. See who's where, what they're doing, and how to reach them.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: "/alumni",
+      type: "website",
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: id.ogAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/twitter-image"],
+    },
   };
 }
 

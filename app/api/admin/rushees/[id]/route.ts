@@ -143,50 +143,59 @@ export async function PATCH(
   }
 
   try {
-    // "Convert to pledge" branch: flips status, then shadow-creates a Brother.
-    // The Brother create is best-effort (failure doesn't block status flip)
-    // and dedupes by email so a re-click is idempotent.
+    // "Convert to pledge" branch: flips status AND shadow-creates a Brother.
+    // Both happen inside a single interactive transaction so the pair is
+    // atomic — if the Brother create throws, the Rush.status flip rolls back
+    // and we surface a 500 (rather than leaving an orphaned ACCEPTED rush with
+    // no pledge row and still reporting ok:true).
+    //
+    // Idempotency is preserved: an already-existing Brother (matched by email
+    // or name) short-circuits the create, so a re-click just returns the
+    // existing pledge instead of erroring or double-inserting.
     if (data.convertToPledge) {
-      const updated = await prisma.rush.update({
-        where: { id: params.id },
-        data: { status: "ACCEPTED" },
-      });
       let createdBrotherId: string | null = null;
-      try {
-        const exists = await prisma.brother.findFirst({
-          where: { OR: [{ email: updated.email }, { name: updated.name }] },
+      const updated = await prisma.$transaction(async (tx) => {
+        const rush = await tx.rush.update({
+          where: { id: params.id },
+          data: { status: "ACCEPTED" },
+        });
+        const exists = await tx.brother.findFirst({
+          where: { OR: [{ email: rush.email }, { name: rush.name }] },
         });
         if (!exists) {
-          const b = await prisma.brother.create({
+          const b = await tx.brother.create({
             data: {
-              name: updated.name,
-              email: updated.email,
-              phone: updated.phone,
-              year: updated.year,
-              major: updated.major,
+              name: rush.name,
+              email: rush.email,
+              phone: rush.phone,
+              year: rush.year,
+              major: rush.major,
               status: "PROSPECT",
             },
           });
           createdBrotherId = b.id;
 
-          // Copy bid waiver info and create a Document record (Compliance Audit Trail)
-          if (updated.enrichmentData) {
+          // Copy bid waiver info and create a Document record (Compliance Audit
+          // Trail). This is best-effort within the tx: a malformed
+          // enrichmentData JSON or an optional-field miss must not abort the
+          // core status-flip + Brother-create commit, so it's caught locally.
+          if (rush.enrichmentData) {
             try {
-              const enrichment = JSON.parse(updated.enrichmentData);
+              const enrichment = JSON.parse(rush.enrichmentData);
               const waiverUrl = enrichment.bidWaiverUrl;
               const signatureName = enrichment.signatureName;
               const signedAt = enrichment.signedAt;
 
               if (waiverUrl) {
-                await prisma.document.create({
+                await tx.document.create({
                   data: {
-                    name: `${updated.name} - Signed Bid & Anti-Hazing Waiver`,
-                    description: `Digitally signed by ${signatureName || updated.name} on ${signedAt ? new Date(signedAt).toLocaleDateString() : new Date().toLocaleDateString()}`,
+                    name: `${rush.name} - Signed Bid & Anti-Hazing Waiver`,
+                    description: `Digitally signed by ${signatureName || rush.name} on ${signedAt ? new Date(signedAt).toLocaleDateString() : new Date().toLocaleDateString()}`,
                     url: waiverUrl,
                     blobUrl: waiverUrl,
                     category: "POLICIES",
                     visibility: "OFFICERS",
-                    fileName: `${updated.name.replace(/\s+/g, "_")}_bid_waiver.pdf`,
+                    fileName: `${rush.name.replace(/\s+/g, "_")}_bid_waiver.pdf`,
                     uploadedById: b.id,
                   },
                 });
@@ -196,12 +205,8 @@ export async function PATCH(
             }
           }
         }
-      } catch (innerErr) {
-        // Best-effort: log but don't fail the conversion. Rush.status is
-        // already ACCEPTED so the chair can manually add the Brother row if
-        // the auto-create lost a race.
-        console.warn("[rushees/PATCH convert] brother create failed:", innerErr);
-      }
+        return rush;
+      });
       await auditAndNotify("rushee.update", {
         actor: actorFromRequest(req, { role: "admin", name: "admin (shared)" }),
         entity: { type: "Rush", id: updated.id, name: updated.name },

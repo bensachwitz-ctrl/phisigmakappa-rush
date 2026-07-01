@@ -61,11 +61,35 @@ export async function POST(req: Request) {
     select: { value: true },
   }).catch(() => null);
 
-  const vote = await prisma.vote.upsert({
-    where: { rushId_brotherId: { rushId, brotherId } },
-    update: { value, comment: comment || null },
-    create: { rushId, brotherId, value, comment: comment || null },
-  });
+  // Concurrent double-submit from the same voter can race the
+  // @@unique([rushId, brotherId]) constraint: both requests see no existing
+  // row and both try to create, so the loser's create throws a P2002 unique
+  // violation. The DB still guarantees exactly one vote row, so this is not
+  // data corruption — just a lost race. Catch P2002 and re-read the settled
+  // row so both callers get 200 with the winning vote instead of a 500.
+  let vote: Awaited<ReturnType<typeof prisma.vote.upsert>>;
+  try {
+    vote = await prisma.vote.upsert({
+      where: { rushId_brotherId: { rushId, brotherId } },
+      update: { value, comment: comment || null },
+      create: { rushId, brotherId, value, comment: comment || null },
+    });
+  } catch (err: any) {
+    if (err?.code === "P2002") {
+      const settled = await prisma.vote.findUnique({
+        where: { rushId_brotherId: { rushId, brotherId } },
+      });
+      // The unique row is guaranteed to exist here (P2002 fired precisely
+      // because a concurrent request created it), but guard the null case so a
+      // torn read still returns a clean 200 rather than throwing.
+      if (!settled) {
+        return NextResponse.json({ ok: true, vote: null });
+      }
+      vote = settled;
+    } else {
+      throw err;
+    }
+  }
 
   await audit({
     action: prior ? "RUSH_VOTE_CHANGE" : "RUSH_VOTE_CAST",

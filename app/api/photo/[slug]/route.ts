@@ -12,6 +12,12 @@ export const dynamic = "force-dynamic";
 // from streaming gigabytes through our function (memory + bandwidth DoS).
 const MAX_REMOTE_BYTES = 12 * 1024 * 1024; // 12 MB
 
+// Per-request wall-clock ceiling for any single external fetch (Instagram
+// embed HTML + CDN image bytes). A stalled/slow upstream must not hang the
+// function; on timeout the fetch is aborted and the caller falls through to
+// its existing fallback/placeholder path.
+const REMOTE_FETCH_TIMEOUT_MS = 8000;
+
 /**
  * SSRF allowlist for the arbitrary-URL proxy branch. ONLY these host suffixes
  * may be fetched: Instagram's CDNs and our own Vercel Blob store. This mirrors
@@ -103,15 +109,23 @@ async function safeFetchImage(
     return null;
   }
 
+  // Bound the connection: a stalled/slow CDN must not hang the function.
+  // On timeout the AbortController fires, fetch rejects, and we fall through
+  // to `return null` (caller renders a transparent pixel).
   let res: Response;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS);
   try {
     res = await fetch(parsed.toString(), {
       redirect: "manual", // never follow a 30x into an internal host
       cache: "no-store",
       headers: { Accept: "image/*" },
+      signal: controller.signal,
     });
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
   if (!res.ok) return null; // redirects (3xx) land here too — rejected
 
@@ -327,6 +341,11 @@ export async function GET(
   let imgUrl: string | null = null;
 
   for (const url of candidates) {
+    // Bound each embed-HTML fetch: a stalled IG endpoint aborts at the timeout
+    // and lands in the catch below, which `continue`s to the next candidate
+    // (and ultimately the transparent-pixel fallback if all candidates fail).
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS);
     try {
       const html = await fetch(url, {
         headers: {
@@ -338,6 +357,7 @@ export async function GET(
         },
         redirect: "follow",
         cache: "no-store",
+        signal: controller.signal,
       }).then((r) => (r.ok ? r.text() : ""));
       if (!html) continue;
 
@@ -378,6 +398,8 @@ export async function GET(
       if (imgUrl) break;
     } catch {
       continue;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -385,16 +407,29 @@ export async function GET(
     return transparentPixel();
   }
 
+  // Bound the CDN image fetch (headers + body read). A stalled upstream aborts
+  // at the timeout, the throw is caught below, and we return a transparent
+  // pixel — same fallback as any other image-fetch failure.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS);
   try {
-    const imgRes = await fetch(imgUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        Referer: "https://www.instagram.com/",
-      },
-      cache: "no-store",
-    });
-    if (!imgRes.ok) throw new Error(`img status ${imgRes.status}`);
-    const original = Buffer.from(await imgRes.arrayBuffer());
+    let original: Buffer;
+    let originalCt: string;
+    try {
+      const imgRes = await fetch(imgUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://www.instagram.com/",
+        },
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!imgRes.ok) throw new Error(`img status ${imgRes.status}`);
+      original = Buffer.from(await imgRes.arrayBuffer());
+      originalCt = imgRes.headers.get("Content-Type") || "image/jpeg";
+    } finally {
+      clearTimeout(timer);
+    }
 
     // Sanity check: real Phi Sig chapter photos from Instagram are 100KB+.
     // Anything under 60KB is almost certainly an IG branding/logo asset
@@ -406,7 +441,6 @@ export async function GET(
       throw new Error(`suspiciously small image: ${original.byteLength} bytes`);
     }
 
-    const originalCt = imgRes.headers.get("Content-Type") || "image/jpeg";
     const { buf, contentType } = await negotiateFormat(original, originalCt, accept, reqWidth);
     const etag = buildETag(buf);
 
