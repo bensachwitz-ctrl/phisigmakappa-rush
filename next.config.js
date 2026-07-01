@@ -110,9 +110,12 @@ const nextConfig = {
     // 'unsafe-inline' stays for now: Tailwind injects <style> and Next inlines
     // small RSC bootstrap scripts, so removing it would break the app.
     const isProd = process.env.NODE_ENV === "production";
+    // https://js.stripe.com is required so Stripe.js loads on the signup/checkout
+    // funnel (/onboard) and the dues Connect flows — without it the CSP blocks
+    // Stripe.js and the payment step silently fails ("Failed to load Stripe.js").
     const scriptSrc = isProd
-      ? "script-src 'self' 'unsafe-inline'"
-      : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+      ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com";
     // Only widen connect-src to Sentry's ingest host when client error tracking
     // is actually configured. With NEXT_PUBLIC_SENTRY_DSN unset the CSP stays
     // exactly as tight as before — no Sentry origin is allowed.
@@ -155,8 +158,8 @@ const nextConfig = {
               // Stream (chat) origins are allowed so the integration works when
               // its env keys are set. Inert otherwise — no request hits these
               // hosts unless the feature is configured.
-              "connect-src 'self' https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://cal.com https://*.cal.com" + sentryConnect,
-              "frame-src 'self' https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://cal.com https://*.cal.com",
+              "connect-src 'self' https://api.stripe.com https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://cal.com https://*.cal.com" + sentryConnect,
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://cal.com https://*.cal.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
