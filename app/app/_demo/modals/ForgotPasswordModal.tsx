@@ -6,8 +6,13 @@ import {
 } from "@/components/brand/icons";
 
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderForgotPasswordModal(ctx: DemoContext) {
+  return <ForgotPasswordModal ctx={ctx} />;
+}
+
+export function ForgotPasswordModal({ ctx }: { ctx: DemoContext }) {
   const {
     email,
     forgotEmail,
@@ -19,13 +24,14 @@ export function renderForgotPasswordModal(ctx: DemoContext) {
     setForgotEmail,
     setShowForgotPassword,
   } = ctx;
+  useEscapeClose(() => setShowForgotPassword(false));
   return (
             <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-6 backdrop-blur-sm lg:absolute" onClick={() => setShowForgotPassword(false)}>
-              <div className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in text-left" onClick={(e) => e.stopPropagation()}>
+              <div role="dialog" aria-modal="true" aria-labelledby="forgot-password-modal-title" className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in text-left" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-1.5">
                     <IconLock className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Reset Password</h4>
+                    <h4 id="forgot-password-modal-title" className="text-xs font-bold text-slate-900 uppercase tracking-wider">Reset Password</h4>
                   </div>
                   <button onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
                     <IconClose className="w-3.5 h-3.5" />

@@ -39,13 +39,27 @@ type Brother = {
   serviceHours: number;
   studyHours: number;
   role: string;
+  status: string;
 };
 
 const empty = {
   name: "", email: "", phone: "", year: "", major: "",
   position: "", pledgeClass: "", bio: "", headshotUrl: "",
   duesPaid: false, serviceHours: 0, studyHours: 0, role: "MEMBER" as "MEMBER" | "ADMIN",
+  status: "ACTIVE",
 };
+
+// Member-status lifecycle values (mirrors the Brother.status enum in
+// prisma/schema.prisma). Friendly labels for the edit-dialog select.
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "PROSPECT", label: "Prospect" },
+  { value: "PLEDGE", label: "Pledge" },
+  { value: "INITIATE", label: "Initiate" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "ALUMNUS", label: "Alumnus" },
+  { value: "EXPELLED", label: "Expelled" },
+];
 
 type DuesConfig = {
   enabled: boolean;
@@ -145,6 +159,7 @@ export function BrothersManager({
       serviceHours: b.serviceHours,
       studyHours: b.studyHours,
       role: (b.role as any) || "MEMBER",
+      status: b.status || "ACTIVE",
     });
     setOpen(true);
   }
@@ -590,6 +605,18 @@ export function BrothersManager({
                 <Label className="mb-1 inline-block">Pledge class</Label>
                 <Input value={form.pledgeClass} onChange={(e) => setForm({ ...form, pledgeClass: e.target.value })} placeholder="Alpha Phi" />
               </div>
+            </div>
+            <div>
+              <Label className="mb-1 inline-block">Member status</Label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <label className="flex items-center gap-2 text-sm cursor-pointer pt-7">

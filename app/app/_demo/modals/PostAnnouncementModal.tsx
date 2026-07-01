@@ -7,8 +7,13 @@ import {
 
 import { BrandGlyphIcon } from "@/components/site/brand-glyph";
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderPostAnnModal(ctx: DemoContext) {
+  return <PostAnnModal ctx={ctx} />;
+}
+
+export function PostAnnModal({ ctx }: { ctx: DemoContext }) {
   const {
     annBody,
     annPinned,
@@ -21,19 +26,21 @@ export function renderPostAnnModal(ctx: DemoContext) {
     setAnnTitle,
     setShowPostAnnModal,
   } = ctx;
+  const closeModal = () => { setShowPostAnnModal(false); setAnnTitle(""); setAnnBody(""); setAnnPinned(false); };
+  useEscapeClose(closeModal);
   // <lg: the sheet FILLS the content area (viewport minus the demo header) —
   // no dead shell bands above/below (owner round-8); content scrolls inside.
   // lg+: classic in-phone bottom sheet.
   return (
-                <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 flex flex-col justify-end bg-slate-950/75 text-left backdrop-blur-sm lg:absolute lg:inset-0" onClick={() => { setShowPostAnnModal(false); setAnnTitle(""); setAnnBody(""); setAnnPinned(false); }}>
-                  <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 flex flex-col justify-end bg-slate-950/75 text-left backdrop-blur-sm lg:absolute lg:inset-0" onClick={closeModal}>
+                  <div role="dialog" aria-modal="true" aria-labelledby="post-ann-modal-title" className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <BrandGlyphIcon name="announcements" className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
-                        <h4 className="text-sm font-bold text-slate-955">Publish Announcement</h4>
+                        <h4 id="post-ann-modal-title" className="text-sm font-bold text-slate-955">Publish Announcement</h4>
                       </div>
                       <button
-                        onClick={() => { setShowPostAnnModal(false); setAnnTitle(""); setAnnBody(""); setAnnPinned(false); }}
+                        onClick={closeModal}
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                         type="button"
                       >

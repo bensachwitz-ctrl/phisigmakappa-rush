@@ -6,8 +6,13 @@ import {
 } from "@/components/brand/icons";
 
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderEditProfileModal(ctx: DemoContext) {
+  return <EditProfileModal ctx={ctx} />;
+}
+
+export function EditProfileModal({ ctx }: { ctx: DemoContext }) {
   const {
     editBio,
     editCity,
@@ -35,15 +40,16 @@ export function renderEditProfileModal(ctx: DemoContext) {
     setEditYear,
     setShowEditProfileModal,
   } = ctx;
+  useEscapeClose(() => setShowEditProfileModal(false));
   // <lg: the sheet FILLS the content area below the demo header — no dead
   // shell bands (owner round-8). lg+: classic in-phone bottom sheet.
   return (
                 <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 flex flex-col justify-end bg-slate-950/75 text-left backdrop-blur-sm lg:absolute lg:inset-0" onClick={() => setShowEditProfileModal(false)}>
-                  <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[88%]" onClick={(e) => e.stopPropagation()}>
+                  <div role="dialog" aria-modal="true" aria-labelledby="edit-profile-modal-title" className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[88%]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <IconUser className="w-5 h-5" style={{ color: selectedBrand.primaryColor }} />
-                        <h4 className="text-sm font-bold text-slate-955">Update Profile Information</h4>
+                        <h4 id="edit-profile-modal-title" className="text-sm font-bold text-slate-955">Update Profile Information</h4>
                       </div>
                       <button
                         onClick={() => setShowEditProfileModal(false)}

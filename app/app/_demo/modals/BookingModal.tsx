@@ -6,6 +6,7 @@ import {
 } from "@/components/brand/icons";
 
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderBookingModal(ctx: DemoContext) {
   return <BookingModal ctx={ctx} />;
@@ -25,6 +26,8 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
     setBookingTime,
     setShowBookingModal,
   } = ctx;
+
+  useEscapeClose(() => setShowBookingModal(false));
 
   const getTodayDateString = () => {
     const d = new Date();
@@ -71,7 +74,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowBookingModal(false)}>
-      <div className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-md space-y-5 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="booking-modal-title" className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-md space-y-5 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => setShowBookingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
           <IconClose className="w-4 h-4" />
         </button>
@@ -79,7 +82,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
           <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
             <IconCalendar className="w-3.5 h-3.5" /> Book walkthrough
           </div>
-          <h3 className="text-lg font-bold text-white leading-tight">Schedule a Call with Our Team</h3>
+          <h3 id="booking-modal-title" className="text-lg font-bold text-white leading-tight">Schedule a Call with Our Team</h3>
           <p className="text-xs text-slate-400">Pick a time to walk through the custom options for your chapter.</p>
         </div>
 

@@ -1,20 +1,26 @@
 import React from "react";
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderConfirmModal(ctx: DemoContext) {
+  return <ConfirmModal ctx={ctx} />;
+}
+
+export function ConfirmModal({ ctx }: { ctx: DemoContext }) {
   const {
     confirmModal,
     selectedBrand,
     setConfirmModal,
   } = ctx;
+  useEscapeClose(() => setConfirmModal(null));
   // Render-gated by the orchestrator (`{confirmModal && renderConfirmModal(ctx)}`);
   // this guard only restores the type narrowing the inline conditional provided.
   if (!confirmModal) return null;
   return (
             <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-6 backdrop-blur-sm lg:absolute" onClick={() => setConfirmModal(null)}>
-              <div className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title" className="bg-white rounded-3xl border border-slate-100 p-5 w-full max-w-xs space-y-4 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
                 <div className="text-center space-y-1.5">
-                  <h4 className="text-sm font-bold text-slate-950">{confirmModal.title}</h4>
+                  <h4 id="confirm-modal-title" className="text-sm font-bold text-slate-950">{confirmModal.title}</h4>
                   <p className="text-xs text-slate-500 leading-normal">{confirmModal.message}</p>
                 </div>
                 <div className="flex gap-2.5 pt-1">

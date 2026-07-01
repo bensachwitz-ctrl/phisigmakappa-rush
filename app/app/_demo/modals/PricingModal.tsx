@@ -6,14 +6,20 @@ import {
 
 import type { DemoContext } from "../context";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderPricingModal(ctx: DemoContext) {
+  return <PricingModal ctx={ctx} />;
+}
+
+export function PricingModal({ ctx }: { ctx: DemoContext }) {
   const {
     setShowPricingModal,
   } = ctx;
+  useEscapeClose(() => setShowPricingModal(false));
   return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPricingModal(false)}>
-          <div className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-2xl space-y-6 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-labelledby="pricing-modal-title" className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-2xl space-y-6 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setShowPricingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
               <IconClose className="w-4 h-4" />
             </button>
@@ -21,7 +27,7 @@ export function renderPricingModal(ctx: DemoContext) {
               <div className="inline-flex items-center gap-1.5 text-blue-400 text-[12px] font-bold uppercase tracking-wider">
                 <GreekstackLogo title="" aria-hidden className="w-3.5 h-3.5" /> Launch Greekstack App
               </div>
-              <h3 className="text-xl font-bold text-white leading-tight">Choose Your Chapter Plan</h3>
+              <h3 id="pricing-modal-title" className="text-xl font-bold text-white leading-tight">Choose Your Chapter Plan</h3>
               <p className="text-xs text-slate-400">Unleash the full white-label platform for your chapter. Cancel anytime.</p>
             </div>
 

@@ -6,8 +6,13 @@ import {
 } from "@/components/brand/icons";
 
 import type { DemoContext } from "../context";
+import { useEscapeClose } from "./useEscapeClose";
 
 export function renderPnmDetail(ctx: DemoContext) {
+  return <PnmDetailModal ctx={ctx} />;
+}
+
+export function PnmDetailModal({ ctx }: { ctx: DemoContext }) {
   const {
     handleAddImpression,
     handlePnmVote,
@@ -20,11 +25,12 @@ export function renderPnmDetail(ctx: DemoContext) {
     setNewImpressionTone,
     setSelectedPnm,
   } = ctx;
+  useEscapeClose(() => setSelectedPnm(null));
   // <lg: the sheet FILLS the content area below the demo header — no dead
   // shell bands (owner round-8). lg+: classic in-phone bottom sheet.
   return (
                 <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 flex flex-col justify-end bg-slate-950/70 text-left backdrop-blur-sm lg:absolute lg:inset-0" onClick={() => setSelectedPnm(null)}>
-                  <div className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
+                  <div role="dialog" aria-modal="true" aria-labelledby="pnm-detail-modal-title" className="bg-white rounded-t-[32px] border-t border-slate-200 grow overflow-y-auto flex flex-col p-6 space-y-4 shadow-2xl lg:grow-0 lg:max-h-[85%]" onClick={(e) => e.stopPropagation()}>
                     
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2">
@@ -35,7 +41,7 @@ export function renderPnmDetail(ctx: DemoContext) {
                           {selectedPnm.name.split(" ").map((n: string) => n[0]).join("")}
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900">{selectedPnm.name}</h4>
+                          <h4 id="pnm-detail-modal-title" className="text-sm font-bold text-slate-900">{selectedPnm.name}</h4>
                           <span className="text-[12px] text-slate-500">{selectedPnm.status} Candidate</span>
                         </div>
                       </div>

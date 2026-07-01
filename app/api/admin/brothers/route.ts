@@ -156,7 +156,7 @@ export async function PATCH(req: Request) {
   // the single most-asked "who changed that?" question per chapter).
   const before = await prisma.brother.findUnique({
     where: { id },
-    select: { duesPaid: true, role: true, position: true, name: true },
+    select: { duesPaid: true, role: true, position: true, name: true, status: true },
   }).catch(() => null);
 
   const updated = await prisma.brother.update({
@@ -308,11 +308,38 @@ export async function PATCH(req: Request) {
         req,
       });
     }
+    // W1: member-lifecycle status transition — write a MemberStatusChange row so
+    // the per-brother lifecycle timeline can be rebuilt. Best-effort: the
+    // canonical Brother.status flip already happened above, so a failure here
+    // (e.g. table not yet migrated) must never break the status update itself.
+    if (typeof (data as any).status === "string" && before.status !== (data as any).status) {
+      try {
+        await prisma.memberStatusChange.create({
+          data: {
+            brotherId: id,
+            fromStatus: before.status ?? null,
+            toStatus: (data as any).status,
+            changedById: getCurrentBrotherId(),
+          },
+        });
+      } catch {
+        // Non-fatal — lifecycle audit is additive, never gates the update.
+      }
+      await audit({
+        action: "BROTHER_STATUS",
+        subjectType: "Brother",
+        subjectId: id,
+        subjectName: updated.name,
+        details: `${before.status ?? "—"} → ${(data as any).status}`,
+        req,
+      });
+    }
     // Generic catch-all for other profile edits — only logged when nothing
     // more-specific fired, to avoid double-rows when only dues changed.
     const dueChanged = typeof data.duesPaid === "boolean" && before.duesPaid !== data.duesPaid;
     const roleChanged = typeof (data as any).role === "string" && before.role !== (data as any).role;
-    if (!dueChanged && !roleChanged) {
+    const statusChanged = typeof (data as any).status === "string" && before.status !== (data as any).status;
+    if (!dueChanged && !roleChanged && !statusChanged) {
       await audit({
         action: "BROTHER_UPDATED",
         subjectType: "Brother",
