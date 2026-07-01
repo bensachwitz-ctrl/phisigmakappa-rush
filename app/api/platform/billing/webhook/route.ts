@@ -83,6 +83,17 @@ export async function POST(req: Request) {
         await handleInvoiceEvent(stripe, event.data.object as Stripe.Invoice, "paid");
         break;
       }
+      case "charge.refunded":
+      case "charge.dispute.created":
+      case "charge.dispute.closed": {
+        // REVERSAL VISIBILITY — refunds/disputes must never be silently dropped,
+        // or platform revenue can be reconciled against Stripe and come up
+        // short. Access itself is governed by the subscription lifecycle cases
+        // above (a reversal that ends the plan arrives as subscription.deleted);
+        // here we make every reversal auditable so revenue is never overstated.
+        await handleReversalEvent(stripe, event);
+        break;
+      }
       case "checkout.session.completed": {
         // A subscription Checkout completed. The subscription.created event also
         // fires and carries full status, but handle this too so the customer↔
@@ -189,6 +200,11 @@ async function handleSubscriptionEvent(
 
   const status = narrowStatus(sub.status);
   const plan = (sub.metadata?.plan || "").trim() || undefined;
+  // CANCELLATION TRIAL-LEAK GUARD — Stripe RETAINS the original trial_end on a
+  // deleted/canceled subscription. Mirroring it would leave a future trialEndsAt
+  // on a canceled chapter, and getEntitlement() would grant a "trial_active"
+  // pass until that stale date passes (access + revenue leak). Null it on cancel.
+  const trialEndsAt = status === "canceled" ? null : trialEndDate(sub);
 
   await centralDb.tenant
     .update({
@@ -196,7 +212,7 @@ async function handleSubscriptionEvent(
       data: {
         stripeSubscriptionId: sub.id,
         subscriptionStatus: status,
-        trialEndsAt: trialEndDate(sub),
+        trialEndsAt,
         // Re-link customer id if this is the first time we see it for this tenant.
         ...(customerId ? { stripeCustomerId: customerId } : {}),
         ...(plan ? { plan } : {}),
@@ -371,4 +387,56 @@ async function handleCheckoutCompleted(
     .catch((e) => errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "tenant_update_failed" }));
 
   logger.info("platform.billing.checkout_synced", { route: ROUTE, tenant: subdomain, status });
+}
+
+/**
+ * Record a platform-subscription reversal (refund or dispute) so platform
+ * revenue is reconcilable against Stripe. We intentionally do NOT mutate
+ * subscriptionStatus here: a partial/goodwill refund does not end the plan, and
+ * a reversal that DOES end it arrives separately as customer.subscription.
+ * deleted (handled above). This handler exists to close the audit gap — the
+ * webhook previously 200'd these events with no record at all.
+ */
+async function handleReversalEvent(stripe: Stripe, event: Stripe.Event): Promise<void> {
+  let customerId: string | null = null;
+  let detail: Record<string, unknown> = {};
+
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    customerId = typeof charge.customer === "string" ? charge.customer : charge.customer?.id || null;
+    detail = {
+      chargeId: charge.id,
+      amount: charge.amount,
+      amountRefunded: charge.amount_refunded,
+      currency: charge.currency,
+      fullyRefunded: charge.amount_refunded >= charge.amount,
+    };
+  } else {
+    // charge.dispute.created | charge.dispute.closed — the Dispute object carries
+    // only the charge id, so retrieve the charge to resolve the paying customer.
+    const dispute = event.data.object as Stripe.Dispute;
+    const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id || null;
+    if (chargeId) {
+      const charge = await stripe.charges.retrieve(chargeId).catch(() => null);
+      customerId =
+        charge && typeof charge.customer === "string"
+          ? charge.customer
+          : (charge?.customer as Stripe.Customer | null)?.id || null;
+    }
+    detail = {
+      disputeId: dispute.id,
+      amount: dispute.amount,
+      currency: dispute.currency,
+      reason: dispute.reason,
+      disputeStatus: dispute.status,
+    };
+  }
+
+  const subdomain = await resolveSubdomain(null, customerId);
+  logger.warn("platform.billing.reversal_recorded", {
+    route: ROUTE,
+    eventType: event.type,
+    tenant: subdomain || "unresolved",
+    ...detail,
+  });
 }

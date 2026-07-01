@@ -601,7 +601,14 @@ export async function POST(req: Request) {
     const host = req.headers.get("host") || "greekstack.vercel.app";
     const isLocal = host.includes("localhost");
     const port = isLocal && host.includes("localhost:") ? `:${host.split("localhost:")[1]}` : "";
-    const domain = isLocal ? "localhost" : "greekstack.vercel.app";
+    // Canonical base domain for the redirect AND every email link below. A
+    // custom-domain deploy sets APP_BASE_DOMAIN (or NEXT_PUBLIC_APP_DOMAIN);
+    // otherwise derive from the ACTUAL request host so the welcome/owner emails
+    // link to the real deployment instead of a hardcoded greekstack.vercel.app
+    // that 404s on a custom domain. Localhost keeps the bare "localhost" base.
+    const domain = isLocal
+      ? "localhost"
+      : (process.env.APP_BASE_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || host).trim();
     const proto = isLocal ? "http" : "https";
     const redirectUrl = `${proto}://${subdomain}.${domain}${port}/admin`;
 
@@ -624,7 +631,7 @@ export async function POST(req: Request) {
     // admin URL points at the new chapter's subdomain /admin.
     try {
       const adminEmailAddr = adminEmail.trim().toLowerCase();
-      const adminUrl = `https://${subdomain}.greekstack.vercel.app/admin`;
+      const adminUrl = `https://${subdomain}.${domain}/admin`;
       const chapterDisplay = [
         fraternityName.trim(),
         (greekLetters || "").trim(),
@@ -681,7 +688,7 @@ export async function POST(req: Request) {
           <tr><td style="padding:6px 0;color:#71717a;">Chapter</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escHtml(chapterDisplay)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Plan</td><td style="padding:6px 0;text-align:right;">${escHtml(planLabel)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
-          <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.greekstack.vercel.app</a></td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.${escHtml(domain)}</a></td></tr>
         </table>
         <p style="margin:16px 0 0;">${billingLineHtml}</p>
         <p style="margin:16px 0 0;">Keep an eye on your inbox — <strong>Ben, the founder, will personally email you</strong> shortly to say hi and make sure you have everything you need to get going.</p>
@@ -755,11 +762,11 @@ export async function POST(req: Request) {
           { label: "Plan", value: planLabelOwner },
           { label: "Promo Code", value: isPromoValid ? `${promoCode} (Applied)` : "—" },
           { label: "Instagram", value: igDisplay },
-          { label: "Site", value: `${subdomain}.greekstack.vercel.app` },
+          { label: "Site", value: `${subdomain}.${domain}` },
           { label: "Payment deadline", value: deadlineLabel },
         ],
         replyTo: adminEmailAddr,
-        cta: { label: "Open the chapter site", url: `https://${subdomain}.greekstack.vercel.app` },
+        cta: { label: "Open the chapter site", url: `https://${subdomain}.${domain}` },
         footerNote: "Sent automatically when a chapter completes signup.",
       }).catch((e) =>
         errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "owner_notify_failed" }),
