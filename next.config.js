@@ -110,12 +110,25 @@ const nextConfig = {
     // 'unsafe-inline' stays for now: Tailwind injects <style> and Next inlines
     // small RSC bootstrap scripts, so removing it would break the app.
     const isProd = process.env.NODE_ENV === "production";
+    // PostHog product analytics. Only widen the CSP when a key is actually
+    // configured (NEXT_PUBLIC_POSTHOG_KEY). Without it the CSP stays exactly as
+    // tight as before. PostHog loads its array/config script from the assets
+    // host and beacons events to the ingest host, so both script-src and
+    // connect-src need the origins or every capture is CSP-blocked (and the SDK
+    // retries in a loop, spamming the console). Declared BEFORE scriptSrc since
+    // scriptSrc appends posthogScript. Host defaults to US cloud.
+    const posthogEnabled = !!process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    const posthogScript = posthogEnabled ? " https://us-assets.i.posthog.com" : "";
+    const posthogConnect = posthogEnabled
+      ? " https://us.i.posthog.com https://us-assets.i.posthog.com"
+      : "";
     // https://js.stripe.com is required so Stripe.js loads on the signup/checkout
     // funnel (/onboard) and the dues Connect flows — without it the CSP blocks
     // Stripe.js and the payment step silently fails ("Failed to load Stripe.js").
-    const scriptSrc = isProd
+    const scriptSrc = (isProd
       ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
-      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com";
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com")
+      + posthogScript;
     // Only widen connect-src to Sentry's ingest host when client error tracking
     // is actually configured. With NEXT_PUBLIC_SENTRY_DSN unset the CSP stays
     // exactly as tight as before — no Sentry origin is allowed.
@@ -158,7 +171,7 @@ const nextConfig = {
               // Stream (chat) origins are allowed so the integration works when
               // its env keys are set. Inert otherwise — no request hits these
               // hosts unless the feature is configured.
-              "connect-src 'self' https://api.stripe.com https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://cal.com https://*.cal.com" + sentryConnect,
+              "connect-src 'self' https://api.stripe.com https://api.resend.com https://api.twilio.com https://*.stream-io-api.com https://*.getstream.io wss://*.stream-io-api.com https://cal.com https://*.cal.com" + sentryConnect + posthogConnect,
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.instagram.com https://instagram.com https://*.cdninstagram.com https://cal.com https://*.cal.com",
               "object-src 'none'",
               "base-uri 'self'",

@@ -1,18 +1,19 @@
 // scripts/gen-web-icons.mjs
 //
 // Generates the web / PWA / favicon icons (app/icon.png + app/apple-icon.png)
-// from the CANONICAL light seal VECTOR (brand/greekstack-seal-light.svg) — NOT a
+// from the CANONICAL navy seal VECTOR (brand/greekstack-seal.svg) — NOT a
 // raster. Next App Router auto-serves app/icon.png at /icon.png (favicon + PWA)
 // and app/apple-icon.png at /apple-icon.png (iOS "Add to Home Screen"); the
 // manifest (app/manifest.webmanifest/route.ts) references both at 512×512.
 //
 //   node scripts/gen-web-icons.mjs
 //
-// These are the LIGHT-tile presentation of the one canonical mark (ivory tile,
-// navy temple, gold accents) — the same elevated geometry as the navy iOS seal,
-// so the favicon, the in-app header logo, the maskable icon, and the native app
-// icon all read as one identity. Replaces the cream navy-temple raster the
-// owner flagged as "AI slop".
+// v2 — the favicon/web icon now uses the SAME navy seal presentation as the
+// native iOS/Android AppIcon (deep-navy tile #0B1B3A, ivory temple #F4F1E6,
+// warm gold #E8B53A), so the browser tab, home-screen icon, and installed app
+// icon read as ONE premium identity. The prior pale-ivory tile presentation
+// read as washed-out/generic in a browser tab (owner flagged it "sloppy"); the
+// navy seal is the canonical mark and pops on both light and dark tab bars.
 
 import sharp from "sharp";
 import path from "node:path";
@@ -22,13 +23,14 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 
-const SEAL_LIGHT = path.join(root, "brand", "greekstack-seal-light.svg");
+const SEAL = path.join(root, "brand", "greekstack-seal.svg");
 const APP = path.join(root, "app");
 const SIZE = 512; // manifest declares 512×512 for /icon.png + /apple-icon.png
 
 async function build() {
-  const svg = fs.readFileSync(SEAL_LIGHT);
-  // Web icons keep alpha (the rounded ivory tile sits on whatever page bg).
+  const svg = fs.readFileSync(SEAL);
+  // Web icons keep alpha (the rounded navy tile sits on whatever page bg —
+  // the corners outside the rounded rect stay transparent).
   const buf = await sharp(svg, { density: 384 })
     .resize(SIZE, SIZE, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
@@ -36,8 +38,8 @@ async function build() {
 
   await sharp(buf).toFile(path.join(APP, "icon.png"));
   await sharp(buf).toFile(path.join(APP, "apple-icon.png"));
-  console.log(`✓ app/icon.png + app/apple-icon.png (${SIZE}x${SIZE}) from greekstack-seal-light.svg`);
+  console.log(`✓ app/icon.png + app/apple-icon.png (${SIZE}x${SIZE}) from greekstack-seal.svg`);
 }
 
 await build();
-console.log("Done. Light tile #F7F5EE / navy temple #16264E / gold #A8780F");
+console.log("Done. Navy seal — tile #0B1B3A / ivory temple #F4F1E6 / gold #E8B53A");

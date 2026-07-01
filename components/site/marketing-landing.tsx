@@ -13,6 +13,7 @@ import { Reveal } from "@/components/site/reveal";
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import {
   TypewriterCycle,
+  PhraseFlip,
   Tilt3DCard,
   Magnetic,
   Parallax,
@@ -1410,12 +1411,15 @@ function Hero() {
               the meaning even if JS never runs. */}
           <h1 className="gs-hero-h1 mt-6 text-balance font-bold tracking-tight animate-slide-up [animation-delay:120ms]">
             <span className="block">
-              <TypewriterCycle
+              {/* Whole-phrase flip (not char-by-char typing): every frame shows
+                  a COMPLETE, legible function name, so a glance/screenshot never
+                  catches a half-typed word that reads as "clipped". Cross-fades
+                  through the value props then settles on the brand promise. */}
+              <PhraseFlip
                 phrases={HERO_PHRASES}
                 settleText={HERO_SETTLE}
                 ssrText={HERO_SETTLE}
                 textClassName="gs-gradient-text"
-                caretClassName="bg-sky-500"
               />
             </span>
             <span className="mt-2 block text-foreground">

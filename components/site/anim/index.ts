@@ -13,6 +13,7 @@
  * Used by components/site/marketing-landing.tsx.
  */
 export { TypewriterCycle } from "./typewriter-cycle";
+export { PhraseFlip } from "./phrase-flip";
 export { Tilt3DCard } from "./tilt-3d-card";
 export { Magnetic } from "./magnetic";
 export { Parallax, ScrollProgressBar } from "./parallax";
