@@ -43,6 +43,7 @@ export function PostAnnModal({ ctx }: { ctx: DemoContext }) {
                         onClick={closeModal}
                         className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-full transition"
                         type="button"
+                        aria-label="Close"
                       >
                         <IconClose className="w-4 h-4" />
                       </button>
