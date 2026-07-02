@@ -532,8 +532,11 @@ export function RusheesManager({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-border bg-card">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto rounded-xl border border-border bg-card">
+                  {/* min-w keeps all 5 columns reachable on phones — the wrapper
+                      scrolls horizontally instead of clipping the Status column
+                      (critique council: mobile roster table, 390px). */}
+                  <table className="w-full min-w-[720px] text-sm">
                     <thead className="bg-secondary text-xs uppercase tracking-[0.12em] text-muted-foreground">
                       <tr>
                         <th className="text-left py-3 px-4">New Member</th>
