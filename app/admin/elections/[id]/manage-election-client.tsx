@@ -175,10 +175,26 @@ export function ManageElectionClient({
             <LifecycleHint status={election.status} />
             <div className="flex items-center gap-2">
               {isDraft && (
-                <Button onClick={() => lifecycle("open")} disabled={busy !== null} className="press">
-                  {busy === "open" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Vote className="h-4 w-4" />}
-                  Open voting
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    onClick={() => lifecycle("open")}
+                    disabled={busy !== null || election.seats.length === 0 || election.seats.some((s) => s.candidates.length === 0)}
+                    className="press"
+                  >
+                    {busy === "open" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Vote className="h-4 w-4" />}
+                    Open voting
+                  </Button>
+                  {/* #17 — never open an election with no offices or an office that
+                      has zero candidates; disable with a reason so the admin knows
+                      what to finish first. */}
+                  {(election.seats.length === 0 || election.seats.some((s) => s.candidates.length === 0)) && (
+                    <span className="text-[11px] font-medium text-amber-600">
+                      {election.seats.length === 0
+                        ? "Add at least one office before opening voting."
+                        : "Each office needs at least one candidate first."}
+                    </span>
+                  )}
+                </div>
               )}
               {isOpen && (
                 <Button onClick={() => lifecycle("close")} disabled={busy !== null} className="press">

@@ -194,6 +194,11 @@ export function RusheesManager({
   };
 
   const assignDriver = async (day: string, shiftHours: string, memberId: string) => {
+    // #16 — the first <option> is a placeholder ("Select a new member..."); if the
+    // admin re-selects it, memberId is empty. Don't POST an empty assignment (it
+    // errored with a red "Assignment failed" toast). Removing a driver is done
+    // with the "Clear" button.
+    if (!memberId) return;
     try {
       const res = await fetch("/api/admin/sober-schedule", {
         method: "POST",
