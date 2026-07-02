@@ -143,10 +143,12 @@ export function WebsiteBuilderClient({
   const [orientation, setOrientation] = React.useState<"centered" | "split-left" | "split-right">(
     (initialConfig["website.orientation"] as any) || "centered"
   );
-  const [logo, setLogo] = React.useState(initialConfig["website.logo"] || "");
-  const [hero, setHero] = React.useState(initialConfig["website.hero"] || "");
-  const [headline, setHeadline] = React.useState(initialConfig["website.headline"] || "");
-  const [tagline, setTagline] = React.useState(initialConfig["website.tagline"] || "");
+  // #2 — read from the CANONICAL keys the public renderer + onboard API use, so
+  // a value saved here (or during onboarding) round-trips instead of resetting.
+  const [logo, setLogo] = React.useState(initialConfig["brand.logoUrl"] || initialConfig["website.logo"] || "");
+  const [hero, setHero] = React.useState(initialConfig["brand.heroImageUrl"] || initialConfig["website.hero"] || "");
+  const [headline, setHeadline] = React.useState(initialConfig["hero.h1.lead"] || initialConfig["website.headline"] || "");
+  const [tagline, setTagline] = React.useState(initialConfig["hero.subline"] || initialConfig["website.tagline"] || "");
 
   // Quick Style Presets state — a single text box maps recognized keywords to a
   // built-in template + palette preset (no AI, no code-gen, no agents).
@@ -278,11 +280,17 @@ export function WebsiteBuilderClient({
         "website.template": template,
         "brand.primaryHex": primaryHex.trim(),
         "brand.secondaryHex": secondaryHex.trim(),
+        // #2 — write to the CANONICAL keys the public renderer actually reads,
+        // so these controls change the LIVE site (they previously wrote to
+        // website.* keys nothing consumed, so Save was a silent no-op while the
+        // toast claimed "updated immediately"). orientation is kept on its own
+        // key (the in-builder preview honors it; live renderer support is a
+        // separate follow-up) so it still round-trips here.
         "website.orientation": orientation,
-        "website.logo": logo,
-        "website.hero": hero,
-        "website.headline": headline,
-        "website.tagline": tagline,
+        "brand.logoUrl": logo,
+        "brand.heroImageUrl": hero,
+        "hero.h1.lead": headline,
+        "hero.subline": tagline,
       };
       sections.forEach(s => {
         if (s.showKey) {

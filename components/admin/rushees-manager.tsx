@@ -662,9 +662,14 @@ export function RusheesManager({
                                 className="flex-1 px-3 py-1.5 bg-background border border-input rounded-md text-xs font-medium outline-none focus:ring-1 focus:ring-ring transition"
                               >
                                 <option value="">Select a new member...</option>
+                                {/* #3 — SoberDriverShift.memberId is a FK to Brother, but accepted
+                                    PNMs live in the Rush table (Rush ids), so assigning one always
+                                    errored. Only PLEDGE rows are real Brother rows; show accepted
+                                    PNMs DISABLED with a reason so they can't be picked (no FK error)
+                                    and the admin knows to make them a pledge first. */}
                                 {acceptedNewMembers.map((m) => (
-                                  <option key={m.id} value={m.id}>
-                                    {m.name} ({m.type === "pledge" ? "Pledge" : "Accepted PNM"})
+                                  <option key={m.id} value={m.id} disabled={m.type !== "pledge"}>
+                                    {m.name} {m.type === "pledge" ? "(Pledge)" : "(Accepted PNM — make a pledge to assign)"}
                                   </option>
                                 ))}
                               </select>

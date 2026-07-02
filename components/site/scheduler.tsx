@@ -65,7 +65,10 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       arr.push({
-        iso: d.toISOString().split("T")[0],
+        // #1 — build the iso from LOCAL components (not toISOString, which is
+        // UTC) so it always matches the visible dayNum below; otherwise the
+        // stored value and the label digit are computed on different clocks.
+        iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
         dayName: d.toLocaleDateString("en-US", { weekday: "short" }),
         dayNum: d.getDate(),
         month: d.toLocaleDateString("en-US", { month: "short" }),
@@ -107,8 +110,11 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
         hours = 0;
       }
 
-      const dateObj = new Date(selectedDate);
-      dateObj.setHours(hours, minutes, 0, 0);
+      // #1 — construct the instant ALL-LOCAL. `new Date("YYYY-MM-DD")` parses as
+      // UTC midnight, and the subsequent setHours is local, so for anyone west
+      // of UTC the booked DAY shifted a day earlier than the button they clicked.
+      const [y, mo, dd] = selectedDate.split("-").map(Number);
+      const dateObj = new Date(y, mo - 1, dd, hours, minutes, 0, 0);
 
       const res = await fetch("/api/schedule", {
         method: "POST",
