@@ -473,6 +473,41 @@ export function WebsiteBuilderClient({
     { id: "tweak", label: "Style Presets", icon: Sparkles },
   ];
 
+  // #7 — the interactive live preview, defined once and rendered on EVERY builder
+  // tab: inline beside its controls in the Style-Presets tab, and in the shared
+  // right rail for the Template / Brand / Layout tabs, so no tab edits blind.
+  const livePreview = (
+    <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col justify-center">
+      {/* #6 — read the CANONICAL chapter.* keys (with legacy unprefixed
+          fallback) so each tenant previews THEIR identity instead of always the
+          Phi Sig / USC reference chapter. */}
+      <EditableLivePreview
+        fraternityName={initialConfig["chapter.fraternityName"] || initialConfig["fraternityName"] || "Phi Sigma Kappa"}
+        onFraternityName={() => {}}
+        greekLetters={initialConfig["chapter.greekLetters"] || initialConfig["greekLetters"] || "ΦΣΚ"}
+        greekLettersGlyphs={initialConfig["chapter.greekLettersGlyphs"] || initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
+        fraternityLetters={initialConfig["chapter.fraternityLetters"] || initialConfig["fraternityLetters"] || "ΦΣΚ"}
+        schoolName={initialConfig["chapter.schoolName"] || initialConfig["schoolName"] || "USC"}
+        schoolShort={initialConfig["chapter.schoolShort"] || initialConfig["schoolShort"] || "USC"}
+        primaryColor={primaryHex}
+        onPrimaryColor={setPrimaryHex}
+        darkColor={secondaryHex}
+        onDarkColor={setSecondaryHex}
+        softColor="#eff6ff"
+        onSoftColor={() => {}}
+        heroHeadline={headline}
+        onHeroHeadline={setHeadline}
+        heroTagline={tagline}
+        onHeroTagline={setTagline}
+        subdomain={initialConfig["chapter.subdomain"] || initialConfig["subdomain"] || "usc"}
+        templateId={template}
+        orientation={orientation}
+        chapterLogo={logo}
+        chapterHero={hero}
+      />
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* ── Tab rail ─────────────────────────────────────────────────────── */}
@@ -858,36 +893,9 @@ export function WebsiteBuilderClient({
                   </div>
                 </div>
 
-                {/* Integrated Interactive Live Preview on the right side */}
-                <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col justify-center">
-                  {/* #6 — read the CANONICAL chapter.* keys (with legacy
-                      unprefixed fallback) so each tenant previews THEIR identity
-                      instead of always the Phi Sig / USC reference chapter. */}
-                  <EditableLivePreview
-                    fraternityName={initialConfig["chapter.fraternityName"] || initialConfig["fraternityName"] || "Phi Sigma Kappa"}
-                    onFraternityName={() => {}}
-                    greekLetters={initialConfig["chapter.greekLetters"] || initialConfig["greekLetters"] || "ΦΣΚ"}
-                    greekLettersGlyphs={initialConfig["chapter.greekLettersGlyphs"] || initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
-                    fraternityLetters={initialConfig["chapter.fraternityLetters"] || initialConfig["fraternityLetters"] || "ΦΣΚ"}
-                    schoolName={initialConfig["chapter.schoolName"] || initialConfig["schoolName"] || "USC"}
-                    schoolShort={initialConfig["chapter.schoolShort"] || initialConfig["schoolShort"] || "USC"}
-                    primaryColor={primaryHex}
-                    onPrimaryColor={setPrimaryHex}
-                    darkColor={secondaryHex}
-                    onDarkColor={setSecondaryHex}
-                    softColor="#eff6ff"
-                    onSoftColor={() => {}}
-                    heroHeadline={headline}
-                    onHeroHeadline={setHeadline}
-                    heroTagline={tagline}
-                    onHeroTagline={setTagline}
-                    subdomain={initialConfig["chapter.subdomain"] || initialConfig["subdomain"] || "usc"}
-                    templateId={template}
-                    orientation={orientation}
-                    chapterLogo={logo}
-                    chapterHero={hero}
-                  />
-                </div>
+                {/* Interactive Live Preview (shared with the other tabs via the
+                    `livePreview` const so there is a single source of truth). */}
+                {livePreview}
               </div>
             </div>
           )}
@@ -895,6 +903,18 @@ export function WebsiteBuilderClient({
 
         {/* ── Sticky actions rail (shared across tabs) ───────────────────────── */}
         <div className="space-y-5">
+          {/* #7 — live preview in the shared rail for every tab EXCEPT Style
+              Presets (which renders it inline beside its own controls), so
+              admins on the Template / Brand / Layout tabs still see their
+              changes render as they make them. */}
+          {tab !== "tweak" && (
+            <div className="space-y-2">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Live preview
+              </div>
+              {livePreview}
+            </div>
+          )}
           <Card className="bg-gradient-to-br from-white to-phisig-mist border-phisig-red/10 shadow-md">
             <CardContent className="p-5 space-y-4">
               <h3 className="font-bold text-base">Actions</h3>
