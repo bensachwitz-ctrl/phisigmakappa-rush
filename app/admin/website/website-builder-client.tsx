@@ -331,24 +331,66 @@ export function WebsiteBuilderClient({
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // #10 — downscale + compress an uploaded image to a small data URL so a normal
+  // phone photo can't blow past the ~5,000,000-char config cap (which surfaced
+  // as an opaque "Invalid input" on Save). Rejects absurd files up front and
+  // preserves logo transparency (PNG) while compressing hero photos (JPEG).
+  const fileToCompressedDataUrl = (
+    file: File,
+    { maxDim, mime = "image/jpeg", quality = 0.82 }: { maxDim: number; mime?: string; quality?: number }
+  ): Promise<string> =>
+    new Promise((resolve, reject) => {
+      if (file.size > 12 * 1024 * 1024) {
+        reject(new Error("That image is over 12MB. Please choose a smaller file."));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read that image."));
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        // SVGs are already vector/tiny — keep as-is, just cap length.
+        if (file.type === "image/svg+xml") {
+          if (dataUrl.length > 500_000) reject(new Error("That SVG is too large — please simplify it."));
+          else resolve(dataUrl);
+          return;
+        }
+        const img = new Image();
+        img.onerror = () => reject(new Error("Could not load that image."));
+        img.onload = () => {
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { resolve(dataUrl); return; }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL(mime, quality));
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogo(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      setLogo(await fileToCompressedDataUrl(file, { maxDim: 256, mime: "image/png" }));
+    } catch (err: any) {
+      push({ title: "Couldn't use that logo", description: err?.message || "Please try another image.", variant: "destructive" });
+    }
   };
 
-  const handleHeroUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setHero(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      setHero(await fileToCompressedDataUrl(file, { maxDim: 1600, mime: "image/jpeg", quality: 0.82 }));
+    } catch (err: any) {
+      push({ title: "Couldn't use that hero image", description: err?.message || "Please try another image.", variant: "destructive" });
+    }
   };
 
   // Quick Style Presets — a keyword matcher that maps recognized words in the
@@ -818,14 +860,17 @@ export function WebsiteBuilderClient({
 
                 {/* Integrated Interactive Live Preview on the right side */}
                 <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col justify-center">
+                  {/* #6 — read the CANONICAL chapter.* keys (with legacy
+                      unprefixed fallback) so each tenant previews THEIR identity
+                      instead of always the Phi Sig / USC reference chapter. */}
                   <EditableLivePreview
-                    fraternityName={initialConfig["fraternityName"] || "Phi Sigma Kappa"}
+                    fraternityName={initialConfig["chapter.fraternityName"] || initialConfig["fraternityName"] || "Phi Sigma Kappa"}
                     onFraternityName={() => {}}
-                    greekLetters={initialConfig["greekLetters"] || "ΦΣΚ"}
-                    greekLettersGlyphs={initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
-                    fraternityLetters={initialConfig["fraternityLetters"] || "ΦΣΚ"}
-                    schoolName={initialConfig["schoolName"] || "USC"}
-                    schoolShort={initialConfig["schoolShort"] || "USC"}
+                    greekLetters={initialConfig["chapter.greekLetters"] || initialConfig["greekLetters"] || "ΦΣΚ"}
+                    greekLettersGlyphs={initialConfig["chapter.greekLettersGlyphs"] || initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
+                    fraternityLetters={initialConfig["chapter.fraternityLetters"] || initialConfig["fraternityLetters"] || "ΦΣΚ"}
+                    schoolName={initialConfig["chapter.schoolName"] || initialConfig["schoolName"] || "USC"}
+                    schoolShort={initialConfig["chapter.schoolShort"] || initialConfig["schoolShort"] || "USC"}
                     primaryColor={primaryHex}
                     onPrimaryColor={setPrimaryHex}
                     darkColor={secondaryHex}
@@ -836,7 +881,7 @@ export function WebsiteBuilderClient({
                     onHeroHeadline={setHeadline}
                     heroTagline={tagline}
                     onHeroTagline={setTagline}
-                    subdomain={initialConfig["subdomain"] || "usc"}
+                    subdomain={initialConfig["chapter.subdomain"] || initialConfig["subdomain"] || "usc"}
                     templateId={template}
                     orientation={orientation}
                     chapterLogo={logo}
