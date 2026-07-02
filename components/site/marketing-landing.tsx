@@ -812,7 +812,10 @@ const FAQS: { q: string; a: string }[] = [
 
 
 
-// Floating letters metadata for 3D scroll intro
+// Floating letters metadata for 3D scroll intro. A DENSE, depth-staggered field
+// (near ones at shallow startZ pass close/fast; far ones emerge from deep) so
+// the camera visibly flies THROUGH a crowd of Greek letters before the logo
+// resolves. Owner feedback: more letters, bigger, and clearly travelled-through.
 const INTRO_LETTERS = [
   { char: "Φ", x: "-30%", y: "-20%", startZ: -500, rot: 15 },
   { char: "Σ", x: "25%", y: "-10%", startZ: -300, rot: -20 },
@@ -824,6 +827,24 @@ const INTRO_LETTERS = [
   { char: "Ξ", x: "18%", y: "30%", startZ: -300, rot: 18 },
   { char: "Λ", x: "-25%", y: "-22%", startZ: -600, rot: -30 },
   { char: "Π", x: "30%", y: "-20%", startZ: -400, rot: 12 },
+  { char: "Α", x: "-42%", y: "-6%", startZ: -900, rot: -8 },
+  { char: "Β", x: "40%", y: "12%", startZ: -800, rot: 22 },
+  { char: "Γ", x: "-6%", y: "34%", startZ: -1000, rot: -18 },
+  { char: "Μ", x: "8%", y: "-34%", startZ: -1100, rot: 14 },
+  { char: "Ν", x: "-38%", y: "28%", startZ: -750, rot: -24 },
+  { char: "Ρ", x: "44%", y: "-4%", startZ: -650, rot: 8 },
+  { char: "Τ", x: "-14%", y: "-14%", startZ: -150, rot: -12 },
+  { char: "Χ", x: "14%", y: "6%", startZ: -120, rot: 16 },
+  { char: "Υ", x: "-4%", y: "-6%", startZ: -100, rot: -6 },
+  { char: "Η", x: "36%", y: "34%", startZ: -1200, rot: 28 },
+  { char: "Ζ", x: "-46%", y: "-30%", startZ: -1300, rot: -20 },
+  { char: "Ι", x: "22%", y: "-22%", startZ: -350, rot: 10 },
+  { char: "Ε", x: "-22%", y: "2%", startZ: -220, rot: -14 },
+  { char: "Ο", x: "6%", y: "22%", startZ: -280, rot: 20 },
+  { char: "Ϝ", x: "46%", y: "-26%", startZ: -1400, rot: -28 },
+  { char: "Σ", x: "-32%", y: "-38%", startZ: -1250, rot: 12 },
+  { char: "Ω", x: "2%", y: "-24%", startZ: -180, rot: -10 },
+  { char: "Δ", x: "-8%", y: "12%", startZ: -140, rot: 24 },
 ];
 
 interface LetterConfig {
@@ -841,10 +862,13 @@ function FloatingLetter({
   letter: LetterConfig;
   scrollYProgress: any;
 }) {
-  const letterZ = useTransform(scrollYProgress, [0, 0.12], [letter.startZ, 1200]);
-  const letterOpacity = useTransform(scrollYProgress, [0, 0.08, 0.12], [0.8, 0.8, 0]);
-  const letterScale = useTransform(scrollYProgress, [0, 0.12], [0.5, 3.5]);
-  const letterRot = useTransform(scrollYProgress, [0, 0.12], [letter.rot, letter.rot * 2]);
+  // Letters start deep, grow as you scroll, and pass THROUGH the camera plane
+  // (z > perspective 1200) so you fly through the field. Held visible longer,
+  // then fade just before the logo/tagline resolves.
+  const letterZ = useTransform(scrollYProgress, [0, 0.14], [letter.startZ, 1400]);
+  const letterOpacity = useTransform(scrollYProgress, [0, 0.10, 0.14], [0.85, 0.85, 0]);
+  const letterScale = useTransform(scrollYProgress, [0, 0.14], [0.35, 6]);
+  const letterRot = useTransform(scrollYProgress, [0, 0.14], [letter.rot, letter.rot * 2]);
 
   return (
     <motion.div
@@ -857,7 +881,7 @@ function FloatingLetter({
         rotate: letterRot,
         transformStyle: "preserve-3d",
       }}
-      className="absolute text-blue-500/25 font-black text-7xl select-none pointer-events-none font-display"
+      className="absolute text-blue-500/30 font-black text-8xl md:text-9xl select-none pointer-events-none font-display"
     >
       {letter.char}
     </motion.div>
@@ -894,36 +918,40 @@ export default function MarketingLandingPage() {
     offset: ["start start", "end end"],
   });
 
-  // 3D scrolling transforms driven by scroll progress
-  // 1. Hero Zoom
-  const heroScale = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [0.7, 0.7, 1.0, 6, 8]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.08, 0.14, 0.18, 0.22], [0, 0, 1.0, 1.0, 0]);
-  const heroZ = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [-400, -400, 0, 800, 1000]);
-  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.08 && latest < 0.18) ? "auto" : "none");
+  // 3D scrolling transforms driven by scroll progress. Timeline re-tuned so each
+  // stage has a WIDE readable HOLD (a real pause at scale=1 / opacity=1) instead
+  // of flashing past — owner feedback: "goes through too quickly, can barely see
+  // each page." The snap points further down are aligned to these holds so
+  // scrolling lands ON each legible stage. Letters (FloatingLetter) own 0 → 0.14.
+  // 1. Hero (logo + tagline flip) — HOLD 0.16 → 0.24
+  const heroScale = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [0.7, 0.7, 1.0, 1.0, 7]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.10, 0.15, 0.24, 0.30], [0, 0, 1.0, 1.0, 0]);
+  const heroZ = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [-400, -400, 0, 0, 900]);
+  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.10 && latest < 0.26) ? "auto" : "none");
 
   // Giant background logo zoom (3D feel)
-  const logoScale = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [0.2, 1.0, 1.2, 8, 12]);
-  const logoOpacity = useTransform(scrollYProgress, [0, 0.04, 0.08, 0.16, 0.18, 0.22], [0, 0.8, 0.8, 0.15, 0.15, 0]);
-  const logoZ = useTransform(scrollYProgress, [0, 0.08, 0.16, 0.18, 0.22], [-800, -200, 0, 1000, 1200]);
+  const logoScale = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [0.2, 1.0, 1.2, 1.2, 9]);
+  const logoOpacity = useTransform(scrollYProgress, [0, 0.05, 0.10, 0.16, 0.24, 0.30], [0, 0.8, 0.8, 0.15, 0.15, 0]);
+  const logoZ = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [-800, -200, 0, 0, 1100]);
 
 
-  // 2. How It Works Stage
-  const howItWorksScale = useTransform(scrollYProgress, [0.18, 0.32, 0.42, 0.52], [0.4, 1, 1, 4]);
-  const howItWorksOpacity = useTransform(scrollYProgress, [0.18, 0.28, 0.45, 0.52], [0, 1, 1, 0]);
-  const howItWorksZ = useTransform(scrollYProgress, [0.18, 0.32, 0.42, 0.52], [-650, 0, 0, 800]);
-  const howItWorksPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.18 && latest < 0.48) ? "auto" : "none");
+  // 2. How It Works Stage — HOLD 0.37 → 0.46
+  const howItWorksScale = useTransform(scrollYProgress, [0.30, 0.37, 0.46, 0.52], [0.4, 1, 1, 4]);
+  const howItWorksOpacity = useTransform(scrollYProgress, [0.30, 0.36, 0.47, 0.52], [0, 1, 1, 0]);
+  const howItWorksZ = useTransform(scrollYProgress, [0.30, 0.37, 0.46, 0.52], [-650, 0, 0, 800]);
+  const howItWorksPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.31 && latest < 0.50) ? "auto" : "none");
 
-  // 3. Features Stage
-  const featuresScale = useTransform(scrollYProgress, [0.46, 0.58, 0.68, 0.78], [0.4, 1, 1, 4]);
-  const featuresOpacity = useTransform(scrollYProgress, [0.46, 0.54, 0.72, 0.78], [0, 1, 1, 0]);
-  const featuresZ = useTransform(scrollYProgress, [0.46, 0.58, 0.68, 0.78], [-650, 0, 0, 800]);
-  const featuresPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.48 && latest < 0.74) ? "auto" : "none");
+  // 3. Features Stage — HOLD 0.59 → 0.69
+  const featuresScale = useTransform(scrollYProgress, [0.52, 0.59, 0.69, 0.75], [0.4, 1, 1, 4]);
+  const featuresOpacity = useTransform(scrollYProgress, [0.52, 0.58, 0.70, 0.75], [0, 1, 1, 0]);
+  const featuresZ = useTransform(scrollYProgress, [0.52, 0.59, 0.69, 0.75], [-650, 0, 0, 800]);
+  const featuresPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.53 && latest < 0.73) ? "auto" : "none");
 
-  // 4. Pricing Stage
-  const pricingScale = useTransform(scrollYProgress, [0.72, 0.84, 0.92, 0.98], [0.4, 1, 1, 4]);
-  const pricingOpacity = useTransform(scrollYProgress, [0.72, 0.80, 0.94, 0.98], [0, 1, 1, 0]);
-  const pricingZ = useTransform(scrollYProgress, [0.72, 0.84, 0.92, 0.98], [-650, 0, 0, 800]);
-  const pricingPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.74 && latest < 0.98) ? "auto" : "none");
+  // 4. Pricing Stage — HOLD 0.82 → 0.93
+  const pricingScale = useTransform(scrollYProgress, [0.75, 0.82, 0.93, 1.0], [0.4, 1, 1, 4]);
+  const pricingOpacity = useTransform(scrollYProgress, [0.75, 0.81, 0.94, 1.0], [0, 1, 1, 0]);
+  const pricingZ = useTransform(scrollYProgress, [0.75, 0.82, 0.93, 1.0], [-650, 0, 0, 800]);
+  const pricingPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.76 && latest < 0.98) ? "auto" : "none");
 
   if (reduce || isMobile) {
     // Accessible flat layout for reduced motion / mobile screens
@@ -963,13 +991,19 @@ export default function MarketingLandingPage() {
       <ScrollProgressBar />
       <SiteNav />
 
-      {/* 3D scrolling container. Each major section is pinned, fades and scales from depth, then zooms past. */}
-      <div ref={containerRef} className="relative h-[650vh]">
-        {/* Scroll snap helper points for 3D slides */}
+      {/* 3D scrolling container. Each major section is pinned, fades and scales
+          from depth, HOLDS legibly, then zooms past. Taller (900vh) so every
+          stage gets real scroll distance to read — owner feedback: it went by
+          too fast. */}
+      <div ref={containerRef} className="relative h-[900vh]">
+        {/* Scroll snap points aligned to each stage's readable HOLD (hero ~0.20,
+            how-it-works ~0.41, features ~0.64, pricing ~0.88 of 900vh) so a
+            scroll settles ON each legible stage instead of a transition. */}
         <div className="absolute top-0 h-screen w-full snap-start snap-always pointer-events-none" />
         <div className="absolute top-[180vh] h-screen w-full snap-start snap-always pointer-events-none" />
-        <div className="absolute top-[360vh] h-screen w-full snap-start snap-always pointer-events-none" />
-        <div className="absolute top-[540vh] h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[378vh] h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[576vh] h-screen w-full snap-start snap-always pointer-events-none" />
+        <div className="absolute top-[792vh] h-screen w-full snap-start snap-always pointer-events-none" />
 
         <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center [perspective:1200px] [transform-style:preserve-3d]">
           
