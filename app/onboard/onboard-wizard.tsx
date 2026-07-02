@@ -187,6 +187,21 @@ export default function OnboardWizard() {
   const [provisioning, setProvisioning] = React.useState(false);
   const [launched, setLaunched] = React.useState(false);
   const [liveUrl, setLiveUrl] = React.useState("");
+
+  // #9 — the wizard has no draft persistence, so closing/refreshing the tab
+  // mid-setup silently loses all entered chapter data. Warn before an accidental
+  // navigation once the user has progressed past the first step and hasn't
+  // launched yet, so they don't lose their work with one stray keystroke.
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (step !== "pricing" && !launched) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [step, launched]);
   // Inline launch-failure message (non-subdomain errors) so the finish line shows
   // a recoverable card with Retry + Talk-to-our-team, not just a transient toast.
   const [launchError, setLaunchError] = React.useState<string | null>(null);

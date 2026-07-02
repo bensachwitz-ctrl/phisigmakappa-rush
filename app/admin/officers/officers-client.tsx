@@ -66,6 +66,9 @@ const DOMAINS: Array<{ key: DomainKey; label: string; hint: string }> = [
   { key: "rushPipeline", label: "Rush Pipeline", hint: "PNM intake, votes, bid extension" },
   { key: "brothers", label: "Brothers", hint: "Member roster + profiles" },
   { key: "events", label: "Events", hint: "Calendar + RSVPs" },
+  // #11 — elections is a real DomainKey but was missing from this editor, so
+  // admins couldn't grant/revoke it and the access summary misreported the role.
+  { key: "elections", label: "Elections", hint: "Ballots, candidates, seating winners" },
   { key: "announcements", label: "Announcements", hint: "Chapter news posts" },
   { key: "dues", label: "Dues", hint: "Member dues ledger" },
   { key: "academic", label: "Academic", hint: "Academic standing + study hours" },
