@@ -43,7 +43,7 @@ export function AddMemberModal({ ctx }: { ctx: DemoContext }) {
                     <IconCrown className="w-4 h-4 text-amber-500" />
                     <h4 id="add-member-modal-title" className="text-xs font-bold text-slate-900 uppercase tracking-wider">Add New Member</h4>
                   </div>
-                  <button onClick={() => setShowAddMemberModal(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
+                  <button type="button" aria-label="Close" onClick={() => setShowAddMemberModal(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
                     <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>

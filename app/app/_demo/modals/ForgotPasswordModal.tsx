@@ -33,7 +33,7 @@ export function ForgotPasswordModal({ ctx }: { ctx: DemoContext }) {
                     <IconLock className="w-4 h-4" style={{ color: selectedBrand.primaryColor }} />
                     <h4 id="forgot-password-modal-title" className="text-xs font-bold text-slate-900 uppercase tracking-wider">Reset Password</h4>
                   </div>
-                  <button onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
+                  <button type="button" aria-label="Close" onClick={() => setShowForgotPassword(false)} className="p-1 text-slate-500 hover:text-slate-600 rounded-full hover:bg-slate-50 transition">
                     <IconClose className="w-3.5 h-3.5" />
                   </button>
                 </div>

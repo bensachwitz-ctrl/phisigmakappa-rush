@@ -75,7 +75,7 @@ export function BookingModal({ ctx }: { ctx: DemoContext }) {
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowBookingModal(false)}>
       <div role="dialog" aria-modal="true" aria-labelledby="booking-modal-title" className="bg-slate-900 border border-white/10 rounded-[32px] p-6 w-full max-w-md space-y-5 shadow-2xl relative animate-scale-in text-left text-slate-200" onClick={(e) => e.stopPropagation()}>
-        <button onClick={() => setShowBookingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
+        <button type="button" aria-label="Close" onClick={() => setShowBookingModal(false)} className="absolute right-4 top-4 p-1 text-slate-400 hover:text-slate-200 rounded-full hover:bg-white/5 transition">
           <IconClose className="w-4 h-4" />
         </button>
         <div className="space-y-1.5 border-b border-white/10 pb-3">
