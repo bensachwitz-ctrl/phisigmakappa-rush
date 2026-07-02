@@ -92,177 +92,177 @@ export default async function BrothersDashboardPage() {
   let meetings, chores, serviceLogs, events, serviceEvents, duesPayments,
     polls, announcements, alumniNetwork, jobPostings, configs;
   try {
-  // Fetch Chapter Meeting Attendance
-  meetings = await prisma.chapterMeeting.findMany({
-    orderBy: { scheduledAt: "desc" },
-    include: {
-      attendance: {
-        where: { memberId: brother.id }
-      }
-    }
-  });
-
-  // Fetch Chore Wheel Assignments
-  chores = await prisma.choreWheelAssignment.findMany({
-    where: { memberId: brother.id },
-    orderBy: { weekStarting: "desc" },
-    include: {
-      task: true
-    }
-  });
-
-  // Fetch Service Hour Logs
-  serviceLogs = await prisma.serviceHourLog.findMany({
-    where: { memberId: brother.id },
-    orderBy: { performedAt: "desc" },
-    include: {
-      serviceEvent: {
-        select: { id: true, title: true }
-      }
-    }
-  });
-
-  // Fetch all upcoming events (so the brother can RSVP)
-  events = await prisma.event.findMany({
-    where: {
-      startsAt: { gte: new Date() }
-    },
-    orderBy: { startsAt: "asc" },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      location: true,
-      dressCode: true,
-      startsAt: true,
-      endsAt: true,
-      category: true,
-      rsvps: {
-        where: { brotherId: brother.id },
-        select: { status: true, note: true }
-      }
-    }
-  });
-
-  // Fetch approved service events for log association
-  serviceEvents = await prisma.serviceEvent.findMany({
-    where: {
-      status: "approved",
-      eventDate: { gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) } // last 60 days to future
-    },
-    orderBy: { eventDate: "desc" },
-    select: {
-      id: true,
-      title: true,
-      eventDate: true,
-      partnerOrg: true
-    }
-  });
-
-  // Fetch past dues payments
-  duesPayments = await prisma.duesPayment.findMany({
-    where: { brotherId: brother.id },
-    orderBy: { createdAt: "desc" }
-  });
-
-  // Fetch active surveys/polls
-  polls = await prisma.poll.findMany({
-    where: {
-      audience: { in: ["BROTHERS", "ALL"] },
-      closedAt: null
-    },
-    include: {
-      votes: {
-        select: {
-          id: true,
-          brotherId: true,
-          alumniId: true,
-          optionId: true
+  // All 11 reads below are INDEPENDENT (each keyed on the already-known
+  // brother.id or on static filters), so run them concurrently in one
+  // Promise.all instead of a serial await-waterfall — the dashboard load drops
+  // from the sum of 11 round-trips to the slowest single query (critique
+  // council: member-portal perceived speed). Order MUST match the destructure.
+  [
+    meetings, chores, serviceLogs, events, serviceEvents, duesPayments,
+    polls, announcements, alumniNetwork, jobPostings, configs,
+  ] = await Promise.all([
+    // Chapter meeting attendance
+    prisma.chapterMeeting.findMany({
+      orderBy: { scheduledAt: "desc" },
+      include: {
+        attendance: {
+          where: { memberId: brother.id }
         }
       }
-    },
-    orderBy: { createdAt: "desc" }
-  });
-
-  // Fetch pinned & recent announcements
-  announcements = await prisma.announcement.findMany({
-    where: {
-      audience: { in: ["BROTHERS", "ALL"] },
-      status: "sent"
-    },
-    orderBy: [
-      { pinned: "desc" },
-      { createdAt: "desc" }
-    ],
-    take: 15,
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      pinned: true,
-      createdAt: true,
-      author: {
-        select: { name: true, position: true }
+    }),
+    // Chore wheel assignments
+    prisma.choreWheelAssignment.findMany({
+      where: { memberId: brother.id },
+      orderBy: { weekStarting: "desc" },
+      include: {
+        task: true
+      }
+    }),
+    // Service hour logs
+    prisma.serviceHourLog.findMany({
+      where: { memberId: brother.id },
+      orderBy: { performedAt: "desc" },
+      include: {
+        serviceEvent: {
+          select: { id: true, title: true }
+        }
+      }
+    }),
+    // All upcoming events (so the brother can RSVP)
+    prisma.event.findMany({
+      where: {
+        startsAt: { gte: new Date() }
       },
-      pollId: true,
-      poll: {
-        select: {
-          id: true,
-          question: true,
-          options: true,
-          createdById: true,
-          closesAt: true,
-          closedAt: true,
-          audience: true,
-          createdAt: true,
-          updatedAt: true,
-          votes: {
-            select: {
-              id: true,
-              brotherId: true,
-              alumniId: true,
-              optionId: true
+      orderBy: { startsAt: "asc" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        location: true,
+        dressCode: true,
+        startsAt: true,
+        endsAt: true,
+        category: true,
+        rsvps: {
+          where: { brotherId: brother.id },
+          select: { status: true, note: true }
+        }
+      }
+    }),
+    // Approved service events for log association
+    prisma.serviceEvent.findMany({
+      where: {
+        status: "approved",
+        eventDate: { gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) } // last 60 days to future
+      },
+      orderBy: { eventDate: "desc" },
+      select: {
+        id: true,
+        title: true,
+        eventDate: true,
+        partnerOrg: true
+      }
+    }),
+    // Past dues payments
+    prisma.duesPayment.findMany({
+      where: { brotherId: brother.id },
+      orderBy: { createdAt: "desc" }
+    }),
+    // Active surveys/polls
+    prisma.poll.findMany({
+      where: {
+        audience: { in: ["BROTHERS", "ALL"] },
+        closedAt: null
+      },
+      include: {
+        votes: {
+          select: {
+            id: true,
+            brotherId: true,
+            alumniId: true,
+            optionId: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    }),
+    // Pinned & recent announcements
+    prisma.announcement.findMany({
+      where: {
+        audience: { in: ["BROTHERS", "ALL"] },
+        status: "sent"
+      },
+      orderBy: [
+        { pinned: "desc" },
+        { createdAt: "desc" }
+      ],
+      take: 15,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        pinned: true,
+        createdAt: true,
+        author: {
+          select: { name: true, position: true }
+        },
+        pollId: true,
+        poll: {
+          select: {
+            id: true,
+            question: true,
+            options: true,
+            createdById: true,
+            closesAt: true,
+            closedAt: true,
+            audience: true,
+            createdAt: true,
+            updatedAt: true,
+            votes: {
+              select: {
+                id: true,
+                brotherId: true,
+                alumniId: true,
+                optionId: true
+              }
             }
           }
         }
       }
-    }
-  });
-
-  // Fetch directory of opted-in alumni for networking
-  alumniNetwork = await prisma.alumniProfile.findMany({
-    where: { optInDirectory: true },
-    orderBy: { graduationYear: "desc" },
-    select: {
-      id: true,
-      fullName: true,
-      preferredName: true,
-      graduationYear: true,
-      pledgeClass: true,
-      email: true,
-      phone: true,
-      city: true,
-      state: true,
-      employer: true,
-      jobTitle: true,
-      linkedinUrl: true,
-      bio: true,
-    }
-  });
-
-  // Fetch career opportunities / job postings
-  jobPostings = await prisma.jobPosting.findMany({
-    orderBy: { createdAt: "desc" }
-  });
-
-  // Load Stripe dues configs from SiteConfig KV store
-  configs = await prisma.siteConfig.findMany({
-    where: {
-      key: {
-        in: ["dues.enabled", "dues.amountCents", "dues.year", "dues.label", "dues.stripePublishableKey"]
+    }),
+    // Directory of opted-in alumni for networking
+    prisma.alumniProfile.findMany({
+      where: { optInDirectory: true },
+      orderBy: { graduationYear: "desc" },
+      select: {
+        id: true,
+        fullName: true,
+        preferredName: true,
+        graduationYear: true,
+        pledgeClass: true,
+        email: true,
+        phone: true,
+        city: true,
+        state: true,
+        employer: true,
+        jobTitle: true,
+        linkedinUrl: true,
+        bio: true,
       }
-    }
-  });
+    }),
+    // Career opportunities / job postings
+    prisma.jobPosting.findMany({
+      orderBy: { createdAt: "desc" }
+    }),
+    // Stripe dues configs from the SiteConfig KV store
+    prisma.siteConfig.findMany({
+      where: {
+        key: {
+          in: ["dues.enabled", "dues.amountCents", "dues.year", "dues.label", "dues.stripePublishableKey"]
+        }
+      }
+    }),
+  ]);
   } catch (err) {
     if (isNextSignal(err)) throw err;
     console.error("[brothers dashboard] data load failed:", err);
