@@ -866,8 +866,8 @@ function FloatingLetter({
   // (z > perspective 1200) so you fly through the field. Held visible longer,
   // then fade just before the logo/tagline resolves.
   const letterZ = useTransform(scrollYProgress, [0, 0.14], [letter.startZ, 1400]);
-  const letterOpacity = useTransform(scrollYProgress, [0, 0.10, 0.14], [0.85, 0.85, 0]);
-  const letterScale = useTransform(scrollYProgress, [0, 0.14], [0.35, 6]);
+  const letterOpacity = useTransform(scrollYProgress, [0, 0.10, 0.14], [0.9, 0.9, 0]);
+  const letterScale = useTransform(scrollYProgress, [0, 0.14], [0.6, 6.5]);
   const letterRot = useTransform(scrollYProgress, [0, 0.14], [letter.rot, letter.rot * 2]);
 
   return (
@@ -923,16 +923,21 @@ export default function MarketingLandingPage() {
   // of flashing past — owner feedback: "goes through too quickly, can barely see
   // each page." The snap points further down are aligned to these holds so
   // scrolling lands ON each legible stage. Letters (FloatingLetter) own 0 → 0.14.
-  // 1. Hero (logo + tagline flip) — HOLD 0.16 → 0.24
-  const heroScale = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [0.7, 0.7, 1.0, 1.0, 7]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.10, 0.15, 0.24, 0.30], [0, 0, 1.0, 1.0, 0]);
-  const heroZ = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [-400, -400, 0, 0, 900]);
-  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.10 && latest < 0.26) ? "auto" : "none");
+  // 1. Hero (logo + tagline flip) — VISIBLE AT SCROLL 0 so the value prop +
+  // primary CTA ARE the landing frame (critique council: the old timeline made
+  // an empty faint-letter field the first paint / LCP, with no headline or CTA
+  // until ~15% scroll). Now the hero holds legibly from 0 → 0.24, the Greek
+  // letters fly THROUGH it as you scroll, then it zooms past into How-It-Works.
+  const heroScale = useTransform(scrollYProgress, [0, 0.24, 0.30], [1.0, 1.0, 7]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.06, 0.24, 0.30], [1, 1, 1, 0]);
+  const heroZ = useTransform(scrollYProgress, [0, 0.24, 0.30], [0, 0, 900]);
+  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest < 0.28) ? "auto" : "none");
 
-  // Giant background logo zoom (3D feel)
-  const logoScale = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [0.2, 1.0, 1.2, 1.2, 9]);
-  const logoOpacity = useTransform(scrollYProgress, [0, 0.05, 0.10, 0.16, 0.24, 0.30], [0, 0.8, 0.8, 0.15, 0.15, 0]);
-  const logoZ = useTransform(scrollYProgress, [0, 0.10, 0.16, 0.24, 0.30], [-800, -200, 0, 0, 1100]);
+  // Giant background logo — a subtle depth accent behind the hero (it is no
+  // longer the scroll-0 hero element; the real hero text carries the frame).
+  const logoScale = useTransform(scrollYProgress, [0, 0.16, 0.24, 0.30], [0.9, 1.2, 1.2, 9]);
+  const logoOpacity = useTransform(scrollYProgress, [0, 0.06, 0.16, 0.24, 0.30], [0.14, 0.20, 0.15, 0.15, 0]);
+  const logoZ = useTransform(scrollYProgress, [0, 0.16, 0.24, 0.30], [-200, 0, 0, 1100]);
 
 
   // 2. How It Works Stage — HOLD 0.37 → 0.46
