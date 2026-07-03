@@ -107,7 +107,7 @@ async function ChapterPrivacyPage() {
     [fraternityName, greekLetters].filter(Boolean).join(" ") +
     (schoolShort ? ` (${schoolShort})` : "");
   return (
-    <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
+    <div className="min-h-screen bg-background">      <PublicNav />
       <div className="container section-y max-w-3xl">
         <Link
           href="/"
@@ -235,7 +235,7 @@ async function ChapterPrivacyPage() {
         </p>
       </div>
       <PublicFooter />
-    </main>
+    </div>
   );
 }
 
@@ -259,7 +259,7 @@ function PlatformPrivacyPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <ApexHeader />
 
-      <main id="main-content" className="container section-y max-w-3xl">
+      <div className="container section-y max-w-3xl">
         <Link
           href="/"
           className="group mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -497,7 +497,7 @@ function PlatformPrivacyPage() {
           Last updated: {PLATFORM_PRIVACY_UPDATED} · Greekstack — the white-label Greek-life platform · Contact:{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>
         </p>
-      </main>
+      </div>
 
       <ApexFooter />
     </div>

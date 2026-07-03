@@ -136,8 +136,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
         </div>
       </header>
 
-      <main
-        id="main-content"
+      <div
         className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-20 pt-8 sm:pt-12"
       >
         {/* ── Heading — premium classical lockup ─────────────────────── */}
@@ -331,7 +330,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
               classical footer accent. */}
           <MarketingSiteLink />
         </div>
-      </main>
+      </div>
     </div>
   );
 }

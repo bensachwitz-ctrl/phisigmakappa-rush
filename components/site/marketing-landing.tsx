@@ -968,7 +968,7 @@ export default function MarketingLandingPage() {
         />
         <ScrollProgressBar />
         <SiteNav />
-        <main id="main" className="relative z-10">
+        <div className="relative z-10">
           <div className="snap-start snap-always"><Hero /></div>
           <div className="snap-start snap-always"><GlyphMarquee /></div>
           <div className="snap-start snap-always"><DemoShowcase /></div>
@@ -981,7 +981,7 @@ export default function MarketingLandingPage() {
           <div className="snap-start snap-always"><Pricing /></div>
           <div className="snap-start snap-always"><Faq /></div>
           <div className="snap-start snap-always"><FinalCta /></div>
-        </main>
+        </div>
         <SiteFooter />
       </div>
     );
@@ -1111,7 +1111,7 @@ export default function MarketingLandingPage() {
       </div>
 
       {/* Narrative continuation scrolling normally below the 3D container */}
-      <main id="main" className="relative z-10 bg-white border-t border-border/40">
+      <div className="relative z-10 bg-white border-t border-border/40">
         <div className="snap-start snap-always"><GlyphMarquee /></div>
         <div className="snap-start snap-always"><DemoShowcase /></div>
         <div className="snap-start snap-always"><BeforeAfter /></div>
@@ -1120,7 +1120,7 @@ export default function MarketingLandingPage() {
         <div className="snap-start snap-always"><Proof /></div>
         <div className="snap-start snap-always"><Faq /></div>
         <div className="snap-start snap-always"><FinalCta /></div>
-      </main>
+      </div>
 
       <SiteFooter />
     </div>

@@ -71,7 +71,7 @@ export default async function BidPage({ params }: { params: { token: string } })
   const rushEmail = cfg["contact.rushEmail"] || "";
 
   return (
-    <main id="main-content" className="min-h-screen bg-phisig-mist">
+    <div className="min-h-screen bg-phisig-mist">
       <div className="container py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <Wordmark variant="compact" />
@@ -151,6 +151,6 @@ export default async function BidPage({ params }: { params: { token: string } })
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

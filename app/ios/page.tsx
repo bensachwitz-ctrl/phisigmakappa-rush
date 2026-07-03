@@ -77,7 +77,7 @@ export default async function IosPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <ApexHeader />
 
-      <main id="main-content" className="container section-y max-w-5xl flex-1 px-4 sm:px-6">
+      <div className="container section-y max-w-5xl flex-1 px-4 sm:px-6">
         <Link
           href="/"
           className="group mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -279,7 +279,7 @@ export default async function IosPage() {
             />
           </div>
         </section>
-      </main>
+      </div>
 
       <ApexFooter />
     </div>

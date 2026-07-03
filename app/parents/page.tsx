@@ -87,7 +87,7 @@ export default async function ParentsPage() {
   const { terms } = chapterIdentityFromCfg(cfg);
 
   return (
-    <main id="main-content" className="min-h-screen bg-background">      <PublicNav />
+    <div className="min-h-screen bg-background">      <PublicNav />
 
       <div className="container section-y max-w-4xl">
         <Link
@@ -385,7 +385,7 @@ export default async function ParentsPage() {
       </div>
 
       <PublicFooter />
-    </main>
+    </div>
   );
 }
 

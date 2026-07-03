@@ -91,7 +91,7 @@ export default function LoginClient() {
   }
 
   return (
-    <main id="main-content" className="relative isolate flex min-h-screen flex-col overflow-hidden">
+    <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
       {/* Brand wash — the same blue-tinted radial+linear field the marketing
           site paints, so the operator login reads as part of Greekstack rather
           than a bare gray form. Decorative + non-interactive. */}
@@ -270,6 +270,6 @@ export default function LoginClient() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

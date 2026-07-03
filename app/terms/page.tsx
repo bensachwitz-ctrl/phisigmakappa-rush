@@ -75,7 +75,7 @@ export default async function TermsPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <ApexHeader />
 
-      <main id="main-content" className="container section-y max-w-3xl">
+      <div className="container section-y max-w-3xl">
         <Link
           href="/"
           className="group mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -336,7 +336,7 @@ export default async function TermsPage() {
           · See also our{" "}
           <Link href="/privacy" className="text-blue-600 hover:underline">privacy policy</Link>.
         </p>
-      </main>
+      </div>
 
       <ApexFooter />
     </div>

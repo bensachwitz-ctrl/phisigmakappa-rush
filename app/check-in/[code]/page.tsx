@@ -61,7 +61,7 @@ export default async function CheckInPage({ params }: { params: { code: string }
     .join(" ");
 
   return (
-    <main id="main-content" className="min-h-screen bg-phisig-mist">
+    <div className="min-h-screen bg-phisig-mist">
       <div className="container py-6">
         <Link
           href="/"
@@ -133,6 +133,6 @@ export default async function CheckInPage({ params }: { params: { code: string }
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
