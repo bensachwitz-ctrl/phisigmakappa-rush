@@ -4,6 +4,7 @@ import { forEachTenant } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { logger, errorSink } from "@/lib/logger";
 import { markDuesIntroFeeUsedFromSession } from "@/lib/platform-billing";
+import { sendDuesPaidReceipt } from "@/lib/dues-receipt";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -188,13 +189,51 @@ async function reconcileTenant(
         }
 
         const now = new Date();
+
+        // Generate the branded PDF receipt + email it to the brother — the SAME
+        // receipt side-effect the webhook applies, via the shared helper. Before
+        // this, a payment confirmed by THIS safety-net cron (a dropped webhook —
+        // exactly the case the cron exists for) silently gave the brother no PDF
+        // and no receipt email. Best-effort; runs once per row (the fresh/PAID
+        // guard above makes a re-run a no-op, so no duplicate emails). Returns
+        // the branded URL (falling back to Stripe's) to persist + the brother
+        // name for the audit row below.
+        //
+        // CRITICAL: the receipt is BEST-EFFORT and must NEVER block the payment
+        // confirmation. Any throw here falls back to the Stripe receipt URL + a
+        // null name so the PAID transaction below still commits — a receipt/PDF
+        // failure can't strand a confirmed payment as PENDING.
+        let finalReceiptUrl: string | null = receiptUrl;
+        let receiptBrotherName: string | null = null;
+        try {
+          const receiptOut = await sendDuesPaidReceipt(db, {
+            paymentId: payment.id,
+            brotherId: payment.brotherId,
+            amountCents: payment.amountCents,
+            year: payment.year,
+            paidAt: now,
+            paymentIntentId,
+            stripeReceiptUrl: receiptUrl,
+            route: ROUTE,
+          });
+          finalReceiptUrl = receiptOut.finalReceiptUrl;
+          receiptBrotherName = receiptOut.brotherName;
+        } catch (e) {
+          errorSink(e, {
+            route: ROUTE,
+            kind: "dues",
+            paymentId: payment.id,
+            outcome: "dues_receipt_side_effect_failed",
+          });
+        }
+
         await db.$transaction([
           db.duesPayment.update({
             where: { id: payment.id },
             data: {
               status: "PAID",
               stripePaymentIntentId: paymentIntentId,
-              receiptUrl,
+              receiptUrl: finalReceiptUrl,
             },
           }),
           db.brother.update({
@@ -233,11 +272,6 @@ async function reconcileTenant(
           });
         }
 
-        const brother = await db.brother.findUnique({
-          where: { id: payment.brotherId },
-          select: { name: true },
-        }).catch(() => null);
-
         await db.auditLog.create({
           data: {
             actorId: null,
@@ -245,7 +279,8 @@ async function reconcileTenant(
             action: "DUES_PAID",
             subjectType: "Brother",
             subjectId: payment.brotherId,
-            subjectName: brother?.name || null,
+            // reuse the brother name the receipt helper already resolved
+            subjectName: receiptBrotherName,
             details: `$${(payment.amountCents / 100).toFixed(2)} via Stripe — ${payment.year} (reconciled)`,
             ipAddress: null,
           },

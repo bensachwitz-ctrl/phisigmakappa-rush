@@ -1,6 +1,11 @@
 import { jsPDF } from "jspdf";
 import { put } from "@vercel/blob";
 import crypto from "crypto";
+import type { PrismaClient } from "@prisma/client";
+import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
+import { sendEmail } from "@/lib/email";
+import { errorSink } from "@/lib/logger";
 
 export interface DuesReceiptDetails {
   brotherName: string;
@@ -302,6 +307,152 @@ export async function generateAndUploadDuesReceipt(
   const blob = await put(`receipts/${cleanFilename}.pdf`, pdfBuffer, {
     access: "public",
   });
-  
+
   return blob.url;
+}
+
+// Minimal HTML-attribute escaper for values interpolated into the receipt
+// email (mirrors the local escUrl the webhook used before this was shared).
+function escReceipt(s: string): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export interface DuesPaidReceiptInput {
+  paymentId: string;
+  brotherId: string;
+  amountCents: number;
+  year: string;
+  paidAt: Date;
+  paymentIntentId: string | null;
+  /** Stripe-hosted receipt URL captured from the charge, used as a fallback. */
+  stripeReceiptUrl: string | null;
+  /** Route tag for errorSink attribution ("/api/dues/webhook" | cron route). */
+  route: string;
+}
+
+/**
+ * Shared "brother paid their dues → give them their receipt" side-effect.
+ * Generates the branded PDF receipt, emails it to the paying brother, and
+ * returns the final receipt URL (branded PDF, falling back to the Stripe-hosted
+ * receipt) so the caller can persist it on the DuesPayment row, plus the
+ * brother's name for the caller's audit row.
+ *
+ * BOTH the Stripe webhook (real-time) and the reconcile-stripe cron (safety net
+ * for a dropped/failed webhook) call this, so a brother's receipt is IDENTICAL
+ * regardless of which path confirmed the payment. Before this was factored out,
+ * the cron confirmed the payment but never generated the PDF or sent the email —
+ * a brother whose payment was reconciled by the nightly job silently received no
+ * receipt.
+ *
+ * Fully best-effort: every step is caught so a receipt/email failure NEVER fails
+ * the confirmed payment (Stripe would otherwise retry a payment it already took).
+ * The chapter identity + brand are read from THIS tenant's siteConfig via the
+ * passed-in `db`, so a payment to one chapter is never branded as another.
+ */
+export async function sendDuesPaidReceipt(
+  db: PrismaClient,
+  input: DuesPaidReceiptInput,
+): Promise<{ finalReceiptUrl: string | null; brotherName: string | null }> {
+  const {
+    paymentId, brotherId, amountCents, year, paidAt,
+    paymentIntentId, stripeReceiptUrl, route,
+  } = input;
+
+  const brother = await db.brother.findUnique({
+    where: { id: brotherId },
+    select: { name: true, email: true },
+  }).catch(() => null);
+
+  const cfgRows = await db.siteConfig.findMany().catch(
+    () => [] as { key: string; value: string }[],
+  );
+  const cfg = Object.fromEntries(cfgRows.map((r) => [r.key, r.value]));
+  const id = chapterIdentityFromCfg(cfg);
+  const brandHex = cfg["brand.primaryHex"] || "";
+  const duesLabel = cfg["dues.label"] || `Chapter dues — ${year}`;
+  const chapterName = id.chapterAttribution || id.fraternityName;
+  const schoolName = id.schoolName || "";
+
+  // Branded PDF receipt → Vercel Blob (best-effort).
+  let customReceiptUrl: string | null = null;
+  if (brother) {
+    try {
+      const receiptFilename = `dues_receipt_${paymentId}_${Date.now()}`;
+      customReceiptUrl = await generateAndUploadDuesReceipt({
+        brotherName: brother.name || "Chapter Brother",
+        brotherEmail: brother.email || "",
+        amountCents,
+        year,
+        paidAt,
+        status: "PAID",
+        stripePaymentIntentId: paymentIntentId,
+        chapterName,
+        schoolName,
+        brandHex,
+        duesLabel,
+      }, receiptFilename);
+    } catch (err) {
+      errorSink(err, { route, outcome: "generate_dues_receipt_pdf_failed" });
+    }
+  }
+
+  const finalReceiptUrl = customReceiptUrl || stripeReceiptUrl;
+
+  // Branded receipt email to the paying brother (best-effort). A send failure
+  // must NEVER throw out of here.
+  try {
+    if (brother?.email) {
+      const amount = `$${(amountCents / 100).toFixed(2)}`;
+      const paidOn = paidAt.toLocaleDateString("en-US", { dateStyle: "long" });
+      const firstName = (brother.name || "").split(" ")[0] || "brother";
+      const receiptRow = finalReceiptUrl
+        ? `<tr><td style="padding:6px 0;color:#71717a;">Payment receipt</td><td style="padding:6px 0;text-align:right;"><a href="${escReceipt(
+            finalReceiptUrl,
+          )}" style="color:${brandHex || "#1F2937"};">Download receipt (PDF)</a></td></tr>`
+        : "";
+      const bodyHtml = `
+        <p style="margin:0 0 16px;">Hi ${escReceipt(firstName)}, thanks — your chapter dues payment was received. Here's your receipt for your records.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
+          <tr><td style="padding:6px 0;color:#71717a;">Item</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escReceipt(duesLabel)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Period</td><td style="padding:6px 0;text-align:right;">${escReceipt(year)}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Amount paid</td><td style="padding:6px 0;text-align:right;font-weight:700;">${amount}</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Date</td><td style="padding:6px 0;text-align:right;">${escReceipt(paidOn)}</td></tr>
+          ${receiptRow}
+        </table>`;
+      const html = renderEmail({
+        brandHex,
+        chapterName: id.chapterAttribution || id.fraternityName,
+        chapterSubline: id.schoolName || undefined,
+        heading: "Your dues payment receipt",
+        bodyHtml,
+        cta: finalReceiptUrl ? { label: "Download your PDF receipt", url: finalReceiptUrl } : null,
+        footerNote: `Paid via Stripe to ${escReceipt(id.fraternityName)}. Keep this email as your receipt.`,
+      });
+      await sendEmail({
+        to: brother.email,
+        subject: `Dues receipt — ${id.fraternityName} (${amount})`,
+        html,
+        text: renderEmailText({
+          heading: "Your dues payment receipt",
+          lines: [
+            `${duesLabel} — ${year}`,
+            `Amount paid: ${amount} on ${paidOn}`,
+            finalReceiptUrl ? `Receipt: ${finalReceiptUrl}` : "",
+          ],
+          chapterName: id.chapterAttribution || id.fraternityName,
+        }),
+      }).catch((e) =>
+        errorSink(e, { route, outcome: "dues_receipt_email_failed" }),
+      );
+    }
+  } catch (e) {
+    errorSink(e, { route, outcome: "dues_receipt_email_failed" });
+  }
+
+  return { finalReceiptUrl, brotherName: brother?.name ?? null };
 }

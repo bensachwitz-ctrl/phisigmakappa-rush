@@ -237,7 +237,13 @@ async function handleCheckoutCompleted(
   const chapterName = id.chapterAttribution || id.fraternityName;
   const schoolName = id.schoolName || "";
 
-  // Generate branded PDF receipt and upload to Vercel Blob
+  // Generate branded PDF receipt and upload to Vercel Blob.
+  // NOTE: lib/dues-receipt.sendDuesPaidReceipt() is the SHARED extraction of
+  // this PDF-gen + receipt-email logic, derived from this block and now used by
+  // the reconcile-stripe cron so a cron-confirmed payment gets an identical
+  // receipt. This webhook path is intentionally left inline (payment-critical,
+  // no integration harness to prove a refactor byte-identical); keep the two in
+  // sync — any change to the receipt PDF/email here should mirror the helper.
   let customReceiptUrl: string | null = null;
   if (brother) {
     try {
