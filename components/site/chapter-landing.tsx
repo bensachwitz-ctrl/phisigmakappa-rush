@@ -234,15 +234,15 @@ export default async function ChapterLandingPage({
   // pixel below the form is a distraction at a 30-second walk-up on bumpy 4G.
   if (booth) {
     return (
-      <main id="main-content" className="min-h-screen bg-phisig-mist">        <PublicNav booth />
+      <div className="min-h-screen bg-phisig-mist">        <PublicNav booth />
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <div className="mb-4 flex justify-center">
               <SectionEyebrow>{identity.fraternityName} at {identity.schoolShort} · Booth</SectionEyebrow>
             </div>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
               Add yourself to the {termLabelShort} {terms.recruit.toLowerCase()} list.
-            </h2>
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Three quick fields. We&apos;ll text you when the schedule drops.
             </p>
@@ -254,7 +254,7 @@ export default async function ChapterLandingPage({
             Tablet auto-clears between rushees · {cfg["contact.instagramHandle"]}
           </p>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -391,7 +391,7 @@ export default async function ChapterLandingPage({
     });
   }
   return (
-    <main id="main-content" className="relative min-h-screen overflow-x-clip">
+    <div className="relative min-h-screen overflow-x-clip">
       <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
       {/* Drifting Greek letters rendered globally by app/layout.tsx — chapter-
           specific glyphs + brand color resolved there from cfg. */}
@@ -429,6 +429,6 @@ export default async function ChapterLandingPage({
         />
         <div className="md:hidden h-20" aria-hidden />
       </div>
-    </main>
+    </div>
   );
 }
