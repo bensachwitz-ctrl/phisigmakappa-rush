@@ -548,6 +548,7 @@ model OfficerAssignment {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt
 
+  @@unique([positionId, brotherId, termCode]) // a brother holds a position once per term
   @@index([brotherId, termCode])
   @@index([positionId, termCode])
 }

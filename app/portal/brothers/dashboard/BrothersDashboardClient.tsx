@@ -940,6 +940,38 @@ export default function BrothersDashboardClient({
   // Handle Poll Vote
   const handleVote = async (pollId: string, optionId: string) => {
     setVotingOnPollId(pollId);
+    // Optimistic vote: reflect the choice in both surfaces immediately so the
+    // tally moves the instant the brother taps, then reconcile with the server
+    // id on success or revert to the snapshot on failure. Previously the UI sat
+    // inert until the round-trip completed, which felt laggy on bar wifi.
+    const prevPolls = pollList;
+    const prevAnnouncements = announcementList;
+    const applyVote = (voteId: string) => {
+      setPollList((prev) =>
+        prev.map((p) => {
+          if (p.id !== pollId) return p;
+          const filteredVotes = p.votes.filter((v) => v.brotherId !== brother.id);
+          return {
+            ...p,
+            votes: [...filteredVotes, { id: voteId, brotherId: brother.id, alumniId: null, optionId }],
+          };
+        })
+      );
+      setAnnouncementList((prev) =>
+        prev.map((a) => {
+          if (!a.poll || a.poll.id !== pollId) return a;
+          const filteredVotes = a.poll.votes.filter((v) => v.brotherId !== brother.id);
+          return {
+            ...a,
+            poll: {
+              ...a.poll,
+              votes: [...filteredVotes, { id: voteId, brotherId: brother.id, alumniId: null, optionId }],
+            },
+          };
+        })
+      );
+    };
+    applyVote("optimistic");
     try {
       const res = await fetch(`/api/polls/${pollId}/vote`, {
         method: "POST",
@@ -949,40 +981,16 @@ export default function BrothersDashboardClient({
 
       if (res.ok) {
         const data = await res.json();
-        setPollList((prev) =>
-          prev.map((p) => {
-            if (p.id !== pollId) return p;
-            const filteredVotes = p.votes.filter((v) => v.brotherId !== brother.id);
-            return {
-              ...p,
-              votes: [
-                ...filteredVotes,
-                { id: data.vote?.id || "temp", brotherId: brother.id, alumniId: null, optionId },
-              ],
-            };
-          })
-        );
-        setAnnouncementList((prev) =>
-          prev.map((a) => {
-            if (!a.poll || a.poll.id !== pollId) return a;
-            const filteredVotes = a.poll.votes.filter((v) => v.brotherId !== brother.id);
-            return {
-              ...a,
-              poll: {
-                ...a.poll,
-                votes: [
-                  ...filteredVotes,
-                  { id: data.vote?.id || "temp", brotherId: brother.id, alumniId: null, optionId },
-                ],
-              },
-            };
-          })
-        );
+        applyVote(data.vote?.id || "temp"); // reconcile optimistic row with the real vote id
       } else {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
+        setPollList(prevPolls);
+        setAnnouncementList(prevAnnouncements);
         push({ title: "Failed to submit vote.", description: err.error || undefined, variant: "destructive" });
       }
     } catch {
+      setPollList(prevPolls);
+      setAnnouncementList(prevAnnouncements);
       push({ title: "A network error occurred.", description: "Please try voting again.", variant: "destructive" });
     } finally {
       setVotingOnPollId(null);
@@ -2484,6 +2492,10 @@ export default function BrothersDashboardClient({
                     const options = parsePollOptions(p.options);
                     const myVote = p.votes.find((v) => v.brotherId === brother.id);
                     const totalVotes = p.votes.length;
+                    // A poll is closed once it's explicitly closed OR its close
+                    // time has passed — the server rejects late votes, so the UI
+                    // must not invite a tap that can only fail.
+                    const isClosed = !!p.closedAt || (!!p.closesAt && new Date(p.closesAt).getTime() < Date.now());
 
                     return (
                       <div
@@ -2502,8 +2514,11 @@ export default function BrothersDashboardClient({
                                 <button
                                   key={o.id}
                                   onClick={() => handleVote(p.id, o.id)}
-                                  disabled={votingOnPollId === p.id}
+                                  disabled={votingOnPollId === p.id || isClosed}
+                                  aria-disabled={isClosed}
                                   className={`w-full text-left p-3 rounded-xl border transition flex flex-col relative overflow-hidden group min-h-[50px] justify-center ${
+                                    isClosed ? "opacity-70 cursor-not-allowed" : ""
+                                  } ${
                                     isSelected
                                       ? "border-maroon-800 bg-maroon-50/20"
                                       : "border-maroon-100 hover:border-maroon-300 hover:bg-cream-50/50"
@@ -2537,9 +2552,11 @@ export default function BrothersDashboardClient({
                         <div className="border-t border-maroon-50 pt-3 flex justify-between items-center text-[10px] text-maroon-500 font-semibold uppercase tracking-wider">
                           <span>Total Casts: {totalVotes}</span>
                           <span>
-                            {p.closesAt
-                              ? `Closes: ${new Date(p.closesAt).toLocaleDateString()}`
-                              : "Open Poll"}
+                            {isClosed
+                              ? "Closed"
+                              : p.closesAt
+                                ? `Closes: ${new Date(p.closesAt).toLocaleDateString()}`
+                                : "Open Poll"}
                           </span>
                         </div>
                       </div>

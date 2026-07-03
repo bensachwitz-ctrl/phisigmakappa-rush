@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight, Clock } from "lucide-react";
+import { IconCheckCircle, IconArrowRight, IconClock } from "@/components/brand/icons";
 import { ConfettiPayoff } from "@/components/ui/confetti";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +41,7 @@ export default async function DuesSuccessPage({
             <>
               <ConfettiPayoff />
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 mx-auto">
-                <CheckCircle2 className="h-7 w-7" />
+                <IconCheckCircle className="h-7 w-7" />
               </div>
               <h1 className="text-2xl font-semibold tracking-tight">Payment received</h1>
               <p className="text-sm text-muted-foreground">
@@ -56,7 +56,7 @@ export default async function DuesSuccessPage({
                     rel="noopener noreferrer"
                     className="text-phisig-red hover:underline inline-flex items-center gap-1"
                   >
-                    View Stripe receipt <ArrowRight className="h-3 w-3" />
+                    View Stripe receipt <IconArrowRight className="h-3 w-3" />
                   </a>
                 </p>
               )}
@@ -64,7 +64,7 @@ export default async function DuesSuccessPage({
           ) : isPending ? (
             <>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-700 mx-auto">
-                <Clock className="h-7 w-7" />
+                <IconClock className="h-7 w-7" />
               </div>
               <h1 className="text-2xl font-semibold tracking-tight">Confirming your payment…</h1>
               <p className="text-sm text-muted-foreground">
@@ -74,7 +74,7 @@ export default async function DuesSuccessPage({
           ) : (
             <>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-muted-foreground mx-auto">
-                <CheckCircle2 className="h-7 w-7" />
+                <IconCheckCircle className="h-7 w-7" />
               </div>
               <h1 className="text-2xl font-semibold tracking-tight">Thanks!</h1>
               <p className="text-sm text-muted-foreground">
@@ -87,7 +87,7 @@ export default async function DuesSuccessPage({
               href="/admin/brothers"
               className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
             >
-              Back to brother directory <ArrowRight className="h-3 w-3" />
+              Back to brother directory <IconArrowRight className="h-3 w-3" />
             </Link>
           </div>
         </CardContent>

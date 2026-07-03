@@ -51,20 +51,50 @@ export async function POST(req: Request) {
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 });
   const data = parsed.data;
-  const created = await prisma.officerAssignment.create({
-    data: {
-      positionId: data.positionId,
-      brotherId: data.brotherId,
-      termCode: data.termCode,
-      startDate: new Date(data.startDate),
-      endDate: data.endDate ? new Date(data.endDate) : null,
-      notes: data.notes || null,
-    },
-    include: {
-      position: { select: { id: true, title: true, slug: true } },
-      brother: { select: { id: true, name: true } },
-    },
+
+  // Reject a duplicate assignment (same brother + position + term) BEFORE
+  // create — without this the same brother could be seated in one position for
+  // one term multiple times, inflating the officer count and the audit trail.
+  // The @@unique on OfficerAssignment is the DB-level backstop (P2002 caught
+  // below); this findFirst gives a clean 409 without relying on the constraint.
+  const dupe = await prisma.officerAssignment.findFirst({
+    where: { positionId: data.positionId, brotherId: data.brotherId, termCode: data.termCode },
+    select: { id: true },
   });
+  if (dupe) {
+    return NextResponse.json(
+      { ok: false, error: "That brother already holds this position for that term." },
+      { status: 409 },
+    );
+  }
+
+  let created;
+  try {
+    created = await prisma.officerAssignment.create({
+      data: {
+        positionId: data.positionId,
+        brotherId: data.brotherId,
+        termCode: data.termCode,
+        startDate: new Date(data.startDate),
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        notes: data.notes || null,
+      },
+      include: {
+        position: { select: { id: true, title: true, slug: true } },
+        brother: { select: { id: true, name: true } },
+      },
+    });
+  } catch (e) {
+    // Backstop: the @@unique fires under a concurrent double-submit that slips
+    // past the findFirst check above.
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      return NextResponse.json(
+        { ok: false, error: "That brother already holds this position for that term." },
+        { status: 409 },
+      );
+    }
+    throw e;
+  }
 
   // Audit — high-stakes mutation (granting officer permissions). Defensive
   // try/catch so a broken Announcement table can't poison the response.
