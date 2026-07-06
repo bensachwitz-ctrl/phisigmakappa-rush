@@ -55,7 +55,6 @@ export {
   IconMenu,
   IconClose,
   IconShieldCheck,
-<<<<<<< HEAD
   IconSearch,
   IconCommand,
   IconHelp,
@@ -116,13 +115,11 @@ export {
   IconBell,
   IconLogOut,
   IconLogIn,
-  IconChevronRight,
   IconInfo,
   IconAward,
   IconClock,
   IconHeart,
   IconBriefcase,
-  IconBuilding,
   IconThumbsUp,
   IconKey,
   IconXCircle,
@@ -132,7 +129,6 @@ export {
   IconQrCode,
   IconGift,
   IconCalendarPlus,
-  IconWand,
   IconMegaphone,
 } from "./mobile";
 

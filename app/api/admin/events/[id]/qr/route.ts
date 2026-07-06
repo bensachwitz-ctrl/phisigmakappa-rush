@@ -15,7 +15,6 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import crypto from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
