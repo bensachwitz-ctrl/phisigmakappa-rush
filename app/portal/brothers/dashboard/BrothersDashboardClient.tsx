@@ -649,8 +649,13 @@ export default function BrothersDashboardClient({
   const [rsvpStatus, setRsvpStatus] = useState<"GOING" | "NOT_GOING" | "MAYBE">("GOING");
   const [activeRosterEvent, setActiveRosterEvent] = useState<string | null>(null);
   const [rosterData, setRosterData] = useState<{
-    roster: any[];
-    noResponse: any[];
+    roster: {
+      status: "GOING" | "NOT_GOING" | "MAYBE";
+      note: string | null;
+      updatedAt: string;
+      brother: Pick<Brother, "id" | "name" | "position" | "headshotUrl">;
+    }[];
+    noResponse: Pick<Brother, "id" | "name" | "position" | "headshotUrl">[];
     counts: { GOING: number; NOT_GOING: number; MAYBE: number; NO_RESPONSE: number; TOTAL_BROTHERS: number };
   } | null>(null);
   const [loadingRoster, setLoadingRoster] = useState(false);
