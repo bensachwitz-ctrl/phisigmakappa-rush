@@ -62,6 +62,23 @@ describe("signatureMatchesToken", () => {
     expect(signatureMatchesToken(URL_UNDER_TEST, STOP_PARAMS, "", "tenant-token-abc")).toBe(false);
     expect(signatureMatchesToken(URL_UNDER_TEST, STOP_PARAMS, sig, "")).toBe(false);
   });
+
+  it("rejects a signature of a different length (avoids timing attack exception)", () => {
+    const sig = twilioSign(URL_UNDER_TEST, STOP_PARAMS, "tenant-token-abc");
+    expect(signatureMatchesToken(URL_UNDER_TEST, STOP_PARAMS, sig + "x", "tenant-token-abc")).toBe(false);
+    expect(signatureMatchesToken(URL_UNDER_TEST, STOP_PARAMS, sig.slice(0, -1), "tenant-token-abc")).toBe(false);
+  });
+
+  it("accepts when params are empty", () => {
+    const sig = twilioSign(URL_UNDER_TEST, {}, "tenant-token-abc");
+    expect(signatureMatchesToken(URL_UNDER_TEST, {}, sig, "tenant-token-abc")).toBe(true);
+  });
+
+  it("handles special characters in params correctly", () => {
+    const specialParams = { "Body": "Hello 🌍! This is a test & special # characters.", "To": "+1234567890", "From": "+0987654321" };
+    const sig = twilioSign(URL_UNDER_TEST, specialParams, "tenant-token-abc");
+    expect(signatureMatchesToken(URL_UNDER_TEST, specialParams, sig, "tenant-token-abc")).toBe(true);
+  });
 });
 
 describe("verifyTwilioSignatureMultiToken — tenant-aware acceptance", () => {
