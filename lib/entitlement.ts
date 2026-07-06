@@ -1,4 +1,4 @@
-import { centralDb } from "@/lib/prisma";
+import { centralDb, getTenantClient } from "@/lib/prisma";
 import { normalizePlan } from "@/lib/platform-billing";
 
 /**
@@ -184,6 +184,31 @@ export async function getEntitlement(subdomain: string): Promise<Entitlement> {
   //    the status string is missing/stale).
   if (daysLeft !== null && daysLeft > 0) {
     return { entitled: true, ...base, reason: "trial_active" };
+  }
+
+  // 3b. Read the onboard-seeded paymentDeadline from the tenant's own database
+  //     schema. If now > paymentDeadline and there is no active subscription,
+  //     we block access by setting entitled:false so the admin-layout locks
+  //     them out. Keep lookup/connection errors fail-open.
+  let isDeadlineElapsed = false;
+  try {
+    const tenantDb = getTenantClient(subdomain);
+    const deadlineRow = await tenantDb.siteConfig.findUnique({
+      where: { key: "billing.paymentDeadline" },
+      select: { value: true },
+    });
+    if (deadlineRow?.value) {
+      const deadline = new Date(deadlineRow.value);
+      if (!Number.isNaN(deadline.getTime()) && Date.now() > deadline.getTime()) {
+        isDeadlineElapsed = true;
+      }
+    }
+  } catch {
+    // fail-open
+  }
+
+  if (isDeadlineElapsed) {
+    return { entitled: false, ...base, reason: "trial_expired" };
   }
 
   // 4. Everything else (past_due, canceled, trial_expired, unknown/absent) —

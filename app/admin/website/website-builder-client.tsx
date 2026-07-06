@@ -157,6 +157,25 @@ const EDITABLE_FIELDS: Record<string, { key: string; label: string; type: "input
     { key: "bio", label: "Biography Text", type: "textarea" },
     { key: "bullets", label: "Achievements / Highlights (separated by | or newlines)", type: "textarea" },
   ],
+  faq: [
+    { key: "json", label: "FAQ JSON (Array of {q, a} objects)", type: "textarea" },
+  ],
+  eboard: [
+    { key: "1.name", label: "President - Name", type: "input" },
+    { key: "1.role", label: "President - Role / Major", type: "input" },
+    { key: "2.name", label: "VP - Name", type: "input" },
+    { key: "2.role", label: "VP - Role / Major", type: "input" },
+    { key: "3.name", label: "Treasurer - Name", type: "input" },
+    { key: "3.role", label: "Treasurer - Role / Major", type: "input" },
+    { key: "4.name", label: "Secretary - Name", type: "input" },
+    { key: "4.role", label: "Secretary - Role / Major", type: "input" },
+    { key: "5.name", label: "Recruitment - Name", type: "input" },
+    { key: "5.role", label: "Recruitment - Role / Major", type: "input" },
+  ],
+  register: [
+    { key: "termLabel", label: "Recruitment Term Label (e.g. Fall '26)", type: "input" },
+    { key: "termLabelLong", label: "Full Term Label (optional, overrides default)", type: "input" },
+  ],
 };
 
 export function WebsiteBuilderClient({
@@ -184,6 +203,8 @@ export function WebsiteBuilderClient({
     fields.forEach((f) => {
       const fullKey = sectionId === "hero" && f.key.startsWith("h1.")
         ? `hero.${f.key}`
+        : sectionId === "register"
+        ? `rush.${f.key}`
         : `${sectionId}.${f.key}`;
       initialValues[f.key] = config[fullKey] || "";
     });
@@ -208,6 +229,8 @@ export function WebsiteBuilderClient({
         Object.entries(editFields).forEach(([field, value]) => {
           const fullKey = editingSectionId === "hero" && field.startsWith("h1.")
             ? `hero.${field}`
+            : editingSectionId === "register"
+            ? `rush.${field}`
             : `${editingSectionId}.${field}`;
           next[fullKey] = value;
         });
@@ -828,7 +851,7 @@ export function WebsiteBuilderClient({
 
                         <div className="flex items-center gap-2 shrink-0">
                           {/* Edit Content Button */}
-                          {["hero", "stats", "about", "testimonial", "spotlight"].includes(sect.id) && (
+                          {["hero", "stats", "about", "testimonial", "spotlight", "faq", "eboard", "register"].includes(sect.id) && (
                             <Button
                               type="button"
                               variant="outline"
