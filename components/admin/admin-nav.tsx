@@ -9,6 +9,15 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+<<<<<<< HEAD
+=======
+// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
+// LUCIDE→BESPOKE TODO at the foot of this file). Menu/X/ChevronDown/ExternalLink
+// were migrated to the bespoke utility set below.
+import {
+  LogOut, LayoutGrid,
+} from "lucide-react";
+>>>>>>> greekstack/replace-lucide-icons-6270049843917795744
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin,
@@ -16,7 +25,7 @@ import {
   // always-on officer chrome reads as ONE cohesive made-for-Greek-life set.
   IconDirectory, IconStanding, IconFamilyTree, IconMeetings, IconRiskDesk,
   IconAcademic, IconChores, IconBallot, IconElections, IconService, IconLibrary,
-  IconExports, IconPayouts, IconBilling, IconAuditLog,
+  IconExports, IconPayouts, IconBilling, IconAuditLog, IconCommand, IconHelp,
   // Bespoke UI-utility glyphs replacing the former raw-lucide chrome (menu/close/
   // chevron/external) so even the nav's mechanical affordances are on-brand.
   IconMenu, IconClose, IconChevronDown, IconExternal, IconSignOut, IconHelp, IconCommand, IconGrid,
@@ -328,3 +337,17 @@ export function AdminNav({
   );
 }
 
+<<<<<<< HEAD
+=======
+// ─────────────────────────────────────────────────────────────────────────────
+// LUCIDE → BESPOKE TODO (officer chrome)
+// ─────────────────────────────────────────────────────────────────────────────
+// Every nav DESTINATION glyph + the mechanical menu/close/chevron/external
+// affordances are now bespoke (@/components/brand/icons). The few remaining raw
+// lucide imports here have NO sensible bespoke equivalent yet and are LEFT AS-IS
+// rather than force a weak match (each keeps identical size/aria/onClick):
+//   • LogOut    — sign-out action (mobile menu + outline button)
+//   • LayoutGrid— the "More" overflow trigger's default (non-active) glyph
+// Next pass: draw IconSignOut / IconGrid in the bespoke
+// design language (see components/brand/icons/icon-base.tsx) and swap these two.
+>>>>>>> greekstack/replace-lucide-icons-6270049843917795744

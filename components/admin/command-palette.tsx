@@ -299,14 +299,3 @@ export function CommandPaletteLauncher({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LUCIDE → BESPOKE TODO (⌘K palette)
-// ─────────────────────────────────────────────────────────────────────────────
-// Every navigate/action command ROW glyph + the External row are bespoke. The
-// remaining raw lucide here are palette CHROME with no bespoke equivalent yet
-// and are left as-is rather than force a weak match (size/aria unchanged):
-//   • Search     — the search-field leading glyph
-//   • Command    — the ⌘ hint in the input + footer + mobile launcher
-//   • HelpCircle — the Help command row + handbook entry
-// Next pass: draw IconSearch / IconCommand / IconHelp in the bespoke design
-// language (components/brand/icons/icon-base.tsx) and swap these three.

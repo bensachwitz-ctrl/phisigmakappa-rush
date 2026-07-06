@@ -129,7 +129,6 @@ export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
     </IconBase>
   );
 }
-
 /** IconHelp — a circled question mark with an accent-filled disc. */
 export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
