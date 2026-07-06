@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Dialog, DialogContent, DialogTitle,
 } from "@/components/ui/dialog";
-// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
-// LUCIDE→BESPOKE TODO at the foot of this file). `ExternalLink` was migrated to
-// the bespoke `IconExternal` below.
+// All icons in the command palette have now been migrated to bespoke.
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin, IconSpark,
