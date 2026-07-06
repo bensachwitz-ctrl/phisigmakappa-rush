@@ -20,7 +20,7 @@ describe("safeHex", () => {
 
   it("passes a valid #RRGGBB (and #RGB) through, trimmed", () => {
     expect(safeHex("#500000", "#f59e0b")).toBe("#500000");
-    expect(safeHex("  #abc  ", "#f59e0b")).toBe("#abc");
+    expect(safeHex("  #abc  ", "#f59e0b")).toBe("#aabbcc");
   });
 
   it("coerces a hostile / non-hex value to the default (no injection)", () => {
