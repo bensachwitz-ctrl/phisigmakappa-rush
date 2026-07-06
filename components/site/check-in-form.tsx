@@ -61,7 +61,11 @@ export function CheckInForm({ code, orgName }: Props) {
         return;
       }
       // The API tells us when it needs the full form (unknown number).
-      if (data.needsForm) setExpanded(true);
+      if (data.needsForm) {
+        setExpanded(true);
+        setError(null);
+        return;
+      }
       setError(data.error || "Something went wrong. Try again.");
     } catch {
       setError("Network error - check your connection and try again.");
@@ -126,6 +130,9 @@ export function CheckInForm({ code, orgName }: Props) {
 
       {expanded && (
         <div className="space-y-4 rounded-xl border border-dashed border-phisig-red/30 bg-phisig-red/[0.03] p-4">
+          <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 text-xs text-blue-800 leading-relaxed">
+            Your phone number wasn&apos;t found in our recruitment database. Please complete the quick form below to register and check in.
+          </div>
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-phisig-red">
             <UserPlus className="h-3.5 w-3.5" /> New here - tell us about you
           </p>
@@ -209,6 +216,7 @@ export function CheckInForm({ code, orgName }: Props) {
               type="checkbox"
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
+              disabled={busy || !phone}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-phisig-red"
             />
             <span>
@@ -229,7 +237,7 @@ export function CheckInForm({ code, orgName }: Props) {
 
       <button
         type="submit"
-        disabled={busy || !phone}
+        disabled={busy || !phone || (expanded && !consent)}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-phisig-red px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-phisig-red/90 disabled:opacity-50"
       >
         {busy ? (

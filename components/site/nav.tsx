@@ -6,7 +6,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { IconLock } from "@/components/brand/icons/contact";
 
-export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
+export function PublicNav({ booth: boothProp, activeSections }: { booth?: boolean; activeSections?: string[] } = {}) {
   // Read ?booth=1 from window after hydration so we never throw during SSR.
   // If a parent server component already detected booth and passed it down, use
   // that as the SSR-correct initial state (avoids a nav-link flash on first paint).
@@ -44,12 +44,14 @@ export function PublicNav({ booth: boothProp }: { booth?: boolean } = {}) {
           >
             Schedule
           </Link>
-          <Link
-            href="#about"
-            className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
-          >
-            About
-          </Link>
+          {(!activeSections || activeSections.includes("about")) && (
+            <Link
+              href="#about"
+              className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"
+            >
+              About
+            </Link>
+          )}
           <Link
             href="/alumni"
             className="hidden md:inline-flex h-9 items-center px-3 text-sm text-muted-foreground hover:text-foreground"

@@ -118,6 +118,47 @@ function ColorEditable({
   );
 }
 
+const EDITABLE_FIELDS: Record<string, { key: string; label: string; type: "input" | "textarea" }[]> = {
+  hero: [
+    { key: "h1.lead", label: "Headline Lead", type: "input" },
+    { key: "h1.highlight", label: "Highlighted Word", type: "input" },
+    { key: "h1.tail", label: "Headline Tail", type: "input" },
+    { key: "subline", label: "Hero Subline / Tagline", type: "textarea" },
+  ],
+  stats: [
+    { key: "brothers", label: "Active Members Count (e.g. 60+)", type: "input" },
+    { key: "brothers.label", label: "Members Label (e.g. Active Brothers)", type: "input" },
+    { key: "brothers.sub", label: "Members Subtext", type: "input" },
+    { key: "gpa", label: "Chapter GPA (e.g. 3.45)", type: "input" },
+    { key: "gpa.label", label: "GPA Label", type: "input" },
+    { key: "gpa.sub", label: "GPA Subtext", type: "input" },
+    { key: "years", label: "Years Strong (e.g. 50+)", type: "input" },
+    { key: "years.label", label: "Years Label", type: "input" },
+    { key: "years.sub", label: "Years Subtext", type: "input" },
+    { key: "charity", label: "Charity Raised (e.g. $25k+)", type: "input" },
+    { key: "charity.label", label: "Charity Label", type: "input" },
+    { key: "charity.sub", label: "Charity Subtext", type: "input" },
+  ],
+  about: [
+    { key: "history", label: "Chapter History / About Text", type: "textarea" },
+    { key: "alumniLine", label: "Alumni Footprint Line", type: "input" },
+    { key: "heritageLine", label: "Heritage / Chartering Line", type: "input" },
+  ],
+  testimonial: [
+    { key: "quote", label: "Testimonial Quote", type: "textarea" },
+    { key: "author", label: "Author Name", type: "input" },
+    { key: "classYear", label: "Class Year (e.g. '26)", type: "input" },
+    { key: "attribution", label: "Attribution / Title", type: "input" },
+  ],
+  spotlight: [
+    { key: "name", label: "Member Name", type: "input" },
+    { key: "role", label: "Major/Role", type: "input" },
+    { key: "month", label: "Spotlight Month (e.g. October)", type: "input" },
+    { key: "bio", label: "Biography Text", type: "textarea" },
+    { key: "bullets", label: "Achievements / Highlights (separated by | or newlines)", type: "textarea" },
+  ],
+};
+
 export function WebsiteBuilderClient({
   initialConfig,
 }: {
@@ -127,6 +168,74 @@ export function WebsiteBuilderClient({
   const { push } = useToast();
   const [busy, setBusy] = React.useState(false);
   const [tab, setTab] = React.useState<TabId>("templates");
+
+  // Local config state to dynamically sync overrides with live preview
+  const [config, setConfig] = React.useState<Record<string, string>>(initialConfig);
+
+  // Section content editor states
+  const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null);
+  const [editFields, setEditFields] = React.useState<Record<string, string>>({});
+  const [savingSection, setSavingSection] = React.useState(false);
+
+  const handleOpenEdit = (sectionId: string) => {
+    setEditingSectionId(sectionId);
+    const fields = EDITABLE_FIELDS[sectionId] || [];
+    const initialValues: Record<string, string> = {};
+    fields.forEach((f) => {
+      const fullKey = sectionId === "hero" && f.key.startsWith("h1.")
+        ? `hero.${f.key}`
+        : `${sectionId}.${f.key}`;
+      initialValues[f.key] = config[fullKey] || "";
+    });
+    setEditFields(initialValues);
+  };
+
+  const handleSaveSectionContent = async () => {
+    if (!editingSectionId) return;
+    setSavingSection(true);
+    try {
+      const res = await fetch(`/api/admin/website/${editingSectionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editFields }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) throw new Error(j.error || "Save failed");
+
+      // Update local config state
+      setConfig((prev) => {
+        const next = { ...prev };
+        Object.entries(editFields).forEach(([field, value]) => {
+          const fullKey = editingSectionId === "hero" && field.startsWith("h1.")
+            ? `hero.${field}`
+            : `${editingSectionId}.${field}`;
+          next[fullKey] = value;
+        });
+        return next;
+      });
+
+      // Update individual states if editing hero
+      if (editingSectionId === "hero") {
+        if (editFields["h1.lead"] !== undefined) setHeadline(editFields["h1.lead"]);
+        if (editFields["subline"] !== undefined) setTagline(editFields["subline"]);
+      }
+
+      push({
+        title: "Section content updated",
+        description: "Review the live preview on the right.",
+        variant: "default",
+      });
+      setEditingSectionId(null);
+    } catch (err: any) {
+      push({
+        title: "Failed to save section content",
+        description: err.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSection(false);
+    }
+  };
 
   // ── Staged brand + template (additive — Layout list is unchanged) ──────────
   const [template, setTemplate] = React.useState<TemplateId>(
@@ -158,13 +267,13 @@ export function WebsiteBuilderClient({
   // website.sections override so the new template's default order takes effect
   // (an existing override otherwise pins the order across templates).
   const [resetOrderOnTemplate, setResetOrderOnTemplate] = React.useState(true);
-  const hasOrderOverride = Boolean(initialConfig["website.sections"]);
-  const initialTemplate = resolveTemplateId(initialConfig["website.template"]);
+  const hasOrderOverride = Boolean(config["website.sections"]);
+  const initialTemplate = resolveTemplateId(config["website.template"]);
 
   // Parse order
   const getOrderedSections = React.useCallback((): SectionConfig[] => {
     let orderList = [...DEFAULT_ORDER];
-    const rawOrder = initialConfig["website.sections"];
+    const rawOrder = config["website.sections"];
     if (rawOrder) {
       try {
         const parsed = JSON.parse(rawOrder);
@@ -186,7 +295,7 @@ export function WebsiteBuilderClient({
       const showKey = meta.showKey;
       let visible = true;
       if (showKey) {
-        visible = initialConfig[showKey] !== "false"; // default true
+        visible = config[showKey] !== "false"; // default true
       }
       return {
         id: key,
@@ -197,7 +306,7 @@ export function WebsiteBuilderClient({
         visible
       };
     });
-  }, [initialConfig]);
+  }, [config]);
 
   const [sections, setSections] = React.useState<SectionConfig[]>([]);
 
@@ -482,13 +591,13 @@ export function WebsiteBuilderClient({
           fallback) so each tenant previews THEIR identity instead of always the
           Phi Sig / USC reference chapter. */}
       <EditableLivePreview
-        fraternityName={initialConfig["chapter.fraternityName"] || initialConfig["fraternityName"] || "Phi Sigma Kappa"}
+        fraternityName={config["chapter.fraternityName"] || config["fraternityName"] || "Phi Sigma Kappa"}
         onFraternityName={() => {}}
-        greekLetters={initialConfig["chapter.greekLetters"] || initialConfig["greekLetters"] || "ΦΣΚ"}
-        greekLettersGlyphs={initialConfig["chapter.greekLettersGlyphs"] || initialConfig["greekLettersGlyphs"] || "ΦΣΚ"}
-        fraternityLetters={initialConfig["chapter.fraternityLetters"] || initialConfig["fraternityLetters"] || "ΦΣΚ"}
-        schoolName={initialConfig["chapter.schoolName"] || initialConfig["schoolName"] || "USC"}
-        schoolShort={initialConfig["chapter.schoolShort"] || initialConfig["schoolShort"] || "USC"}
+        greekLetters={config["chapter.greekLetters"] || config["greekLetters"] || "ΦΣΚ"}
+        greekLettersGlyphs={config["chapter.greekLettersGlyphs"] || config["greekLettersGlyphs"] || "ΦΣΚ"}
+        fraternityLetters={config["chapter.fraternityLetters"] || config["fraternityLetters"] || "ΦΣΚ"}
+        schoolName={config["chapter.schoolName"] || config["schoolName"] || "USC"}
+        schoolShort={config["chapter.schoolShort"] || config["schoolShort"] || "USC"}
         primaryColor={primaryHex}
         onPrimaryColor={setPrimaryHex}
         darkColor={secondaryHex}
@@ -499,7 +608,7 @@ export function WebsiteBuilderClient({
         onHeroHeadline={setHeadline}
         heroTagline={tagline}
         onHeroTagline={setTagline}
-        subdomain={initialConfig["chapter.subdomain"] || initialConfig["subdomain"] || "usc"}
+        subdomain={config["chapter.subdomain"] || config["subdomain"] || "usc"}
         templateId={template}
         orientation={orientation}
         chapterLogo={logo}
@@ -718,6 +827,20 @@ export function WebsiteBuilderClient({
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
+                          {/* Edit Content Button */}
+                          {["hero", "stats", "about", "testimonial", "spotlight"].includes(sect.id) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenEdit(sect.id)}
+                              disabled={busy}
+                              className="text-xs h-8 mr-2"
+                            >
+                              Edit Content
+                            </Button>
+                          )}
+
                           {/* Visibility Toggle */}
                           {!isAlwaysVisible ? (
                             <div className="flex items-center gap-1.5 mr-2">
@@ -983,6 +1106,53 @@ export function WebsiteBuilderClient({
         </DialogContent>
       </Dialog>
 
+      {/* Edit Section Content Dialog */}
+      <Dialog open={editingSectionId !== null} onOpenChange={(o) => !savingSection && !o && setEditingSectionId(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="capitalize">Edit {editingSectionId} Content</DialogTitle>
+            <DialogDescription>
+              Modify the copy fields for this section. Changes are saved to database and show in live preview.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {editingSectionId && EDITABLE_FIELDS[editingSectionId]?.map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-500 block">
+                  {field.label}
+                </label>
+                {field.type === "textarea" ? (
+                  <textarea
+                    value={editFields[field.key] || ""}
+                    onChange={(e) => setEditFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="w-full h-24 rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={editFields[field.key] || ""}
+                    onChange={(e) => setEditFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSectionId(null)} disabled={savingSection}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSectionContent} disabled={savingSection} className="gap-1.5 bg-phisig-red hover:bg-phisig-red-dark text-white">
+              {savingSection ? (
+                <><RefreshCw className="h-4 w-4 animate-spin" /> Saving...</>
+              ) : (
+                <><Save className="h-4 w-4" /> Save Content</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

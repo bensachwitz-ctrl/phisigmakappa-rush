@@ -110,6 +110,12 @@ export function MeetingsClient({
   const [query, setQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("ALL");
 
+  const nowLocalString = React.useMemo(() => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+  }, []);
+
   // ---- Create meeting dialog ----
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createBusy, setCreateBusy] = React.useState(false);
@@ -187,6 +193,10 @@ export function MeetingsClient({
     if (Number.isNaN(scheduledDate.getTime())) {
       push({ title: "Please choose a valid date & time", variant: "destructive" });
       return;
+    }
+    if (scheduledDate < new Date()) {
+      const confirmSave = window.confirm("This meeting is in the past. Are you sure you want to schedule it?");
+      if (!confirmSave) return;
     }
     setCreateBusy(true);
     try {
@@ -711,6 +721,7 @@ export function MeetingsClient({
                 <Input
                   id="mWhen"
                   type="datetime-local"
+                  min={nowLocalString}
                   value={createForm.scheduledAt}
                   onChange={(e) => setCreateForm({ ...createForm, scheduledAt: e.target.value })}
                 />

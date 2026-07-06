@@ -126,11 +126,12 @@ export async function POST(req: Request) {
       </div>
     `;
     
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       subject: `Confirmed: ${eventType} with ${id.fraternityShort}`,
       html: htmlToUser,
     });
+    const emailed = emailResult.ok;
     
     // Send notification to the chapter administrator/contact. White-label-safe:
     // fall back through the chapter's own configured contacts, never a hardcoded
@@ -160,7 +161,7 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true, event });
+    return NextResponse.json({ ok: true, event, emailed });
   } catch (err: any) {
     // Logged server-side for debugging; never echo the raw message (may carry
     // DB/email-provider internals) back to the public caller.

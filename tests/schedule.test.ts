@@ -35,6 +35,7 @@ import { POST } from "@/app/api/schedule/route";
 describe("POST /api/schedule — Booking Scheduler API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.mockSendEmail.mockResolvedValue({ ok: true });
   });
 
   it("returns 400 when booking details are invalid or missing", async () => {

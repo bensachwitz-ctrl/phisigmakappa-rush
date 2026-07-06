@@ -60,6 +60,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
   const [busy, setBusy] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [bookedEvent, setBookedEvent] = React.useState<any>(null);
+  const [emailed, setEmailed] = React.useState(false);
 
   // Generate 7 days starting from tomorrow for the date selector
   const dates = React.useMemo(() => {
@@ -81,6 +82,17 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
     }
     return arr;
   }, []);
+
+  // Preselect first weekday date and first time slot on mount so details show immediately
+  React.useEffect(() => {
+    if (dates.length > 0) {
+      const firstWeekday = dates.find(d => d.dayName !== "Sat" && d.dayName !== "Sun") || dates[0];
+      setSelectedDate(firstWeekday.iso);
+    }
+    if (TIME_SLOTS.length > 0) {
+      setSelectedTime(TIME_SLOTS[0]);
+    }
+  }, [dates]);
 
   // Format clean iframe URL if username is supplied instead of full URL
   const embedUrl = React.useMemo(() => {
@@ -137,6 +149,7 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
       if (!res.ok || !json.ok) throw new Error(json.error || "Booking failed");
 
       setBookedEvent(json.event);
+      setEmailed(!!json.emailed);
       setSuccess(true);
       push({ title: "Meeting Scheduled!", variant: "success" });
     } catch (err: any) {
@@ -155,7 +168,9 @@ export function Scheduler({ calDiyUrl, chapterShort = "your chapter", schoolShor
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-emerald-950">Meeting Confirmed!</h2>
           <p className="mt-2 text-sm text-emerald-800">
-            Your appointment has been added to our calendar. A confirmation email has been sent to <span className="font-semibold">{email}</span>.
+            Your appointment has been added to our calendar.{emailed && (
+              <> A confirmation email has been sent to <span className="font-semibold">{email}</span>.</>
+            )}
           </p>
 
           <div className="mt-6 border border-emerald-100 rounded-xl bg-white p-5 text-left space-y-3 shadow-sm">

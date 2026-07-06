@@ -123,7 +123,7 @@ async function handlePost(req: Request): Promise<NextResponse> {
   const stripe = getStripe();
 
   // All prereqs required. Missing any → graceful 503.
-  if (!enabled || !publishableKey || !webhookConfigured || !stripe) {
+  if (!enabled || !webhookConfigured || !stripe) {
     return NextResponse.json(
       {
         ok: false,

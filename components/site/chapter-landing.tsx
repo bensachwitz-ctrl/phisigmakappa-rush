@@ -35,10 +35,7 @@ import {
   resolveTemplateId,
 } from "@/components/site/templates/template-config";
 import type { SectionContext } from "@/components/site/templates/types";
-// Structured section-builder order (Section table). Returns null when a tenant
-// has not adopted the structured store, so the legacy SiteConfig render is
-// preserved byte-for-byte. Additive — never changes an un-customized page.
-import { getStructuredOrder } from "@/lib/section-builder";
+import { getStructuredOrder, getSectionContentByKey } from "@/lib/section-builder";
 
 
 export const dynamic = "force-dynamic";
@@ -194,6 +191,19 @@ export default async function ChapterLandingPage({
   const cfg = await getSiteConfig();
   if (cfg["chapter.onboarded"] !== "true") {
     redirect("/onboard");
+  }
+  
+  // Merge structured SectionContent overrides into the config before rendering the landing page
+  const sectionOverrides = await getSectionContentByKey();
+  if (sectionOverrides) {
+    for (const [sectionKey, contentMap] of Object.entries(sectionOverrides)) {
+      for (const [field, value] of Object.entries(contentMap)) {
+        const fullKey = sectionKey === "hero" && field.startsWith("h1.") 
+          ? `hero.${field}` 
+          : `${sectionKey}.${field}`;
+        cfg[fullKey] = value;
+      }
+    }
   }
   // Chapter identity from cfg — single source of truth for every body-copy
   // mention of the fraternity / chapter / school so a re-skinned tenant (e.g.
@@ -414,7 +424,7 @@ export default async function ChapterLandingPage({
       </div>
       <div className="relative z-[2]">
         <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
-        <PublicNav />
+        <PublicNav activeSections={validOrder} />
         {validOrder.map((sectionKey) => (
           <React.Fragment key={sectionKey}>
             {sectionMap[sectionKey]}

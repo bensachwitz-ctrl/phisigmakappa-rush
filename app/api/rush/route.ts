@@ -404,7 +404,7 @@ export async function POST(req: Request) {
 
     // Fire auto-enrichment — searches Google/LinkedIn/IG/USC directory/MaxPreps
     // for additional info about the rushee. Doesn't block the response.
-    await autoEnrichInBackground(created.id, {
+    autoEnrichInBackground(created.id, {
       name: data.name,
       hometown: data.hometown || null,
       major: data.major || null,

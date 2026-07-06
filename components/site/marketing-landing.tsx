@@ -263,6 +263,7 @@ function PreviewElections() {
             <button
               key={i}
               onClick={() => handleVote(i)}
+              aria-label={`Simulate vote for candidate ${c.glyph}`}
               className={`w-full flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-all duration-200 active:scale-[0.99] relative overflow-hidden ${
                 isSelected 
                   ? "border-blue-600 bg-blue-500/5 font-semibold"

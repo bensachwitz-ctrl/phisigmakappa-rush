@@ -244,6 +244,16 @@ export function RushForm({
           }
         }
       }
+      if (customQuestions && customQuestions.length > 0) {
+        customQuestions.forEach((q) => {
+          if (q.required) {
+            const val = (data.customAnswers?.[q.key] || "").trim();
+            if (!val) {
+              e[`custom-${q.key}`] = `Please answer: ${q.label}`;
+            }
+          }
+        });
+      }
     }
     setErrors(e);
 
@@ -748,7 +758,7 @@ function ProfileStep({
           {customQuestions.map((q) => {
             const currentVal = data.customAnswers?.[q.key] || "";
             return (
-              <Field key={q.key} id={`custom-${q.key}`} label={q.label} required={q.required}>
+              <Field key={q.key} id={`custom-${q.key}`} label={q.label} required={q.required} error={errors[`custom-${q.key}`]}>
                 <Input
                   id={`custom-${q.key}`}
                   value={currentVal}
