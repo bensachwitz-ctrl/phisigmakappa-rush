@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import vm from "node:vm";
 
@@ -16,6 +16,8 @@ import vm from "node:vm";
 
 const ROOT = resolve(__dirname, "..");
 const SHELL = readFileSync(resolve(ROOT, "mobile-shell/index.html"), "utf8");
+const IOS_PATH = resolve(ROOT, "ios/App/App/public/index.html");
+const IOS_COPY = existsSync(IOS_PATH) ? readFileSync(IOS_PATH, "utf8") : null;
 
 describe("bundled iOS shell — brand parity (no 7-color hash)", () => {
   it("removed the rainbow hash palette + hash-based brandFor", () => {
@@ -39,6 +41,10 @@ describe("bundled iOS shell — brand parity (no 7-color hash)", () => {
     expect(SHELL).toContain("adoptBrandFromData");
     expect(SHELL).toContain("chapter.brand");
     expect(SHELL).toContain("primaryHex");
+  });
+
+  it.skipIf(!IOS_COPY)("ios cap-synced copy is byte-identical to the source shell", () => {
+    expect(IOS_COPY).toBe(SHELL);
   });
 });
 
