@@ -1,0 +1,11 @@
+🧪 [Add unit tests for normalizePhone in lib/sms.ts]
+
+🎯 What: Added missing unit tests for the `normalizePhone` function in `lib/sms.ts`.
+📊 Coverage: Added tests to cover the following scenarios:
+- 10-digit US numbers (prepends `+1`).
+- 11-digit US numbers starting with `1` (prepends `+`).
+- Phone numbers with formatting characters (spaces, hyphens, periods, parentheses).
+- International numbers starting with `+` (preserved).
+- International numbers without `+` (prepends `+` and removes non-digits).
+- Invalid strings with no digits.
+✨ Result: `normalizePhone` is now thoroughly tested against various inputs, ensuring high reliability when converting phone strings to E.164.
