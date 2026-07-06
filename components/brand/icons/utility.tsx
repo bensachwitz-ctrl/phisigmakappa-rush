@@ -96,40 +96,53 @@ export function IconShieldCheck({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** IconSearch — a magnifying glass with an accent-shaded lens. */
+/** IconSearch — a magnifying glass with a faint accent filled glass. */
 export function IconSearch({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
-      <circle cx="11" cy="11" r="5.5" fill={accent} opacity={0.16} stroke="none" />
-      <circle cx="11" cy="11" r="5.5" />
-      <path d="M20 20l-5-5" />
+      <circle cx="11" cy="11" r="8" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
     </IconBase>
   );
 }
 
-/** IconCommand — the ⌘ loop with a soft central accent box. */
+/** IconSignOut — an arrow leaving a framed doorway. */
+export function IconSignOut({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      {/* accent: door frame fill */}
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4v16Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      {/* breakout arrow */}
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </IconBase>
+  );
+}
+
+/** IconCommand — the mac command symbol with a central accent fill. */
 export function IconCommand({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
-      <path d="M9 9h6v6H9V9Z" fill={accent} opacity={0.16} stroke="none" />
-      <path d="M18 9a3 3 0 1 1-3-3V9h3Zm-9 0a3 3 0 1 0 3-3V9H9Zm0 6a3 3 0 1 0 3 3V15H9Zm9 0a3 3 0 1 1-3 3V15h3ZM9 9h6v6H9V9Z" />
+      <rect x="9" y="9" width="6" height="6" fill={accent} opacity={0.16} stroke="none" />
+      <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
     </IconBase>
   );
 }
 
-/** IconHelp — a question mark with a soft accent-shaded background disk. */
+/** IconHelp — a circled question mark with an accent-filled disc. */
 export function IconHelp({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
-      <circle cx="12" cy="12" r="8.5" fill={accent} opacity={0.16} stroke="none" />
-      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="9" fill={accent} opacity={0.16} stroke="none" />
+      <circle cx="12" cy="12" r="9" />
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-      <path d="M12 17h.01" />
+      <path d="M12 17h.01" strokeWidth={2.5} />
     </IconBase>
   );
 }
 
-/** ChevronLeft — a leftward chevron with a soft accent echo. */
+/** IconChevronLeft — a leftward chevron with a soft accent echo. */
 export function IconChevronLeft({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -139,7 +152,7 @@ export function IconChevronLeft({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** ChevronRight — a rightward chevron with a soft accent echo. */
+/** IconChevronRight — a rightward chevron with a soft accent echo. */
 export function IconChevronRight({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -149,7 +162,7 @@ export function IconChevronRight({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Spinner — an animating loading ring with an accent sweep. */
+/** IconSpinner — an animating loading ring with an accent sweep. */
 export function IconSpinner({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -159,7 +172,7 @@ export function IconSpinner({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** AlertCircle — a warning ring with a soft accent fill. */
+/** IconAlertCircle — a warning ring with a soft accent fill. */
 export function IconAlertCircle({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -170,7 +183,7 @@ export function IconAlertCircle({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Database — stacked discs with an accent fill in the top platter. */
+/** IconDatabase — stacked discs with an accent fill in the top platter. */
 export function IconDatabase({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -182,7 +195,7 @@ export function IconDatabase({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Wand — a magic wand with accent sparkles. */
+/** IconWand — a magic wand with accent sparkles. */
 export function IconWand({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -192,7 +205,7 @@ export function IconWand({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Upload — a tray and upward arrow with a soft accent tray fill. */
+/** IconUpload — a tray and upward arrow with a soft accent tray fill. */
 export function IconUpload({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -203,7 +216,7 @@ export function IconUpload({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Image — a framed picture with an accent sun/moon. */
+/** IconImage — a framed picture with an accent sun/moon. */
 export function IconImage({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -215,7 +228,7 @@ export function IconImage({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Building — a skyline profile with accent window tint. */
+/** IconBuilding — a skyline profile with accent window tint. */
 export function IconBuilding({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -228,7 +241,7 @@ export function IconBuilding({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** Rocket — a spaceship in flight with accent thrust/flame. */
+/** IconRocket — a spaceship in flight with accent thrust/flame. */
 export function IconRocket({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -241,7 +254,7 @@ export function IconRocket({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
-/** UserPlus — a person profile with an accent plus badge. */
+/** IconUserPlus — a person profile with an accent plus badge. */
 export function IconUserPlus({ accent = GS_ACCENT, ...props }: IconProps) {
   return (
     <IconBase {...props}>
@@ -250,6 +263,20 @@ export function IconUserPlus({ accent = GS_ACCENT, ...props }: IconProps) {
       <circle cx="9" cy="7" r="4" />
       <path d="M19 8v6M22 11h-6" stroke={accent} opacity={0.3} strokeWidth={3} />
       <path d="M19 8v6M22 11h-6" />
+    </IconBase>
+  );
+}
+
+/** IconGrid — a 2x2 layout grid with accent fills in opposing corners. */
+export function IconGrid({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="14" y="3" width="7" height="7" rx="1.5" fill={accent} opacity={0.2} stroke="none" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" fill={accent} opacity={0.2} stroke="none" />
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
     </IconBase>
   );
 }

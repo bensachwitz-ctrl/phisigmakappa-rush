@@ -69,6 +69,8 @@ export {
   IconBuilding,
   IconRocket,
   IconUserPlus,
+  IconSignOut,
+  IconGrid,
 } from "./utility";
 
 // Custom tool-specific glyphs.

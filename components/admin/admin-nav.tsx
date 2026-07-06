@@ -9,12 +9,6 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
-// LUCIDE→BESPOKE TODO at the foot of this file). Menu/X/ChevronDown/ExternalLink
-// were migrated to the bespoke utility set below.
-import {
-  LogOut, HelpCircle, Command, LayoutGrid,
-} from "lucide-react";
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin,
@@ -25,7 +19,7 @@ import {
   IconExports, IconPayouts, IconBilling, IconAuditLog,
   // Bespoke UI-utility glyphs replacing the former raw-lucide chrome (menu/close/
   // chevron/external) so even the nav's mechanical affordances are on-brand.
-  IconMenu, IconClose, IconChevronDown, IconExternal,
+  IconMenu, IconClose, IconChevronDown, IconExternal, IconSignOut, IconHelp, IconCommand, IconGrid,
 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +80,7 @@ const ITEMS: NavItem[] = [
   { href: "/admin/setup", label: "Setup wizard", icon: IconLaunch, adminOnly: true, group: "more" },
   { href: "/admin/settings", label: "Site content", icon: IconAdmin, adminOnly: true, group: "more", domain: "siteSettings" },
   { href: "/admin/website", label: "Website Builder", icon: IconWhiteLabel, adminOnly: true, group: "more", domain: "siteSettings" },
-  { href: "/admin/help", label: "Help", icon: HelpCircle, adminOnly: false, group: "more" },
+  { href: "/admin/help", label: "Help", icon: IconHelp, adminOnly: false, group: "more" },
 ];
 
 /** Does `href` match `pathname` as an exact hit or a path-segment prefix? */
@@ -208,7 +202,7 @@ export function AdminNav({
                   {activeMore ? (
                     <activeMore.icon className="h-4 w-4" aria-hidden="true" />
                   ) : (
-                    <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                    <IconGrid className="h-4 w-4" aria-hidden="true" />
                   )}
                   {activeMore ? activeMore.label : "More"}
                   <IconChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform" aria-hidden="true" />
@@ -257,7 +251,7 @@ export function AdminNav({
             title="Open command palette (⌘K)"
             aria-label="Open command palette"
           >
-            <Command className="h-3.5 w-3.5" />
+            <IconCommand className="h-3.5 w-3.5" />
             Quick jump
             <kbd className="ml-1 rounded border border-border bg-secondary px-1 text-[10px]">⌘K</kbd>
           </button>
@@ -268,7 +262,7 @@ export function AdminNav({
             className="lg:hidden inline-flex items-center gap-1 text-muted-foreground hover:text-phisig-red px-2 py-1 rounded-md text-xs"
             title="Help"
           >
-            <HelpCircle className="h-4 w-4" />
+            <IconHelp className="h-4 w-4" />
             <span className="hidden sm:inline">Help</span>
           </Link>
 
@@ -284,7 +278,7 @@ export function AdminNav({
           </Link>
 
           <Button variant="outline" size="sm" onClick={logout} className="hidden sm:inline-flex">
-            <LogOut className="h-3.5 w-3.5" />
+            <IconSignOut className="h-3.5 w-3.5" />
             <span className="hidden md:inline">Sign out</span>
           </Button>
 
@@ -325,7 +319,7 @@ export function AdminNav({
               onClick={logout}
               className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground col-span-2 border-t border-border mt-2 pt-3"
             >
-              <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+              <IconSignOut className="h-4 w-4" aria-hidden="true" /> Sign out
             </button>
           </nav>
         </div>
@@ -334,16 +328,3 @@ export function AdminNav({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LUCIDE → BESPOKE TODO (officer chrome)
-// ─────────────────────────────────────────────────────────────────────────────
-// Every nav DESTINATION glyph + the mechanical menu/close/chevron/external
-// affordances are now bespoke (@/components/brand/icons). The few remaining raw
-// lucide imports here have NO sensible bespoke equivalent yet and are LEFT AS-IS
-// rather than force a weak match (each keeps identical size/aria/onClick):
-//   • LogOut    — sign-out action (mobile menu + outline button)
-//   • HelpCircle— mobile Help affordance
-//   • Command   — ⌘K "Quick jump" hint chip
-//   • LayoutGrid— the "More" overflow trigger's default (non-active) glyph
-// Next pass: draw IconSignOut / IconHelp / IconCommand / IconGrid in the bespoke
-// design language (see components/brand/icons/icon-base.tsx) and swap these four.
