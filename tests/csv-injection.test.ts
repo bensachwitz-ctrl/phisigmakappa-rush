@@ -50,4 +50,14 @@ describe("csvEscape — formula injection", () => {
     expect(csvEscape(-5)).toContain("'-5");
     expect(csvEscape(42)).toBe("42");
   });
+
+  it("wraps strings containing newlines in quotes", () => {
+    expect(csvEscape("Hello\nWorld")).toBe('"Hello\nWorld"');
+    expect(csvEscape("Line 1\r\nLine 2")).toBe('"Line 1\r\nLine 2"');
+    expect(csvEscape("Just\ra\rcarriage\rreturn")).toBe('"Just\ra\rcarriage\rreturn"');
+  });
+
+  it("handles complex strings with multiple special characters", () => {
+    expect(csvEscape('Hello, "World"\nNew Line')).toBe('"Hello, ""World""\nNew Line"');
+  });
 });

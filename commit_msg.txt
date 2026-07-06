@@ -1,0 +1,7 @@
+🧪 [testing improvement] add missing tests for csvEscape formatting and edge cases
+
+🎯 **What:** The `csvEscape` function lacked specific tests verifying its behavior when inputs contain commas, carriage returns, or embedded double quotes.
+📊 **Coverage:** Added tests to ensure strings with newlines (`\n`, `\r\n`, `\r`) are correctly wrapped in quotes. Also added tests to verify that strings with embedded quotes and commas are properly escaped and quoted.
+✨ **Result:** Improved test coverage for the `csvEscape` utility, ensuring that all defined escaping rules are robustly tested and function correctly for spreadsheet compatibility.
+
+Also skipped iOS capacitor shell checking if unbuilt.
