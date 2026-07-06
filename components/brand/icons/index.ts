@@ -58,6 +58,17 @@ export {
   IconSearch,
   IconCommand,
   IconHelp,
+  IconChevronLeft,
+  IconChevronRight,
+  IconSpinner,
+  IconAlertCircle,
+  IconDatabase,
+  IconWand,
+  IconUpload,
+  IconImage,
+  IconBuilding,
+  IconRocket,
+  IconUserPlus,
 } from "./utility";
 
 // Custom tool-specific glyphs.
