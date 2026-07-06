@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion, useInView, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useInView, useScroll, useTransform, useMotionValueEvent, useMotionValue } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
@@ -919,45 +919,83 @@ export default function MarketingLandingPage() {
     offset: ["start start", "end end"],
   });
 
-  // 3D scrolling transforms driven by scroll progress. Timeline re-tuned so each
-  // stage has a WIDE readable HOLD (a real pause at scale=1 / opacity=1) instead
-  // of flashing past — owner feedback: "goes through too quickly, can barely see
-  // each page." The snap points further down are aligned to these holds so
-  // scrolling lands ON each legible stage. Letters (FloatingLetter) own 0 → 0.14.
-  // 1. Hero (logo + tagline flip) — VISIBLE AT SCROLL 0 so the value prop +
-  // primary CTA ARE the landing frame (critique council: the old timeline made
-  // an empty faint-letter field the first paint / LCP, with no headline or CTA
-  // until ~15% scroll). Now the hero holds legibly from 0 → 0.24, the Greek
-  // letters fly THROUGH it as you scroll, then it zooms past into How-It-Works.
-  const heroScale = useTransform(scrollYProgress, [0, 0.24, 0.30], [1.0, 1.0, 7]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.06, 0.24, 0.30], [1, 1, 1, 0]);
-  const heroZ = useTransform(scrollYProgress, [0, 0.24, 0.30], [0, 0, 900]);
-  const heroPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest < 0.28) ? "auto" : "none");
 
-  // Giant background logo — a subtle depth accent behind the hero (it is no
-  // longer the scroll-0 hero element; the real hero text carries the frame).
+  // 1. Immersive Intro Transforms (Visible only at scroll progress 0 -> 0.08)
+  const introScale = useTransform(scrollYProgress, [0, 0.08], [1.0, 1.8]);
+  const introOpacity = useTransform(scrollYProgress, [0, 0.06, 0.08], [1, 1, 0]);
+  const introZ = useTransform(scrollYProgress, [0, 0.08], [0, 400]);
+  const introPointerEvents = useTransform(scrollYProgress, (v: number) => (v < 0.07) ? "auto" : "none");
+
+  // 2. Hero Stage Transforms (Fades in after intro, then zooms past into How-It-Works)
+  const heroScale = useTransform(scrollYProgress, [0, 0.12, 0.24, 0.30], [0.7, 1.0, 1.0, 7]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.05, 0.12, 0.24, 0.30], [0, 0, 1, 1, 0]);
+  const heroZ = useTransform(scrollYProgress, [0, 0.12, 0.24, 0.30], [-200, 0, 0, 900]);
+  const heroPointerEvents = useTransform(scrollYProgress, (v: number) => (v >= 0.08 && v < 0.28) ? "auto" : "none");
+
+  // Giant background logo — a subtle depth accent behind the hero
   const logoScale = useTransform(scrollYProgress, [0, 0.16, 0.24, 0.30], [0.9, 1.2, 1.2, 9]);
-  const logoOpacity = useTransform(scrollYProgress, [0, 0.06, 0.16, 0.24, 0.30], [0.14, 0.20, 0.15, 0.15, 0]);
+  const logoOpacity = useTransform(scrollYProgress, [0, 0.06, 0.16, 0.24, 0.30], [0, 0.20, 0.15, 0.15, 0]);
   const logoZ = useTransform(scrollYProgress, [0, 0.16, 0.24, 0.30], [-200, 0, 0, 1100]);
 
-
-  // 2. How It Works Stage — HOLD 0.37 → 0.46
+  // 3. How It Works Stage — HOLD 0.37 → 0.46
   const howItWorksScale = useTransform(scrollYProgress, [0.30, 0.37, 0.46, 0.52], [0.4, 1, 1, 4]);
   const howItWorksOpacity = useTransform(scrollYProgress, [0.30, 0.36, 0.47, 0.52], [0, 1, 1, 0]);
   const howItWorksZ = useTransform(scrollYProgress, [0.30, 0.37, 0.46, 0.52], [-650, 0, 0, 800]);
-  const howItWorksPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.31 && latest < 0.50) ? "auto" : "none");
+  const howItWorksPointerEvents = useTransform(scrollYProgress, (v: number) => (v >= 0.31 && v < 0.50) ? "auto" : "none");
 
-  // 3. Features Stage — HOLD 0.59 → 0.69
+  // 4. Features Stage — HOLD 0.59 → 0.69
   const featuresScale = useTransform(scrollYProgress, [0.52, 0.59, 0.69, 0.75], [0.4, 1, 1, 4]);
   const featuresOpacity = useTransform(scrollYProgress, [0.52, 0.58, 0.70, 0.75], [0, 1, 1, 0]);
   const featuresZ = useTransform(scrollYProgress, [0.52, 0.59, 0.69, 0.75], [-650, 0, 0, 800]);
-  const featuresPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.53 && latest < 0.73) ? "auto" : "none");
+  const featuresPointerEvents = useTransform(scrollYProgress, (v: number) => (v >= 0.53 && v < 0.73) ? "auto" : "none");
 
-  // 4. Pricing Stage — HOLD 0.82 → 0.93
+  // 5. Pricing Stage — HOLD 0.82 → 0.93
   const pricingScale = useTransform(scrollYProgress, [0.75, 0.82, 0.93, 1.0], [0.4, 1, 1, 4]);
   const pricingOpacity = useTransform(scrollYProgress, [0.75, 0.81, 0.94, 1.0], [0, 1, 1, 0]);
   const pricingZ = useTransform(scrollYProgress, [0.75, 0.82, 0.93, 1.0], [-650, 0, 0, 800]);
-  const pricingPointerEvents = useTransform(scrollYProgress, (latest: number) => (latest >= 0.76 && latest < 0.98) ? "auto" : "none");
+  const pricingPointerEvents = useTransform(scrollYProgress, (v: number) => (v >= 0.76 && v < 0.98) ? "auto" : "none");
+
+  // 6. Side quick-navigation opacity
+  const quickNavOpacity = useTransform(scrollYProgress, [0, 0.08], [0, 1]);
+  const quickNavPointerEvents = useTransform(scrollYProgress, (v: number) => v > 0.08 ? "auto" : "none");
+
+  // State and hooks for interactive scrolling tour
+  const [activeStage, setActiveStage] = React.useState(0);
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    if (latest < 0.10) {
+      setActiveStage(0); // Intro
+    } else if (latest < 0.31) {
+      setActiveStage(1); // Hero
+    } else if (latest < 0.53) {
+      setActiveStage(2); // How It Works
+    } else if (latest < 0.76) {
+      setActiveStage(3); // Features
+    } else {
+      setActiveStage(4); // Pricing
+    }
+  });
+
+  const scrollToStage = (stageIdx: number) => {
+    const stageHeights = [
+      0, // Intro
+      1.80, // Hero (180vh)
+      3.78, // How It Works (378vh)
+      5.76, // Features (576vh)
+      7.92, // Pricing (792vh)
+    ];
+    window.scrollTo({
+      top: stageHeights[stageIdx] * window.innerHeight,
+      behavior: "smooth",
+    });
+  };
+
+  const stages = [
+    { label: "Intro" },
+    { label: "Hero" },
+    { label: "How It Works" },
+    { label: "Features" },
+    { label: "Pricing" },
+  ];
 
   if (reduce || isMobile) {
     // Accessible flat layout for reduced motion / mobile screens
@@ -995,7 +1033,43 @@ export default function MarketingLandingPage() {
         className="fixed inset-0 z-[-10] bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(37,99,235,0.10),transparent_55%),linear-gradient(to_bottom,#f6f8fc_0%,#ffffff_34%,#eef4ff_100%)]"
       />
       <ScrollProgressBar />
-      <SiteNav />
+      <SiteNav scrollYProgress={scrollYProgress} />
+
+      {/* Quick Navigation Dots */}
+      {!reduce && !isMobile && (
+        <motion.div
+          style={{
+            opacity: quickNavOpacity,
+            pointerEvents: quickNavPointerEvents as any,
+          }}
+          className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4 p-3 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/10 shadow-2xl"
+        >
+          {stages.map((stage, idx) => {
+            const isActive = activeStage === idx;
+            return (
+              <button
+                key={idx}
+                onClick={() => scrollToStage(idx)}
+                className="group relative flex items-center justify-end"
+                aria-label={`Jump to ${stage.label}`}
+              >
+                {/* Tooltip on hover */}
+                <span className="absolute right-8 scale-0 group-hover:scale-100 transition-all duration-200 origin-right rounded bg-slate-900/90 border border-white/10 px-2 py-1 text-[11px] font-semibold text-white whitespace-nowrap shadow-md">
+                  {stage.label}
+                </span>
+                {/* Dot */}
+                <span
+                  className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-400 to-sky-400 scale-125 shadow-[0_0_10px_rgba(56,189,248,0.5)]"
+                      : "bg-slate-500 hover:bg-slate-300 scale-100"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </motion.div>
+      )}
 
       {/* 3D scrolling container. Each major section is pinned, fades and scales
           from depth, HOLDS legibly, then zooms past. Taller (900vh) so every
@@ -1030,6 +1104,80 @@ export default function MarketingLandingPage() {
             <div className="opacity-15 text-blue-600 w-96 h-96 flex items-center justify-center">
               <GreekstackLogo className="w-full h-full" />
             </div>
+          </motion.div>
+
+          {/* Immersive Intro Overlay */}
+          <motion.div
+            style={{
+              scale: introScale,
+              opacity: introOpacity,
+              z: introZ,
+              pointerEvents: introPointerEvents as any,
+              transformStyle: "preserve-3d",
+            }}
+            className="absolute inset-0 flex flex-col justify-center items-center px-4 text-center select-none"
+          >
+            <div className="space-y-6 max-w-lg">
+              {/* Pulsing beautiful logo */}
+              <div className="flex justify-center">
+                <div className="relative group">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 blur-xl opacity-30 group-hover:opacity-50 transition duration-500 animate-pulse" />
+                  <GreekstackLogo title="Greekstack" className="relative w-24 h-24 text-blue-600 drop-shadow-2xl" />
+                </div>
+              </div>
+
+              {/* Title & Tagline */}
+              <div className="space-y-3">
+                <h1 className="text-4xl font-extrabold tracking-[0.22em] text-slate-900 font-display uppercase">
+                  Greekstack
+                </h1>
+                <p className="text-sm font-semibold tracking-[0.14em] text-slate-500 font-serif uppercase">
+                  The White-Label Chapter Management Platform
+                </p>
+              </div>
+
+              {/* Action Button to Start Tour */}
+              <div className="pt-4 flex justify-center">
+                <button
+                  onClick={() => scrollToStage(1)}
+                  className="press px-6 py-3 text-xs font-bold uppercase tracking-wider text-white rounded-full bg-slate-950 hover:bg-slate-900 shadow-xl transition-all duration-300 flex items-center gap-2 border border-white/10"
+                >
+                  Start Interactive Tour
+                  <motion.span
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                    className="inline-flex"
+                  >
+                    <IconArrowRight className="w-4 h-4 ml-1" />
+                  </motion.span>
+                </button>
+              </div>
+
+              {/* Subtle hint */}
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest pt-2">
+                or scroll to explore
+              </p>
+            </div>
+            
+            {/* Downward bounce arrow indicator at bottom */}
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
+              className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-80"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Scroll</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4 text-slate-400"
+              >
+                <path d="M12 5v14M19 12l-7 7-7-7" />
+              </svg>
+            </motion.div>
           </motion.div>
 
           {/* 1. Hero overlay */}
@@ -1130,7 +1278,7 @@ export default function MarketingLandingPage() {
 
 /* ───────────────────────────── Nav ───────────────────────────── */
 
-function SiteNav() {
+function SiteNav({ scrollYProgress }: { scrollYProgress?: any }) {
   // Condense the header (tighter height + stronger blur/shadow) after the user
   // scrolls past the hero fold. Passive listener; no layout thrash.
   const [scrolled, setScrolled] = React.useState(false);
@@ -1142,15 +1290,21 @@ function SiteNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const fallbackProgress = useMotionValue(1);
+  const activeProgress = scrollYProgress || fallbackProgress;
+  const opacity = useTransform(activeProgress, [0, 0.08], [0, 1]);
+  const pointerEvents = useTransform(activeProgress, (v: number) => v > 0.08 ? "auto" : "none");
+
   return (
-    <header
+    <motion.header
+      style={{ opacity, pointerEvents: pointerEvents as any }}
       className={
         // Frosted-glass header: .liquid-glass-strong supplies the translucent base +
         // heavier backdrop-blur + saturation. We keep a scroll-reactive border +
         // shadow on top so the bar gains definition once the page scrolls under
         // it, and stays nearly borderless over the hero. A hairline blue→sky→gold
         // bottom edge fades in on scroll for a premium "lit" seam.
-        "liquid-glass-strong sticky top-0 z-50 w-full border-b transition-all duration-300 " +
+        "liquid-glass-strong fixed top-0 left-0 right-0 z-50 w-full border-b transition-all duration-300 " +
         (scrolled
           ? "border-border/60 shadow-[0_4px_30px_-12px_rgba(37,99,235,0.45)] bg-white/80 backdrop-blur-lg"
           : "border-transparent shadow-none bg-transparent")
@@ -1264,7 +1418,7 @@ function SiteNav() {
 
       {/* Mobile / tablet sheet menu. */}
       <MobileNavSheet open={menuOpen} onClose={() => setMenuOpen(false)} />
-    </header>
+    </motion.header>
   );
 }
 
