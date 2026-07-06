@@ -1,6 +1,6 @@
 {
   "name": "greek-stack",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "private": true,
   "description": "GreekStack — white-label chapter management platform for fraternities & sororities (recruitment, dues, roster, events, alumni)",
   "scripts": {
