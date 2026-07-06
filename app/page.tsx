@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 function ChapterInactivePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-16 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-16 text-center">
       <div className="w-full max-w-md">
         <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
           <svg
@@ -58,7 +58,7 @@ function ChapterInactivePage() {
           administrator, please contact Greekstack support to restore access.
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 

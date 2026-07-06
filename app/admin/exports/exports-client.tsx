@@ -148,7 +148,7 @@ export function ExportsClient({
   const selectedType = EXPORT_TYPES.find((t) => t.value === exportType);
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4">
           <IconChip icon={FileSpreadsheet} tone="brand" size="lg" className="hidden sm:inline-flex" />
@@ -286,6 +286,6 @@ export function ExportsClient({
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

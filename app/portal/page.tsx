@@ -83,7 +83,7 @@ export default async function PortalHubPage() {
       <FloatingSymbols greekLettersGlyphs={cfg["chapter.greekLettersGlyphs"]} />
       <PublicNav />
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         <header className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
             <IconShieldCheck className="w-3.5 h-3.5" aria-hidden />
@@ -150,7 +150,7 @@ export default async function PortalHubPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       <PublicFooter />
     </div>

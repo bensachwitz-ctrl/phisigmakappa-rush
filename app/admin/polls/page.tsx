@@ -16,7 +16,7 @@ export default async function AdminPollsPage() {
     redirect("/admin/login");
   }
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <div className="mx-auto max-w-2xl">
         {/* AdminPageHeader renders the page H1; PollsFeed renders an H2 for the
             section title, so heading order stays correct. */}
@@ -27,6 +27,6 @@ export default async function AdminPollsPage() {
         />
         <PollsFeed isAdmin={session.isAdmin} />
       </div>
-    </main>
+    </div>
   );
 }

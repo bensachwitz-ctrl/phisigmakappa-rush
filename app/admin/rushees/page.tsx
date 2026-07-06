@@ -71,12 +71,12 @@ export default async function RusheesPage() {
   const initialRushActive = cfg["rush.isActive"] !== "false";
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <RusheesManager 
         initial={initial} 
         initialRushActive={initialRushActive} 
         chapterName={identity.chapterFullName} 
       />
-    </main>
+    </div>
   );
 }

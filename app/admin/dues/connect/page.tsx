@@ -32,7 +32,7 @@ export default async function DuesPayoutsPage() {
   if (!canRead) return <OfficerAccessRequired title="Payouts" permission="Payments" />;
 
   return (
-    <main className="container py-8 max-w-2xl">
+    <div className="container py-8 max-w-2xl">
       <Link
         href="/admin"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
@@ -54,6 +54,6 @@ export default async function DuesPayoutsPage() {
       </div>
 
       <DuesConnectCard />
-    </main>
+    </div>
   );
 }

@@ -332,7 +332,7 @@ export function OfficersClient({
   }
 
   return (
-    <main className="container py-8 space-y-8">
+    <div className="container py-8 space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4">
@@ -805,7 +805,7 @@ export function OfficersClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
 

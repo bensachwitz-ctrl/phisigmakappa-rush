@@ -252,7 +252,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
   // ── Loading state (pre-mount, before `today` resolves) ──────────────────────
   if (!view || !today) {
     return (
-      <main className="container py-8">
+      <div className="container py-8">
         <CalendarHeader />
         <div
           className="mt-6 h-[28rem] animate-pulse rounded-2xl border bg-gradient-to-b from-muted/40 to-transparent motion-reduce:animate-none"
@@ -261,7 +261,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
         <p className="sr-only" role="status">
           Loading calendar…
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -271,7 +271,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
     !!(currentMonthParts && currentMonthParts.year === view.year && currentMonthParts.month === view.month);
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <CalendarHeader />
 
       {/* Legend + month nav */}
@@ -519,7 +519,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
           </ol>
         )}
       </section>
-    </main>
+    </div>
   );
 }
 

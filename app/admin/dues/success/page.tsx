@@ -34,7 +34,7 @@ export default async function DuesSuccessPage({
   const isPending = payment?.status === "PENDING";
 
   return (
-    <main className="container py-12 max-w-xl">
+    <div className="container py-12 max-w-xl">
       <Card>
         <CardContent className="p-8 text-center space-y-4">
           {isPaid ? (
@@ -92,6 +92,6 @@ export default async function DuesSuccessPage({
           </div>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

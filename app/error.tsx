@@ -23,7 +23,7 @@ export default function Error({
 
   return (
     <AnimatedBackground variant="aurora-grid" tone="brand" className="min-h-screen bg-background">
-      <main className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-screen flex-col">
         <div className="container py-6">
           <Link href="/" className="inline-flex items-center gap-2">
             <Wordmark variant="compact" />
@@ -67,7 +67,7 @@ export default function Error({
             )}
           </div>
         </div>
-      </main>
+      </div>
     </AnimatedBackground>
   );
 }

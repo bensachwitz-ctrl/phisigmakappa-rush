@@ -240,7 +240,7 @@ export default function PlatformConsolePage() {
   const suspendedCount = tenants.length - activeCount;
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       {/* Header — platform royal blue, deliberately NOT a chapter's brand color. */}
       <AnimatedBackground variant="aurora-grid" tone="platform" className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -467,7 +467,7 @@ export default function PlatformConsolePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
 

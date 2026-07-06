@@ -192,7 +192,7 @@ export function RiskClient({
   }
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Risk & Safety Incident Desk</h1>
@@ -500,6 +500,6 @@ export function RiskClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

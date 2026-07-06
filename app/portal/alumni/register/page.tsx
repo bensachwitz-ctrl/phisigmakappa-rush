@@ -121,7 +121,7 @@ export default function AlumniRegisterPage() {
       <div>
         <PublicNav />
 
-        <main className="max-w-xl mx-auto px-4 py-8 sm:py-12">
+        <div className="max-w-xl mx-auto px-4 py-8 sm:py-12">
           <Link
             href="/portal/alumni"
             className="inline-flex items-center gap-1.5 text-sm text-maroon-700 hover:text-maroon-900 mb-6"
@@ -567,7 +567,7 @@ export default function AlumniRegisterPage() {
               </form>
             )}
           </div>
-        </main>
+        </div>
       </div>
 
       <PublicFooterClient />

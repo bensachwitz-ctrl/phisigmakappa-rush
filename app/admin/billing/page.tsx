@@ -62,7 +62,7 @@ export default async function BillingPage({
   )}/mo`;
 
   return (
-    <main className="container py-8 max-w-3xl">
+    <div className="container py-8 max-w-3xl">
       <Link
         href="/admin"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
@@ -103,6 +103,6 @@ export default async function BillingPage({
         stripeConfigured={stripeConfigured}
         justSubscribed={searchParams?.ok === "1"}
       />
-    </main>
+    </div>
   );
 }

@@ -373,7 +373,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
         <PublicNav />
-        <main className="max-w-2xl mx-auto px-4 py-8 sm:py-12">{children}</main>
+        <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">{children}</div>
       </div>
       <PublicFooterClient />
     </div>

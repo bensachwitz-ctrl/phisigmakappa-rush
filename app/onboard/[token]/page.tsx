@@ -46,7 +46,7 @@ export default async function OnboardPage({ params }: { params: { token: string 
   const { greekLetters } = chapterIdentityFromCfg(cfg);
 
   return (
-    <main className="min-h-screen bg-phisig-mist">
+    <div className="min-h-screen bg-phisig-mist">
       <div className="container py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <Wordmark variant="compact" />
@@ -92,6 +92,6 @@ export default async function OnboardPage({ params }: { params: { token: string 
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

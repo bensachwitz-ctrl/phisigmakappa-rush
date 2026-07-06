@@ -73,7 +73,7 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
     <div className="min-h-screen bg-cream-50 text-maroon-950">
       <PublicNav />
 
-      <main className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
+      <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
         <Link
           href="/alumni"
           className="inline-flex items-center gap-1.5 text-sm text-maroon-700 hover:text-maroon-900 mb-6"
@@ -164,7 +164,7 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
             </Button>
           </Link>
         </div>
-      </main>
+      </div>
 
       <PublicFooter />
     </div>

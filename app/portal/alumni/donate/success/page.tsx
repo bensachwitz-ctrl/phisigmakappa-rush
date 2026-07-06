@@ -31,7 +31,7 @@ export default async function AlumniDonationSuccessPage({
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <PublicNav />
 
-      <main className="container flex-grow flex items-center justify-center px-4 py-16">
+      <div className="container flex-grow flex items-center justify-center px-4 py-16">
         <Card className="max-w-xl w-full border-maroon-100/80 bg-white shadow-xl rounded-2xl overflow-hidden">
           <CardContent className="p-8 text-center space-y-6">
             {isPaid ? (
@@ -114,7 +114,7 @@ export default async function AlumniDonationSuccessPage({
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
 
       <PublicFooter />
     </div>

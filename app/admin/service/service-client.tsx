@@ -335,7 +335,7 @@ export function ServiceClient({
   }
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4">
           <IconChip icon={HeartHandshake} tone="brand" size="lg" className="hidden sm:inline-flex" />
@@ -902,6 +902,6 @@ export function ServiceClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

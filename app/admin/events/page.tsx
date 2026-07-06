@@ -30,7 +30,7 @@ export default async function AdminEventsPage() {
   }));
 
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       {/* Page-header "+ Add event" — lives at the top of the events page
           for admins so they can drop a new event without scrolling past the
           brother calendar. Triggers the EventsManager dialog via a custom
@@ -82,6 +82,6 @@ export default async function AdminEventsPage() {
           <EventsManager initial={serializable as any} />
         </section>
       )}
-    </main>
+    </div>
   );
 }

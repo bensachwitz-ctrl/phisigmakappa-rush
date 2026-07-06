@@ -86,7 +86,7 @@ export default async function TreasuryPage({
   }));
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start gap-3">
         <span
           className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/15"
@@ -110,6 +110,6 @@ export default async function TreasuryPage({
         initialPeriod={period}
         initialPeriods={allPeriods}
       />
-    </main>
+    </div>
   );
 }

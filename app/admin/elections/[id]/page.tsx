@@ -26,7 +26,7 @@ export default async function ManageElectionPage({ params }: { params: { id: str
 
   if (!session || !allowed) {
     return (
-      <main className="container py-8">
+      <div className="container py-8">
         <div className="mx-auto max-w-lg">
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
@@ -49,7 +49,7 @@ export default async function ManageElectionPage({ params }: { params: { id: str
             </CardContent>
           </Card>
         </div>
-      </main>
+      </div>
     );
   }
 

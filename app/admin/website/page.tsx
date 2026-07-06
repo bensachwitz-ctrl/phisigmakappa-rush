@@ -28,7 +28,7 @@ export default async function WebsitePage() {
   }
   
   return (
-    <main className="container max-w-5xl py-8 space-y-6">
+    <div className="container max-w-5xl py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Chapter Website Builder</h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -36,7 +36,7 @@ export default async function WebsitePage() {
         </p>
       </div>
       <WebsiteBuilderClient initialConfig={cfg} />
-    </main>
+    </div>
   );
 }
 

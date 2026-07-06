@@ -87,7 +87,7 @@ export default async function DirectoryPage() {
   const subtitleScope = chapterName || (greekLetters ? `the ${greekLetters} chapter` : "the chapter");
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start gap-4">
         <span
           className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/35 ring-1 ring-white/20"
@@ -107,6 +107,6 @@ export default async function DirectoryPage() {
       </div>
 
       <DirectoryManager initial={members} />
-    </main>
+    </div>
   );
 }

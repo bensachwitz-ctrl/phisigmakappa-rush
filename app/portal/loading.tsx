@@ -26,7 +26,7 @@ export default function PortalLoading() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-5xl px-3 py-8 sm:px-4 sm:py-16">
+      <div className="mx-auto max-w-5xl px-3 py-8 sm:px-4 sm:py-16">
         {/* Centered header */}
         <div className="mb-10 flex flex-col items-center text-center sm:mb-12">
           <Bar className="h-6 w-20 rounded-full" />
@@ -49,7 +49,7 @@ export default function PortalLoading() {
             </div>
           ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -293,7 +293,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   }));
 
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       {/* E-Board View Slider Toggle — frosted glass pill with a brand-tinted
           active chip and a soft layered shadow. */}
       <div className="flex justify-center mb-8">
@@ -622,6 +622,6 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           )}
         </>
       )}
-    </main>
+    </div>
   );
 }

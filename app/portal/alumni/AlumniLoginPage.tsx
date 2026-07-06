@@ -59,7 +59,7 @@ export default function AlumniLoginPage({ chapterName, schoolName }: AlumniLogin
       <div>
         <PublicNav />
 
-        <main className="max-w-md mx-auto px-4 py-12 sm:py-16">
+        <div className="max-w-md mx-auto px-4 py-12 sm:py-16">
           <Link
             href="/portal"
             className="inline-flex items-center gap-1.5 text-sm text-maroon-700 hover:text-maroon-900 mb-6"
@@ -209,7 +209,7 @@ export default function AlumniLoginPage({ chapterName, schoolName }: AlumniLogin
               Choose a different chapter
             </Link>
           </p>
-        </main>
+        </div>
       </div>
 
       <PublicFooter />

@@ -83,7 +83,7 @@ export default async function BrothersPage({
   }));
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       {/* E-Board View Slider Toggle */}
       <div className="flex justify-center">
         <div className="inline-flex rounded-xl bg-muted p-1 border border-border">
@@ -141,6 +141,6 @@ export default async function BrothersPage({
           />
         </>
       )}
-    </main>
+    </div>
   );
 }

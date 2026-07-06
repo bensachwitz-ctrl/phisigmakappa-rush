@@ -29,7 +29,7 @@ export default async function SettingsPage() {
     googleCal: !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET,
   };
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
@@ -60,6 +60,6 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsManager initial={settings} envIntegrations={envIntegrations} />
-    </main>
+    </div>
   );
 }

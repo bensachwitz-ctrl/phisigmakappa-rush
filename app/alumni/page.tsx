@@ -95,7 +95,7 @@ export default async function AlumniDirectoryPage() {
     <div className="min-h-screen bg-cream-50 text-maroon-950">
       <PublicNav />
 
-      <main className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
         {/* Hero */}
         <header className="mb-10 text-center">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
@@ -177,7 +177,7 @@ export default async function AlumniDirectoryPage() {
             })}
           </div>
         )}
-      </main>
+      </div>
 
       <PublicFooter />
     </div>

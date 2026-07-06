@@ -78,7 +78,7 @@ export default async function DuesHubPage() {
   if (!canRead) return <OfficerAccessRequired title="Dues" permission="Dues" />;
 
   return (
-    <main className="container py-8 max-w-3xl">
+    <div className="container py-8 max-w-3xl">
       <Link
         href="/admin"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
@@ -129,6 +129,6 @@ export default async function DuesHubPage() {
         set your amount and Stripe keys, then <span className="font-medium text-foreground">connect a
         payout account</span> so money lands in your chapter&apos;s bank.
       </p>
-    </main>
+    </div>
   );
 }

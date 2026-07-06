@@ -31,7 +31,7 @@ export default function BrothersDashboardLoading() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
         {/* Profile header — avatar + name/role */}
         <div className="mb-6 flex items-center gap-4">
           <Bar className="h-16 w-16 rounded-2xl sm:h-20 sm:w-20" />
@@ -82,7 +82,7 @@ export default function BrothersDashboardLoading() {
             </div>
           ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

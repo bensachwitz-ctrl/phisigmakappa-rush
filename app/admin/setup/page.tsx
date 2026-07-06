@@ -34,7 +34,7 @@ export default async function SetupPage() {
 
   const cfg = await getSiteConfig();
   return (
-    <main className="container py-8 max-w-3xl">
+    <div className="container py-8 max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
         <Link
           href="/admin"
@@ -65,6 +65,6 @@ export default async function SetupPage() {
       </div>
 
       <SetupWizard initial={cfg} />
-    </main>
+    </div>
   );
 }

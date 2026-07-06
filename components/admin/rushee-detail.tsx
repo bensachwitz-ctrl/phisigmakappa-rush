@@ -209,7 +209,7 @@ export function RusheeDetail({
   }
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div>
         <Link
           href="/admin/rushees"
@@ -397,7 +397,7 @@ export function RusheeDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
 

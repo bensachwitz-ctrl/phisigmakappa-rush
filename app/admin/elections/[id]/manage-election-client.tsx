@@ -136,7 +136,7 @@ export function ManageElectionClient({
   }
 
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Back + header */}
         <div>
@@ -292,7 +292,7 @@ export function ManageElectionClient({
             : "Results show vote totals per candidate. Individual votes are never displayed."}
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 

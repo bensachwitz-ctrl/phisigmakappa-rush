@@ -51,7 +51,7 @@ export default async function FamilyPage() {
   const chapterLabel = greekLettersRaw ? `the ${greekLettersRaw} chapter` : "the chapter";
 
   return (
-    <main className="container py-8 space-y-6">
+    <div className="container py-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3.5">
           <span
@@ -79,6 +79,6 @@ export default async function FamilyPage() {
       </div>
 
       <FamilyManager initial={brothers} isAdmin={!!session?.isAdmin} />
-    </main>
+    </div>
   );
 }

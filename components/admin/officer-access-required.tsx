@@ -27,7 +27,7 @@ export function OfficerAccessRequired({
   permission: string;
 }) {
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <div className="mx-auto max-w-lg">
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
@@ -50,6 +50,6 @@ export function OfficerAccessRequired({
           </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }

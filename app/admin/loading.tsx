@@ -31,7 +31,7 @@ function KpiCardSkeleton() {
 
 export default function AdminLoading() {
   return (
-    <main
+    <div
       className="container py-8"
       aria-busy="true"
       aria-live="polite"
@@ -91,6 +91,6 @@ export default function AdminLoading() {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

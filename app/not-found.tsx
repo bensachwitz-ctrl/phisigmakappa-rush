@@ -17,7 +17,7 @@ export default async function NotFound() {
   const { terms } = await getChapterIdentity();
   return (
     <AnimatedBackground variant="aurora-grid" tone="brand" className="min-h-screen bg-background">
-      <main className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-screen flex-col">
         <div className="container py-6">
           <Link href="/" className="inline-flex items-center gap-2">
             <Wordmark variant="compact" />
@@ -56,7 +56,7 @@ export default async function NotFound() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </AnimatedBackground>
   );
 }

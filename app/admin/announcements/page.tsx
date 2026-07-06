@@ -32,13 +32,13 @@ export default async function AnnouncementsPage() {
   }));
 
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <AdminPageHeader
         icon={Megaphone}
         title="Announcements"
         subtitle="Post chapter-wide updates. Pin urgent ones to the top. Use Broadcast to text/email all members."
       />
       <AnnouncementsManager initial={serializable as any} />
-    </main>
+    </div>
   );
 }

@@ -84,7 +84,7 @@ export default function GlobalError({
           WebkitFontSmoothing: "antialiased",
         }}
       >
-        <main
+        <div
           role="main"
           style={{
             width: "100%",
@@ -251,7 +251,7 @@ export default function GlobalError({
               Reference: {error.digest}
             </p>
           ) : null}
-        </main>
+        </div>
       </body>
     </html>
   );

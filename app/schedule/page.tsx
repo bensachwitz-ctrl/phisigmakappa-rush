@@ -52,7 +52,7 @@ export default async function SchedulePage() {
     <div className="min-h-screen bg-cream-50 text-maroon-950">
       <PublicNav />
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         <header className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
             <CalendarDays className="w-3.5 h-3.5" aria-hidden />
@@ -72,7 +72,7 @@ export default async function SchedulePage() {
           schoolShort={id.schoolShort}
           tagline={id.tagline}
         />
-      </main>
+      </div>
 
       <PublicFooter />
     </div>

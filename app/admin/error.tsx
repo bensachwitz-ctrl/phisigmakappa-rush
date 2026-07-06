@@ -26,7 +26,7 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <main className="container flex flex-1 items-center justify-center px-4 py-16">
+    <div className="container flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg text-center animate-slide-up">
         <div className="relative mx-auto mb-6 w-fit">
           <span
@@ -72,6 +72,6 @@ export default function AdminError({
           </p>
         )}
       </div>
-    </main>
+    </div>
   );
 }

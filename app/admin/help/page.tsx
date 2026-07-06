@@ -317,7 +317,7 @@ const COMMON_TASKS = [
 
 export default function HelpPage() {
   return (
-    <main className="container py-8">
+    <div className="container py-8">
       <div className="mb-8">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
           <BookOpen className="h-3 w-3" /> Chapter handbook
@@ -379,6 +379,6 @@ export default function HelpPage() {
         ))}
       </section>
 
-    </main>
+    </div>
   );
 }
