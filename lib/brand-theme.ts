@@ -25,8 +25,11 @@ export const BRAND_DEFAULTS = {
  */
 export function safeHex(input: string | undefined, fallback: string): string {
   if (!input) return fallback;
-  const trimmed = input.trim();
-  if (/^#([0-9a-fA-F]{3}){1,2}$/.test(trimmed)) return trimmed;
+  const clean = input.trim().replace(/^#/, "");
+  if (/^[0-9A-Fa-f]{6}$/.test(clean)) return `#${clean}`;
+  if (/^[0-9A-Fa-f]{3}$/.test(clean)) {
+    return `#${clean[0]}${clean[0]}${clean[1]}${clean[1]}${clean[2]}${clean[2]}`;
+  }
   return fallback;
 }
 
