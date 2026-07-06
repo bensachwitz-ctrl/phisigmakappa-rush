@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
 // LUCIDE→BESPOKE TODO at the foot of this file). Menu/X/ChevronDown/ExternalLink
@@ -18,6 +19,12 @@ import {
   LogOut, LayoutGrid,
 } from "lucide-react";
 >>>>>>> greekstack/replace-lucide-icons-6270049843917795744
+=======
+// Bespoke UI utility glyphs
+import {
+  IconSignOut, IconHelp, IconCommand, IconGrid,
+} from "@/components/brand/icons";
+>>>>>>> greekstack/jules-17427853769023413-93a4366b
 import {
   IconDashboard, IconRecruitment, IconMembers, IconEvents, IconCalendarTool, IconDues,
   IconTreasury, IconLaunch, IconWhiteLabel, IconSecurity, IconComms, IconAdmin,
@@ -260,7 +267,11 @@ export function AdminNav({
             title="Open command palette (⌘K)"
             aria-label="Open command palette"
           >
+<<<<<<< HEAD
             <IconCommand className="h-3.5 w-3.5" />
+=======
+            <IconCommand className="h-3.5 w-3.5" aria-hidden="true" />
+>>>>>>> greekstack/jules-17427853769023413-93a4366b
             Quick jump
             <kbd className="ml-1 rounded border border-border bg-secondary px-1 text-[10px]">⌘K</kbd>
           </button>
@@ -271,7 +282,11 @@ export function AdminNav({
             className="lg:hidden inline-flex items-center gap-1 text-muted-foreground hover:text-phisig-red px-2 py-1 rounded-md text-xs"
             title="Help"
           >
+<<<<<<< HEAD
             <IconHelp className="h-4 w-4" />
+=======
+            <IconHelp className="h-4 w-4" aria-hidden="true" />
+>>>>>>> greekstack/jules-17427853769023413-93a4366b
             <span className="hidden sm:inline">Help</span>
           </Link>
 
@@ -287,7 +302,11 @@ export function AdminNav({
           </Link>
 
           <Button variant="outline" size="sm" onClick={logout} className="hidden sm:inline-flex">
+<<<<<<< HEAD
             <IconSignOut className="h-3.5 w-3.5" />
+=======
+            <IconSignOut className="h-3.5 w-3.5" aria-hidden="true" />
+>>>>>>> greekstack/jules-17427853769023413-93a4366b
             <span className="hidden md:inline">Sign out</span>
           </Button>
 
@@ -338,6 +357,7 @@ export function AdminNav({
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // ─────────────────────────────────────────────────────────────────────────────
 // LUCIDE → BESPOKE TODO (officer chrome)
@@ -351,3 +371,5 @@ export function AdminNav({
 // Next pass: draw IconSignOut / IconGrid in the bespoke
 // design language (see components/brand/icons/icon-base.tsx) and swap these two.
 >>>>>>> greekstack/replace-lucide-icons-6270049843917795744
+=======
+>>>>>>> greekstack/jules-17427853769023413-93a4366b

@@ -55,6 +55,7 @@ export {
   IconMenu,
   IconClose,
   IconShieldCheck,
+<<<<<<< HEAD
   IconSearch,
   IconCommand,
   IconHelp,
