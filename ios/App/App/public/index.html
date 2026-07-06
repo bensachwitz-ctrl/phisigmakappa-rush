@@ -28,8 +28,8 @@
 
     NO-LOGIN DEMO: the built-in "Demo Chapter" loads a fully interactive,
     READ-ONLY sample dashboard (no credentials) so a reviewer / cold-start user
-    can see the whole app — Feed, Events, Rush, Dues, Directory, Profile, and an
-    officer/Exec view — without an account.
+    can see the whole app — Feed, Events, Rush, Dues, Directory, Vote, Profile,
+    and an officer/Exec view — without an account.
 
     This bundled client mirrors the richer React member surface
     (app/app/MobileAppClient.tsx) as closely as a dependency-free static client
@@ -52,6 +52,13 @@
       --accent:#38bdf8; --gold:#d4af37; --card:#121d39;
       --line:rgba(255,255,255,.10); --danger:#f87171; --ok:#34d399;
       --radius:16px;
+      /* Classical DISPLAY voice — matches the website's Cinzel system. The native
+         WKWebView shell is offline-first, so we do NOT pull a web font (no network
+         dependency, no layout shift); instead we name Cinzel first (used if ever
+         bundled) and fall back to iOS's inscriptional serifs (Optima/Trajan-like
+         Didot/Times) so the wordmark + headings read as the same Greek/Roman brand
+         voice as the site. Body copy stays on the system sans for legibility. */
+      --font-display:"Cinzel","Optima","Trajan Pro","Didot","Times New Roman",Georgia,serif;
     }
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
     html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
@@ -64,7 +71,8 @@
     .center{flex:1;display:grid;place-items:center;text-align:center;padding:24px}
     /* GreekStack wordmark — "Greek" in ink, "stack" in the site's royal-blue→cyan
        gradient (matches .gs-gradient-text in app/globals.css exactly). */
-    .wordmark{font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+    .wordmark{font-family:var(--font-display);font-weight:700;font-size:30px;
+      text-transform:uppercase;letter-spacing:.06em;line-height:1}
     .wordmark .grad{background:linear-gradient(90deg,var(--brand2),var(--brand),var(--brand3));
       -webkit-background-clip:text;background-clip:text;color:transparent}
     /* Canonical GreekStack crest — navy temple/pediment reversed in a gold disc,
@@ -87,15 +95,16 @@
     header.topbar .mark{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
       flex:none;background:linear-gradient(150deg,#fbbf24,var(--gold))}
     header.topbar .mark svg{width:18px;height:18px;display:block}
-    header.topbar .title{font-weight:700;font-size:16px;flex:1;min-width:0;
+    header.topbar .title{font-family:var(--font-display);font-weight:700;font-size:16px;
+      letter-spacing:.02em;flex:1;min-width:0;
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     header.topbar .back{font-size:13px;color:var(--muted);padding:8px;margin:-8px}
     /* Demo badge in the topbar so the no-login state is always legible. */
     header.topbar .demo{flex:none;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
       color:#1f2937;background:linear-gradient(150deg,#fcd34d,var(--gold));padding:3px 7px;border-radius:7px}
     main{flex:1;padding:8px 16px 24px 16px}
-    h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
-      margin:20px 2px 10px}
+    h2.section{font-family:var(--font-display);font-size:13px;text-transform:uppercase;
+      letter-spacing:1px;color:var(--muted);margin:20px 2px 10px}
     .field{margin-bottom:14px}
     .field label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;
       color:var(--muted);margin:0 2px 6px}
@@ -187,17 +196,37 @@
     <div class="center" id="boot">
       <div>
         <div class="crest-disc" aria-hidden="true">
-          <!-- Canonical GreekStack temple: pediment + four columns + base (navy on gold).
-               Identical geometry to app/maskable-icon/route.tsx so the bundled app, the
-               website PWA icon, and the native app icon all read as one mark. -->
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>
-            <rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>
-            <rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>
-            <rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>
+          <!-- Canonical GreekStack ELEVATED temple: pediment + gold cornice +
+               medallion + architrave + four columns WITH capitals + bases +
+               stepped stylobate + gold floor (navy temple + gold accents on the
+               gold disc). Identical 100-unit geometry to brand/greekstack-seal.svg,
+               app/maskable-icon/route.tsx, and <GreekstackLogo> so the bundled
+               app, the website PWA icon, and the native app icon are one mark. -->
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#0F2350">
+              <path d="M16 44 L50 22 L84 44 Z"/>
+              <rect x="14" y="46.5" width="72" height="5" rx="1"/>
+              <rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="23" y="54.7" width="6" height="15"/>
+              <rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="39" y="54.7" width="6" height="15"/>
+              <rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="55" y="54.7" width="6" height="15"/>
+              <rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6"/>
+              <rect x="71" y="54.7" width="6" height="15"/>
+              <rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6"/>
+              <rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>
+              <rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>
+            </g>
+            <g fill="#E8B53A">
+              <rect x="14" y="43.4" width="72" height="2" rx="1"/>
+              <circle cx="50" cy="36" r="3"/>
+              <rect x="16" y="51" width="68" height="1"/>
+              <rect x="13" y="79.9" width="74" height="1.1"/>
+            </g>
           </svg>
         </div>
         <div class="wordmark">Greek<span class="grad">stack</span></div>
@@ -238,27 +267,46 @@
     async function prefDel(k) { var P = plugin("Preferences"); if (!P) { try { localStorage.removeItem(k); } catch (e) {} return; } try { await P.remove({ key: k }); } catch (e) {} }
     function haptic() { var H = plugin("Haptics"); if (!H) return; try { H.selectionChanged ? H.selectionChanged() : (H.impact && H.impact({ style: "Light" })); } catch (e) {} }
     function hideSplash() { var S = plugin("SplashScreen"); if (!S) return; try { S.hide(); } catch (e) {} }
-    // Open an external URL (Stripe checkout) in the system browser. Prefer the
-    // Capacitor Browser plugin when present; else window.open(_blank), which
-    // Capacitor routes to SFSafariViewController for external https on iOS.
+    // Open an external URL (Stripe checkout, legal links) in the system browser.
+    // @capacitor/browser is NOT installed, so window.open(_blank) is the real path:
+    // Capacitor routes an external https _blank to SFSafariViewController on iOS /
+    // the system browser on Android. location.href is the last-resort fallback.
     function openExternal(url) {
-      var B = plugin("Browser");
-      if (B && B.open) { try { B.open({ url: url }); return; } catch (e) {} }
       try { window.open(url, "_blank"); } catch (e) { try { window.location.href = url; } catch (e2) {} }
     }
 
     // ── Brand glyphs (inline SVG, matching the website's bespoke icon set) ──
-    // The canonical GreekStack temple crest (navy on transparent — sits in a gold
-    // disc). Same geometry as app/maskable-icon/route.tsx + the native app icon.
+    // The canonical GreekStack ELEVATED temple crest (navy temple + gold accents
+    // on transparent — sits in a gold disc). SAME 100-unit geometry as
+    // brand/greekstack-seal.svg, app/maskable-icon/route.tsx, <GreekstackLogo>,
+    // and the native app icon: capitals + bases + gold cornice/medallion/
+    // architrave/floor + stepped stylobate.
     var CREST_SVG =
-      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<path d="M2.6 8.6 12 3.2l9.4 5.4H2.6Z" fill="#0F2350"/>' +
-        '<rect x="3.4" y="9.4" width="17.2" height="1.7" rx="0.5" fill="#0F2350"/>' +
-        '<rect x="4.6" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="8.4" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="13.7" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="17.5" y="11.4" width="1.9" height="6.2" rx="0.4" fill="#0F2350"/>' +
-        '<rect x="3.4" y="17.9" width="17.2" height="1.9" rx="0.6" fill="#0F2350"/>' +
+      '<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<g fill="#0F2350">' +
+          '<path d="M16 44 L50 22 L84 44 Z"/>' +
+          '<rect x="14" y="46.5" width="72" height="5" rx="1"/>' +
+          '<rect x="21.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="23" y="54.7" width="6" height="15"/>' +
+          '<rect x="21.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="37.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="39" y="54.7" width="6" height="15"/>' +
+          '<rect x="37.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="53.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="55" y="54.7" width="6" height="15"/>' +
+          '<rect x="53.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="69.5" y="52.5" width="9" height="2.2" rx="0.6"/>' +
+          '<rect x="71" y="54.7" width="6" height="15"/>' +
+          '<rect x="69.5" y="69.7" width="9" height="2.3" rx="0.6"/>' +
+          '<rect x="18" y="72.5" width="64" height="3.2" rx="0.8"/>' +
+          '<rect x="13" y="76.2" width="74" height="3.4" rx="0.8"/>' +
+        '</g>' +
+        '<g fill="#E8B53A">' +
+          '<rect x="14" y="43.4" width="72" height="2" rx="1"/>' +
+          '<circle cx="50" cy="36" r="3"/>' +
+          '<rect x="16" y="51" width="68" height="1"/>' +
+          '<rect x="13" y="79.9" width="74" height="1.1"/>' +
+        '</g>' +
       '</svg>';
 
     // Tab-nav glyphs — bespoke 24×24 line icons in the website's icon language
@@ -330,6 +378,23 @@
           '<path d="M12 21c4-4.2 6-7.4 6-10.2A6 6 0 0 0 6 10.8C6 13.6 8 16.8 12 21Z" fill="var(--accent)" opacity=".16"/>' +
           '<path d="M12 21c4-4.2 6-7.4 6-10.2A6 6 0 0 0 6 10.8C6 13.6 8 16.8 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
           '<circle cx="12" cy="10.5" r="2.1" stroke="currentColor" stroke-width="1.6"/>' +
+        '</svg>',
+      // Report (flag) + Block (no-entry) glyphs for the UGC moderation controls.
+      flag:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M6 21V4M6 5h10l-1.6 3.5L16 12H6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>',
+      block:
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/>' +
+          '<path d="M6.4 6.4l11.2 11.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' +
+        '</svg>',
+      vote:
+        '<svg class="ti" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+          '<path d="M5 11.5l2.5-7a1.5 1.5 0 0 1 1.4-1h6.2a1.5 1.5 0 0 1 1.4 1l2.5 7" fill="var(--accent)" opacity=".16"/>' +
+          '<path d="M5 11.5l2.5-7a1.5 1.5 0 0 1 1.4-1h6.2a1.5 1.5 0 0 1 1.4 1l2.5 7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<rect x="3.5" y="11.5" width="17" height="6.5" rx="1.8" stroke="currentColor" stroke-width="1.75"/>' +
+          '<path d="M9 8.5l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>' +
         '</svg>'
     };
 
@@ -362,6 +427,25 @@
         ok.onclick = function () { haptic(); ov.remove(); resolve(true); };
         no.onclick = function () { ov.remove(); resolve(false); };
         box.appendChild(ok); box.appendChild(no); ov.appendChild(box); document.body.appendChild(ov);
+      });
+    }
+    // Prompt dialog — confirm with a free-text reason (used by content reports).
+    // Resolves to the entered string on confirm, or null on cancel.
+    function promptDialog(opts) {
+      return new Promise(function (resolve) {
+        var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:center;padding:24px"></div>');
+        var box = el('<div class="card" style="max-width:340px;width:100%;margin:0"></div>');
+        box.appendChild(el('<div class="h">' + esc(opts.title) + '</div>'));
+        box.appendChild(el('<div class="b" style="margin-bottom:12px">' + esc(opts.message) + '</div>'));
+        var ta = el('<textarea rows="3" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px;font:inherit;font-size:14px;resize:vertical;margin-bottom:12px" maxlength="1000"></textarea>');
+        ta.setAttribute("placeholder", opts.placeholder || "");
+        box.appendChild(ta);
+        var ok = el('<button class="btn ' + (opts.danger ? "danger" : "") + '">' + esc(opts.confirmText || "Send") + '</button>');
+        var no = el('<button class="btn ghost" style="margin-top:8px">Cancel</button>');
+        ok.onclick = function () { haptic(); ov.remove(); resolve(String(ta.value || "").trim()); };
+        no.onclick = function () { ov.remove(); resolve(null); };
+        box.appendChild(ok); box.appendChild(no); ov.appendChild(box); document.body.appendChild(ov);
+        setTimeout(function () { try { ta.focus(); } catch (e) {} }, 50);
       });
     }
 
@@ -483,14 +567,31 @@
           { id: "pnm2", name: "Chris Nolan", major: "Accounting", year: "Sophomore", status: "BID_EXTENDED", votesCount: 12 },
           { id: "pnm3", name: "Aaron Diaz", major: "Political Sci.", year: "Freshman", status: "ACTIVE", votesCount: 5 },
           { id: "pnm4", name: "Sam Whitfield", major: "Undeclared", year: "Freshman", status: "ACTIVE", votesCount: 3 }
-        ]
+        ],
+        // Demo open election so the no-login showcase exercises the Vote tab +
+        // spotlight (same shape lib/mobile-elections returns). myBallot is empty
+        // so the demo starts unvoted; casting locally fills it in.
+        election: {
+          id: "el-demo", title: "Spring 2026 Officer Elections", ballotsCast: 18, totalEligible: 42,
+          seats: [
+            { id: "seat-pres", title: "President", candidates: [
+              { id: "cand-1", name: "Alex Mercer", year: "Senior", blurb: "Two terms on exec; ran the best rush in chapter history.", votes: 11 },
+              { id: "cand-2", name: "Daniel Cho", year: "Junior", blurb: "Treasurer; wants a transparent budget and bigger philanthropy.", votes: 7 }
+            ] },
+            { id: "seat-trea", title: "Treasurer", candidates: [
+              { id: "cand-3", name: "Ethan Park", year: "Sophomore", blurb: "Will move dues fully online and cut late payments.", votes: 9 },
+              { id: "cand-4", name: "Jordan Lee", year: "Sophomore", blurb: "Detail-oriented; clean books and on-time reimbursements.", votes: 9 }
+            ] }
+          ]
+        },
+        myBallot: {}
       };
     }
 
     // ── App state ──────────────────────────────────────────────────────────
-    // tab ∈ feed/events/rush/dues/directory/profile; view ∈ member/exec.
-    var S = { chapters: [], session: null, tenant: null, data: null, tab: "feed", view: "member", demo: false };
-    var K = { session: "gs.session", lastView: "gs.lastView" };
+    // tab ∈ feed/events/rush/dues/directory/elections/profile; view ∈ member/exec.
+    var S = { chapters: [], session: null, tenant: null, data: null, tab: "feed", view: "member", demo: false, blocked: {} };
+    var K = { session: "gs.session", lastView: "gs.lastView", blocked: "gs.blocked" };
 
     // True only when the dashboard came from the no-login demo showcase.
     function isDemo() { return !!S.demo; }
@@ -499,6 +600,11 @@
     // ALSO re-gated server-side, so this is purely which UI is offered.
     function execAllowed() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.exec === true); }
     function duesEnabled() { return isDemo() || !!(S.data && S.data.capabilities && S.data.capabilities.duesEnabled === true); }
+    // True only when the chapter has a currently-OPEN election the signed-in
+    // brother can vote in (the server returns election:null otherwise). Drives
+    // the member "Vote" tab + the feed spotlight so the surface only appears when
+    // there's a real ballot — never an empty, data-less tab.
+    function electionOpen() { return !!(S.data && S.data.election && (S.data.election.seats || []).length); }
 
     // ── Network ─────────────────────────────────────────────────────────────
     async function getRegistry() {
@@ -538,12 +644,88 @@
       return { status: r.status, ok: r.ok && j.ok, data: j };
     }
 
+    // ── Moderation (Apple Guideline 1.2) ──────────────────────────────────────
+    // REPORT objectionable cross-member content (an officer announcement, a
+    // career post, or a member/alumni profile). Posts to the token-bound
+    // /api/mobile/report endpoint, which records the report AND notifies chapter
+    // admins through the existing notification path. In the read-only demo we
+    // confirm the flow without hitting the network.
+    async function reportContent(target) {
+      var reason = await promptDialog({
+        title: "Report this content",
+        message: "Tell a chapter admin what's wrong. Your report is sent to chapter officers for review.",
+        placeholder: "What's objectionable?",
+        confirmText: "Send report", danger: true
+      });
+      if (reason === null) return; // cancelled
+      if (isDemo()) { toast("Report sent to chapter admins. (Demo)", "ok"); return; }
+      var res = await authPost("/api/mobile/report", {
+        kind: "report",
+        targetType: target.type || "other",
+        targetId: target.id || "",
+        targetName: target.name || "",
+        reason: reason || ""
+      });
+      if (res.ok) toast("Report sent to chapter admins.", "ok");
+      else toast((res.data && res.data.error) || "Couldn't send the report. Try again.", "err");
+    }
+
+    // BLOCK / UNBLOCK a member. The hide is enforced on-device (the blocked set,
+    // persisted in Preferences) AND a moderator is notified via /api/mobile/report
+    // so a member can't be silently shadow-blocked off the record. Reversible.
+    async function toggleBlock(member) {
+      var id = member && member.id; if (!id) return;
+      var nowBlocked = !isBlocked(id);
+      if (nowBlocked) {
+        var yes = await confirmDialog({
+          title: "Block " + (member.name || "this member") + "?",
+          message: "You won't see their directory listing or their posts. Chapter admins are notified. You can unblock them anytime.",
+          confirmText: "Block member", danger: true
+        });
+        if (!yes) return;
+        blockedSet()[id] = 1;
+      } else {
+        delete blockedSet()[id];
+      }
+      await persistBlocked();
+      haptic();
+      // Notify a moderator (best-effort; the on-device hide already applied).
+      if (!isDemo()) {
+        authPost("/api/mobile/report", {
+          kind: nowBlocked ? "block" : "unblock",
+          targetType: "member",
+          targetId: id,
+          targetName: member.name || ""
+        }).catch(function () {});
+      }
+      toast(nowBlocked ? ((member.name || "Member") + " blocked.") : ((member.name || "Member") + " unblocked."), "ok");
+      paintDashboard(false); // re-render to hide/show the member's content
+    }
+
     // ── Persistence ─────────────────────────────────────────────────────────
     async function saveSession(s) { S.session = s; await prefSet(K.session, JSON.stringify(s)); }
     async function clearSession() { S.session = null; S.tenant = null; S.data = null; S.demo = false; S.view = "member"; await prefDel(K.session); await prefDel(K.lastView); }
     async function restoreSession() { var raw = await prefGet(K.session); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } }
     async function cacheView(d) { try { var j = JSON.stringify({ at: Date.now(), data: d }); if (j.length < 400000) await prefSet(K.lastView, j); } catch (e) {} }
     async function readCachedView() { var raw = await prefGet(K.lastView); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } }
+
+    // ── Block list (Apple 1.2) ────────────────────────────────────────────────
+    // A member can BLOCK another member; blocked members' directory rows + feed
+    // content are hidden client-side. The set is PERSISTED in Capacitor
+    // Preferences, scoped per-chapter (keyed by subdomain) so a block in one
+    // chapter never leaks into another, and survives app restarts. Shape:
+    // { "<subdomain>": { "<memberId>": 1 } }.
+    async function loadBlocked() {
+      var raw = await prefGet(K.blocked);
+      try { S.blocked = raw ? (JSON.parse(raw) || {}) : {}; } catch (e) { S.blocked = {}; }
+    }
+    function blockedSet() {
+      var sub = S.session && S.session.subdomain ? S.session.subdomain : "_";
+      if (!S.blocked[sub]) S.blocked[sub] = {};
+      return S.blocked[sub];
+    }
+    function isBlocked(id) { return !!(id && blockedSet()[id]); }
+    async function persistBlocked() { try { await prefSet(K.blocked, JSON.stringify(S.blocked)); } catch (e) {} }
 
     // ── Topbar ───────────────────────────────────────────────────────────────
     function topbar(title, onBack, opts) {
@@ -802,6 +984,7 @@
         else if (S.tab === "rush") paintRush(main, d);
         else if (S.tab === "dues") paintDues(main, d);
         else if (S.tab === "directory") paintDirectory(main, d);
+        else if (S.tab === "elections") paintElections(main, d);
         else paintProfile(main, d);
       }
 
@@ -812,33 +995,74 @@
 
     // ── MEMBER: Feed ──────────────────────────────────────────────────────────
     function paintFeed(main, d) {
+      // Open-election SPOTLIGHT — surfaces the live ballot at the top of the feed
+      // so a member can't miss it, and taps straight into the Vote tab. Only
+      // shown while an election is open (electionOpen); no dead control otherwise.
+      if (electionOpen()) {
+        var ev = d.election;
+        var seatCount = (ev.seats || []).length;
+        var votedCount = Object.keys(d.myBallot || {}).length;
+        var done = seatCount > 0 && votedCount >= seatCount;
+        var spot = el(
+          '<div class="card" style="border-color:var(--brand);background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 10%,var(--bg2)),var(--bg2))">' +
+            '<span class="pill brand">' + (done ? "Voted" : "Election open") + "</span>" +
+            '<div class="h">' + esc(ev.title) + "</div>" +
+            '<div class="b">' + (done
+              ? "Thanks for voting. You can review the ballot any time."
+              : (votedCount > 0
+                  ? ("You've voted in " + votedCount + " of " + seatCount + " race" + (seatCount === 1 ? "" : "s") + " — finish your ballot.")
+                  : ("Cast your secret ballot in " + seatCount + " race" + (seatCount === 1 ? "" : "s") + "."))) +
+            "</div>" +
+          "</div>"
+        );
+        var go = el('<button class="btn" style="margin-top:2px">' + (done ? "Review ballot" : "Open ballot") + "</button>");
+        go.onclick = function () { haptic(); S.tab = "elections"; paintDashboard(false); };
+        spot.appendChild(go);
+        main.appendChild(spot);
+      }
       main.appendChild(el('<h2 class="section">Announcements</h2>'));
       var anns = d.announcements || [];
       if (!anns.length) { main.appendChild(el('<div class="empty">No announcements yet.</div>')); return; }
       anns.forEach(function (a) {
-        main.appendChild(el(
+        var card = el(
           '<div class="card">' +
             (a.pinned ? '<span class="pill">Pinned</span>' : "") +
             '<div class="h">' + esc(a.title) + "</div>" +
             '<div class="b">' + esc(a.body) + "</div>" +
             '<div class="when">' + esc(a.authorName || "Officer") + " · " + esc(fmtDate(a.createdAt)) + "</div>" +
           "</div>"
-        ));
+        );
+        card.appendChild(reportLink({ type: "announcement", id: a.id, name: a.title }));
+        main.appendChild(card);
       });
       // Career posts surface in the feed too (alumni opportunities).
       var careers = d.careers || [];
       if (careers.length) {
         main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
         careers.forEach(function (c) {
-          main.appendChild(el(
+          var card = el(
             '<div class="card">' +
               '<span class="pill brand">Career</span>' +
               '<div class="h">' + esc(c.title) + "</div>" +
               '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
             "</div>"
-          ));
+          );
+          card.appendChild(reportLink({ type: "career", id: c.id, name: c.title }));
+          main.appendChild(card);
         });
       }
+    }
+
+    // Small "Report" affordance appended to a content card. Wired to the real
+    // reportContent() → /api/mobile/report path (NOT a dead control). The target
+    // carries the content's type + id + label so a moderator knows what was flagged.
+    function reportLink(target) {
+      var bar = el('<div style="display:flex;justify-content:flex-end;margin-top:10px"></div>');
+      var btn = el('<button type="button" class="linklike" aria-label="Report this content" style="display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:6px 2px;font-size:12.5px;color:var(--muted);cursor:pointer;min-height:44px">' +
+        '<span style="width:14px;height:14px;display:inline-flex">' + ICON.flag + '</span>Report</button>');
+      btn.onclick = function () { haptic(); reportContent(target); };
+      bar.appendChild(btn);
+      return bar;
     }
 
     // ── MEMBER: Events (RSVP + add-to-calendar) ───────────────────────────────
@@ -930,6 +1154,103 @@
       });
     }
 
+    // ── MEMBER: Elections (secret-ballot voting) ──────────────────────────────
+    // Mirrors the web ElectionsVoter contract: one ballot per SEAT, secret (the
+    // server returns aggregate per-candidate counts + this member's OWN choices
+    // in d.myBallot), idempotent (a seat already voted shows a locked "Voted"
+    // state, no re-cast). Casts via authPost("/api/mobile/elections/vote",
+    // {seatId, candidateId}) and adopts the refreshed {election, myBallot} the
+    // route returns so the tally + voted state update without a full reload.
+    function paintElections(main, d) {
+      var ev = d.election;
+      main.appendChild(el('<h2 class="section">Elections</h2>'));
+      // Empty state — the tab is normally hidden when nothing is open, but if it
+      // is reached with no live ballot (e.g. the election just closed) show an
+      // explicit empty state, never a blank surface.
+      if (!ev || !(ev.seats || []).length) {
+        main.appendChild(el('<div class="empty">No open elections right now. You\'ll see the ballot here the moment voting opens.</div>'));
+        return;
+      }
+      var myBallot = d.myBallot || {};
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">' + esc(ev.title) + '</div>' +
+          '<div class="v" style="font-size:22px">' + (ev.ballotsCast || 0) + ' cast</div>' +
+          '<div style="font-size:12px;opacity:.85;margin-top:4px">Secret ballot · ' + (ev.totalEligible || 0) + ' eligible voters</div>' +
+        '</div>'
+      ));
+
+      ev.seats.forEach(function (seat) {
+        var votedFor = myBallot[seat.id] || null;
+        var card = el('<div class="card"></div>');
+        card.appendChild(el('<div class="h">' + esc(seat.title) + (votedFor ? ' <span class="pill brand" style="margin-left:6px">Voted</span>' : "") + "</div>"));
+        (seat.candidates || []).forEach(function (c) {
+          var isMine = votedFor === c.id;
+          var row = el(
+            '<div class="row" style="cursor:' + (votedFor ? "default" : "pointer") + ';' + (isMine ? "border-color:var(--brand)" : "") + '">' +
+              '<div class="meta"><div class="name">' + esc(c.name) + (isMine ? ' <span style="color:var(--brand)">✓ Your vote</span>' : "") + "</div>" +
+                '<div class="school">' + esc([c.year, c.blurb].filter(Boolean).join(" · ")) + "</div></div>" +
+              '<span class="pill muted" style="margin:0">' + (c.votes || 0) + " vote" + ((c.votes || 0) === 1 ? "" : "s") + "</span>" +
+            "</div>"
+          );
+          // Only an UNVOTED seat is tappable (one ballot per seat; the server is
+          // the real guard, the UI just prevents an obvious double-tap).
+          if (!votedFor) {
+            row.onclick = function () { haptic(); castBallot(seat, c, row); };
+          }
+          card.appendChild(row);
+        });
+        if (!votedFor) {
+          card.appendChild(el('<div class="small" style="margin-top:8px;color:var(--muted)">Tap a candidate to cast your secret ballot. You can vote once per race.</div>'));
+        }
+        main.appendChild(card);
+      });
+    }
+
+    // Cast one secret ballot for a seat, then adopt the refreshed view the vote
+    // route returns (new tally + this member's choices) and repaint.
+    async function castBallot(seat, candidate, row) {
+      var ok = await confirmDialog({
+        title: "Confirm your vote",
+        message: 'Vote for ' + (candidate.name) + ' as ' + (seat.title) + '? Your ballot is secret and can\'t be changed.',
+        confirmText: "Cast ballot"
+      });
+      if (!ok) return;
+      if (isDemo()) {
+        // Demo: reflect the vote locally so the flow is fully exercised offline.
+        S.data.myBallot = Object.assign({}, S.data.myBallot, mapEntry(seat.id, candidate.id));
+        var cand = (seat.candidates || []).filter(function (x) { return x.id === candidate.id; })[0];
+        if (cand) cand.votes = (cand.votes || 0) + 1;
+        S.data.election.ballotsCast = (S.data.election.ballotsCast || 0) + 1;
+        toast("Vote recorded. Thanks for voting!", "ok");
+        paintDashboard(false);
+        return;
+      }
+      if (row) { row.style.opacity = "0.6"; row.style.pointerEvents = "none"; }
+      try {
+        var res = await authPost("/api/mobile/elections/vote", { seatId: seat.id, candidateId: candidate.id });
+        if (res.ok && res.data) {
+          // Adopt the authoritative refreshed view (tally + myBallot).
+          S.data.election = res.data.election;
+          S.data.myBallot = res.data.myBallot || {};
+          toast("Vote recorded. Thanks for voting!", "ok");
+          paintDashboard(false);
+        } else if (res.status === 409) {
+          toast(res.data.error || "You've already voted for this race.", "info");
+          refetchDashboard();
+        } else {
+          toast(res.data.error || "Couldn't record your vote. Try again.", "err");
+          if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+        }
+      } catch (e) {
+        toast("Couldn't reach the server. Try again.", "err");
+        if (row) { row.style.opacity = ""; row.style.pointerEvents = ""; }
+      }
+    }
+
+    // Tiny helper: a one-key object (kept ES5-friendly for the WKWebView shell).
+    function mapEntry(k, v) { var o = {}; o[k] = v; return o; }
+
     // ── MEMBER: Dues (balance + real Stripe checkout) ─────────────────────────
     function paintDues(main, d) {
       var dues = d.dues || {}; var cfg = dues.config || {};
@@ -974,8 +1295,14 @@
 
     // ── MEMBER: Directory ─────────────────────────────────────────────────────
     function paintDirectory(main, d) {
-      var roster = (d.roster && d.roster.actives) || [];
-      var alumni = (d.roster && d.roster.alumni) || [];
+      var rosterAll = (d.roster && d.roster.actives) || [];
+      var alumniAll = (d.roster && d.roster.alumni) || [];
+      // Apple 1.2 — hide BLOCKED members from the directory entirely. The block
+      // set is persisted in Preferences (per-chapter) and applied here before
+      // any row renders. The member's own profile is never in this list.
+      var roster = rosterAll.filter(function (m) { return !isBlocked(m.id); });
+      var alumni = alumniAll.filter(function (m) { return !isBlocked(m.id); });
+      var hiddenCount = (rosterAll.length - roster.length) + (alumniAll.length - alumni.length);
       main.appendChild(el('<h2 class="section">Directory · ' + roster.length + " active" + (roster.length === 1 ? "" : "s") + "</h2>"));
       var sb = el('<div class="search"><input placeholder="Search members" inputmode="search" /></div>');
       main.appendChild(sb);
@@ -993,16 +1320,49 @@
       }
       function memberRow(m, parts) {
         var b = brandFor(S.session.tenant);
-        return el(
+        var row = el(
           '<div class="row" style="cursor:default">' +
             '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(m.name)) + "</div>" +
             '<div class="meta"><div class="name">' + esc(m.name) + '</div><div class="school">' + esc(parts.filter(Boolean).join(" · ")) + "</div></div>" +
+            '<div class="act"></div>' +
           "</div>"
         );
+        var act = row.querySelector(".act");
+        // REPORT this member's profile → /api/mobile/report (real, wired).
+        var rep = el('<button type="button" class="ib" aria-label="Report ' + esc(m.name || "member") + '">' + ICON.flag + '</button>');
+        rep.onclick = function () { haptic(); reportContent({ type: "member", id: m.id, name: m.name }); };
+        // BLOCK / UNBLOCK this member → hides their content on-device + notifies admins.
+        var blk = el('<button type="button" class="ib danger" aria-label="Block ' + esc(m.name || "member") + '">' + ICON.block + '</button>');
+        blk.onclick = function () { haptic(); toggleBlock(m); };
+        act.appendChild(rep); act.appendChild(blk);
+        return row;
       }
       sb.querySelector("input").oninput = function (e) { paint(e.target.value); };
       paint("");
       if (alumni.length) { main.appendChild(alumniHead); main.appendChild(alumniList); }
+      // Blocked-members review strip — shows the count + a way to UNBLOCK
+      // (reversible, as Apple requires). Only rendered when something is blocked.
+      if (hiddenCount > 0) main.appendChild(blockedReview(rosterAll.concat(alumniAll)));
+    }
+
+    // A collapsible list of the member's blocked members, each with an Unblock
+    // button (reversibility). Names are resolved from the current roster payload;
+    // a blocked id no longer in the roster shows as "Blocked member".
+    function blockedReview(allMembers) {
+      var ids = Object.keys(blockedSet());
+      var card = el('<div class="card" style="margin-top:8px"></div>');
+      card.appendChild(el('<div class="h">Blocked members · ' + ids.length + "</div>"));
+      card.appendChild(el('<div class="small" style="margin-bottom:10px">You\'ve hidden these members. Unblock to see their listing and posts again.</div>'));
+      ids.forEach(function (id) {
+        var m = allMembers.filter(function (x) { return x.id === id; })[0] || { id: id, name: "Blocked member" };
+        var rowEl = el('<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0"></div>');
+        rowEl.appendChild(el('<div class="small" style="color:var(--ink)">' + esc(m.name || "Blocked member") + "</div>"));
+        var un = el('<button type="button" class="btn ghost" style="width:auto;padding:6px 14px;min-height:36px">Unblock</button>');
+        un.onclick = function () { haptic(); toggleBlock(m); };
+        rowEl.appendChild(un);
+        card.appendChild(rowEl);
+      });
+      return card;
     }
 
     // ── MEMBER + OFFICER: Profile (with account deletion) ─────────────────────
@@ -1056,7 +1416,21 @@
       dz.appendChild(del);
       main.appendChild(dz);
 
-      main.appendChild(el('<p class="small" style="text-align:center;margin-top:14px">Greek Stack · bundled app</p>'));
+      // ── Legal — in-app links to Privacy / Terms / Support (Apple polish) ─────
+      // Apple wants a reachable Privacy Policy and, for an app handling member PII
+      // + payments, an in-app legal link is expected. The Next app already serves
+      // /privacy, /terms, /support, so we build the URLs off the SAME origin the
+      // app talks to (API_BASE — the live deploy, custom-domain or vercel) and
+      // open them in the system browser via openExternal (SFSafariViewController).
+      var legal = el('<div class="legal" style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:14px"></div>');
+      [["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Support", "/support"]].forEach(function (lk) {
+        var a = el('<button class="linklike" type="button" style="background:none;border:0;padding:6px 2px;font-size:13px;color:#475569;text-decoration:underline;text-underline-offset:2px;cursor:pointer;min-height:44px">' + esc(lk[0]) + '</button>');
+        a.onclick = function () { haptic(); openExternal(API_BASE + lk[1]); };
+        legal.appendChild(a);
+      });
+      main.appendChild(legal);
+
+      main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">Greek Stack · bundled app</p>'));
     }
 
     // ── OFFICER: Roster (add / remove / reset — persists to the server) ───────
@@ -1213,7 +1587,20 @@
         '</div>'
       ));
       var remind = el('<button class="btn">Send dues reminders</button>');
-      remind.onclick = function () { haptic(); toast("Dues reminders sent to all unpaid members.", "ok"); };
+      remind.onclick = async function () {
+        haptic();
+        // Demo mode never hits the network — say so plainly, no fake count.
+        if (isDemo()) { toast("Dues reminders sent to unpaid members. (Demo)", "ok"); return; }
+        remind.disabled = true; remind.textContent = "Sending reminders…";
+        // REAL action: the server finds unpaid active members with an email,
+        // emails each a branded reminder, and returns the HONEST sent count.
+        var res = await authPost("/api/mobile/exec/dues-reminder", {});
+        if (res.ok) toast((res.data && res.data.message) || "Dues reminders sent.", "ok");
+        else if (res.status === 403) toast("Only chapter officers can send dues reminders.", "err");
+        else if (res.status === 409) toast((res.data && res.data.error) || "Online dues aren't enabled for this chapter.", "err");
+        else toast((res.data && res.data.error) || "Couldn't send dues reminders. Try again shortly.", "err");
+        remind.disabled = false; remind.textContent = "Send dues reminders";
+      };
       main.appendChild(remind);
     }
 
@@ -1226,6 +1613,10 @@
         tabs = [["feed", "Feed", ICON.feed], ["events", "Events", ICON.events], ["rush", "Rush", ICON.rush]];
         if (duesEnabled()) tabs.push(["dues", "Dues", ICON.dues]);
         else tabs.push(["directory", "Directory", ICON.directory]);
+        // Vote tab — appears ONLY while a ballot the member can vote in is open
+        // (electionOpen). Pulled in before Profile so the live ballot is one tap
+        // away; it vanishes again the moment the election closes.
+        if (electionOpen()) tabs.push(["elections", "Vote", ICON.vote]);
         tabs.push(["profile", "Profile", ICON.profile]);
       }
       // Keep the active tab valid for the current tab set.
@@ -1239,21 +1630,125 @@
       return bar;
     }
 
+    // ── Universal-link deep linking ───────────────────────────────────────────
+    // The app ADVERTISES universal links (AASA /app + /app/*; entitlements
+    // applinks:greekstack.com; the promo banner "open straight to the right
+    // page"). Tapping https://greekstack.com/app?chapter=<sub>[&tab=<tab>]
+    // (or /app/<tab>?chapter=<sub>) must route the app to that chapter + tab.
+    // We parse BOTH the cold-start launch URL (App.getLaunchUrl) and live
+    // foreground opens (App.addListener('appUrlOpen')). All no-ops on web /
+    // when the plugin is absent. The valid member tabs the link may target.
+    var DEEP_LINK_TABS = ["feed", "events", "rush", "dues", "directory", "elections", "profile"];
+
+    /**
+     * Parse a deep-link URL → { chapter, tab } (either may be null). Accepts the
+     * advertised /app[?chapter=&tab=] and /app/<tab>?chapter= forms, on any of
+     * our hosts or the capacitor://localhost scheme. Defensive: never throws.
+     */
+    function parseDeepLink(url) {
+      if (!url) return { chapter: null, tab: null };
+      var u;
+      try { u = new URL(url); } catch (e) { return { chapter: null, tab: null }; }
+      var path = (u.pathname || "").replace(/\/+$/, ""); // trim trailing slash
+      // Only the /app namespace carries member routing (matches AASA /app, /app/*).
+      var inApp = path === "/app" || path.indexOf("/app/") === 0;
+      if (!inApp) return { chapter: null, tab: null };
+      var chapter = (u.searchParams.get("chapter") || "").trim().toLowerCase() || null;
+      // tab from ?tab= first, else the path segment after /app/.
+      var tab = (u.searchParams.get("tab") || "").trim().toLowerCase() || null;
+      if (!tab && path.indexOf("/app/") === 0) {
+        tab = path.slice("/app/".length).split("/")[0].toLowerCase() || null;
+      }
+      if (tab && DEEP_LINK_TABS.indexOf(tab) === -1) tab = null; // ignore unknown tabs
+      // Only allow clean DNS-label subdomains (mirrors the web routing guard).
+      if (chapter && !/^[a-z0-9][a-z0-9-]*$/.test(chapter)) chapter = null;
+      return { chapter: chapter, tab: tab };
+    }
+
+    /**
+     * Route an incoming deep link. Returns true when it took over navigation.
+     *   • No chapter → not handled (caller falls back to normal boot/no-op).
+     *   • Already signed into THAT chapter → switch to the requested tab (if any)
+     *     and show the dashboard.
+     *   • Otherwise → preselect that chapter at its login (or, if it isn't in the
+     *     registry, drop the user on the picker rather than a dead end).
+     */
+    function routeDeepLink(link) {
+      if (!link || !link.chapter) return false;
+      var sub = link.chapter;
+      // Honor the requested tab on the next dashboard paint (validated above).
+      if (link.tab) S.tab = link.tab;
+      // Already authenticated for this exact chapter → just re-route in place.
+      if (S.session && S.session.token && S.session.subdomain === sub && !isDemo()) {
+        showDashboard();
+        return true;
+      }
+      // Find the chapter in the registry so we can theme + go straight to login.
+      var match = (S.chapters || []).filter(function (c) { return c.subdomain === sub; })[0];
+      if (match) {
+        if (match.demo) { enterDemo(); return true; }
+        applyBrand(match);
+        showLogin(match);
+        return true;
+      }
+      // Unknown chapter (not provisioned / typo) → the picker, never a dead end.
+      pickerSchool = null;
+      showPicker();
+      return true;
+    }
+
+    // Register the live foreground deep-link listener once (native only). A link
+    // tapped while the app is already running arrives here.
+    function registerDeepLinkListener() {
+      var App = plugin("App");
+      if (!App || typeof App.addListener !== "function") return;
+      try {
+        App.addListener("appUrlOpen", function (event) {
+          var parsed = parseDeepLink(event && event.url);
+          if (parsed.chapter) { haptic(); routeDeepLink(parsed); }
+        });
+      } catch (e) {}
+    }
+
+    // Read the cold-start launch URL (the app was OPENED by a universal link).
+    async function getColdStartDeepLink() {
+      var App = plugin("App");
+      if (!App || typeof App.getLaunchUrl !== "function") return { chapter: null, tab: null };
+      try {
+        var r = await App.getLaunchUrl();
+        return parseDeepLink(r && r.url);
+      } catch (e) { return { chapter: null, tab: null }; }
+    }
+
     // ── Boot ────────────────────────────────────────────────────────────────
     (async function boot() {
       hideSplash();
+      // 0) Restore the per-chapter block list (Apple 1.2) so a member's blocks
+      //    persist across launches and apply before the first dashboard paint.
+      await loadBlocked();
       // 1) Restore a saved session → straight into the dashboard.
       var saved = await restoreSession();
       // 2) Load the chapter registry (for the picker, and to refresh tenant meta).
       S.chapters = await getRegistry();
+      // 2a) Wire the live deep-link listener + read any cold-start launch URL so a
+      //     universal-link tap opens straight to the right chapter/page (the
+      //     capability the AASA + entitlements + promo banner advertise).
+      registerDeepLinkListener();
+      var coldLink = await getColdStartDeepLink();
       if (saved && saved.token && saved.subdomain) {
         // Re-bind tenant from the (possibly refreshed) registry, else trust saved.
         var match = S.chapters.filter(function (c) { return c.subdomain === saved.subdomain; })[0];
         saved.tenant = match || saved.tenant || { subdomain: saved.subdomain, name: saved.subdomain, school: "" };
         S.session = saved; S.demo = false;
+        // A cold-start deep link overrides the default "resume my dashboard": it
+        // may target a DIFFERENT chapter (→ login there) or just a tab on this one.
+        if (coldLink.chapter && routeDeepLink(coldLink)) return;
         showDashboard();
         return;
       }
+      // No saved session: a cold-start deep link still routes to that chapter's
+      // login (or the picker if it isn't provisioned); otherwise the picker.
+      if (coldLink.chapter && routeDeepLink(coldLink)) return;
       showPicker();
     })();
   })();

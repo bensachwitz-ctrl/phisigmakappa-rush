@@ -98,12 +98,12 @@ describe("brand-theme helpers", () => {
         "brand.secondaryHex": "#00ff00",
       };
       const style = buildBrandThemeStyle(cfg);
-      expect(style).toContain(`--brand-primary:#ff0000`);
+      expect(style).toContain(`--brand-primary:#eb0000`);
       expect(style).toContain(`--brand-primary-dark:#aa0000`);
       expect(style).toContain(`--brand-primary-soft:#ffaaaa`);
       expect(style).toContain(`--brand-secondary:#00ff00`);
 
-      const primaryHsl = hexToHslTriple("#ff0000");
+      const primaryHsl = hexToHslTriple("#eb0000");
       expect(style).toContain(`--primary:${primaryHsl}`);
       expect(style).toContain(`--ring:${primaryHsl}`);
     });
