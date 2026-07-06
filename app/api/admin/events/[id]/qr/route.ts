@@ -9,6 +9,7 @@
 // GET returns { code, url, checkInCount } for the live QR + a running scan count.
 // Admin-only (rush chair / e-board) via the cookie session — the same gate the
 // rest of the events API uses.
+import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -25,7 +26,7 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 function makeCode(len = 8): string {
   let out = "";
   for (let i = 0; i < len; i++) {
-    out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+    out += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   }
   return out;
 }
