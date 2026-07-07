@@ -58,17 +58,44 @@ export async function POST(req: Request) {
     });
 
     if (brother && brother.passwordHash && verifyPassword(password, brother.passwordHash)) {
-      // Auto-provision a PortalUser row so they have a unified login session
-      portalUser = await prisma.portalUser.create({
-        data: {
-          role: "brother",
-          email,
-          passwordHash: brother.passwordHash,
-          brotherId: brother.id,
-          lastLoginAt: new Date(),
-        },
-      });
-      brotherId = brother.id;
+      // Auto-provision a PortalUser row so they have a unified login session.
+      // GUARD the unique-email collision: PortalUser.email is GLOBALLY unique
+      // (not per-role), so a person who already owns a PortalUser under a
+      // DIFFERENT role (e.g. they registered as alumni) collides here. The
+      // role-scoped findFirst above misses that row, so without this guard the
+      // create() throws Prisma P2002 → an UNHANDLED 500, and a real brother whose
+      // email is already an alumni PortalUser could NEVER log in. On collision we
+      // re-query the existing row by email and LINK it to this Brother instead of
+      // crashing — implementing the intended unified brother/alumnus login.
+      try {
+        portalUser = await prisma.portalUser.create({
+          data: {
+            role: "brother",
+            email,
+            passwordHash: brother.passwordHash,
+            brotherId: brother.id,
+            lastLoginAt: new Date(),
+          },
+        });
+        brotherId = brother.id;
+      } catch (err: any) {
+        if (err?.code !== "P2002") throw err;
+        const existing = await prisma.portalUser.findUnique({ where: { email } });
+        if (!existing) {
+          recordRateLimit(rlKey, LOGIN_LIMIT);
+          return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+        }
+        // Link the pre-existing account to this Brother (preserve any existing
+        // brotherId) and reuse it for the session rather than 500-ing.
+        portalUser = await prisma.portalUser.update({
+          where: { id: existing.id },
+          data: {
+            brotherId: existing.brotherId ?? brother.id,
+            lastLoginAt: new Date(),
+          },
+        });
+        brotherId = portalUser.brotherId ?? brother.id;
+      }
     }
   } else if (portalUser.passwordHash && verifyPassword(password, portalUser.passwordHash)) {
     // PortalUser exists and password is correct, update login timestamp

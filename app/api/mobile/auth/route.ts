@@ -121,17 +121,38 @@ async function handlePost(req: Request): Promise<NextResponse> {
         });
 
         if (brother && brother.passwordHash && verifyPassword(password, brother.passwordHash)) {
-          portalUser = await db.portalUser.create({
-            data: {
-              role: "brother",
-              email,
-              passwordHash: brother.passwordHash,
-              brotherId: brother.id,
-              lastLoginAt: new Date(),
-            },
-          });
-          brotherId = brother.id;
-          authenticated = true;
+          // GUARD the unique-email collision (see brothers/login route): a person
+          // who already owns a PortalUser under a DIFFERENT role collides on the
+          // GLOBALLY-unique email. Without this, create() throws P2002 and the
+          // generic catch below returns a 500, so the real brother can never sign
+          // in. On collision, re-query + LINK the existing row instead.
+          try {
+            portalUser = await db.portalUser.create({
+              data: {
+                role: "brother",
+                email,
+                passwordHash: brother.passwordHash,
+                brotherId: brother.id,
+                lastLoginAt: new Date(),
+              },
+            });
+            brotherId = brother.id;
+            authenticated = true;
+          } catch (createErr: any) {
+            if (createErr?.code !== "P2002") throw createErr;
+            const existing = await db.portalUser.findUnique({ where: { email } });
+            if (existing) {
+              portalUser = await db.portalUser.update({
+                where: { id: existing.id },
+                data: {
+                  brotherId: existing.brotherId ?? brother.id,
+                  lastLoginAt: new Date(),
+                },
+              });
+              brotherId = portalUser.brotherId ?? brother.id;
+              authenticated = true;
+            }
+          }
         }
       }
     } else {

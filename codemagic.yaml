@@ -5,8 +5,10 @@
 # webDir: 'mobile-shell' and intentionally has NO server.url, so Capacitor serves
 # the bundled client from capacitor://localhost (an installed app, not a hosted-
 # site wrapper). It talks to each chapter's backend over the tenant-bound mobile
-# APIs at an absolute, configurable API base (NEXT_PUBLIC_GS_API_BASE, default
-# https://greekstack.vercel.app). The build here generates the iOS project,
+# APIs at an absolute API base that is HARDCODED in mobile-shell/index.html
+# (default https://greekstack.vercel.app; swap window.__GS_API_BASE__ or the
+# gs-api-base meta to retarget a white-label build — NEXT_PUBLIC_GS_API_BASE
+# does NOT reach the bundled shell). The build here generates the iOS project,
 # copies the bundled mobile-shell into it, signs, archives, and ships to
 # TestFlight.
 #
@@ -147,7 +149,15 @@ workflows:
         script: |
           PBX="ios/App/App.xcodeproj/project.pbxproj"
           if [ -f "$PBX" ]; then
-            perl -i -p0e 's{(/\* Release \*/.*?CODE_SIGN_STYLE = )Automatic;}{$1Manual;}s' "$PBX"
+            # Use a GREEDY `.*` (not lazy `.*?`) so the match lands on the LAST
+            # `CODE_SIGN_STYLE = Automatic;` in the file — which is the TARGET
+            # Release config. The old lazy `.*?` anchored on the first
+            # `/* Release */` (the project-level Release block, which has no
+            # CODE_SIGN_STYLE) and then matched the FIRST Automatic it found —
+            # the TARGET DEBUG config — silently flipping Debug instead of
+            # Release (the archive only worked because `xcode-project
+            # use-profiles` later rewrote Release to manual anyway).
+            perl -i -p0e 's{(/\* Release \*/.*CODE_SIGN_STYLE = )Automatic;}{$1Manual;}s' "$PBX"
             perl -i -p0e 's{(/\* Release \*/.*?CODE_SIGN_IDENTITY = )"iPhone Developer";}{$1"iPhone Distribution";}s' "$PBX"
             grep -c 'CODE_SIGN_STYLE = Manual' "$PBX" \
               | xargs -I{} echo "project.pbxproj: {} Manual signing references after patch"

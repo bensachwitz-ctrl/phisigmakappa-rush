@@ -6,6 +6,7 @@ import { hashPassword } from "./password";
 import { checkSubdomainFormat, normalizeSubdomain } from "./reserved-subdomains";
 import { DEFAULT_OFFICER_CATALOG, stringifyPermissions } from "./officer-permissions";
 import { DEFAULTS } from "./site-config";
+import { applyTenantDdl } from "./tenant-ddl";
 
 export interface ProvisioningInput {
   subdomain: string;
@@ -76,26 +77,6 @@ export function assertStrongAdminPassword(password: unknown): asserts password i
 }
 
 /**
- * Parses raw DDL script by stripping comments and splitting into statements.
- */
-function parseDdl(sqlContent: string): string[] {
-  let content = sqlContent;
-  if (content.startsWith("\uFEFF")) {
-    content = content.slice(1);
-  }
-  return content
-    .split(";")
-    .map((stmt) => {
-      return stmt
-        .split("\n")
-        .filter((line) => !line.trim().startsWith("--"))
-        .join("\n")
-        .trim();
-    })
-    .filter((stmt) => stmt.length > 0);
-}
-
-/**
  * Programmatically provisions a new chapter tenant:
  * 1. Validates the subdomain and check shape.
  * 2. Creates a record in the public "Tenant" table (central registry).
@@ -159,7 +140,6 @@ export async function provisionTenant(input: ProvisioningInput) {
     throw new Error(`Schema file not found at: ${ddlPath}`);
   }
   const sqlContent = fs.readFileSync(ddlPath, "utf8");
-  const statements = parseDdl(sqlContent);
 
   let tenantCreated = false;
   let schemaCreated = false;
@@ -189,21 +169,15 @@ export async function provisionTenant(input: ProvisioningInput) {
     await centralDb.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${schemaName}";`);
     schemaCreated = true;
 
-    // 3. Connect to schema via separate client and apply DDL
+    // 3. Connect to schema via separate client and apply DDL. parseTenantDdl
+    //    (shared with /api/onboard via applyTenantDdl) strips `--` comment lines
+    //    BEFORE splitting on `;`, so a comment containing a mid-line semicolon
+    //    can't corrupt the following statement and roll the whole tenant back.
     tenantPrisma = new PrismaClient({
       datasources: { db: { url: tenantUrl } },
     });
 
-    for (const stmt of statements) {
-      try {
-        await tenantPrisma.$executeRawUnsafe(stmt);
-      } catch (err: any) {
-        // Ignore "already exists" errors (e.g. from idempotent runs)
-        if (!err.message?.includes("already exists")) {
-          throw err;
-        }
-      }
-    }
+    await applyTenantDdl(tenantPrisma, sqlContent);
 
     // 4. Seed default configurations
     const configData: Array<{ key: string; value: string }> = [];

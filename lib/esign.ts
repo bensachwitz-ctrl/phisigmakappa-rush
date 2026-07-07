@@ -15,6 +15,34 @@ interface SigneeDetails {
 }
 
 /**
+ * The default agreement text a signer accepts when a caller supplies none. Kept
+ * at module scope so the fingerprint helper and the PDF renderer hash + draw the
+ * EXACT same bytes.
+ */
+export const DEFAULT_CONSENT_TEXT =
+  "I hereby declare my acceptance of membership (bid) and certify that I have read and agree to all terms and conditions, including the Zero-Tolerance Anti-Hazing Agreement. I understand that hazing is strictly prohibited and that my digital signature constitutes a legally binding acceptance of these terms.";
+
+/**
+ * Compute the 32-hex verification fingerprint printed on the certificate. It
+ * binds the signer identity + timestamp AND the exact agreement text accepted,
+ * so the hash changes if the agreement wording changes — giving the record a
+ * real signature↔document binding rather than a fingerprint over identity alone.
+ */
+export function computeVerificationFingerprint(
+  details: SigneeDetails,
+  timestamp: string,
+): string {
+  const consentText = details.consentText || DEFAULT_CONSENT_TEXT;
+  const rawFingerprint = `${details.name}|${details.email}|${details.ipAddress || "no-ip"}|${timestamp}|${consentText}`;
+  return crypto
+    .createHash("sha256")
+    .update(rawFingerprint)
+    .digest("hex")
+    .substring(0, 32)
+    .toUpperCase();
+}
+
+/**
  * Generates a signed confirmation PDF certificate using jsPDF.
  */
 export function generateSignedPdfBuffer(details: SigneeDetails): Buffer {
@@ -92,10 +120,14 @@ export function generateSignedPdfBuffer(details: SigneeDetails): Buffer {
   doc.setTextColor(mutedTextColor.r, mutedTextColor.g, mutedTextColor.b);
   doc.text("Legally Binding E-Signature Record", width / 2, 47, { align: "center" });
 
-  // Generate verification code
+  // The exact agreement text this signer accepted (also fed into the fingerprint
+  // below so the printed hash binds to the agreement bytes, not just identity).
+  const consentText = details.consentText || DEFAULT_CONSENT_TEXT;
+
+  // Generate verification code — bound to the agreement text via the shared
+  // helper (see computeVerificationFingerprint).
   const timestamp = new Date().toISOString();
-  const rawFingerprint = `${details.name}|${details.email}|${details.ipAddress || "no-ip"}|${timestamp}`;
-  const fingerprint = crypto.createHash("sha256").update(rawFingerprint).digest("hex").substring(0, 32).toUpperCase();
+  const fingerprint = computeVerificationFingerprint(details, timestamp);
 
   // 3. Information Blocks
   let y = 60;
@@ -139,10 +171,7 @@ export function generateSignedPdfBuffer(details: SigneeDetails): Buffer {
   doc.setFontSize(9.5);
   doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
 
-  const defaultConsentText = 
-    "I hereby declare my acceptance of membership (bid) and certify that I have read and agree to all terms and conditions, including the Zero-Tolerance Anti-Hazing Agreement. I understand that hazing is strictly prohibited and that my digital signature constitutes a legally binding acceptance of these terms.";
-  
-  const textLines = doc.splitTextToSize(details.consentText || defaultConsentText, width - 40);
+  const textLines = doc.splitTextToSize(consentText, width - 40);
   doc.text(textLines, 20, y);
   
   // Calculate text height

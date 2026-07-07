@@ -6,16 +6,23 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // binary. `webDir` ('mobile-shell') is a real bundled client — School→Chapter
 // picker → themed login → per-chapter dashboard — that talks to each chapter's
 // backend over the EXISTING tenant-bound mobile APIs (/api/mobile/auth +
-// /api/mobile/data?subdomain=…) at an absolute, configurable API base
-// (NEXT_PUBLIC_GS_API_BASE, default https://greekstack.vercel.app). Because the
-// primary UI is bundled (not a webview pointed at the website), this clears the
-// Apple Guideline 4.2/4.7 "pure webview wrapper" rejection risk the old
-// server.url carried.
+// /api/mobile/data?subdomain=…) at an absolute API base. NOTE: for the BUNDLED
+// shell that base is a HARDCODED constant in mobile-shell/index.html
+// (default https://greekstack.vercel.app), overridable only by swapping
+// `window.__GS_API_BASE__` or the `<meta name="gs-api-base">` tag in that HTML.
+// `NEXT_PUBLIC_GS_API_BASE` does NOT affect the bundled binary — it is read only
+// by lib/mobile-api-base.ts, which powers the separate Next.js /app web route.
+// Because the primary UI is bundled (not a webview pointed at the website), this
+// clears the Apple Guideline 4.2/4.7 "pure webview wrapper" rejection risk the
+// old server.url carried.
 //
-// Genuine native value remains wired (app/app/NativeBridge.tsx + the bundled
-// client's Capacitor bridge), all inert on web / active only when native:
-//   • Biometric/session persistence  • Offline cache of the last view
-//   • Deep links (universal links into a chapter)
+// Genuine native value wired into the bundled shell (mobile-shell/index.html),
+// all inert on web / active only when native:
+//   • Session persistence  • Offline cache of the last view
+//   • Deep links (universal links into a chapter)  • Haptics
+// (Biometric unlock is NOT in the bundled shell — it lives in the separate
+//  app/app/NativeBridge.tsx /app web route, whose plugin isn't even bundled.
+//  Do not advertise biometric as shipped native value for this binary.)
 // NOTE: the bundled shell does NOT use push notifications, so the push
 // background mode + aps-environment entitlement are intentionally omitted from
 // the native project (Apple 2.3.1 — declare only capabilities actually used).

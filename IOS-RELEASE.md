@@ -5,14 +5,22 @@ How the **Greek Stack** iOS app gets built, signed, and shipped. The app is a
 client INSIDE the binary (`webDir: mobile-shell/`, loaded from
 `capacitor://localhost` — there is **no** `server.url` pointing at the hosted
 site). The bundled client talks to each chapter's backend over the existing
-tenant-bound mobile APIs at an absolute, configurable API base
-(`NEXT_PUBLIC_GS_API_BASE`, default `https://greekstack.vercel.app`): School →
+tenant-bound mobile APIs at an absolute API base that is **hardcoded in
+`mobile-shell/index.html`** (default `https://greekstack.vercel.app`): School →
 Chapter picker → themed login → per-chapter dashboard (Feed, Events, Rush, Dues,
-Directory, Profile, and an officer/Exec view), plus a no-login demo. Because the
-primary UI is bundled (not a webview wrapper pointed at the website), this clears
-the Apple Guideline 4.2 "minimum functionality / just a website" risk the old
-`server.url` carried. Native value (haptics, biometric session, deep links,
-offline cache) is wired in `lib/native-bridge.ts` and stays inert on the web.
+Directory, Profile, and an officer/Exec view), plus a no-login demo. To retarget
+a white-label / preview build, edit `window.__GS_API_BASE__` (or the
+`<meta name="gs-api-base">`) in that HTML — **`NEXT_PUBLIC_GS_API_BASE` does NOT
+reach the bundled shell** (it is read only by `lib/mobile-api-base.ts`, which
+powers the separate `/app` web route; nothing inlines it into the static HTML at
+`cap sync` time). Because the primary UI is bundled (not a webview wrapper
+pointed at the website), this clears the Apple Guideline 4.2 "minimum
+functionality / just a website" risk the old `server.url` carried. Native value
+in the bundled shell (haptics, session persistence, deep links, offline cache)
+is wired in `mobile-shell/index.html` and stays inert on the web. **Biometric
+unlock is NOT in this binary** — it lives in the separate `/app` web route
+(`lib/native-bridge.ts`) whose plugin isn't bundled, so do not advertise it as
+shipped native value here.
 Push notifications are intentionally NOT wired — the bundled shell declares no
 push capability or `aps-environment` entitlement (Apple 2.3.1: only ship
 capabilities actually used).

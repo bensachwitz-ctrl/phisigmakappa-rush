@@ -127,7 +127,26 @@ export function setBrotherCookie(
 }
 
 export function clearAdminCookie() {
+  // Clear the host-only cookie (the form normal logins set).
   cookies().delete(COOKIE_NAME);
+  // ALSO expire the Domain-scoped variant that onboard mints when COOKIE_DOMAIN
+  // is configured (setBrotherCookie with { domain }). Per RFC 6265 a cookie is
+  // keyed by (name, domain, path); a host-only delete does NOT match/clear a
+  // Domain=.apex cookie, so without this an onboard-minted admin session would
+  // survive "logout" for up to the 12h token TTL (stateless HMAC, no server-side
+  // revocation). Emitting an expired Set-Cookie with the SAME domain clears it.
+  const domain = process.env.COOKIE_DOMAIN;
+  if (domain) {
+    cookies().set(COOKIE_NAME, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      domain,
+      maxAge: 0,
+      expires: new Date(0),
+    });
+  }
 }
 
 export function isAdminAuthed() {

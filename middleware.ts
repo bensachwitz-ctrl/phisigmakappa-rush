@@ -73,8 +73,20 @@ export async function middleware(req: NextRequest) {
     // mobile family, the Origin/SameSite CSRF defense is not its security
     // boundary and a known native origin can be allowed past the same-origin
     // check. Web callers are unaffected (same-origin, no native Origin).
+    // The portal OTP password-reset routes (/api/portal/reset/request|verify|
+    // complete) are the member-facing recovery path from the native app. They
+    // are authenticated by a one-time CODE in the body (not a cookie), already
+    // ship native CORS + an apex `subdomain` body path, and carry no
+    // CSRF-sensitive cookie — so, exactly like the mobile family, the
+    // Origin/SameSite defense is not their security boundary and a known native
+    // origin can be allowed past the same-origin check. Without this, a
+    // capacitor://localhost POST to /api/portal/reset/* was 403'd before the
+    // handler ran, leaving a member who forgot their password zero in-app
+    // recovery. Web callers are unaffected (same-origin, no native Origin).
     const isNativeMobileCall =
-      (pathname.startsWith("/api/mobile/") || pathname === "/api/dues/checkout") &&
+      (pathname.startsWith("/api/mobile/") ||
+        pathname === "/api/dues/checkout" ||
+        pathname.startsWith("/api/portal/reset/")) &&
       isAllowedNativeOrigin(origin);
 
     if (!isNativeMobileCall && !isSameOriginEdge(req)) {

@@ -696,19 +696,13 @@ CREATE TABLE "AlumniVouch" (
     CONSTRAINT "AlumniVouch_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Tenant" (
-    "id" TEXT NOT NULL,
-    "subdomain" TEXT NOT NULL,
-    "domain" TEXT,
-    "name" TEXT,
-    "school" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Tenant_pkey" PRIMARY KEY ("id")
-);
+-- NOTE: the central "Tenant" registry table is intentionally NOT created here.
+-- It lives ONLY in the public schema (centralDb.tenant, prisma model Tenant with
+-- Stripe/subscription columns). This file is the PER-TENANT DDL, executed inside
+-- each schema_<sub>; a per-tenant Tenant table was dead (no code reads/writes it
+-- via a tenant-scoped client) and a stale, non-matching shell (it lacked the
+-- stripeCustomerId/subscriptionStatus/plan columns the real model carries),
+-- inviting accidental writes to the wrong schema. Removed.
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Rush_email_key" ON "Rush"("email");
@@ -920,11 +914,8 @@ CREATE INDEX "AlumniVouch_alumniId_idx" ON "AlumniVouch"("alumniId");
 -- CreateIndex
 CREATE UNIQUE INDEX "AlumniVouch_rushId_alumniId_key" ON "AlumniVouch"("rushId", "alumniId");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Tenant_subdomain_key" ON "Tenant"("subdomain");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Tenant_domain_key" ON "Tenant"("domain");
+-- (Tenant_subdomain_key / Tenant_domain_key removed with the per-tenant Tenant
+-- table above — the central registry's unique indexes live in the public schema.)
 
 -- AddForeignKey
 ALTER TABLE "RushImpression" ADD CONSTRAINT "RushImpression_rushId_fkey" FOREIGN KEY ("rushId") REFERENCES "Rush"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1223,4 +1214,37 @@ CREATE INDEX IF NOT EXISTS "SectionContent_sectionId_idx" ON "SectionContent"("s
 -- by the naive split). On a fresh schema this runs once; on a re-run it raises
 -- "already exists" which the runner ignores.
 ALTER TABLE "SectionContent" ADD CONSTRAINT "SectionContent_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "Section"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- ── Portal password reset (OTP flow) ────────────────────────────────────────
+-- One-time 6-digit code reset for the member portal (brother/alumni). Mirrors
+-- prisma model PortalPasswordReset (prisma/schema.prisma). Was MISSING from this
+-- per-tenant DDL, so every provisioned tenant lacked the table and
+-- /api/portal/reset/request silently no-op'd (the OTP was never persisted, so
+-- reset/verify never found a row and reset could never complete). We store ONLY
+-- the HMAC hash of the code, never the plaintext. IF NOT EXISTS so re-running
+-- this DDL against a schema built by an older copy is a clean no-op.
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "PortalPasswordReset" (
+    "id" TEXT NOT NULL,
+    "portalUserId" TEXT NOT NULL,
+    "codeHash" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
+    "requestIp" TEXT,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PortalPasswordReset_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "PortalPasswordReset_portalUserId_createdAt_idx" ON "PortalPasswordReset"("portalUserId", "createdAt");
+CREATE INDEX IF NOT EXISTS "PortalPasswordReset_email_role_idx" ON "PortalPasswordReset"("email", "role");
+CREATE INDEX IF NOT EXISTS "PortalPasswordReset_expiresAt_idx" ON "PortalPasswordReset"("expiresAt");
+
+-- AddForeignKey (plain ADD CONSTRAINT — re-run-safe: raises "already exists"
+-- which the provisioning runner ignores).
+ALTER TABLE "PortalPasswordReset" ADD CONSTRAINT "PortalPasswordReset_portalUserId_fkey" FOREIGN KEY ("portalUserId") REFERENCES "PortalUser"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

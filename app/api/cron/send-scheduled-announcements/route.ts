@@ -12,10 +12,12 @@ const ROUTE = "/api/cron/send-scheduled-announcements";
 // W4 — Vercel Cron entry that fires scheduled announcements whose
 // scheduledFor deadline has passed.
 //
-// Schedule: `0 */15 * * * *` in vercel.json (every 15 minutes). A 15-minute
-// resolution is more than enough for chapter-pace communications — a more
-// aggressive cadence costs Vercel cron invocations without buying meaningful
-// freshness for "Sunday meeting at 7pm" reminders.
+// Schedule: `0 13 * * *` in vercel.json — ONCE DAILY at 13:00 UTC (the Vercel
+// Hobby-plan daily-cron limit), NOT every 15 minutes. A scheduled announcement
+// therefore fires up to ~24h after its intended time. To get sub-daily
+// resolution, move to a plan/scheduler that allows it and set `0 */15 * * *`
+// (or trigger the `?secret=` endpoint from an external scheduler). Keep this
+// comment in sync with vercel.json so the freshness contract isn't overstated.
 //
 // Auth gate: `?secret=<CRON_SECRET>` query param OR
 // `Authorization: Bearer <CRON_SECRET>` header. Both work so Vercel's

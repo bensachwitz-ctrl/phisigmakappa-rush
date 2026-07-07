@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { errorSink } from "@/lib/logger";
 import { resolveDuesActor } from "@/lib/dues-actor";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
+import { isApexHost } from "@/lib/tenant-host";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -284,6 +285,27 @@ async function handlePost(req: Request): Promise<NextResponse> {
   // endpoint (called server-to-server by Stripe with NO subdomain) routes each
   // event back to THIS chapter's schema via metadata.subdomain below.
 
+  // POST-PAYMENT REDIRECT ORIGIN. Build it from the CHAPTER host, NOT the
+  // platform apex (getSiteUrl()/NEXT_PUBLIC_SITE_URL). Redirecting to the apex
+  // breaks the payer twice: (a) the success page reads the empty public schema
+  // so duesPayment.findUnique returns null and the receipt never renders, and
+  // (b) apex middleware finds no tenant session and bounces the payer to
+  // /admin/login. Web callers carry the chapter Host (use it verbatim); native
+  // callers are apex-hosted but resolved `sub`, so rebuild the subdomain origin
+  // from it. Mirrors the pattern the sibling /api/dues/connect route uses.
+  const hostHeader = headers().get("host");
+  const apexBaseDomain = (
+    process.env.APP_BASE_DOMAIN ||
+    process.env.NEXT_PUBLIC_APP_DOMAIN ||
+    "greekstack.vercel.app"
+  ).replace(/^\.+/, "");
+  const origin =
+    hostHeader && !isApexHost(hostHeader)
+      ? `https://${hostHeader}`
+      : sub
+        ? `https://${sub}.${apexBaseDomain}`
+        : siteUrl;
+
   // Base Checkout params — IDENTICAL to the legacy platform-collects flow.
   // metadata.subdomain MUST stay intact: the single platform webhook routes
   // each event back to this chapter's schema by reading it.
@@ -304,8 +326,8 @@ async function handlePost(req: Request): Promise<NextResponse> {
         quantity: 1,
       },
     ],
-    success_url: `${siteUrl}/admin/dues/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteUrl}/admin/brothers`,
+    success_url: `${origin}/admin/dues/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/admin/brothers`,
     metadata: {
       brotherId: brother.id,
       duesPaymentId: payment.id,

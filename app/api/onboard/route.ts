@@ -15,6 +15,7 @@ import { getStripe } from "@/lib/stripe";
 import { platformSubscriptionDescription } from "@/lib/platform-billing";
 import { resolveTemplateId } from "@/components/site/templates/template-orders";
 import { normalizeSubdomain, checkSubdomainFormat } from "@/lib/reserved-subdomains";
+import { applyTenantDdl } from "@/lib/tenant-ddl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -168,6 +169,16 @@ export async function POST(req: Request) {
   // schemaName is built ONLY from the sanitized subdomain ([a-z0-9-] -> _), so
   // it is safe to interpolate into raw SQL (no injection surface).
   const schemaName = `schema_${subdomain.replace(/[^a-zA-Z0-9]/g, "_")}`;
+  // The session tenant TAG the onboard cookie is signed with MUST equal what every
+  // verifier derives from the chapter Host at request time. Verifiers call
+  // getSubdomain(host) (lib/tenant-host.ts), which collapses non-alphanumerics to
+  // "_" and lowercases. normalizeSubdomain() above PRESERVES interior hyphens
+  // (e.g. "sig-ep"), so signing with that hyphen form keys the HMAC on
+  // "gs-tenant:sig-ep" while the chapter-host verifier keys it on
+  // "gs-tenant:sig_ep" — the just-minted cookie would fail verification and a
+  // hyphenated chapter's founder would be bounced to /admin/login right after
+  // signup. Bind to the SAME canonical (underscore) form as getSubdomain here.
+  const tenantTag = subdomain.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
   let tenantPrisma: PrismaClient | null = null;
   let schemaCreated = false;
   // Rollback ownership guard: this request may DROP the schema / delete the
@@ -286,37 +297,23 @@ export async function POST(req: Request) {
     if (!fs.existsSync(sqlFilePath)) {
       throw new Error("Database DDL schema file not found.");
     }
-    let sqlContent = fs.readFileSync(sqlFilePath, "utf8");
-    if (sqlContent.startsWith("﻿")) sqlContent = sqlContent.slice(1);
-    // STRIP full-line `--` comments BEFORE splitting on `;`. Doing it in this
-    // order is load-bearing: a comment line may itself contain a semicolon
-    // (e.g. "-- ...additive columns; idempotent so a re-run..."). If we split on
-    // `;` first, the text AFTER that semicolon ("idempotent so a") no longer
-    // starts with `--`, survives the per-line comment filter, and gets prepended
-    // to the next statement as raw SQL — producing a "syntax error at or near
-    // 'idempotent'" that would break EVERY signup. Removing comment lines from
-    // the source first makes the splitter robust to any `;` inside a comment.
-    const statements = sqlContent
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("--"))
-      .join("\n")
-      .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
+    const sqlContent = fs.readFileSync(sqlFilePath, "utf8");
+    // Parse + apply via the SHARED helper (lib/tenant-ddl). It strips full-line
+    // `--` comments BEFORE splitting on `;` — load-bearing, because a comment
+    // line may itself contain a semicolon (e.g. schema.sql "-- ...when rows
+    // exist; with zero rows it falls back..."). Splitting first would prepend
+    // the post-`;` fragment to the next CREATE TABLE as raw SQL and break EVERY
+    // signup. Sharing one parser with lib/provision.ts stops the two paths from
+    // drifting apart again.
     const baseUri = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || "";
     const separator = baseUri.includes("?") ? "&" : "?";
     const tenantDbUrl = `${baseUri}${separator}schema=${schemaName}&options=-c%20search_path=${schemaName}`;
     tenantPrisma = new PrismaClient({ datasources: { db: { url: tenantDbUrl } } });
 
-    for (const statement of statements) {
-      try {
-        await tenantPrisma.$executeRawUnsafe(statement);
-      } catch (err: any) {
-        if (!err?.message?.includes("already exists")) {
-          throw new Error(`Tenant DDL failed: ${err?.message || "unknown error"}`);
-        }
-      }
+    try {
+      await applyTenantDdl(tenantPrisma, sqlContent);
+    } catch (err: any) {
+      throw new Error(`Tenant DDL failed: ${err?.message || "unknown error"}`);
     }
 
     // 4. Seed tenant config + the admin account into the tenant schema.
@@ -649,7 +646,7 @@ export async function POST(req: Request) {
     // COOKIE_DOMAIN the cookie is host-only and the new admin logs in once on the
     // subdomain (still correct — middleware just bounces them to /admin/login).
     setBrotherCookie(brother.id, true, {
-      tenant: subdomain,
+      tenant: tenantTag,
       domain: process.env.COOKIE_DOMAIN || undefined,
     });
     await tenantPrisma.$disconnect();
