@@ -3127,7 +3127,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                 {/* Sliding brand active-pill behind the icons. */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute bottom-1.5 top-1.5 rounded-2xl transition-transform duration-380 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
+                  className="pointer-events-none absolute bottom-1.5 top-1.5 rounded-2xl transition-transform duration-380 ease-gs-bounce motion-reduce:transition-none"
                   style={{
                     width: "calc(20% - 0.5rem)",
                     left: "0.25rem",

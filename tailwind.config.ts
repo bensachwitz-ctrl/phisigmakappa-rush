@@ -166,16 +166,19 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      // Named tokens for the spring easing + 380ms duration used across the
-      // marketing/onboarding surfaces. Promotes the arbitrary
-      // ease-[cubic-bezier(0.16,1,0.3,1)] / duration-[380ms] classes (which
+      // Named tokens for the spring/bounce easings + 380ms/1400ms durations used
+      // across the marketing/onboarding surfaces and mobile shell. Promotes the
+      // arbitrary ease-[cubic-bezier(...)] / duration-[...ms] classes (which
       // Tailwind logs as "ambiguous … matches multiple utilities" on every
-      // build) to clean ease-gs-spring / duration-380 utilities.
+      // build) to clean ease-gs-spring / ease-gs-bounce / duration-380 /
+      // duration-1400 utilities.
       transitionTimingFunction: {
         "gs-spring": "cubic-bezier(0.16,1,0.3,1)",
+        "gs-bounce": "cubic-bezier(0.34,1.56,0.64,1)",
       },
       transitionDuration: {
         "380": "380ms",
+        "1400": "1400ms",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],

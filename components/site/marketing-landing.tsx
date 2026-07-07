@@ -1964,7 +1964,7 @@ function ProductPreview() {
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 motion-safe:transition-[width] motion-safe:duration-[1400ms] motion-safe:ease-gs-spring"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 motion-safe:transition-[width] motion-safe:duration-1400 motion-safe:ease-gs-spring"
                   style={{ width: filled ? "62%" : "0%" }}
                 />
               </div>
