@@ -10,8 +10,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // The primary CTA is driven ENTIRELY by the --primary brand token: the
+        // fill is bg-primary and the hover darkens the SAME token (bg-primary/90)
+        // so the button tracks the chapter color on every state. The old hover
+        // reached for a differently-sourced brand-dark token (Phi-Sig cardinal as
+        // its static fallback), which made the hover state drift off the base hue
+        // — part of the two-tone white-label bug. One token, one hue, any chapter.
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-phisig-red-dark active:scale-[0.98]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-[0.98]",
         // Every pressable variant gets tactile press feedback (active:scale ~0.98
         // — Emil Kowalski's scale-on-press) so taps "give" under the finger; the
         // micro-lift on outline hover matches the filled variants' language.

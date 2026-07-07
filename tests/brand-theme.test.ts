@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { safeHex, hexToHslTriple, buildBrandThemeStyle, BRAND_DEFAULTS } from "@/lib/brand-theme";
+
+const ROOT = resolve(__dirname, "..");
+const readSrc = (p: string) => readFileSync(resolve(ROOT, p), "utf8");
 
 describe("brand-theme helpers", () => {
   describe("safeHex", () => {
@@ -117,5 +122,85 @@ describe("brand-theme helpers", () => {
       expect(style).toContain(`--brand-primary:${BRAND_DEFAULTS.primary}`);
       expect(style).toContain(`--brand-primary-dark:${BRAND_DEFAULTS.primaryDark}`);
     });
+  });
+});
+
+// ── P1 #5 — the primary CTA follows the brand (no two-tone) ───────────────────
+// The theme injects --primary/--ring per chapter (asserted above). This block
+// pins the two remaining leaks that made a rebranded chapter render half-Phi-Sig:
+//   (a) the STATIC :root fallback in globals.css was cardinal red (351 76% 42%)
+//       while the injected default is platform blue — so a primary CTA flashed
+//       red before the per-chapter <style> applied. Static + injected must agree.
+//   (b) the default <Button> hover reached for phisig-red-dark instead of the
+//       --primary token, drifting the hover state off the base hue.
+// These are source-pins (the CSS/Tailwind class strings aren't executable in the
+// node suite), and they are RED→GREEN: before the fix globals.css held
+// "351 76% 42%" and button.tsx held "hover:bg-phisig-red-dark".
+describe("P1 #5 — static :root defaults agree with the injected brand default", () => {
+  const globals = readSrc("app/globals.css");
+  const platformHsl = hexToHslTriple(BRAND_DEFAULTS.primary); // "221 83% 53%"
+
+  it("the legacy cardinal-red default is gone from :root", () => {
+    expect(globals).not.toContain("351 76% 42%");
+  });
+
+  it("globals.css :root --primary fallback is the platform blue triple", () => {
+    expect(globals).toContain(`--primary: ${platformHsl};`);
+  });
+
+  it("globals.css :root --ring fallback is the platform blue triple", () => {
+    expect(globals).toContain(`--ring: ${platformHsl};`);
+  });
+
+  it("the injected default (buildBrandThemeStyle({})) --primary matches the static fallback", () => {
+    const style = buildBrandThemeStyle({});
+    expect(style).toContain(`--primary:${platformHsl};`);
+    expect(style).toContain(`--ring:${platformHsl};`);
+    // Same triple in the static globals fallback → static and injected agree.
+    expect(globals).toContain(`--primary: ${platformHsl};`);
+  });
+});
+
+describe("P1 #5 — the default Button CTA is driven by the --primary token", () => {
+  const button = readSrc("components/ui/button.tsx");
+
+  it("the default variant fills with bg-primary and hovers on the same token", () => {
+    expect(button).toContain("bg-primary text-primary-foreground");
+    expect(button).toContain("hover:bg-primary/90");
+  });
+
+  it("the default CTA no longer reaches for the phisig-red-dark token", () => {
+    expect(button).not.toContain("hover:bg-phisig-red-dark");
+  });
+});
+
+// ── P1 #6 — the header/footer Wordmark is config-driven, not hardcoded Phi Sig ─
+// The <Wordmark> in the site nav + footer reads chapter identity from config
+// (via useChapterIdentity) and renders THOSE letters/school. The bundled Phi Sig
+// shield asset is used ONLY behind the isPhiSig gate; every other chapter renders
+// its own uploaded logo or the auto-branded generic shield. These source-pins
+// lock the white-label behavior so a regression to a hardcoded ΦΣΚ / USC / Phi
+// Sig-only mark fails CI.
+describe("P1 #6 — Wordmark renders config letters/school, not the reference chapter", () => {
+  const wordmark = readSrc("components/brand/wordmark.tsx");
+
+  it("reads the chapter's letters + school from config context", () => {
+    expect(wordmark).toContain("useChapterIdentity");
+    expect(wordmark).toMatch(/fraternityLetters/);
+    expect(wordmark).toMatch(/greekLettersGlyphs/);
+    expect(wordmark).toMatch(/schoolName/);
+    expect(wordmark).toMatch(/schoolShort/);
+  });
+
+  it("does not hardcode the reference chapter's ΦΣΚ letters or USC school", () => {
+    expect(wordmark).not.toMatch(/ΦΣΚ/);
+    expect(wordmark).not.toMatch(/\bUSC\b/);
+  });
+
+  it("uses the Phi Sig shield asset only behind the isPhiSig gate, with a generic + logo fallback", () => {
+    expect(wordmark).toContain("isPhiSig");
+    // Non-Phi-Sig chapters get their own logo or the auto-branded generic shield.
+    expect(wordmark).toContain("logoUrl");
+    expect(wordmark).toContain("renderGenericShield");
   });
 });

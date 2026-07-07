@@ -110,12 +110,24 @@ const config: Config = {
         // structural extremes (deep navy ink at 900–950, pale blue tints at
         // 50–200) stay fixed so contrast/AA is stable regardless of school hue.
         //
-        // `maroon-*` → ROYAL-BLUE / NAVY ramp (50 pale → 950 deep navy ink).
+        // `maroon-*` → structural NEUTRAL ramp with a live brand accent band.
+        // R49 rebound the mid shades (400–700) to --brand-primary* so the portal
+        // accents follow the chapter color — but the EXTREMES stayed a fixed
+        // COOL-BLUE (50–300) + NAVY (750–950). On a non-blue chapter that reads
+        // as "brand accents on the wrong-hue tints + navy ink" — the half-Phi-Sig
+        // / two-tone bug on the authed surface. Fix: the STRUCTURAL tints + ink
+        // are now HUE-NEUTRAL — low-saturation color-mix that pulls a whisper of
+        // the LIVE --brand-primary into an otherwise neutral gray, so the tint
+        // subtly harmonizes with ANY school hue instead of committing to blue.
+        // The accent band (400–700) stays inside the live brand colors; contrast
+        // is stable because the tints are near-white and the ink is near-black
+        // regardless of hue. Each color-mix carries a neutral-gray static
+        // fallback for the --brand-primary var and for no-color-mix engines.
         maroon: {
-          50: '#eff5ff',   // pale blue wash (was near-white pink) — card/section tints
-          100: '#dbe7fe',  // hairline borders / dividers
-          200: '#bcd2fb',  // soft borders / chips
-          300: '#93b4f8',
+          50: 'color-mix(in srgb, var(--brand-primary, #2563eb) 5%, #f7f7f8)',   // near-white wash — card/section tints
+          100: 'color-mix(in srgb, var(--brand-primary, #2563eb) 8%, #ededf0)',  // hairline borders / dividers
+          200: 'color-mix(in srgb, var(--brand-primary, #2563eb) 12%, #e1e1e6)', // soft borders / chips
+          300: 'color-mix(in srgb, var(--brand-primary, #2563eb) 18%, #cbcbd3)', // stronger borders
           // 400 → brand-DARK ramp (AA fix): the old fixed #5e8af0 is only ~3.30:1
           // on white and was used as informational text in ~20 portal spots, which
           // fails WCAG AA (4.5:1). Bind it to --brand-primary-dark (the AA-floored
@@ -127,18 +139,26 @@ const config: Config = {
           600: 'var(--brand-primary, #2563eb)',
           650: 'var(--brand-primary-dark, #1d4ed8)',
           700: 'var(--brand-primary-dark, #1d4ed8)',
-          750: '#1a3da8',
-          800: '#17357f',  // deep navy gradient stop
-          850: '#122a63',
-          900: '#0f2350',  // primary body text — deep navy (≈11:1 on white)
-          950: '#0a1838',  // darkest ink / on-gold text
+          // 750–950 → NEAR-NEUTRAL INK. Deep, near-black grays with only a faint
+          // brand cast (color-mix) so body copy + dark gradient stops read on
+          // white at AA on any chapter instead of committing to a fixed navy.
+          750: 'color-mix(in srgb, var(--brand-primary, #2563eb) 22%, #2c2c31)',
+          800: 'color-mix(in srgb, var(--brand-primary, #2563eb) 18%, #242429)', // deep gradient stop
+          850: 'color-mix(in srgb, var(--brand-primary, #2563eb) 14%, #1c1c21)',
+          900: 'color-mix(in srgb, var(--brand-primary, #2563eb) 10%, #17171b)', // primary body text — near-neutral ink (~16:1 on white)
+          950: 'color-mix(in srgb, var(--brand-primary, #2563eb) 7%, #0e0e11)',  // darkest ink / on-accent text
         },
-        // `cream-*` → warm GOLD / PARCHMENT ramp (light surfaces + on-navy text).
+        // `cream-*` → warm ACCENT ramp for the ALUMNI surfaces. Rebound from a
+        // FIXED parchment to the live --brand-secondary (platform gold #f59e0b by
+        // default) via low-saturation color-mix into near-white paper, so the
+        // alumni accent follows the chapter's secondary color instead of always
+        // reading warm-gold on a navy chapter. Static gold fallbacks keep the
+        // platform look pixel-close when no secondary override is set.
         cream: {
-          50: '#fffdf6',   // warmest paper — page/card backgrounds on the portal
-          100: '#fdf6e3',  // soft gold-tinted surface
-          200: '#f8e7bf',  // gold border / band
-          300: '#f0d089',  // gold accent edge
+          50: 'color-mix(in srgb, var(--brand-secondary, #f59e0b) 5%, #fffdf6)',   // warmest paper — page/card backgrounds
+          100: 'color-mix(in srgb, var(--brand-secondary, #f59e0b) 11%, #fdf8ec)', // soft accent surface
+          200: 'color-mix(in srgb, var(--brand-secondary, #f59e0b) 22%, #f6ead0)', // accent border / band
+          300: 'color-mix(in srgb, var(--brand-secondary, #f59e0b) 38%, #eeda9f)', // accent edge
         },
       },
       borderRadius: {

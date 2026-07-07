@@ -20,7 +20,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 8%;
 
-    --primary: 351 76% 42%;
+    /* Static :root fallback for the shadcn --primary token. This MUST equal the
+       platform default the injected theme resolves to for an unbranded chapter —
+       buildBrandThemeStyle({}) emits --primary from BRAND_DEFAULTS.primary
+       (#2563eb → the platform-blue HSL triple). The old cardinal-red default here
+       disagreed with that injected blue default, so before the per-chapter <style> applied
+       (SSR first paint / any surface the override doesn't reach) every primary
+       CTA flashed Phi-Sig red on a blue site → the two-tone bug. Keeping this in
+       lock-step with the injected default means static and injected agree. */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 5% 96%;
@@ -42,7 +50,11 @@
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 351 76% 42%;
+    /* --ring tracks --primary (both are re-emitted per-chapter by
+       buildBrandThemeStyle). Its static fallback must match the injected default
+       (platform blue) too, so the focus ring never defaults to cardinal red on a
+       blue site before the override applies. */
+    --ring: 221 83% 53%;
 
     /* ── Greekstack PLATFORM brand — "Royal Blue & Sky + Gold" ───────────────
        Used by the apex marketing site, signup wizard, and platform console —
