@@ -218,6 +218,38 @@ export async function getEntitlement(subdomain: string): Promise<Entitlement> {
 }
 
 /**
+ * SERVER-SIDE WRITE-LOCKOUT PREDICATE — the single source of truth for "is this
+ * chapter's PLATFORM subscription in a state that must BLOCK write access?".
+ *
+ * getEntitlement() is deliberately fail-OPEN for the banner (see the contract at
+ * the top of this file): its `entitled` flag only flips false on the hard
+ * deadline-elapsed branch. This predicate is the STRICTER, write-blocking read
+ * shared by the admin layout (UI lock) AND the server guards (API 402) so the two
+ * can never drift:
+ *   • deadline elapsed (entitled === false)     → LOCKED
+ *   • subscription canceled                      → LOCKED
+ *   • subscription unpaid                        → LOCKED
+ *   • trial lapsed with no active subscription   → LOCKED (reason "trial_expired")
+ * Everything else stays UNLOCKED — trialing, active, past_due (dunning grace),
+ * and every uncertain state (unknown / lookup_error / no_tenant_row). We never
+ * dark-screen on uncertainty.
+ *
+ * NOTE this does NOT treat the operator `isActive=true` override as an
+ * unconditional pass: getEntitlement still reports the REAL billing `reason`
+ * (canceled / trial_expired) for an isActive-comped chapter, so a comped chapter
+ * whose Stripe subscription is canceled is correctly locked out of writes.
+ */
+export function isBillingLockedOut(e: Entitlement): boolean {
+  if (!e.entitled) return true;
+  return (
+    e.status === "canceled" ||
+    e.status === "unpaid" ||
+    e.reason === "canceled" ||
+    e.reason === "trial_expired"
+  );
+}
+
+/**
  * Pick the most informative banner `reason` for a billing state that is NOT a
  * clean trialing/active. Always advisory — entitlement itself stays true.
  */

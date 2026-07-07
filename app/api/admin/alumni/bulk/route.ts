@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin, getCurrentBrother } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { normaliseAlumniInput } from "@/lib/alumni";
 import { audit } from "@/lib/audit";
 
@@ -42,6 +43,8 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 }); }

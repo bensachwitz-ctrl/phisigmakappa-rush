@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isSameOrigin, getCurrentBrother } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -32,6 +33,8 @@ export async function POST(
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Origin not allowed" }, { status: 403 });
   }
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
   let body: unknown;
   try { body = await req.json(); } catch {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 });

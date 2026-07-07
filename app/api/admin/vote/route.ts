@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrotherId, isAdminAuthed } from "@/lib/auth";
 import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -25,6 +26,10 @@ const DeleteSchema = z.object({
 export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  {
+    const billingLocked = await guardBillingWrite();
+    if (billingLocked) return billingLocked;
   }
   const brotherId = getCurrentBrotherId();
   if (!brotherId) {
@@ -108,6 +113,10 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  {
+    const billingLocked = await guardBillingWrite();
+    if (billingLocked) return billingLocked;
   }
   const brotherId = getCurrentBrotherId();
   if (!brotherId) return NextResponse.json({ ok: false }, { status: 401 });

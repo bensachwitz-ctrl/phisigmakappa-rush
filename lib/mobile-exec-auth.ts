@@ -20,6 +20,7 @@
 import { centralDb, getTenantClient } from "@/lib/prisma";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { computeMemberCapabilities } from "@/lib/member-capabilities";
+import { checkBillingLock } from "@/lib/billing-guard";
 import type { PrismaClient } from "@prisma/client";
 
 /** A failed gate: the route should return this status + message verbatim. */
@@ -118,6 +119,20 @@ export async function authorizeMobileExec(
     // Uniform 403 — never leak WHY (no "you're not an officer" enumeration of
     // the position gate). A non-officer simply cannot use exec tools.
     return { ok: false, status: 403, error: "Officer access required." };
+  }
+
+  // BILLING WRITE GUARD (P1) — the exec routes are officer WRITES (roster / reset
+  // / announce). A Bearer caller carries no browser billing cookie, so the
+  // middleware lockout can't touch it; enforce the SAME server-side entitlement
+  // check the web admin guards use. A locked-out chapter (canceled / unpaid /
+  // trial-expired) is refused with 402. Fails OPEN on any lookup error.
+  const { locked } = await checkBillingLock(subdomain);
+  if (locked) {
+    return {
+      ok: false,
+      status: 402,
+      error: "Billing Lockout: your chapter's subscription needs attention. Visit /admin/billing.",
+    };
   }
 
   return {

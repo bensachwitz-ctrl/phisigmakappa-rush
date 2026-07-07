@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin, getCurrentBrother } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { audit } from "@/lib/audit";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
@@ -126,6 +127,8 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 }); }

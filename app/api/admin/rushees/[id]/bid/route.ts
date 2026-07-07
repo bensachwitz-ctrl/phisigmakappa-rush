@@ -13,6 +13,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { getResendConfig, getTwilioConfig } from "@/lib/messaging-config";
@@ -143,6 +144,8 @@ export async function POST(
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Origin not allowed" }, { status: 403 });
   }
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
   const body = await req.json().catch(() => ({}));
   const parsed = Schema.safeParse(body || {});
   const regenerate = parsed.success ? !!parsed.data.regenerate : false;

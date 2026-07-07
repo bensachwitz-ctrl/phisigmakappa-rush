@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrotherId, getCurrentSession } from "@/lib/auth";
 import { hasPermission, getCurrentOfficerPermissions, guardOfficerOrAdmin } from "@/lib/permissions";
+import { checkBillingLock } from "@/lib/billing-guard";
 import { DOCUMENT_VISIBILITIES } from "@/lib/member-lifecycle";
 
 export const runtime = "nodejs";
@@ -31,10 +32,17 @@ const Schema = z.object({
 async function ensureWrite() {
   const session = await getCurrentSession();
   if (!session) return { ok: false, status: 401, error: "Sign in first" } as const;
-  if (session.isAdmin) return { ok: true } as const;
-  const perms = await getCurrentOfficerPermissions();
-  if (!hasPermission(perms, "documents", "write")) {
-    return { ok: false, status: 403, error: "You need the Documents permission to do that." } as const;
+  if (!session.isAdmin) {
+    const perms = await getCurrentOfficerPermissions();
+    if (!hasPermission(perms, "documents", "write")) {
+      return { ok: false, status: 403, error: "You need the Documents permission to do that." } as const;
+    }
+  }
+  // BILLING WRITE GUARD (P1): a locked-out chapter may READ documents but not
+  // upload/edit/delete them. Server-side entitlement re-check, not the cookie.
+  const { locked } = await checkBillingLock();
+  if (locked) {
+    return { ok: false, status: 402, error: "Billing Lockout: activate your subscription at /admin/billing." } as const;
   }
   return { ok: true } as const;
 }

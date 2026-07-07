@@ -15,6 +15,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
 import { isAdminAuthed } from "@/lib/auth";
+import { assertBillingActive, guardBillingWrite } from "@/lib/billing-guard";
 import {
   DomainKey,
   OfficerPermissions,
@@ -78,6 +79,17 @@ export async function requireOfficerPermission(
     err.domain = domain;
     err.action = action;
     throw err;
+  }
+  // BILLING WRITE GUARD (P1): a chapter whose PLATFORM subscription is locked out
+  // (canceled / unpaid / trial-expired / deadline-elapsed) may READ its admin
+  // surface but must NOT be able to WRITE. Enforced server-side here — atop the
+  // deletable middleware `phisig_billing_locked` cookie — so a cookie-stripped,
+  // curl, or Bearer mutation is refused with 402. Permission is checked FIRST
+  // above so a non-officer still gets 403 (we never leak billing state to someone
+  // who isn't even allowed to act). Only "write" actions are gated; reads are
+  // never blocked. assertBillingActive fails OPEN on any lookup error.
+  if (action === "write") {
+    await assertBillingActive();
   }
   return perms;
 }
@@ -193,6 +205,8 @@ type RouteHandler = (req: Request) => Promise<Response> | Response;
  * before the handler. Mirrors the app/admin/layout.tsx boundary for JSON routes
  * that expose chapter-wide PII / internal info but have no finer per-domain gate.
  */
+const STATE_CHANGING_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
+
 export function withAdminArea(handler: RouteHandler): RouteHandler {
   return async (req: Request) => {
     if (!isAdminAuthed()) {
@@ -200,6 +214,12 @@ export function withAdminArea(handler: RouteHandler): RouteHandler {
     }
     const denied = await guardOfficerOrAdmin();
     if (denied) return denied;
+    // Billing WRITE guard (P1) — the coarse-floor wrapper also covers mutations,
+    // so gate state-changing methods on the same server-side entitlement check.
+    if (STATE_CHANGING_METHODS.has(req.method)) {
+      const locked = await guardBillingWrite();
+      if (locked) return locked;
+    }
     return handler(req);
   };
 }

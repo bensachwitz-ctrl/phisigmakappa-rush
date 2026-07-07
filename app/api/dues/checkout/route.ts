@@ -113,12 +113,17 @@ async function handlePost(req: Request): Promise<NextResponse> {
 
   const enabled = cfg["dues.enabled"] === "true";
   const publishableKey = cfg["dues.stripePublishableKey"] || "";
-  // The webhook secret can be the SINGLE platform-global STRIPE_WEBHOOK_SECRET
-  // (the current model — one endpoint, routed by metadata.subdomain) OR a legacy
-  // per-chapter dues.stripeWebhookSecret. Either one satisfies the prereq; the
-  // webhook resolves them in the same order. (Without this, a chapter relying on
-  // the global secret could never enable online dues — it 503'd forever.)
-  const webhookConfigured = !!(process.env.STRIPE_WEBHOOK_SECRET || cfg["dues.stripeWebhookSecret"]);
+  // The webhook signing secret MUST be the platform-GLOBAL STRIPE_WEBHOOK_SECRET.
+  // Stripe delivers every chapter's events to the single platform webhook endpoint
+  // server-to-server with NO chapter subdomain on the Host, so app/api/dues/webhook
+  // verifies signatures with process.env.STRIPE_WEBHOOK_SECRET ONLY — the legacy
+  // per-chapter `dues.stripeWebhookSecret` was removed there (read through the Host
+  // proxy it resolved to the empty public schema and could never verify). We gate
+  // checkout on the SAME secret: accepting a per-chapter-only secret here would let
+  // a chapter charge cards while EVERY checkout.session.completed 503'd at the
+  // webhook, so DuesPayment would never flip PAID — real money charged, never
+  // reconciled. Requiring the global secret keeps the charge/reconcile contract honest.
+  const webhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET;
 
   const stripe = getStripe();
 

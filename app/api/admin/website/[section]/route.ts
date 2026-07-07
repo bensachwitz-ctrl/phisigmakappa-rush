@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { audit } from "@/lib/audit";
 import { ensureSectionTables, getSectionRecords } from "@/lib/section-builder";
 import { isKnownSectionKey, KNOWN_SECTION_KEYS } from "@/components/site/templates/template-orders";
@@ -82,6 +83,8 @@ export async function PATCH(
 ) {
   const denied = gate(req);
   if (denied) return denied;
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   const sectionKey = params.section;
   if (!isKnownSectionKey(sectionKey)) {

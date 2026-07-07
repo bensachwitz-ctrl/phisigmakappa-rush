@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { errorSink } from "@/lib/logger";
 import { seedSampleData, clearSampleData } from "@/lib/sample-data";
 
@@ -44,6 +45,8 @@ export async function POST(req: Request) {
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Bad origin" }, { status: 403 });
   }
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   // ── Validate body ────────────────────────────────────────────────────────
   let body: unknown;

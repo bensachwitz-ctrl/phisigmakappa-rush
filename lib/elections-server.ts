@@ -16,6 +16,7 @@
 import { isSameOrigin } from "@/lib/auth";
 import { getCurrentSession, getCurrentBrother } from "@/lib/auth";
 import { getCurrentOfficerPermissions, hasPermission } from "@/lib/permissions";
+import { checkBillingLock } from "@/lib/billing-guard";
 import type { AuditActor } from "@/lib/notify";
 
 export type ElectionGuard =
@@ -46,15 +47,30 @@ export async function guardElectionRequest(
   if (!session) {
     return { ok: false, status: 401, error: "Sign in first" };
   }
-  if (session.isAdmin) return { ok: true };
+  if (!session.isAdmin) {
+    const perms = await getCurrentOfficerPermissions();
+    if (!hasPermission(perms, "elections", action)) {
+      return {
+        ok: false,
+        status: 403,
+        error: "You need the Elections permission to do that.",
+      };
+    }
+  }
 
-  const perms = await getCurrentOfficerPermissions();
-  if (!hasPermission(perms, "elections", action)) {
-    return {
-      ok: false,
-      status: 403,
-      error: "You need the Elections permission to do that.",
-    };
+  // BILLING WRITE GUARD (P1) — a chapter whose PLATFORM subscription is locked
+  // out (canceled/unpaid/trial-expired) may READ elections but not MUTATE them.
+  // Server-side entitlement re-check (not the deletable middleware cookie), so a
+  // cookie-stripped/curl election mutation is refused with 402. Reads pass.
+  if (action === "write") {
+    const { locked } = await checkBillingLock();
+    if (locked) {
+      return {
+        ok: false,
+        status: 402,
+        error: "Billing Lockout: activate your subscription at /admin/billing.",
+      };
+    }
   }
   return { ok: true };
 }

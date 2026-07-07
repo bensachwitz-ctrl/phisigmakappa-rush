@@ -6,7 +6,7 @@ import { BillingBanner } from "@/components/admin/billing-banner";
 import { getCurrentSession } from "@/lib/auth";
 import { getOfficerPermissionsForBrother } from "@/lib/permissions";
 import { getSubdomain } from "@/lib/prisma";
-import { getEntitlement } from "@/lib/entitlement";
+import { getEntitlement, isBillingLockedOut } from "@/lib/entitlement";
 import { getStripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
@@ -110,11 +110,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       />
     );
 
-    const isLockedOut =
-      entitlement.status === "canceled" ||
-      entitlement.status === "unpaid" ||
-      entitlement.reason === "canceled" ||
-      entitlement.reason === "trial_expired";
+    // Single source of truth (shared with the server-side write guards in
+    // lib/billing-guard.ts) so the UI lock and the API 402 can never drift. The
+    // cookie below is now only a UX hint for the middleware fast-path — the real
+    // enforcement is the server-side entitlement re-check on every mutation.
+    const isLockedOut = isBillingLockedOut(entitlement);
 
     if (isLockedOut) {
       cookieScript = (

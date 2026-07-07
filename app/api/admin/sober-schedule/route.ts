@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { guardBillingWrite } from "@/lib/billing-guard";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -74,6 +75,9 @@ export async function POST(req: Request) {
   if (!isAdminRole()) {
     return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
+  // Billing WRITE guard (P1): a locked-out chapter may not edit the sober schedule.
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   try {
     const body = await req.json();
@@ -137,6 +141,9 @@ export async function DELETE(req: Request) {
   if (!isAdminRole()) {
     return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
   }
+  // Billing WRITE guard (P1): a locked-out chapter may not edit the sober schedule.
+  const billingLocked = await guardBillingWrite();
+  if (billingLocked) return billingLocked;
 
   try {
     const url = new URL(req.url);
