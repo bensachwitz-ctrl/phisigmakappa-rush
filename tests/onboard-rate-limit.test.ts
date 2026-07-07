@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   attemptCreate: vi.fn(async (): Promise<any> => ({ id: "att_1" })),
   tenantFindUnique: vi.fn(async (): Promise<any> => null),
   tenantCreate: vi.fn(async (): Promise<any> => ({ id: "tenant-1" })),
+  tenantUpdate: vi.fn(async (): Promise<any> => ({ id: "tenant-1" })),
+  tenantDelete: vi.fn(async (): Promise<any> => ({ id: "tenant-1" })),
   executeRawUnsafe: vi.fn(async (): Promise<any> => true),
   brotherCreate: vi.fn(async (): Promise<any> => ({ id: "brother-1" })),
   portalUserCreate: vi.fn(async (): Promise<any> => ({ id: "portal-1" })),
@@ -27,7 +29,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({
   centralDb: {
     onboardAttempt: { count: mocks.attemptCount, create: mocks.attemptCreate },
-    tenant: { findUnique: mocks.tenantFindUnique, create: mocks.tenantCreate },
+    tenant: { findUnique: mocks.tenantFindUnique, create: mocks.tenantCreate, update: mocks.tenantUpdate, delete: mocks.tenantDelete },
     $executeRawUnsafe: mocks.executeRawUnsafe,
   },
   prisma: {},

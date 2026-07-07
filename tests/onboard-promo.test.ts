@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => {
   return {
     mockTenantFindUnique: vi.fn(),
     mockTenantCreate: vi.fn(),
+    mockTenantUpdate: vi.fn(),
+    mockTenantDelete: vi.fn(),
     mockExecuteRawUnsafe: vi.fn(),
     mockSendEmail: vi.fn(),
     mockSendSalesEmail: vi.fn(),
@@ -21,6 +23,8 @@ vi.mock("@/lib/prisma", () => {
       tenant: {
         findUnique: mocks.mockTenantFindUnique,
         create: mocks.mockTenantCreate,
+        update: mocks.mockTenantUpdate,
+        delete: mocks.mockTenantDelete,
       },
       $executeRawUnsafe: mocks.mockExecuteRawUnsafe,
     },
@@ -88,6 +92,7 @@ describe("POST /api/onboard — Onboarding Promo Code Integration", () => {
     mocks.mockTenantFindUnique.mockResolvedValue(null); // Subdomain is free
     mocks.mockExecuteRawUnsafe.mockResolvedValue(true);
     mocks.mockTenantCreate.mockResolvedValue({ id: "tenant-123" });
+    mocks.mockTenantUpdate.mockResolvedValue({ id: "tenant-123" });
     mocks.mockBrotherCreate.mockResolvedValue({ id: "brother-123" });
     mocks.mockPortalUserCreate.mockResolvedValue({ id: "portal-123" });
     mocks.mockSendEmail.mockResolvedValue({ ok: true });

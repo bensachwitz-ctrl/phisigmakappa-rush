@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => {
   return {
     mockTenantFindUnique: vi.fn(),
     mockTenantCreate: vi.fn(),
+    mockTenantUpdate: vi.fn(),
+    mockTenantDelete: vi.fn(),
     mockExecuteRawUnsafe: vi.fn(),
     mockSendEmail: vi.fn(),
     mockSendSalesEmail: vi.fn(),
@@ -27,6 +29,8 @@ vi.mock("@/lib/prisma", () => {
       tenant: {
         findUnique: mocks.mockTenantFindUnique,
         create: mocks.mockTenantCreate,
+        update: mocks.mockTenantUpdate,
+        delete: mocks.mockTenantDelete,
       },
       $executeRawUnsafe: mocks.mockExecuteRawUnsafe,
     },
@@ -180,15 +184,24 @@ describe("POST /api/onboard — Stripe Onboarding Payment Integration", () => {
     // Verify subscriptions were created (both monthly main plan + rush cycle)
     expect(mocks.mockStripeSubscriptionsCreate).toHaveBeenCalledTimes(2);
 
-    // Verify centralDb tenant registry was created with correct Stripe fields
-    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+    // Verify the reserved central registry row was FINALIZED (update) with the
+    // Stripe fields. The subdomain is reserved via tenant.create up front (before
+    // any DDL/seed); the Stripe ids + refined status land via tenant.update.
+    expect(mocks.mockTenantUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { subdomain: "epsilonomega" },
         data: expect.objectContaining({
           stripeCustomerId: "cust_123",
           stripeSubscriptionId: "sub_123",
           subscriptionStatus: "trialing",
           plan: "monthly",
         }),
+      })
+    );
+    // And the up-front reservation create ran exactly once, before provisioning.
+    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ subdomain: "epsilonomega", plan: "monthly" }),
       })
     );
   });

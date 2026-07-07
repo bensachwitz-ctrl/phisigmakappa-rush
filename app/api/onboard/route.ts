@@ -170,6 +170,14 @@ export async function POST(req: Request) {
   const schemaName = `schema_${subdomain.replace(/[^a-zA-Z0-9]/g, "_")}`;
   let tenantPrisma: PrismaClient | null = null;
   let schemaCreated = false;
+  // Rollback ownership guard: this request may DROP the schema / delete the
+  // registry row ONLY if it actually reserved them. Set true immediately after
+  // the atomic reservation create succeeds. A concurrent double-submit that
+  // LOSES the reservation race never sets this, so it can never drop the
+  // winner's live schema (the P0 #2 cross-tenant data-loss vector).
+  let iOwnRegistryRow = false;
+  // Whether we hold the per-subdomain advisory lock (released in `finally`).
+  let advisoryLocked = false;
   // Hoisted so the outer catch can roll back any LIVE Stripe objects created
   // BEFORE the central registry row write — otherwise a failure between the
   // subscription create and the tenant.create leaves an orphaned, billing
@@ -187,10 +195,84 @@ export async function POST(req: Request) {
     //    did. Still idempotent, so a cold instance self-heals on first signup.
     await ensureTenantRegistry();
 
-    // 1. Reserve the subdomain via the central registry (uniqueness).
+    // Serialize concurrent provisioning of the SAME subdomain with a Postgres
+    // advisory lock keyed on the normalized subdomain. A double-submit otherwise
+    // interleaves two CREATE SCHEMA + seed passes into one schema. Best-effort:
+    // on a pooled connection the session lock may not pin across statements, so
+    // the ATOMIC reservation create below (unique constraint) is the hard
+    // guarantee; the lock just narrows the interleave window. Never fatal —
+    // released in the outer `finally`.
+    try {
+      await centralDb.$executeRawUnsafe(
+        `SELECT pg_advisory_lock(hashtext($1))`,
+        `onboard:${subdomain}`,
+      );
+      advisoryLocked = true;
+    } catch {
+      // Proceed unlocked — the unique reservation still prevents a double-provision.
+    }
+
+    // 1a. Fast-fail on an already-provisioned subdomain (friendly error before
+    //     doing any work). NOT the security boundary — the reservation create
+    //     below is, because it closes the findUnique→create race atomically.
     const existingTenant = await centralDb.tenant.findUnique({ where: { subdomain } });
     if (existingTenant) {
       return NextResponse.json({ ok: false, error: "Subdomain is already taken" }, { status: 400 });
+    }
+
+    // Pricing method + resulting subscription status — computed HERE (moved up
+    // from the seed step below) because the atomic reservation row needs them.
+    // See the fuller rationale on the seed-side `updates` block.
+    //   monthly/semester → Base, trialing;  dues_percentage/custom/yearly → active.
+    const ALLOWED_PLANS = new Set(["monthly", "yearly", "semester", "dues_percentage", "custom"]);
+    const normalizedPlan =
+      typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
+        ? rawPlan.trim()
+        : "monthly";
+    const subscriptionStatus =
+      normalizedPlan === "dues_percentage" ||
+      normalizedPlan === "custom" ||
+      normalizedPlan === "yearly"
+        ? "active"
+        : "trialing";
+    // Reservation trial end mirrors the final rule (custom has no trial). The
+    // final, Stripe-refined value is written by the tenant.update at the end.
+    const reservationTrialEndsAt =
+      normalizedPlan === "custom"
+        ? null
+        : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+    // 1b. RESERVE the subdomain ATOMICALLY, BEFORE any DDL or seed. The unique
+    //     constraint on public."Tenant".subdomain is the race arbiter: of two
+    //     concurrent double-submits, exactly one create succeeds; the other
+    //     throws P2002 and returns "taken" WITHOUT ever creating a schema — so it
+    //     can never DROP the winner's schema. Only after this succeeds do we own
+    //     the registry row (and, next, the schema), gating the rollback below.
+    //     Stripe ids + the final status/trial are filled in via tenant.update
+    //     once provisioning + billing complete.
+    try {
+      await centralDb.tenant.create({
+        data: {
+          subdomain,
+          name: fraternityName.trim(),
+          school: (schoolName || "").trim(),
+          isActive: true,
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
+          subscriptionStatus,
+          trialEndsAt: reservationTrialEndsAt,
+          plan: normalizedPlan,
+        },
+      });
+      iOwnRegistryRow = true;
+    } catch (reserveErr: any) {
+      // Lost the reservation race (or a duplicate submit) — the subdomain is
+      // taken. We created NO schema, so there is nothing to roll back and, by
+      // design, we never touch the winner's schema/row.
+      if (reserveErr?.code === "P2002") {
+        return NextResponse.json({ ok: false, error: "Subdomain is already taken" }, { status: 400 });
+      }
+      throw reserveErr;
     }
 
     // 2. Create the tenant's Postgres schema.
@@ -249,42 +331,15 @@ export async function POST(req: Request) {
         ? orgType.trim()
         : "fraternity";
 
-    // Pricing METHOD chosen in the wizard, validated against the known plan set so
-    // a forged/unknown body value can't poison the registry. Persisted to the
-    // central Tenant.plan column (distinct from the SiteConfig "billing.plan"
-    // display key below). Defaults to "monthly" (the first-month-free Base offer)
-    // — the same default the wizard ships with.
-    //   monthly | semester  → Base plan, billed to Greekstack → status "trialing"
-    //                         (the free-trial window the soft-gate already honors)
-    //   dues_percentage     → Dues-share, $0 upfront → status "active": these
-    //                         chapters pay via a % of dues, so entitlement must
-    //                         treat them as a paying customer (good standing), not
-    //                         a trial that can lapse into the dunning banner.
-    //   custom              → Custom build (a "talk to us" path in the wizard).
-    //                         Rarely lands here since the wizard's Custom card
-    //                         links out to /contact#custom, but it's an allowed
-    //                         value so the chosen plan always round-trips cleanly.
-    //                         Treated as "active" (a negotiated, paying
-    //                         arrangement — never a trial that can lapse).
-    //   yearly              → Annual plan ($800/year, includes all rush fees).
-    //                         A committed, paying arrangement → status "active"
-    //                         (never a trial that can lapse into the dunning
-    //                         banner). The first-month-free language is a monthly-
-    //                         only offer, so yearly leads with the annual price.
-    // ("semester"/"dues_percentage" stay in the allowlist ONLY for back-compat /
-    // round-trip safety with already-provisioned tenants; the wizard no longer
-    // offers either — the live model is monthly | yearly | custom.)
-    const ALLOWED_PLANS = new Set(["monthly", "yearly", "semester", "dues_percentage", "custom"]);
-    const normalizedPlan =
-      typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
-        ? rawPlan.trim()
-        : "monthly";
-    const subscriptionStatus =
-      normalizedPlan === "dues_percentage" ||
-      normalizedPlan === "custom" ||
-      normalizedPlan === "yearly"
-        ? "active"
-        : "trialing";
+    // NOTE: `normalizedPlan` + `subscriptionStatus` are computed EARLIER now
+    // (right after the subdomain reservation) because the atomic reservation row
+    // needs them. The plan allowlist rationale:
+    //   monthly | semester  → Base plan, billed to Greekstack → "trialing".
+    //   dues_percentage     → Dues-share, $0 upfront → "active" (paying customer).
+    //   custom              → Custom build (talk-to-sales) → "active", no trial.
+    //   yearly              → Annual ($800/yr, incl. rush) → "active", no trial.
+    // ("semester"/"dues_percentage" stay in the allowlist only for back-compat
+    // round-trip safety; the live wizard offers monthly | yearly | custom.)
 
     // 2-WEEK PAYMENT DEADLINE. The chapter goes live immediately with no card;
     // they must set up payment within 14 days of launch or the site is taken down
@@ -569,10 +624,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Write the central registry row
-    await centralDb.tenant.create({
+    // Finalize the reserved central registry row with the Stripe results + the
+    // Stripe-refined status/trial. The row already exists (atomic reservation
+    // above), so this is an UPDATE — the reservation create was the race arbiter
+    // and must stay first, before any DDL/seed.
+    await centralDb.tenant.update({
+      where: { subdomain },
       data: {
-        subdomain,
         name: fraternityName.trim(),
         school: (schoolName || "").trim(),
         isActive: true,
@@ -786,14 +844,25 @@ export async function POST(req: Request) {
       outcome: "provisioning_failed",
     });
     // Roll back the half-created schema so the subdomain can be retried cleanly.
-    // The registry row is written last, so on failure it never exists yet.
     try {
       if (tenantPrisma) await tenantPrisma.$disconnect();
     } catch {}
-    if (schemaCreated) {
+    // ONLY drop the schema if THIS request created it — which is true exactly
+    // when it reserved the registry row (iOwnRegistryRow). A concurrent double-
+    // submit that LOST the reservation race never set iOwnRegistryRow, so it can
+    // never DROP the winner's live schema (the P0 #2 cross-tenant data-loss
+    // vector). Then delete the reservation row we own so the subdomain frees up.
+    if (schemaCreated && iOwnRegistryRow) {
       await centralDb
         .$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`)
         .catch(() => {});
+    }
+    if (iOwnRegistryRow) {
+      try {
+        await centralDb.tenant.delete({ where: { subdomain } });
+      } catch {
+        // Best-effort — never mask the original provisioning error below.
+      }
     }
     // Roll back any LIVE Stripe objects created before the failure. The central
     // tenant.create is the LAST write, so if we land here with a subscription or
@@ -845,6 +914,14 @@ export async function POST(req: Request) {
       { ok: false, error: "Something went wrong. Please try again." },
       { status: 500 },
     );
+  } finally {
+    // Release the per-subdomain advisory lock. Best-effort (a pooled session may
+    // no-op); never throws so it can't mask the response above.
+    if (advisoryLocked) {
+      await centralDb
+        .$executeRawUnsafe(`SELECT pg_advisory_unlock(hashtext($1))`, `onboard:${subdomain}`)
+        .catch(() => {});
+    }
   }
 }
 

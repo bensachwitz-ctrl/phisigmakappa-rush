@@ -18,6 +18,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   mockTenantFindUnique: vi.fn(),
   mockTenantCreate: vi.fn(),
+  mockTenantUpdate: vi.fn(),
+  mockTenantDelete: vi.fn(),
   mockExecuteRawUnsafe: vi.fn(),
   mockSendEmail: vi.fn(),
   mockSendSalesEmail: vi.fn(),
@@ -41,6 +43,8 @@ vi.mock("@/lib/prisma", () => ({
     tenant: {
       findUnique: mocks.mockTenantFindUnique,
       create: mocks.mockTenantCreate,
+      update: mocks.mockTenantUpdate,
+      delete: mocks.mockTenantDelete,
     },
     $executeRawUnsafe: mocks.mockExecuteRawUnsafe,
   },
@@ -116,6 +120,7 @@ describe("POST /api/onboard — card-free MONTHLY launch", () => {
     mocks.mockTenantFindUnique.mockResolvedValue(null);
     mocks.mockExecuteRawUnsafe.mockResolvedValue(true);
     mocks.mockTenantCreate.mockResolvedValue({ id: "tenant-cf" });
+    mocks.mockTenantUpdate.mockResolvedValue({ id: "tenant-cf" });
     mocks.mockBrotherCreate.mockResolvedValue({ id: "brother-cf" });
     mocks.mockPortalUserCreate.mockResolvedValue({ id: "portal-cf" });
     mocks.mockSendEmail.mockResolvedValue({ ok: true });
@@ -156,8 +161,11 @@ describe("POST /api/onboard — card-free MONTHLY launch", () => {
     expect(subArg.trial_settings?.end_behavior?.missing_payment_method).toBe("cancel");
 
     // Registry row records the customer + trialing status under the monthly plan.
-    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+    // The subdomain is reserved up front via tenant.create; the Stripe ids +
+    // status are finalized on the row via tenant.update.
+    expect(mocks.mockTenantUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { subdomain: "freelaunch" },
         data: expect.objectContaining({
           stripeCustomerId: "cust_cf",
           stripeSubscriptionId: "sub_cf",

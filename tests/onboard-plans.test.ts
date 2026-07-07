@@ -27,6 +27,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   mockTenantFindUnique: vi.fn(),
   mockTenantCreate: vi.fn(),
+  mockTenantUpdate: vi.fn(),
+  mockTenantDelete: vi.fn(),
   mockExecuteRawUnsafe: vi.fn(),
   mockSendEmail: vi.fn(),
   mockSendSalesEmail: vi.fn(),
@@ -50,6 +52,8 @@ vi.mock("@/lib/prisma", () => ({
     tenant: {
       findUnique: mocks.mockTenantFindUnique,
       create: mocks.mockTenantCreate,
+      update: mocks.mockTenantUpdate,
+      delete: mocks.mockTenantDelete,
     },
     $executeRawUnsafe: mocks.mockExecuteRawUnsafe,
   },
@@ -132,6 +136,7 @@ beforeEach(() => {
   mocks.mockTenantFindUnique.mockResolvedValue(null);
   mocks.mockExecuteRawUnsafe.mockResolvedValue(true);
   mocks.mockTenantCreate.mockResolvedValue({ id: "tenant-x" });
+  mocks.mockTenantUpdate.mockResolvedValue({ id: "tenant-x" });
   mocks.mockBrotherCreate.mockResolvedValue({ id: "brother-x" });
   mocks.mockPortalUserCreate.mockResolvedValue({ id: "portal-x" });
   mocks.mockSendEmail.mockResolvedValue({ ok: true });
@@ -171,8 +176,10 @@ describe("POST /api/onboard — plan funnels", () => {
     const platformSub = mocks.mockStripeSubscriptionsCreate.mock.calls[0][0];
     expect(platformSub.trial_period_days).toBe(30);
 
-    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+    // Stripe ids land on the FINAL update (row reserved via create up front).
+    expect(mocks.mockTenantUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { subdomain: "monthlycard" },
         data: expect.objectContaining({ plan: "monthly", stripeCustomerId: "cust_x" }),
       }),
     );

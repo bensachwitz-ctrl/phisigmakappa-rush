@@ -5,6 +5,7 @@ import { isAdminAuthed, isAdminRole, getCurrentBrotherId } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getSiteConfig } from "@/lib/site-config";
 import { getCurrentOfficerPermissions, hasPermission, guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
+import { isSelfEditableField } from "@/lib/self-edit-fields";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -132,14 +133,19 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
     } else {
-      // Editing own profile - cannot elevate role or edit dues/hours/role flags.
-      delete (rest as any).role;
-      delete (rest as any).duesPaid;
-      delete (rest as any).serviceHours;
+      // Editing own profile. Reduce the body to an explicit ALLOWLIST of self-
+      // editable fields (lib/self-edit-fields) instead of a denylist. The old
+      // denylist stripped role/duesPaid/serviceHours but NOT position or status,
+      // so a plain member could self-elevate: position:"President" is trusted by
+      // lib/mobile-exec-auth to unlock /api/mobile/exec/*, and status:"INITIATE"
+      // unlocks initiate-only ritual docs. An allowlist fails closed — any field
+      // not named self-editable (incl. a future schema column) is dropped here.
+      // studyHours/academicStanding stay editable only with academic:write.
       const isAcademicWriter = hasPermission(perms, "academic", "write");
-      if (!isAcademicWriter) {
-        delete (rest as any).studyHours;
-        delete (rest as any).academicStanding;
+      for (const key of Object.keys(rest)) {
+        if (!isSelfEditableField(key, { isAcademicWriter })) {
+          delete (rest as any)[key];
+        }
       }
     }
   }
