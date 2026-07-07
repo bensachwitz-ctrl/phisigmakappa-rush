@@ -1290,14 +1290,9 @@ function SiteNav({ scrollYProgress }: { scrollYProgress?: any }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const fallbackProgress = useMotionValue(1);
-  const activeProgress = scrollYProgress || fallbackProgress;
-  const opacity = useTransform(activeProgress, [0, 0.08], [0, 1]);
-  const pointerEvents = useTransform(activeProgress, (v: number) => v > 0.08 ? "auto" : "none");
-
   return (
     <motion.header
-      style={{ opacity, pointerEvents: pointerEvents as any }}
+      style={{ opacity: 1, pointerEvents: "auto" }}
       className={
         // Frosted-glass header: .liquid-glass-strong supplies the translucent base +
         // heavier backdrop-blur + saturation. We keep a scroll-reactive border +
