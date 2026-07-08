@@ -15,6 +15,7 @@ import {
   IconShieldCheck as IconShieldCheckDuo,
 } from "@/components/brand/icons/chapter";
 import { getSiteConfig } from "@/lib/site-config";
+import { parseRushFormConfig } from "@/lib/rush-form-config";
 import { chapterIdentityFromCfg, type ChapterTerms } from "@/lib/chapter-identity";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -237,7 +238,10 @@ export default async function ChapterLandingPage({
   // `termLabelLong` defaults to the org-appropriate verb + the short label.
   const termLabelShort = cfg["rush.termLabel"] || "Fall '26";
   const termLabelLong = cfg["rush.termLabelLong"] || `${terms.recruit} ${termLabelShort}`;
-  const customQuestions = parseJsonArray<any>(cfg["rush.customQuestions"], []);
+  // Per-tenant custom rush questions — parsed + normalized (typed, ordered,
+  // legacy-shape tolerant) via the shared pure helper. [] when un-configured, so
+  // the form renders exactly the built-in fields. See lib/rush-form-config.ts.
+  const customQuestions = parseRushFormConfig(cfg["rush.customQuestions"]);
 
   // Booth mode = single-purpose tablet kiosk. Render only the rush form.
   // No hero, no marketing sections, no Instagram feed, no footer chrome — every

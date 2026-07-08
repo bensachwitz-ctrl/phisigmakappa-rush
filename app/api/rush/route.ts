@@ -7,6 +7,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { isAdminAuthed } from "@/lib/auth";
 import { getTwilioConfig } from "@/lib/messaging-config";
 import { getClientIp } from "@/lib/client-ip";
+import { parseRushFormConfig, validateSubmission } from "@/lib/rush-form-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -225,6 +226,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // ── Per-tenant custom-question validation (authoritative gate) ──────────
+    // Load THIS chapter's site config once and reuse it below for the consent
+    // disclosure. getSiteConfig resolves the current tenant schema, so the custom
+    // field config is structurally scoped to this chapter — a config authored for
+    // another chapter is invisible here. A chapter with no `rush.customQuestions`
+    // parses to [] and validateSubmission returns ok, so an un-configured tenant
+    // (and the apex) submits exactly as before. We validate on the SERVER even
+    // though the form also validates client-side, so a direct API caller can't
+    // skip a chapter's required intake questions.
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    const customFields = parseRushFormConfig(cfg["rush.customQuestions"]);
+    if (customFields.length > 0) {
+      const check = validateSubmission(customFields, parsed.customAnswers || {});
+      if (!check.ok) {
+        return NextResponse.json(
+          { ok: false, error: "Please complete the required questions.", issues: check.errors },
+          { status: 400 },
+        );
+      }
+    }
+
     // Email fallback: if the PNM submitted without an email (or the form
     // skipped the synthesizer for some reason), generate a stable
     // <slugified-name>-<random>@noemail.local placeholder. Same shape the
@@ -248,9 +270,9 @@ export async function POST(req: Request) {
     // Build the tenant-specific consent disclosure ONCE for this request so
     // both the re-affirmation and first-submission RushConsent rows store the
     // SAME text — and that text names THIS chapter (or a neutral fallback),
-    // never a hardcoded one. getSiteConfig resolves the current tenant schema;
-    // on failure we fall back to empty cfg → neutral "this chapter" copy.
-    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    // never a hardcoded one. Reuses the `cfg` loaded above for custom-question
+    // validation (getSiteConfig resolved the current tenant schema); on that
+    // failure cfg is {} → neutral "this chapter" copy.
     const disclosureText = buildSmsDisclosureText(cfg);
     // Short org label for the confirmation SMS sender prefix (neutral fallback).
     const cfgIdentity = chapterIdentityFromCfg(cfg);

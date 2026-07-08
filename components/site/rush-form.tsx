@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import type { ChapterIdentity } from "@/lib/chapter-identity";
+import { validateSubmission, type FormFieldConfig } from "@/lib/rush-form-config";
 
 type FormData = {
   name: string;
@@ -119,7 +120,9 @@ export function RushForm({
   booth?: boolean;
   socialHandle?: string;
   socialUrl?: string;
-  customQuestions?: Array<{ key: string; label: string; placeholder?: string; required?: boolean }>;
+  // Per-tenant custom rush questions (see lib/rush-form-config.ts). Rendered on
+  // the Profile step, ordered + typed. Empty = the built-in fields only.
+  customQuestions?: FormFieldConfig[];
 } = {}) {
   const { push } = useToast();
   // Chapter identity (per-tenant, via ChapterIdentityProvider) drives the
@@ -244,15 +247,14 @@ export function RushForm({
           }
         }
       }
+      // Custom per-tenant questions — validated by the SAME pure helper the
+      // server uses (required + email/phone/select checks), so client and server
+      // never drift. Errors are namespaced `custom-<key>` to match the field ids.
       if (customQuestions && customQuestions.length > 0) {
-        customQuestions.forEach((q) => {
-          if (q.required) {
-            const val = (data.customAnswers?.[q.key] || "").trim();
-            if (!val) {
-              e[`custom-${q.key}`] = `Please answer: ${q.label}`;
-            }
-          }
-        });
+        const { errors } = validateSubmission(customQuestions, data.customAnswers || {});
+        for (const [key, msg] of Object.entries(errors)) {
+          e[`custom-${key}`] = msg;
+        }
       }
     }
     setErrors(e);
@@ -680,7 +682,7 @@ function ProfileStep({
   update: <K extends keyof FormData>(k: K, v: FormData[K]) => void;
   booth: boolean;
   totalSteps: number;
-  customQuestions?: Array<{ key: string; label: string; placeholder?: string; required?: boolean }>;
+  customQuestions?: FormFieldConfig[];
 }) {
   return (
     <div className="space-y-5">
@@ -756,20 +758,76 @@ function ProfileStep({
         <div className="space-y-4 pt-4 border-t border-border/60">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Additional Information</p>
           {customQuestions.map((q) => {
+            const setAnswer = (v: string) =>
+              update("customAnswers", { ...(data.customAnswers || {}), [q.key]: v });
             const currentVal = data.customAnswers?.[q.key] || "";
+            const fieldId = `custom-${q.key}`;
+            const err = errors[fieldId];
+            const inputClass =
+              "bg-card/45 focus-visible:ring-phisig-red focus-visible:border-phisig-red";
+
+            // Checkbox renders inline (label sits beside the box), so it skips the
+            // shared <Field> label wrapper and manages its own error line.
+            if (q.type === "checkbox") {
+              return (
+                <div key={q.key}>
+                  <label htmlFor={fieldId} className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      id={fieldId}
+                      type="checkbox"
+                      checked={currentVal === "true"}
+                      onChange={(e) => setAnswer(e.target.checked ? "true" : "false")}
+                      className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0"
+                    />
+                    <span className="text-sm text-foreground">
+                      {q.label}{" "}
+                      {q.required && <span className="text-phisig-red" aria-hidden="true">*</span>}
+                    </span>
+                  </label>
+                  {err && (
+                    <p className="mt-1 text-xs text-phisig-red animate-fade-in" role="alert">{err}</p>
+                  )}
+                </div>
+              );
+            }
+
             return (
-              <Field key={q.key} id={`custom-${q.key}`} label={q.label} required={q.required} error={errors[`custom-${q.key}`]}>
-                <Input
-                  id={`custom-${q.key}`}
-                  value={currentVal}
-                  onChange={(e) => {
-                    const answers = { ...(data.customAnswers || {}), [q.key]: e.target.value };
-                    update("customAnswers", answers);
-                  }}
-                  placeholder={q.placeholder || `Enter ${q.label.toLowerCase()}`}
-                  className="bg-card/45 focus-visible:ring-phisig-red focus-visible:border-phisig-red"
-                  required={q.required}
-                />
+              <Field key={q.key} id={fieldId} label={q.label} required={q.required} error={err}>
+                {q.type === "textarea" ? (
+                  <Textarea
+                    id={fieldId}
+                    value={currentVal}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder={q.placeholder || `Enter ${q.label.toLowerCase()}`}
+                    rows={3}
+                    className={inputClass}
+                  />
+                ) : q.type === "select" ? (
+                  <select
+                    id={fieldId}
+                    value={currentVal}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    className={cn(
+                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:border-phisig-red disabled:cursor-not-allowed disabled:opacity-50",
+                      inputClass,
+                    )}
+                  >
+                    <option value="">{q.placeholder || "Select…"}</option>
+                    {(q.options || []).map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    id={fieldId}
+                    type={q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
+                    inputMode={q.type === "phone" ? "tel" : undefined}
+                    value={currentVal}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder={q.placeholder || `Enter ${q.label.toLowerCase()}`}
+                    className={inputClass}
+                  />
+                )}
               </Field>
             );
           })}

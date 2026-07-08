@@ -1,6 +1,7 @@
 import type React from "react";
 import type { ChapterIdentity, ChapterTerms } from "@/lib/chapter-identity";
 import type { FeedPost } from "@/components/site/instagram-feed";
+import type { FormFieldConfig } from "@/lib/rush-form-config";
 
 /**
  * The three chapter-site templates. The renderer
@@ -73,7 +74,7 @@ export interface SectionContext {
   webcalUrl: string;
   termLabelShort: string;
   termLabelLong: string;
-  customQuestions: any[];
+  customQuestions: FormFieldConfig[];
 
   heroEyebrow: string;
   heroLead: string;
