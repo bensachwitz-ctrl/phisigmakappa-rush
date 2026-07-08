@@ -32,6 +32,9 @@ jobs:
       - name: TypeScript typecheck
         run: npx tsc --noEmit
 
+      - name: Sync iOS project
+        run: npx cap sync ios
+
       - name: Unit tests
         run: npm test # vitest run — blocking; do not add continue-on-error
 
