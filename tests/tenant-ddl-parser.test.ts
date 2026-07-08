@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import fs from "fs";
 import path from "path";
-import { parseTenantDdl, applyTenantDdl } from "@/lib/tenant-ddl";
+import {
+  parseTenantDdl,
+  applyTenantDdl,
+  parseSqlStatementsDollarAware,
+} from "@/lib/tenant-ddl";
 
 // ---------------------------------------------------------------------------
 // lib/tenant-ddl.ts — the SINGLE shared per-tenant DDL parser used by both
@@ -120,5 +124,52 @@ describe("applyTenantDdl — execution semantics", () => {
       }),
     };
     await expect(applyTenantDdl(client as any, FRAGMENT)).rejects.toThrow(/syntax error/);
+  });
+});
+
+describe("parseSqlStatementsDollarAware — single-quoted string literals", () => {
+  // REGRESSION: the scanner tracked `$$ … $$` dollar blocks but NOT single-quoted
+  // '…' literals. A seeded value containing a ';' would falsely terminate the
+  // statement, and a '$' inside it would be mistaken for a dollar-quote opener and
+  // swallow everything up to a close tag that never comes — either way shredding
+  // the script. A ';' AND a '$' inside ONE literal exercises both failure modes.
+  it("does NOT split on a ; or $ inside a single-quoted string value", () => {
+    const sql = `INSERT INTO "SiteConfig" ("key","value") VALUES ('greeting', 'Hi; welcome to the $tier$ plan');
+CREATE INDEX IF NOT EXISTS "SiteConfig_key_idx" ON "SiteConfig"("key");`;
+    const stmts = parseSqlStatementsDollarAware(sql);
+
+    expect(stmts).toHaveLength(2);
+    // The whole literal (with its ';' and '$tier$') survives inside statement 1.
+    expect(stmts[0]).toMatch(/^INSERT INTO "SiteConfig"/);
+    expect(stmts[0]).toContain("'Hi; welcome to the $tier$ plan'");
+    // The following DDL is its OWN statement, not merged into the INSERT.
+    expect(stmts[1]).toMatch(/^CREATE INDEX/);
+  });
+
+  it("treats a doubled '' as an escaped quote and stays inside the literal", () => {
+    const sql = `INSERT INTO "X" ("v") VALUES ('it''s a; tricky $ value');
+SELECT 1;`;
+    const stmts = parseSqlStatementsDollarAware(sql);
+
+    expect(stmts).toHaveLength(2);
+    expect(stmts[0]).toContain("'it''s a; tricky $ value'");
+    expect(stmts[1]).toMatch(/^SELECT 1$/);
+  });
+
+  it("still keeps a DO $$ … $$ block whole even when its body contains a quote", () => {
+    // The dollar-block check runs FIRST, so a `'` inside a $$ body (Postgres allows
+    // unescaped quotes there) is consumed as body and never toggles string state.
+    const sql = `DO $$
+BEGIN
+  RAISE NOTICE 'seeding; done';
+END
+$$;
+CREATE INDEX IF NOT EXISTS "i" ON "T"("k");`;
+    const stmts = parseSqlStatementsDollarAware(sql);
+
+    expect(stmts).toHaveLength(2);
+    expect(stmts[0]).toMatch(/^DO \$\$/);
+    expect(stmts[0]).toContain("RAISE NOTICE 'seeding; done'");
+    expect(stmts[1]).toMatch(/^CREATE INDEX/);
   });
 });

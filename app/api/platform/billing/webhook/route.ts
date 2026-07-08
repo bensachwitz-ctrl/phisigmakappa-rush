@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { centralDb, getTenantClient } from "@/lib/prisma";
+import { centralDb } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { errorSink, logger } from "@/lib/logger";
+import { publishTenantIfPendingBilling, customerHasUsableCard } from "@/lib/publish-tenant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,6 +102,18 @@ export async function POST(req: Request) {
         await handleCheckoutCompleted(stripe, event.data.object as Stripe.Checkout.Session);
         break;
       }
+      case "payment_method.attached":
+      case "setup_intent.succeeded":
+      case "customer.updated": {
+        // CARD-ADDED-IN-PORTAL — a card-free chapter that onboarded on a trialing
+        // sub shows "Manage billing" → the Stripe Billing Portal, and adding a card
+        // there emits these events (NOT customer.subscription.* / checkout.session.
+        // completed). Without handling them a pending-billing chapter would stay
+        // DARK until ~day-30 trial conversion. Resolve the customer→tenant, confirm
+        // a usable card is now on file, then publish (flag-gated). Best-effort.
+        await handleCardAddedEvent(stripe, event);
+        break;
+      }
       default:
         // Unhandled — 200 so Stripe stops retrying.
         break;
@@ -140,67 +153,52 @@ async function resolveSubdomain(
 }
 
 /**
- * CARD-REQUIRED-TO-PUBLISH — publish a PENDING-billing chapter once a real billing
- * arrangement lands. A card-free MONTHLY chapter is provisioned with central
- * Tenant.isActive=false (its PUBLIC subdomain dark) + a tenant SiteConfig
- * "billing.pendingActivation"="true" flag (set at onboard). When it later adds a
- * card (a card-backed trialing/active subscription, or a completed subscription
- * Checkout) via the platform-billing path, we flip isActive=true so app/page.tsx
- * begins serving the public site, and clear the pending flag.
- *
- * GATED ON THE PENDING FLAG so this can NEVER un-suspend an operator HARD-suspend:
- * we publish ONLY a chapter that onboard explicitly marked pending. An operator-
- * suspended chapter carries no "true" pending flag, so a routine card-backed
- * subscription event leaves it suspended. If we cannot read the flag we do NOT
- * flip (fail safe — never re-activate on uncertainty).
- *
- * Idempotent (no-op once already active), best-effort, NEVER throws (so it can't
- * fail the webhook — the caller returns 200 and Stripe stops retrying).
+ * CARD-ADDED-IN-PORTAL publish path. A founder who onboarded card-free (trialing
+ * sub already exists → the billing page shows "Manage billing" → the Stripe
+ * Billing Portal) adds a card in the portal, which emits payment_method.attached /
+ * setup_intent.succeeded / customer.updated — none of which carry subscription
+ * status. Resolve the Stripe customer → tenant, confirm a usable card is on file,
+ * then publish (flag-gated inside publishTenantIfPendingBilling, so an operator
+ * hard-suspend is never re-activated). Idempotent + best-effort: it NEVER throws,
+ * so a publish hiccup can't fail the webhook (the POST handler returns 200 and
+ * Stripe stops retrying).
  */
-async function publishTenantIfPendingBilling(subdomain: string): Promise<void> {
+async function handleCardAddedEvent(stripe: Stripe, event: Stripe.Event): Promise<void> {
   try {
-    const row = await centralDb.tenant
-      .findUnique({ where: { subdomain }, select: { isActive: true } })
-      .catch(() => null);
-    // Already live (or unknown) → nothing to publish. Idempotent for redeliveries.
-    if (!row || row.isActive === true) return;
+    const obj = event.data.object as any;
+    let customerId: string | null = null;
+    let metaSub: string | null = null;
 
-    // Only publish a chapter onboard marked pending-billing — never re-activate an
-    // operator hard-suspend (which has no "true" pending flag).
-    let pending = false;
-    try {
-      const tenantDb = getTenantClient(subdomain);
-      const flag = await tenantDb.siteConfig.findUnique({
-        where: { key: "billing.pendingActivation" },
-        select: { value: true },
-      });
-      pending = flag?.value === "true";
-    } catch {
-      return; // can't confirm pending → fail safe, do NOT flip
-    }
-    if (!pending) return;
-
-    await centralDb.tenant.update({
-      where: { subdomain },
-      data: { isActive: true },
-    });
-
-    // Clear the pending flag so app/page.tsx serves the live site and a LATER
-    // operator suspend is never mistaken for pending-billing.
-    try {
-      const tenantDb = getTenantClient(subdomain);
-      await tenantDb.siteConfig.upsert({
-        where: { key: "billing.pendingActivation" },
-        update: { value: "false" },
-        create: { key: "billing.pendingActivation", value: "false" },
-      });
-    } catch (e) {
-      errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "clear_pending_flag_failed" });
+    if (event.type === "customer.updated") {
+      // The object IS the customer.
+      customerId = typeof obj?.id === "string" ? obj.id : null;
+      metaSub = (obj?.metadata?.subdomain || "").trim() || null;
+    } else {
+      // payment_method.attached (PaymentMethod) / setup_intent.succeeded
+      // (SetupIntent) both carry the customer as `customer`.
+      customerId = typeof obj?.customer === "string" ? obj.customer : obj?.customer?.id || null;
+      metaSub = (obj?.metadata?.subdomain || "").trim() || null;
     }
 
-    logger.info("platform.billing.tenant_published", { route: ROUTE, tenant: subdomain });
-  } catch (e) {
-    errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "publish_pending_billing_failed" });
+    if (!customerId && !metaSub) return; // nothing to resolve against
+
+    const subdomain = await resolveSubdomain(metaSub, customerId);
+    if (!subdomain) {
+      logger.info("platform.billing.card_added_unresolved", {
+        route: ROUTE,
+        eventType: event.type,
+      });
+      return;
+    }
+
+    // Confirm a real card is now on file before publishing (an attached card, or
+    // the customer's default PM). A trialing sub with no card must NOT publish.
+    if (!(await customerHasUsableCard(stripe, customerId))) return;
+
+    await publishTenantIfPendingBilling(subdomain, { route: ROUTE });
+  } catch (err) {
+    // Best-effort — never fail the webhook on a publish attempt.
+    errorSink(err, { route: ROUTE, eventType: event.type, outcome: "card_added_publish_failed" });
   }
 }
 
@@ -320,7 +318,7 @@ async function handleSubscriptionEvent(
     (status === "trialing" || status === "active") &&
     (await subscriptionHasCard(stripe, sub))
   ) {
-    await publishTenantIfPendingBilling(subdomain);
+    await publishTenantIfPendingBilling(subdomain, { route: ROUTE });
   }
 }
 
@@ -489,7 +487,7 @@ async function handleCheckoutCompleted(
   // payment method, so publish a pending-billing chapter (e.g. one that re-
   // subscribed after its card-free trial cancelled). Gated on the pending flag
   // (never un-suspends an operator hard-suspend). Best-effort.
-  await publishTenantIfPendingBilling(subdomain);
+  await publishTenantIfPendingBilling(subdomain, { route: ROUTE });
 }
 
 /**

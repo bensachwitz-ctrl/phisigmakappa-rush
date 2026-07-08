@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
-import { forEachTenant } from "@/lib/prisma";
+import { centralDb, forEachTenant } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { logger, errorSink } from "@/lib/logger";
 import { markDuesIntroFeeUsedFromSession } from "@/lib/platform-billing";
+import { publishTenantIfPendingBilling, customerHasUsableCard } from "@/lib/publish-tenant";
 import { sendDuesPaidReceipt } from "@/lib/dues-receipt";
 
 export const runtime = "nodejs";
@@ -36,11 +38,22 @@ const ROUTE = "/api/cron/reconcile-stripe";
  * Only sweeps rows older than 10 minutes so we don't race the webhook on a
  * payment that's still settling.
  *
- * Auth gate mirrors /api/cron/send-scheduled-announcements:
- * `?secret=<CRON_SECRET>` query OR `Authorization: Bearer <CRON_SECRET>`
- * header. Without a CRON_SECRET env (local dev) we reject every external
- * caller and allow only localhost.
+ * Auth gate: PREFER `Authorization: Bearer <CRON_SECRET>` (Vercel Cron stamps
+ * this automatically when CRON_SECRET is set) compared in CONSTANT TIME, and the
+ * platform-only `x-vercel-cron` header (which Vercel strips from external
+ * requests). The `?secret=<CRON_SECRET>` query form is kept for back-compat/ops
+ * curls but also compared in constant time. Without a CRON_SECRET env (local dev)
+ * we reject every external caller and allow only localhost.
  */
+
+/** Constant-time string compare (length-guarded) so a secret check can't leak the
+ *  secret byte-by-byte via response-timing. */
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -53,12 +66,14 @@ function isAuthorized(req: Request): boolean {
     if (host && !/^localhost|^127\.0\.0\.1|^::1/.test(host)) return false;
     return true;
   }
-  // Production — secret must match.
-  const url = new URL(req.url);
-  const fromQuery = url.searchParams.get("secret");
-  if (fromQuery && fromQuery === secret) return true;
+  // Genuine Vercel Cron invocation — Vercel sets this header and strips any
+  // inbound copy from external requests, so its presence is a trusted signal.
+  if (req.headers.get("x-vercel-cron")) return true;
+  // Production — secret must match (constant-time).
   const auth = req.headers.get("authorization") || "";
-  if (auth.startsWith("Bearer ") && auth.slice(7) === secret) return true;
+  if (auth.startsWith("Bearer ") && safeEqual(auth.slice(7), secret)) return true;
+  const fromQuery = new URL(req.url).searchParams.get("secret");
+  if (fromQuery && safeEqual(fromQuery, secret)) return true;
   return false;
 }
 
@@ -119,6 +134,25 @@ export async function GET(req: Request) {
 
   const ok = tenants.every((t) => t.ok);
 
+  // PENDING-BILLING PUBLISH SWEEP (CARD-REQUIRED-TO-PUBLISH safety net). The
+  // platform-billing webhook publishes a card-free chapter the moment it adds a
+  // card (subscription events / payment_method.attached / setup_intent.succeeded /
+  // customer.updated). This is the belt for a MISSED such webhook: sweep every
+  // INACTIVE chapter that has a Stripe customer — the dues fan-out above uses
+  // forEachTenant, which iterates ACTIVE tenants only and can never reach a
+  // pending (isActive=false) chapter — and publish it if a usable card is now on
+  // file. Publish is gated on the onboard-seeded pending flag inside
+  // publishTenantIfPendingBilling (isActive=false + billing.pendingActivation
+  // "true"), so an operator hard-suspend (flag cleared to "false" on suspend) is
+  // NEVER re-activated. Fully isolated + best-effort so it can never affect — or
+  // fail — the dues/donation reconciliation above.
+  let published = 0;
+  try {
+    published = await sweepPendingBillingPublish(stripe);
+  } catch (err) {
+    errorSink(err, { route: ROUTE, outcome: "pending_publish_sweep_failed" });
+  }
+
   // Structured run summary for the ops log — aggregate counts only. We emit at
   // info when everything's clean, warn when a tenant errored, so the run-log is
   // filterable by level.
@@ -127,12 +161,51 @@ export async function GET(req: Request) {
     reconciled: totals.reconciled,
     failed: totals.failed,
     checked: totals.checked,
+    published,
     tenantCount: tenants.length,
   };
   if (ok) logger.info("cron.reconcile_stripe.run", summaryCtx);
   else logger.warn("cron.reconcile_stripe.run", { ...summaryCtx, outcome: "partial_failure" });
 
-  return NextResponse.json({ ok, ...totals, perTenant: tenants });
+  return NextResponse.json({ ok, ...totals, published, perTenant: tenants });
+}
+
+/**
+ * Publish any card-free chapter that has since added a card but was left dark by a
+ * missed webhook. Reads the central registry directly for INACTIVE chapters that
+ * carry a Stripe customer (forEachTenant can't reach them — it's active-only), and
+ * for each, publishes iff a usable card is on file. publishTenantIfPendingBilling
+ * enforces the pending-flag gate (so an operator hard-suspend stays down) and is
+ * idempotent, so a chapter the webhook already published is a clean no-op here.
+ * Every step is best-effort — a registry read failure returns 0 rather than
+ * throwing (keeping the whole sweep non-fatal to the cron).
+ */
+async function sweepPendingBillingPublish(
+  stripe: NonNullable<ReturnType<typeof getStripe>>,
+): Promise<number> {
+  let inactive: Array<{ subdomain: string; stripeCustomerId: string | null }>;
+  try {
+    inactive = await centralDb.tenant.findMany({
+      where: { isActive: false, stripeCustomerId: { not: null } },
+      select: { subdomain: true, stripeCustomerId: true },
+    });
+  } catch (err) {
+    errorSink(err, { route: ROUTE, outcome: "pending_publish_registry_read_failed" });
+    return 0;
+  }
+
+  let published = 0;
+  for (const t of inactive) {
+    try {
+      if (!t.stripeCustomerId) continue;
+      if (!(await customerHasUsableCard(stripe, t.stripeCustomerId))) continue;
+      const didPublish = await publishTenantIfPendingBilling(t.subdomain, { route: ROUTE });
+      if (didPublish) published++;
+    } catch (err) {
+      errorSink(err, { route: ROUTE, tenant: t.subdomain, outcome: "pending_publish_row_failed" });
+    }
+  }
+  return published;
 }
 
 // POST shares the path so ops + Vercel Cron can both invoke it.

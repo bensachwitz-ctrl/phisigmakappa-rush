@@ -6,6 +6,7 @@ import { centralDb, getSubdomain } from "@/lib/prisma";
 import { getEntitlement } from "@/lib/entitlement";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStripe } from "@/lib/stripe";
+import { publishTenantIfPendingBilling, customerHasUsableCard } from "@/lib/publish-tenant";
 import { BillingManager } from "@/components/admin/billing-manager";
 import {
   PLATFORM_PLAN_NAME,
@@ -40,17 +41,39 @@ export default async function BillingPage({
   const entitlement = await getEntitlement(subdomain);
 
   // Has the chapter ever started checkout? (drives portal-vs-checkout default)
+  // isActive lets the portal-return belt below skip the extra Stripe call for an
+  // already-live chapter (the common case).
   const tenant = subdomain
     ? await centralDb.tenant
         .findUnique({
           where: { subdomain },
-          select: { stripeCustomerId: true, plan: true },
+          select: { stripeCustomerId: true, plan: true, isActive: true },
         })
         .catch(() => null)
     : null;
 
   // Stripe configured? (drives the graceful "contact support" state)
-  const stripeConfigured = !!getStripe();
+  const stripe = getStripe();
+  const stripeConfigured = !!stripe;
+
+  // BELT (CARD-REQUIRED-TO-PUBLISH): the founder may have added a card in the
+  // Stripe Billing Portal, whose payment_method.attached / setup_intent.succeeded /
+  // customer.updated events publish the chapter via the platform-billing webhook.
+  // If that webhook was missed, this admin-only return path (?ok=1 after checkout,
+  // or the bare /admin/billing portal return_url) re-checks the customer's card
+  // server-side and publishes so the public site is never left dark. Runs ONLY for
+  // a not-yet-live chapter that already has a Stripe customer; publish is gated on
+  // the pending flag, so an operator hard-suspend is never re-activated. Fully
+  // best-effort — a failure here never blocks the billing page render.
+  if (subdomain && stripe && tenant && tenant.isActive === false && tenant.stripeCustomerId) {
+    try {
+      if (await customerHasUsableCard(stripe, tenant.stripeCustomerId)) {
+        await publishTenantIfPendingBilling(subdomain, { route: "/admin/billing" });
+      }
+    } catch {
+      // best-effort belt — ignore and render the page as usual
+    }
+  }
 
   // The chosen pricing method + whether the intro dues fee has been used, so the
   // manager can render the dues-share ("1.5% then 3%") vs subscription view.

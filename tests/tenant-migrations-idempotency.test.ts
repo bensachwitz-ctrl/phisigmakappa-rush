@@ -13,8 +13,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 //     (idempotency), and any OTHER error surfaces as a failed file,
 //   • the all-tenants wrapper fans out via forEachTenant.
 
-const mocks = vi.hoisted(() => ({ forEachTenant: vi.fn() }));
-vi.mock("@/lib/prisma", () => ({ forEachTenant: mocks.forEachTenant }));
+const mocks = vi.hoisted(() => ({ forEachTenantIncludingInactive: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({
+  forEachTenantIncludingInactive: mocks.forEachTenantIncludingInactive,
+}));
 
 import { parseSqlStatementsDollarAware } from "@/lib/tenant-ddl";
 import {
@@ -106,19 +108,28 @@ describe("applyPendingTenantMigrations — real portal_password_reset file", () 
   });
 });
 
-describe("applyPendingMigrationsToAllTenants — fans out via forEachTenant", () => {
-  it("invokes forEachTenant and applies the curated file set to each tenant db", async () => {
+describe("applyPendingMigrationsToAllTenants — fans out via forEachTenantIncludingInactive", () => {
+  it("uses the INACTIVE-inclusive iterator and applies the curated set to a pending/inactive tenant", async () => {
     const { db } = recordingDb();
-    mocks.forEachTenant.mockImplementation(async (fn: any) => {
-      const result = await fn(db, { subdomain: "alpha" });
-      return [{ tenant: "alpha", ok: true, result }];
+    // The iterator hands us both an active AND an inactive/pending chapter — the
+    // applier must heal the inactive one too (the whole reason for switching off
+    // the active-only forEachTenant), so simulate that here.
+    mocks.forEachTenantIncludingInactive.mockImplementation(async (fn: any) => {
+      const active = await fn(db, { subdomain: "livechap", isActive: true });
+      const pending = await fn(db, { subdomain: "pendingchap", isActive: false });
+      return [
+        { tenant: "livechap", ok: true, result: active },
+        { tenant: "pendingchap", ok: true, result: pending },
+      ];
     });
 
     const out = await applyPendingMigrationsToAllTenants();
-    expect(mocks.forEachTenant).toHaveBeenCalledTimes(1);
-    expect(out[0].tenant).toBe("alpha");
-    // Each tenant applied the full curated set (all idempotent manual migrations).
-    expect(out[0].result).toHaveLength(IDEMPOTENT_MANUAL_MIGRATIONS.length);
-    expect(out[0].result?.every((r: any) => r.ok)).toBe(true);
+    expect(mocks.forEachTenantIncludingInactive).toHaveBeenCalledTimes(1);
+    expect(out.map((o) => o.tenant)).toEqual(["livechap", "pendingchap"]);
+    // The inactive/pending chapter (which the old active-only forEachTenant would
+    // have skipped) got the full curated migration set applied.
+    const pendingResult = out.find((o) => o.tenant === "pendingchap");
+    expect(pendingResult?.result).toHaveLength(IDEMPOTENT_MANUAL_MIGRATIONS.length);
+    expect(pendingResult?.result?.every((r: any) => r.ok)).toBe(true);
   });
 });

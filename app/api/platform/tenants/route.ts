@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { centralDb } from "@/lib/prisma";
+import { centralDb, getTenantClient } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/superadmin";
 
 export const runtime = "nodejs";
@@ -27,7 +27,31 @@ export async function GET() {
         createdAt: true,
       },
     });
-    return NextResponse.json({ ok: true, tenants });
+
+    // Distinguish a PENDING-BILLING chapter (card-free monthly, still "launching
+    // soon" — isActive=false + billing.pendingActivation="true") from an operator
+    // HARD-suspend so the console can render them differently. Only an INACTIVE row
+    // can be pending; a live chapter is never "launching soon", so we skip the
+    // per-tenant schema read for active rows. Best-effort — any read error defaults
+    // pendingBilling to false (renders as a plain suspend).
+    const enriched = await Promise.all(
+      tenants.map(async (t) => {
+        if (t.isActive) return { ...t, pendingBilling: false };
+        let pendingBilling = false;
+        try {
+          const row = await getTenantClient(t.subdomain).siteConfig.findUnique({
+            where: { key: "billing.pendingActivation" },
+            select: { value: true },
+          });
+          pendingBilling = row?.value === "true";
+        } catch {
+          pendingBilling = false;
+        }
+        return { ...t, pendingBilling };
+      }),
+    );
+
+    return NextResponse.json({ ok: true, tenants: enriched });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err?.message || "Failed to load chapters" },

@@ -106,6 +106,10 @@ type Tenant = {
   school: string | null;
   isActive: boolean;
   createdAt: string;
+  // True for an inactive chapter that is still PENDING-BILLING (card-free monthly,
+  // "launching soon"), vs an operator HARD-suspend. Lets the row render the two
+  // states distinctly. Optional so an older API shape still renders sanely.
+  pendingBilling?: boolean;
 };
 
 /** Shape returned by GET /api/health (public-safe; booleans + counts only). */
@@ -185,21 +189,29 @@ export default function PlatformConsolePage() {
     load();
   }, [load]);
 
-  async function toggleActive(t: Tenant) {
+  // EXPLICIT set (not a blind toggle): "Suspend" always sends isActive:false and
+  // "Activate" always sends isActive:true, so a stale local `isActive` can never
+  // flip the chapter to the wrong state. On suspend we clear pendingBilling locally
+  // too — the server clears the pending flag durably (so a later billing event
+  // can't republish), and once operator-activated the "launching soon" state no
+  // longer applies either.
+  async function setActive(t: Tenant, next: boolean) {
     setBusyId(t.id);
     setError(null);
     try {
       const res = await fetch(`/api/platform/tenants/${t.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ isActive: !t.isActive }),
+        body: JSON.stringify({ isActive: next }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) {
         setError(j.error || "Failed to update chapter");
         return;
       }
-      setTenants((prev) => prev.map((x) => (x.id === t.id ? { ...x, isActive: !x.isActive } : x)));
+      setTenants((prev) =>
+        prev.map((x) => (x.id === t.id ? { ...x, isActive: next, pendingBilling: false } : x)),
+      );
     } catch {
       setError("Failed to update chapter");
     } finally {
@@ -366,6 +378,10 @@ export default function PlatformConsolePage() {
                           <Badge className="gap-1 bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
                             <IconCheck className="h-3 w-3" /> Active
                           </Badge>
+                        ) : t.pendingBilling ? (
+                          <Badge className="gap-1 bg-blue-100 text-blue-700 ring-1 ring-blue-200">
+                            <IconClose className="h-3 w-3" /> Launching soon
+                          </Badge>
                         ) : (
                           <Badge className="gap-1 bg-amber-100 text-amber-800 ring-1 ring-amber-200">
                             <IconClose className="h-3 w-3" /> Suspended
@@ -389,7 +405,7 @@ export default function PlatformConsolePage() {
                             variant="outline"
                             size="sm"
                             disabled={rowBusy}
-                            onClick={() => toggleActive(t)}
+                            onClick={() => setActive(t, !t.isActive)}
                             className={cn(
                               t.isActive
                                 ? "border-amber-200 text-amber-700 hover:bg-amber-50"

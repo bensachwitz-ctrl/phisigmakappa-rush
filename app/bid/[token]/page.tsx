@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { Wordmark } from "@/components/brand/wordmark";
 import { BidResponseForm } from "@/components/site/bid-response-form";
@@ -57,6 +58,12 @@ async function lookup(token: string): Promise<LookupResult> {
 }
 
 export default async function BidPage({ params }: { params: { token: string } }) {
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve its
+  // bid links (same gated state app/page.tsx renders). Runs BEFORE the token
+  // lookup, so no rush/PNM data leaks. Returns null (proceeds) on the apex.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
+
   const [result, cfg] = await Promise.all([
     lookup(params.token),
     getSiteConfig().catch(() => ({} as Record<string, string>)),

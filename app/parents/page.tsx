@@ -6,6 +6,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
 import { getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
@@ -63,6 +64,11 @@ export default async function ParentsPage() {
     host = headers().get("host") || headers().get("x-forwarded-host") || "";
   } catch {}
   if (getSubdomain(host) === null) notFound();
+
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve the
+  // parents page either (same gated state app/page.tsx renders).
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
 
   const cfg = await getSiteConfig();
   const advisorPlaceholder =

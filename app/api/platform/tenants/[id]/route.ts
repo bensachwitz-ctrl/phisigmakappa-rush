@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { centralDb } from "@/lib/prisma";
+import { centralDb, getTenantClient } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/superadmin";
 import { errorSink } from "@/lib/logger";
 
@@ -22,8 +22,17 @@ function schemaNameFor(subdomain: string): string {
 }
 
 /**
- * PATCH /api/platform/tenants/[id] — toggle a chapter's isActive flag.
+ * PATCH /api/platform/tenants/[id] — EXPLICITLY set a chapter's isActive flag.
  * Body: { isActive: boolean }. Operator-gated.
+ *
+ * DURABLE OPERATOR HOLD: when suspending (isActive:false), we ALSO clear the
+ * chapter's "billing.pendingActivation" flag to "false". Without this, a chapter
+ * suspended WHILE pending-billing would carry isActive=false AND
+ * pendingActivation="true" at once — and the very next card-backed billing event
+ * (or the reconcile sweep) would call publishTenantIfPendingBilling, see the
+ * "true" flag, and silently REPUBLISH the chapter the operator just took down.
+ * Clearing the flag makes the suspend stick: publishTenantIfPendingBilling refuses
+ * unless the flag is "true".
  */
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   if (!isSuperAdmin()) {
@@ -62,6 +71,29 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         createdAt: true,
       },
     });
+
+    // DURABLE OPERATOR HOLD — on suspend, clear the pending-billing flag so a
+    // later billing event / reconcile sweep can NEVER republish this chapter (see
+    // the header note). Best-effort: a flag-write hiccup must not fail the
+    // suspend — isActive=false already darkens the public site, and the flag stays
+    // "true" only in the unlikely write-failure case (surfaced to the error sink).
+    if (body.isActive === false) {
+      try {
+        await getTenantClient(updated.subdomain).siteConfig.upsert({
+          where: { key: "billing.pendingActivation" },
+          update: { value: "false" },
+          create: { key: "billing.pendingActivation", value: "false" },
+        });
+      } catch (e) {
+        errorSink(e, {
+          route: ROUTE,
+          op: "PATCH",
+          tenantId: id,
+          outcome: "clear_pending_flag_failed",
+        });
+      }
+    }
+
     return NextResponse.json({ ok: true, tenant: updated });
   } catch (err: any) {
     // Prisma P2025 = record not found.

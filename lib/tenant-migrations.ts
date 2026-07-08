@@ -18,13 +18,14 @@
 // INVOCATION: this runs on an explicit deploy / ops trigger, never in a request
 // hot path — see app/api/cron/apply-tenant-migrations/route.ts (CRON_SECRET-gated,
 // same auth model as the reconcile-stripe safety-net cron). It fans out across
-// every active tenant via forEachTenant so one chapter's failure can't abort the
-// rest.
+// EVERY tenant — including inactive / pending-billing / suspended — via
+// forEachTenantIncludingInactive so a not-yet-live chapter's schema is still
+// healed, and each chapter's failure is isolated so it can't abort the rest.
 
 import fs from "fs";
 import path from "path";
 import type { PrismaClient } from "@prisma/client";
-import { forEachTenant } from "./prisma";
+import { forEachTenantIncludingInactive } from "./prisma";
 import { parseSqlStatementsDollarAware } from "./tenant-ddl";
 
 /**
@@ -112,13 +113,18 @@ export async function applyPendingTenantMigrations(
 }
 
 /**
- * Fan the idempotent manual migrations out across EVERY active tenant schema.
- * forEachTenant isolates each chapter in its own try/catch, so one schema's
- * failure can't abort the sweep. Returns the per-tenant summary forEachTenant
- * produces (each `result` is the per-file MigrationFileResult[] above).
+ * Fan the idempotent manual migrations out across EVERY tenant schema — INCLUDING
+ * inactive / pending-billing / suspended chapters. Uses
+ * forEachTenantIncludingInactive (NOT forEachTenant, which is active-only) because
+ * the work is additive + idempotent and MUST reach a schema even when the
+ * chapter's public site isn't live yet — otherwise a chapter provisioned before a
+ * migration landed and still pending billing would never get the healing DDL (e.g.
+ * the portal_password_reset table). Each chapter is isolated in its own try/catch,
+ * so one schema's failure can't abort the sweep. Returns the per-tenant summary
+ * the iterator produces (each `result` is the per-file MigrationFileResult[] above).
  */
 export async function applyPendingMigrationsToAllTenants(): Promise<
   Array<{ tenant: string; ok: boolean; result?: MigrationFileResult[]; error?: string }>
 > {
-  return forEachTenant(async (db) => applyPendingTenantMigrations(db));
+  return forEachTenantIncludingInactive(async (db) => applyPendingTenantMigrations(db));
 }

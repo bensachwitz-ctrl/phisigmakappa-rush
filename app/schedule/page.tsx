@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -43,6 +44,12 @@ export default async function SchedulePage() {
     host = headers().get("host") || headers().get("x-forwarded-host") || "";
   } catch {}
   if (getSubdomain(host) === null) notFound();
+
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve any
+  // public route, only "/". Render the same launching-soon / inactive state as
+  // app/page.tsx before touching chapter data.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
 
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);

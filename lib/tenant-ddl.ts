@@ -45,9 +45,19 @@ export function parseTenantDdl(sqlContent: string): string[] {
  * semicolons. A naive split-on-`;` would shred that block into invalid fragments.
  *
  * Strategy: strip full-line `--` comments first (the migration files only ever
- * place `--` on their own header/annotation lines, never inside a `$$` body), then
- * scan character-by-character, tracking whether we're inside a dollar-quoted block
- * and only treating `;` as a statement terminator when we are NOT inside one.
+ * place `--` on their own header/annotation lines, never inside a `$$` body or a
+ * string literal), then scan character-by-character tracking whether we're inside
+ * a dollar-quoted block OR a single-quoted `'…'` string literal, and only treat
+ * `;` as a statement terminator when we are inside NEITHER.
+ *
+ * SINGLE-QUOTE AWARENESS: a seeded value can legitimately contain a `;` or a `$`
+ * (e.g. `INSERT … VALUES ('Hi; welcome to $tier$ plan')`). Without tracking string
+ * state, the `;` would falsely terminate the statement, or the `$tier$` would be
+ * mistaken for a dollar-quote opener and swallow everything up to a close tag that
+ * never comes — either way shredding the script. Inside a `'…'` literal, `;` and
+ * `$` are literal; a doubled `''` is an escaped quote that stays inside the string.
+ * The dollar-block check runs FIRST, so a `'` inside a `$$ … $$` body (Postgres
+ * allows unescaped quotes there) is consumed as body, never toggling string state.
  */
 export function parseSqlStatementsDollarAware(sqlContent: string): string[] {
   let content = sqlContent;
@@ -60,10 +70,12 @@ export function parseSqlStatementsDollarAware(sqlContent: string): string[] {
   const statements: string[] = [];
   let current = "";
   let tag: string | null = null; // the open dollar-quote tag ("$$", "$foo$"), or null
+  let inSingle = false; // inside a single-quoted '…' string literal
   let i = 0;
   while (i < content.length) {
     if (tag) {
-      // Inside a dollar-quoted block — consume until the matching close tag.
+      // Inside a dollar-quoted block — consume until the matching close tag. `'`,
+      // `;`, and `$` are all literal here, so nothing else can toggle mid-body.
       if (content.startsWith(tag, i)) {
         current += tag;
         i += tag.length;
@@ -74,12 +86,37 @@ export function parseSqlStatementsDollarAware(sqlContent: string): string[] {
       i += 1;
       continue;
     }
-    // Not inside a block — a `$tag$` here OPENS one.
+    if (inSingle) {
+      // Inside a single-quoted string literal. A doubled `''` is an escaped quote
+      // (stays in the string); a lone `'` closes it. `;`/`$` inside are literal.
+      if (content[i] === "'") {
+        if (content[i + 1] === "'") {
+          current += "''";
+          i += 2;
+          continue;
+        }
+        current += "'";
+        i += 1;
+        inSingle = false;
+        continue;
+      }
+      current += content[i];
+      i += 1;
+      continue;
+    }
+    // Not inside a block or a string literal — a `$tag$` here OPENS a block.
     const opener = /^\$[A-Za-z0-9_]*\$/.exec(content.slice(i));
     if (opener) {
       tag = opener[0];
       current += opener[0];
       i += opener[0].length;
+      continue;
+    }
+    // A `'` here OPENS a single-quoted string literal.
+    if (content[i] === "'") {
+      inSingle = true;
+      current += "'";
+      i += 1;
       continue;
     }
     if (content[i] === ";") {

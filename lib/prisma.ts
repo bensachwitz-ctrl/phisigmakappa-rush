@@ -174,6 +174,25 @@ export async function listActiveTenants(): Promise<TenantRecord[]> {
 }
 
 /**
+ * EVERY chapter from the central registry — active, suspended, AND pending-billing
+ * (isActive=false). [] on error. Unlike listActiveTenants (the serve gate), this
+ * is for ADDITIVE, IDEMPOTENT maintenance that must reach a chapter's schema
+ * regardless of whether its PUBLIC site is live — most importantly the manual
+ * schema-migration applier, which otherwise never heals a schema provisioned
+ * before a migration landed if that chapter isn't active yet.
+ */
+export async function listAllTenants(): Promise<TenantRecord[]> {
+  try {
+    const rows = await centralDb.tenant.findMany({
+      select: { id: true, subdomain: true, name: true, school: true, isActive: true },
+    });
+    return rows as TenantRecord[];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Run `fn` once per ACTIVE tenant, each with that tenant's explicit schema client.
  * Every tenant is isolated in its own try/catch so one chapter's failure never
  * aborts the rest. Returns a per-tenant ok/result/error summary. This is how
@@ -184,6 +203,32 @@ export async function forEachTenant<T>(
   fn: (db: PrismaClient, tenant: TenantRecord) => Promise<T>
 ): Promise<Array<{ tenant: string; ok: boolean; result?: T; error?: string }>> {
   const tenants = await listActiveTenants();
+  const out: Array<{ tenant: string; ok: boolean; result?: T; error?: string }> = [];
+  for (const t of tenants) {
+    try {
+      const result = await fn(getTenantClient(t.subdomain), t);
+      out.push({ tenant: t.subdomain, ok: true, result });
+    } catch (err: any) {
+      out.push({ tenant: t.subdomain, ok: false, error: err?.message || "unknown error" });
+    }
+  }
+  return out;
+}
+
+/**
+ * Like forEachTenant, but fans out across EVERY registry row — including inactive /
+ * pending-billing / operator-suspended chapters (listAllTenants, not
+ * listActiveTenants). For ADDITIVE, IDEMPOTENT work that must reach a chapter's
+ * schema irrespective of whether its public site is live — the manual schema-
+ * migration applier is the canonical caller. Each tenant is isolated in its own
+ * try/catch so one chapter's failure never aborts the rest. Do NOT use this for
+ * request-serving / entitlement decisions — isActive is the serve gate, and this
+ * intentionally ignores it.
+ */
+export async function forEachTenantIncludingInactive<T>(
+  fn: (db: PrismaClient, tenant: TenantRecord) => Promise<T>
+): Promise<Array<{ tenant: string; ok: boolean; result?: T; error?: string }>> {
+  const tenants = await listAllTenants();
   const out: Array<{ tenant: string; ok: boolean; result?: T; error?: string }> = [];
   for (const t of tenants) {
     try {

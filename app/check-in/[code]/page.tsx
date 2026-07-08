@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { Wordmark } from "@/components/brand/wordmark";
@@ -48,6 +49,12 @@ async function lookup(code: string): Promise<Lookup> {
 }
 
 export default async function CheckInPage({ params }: { params: { code: string } }) {
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve its
+  // event check-in pages (same gated state app/page.tsx renders). Runs BEFORE the
+  // code lookup, so no event data leaks. Returns null (proceeds) on the apex.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
+
   const [result, cfg] = await Promise.all([
     lookup(params.code),
     getSiteConfig().catch(() => ({} as Record<string, string>)),

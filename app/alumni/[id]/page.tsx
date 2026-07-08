@@ -6,6 +6,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma, getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { publicAlumniView } from "@/lib/alumni";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
@@ -51,6 +52,12 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
     host = headers().get("host") || headers().get("x-forwarded-host") || "";
   } catch {}
   if (getSubdomain(host) === null) notFound();
+
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve an
+  // alum profile (same gated state app/page.tsx renders), and the gate runs BEFORE
+  // the profile lookup so no member data leaks.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
 
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
