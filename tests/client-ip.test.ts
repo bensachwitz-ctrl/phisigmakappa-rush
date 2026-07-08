@@ -39,4 +39,9 @@ describe("getClientIp", () => {
   it("returns null when no IP headers exist", () => {
     expect(getClientIp(reqWith({}))).toBeNull();
   });
+
+  it("handles empty values gracefully when they exist", () => {
+    const req = reqWith({ "x-forwarded-for": " , " });
+    expect(getClientIp(req)).toBeNull();
+  });
 });
