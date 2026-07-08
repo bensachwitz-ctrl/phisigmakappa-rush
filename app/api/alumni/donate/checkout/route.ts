@@ -285,11 +285,27 @@ export async function POST(req: Request) {
       ? `Donation to ${donationChapter} — ${campaign}`
       : `Chapter donation — ${campaign}`;
 
+    // PaymentIntent metadata — stamped onto the PI (and thus reachable from the
+    // Charge/Dispute) so the dues webhook can route a REFUND / CHARGEBACK back to
+    // THIS chapter's schema. charge.refunded / charge.dispute.* carry a
+    // Charge/Dispute object that does NOT carry the Checkout Session's metadata,
+    // so without this the webhook resolves subdomain=undefined → the empty public
+    // schema → the reversal finds no AlumniDonation row → money left Stripe while
+    // the donation stayed PAID. The Session metadata below is unchanged.
+    const donationPiMetadata: Record<string, string> = {
+      subdomain: sub,
+      donationId: donation.id,
+      alumniId,
+      campaign,
+    };
+
     if (isConnectChargesReady(cfg)) {
       const destination = getConnectAccountId(cfg);
       const piData: NonNullable<Stripe.Checkout.SessionCreateParams["payment_intent_data"]> = {
         transfer_data: { destination },
         description: donationDescription,
+        // Route refunds/chargebacks back to this chapter (see donationPiMetadata).
+        metadata: donationPiMetadata,
       };
       const feePct = parseFloat(cfg["dues.platformFeePct"] || "0");
       if (Number.isFinite(feePct) && feePct > 0) {
@@ -303,6 +319,8 @@ export async function POST(req: Request) {
       sessionParams.payment_intent_data = {
         description: donationDescription,
         statement_descriptor_suffix: "DONATION",
+        // Route refunds/chargebacks back to this chapter (see donationPiMetadata).
+        metadata: donationPiMetadata,
       };
       sessionParams.invoice_creation = {
         enabled: true,

@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { setPortalCookie } from "@/lib/portal-auth";
+import { getClientIp } from "@/lib/client-ip";
 import {
-  rateLimit,
-  recordRateLimit,
-  clearRateLimit,
-  clientIpFromRequest,
+  checkDbThrottle,
+  recordDbAttempt,
+  clearDbAttempts,
+  type DbThrottleOptions,
 } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -14,8 +15,14 @@ export const dynamic = "force-dynamic";
 
 // Per-IP+email brute-force throttle: 8 failed attempts within 15 minutes →
 // hard-block for the remainder of the window. Brother passwords are guessable
-// targets, so unlimited attempts are unacceptable.
-const LOGIN_LIMIT = { limit: 8, windowMs: 15 * 60 * 1000 };
+// targets, so unlimited attempts are unacceptable. DB-backed (shared RushSubmitLog
+// count) so the cap holds across serverless instances, and keyed on the non-
+// forgeable getClientIp so an attacker can't rotate x-forwarded-for to dodge it.
+const LOGIN_LIMIT: DbThrottleOptions = {
+  limit: 8,
+  windowMs: 15 * 60 * 1000,
+  status: "PORTAL_BROTHER_LOGIN_FAILED",
+};
 
 export async function POST(req: Request) {
   let body: any;
@@ -32,8 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
-  const rlKey = `portal-brother:${clientIpFromRequest(req)}:${email}`;
-  const rl = rateLimit(rlKey, LOGIN_LIMIT);
+  const throttleKeys = { ip: getClientIp(req), account: `brother:${email}` };
+  const rl = await checkDbThrottle(prisma, throttleKeys, LOGIN_LIMIT);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many failed attempts. Wait 15 minutes and try again." },
@@ -82,7 +89,7 @@ export async function POST(req: Request) {
         if (err?.code !== "P2002") throw err;
         const existing = await prisma.portalUser.findUnique({ where: { email } });
         if (!existing) {
-          recordRateLimit(rlKey, LOGIN_LIMIT);
+          await recordDbAttempt(prisma, throttleKeys, LOGIN_LIMIT);
           return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
         }
         // Link the pre-existing account to this Brother (preserve any existing
@@ -105,18 +112,18 @@ export async function POST(req: Request) {
     });
   } else {
     // PortalUser exists but password doesn't match
-    recordRateLimit(rlKey, LOGIN_LIMIT);
+    await recordDbAttempt(prisma, throttleKeys, LOGIN_LIMIT);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
   // If no user was matched/created above
   if (!portalUser) {
-    recordRateLimit(rlKey, LOGIN_LIMIT);
+    await recordDbAttempt(prisma, throttleKeys, LOGIN_LIMIT);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
   // Successful login — clear the failed-attempt counter for this key.
-  clearRateLimit(rlKey);
+  await clearDbAttempts(prisma, throttleKeys, LOGIN_LIMIT);
 
   // Set the portal cookie
   setPortalCookie(portalUser.id, "brother");

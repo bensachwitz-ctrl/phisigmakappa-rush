@@ -52,15 +52,26 @@ export interface MobileElectionView {
  * member's audience — the client renders an explicit "No open elections" empty
  * state in that case (never a blank, data-less surface).
  *
+ * SECRET-BALLOT / NO-INFLUENCE: while the election is OPEN, per-candidate running
+ * vote counts are SUPPRESSED (returned as 0) for the member-facing view. Exposing
+ * the live tally to every voter mid-election leaks who's winning and lets late
+ * voters be swayed by (or pile onto) the current leader. Counts are only ever
+ * revealed to an OFFICER viewing the admin tally — via `opts.includeCandidateVotes`
+ * — or after the election is no longer OPEN. The aggregate participation headline
+ * (`ballotsCast` / `totalEligible`) is NOT per-candidate and stays visible.
+ *
  * @param db            tenant Prisma client (already bound to the chapter)
  * @param voterBrotherId the verified caller's Brother.id (for the myBallot map);
  *                       pass null for a member with no brother row (→ empty map)
  * @param role          the verified session role ("brother" | "alumni" | "pnm")
+ * @param opts.includeCandidateVotes  reveal per-candidate counts — ONLY set true
+ *                       for an officer/admin tally surface, NEVER a voter view.
  */
 export async function buildMobileElectionView(
   db: PrismaClient,
   voterBrotherId: string | null,
   role: string,
+  opts: { includeCandidateVotes?: boolean } = {},
 ): Promise<{ election: MobileElectionView | null; myBallot: Record<string, string> }> {
   // Only brother-role sessions vote (the audience is BROTHERS or ALL). Alumni /
   // PNM sessions never see a ballot.
@@ -130,6 +141,11 @@ export async function buildMobileElectionView(
   // ballot rows; sum them for the headline (one ballot row per voter per seat).
   let ballotsCast = 0;
 
+  // The query above only ever returns an OPEN election, so per-candidate counts
+  // are revealed ONLY when an officer explicitly opts in (admin tally). Every
+  // voter-facing caller leaves this false → live standings stay hidden.
+  const revealCandidateVotes = opts.includeCandidateVotes === true;
+
   const seats: MobileElectionSeat[] = election.seats.map((s) => {
     const tally = tallySeat(
       s.id,
@@ -147,7 +163,9 @@ export async function buildMobileElectionView(
         name: c.name,
         year: c.brotherId ? yearById.get(c.brotherId) || "" : "",
         blurb: c.statement || "",
-        votes: votesById.get(c.id) ?? 0,
+        // Suppressed (0) for the voter-facing OPEN-election view — see the
+        // NO-INFLUENCE note on this function. Officers pass includeCandidateVotes.
+        votes: revealCandidateVotes ? votesById.get(c.id) ?? 0 : 0,
       })),
     };
   });

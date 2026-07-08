@@ -20,6 +20,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/lib/sms";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,13 +60,14 @@ const CheckInSchema = z.object({
   consent: z.boolean().optional().default(false),
 });
 
-function clientIp(req: Request): string | null {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    null
-  );
-}
+// Grace window around the event during which the QR code accepts check-ins. A
+// bare `checkInCode` lookup with NO time bound let a leaked/screenshotted code be
+// replayed forever (and the code never rotated), so anyone could inject rush
+// leads or bump attendance days later. We accept check-ins only from
+// startsAt-GRACE .. endsAt+GRACE (or startsAt + a default length when endsAt is
+// unset) and BURN the code once the event is over.
+const CHECKIN_GRACE_MS = 2 * 60 * 60 * 1000; // 2h before doors / after close
+const DEFAULT_EVENT_LEN_MS = 12 * 60 * 60 * 1000; // used only when endsAt is null
 
 export async function POST(req: Request, { params }: { params: { code: string } }) {
   const code = (params.code || "").trim().toUpperCase();
@@ -81,9 +83,34 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     );
   }
 
+  // ── TIME-WINDOW GUARD (anti-replay) ──────────────────────────────────────
+  const now = Date.now();
+  const opensAt = event.startsAt.getTime() - CHECKIN_GRACE_MS;
+  const closesAt =
+    (event.endsAt ? event.endsAt.getTime() : event.startsAt.getTime() + DEFAULT_EVENT_LEN_MS) +
+    CHECKIN_GRACE_MS;
+  if (now < opensAt) {
+    return NextResponse.json(
+      { ok: false, error: "Check-in for this event hasn't opened yet." },
+      { status: 403 },
+    );
+  }
+  if (now > closesAt) {
+    // Event is over — rotate the stale code to null so the link can never be
+    // replayed later (idempotent, best-effort). Then reject this attempt.
+    await prisma.event
+      .update({ where: { id: event.id }, data: { checkInCode: null } })
+      .catch(() => {});
+    return NextResponse.json(
+      { ok: false, error: "This check-in link has closed." },
+      { status: 403 },
+    );
+  }
+
   // Lightweight abuse guard: cap check-in writes per IP per hour using the
-  // existing RushSubmitLog (shared rate-limit ledger).
-  const ip = clientIp(req);
+  // existing RushSubmitLog (shared rate-limit ledger). Keyed on the non-forgeable
+  // getClientIp so an attacker can't rotate x-forwarded-for to dodge the cap.
+  const ip = getClientIp(req);
   if (ip) {
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recent = await prisma.rushSubmitLog

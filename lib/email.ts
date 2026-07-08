@@ -23,7 +23,7 @@ import { getResendConfig, getListmonkConfig, type ListmonkConfig } from "./messa
  */
 
 export type EmailResult =
-  | { ok: true; provider: "listmonk" | "resend" | "mock"; id?: string; mock?: boolean }
+  | { ok: true; provider: "listmonk" | "resend" | "mock"; id?: string; mock?: boolean; notConfigured?: boolean }
   | { ok: false; provider: "listmonk" | "resend"; error: string };
 
 export type SendEmailOpts = {
@@ -258,9 +258,13 @@ export async function sendEmail(opts: SendEmailOpts): Promise<EmailResult> {
   const from = `${fromName} <${fromAddr}>`;
 
   if (!apiKey) {
-    // ── Provider 3: mock (no real send — explicit) ──
-    console.log(`[Mock Email] to: ${opts.to}, subject: ${opts.subject}`);
-    return { ok: true, provider: "mock", mock: true };
+    // ── Provider 3: mock (NO provider configured — this is NOT a real send) ──
+    // Surface an explicit `notConfigured` signal so callers/admins can render a
+    // real "email not configured" state instead of a false "sent". We do NOT log
+    // the recipient or subject here — that is member PII / message content and
+    // must never land in server logs; a neutral, non-PII warning is enough.
+    console.warn("[email] no provider configured — message NOT sent (mock mode)");
+    return { ok: true, provider: "mock", mock: true, notConfigured: true };
   }
 
   const resend = new Resend(apiKey);

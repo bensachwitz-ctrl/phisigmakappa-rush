@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { PrismaClient } from "@prisma/client";
 import { forEachTenant } from "@/lib/prisma";
-import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getChapterIdentity, chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
 import {
   verifyTwilioSignatureMultiToken,
@@ -154,13 +154,26 @@ export async function POST(req: Request) {
   const rushee = matches.length ? { name: matches[0].rusheeName } : null;
   const latestConsent = matches.some((m) => m.consentId) ? {} : null;
 
-  // Pull chapter identity once for all CTIA-mandated replies. WHITE-LABEL: the
-  // contact email + site URL come from THIS chapter's cfg / request host — never
-  // a hardcoded Phi Sig address or domain (cross-brand leak). When the chapter
-  // hasn't set a rush email we omit the "Help: <email>" clause rather than leak
-  // another chapter's address.
-  const identity = await getChapterIdentity();
-  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  // Chapter identity for all CTIA-mandated replies. WHITE-LABEL: Twilio hits this
+  // apex webhook with NO chapter Host, so getChapterIdentity()/getSiteConfig()
+  // resolve through the Host proxy to the EMPTY public schema and would sign every
+  // reply with a neutral/placeholder (or wrong) brand. The opt-out WRITES already
+  // fan out per-tenant (matches[]); derive the reply copy from the SAME matched
+  // tenant's schema so a rushee who texts STOP gets a reply signed by the chapter
+  // they actually belong to. Only an UNKNOWN number (no match) falls back to the
+  // Host-proxied identity — there's no tenant to attribute to then.
+  let identity;
+  let cfg: Record<string, string>;
+  if (matches.length) {
+    const rows = await matches[0].db.siteConfig
+      .findMany()
+      .catch(() => [] as { key: string; value: string }[]);
+    cfg = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    identity = chapterIdentityFromCfg(cfg);
+  } else {
+    identity = await getChapterIdentity();
+    cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  }
   const rushEmail = (cfg["contact.rushEmail"] || cfg["contact.advisorEmail"] || "").trim();
   const helpClause = rushEmail ? ` Help: ${rushEmail}.` : "";
   const emailClause = rushEmail ? ` or email ${rushEmail}` : "";

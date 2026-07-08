@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { centralDb, getTenantClient } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { signPortalTokenForTenant } from "@/lib/portal-auth";
+import { getClientIp } from "@/lib/client-ip";
 import {
-  rateLimit,
-  recordRateLimit,
-  clearRateLimit,
-  clientIpFromRequest,
+  checkDbThrottle,
+  recordDbAttempt,
+  clearDbAttempts,
+  type DbThrottleOptions,
 } from "@/lib/rate-limit";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 
@@ -31,7 +32,13 @@ function withCors(req: Request, res: NextResponse): NextResponse {
 // minutes → hard-block for the remainder of the window. The native app hits
 // this endpoint with a chapter's member credentials, so it is a password-
 // guessing target exactly like the web portal login — mirror that throttle.
-const LOGIN_LIMIT = { limit: 8, windowMs: 15 * 60 * 1000 };
+// DB-backed (shared RushSubmitLog count in the chapter schema) so the cap holds
+// across serverless instances, keyed on the non-forgeable getClientIp.
+const LOGIN_LIMIT: DbThrottleOptions = {
+  limit: 8,
+  windowMs: 15 * 60 * 1000,
+  status: "MOBILE_AUTH_FAILED",
+};
 
 export async function POST(req: Request) {
   // Single CORS wrap point: handlePost returns the real response and we attach
@@ -60,18 +67,9 @@ async function handlePost(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Role must be either 'brother' or 'alumni'." }, { status: 400 });
   }
 
-  // Brute-force throttle (record-on-failure / clear-on-success), keyed on
-  // IP + chapter + email so an attacker can't grind one member's password.
-  const rlKey = `mobile-auth:${clientIpFromRequest(req)}:${subdomain}:${email}`;
-  const rl = rateLimit(rlKey, LOGIN_LIMIT);
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: "Too many failed attempts. Wait 15 minutes and try again." },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
-    );
-  }
-
-  // 1. Verify that tenant is active in central registry
+  // 1. Verify that tenant is active in central registry. (Cheap indexed lookup;
+  //    an invalid/inactive chapter short-circuits before any password work, so
+  //    there is nothing to throttle on that path.)
   const tenant = await centralDb.tenant.findUnique({
     where: { subdomain },
   });
@@ -86,6 +84,18 @@ async function handlePost(req: Request): Promise<NextResponse> {
 
   // 2. Get the tenant client
   const db = getTenantClient(subdomain);
+
+  // Brute-force throttle (record-on-failure / clear-on-success), keyed on
+  // IP + chapter + email so an attacker can't grind one member's password. Runs
+  // against the resolved chapter schema's shared RushSubmitLog (cross-instance).
+  const throttleKeys = { ip: getClientIp(req), account: `mobile:${subdomain}:${email}` };
+  const rl = await checkDbThrottle(db, throttleKeys, LOGIN_LIMIT);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many failed attempts. Wait 15 minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
 
   let portalUser: any = null;
   let brotherId: any = null;
@@ -182,13 +192,13 @@ async function handlePost(req: Request): Promise<NextResponse> {
   }
 
   if (!authenticated || !portalUser) {
-    // Record the failed attempt against the throttle key.
-    recordRateLimit(rlKey, LOGIN_LIMIT);
+    // Record the failed attempt against the shared throttle store.
+    await recordDbAttempt(db, throttleKeys, LOGIN_LIMIT);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
   // Successful login — clear the failed-attempt counter for this key.
-  clearRateLimit(rlKey);
+  await clearDbAttempts(db, throttleKeys, LOGIN_LIMIT);
 
   // Tenant-bound token: signed with the chapter's per-tenant secret so it only
   // verifies when this same `subdomain` is presented — never reusable on another

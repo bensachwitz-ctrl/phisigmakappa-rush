@@ -68,6 +68,7 @@ export function HeroBanner(ctx: SectionContext): React.ReactNode {
       <FloatingSymbols
         greekLettersGlyphs={identity.greekLettersGlyphs}
         fraternityLetters={identity.fraternityLetters}
+        schoolNames={[identity.schoolShort || identity.schoolName].filter(Boolean)}
       />
       <FloatingOrbs colors={BRAND_ORB_COLORS} blur={120} className="-z-10 opacity-40" />
       <Grain className="-z-10" opacity={0.05} />

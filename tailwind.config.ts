@@ -71,15 +71,18 @@ const config: Config = {
         },
         // Brand color tokens — bound to CSS custom properties so admin can
         // override at runtime via app/layout.tsx's inline <style> tag (which
-        // reads from cfg["brand.primaryHex"], etc.). Default values match
-        // the Phi Sigma Kappa cardinal ramp (#C8102E / #A20D26 / #FCEFF1).
-        // Each chapter sets their own school color in /admin/settings without
-        // a rebuild — every component using bg-phisig-red, text-phisig-red,
-        // etc. picks up the override on next page load.
+        // reads from cfg["brand.primaryHex"], etc.). The FALLBACK ramp is the
+        // platform's royal-blue identity (#2563eb / #1e40af / #eff6ff), matching
+        // the `brand-secondary` gold below — so an UNBRANDED first paint (SSR /
+        // apex / email, before a chapter's override loads) renders single-tone
+        // royal-blue+gold, not the old two-tone cardinal-red-vs-royal-blue. Each
+        // chapter still sets its own school color in /admin/settings with no
+        // rebuild — every bg-phisig-red / text-phisig-red picks up the override
+        // on next page load.
         phisig: {
-          red: "var(--brand-primary, #C8102E)",
-          "red-dark": "var(--brand-primary-dark, #A20D26)",
-          "red-soft": "var(--brand-primary-soft, #FCEFF1)",
+          red: "var(--brand-primary, #2563eb)",
+          "red-dark": "var(--brand-primary-dark, #1e40af)",
+          "red-soft": "var(--brand-primary-soft, #eff6ff)",
           ink: "#0B0B0C",
           paper: "#FFFFFF",
           mist: "#F5F5F7",

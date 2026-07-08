@@ -51,6 +51,9 @@ export type SmsSendResult = {
   failed: number;
   /** Set when the send was blocked entirely by quiet hours. */
   quietHoursBlocked?: { tz: string; window: string };
+  /** True when NO SMS provider is configured — a mock "send" that did nothing.
+   *  Lets callers/admins show a real "SMS not configured" state, not a false OK. */
+  notConfigured?: boolean;
 };
 
 /** Normalize a phone to E.164 (US default). Mirrors the existing route helper. */
@@ -213,6 +216,9 @@ export async function sendBulkSms(
     return { ok: failed === 0, provider: "twilio", sent, optedOut, failed };
   }
 
-  // ── Provider 3: mock (no creds — caller should log to SmsLog) ──
-  return { ok: true, provider: "mock", sent: 0, optedOut, failed: 0 };
+  // ── Provider 3: mock (NO provider configured — nothing was actually sent) ──
+  // Explicit not-configured signal so callers/admins see a real state instead of
+  // a false success. (The quiet-hours block above is a DIFFERENT mock case and is
+  // intentionally NOT flagged not-configured.)
+  return { ok: true, provider: "mock", sent: 0, optedOut, failed: 0, notConfigured: true };
 }

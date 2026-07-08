@@ -58,6 +58,7 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
       <FloatingSymbols
         greekLettersGlyphs={identity.greekLettersGlyphs}
         fraternityLetters={identity.fraternityLetters}
+        schoolNames={[identity.schoolShort || identity.schoolName].filter(Boolean)}
       />
       <FloatingOrbs colors={BRAND_ORB_COLORS} blur={110} className="-z-10 opacity-50" />
       <Grain className="-z-10" opacity={0.04} />

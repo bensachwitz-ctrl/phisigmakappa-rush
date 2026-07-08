@@ -12,7 +12,7 @@ const DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me";
  * cookies offline using the well-known fallback string. Throwing turns a silent
  * misconfiguration into a loud 500 the operator notices immediately.
  */
-function getSecret(): string {
+export function getSecret(): string {
   const env = process.env.ADMIN_SESSION_SECRET;
   if (env) return env;
   const isProd =

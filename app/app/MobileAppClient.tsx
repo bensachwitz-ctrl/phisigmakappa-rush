@@ -910,7 +910,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   // tenant around the brand, re-seeds the mock data, and closes the chooser.
   const applyBrandToDemo = (brand: FraternityBrand, opts?: { name?: string; school?: string }) => {
     const name = opts?.name || brand.name;
-    const school = opts?.school || "University of South Carolina";
+    const school = opts?.school || "Your University";
     const sub = (name || brand.id).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 18) || "chapter";
     const tenant: Tenant = {
       id: `demo-${sub}`,
@@ -2470,7 +2470,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
             {selectedBrand.name}
           </span>
           <span className="mt-1 block text-[10px] font-medium text-slate-400 leading-none">
-            {selectedTenant?.school || "University of South Carolina"}
+            {selectedTenant?.school || "Your University"}
           </span>
         </div>
 
@@ -2711,7 +2711,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     <input
                       type="email"
                       disabled
-                      value={dashboardData?.profile?.email || email || "member@usc.edu"}
+                      value={dashboardData?.profile?.email || email || "member@example.com"}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none"
                     />
                   </div>

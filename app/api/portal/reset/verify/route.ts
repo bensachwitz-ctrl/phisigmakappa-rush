@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma, centralDb, getTenantClient, getSubdomain } from "@/lib/prisma";
 import { setPortalCookie, type PortalRole } from "@/lib/portal-auth";
-import { rateLimit, recordRateLimit, clearRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
+import {
+  checkDbThrottle,
+  recordDbAttempt,
+  clearDbAttempts,
+  type DbThrottleOptions,
+} from "@/lib/rate-limit";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { verifyOtp, isOtpExpired, isOtpUsed, isValidOtpFormat } from "@/lib/otp";
 
@@ -24,8 +30,20 @@ export const dynamic = "force-dynamic";
 
 // Per-IP + per-account redemption throttle: 8 / 15 min. Caps online guessing of
 // the small 6-digit keyspace; combined with the 10-min expiry this makes brute
-// force infeasible.
-const VERIFY_LIMIT = { limit: 8, windowMs: 15 * 60 * 1000 };
+// force infeasible. DB-backed (shared RushSubmitLog count) so the cap holds
+// across serverless instances, keyed on the non-forgeable getClientIp.
+const VERIFY_LIMIT: DbThrottleOptions = {
+  limit: 8,
+  windowMs: 15 * 60 * 1000,
+  status: "PORTAL_OTP_VERIFY_FAILED",
+};
+
+// HARD per-code attempt ceiling, independent of IP/window. A single issued reset
+// code may be guessed against at most this many times before it is BURNED (marked
+// used) — so even a distributed attacker who evades the per-IP window can only
+// ever get this many tries at one code's small keyspace. reset.attempts was
+// previously incremented but never enforced; this closes that gap.
+const MAX_RESET_ATTEMPTS = 8;
 
 const INVALID = "Invalid or expired code.";
 
@@ -80,24 +98,22 @@ async function handlePost(req: Request): Promise<NextResponse> {
     tenant = getSubdomain(host) || "_apex";
   }
 
-  // ── RATE LIMIT (key on IP + account) ────────────────────────────────────
-  const ip = clientIpFromRequest(req);
-  const ipKey = `portal-otp-verify:ip:${ip}`;
-  const acctKey = `portal-otp-verify:acct:${tenant}:${role}:${email}`;
-  const ipRl = rateLimit(ipKey, VERIFY_LIMIT);
-  const acctRl = rateLimit(acctKey, VERIFY_LIMIT);
-  if (!ipRl.ok || !acctRl.ok) {
-    const retryAfter = Math.max(ipRl.retryAfterSec, acctRl.retryAfterSec);
+  // ── RATE LIMIT (DB-backed; key on IP + account) ─────────────────────────
+  // Counts recent failed redemptions in the tenant's shared RushSubmitLog so the
+  // cap holds across instances. `db` is the resolved tenant client (native path)
+  // or the Host-proxied tenant (web path).
+  const throttleKeys = { ip: getClientIp(req), account: `otp-verify:${tenant}:${role}:${email}` };
+  const rl = await checkDbThrottle(db, throttleKeys, VERIFY_LIMIT);
+  if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
-      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
     );
   }
 
   // Cheap format gate before any DB work — also keeps the timing uniform-ish.
   if (!isValidOtpFormat(code)) {
-    recordRateLimit(ipKey, VERIFY_LIMIT);
-    recordRateLimit(acctKey, VERIFY_LIMIT);
+    await recordDbAttempt(db, throttleKeys, VERIFY_LIMIT);
     return NextResponse.json({ error: INVALID }, { status: 400 });
   }
 
@@ -108,8 +124,7 @@ async function handlePost(req: Request): Promise<NextResponse> {
 
   // Fold "no account" into the same generic failure → no enumeration.
   if (!portalUser) {
-    recordRateLimit(ipKey, VERIFY_LIMIT);
-    recordRateLimit(acctKey, VERIFY_LIMIT);
+    await recordDbAttempt(db, throttleKeys, VERIFY_LIMIT);
     return NextResponse.json({ error: INVALID }, { status: 400 });
   }
 
@@ -121,6 +136,18 @@ async function handlePost(req: Request): Promise<NextResponse> {
     .catch(() => null);
 
   const now = new Date();
+
+  // HARD per-code attempt ceiling (see MAX_RESET_ATTEMPTS). Once a single code has
+  // been guessed against too many times, BURN it (mark used) so it can never be
+  // redeemed even with the correct digits — the user must request a fresh code.
+  if (reset && reset.attempts >= MAX_RESET_ATTEMPTS) {
+    await db.portalPasswordReset
+      .update({ where: { id: reset.id }, data: { usedAt: now } })
+      .catch(() => {});
+    await recordDbAttempt(db, throttleKeys, VERIFY_LIMIT);
+    return NextResponse.json({ error: INVALID }, { status: 400 });
+  }
+
   const valid =
     !!reset &&
     !isOtpUsed(reset) &&
@@ -129,9 +156,10 @@ async function handlePost(req: Request): Promise<NextResponse> {
 
   if (!valid || !reset) {
     // Burn a bucket hit on every failed redemption so guessing is throttled.
-    recordRateLimit(ipKey, VERIFY_LIMIT);
-    recordRateLimit(acctKey, VERIFY_LIMIT);
-    // Best-effort attempt counter for forensics (non-fatal).
+    await recordDbAttempt(db, throttleKeys, VERIFY_LIMIT);
+    // Increment the per-code attempt counter so the MAX_RESET_ATTEMPTS ceiling
+    // above eventually burns a code that's being ground on (now ENFORCED, not
+    // just recorded).
     if (reset) {
       await db.portalPasswordReset
         .update({ where: { id: reset.id }, data: { attempts: { increment: 1 } } })
@@ -158,8 +186,7 @@ async function handlePost(req: Request): Promise<NextResponse> {
   }
 
   // Successful redemption — clear the throttle counters.
-  clearRateLimit(ipKey);
-  clearRateLimit(acctKey);
+  await clearDbAttempts(db, throttleKeys, VERIFY_LIMIT);
 
   // Issue the portal session. mustReset=true gates it to the reset step only —
   // the portal layout redirects any mustReset session to "create new password"

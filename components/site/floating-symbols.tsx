@@ -15,24 +15,29 @@ interface FloatingSymbol {
   rotate: number; // degrees
 }
 
-const SCHOOL_NAMES = [
-  "USC", "Penn State", "Purdue", "FSU", "Indiana", "Michigan", "UT Austin",
-  "UF", "Alabama", "Ohio State", "UNC", "Georgia", "Wisconsin", "UCLA",
-  "TAMU", "Clemson", "Virginia", "Auburn", "Arizona", "Oregon"
-];
-
 export function FloatingSymbols({
   greekLettersGlyphs = "",
   fraternityLetters = "",
+  schoolNames = [],
   className = "z-[-10]",
 }: {
   /** The chapter's chapter-designation glyphs, e.g. "ΓΤ" (Gamma Triton). */
   greekLettersGlyphs?: string;
   /** The chapter's national-org letters, e.g. "ΦΣΚ" / "ΚΔ". */
   fraternityLetters?: string;
+  /**
+   * WHITE-LABEL SAFETY: the ONLY school names ever rendered in the ambient field.
+   * Callers pass THIS chapter's own school (e.g. ["USC"]) — never a hardcoded list
+   * of other universities, which would leak competitor brands onto a per-tenant
+   * rush hero / login. When empty (the per-tenant portal logins pass nothing),
+   * NO school-name node is drawn at all; the field falls back to letters + crest.
+   */
+  schoolNames?: string[];
   className?: string;
 }) {
   const [symbols, setSymbols] = useState<FloatingSymbol[]>([]);
+  // Stable primitive dep for the effect (arrays are referentially unstable).
+  const schoolsKey = (schoolNames || []).join("|");
 
   useEffect(() => {
     // Build the alphabet PURELY from THIS chapter's letters — combine
@@ -47,22 +52,26 @@ export function FloatingSymbols({
     }
     const hasLetters = alphabet.length > 0;
 
+    // The chapter's OWN school(s), de-duped + trimmed. Never a hardcoded list.
+    const schools = (schoolNames || []).map((s) => (s || "").trim()).filter(Boolean);
+    const hasSchools = schools.length > 0;
+
     const items: FloatingSymbol[] = [];
     // 12 nodes (down from 25) — a calmer ambient field that also halves the
     // number of compositor layers behind the hero.
     for (let i = 0; i < 12; i++) {
+      // A "school" node is only ever chosen when the chapter actually gave us its
+      // own school to show — otherwise we never render one (no competitor leak).
       let type: "text" | "crest" | "school" = "crest";
-      if (hasLetters) {
-        const r = Math.random();
-        if (r < 0.50) {
-          type = "text";
-        } else if (r < 0.75) {
-          type = "school";
-        } else {
-          type = "crest";
-        }
+      const r = Math.random();
+      if (hasLetters && hasSchools) {
+        type = r < 0.5 ? "text" : r < 0.75 ? "school" : "crest";
+      } else if (hasLetters) {
+        type = r < 0.65 ? "text" : "crest";
+      } else if (hasSchools) {
+        type = r > 0.5 ? "school" : "crest";
       } else {
-        type = Math.random() > 0.5 ? "school" : "crest";
+        type = "crest";
       }
 
       let content: string | undefined;
@@ -73,7 +82,7 @@ export function FloatingSymbols({
         content = alphabet[Math.floor(Math.random() * alphabet.length)];
         size = Math.floor(Math.random() * 28) + 20;
       } else if (type === "school") {
-        content = SCHOOL_NAMES[Math.floor(Math.random() * SCHOOL_NAMES.length)];
+        content = schools[Math.floor(Math.random() * schools.length)];
         size = Math.floor(Math.random() * 8) + 14; // 14px to 22px for readability
         rotate = Math.random() * 30 - 15; // restricted rotation (-15 to +15 deg)
       } else {
@@ -93,7 +102,7 @@ export function FloatingSymbols({
       });
     }
     setSymbols(items);
-  }, [greekLettersGlyphs, fraternityLetters]);
+  }, [greekLettersGlyphs, fraternityLetters, schoolsKey]);
 
   if (symbols.length === 0) return null;
 

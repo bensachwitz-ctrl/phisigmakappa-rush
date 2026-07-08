@@ -5,7 +5,8 @@ import { sendEmail } from "@/lib/email";
 import { renderEmail, renderEmailText } from "@/lib/email-template";
 import { getChapterIdentity, chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { getSiteConfig } from "@/lib/site-config";
-import { rateLimit, recordRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
+import { checkDbThrottle, recordDbAttempt, type DbThrottleOptions } from "@/lib/rate-limit";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 
 export const runtime = "nodejs";
@@ -29,8 +30,13 @@ function withCors(req: Request, res: NextResponse): NextResponse {
 // Per-IP + per-account throttle on reset requests: ~10 / hour. Without it, this
 // open endpoint can be used to (a) hammer the mail provider / flood a victim's
 // inbox with reset emails, and (b) churn the magicToken on a known account
-// indefinitely. The same reusable in-memory limiter the portal logins use.
-const RESET_REQUEST_LIMIT = { limit: 10, windowMs: 60 * 60 * 1000 };
+// indefinitely. DB-backed (shared RushSubmitLog count) so the cap holds across
+// serverless instances, keyed on the non-forgeable getClientIp.
+const RESET_REQUEST_LIMIT: DbThrottleOptions = {
+  limit: 10,
+  windowMs: 60 * 60 * 1000,
+  status: "PORTAL_FORGOT_REQUEST",
+};
 
 function baseUrl(req: Request) {
   return process.env.SITE_URL || `${new URL(req.url).origin}`;
@@ -80,23 +86,21 @@ async function handlePost(req: Request): Promise<NextResponse> {
 
   // Per-IP + per-account rate limit. We key BOTH on the source IP (blocks a
   // single host spraying many addresses) AND on the target account (blocks
-  // distributed inbox-flooding / token-churn against one victim). Either bucket
-  // tripping → 429. Recorded unconditionally on every request (success or not)
-  // so the count reflects real send pressure, not just failures.
-  const ip = clientIpFromRequest(req);
-  const ipKey = `portal-forgot:ip:${ip}`;
-  const acctKey = `portal-forgot:acct:${role}:${email}`;
-  const ipRl = rateLimit(ipKey, RESET_REQUEST_LIMIT);
-  const acctRl = rateLimit(acctKey, RESET_REQUEST_LIMIT);
-  if (!ipRl.ok || !acctRl.ok) {
-    const retryAfter = Math.max(ipRl.retryAfterSec, acctRl.retryAfterSec);
+  // distributed inbox-flooding / token-churn against one victim). Either
+  // dimension tripping → 429. DB-backed against the resolved chapter schema so
+  // the count is shared across instances (`db` is the tenant client on the native
+  // path, the Host-proxied tenant on the web path).
+  const throttleKeys = { ip: getClientIp(req), account: `forgot:${role}:${email}` };
+  const rl = await checkDbThrottle(db, throttleKeys, RESET_REQUEST_LIMIT);
+  if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many reset requests. Please try again later." },
-      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
     );
   }
-  recordRateLimit(ipKey, RESET_REQUEST_LIMIT);
-  recordRateLimit(acctKey, RESET_REQUEST_LIMIT);
+  // Recorded unconditionally on every request (success or not) so the count
+  // reflects real send pressure, not just failures.
+  await recordDbAttempt(db, throttleKeys, RESET_REQUEST_LIMIT);
 
   // Find PortalUser
   const portalUser = await db.portalUser.findFirst({

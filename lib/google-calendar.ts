@@ -11,6 +11,7 @@
 // ───────────────────────────────────────────────────────────────────────────
 
 import crypto from "crypto";
+import { getSecret } from "@/lib/auth";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -45,7 +46,11 @@ export function buildAuthUrl(opts: {
  * originated from us. Format: <brotherId>.<ts>.<sig>
  */
 export function signOAuthState(brotherId: string, ts: number = Date.now()): string {
-  const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
+  // Reuse the shared session secret resolver (lib/auth.getSecret) — it FAILS
+  // CLOSED in production (throws when ADMIN_SESSION_SECRET is unset) instead of
+  // silently signing OAuth state with a well-known "dev-insecure" fallback that
+  // an attacker could use to forge a valid state token.
+  const secret = getSecret();
   const payload = `${brotherId}.${ts}`;
   const sig = crypto.createHmac("sha256", secret).update(payload).digest("hex");
   return `${payload}.${sig}`;
@@ -61,7 +66,8 @@ export function verifyOAuthState(state: string | undefined | null, maxAgeMs = 10
   const ts = parseInt(tsStr, 10);
   if (!Number.isFinite(ts)) return null;
   if (Date.now() - ts > maxAgeMs) return null;
-  const secret = process.env.ADMIN_SESSION_SECRET || "dev-insecure-secret-change-me";
+  // Same fail-closed secret as signOAuthState (see note there).
+  const secret = getSecret();
   const expected = crypto.createHmac("sha256", secret).update(`${brotherId}.${ts}`).digest("hex");
   if (sig !== expected) return null;
   return brotherId;

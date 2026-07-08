@@ -362,6 +362,21 @@ async function handlePost(req: Request): Promise<NextResponse> {
   // pays the 1.5% intro rate; after, the 3% standard rate.
   const introUsed = cfg[DUES_INTRO_FEE_USED_KEY] === "true";
 
+  // PaymentIntent metadata — stamped onto the PI (and thus reachable from the
+  // Charge/Dispute) so the dues webhook can route a REFUND / CHARGEBACK / PAYMENT-
+  // FAILURE back to THIS chapter's schema. Those events carry a Charge/Dispute/PI
+  // object that does NOT carry the Checkout Session's metadata, so without this
+  // the webhook resolves subdomain=undefined → the empty public schema → the
+  // reversal finds no row → money left Stripe while DuesPayment stayed PAID +
+  // Brother.duesPaid true. The Session metadata below is unchanged (still routes
+  // checkout.session.completed/expired).
+  const piMetadata: Record<string, string> = {
+    subdomain: sub,
+    duesPaymentId: payment.id,
+    brotherId: brother.id,
+    duesYear: year,
+  };
+
   // ADDITIVE Stripe Connect routing (Wave-C). ONLY when this chapter has a
   // connected Express account AND Stripe reports charges_enabled do we route
   // the charge to the chapter's account via destination charges. If the chapter
@@ -373,6 +388,8 @@ async function handlePost(req: Request): Promise<NextResponse> {
       transfer_data: { destination },
       // Branded charge description carried to the connected account's receipt.
       description: duesPiDescription,
+      // Route refunds/chargebacks back to this chapter (see piMetadata above).
+      metadata: piMetadata,
     };
     // Optional admin-configured platform application fee. Applied when an admin
     // set a positive dues.platformFeePct; otherwise 0 (legacy default).
@@ -404,6 +421,8 @@ async function handlePost(req: Request): Promise<NextResponse> {
     sessionParams.payment_intent_data = {
       description: duesPiDescription,
       statement_descriptor_suffix: "DUES",
+      // Route refunds/chargebacks back to this chapter (see piMetadata above).
+      metadata: piMetadata,
     };
     sessionParams.invoice_creation = {
       enabled: true,

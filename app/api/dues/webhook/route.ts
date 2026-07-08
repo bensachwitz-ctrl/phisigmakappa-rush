@@ -16,6 +16,16 @@ export const dynamic = "force-dynamic";
 
 const ROUTE = "/api/dues/webhook";
 
+// Event types whose Stripe object (Charge / Dispute / PaymentIntent) does NOT
+// carry the Checkout Session's metadata, so the tenant must be resolved via the
+// PaymentIntent / session / a registry-wide scan rather than obj.metadata.
+const REVERSAL_EVENT_TYPES = new Set<string>([
+  "charge.refunded",
+  "charge.dispute.created",
+  "charge.dispute.closed",
+  "payment_intent.payment_failed",
+]);
+
 /**
  * POST /api/dues/webhook
  *
@@ -88,10 +98,25 @@ export async function POST(req: Request) {
 
   // TENANT RESOLUTION — only AFTER the signature is verified, so an attacker
   // can't steer writes at an arbitrary schema. Route by the subdomain we
-  // stamped into metadata at checkout. Legacy in-flight sessions with no
-  // subdomain fall back to the Host-proxy `prisma`.
+  // stamped into metadata at checkout.
+  //
+  //   • checkout.session.completed / .expired carry the Checkout Session's
+  //     metadata.subdomain directly (fast path).
+  //   • charge.refunded / charge.dispute.* / payment_intent.payment_failed carry
+  //     a Charge / Dispute / PaymentIntent object that does NOT carry the
+  //     Session's metadata. For those we resolve the tenant ROBUSTLY (see
+  //     resolveReversalTenant): the PaymentIntent's own metadata.subdomain
+  //     (stamped via payment_intent_data at checkout), else the originating
+  //     Checkout Session's metadata, else a registry-wide scan for the row that
+  //     carries this PaymentIntent id. Without this the reversal writes hit the
+  //     EMPTY public schema and refunds/chargebacks NEVER reconcile — money left
+  //     Stripe while DuesPayment stayed PAID + Brother.duesPaid true.
+  //   • Legacy in-flight sessions with no subdomain still fall back to `prisma`.
   const obj = event.data.object as any;
-  const sub = obj?.metadata?.subdomain || null;
+  let sub: string | null = (obj?.metadata?.subdomain || "").toString().trim() || null;
+  if (!sub && REVERSAL_EVENT_TYPES.has(event.type)) {
+    sub = await resolveReversalTenant(stripe, event.type, obj);
+  }
   const db: PrismaClient = sub ? getTenantClient(sub) : prisma;
 
   try {
@@ -159,6 +184,94 @@ export async function POST(req: Request) {
   // One concise success line per processed event — event type + tenant only.
   logger.info("dues.webhook.processed", { route: ROUTE, eventType: event.type, tenant: sub });
   return NextResponse.json({ ok: true });
+}
+
+/** PaymentIntent id for a Charge / Dispute / PaymentIntent event object. */
+function piIdFromEvent(eventType: string, obj: any): string | null {
+  if (eventType.startsWith("payment_intent.")) {
+    return typeof obj?.id === "string" ? obj.id : null;
+  }
+  const pi = obj?.payment_intent;
+  if (typeof pi === "string") return pi;
+  if (pi && typeof pi.id === "string") return pi.id;
+  return null;
+}
+
+/**
+ * Resolve the tenant subdomain for a refund / dispute / payment-failure event
+ * whose object carries NO Checkout-Session metadata (a Charge / Dispute /
+ * PaymentIntent). In order:
+ *   1. the PaymentIntent's OWN metadata.subdomain — stamped via
+ *      payment_intent_data.metadata at checkout (app/api/dues/checkout +
+ *      app/api/alumni/donate/checkout), so the PI/Charge now carry it;
+ *   2. the originating Checkout Session's metadata.subdomain — for legacy
+ *      in-flight payments created before we stamped the PaymentIntent;
+ *   3. a registry-wide scan for the DuesPayment / AlumniDonation that carries
+ *      this PaymentIntent id (mirrors the platform webhook's charge.customer →
+ *      Tenant.stripeCustomerId backstop, adapted to schema-per-tenant).
+ * Every Stripe/DB call is defensive (.catch → null) so tenant resolution can
+ * never throw the webhook. Returns null only when the tenant genuinely can't be
+ * determined (a true out-of-band charge / test event).
+ */
+async function resolveReversalTenant(
+  stripe: Stripe,
+  eventType: string,
+  obj: any,
+): Promise<string | null> {
+  let piId = piIdFromEvent(eventType, obj);
+
+  // A Dispute may carry only a charge id (older API shape) — retrieve the charge
+  // to resolve its PaymentIntent.
+  if (
+    !piId &&
+    (eventType === "charge.dispute.created" || eventType === "charge.dispute.closed")
+  ) {
+    const chargeId =
+      typeof obj?.charge === "string" ? obj.charge : obj?.charge?.id || null;
+    if (chargeId) {
+      const charge = await stripe.charges.retrieve(chargeId).catch(() => null);
+      piId = charge ? piIdFromEvent("charge.refunded", charge) : null;
+    }
+  }
+
+  if (!piId) return null;
+
+  // 1 + 2: the PaymentIntent metadata, then the originating session metadata.
+  const pi = await stripe.paymentIntents.retrieve(piId).catch(() => null);
+  const piSub = ((pi?.metadata as any)?.subdomain || "").toString().trim() || null;
+  if (piSub) return piSub;
+
+  const sessions = await stripe.checkout.sessions
+    .list({ payment_intent: piId, limit: 1 })
+    .catch(() => null);
+  const sessSub =
+    ((sessions?.data?.[0]?.metadata as any)?.subdomain || "").toString().trim() ||
+    null;
+  if (sessSub) return sessSub;
+
+  // 3: registry-wide backstop.
+  return await findTenantByPaymentIntent(piId);
+}
+
+/**
+ * Last-resort tenant resolution: scan every ACTIVE chapter's schema for the
+ * DuesPayment or AlumniDonation carrying this Stripe PaymentIntent id and return
+ * its subdomain. Used only when neither the PaymentIntent nor the originating
+ * Checkout Session carries metadata.subdomain (e.g. a legacy in-flight payment).
+ */
+async function findTenantByPaymentIntent(piId: string): Promise<string | null> {
+  const results = await forEachTenant(async (tdb) => {
+    const dp = await tdb.duesPayment
+      .findFirst({ where: { stripePaymentIntentId: piId }, select: { id: true } })
+      .catch(() => null);
+    if (dp) return true;
+    const ad = await tdb.alumniDonation
+      .findFirst({ where: { stripePaymentIntentId: piId }, select: { id: true } })
+      .catch(() => null);
+    return !!ad;
+  });
+  const hit = results.find((r) => r.ok && r.result === true);
+  return hit ? hit.tenant : null;
 }
 
 async function handleCheckoutCompleted(

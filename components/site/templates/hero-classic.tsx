@@ -45,6 +45,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
         <FloatingSymbols
           greekLettersGlyphs={identity.greekLettersGlyphs}
           fraternityLetters={identity.fraternityLetters}
+          schoolNames={[identity.schoolShort || identity.schoolName].filter(Boolean)}
         />
         {/* Drifting brand-colored orbs for an "alive" depth layer behind the
             hero copy. Tinted to THIS chapter's brand (never platform indigo);
