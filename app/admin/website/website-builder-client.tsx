@@ -281,6 +281,15 @@ export function WebsiteBuilderClient({
   const [hero, setHero] = React.useState(initialConfig["brand.heroImageUrl"] || initialConfig["website.hero"] || "");
   const [headline, setHeadline] = React.useState(initialConfig["hero.h1.lead"] || initialConfig["website.headline"] || "");
   const [tagline, setTagline] = React.useState(initialConfig["hero.subline"] || initialConfig["website.tagline"] || "");
+  // Chapter display name + brand SOFT tint are edited inline in the live preview.
+  // These back the preview's name field + Soft color swatch, which previously had
+  // no-op onChange handlers (edits silently vanished). They now persist on Save to
+  // the canonical keys the public renderer reads (chapter.fraternityName +
+  // brand.primarySoftHex → the --brand-primary-soft CSS var, see lib/brand-theme).
+  const [fraternityName, setFraternityName] = React.useState(
+    initialConfig["chapter.fraternityName"] || initialConfig["fraternityName"] || "",
+  );
+  const [softHex, setSoftHex] = React.useState(initialConfig["brand.primarySoftHex"] || "#eff6ff");
 
   // Quick Style Presets state — a single text box maps recognized keywords to a
   // built-in template + palette preset (no AI, no code-gen, no agents).
@@ -412,6 +421,11 @@ export function WebsiteBuilderClient({
         "website.template": template,
         "brand.primaryHex": primaryHex.trim(),
         "brand.secondaryHex": secondaryHex.trim(),
+        // Brand soft tint (was a no-op handler in the preview — now persisted).
+        "brand.primarySoftHex": softHex.trim(),
+        // Chapter display name (was a no-op handler). Only written when non-empty
+        // so an unset field never clobbers an existing name with a blank.
+        ...(fraternityName.trim() ? { "chapter.fraternityName": fraternityName.trim() } : {}),
         // #2 — write to the CANONICAL keys the public renderer actually reads,
         // so these controls change the LIVE site (they previously wrote to
         // website.* keys nothing consumed, so Save was a silent no-op while the
@@ -614,8 +628,8 @@ export function WebsiteBuilderClient({
           fallback) so each tenant previews THEIR identity instead of always the
           Phi Sig / USC reference chapter. */}
       <EditableLivePreview
-        fraternityName={config["chapter.fraternityName"] || config["fraternityName"] || "Phi Sigma Kappa"}
-        onFraternityName={() => {}}
+        fraternityName={fraternityName}
+        onFraternityName={setFraternityName}
         greekLetters={config["chapter.greekLetters"] || config["greekLetters"] || "ΦΣΚ"}
         greekLettersGlyphs={config["chapter.greekLettersGlyphs"] || config["greekLettersGlyphs"] || "ΦΣΚ"}
         fraternityLetters={config["chapter.fraternityLetters"] || config["fraternityLetters"] || "ΦΣΚ"}
@@ -625,8 +639,8 @@ export function WebsiteBuilderClient({
         onPrimaryColor={setPrimaryHex}
         darkColor={secondaryHex}
         onDarkColor={setSecondaryHex}
-        softColor="#eff6ff"
-        onSoftColor={() => {}}
+        softColor={softHex}
+        onSoftColor={setSoftHex}
         heroHeadline={headline}
         onHeroHeadline={setHeadline}
         heroTagline={tagline}

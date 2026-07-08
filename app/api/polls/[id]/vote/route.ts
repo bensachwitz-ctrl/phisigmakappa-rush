@@ -121,6 +121,20 @@ export async function DELETE(
     return NextResponse.json({ ok: false, error: "Sign in first" }, { status: 401 });
   }
 
+  // A vote may only be RETRACTED while the poll is still OPEN. Without this guard
+  // a member could delete their vote AFTER the poll closed and silently alter an
+  // already-finalized result. Mirrors the POST open-guard (isClosed) above.
+  const poll = await prisma.poll.findUnique({
+    where: { id: params.id },
+    select: { closedAt: true, closesAt: true },
+  });
+  if (!poll) {
+    return NextResponse.json({ ok: false, error: "Poll not found" }, { status: 404 });
+  }
+  if (isClosed(poll)) {
+    return NextResponse.json({ ok: false, error: "Poll is closed" }, { status: 409 });
+  }
+
   if (brotherId) {
     await prisma.pollVote
       .delete({ where: { pollId_brotherId: { pollId: params.id, brotherId } } })

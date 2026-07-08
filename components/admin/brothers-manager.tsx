@@ -585,7 +585,7 @@ export function BrothersManager({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="mb-1 inline-block">Email</Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="@email.sc.edu" />
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="brother@university.edu" />
               </div>
               <div>
                 <Label className="mb-1 inline-block">Phone</Label>
@@ -779,7 +779,7 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
             {channel === "email" && (
               <div>
                 <Label className="mb-1.5 inline-block">Email address</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="brother@email.sc.edu" />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="brother@university.edu" />
               </div>
             )}
             {channel === "sms" && (
