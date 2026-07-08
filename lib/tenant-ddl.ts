@@ -36,6 +36,67 @@ export function parseTenantDdl(sqlContent: string): string[] {
     .filter((stmt) => stmt.length > 0);
 }
 
+/**
+ * Split a SQL script into statements while RESPECTING dollar-quoted blocks
+ * (`$$ … $$` / `$tag$ … $tag$`). Unlike parseTenantDdl (which is safe for
+ * lib/schema.sql because that file has no dollar-quoted bodies), the manual
+ * migration files under prisma/manual-migrations wrap their catalog-guarded
+ * `ADD CONSTRAINT` in a `DO $$ BEGIN … END $$;` block whose body contains its own
+ * semicolons. A naive split-on-`;` would shred that block into invalid fragments.
+ *
+ * Strategy: strip full-line `--` comments first (the migration files only ever
+ * place `--` on their own header/annotation lines, never inside a `$$` body), then
+ * scan character-by-character, tracking whether we're inside a dollar-quoted block
+ * and only treating `;` as a statement terminator when we are NOT inside one.
+ */
+export function parseSqlStatementsDollarAware(sqlContent: string): string[] {
+  let content = sqlContent;
+  if (content.startsWith("﻿")) content = content.slice(1); // strip BOM
+  content = content
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("--"))
+    .join("\n");
+
+  const statements: string[] = [];
+  let current = "";
+  let tag: string | null = null; // the open dollar-quote tag ("$$", "$foo$"), or null
+  let i = 0;
+  while (i < content.length) {
+    if (tag) {
+      // Inside a dollar-quoted block — consume until the matching close tag.
+      if (content.startsWith(tag, i)) {
+        current += tag;
+        i += tag.length;
+        tag = null;
+        continue;
+      }
+      current += content[i];
+      i += 1;
+      continue;
+    }
+    // Not inside a block — a `$tag$` here OPENS one.
+    const opener = /^\$[A-Za-z0-9_]*\$/.exec(content.slice(i));
+    if (opener) {
+      tag = opener[0];
+      current += opener[0];
+      i += opener[0].length;
+      continue;
+    }
+    if (content[i] === ";") {
+      const trimmed = current.trim();
+      if (trimmed.length > 0) statements.push(trimmed);
+      current = "";
+      i += 1;
+      continue;
+    }
+    current += content[i];
+    i += 1;
+  }
+  const tail = current.trim();
+  if (tail.length > 0) statements.push(tail);
+  return statements;
+}
+
 /** Minimal surface of a PrismaClient this helper needs — keeps it easy to test. */
 type RawExecutor = Pick<PrismaClient, "$executeRawUnsafe">;
 

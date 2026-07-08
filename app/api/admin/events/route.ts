@@ -84,13 +84,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, event: updated });
     }
 
+    // NEW-event past-date guard (backlog #6). Reject creating an event whose
+    // start time is already in the past — a fat-fingered year / AM-PM shouldn't
+    // silently publish a "past" event onto the brother calendar or the public
+    // schedule. This mirrors the intent of the existing meeting past-date guard
+    // (app/admin/meetings/meetings-client.tsx) but as a HARD server-side 400 so
+    // the rule holds for every API client, not just the web form. We guard ONLY
+    // creation: the edit branch above is intentionally NOT gated, so an admin can
+    // still correct details on an event that has already happened. `data.startsAt`
+    // arrives as a UTC ISO string (the form converts the chapter-local wall-clock
+    // to UTC before POSTing), so comparing against Date.now() is timezone-safe. A
+    // small grace window absorbs clock skew + the seconds between form-fill and
+    // submit so an event set for "a moment ago" isn't rejected.
+    const startsAtDate = new Date(data.startsAt);
+    if (Number.isNaN(startsAtDate.getTime())) {
+      return NextResponse.json(
+        { ok: false, error: "Please choose a valid start date and time." },
+        { status: 400 },
+      );
+    }
+    const PAST_GRACE_MS = 5 * 60 * 1000;
+    if (startsAtDate.getTime() < Date.now() - PAST_GRACE_MS) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "This event's start time is in the past. Pick a future date and time.",
+        },
+        { status: 400 },
+      );
+    }
+
     const created = await prisma.event.create({
       data: {
         name: data.name,
         description: data.description || null,
         location: data.location || null,
         dressCode: data.dressCode || null,
-        startsAt: new Date(data.startsAt),
+        startsAt: startsAtDate,
         endsAt: data.endsAt ? new Date(data.endsAt) : null,
         isPrivate: !!data.isPrivate,
         category: data.category || "OTHER",

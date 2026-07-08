@@ -226,6 +226,21 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
       push({ title: "Name and start time required", variant: "destructive" });
       return;
     }
+    // NEW-event past-date guard — mirror the server-side 400 (app/api/admin/events)
+    // so the admin gets an instant inline hint instead of a round-trip rejection.
+    // Only for creation: editing an event that has already happened (to fix its
+    // details) stays allowed. Same 5-minute grace as the server so a start set to
+    // "just now" isn't rejected on the seconds between fill and submit.
+    if (!editingId) {
+      const start = parseLocalTimeInTimeZone(form.startsAt, timeZone);
+      if (!Number.isNaN(start.getTime()) && start.getTime() < Date.now() - 5 * 60 * 1000) {
+        push({
+          title: "That start time is in the past. Pick a future date and time.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setBusy(true);
     try {
       const utcStartsAt = parseLocalTimeInTimeZone(form.startsAt, timeZone).toISOString();
