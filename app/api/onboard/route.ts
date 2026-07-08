@@ -253,6 +253,25 @@ export async function POST(req: Request) {
         ? null
         : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
+    // CARD-REQUIRED-TO-PUBLISH gate. A chapter is "billing-ready" at onboarding
+    // when a REAL billing arrangement already exists, and only then does its
+    // PUBLIC subdomain go live immediately:
+    //   • a card is attached now (paymentMethodId present), OR
+    //   • the plan is inherently billed/arranged — yearly (always charges a card
+    //     today), custom (operator-negotiated), or dues_percentage ($0-upfront by
+    //     design; Greekstack earns from the dues Connect fee, no card to collect).
+    // A card-free MONTHLY signup is the ONE not-ready case: it is fully provisioned
+    // (schema, admin, config — the founder CAN log into /admin) but its PUBLIC
+    // subdomain stays dark until a card/subscription lands via the platform-billing
+    // path (see app/api/platform/billing/webhook). We gate the central
+    // Tenant.isActive on this below (reservation create AND final update).
+    const cardProvided = Boolean(paymentMethodId);
+    const billingReady =
+      cardProvided ||
+      normalizedPlan === "yearly" ||
+      normalizedPlan === "custom" ||
+      normalizedPlan === "dues_percentage";
+
     // 1b. RESERVE the subdomain ATOMICALLY, BEFORE any DDL or seed. The unique
     //     constraint on public."Tenant".subdomain is the race arbiter: of two
     //     concurrent double-submits, exactly one create succeeds; the other
@@ -267,7 +286,11 @@ export async function POST(req: Request) {
           subdomain,
           name: fraternityName.trim(),
           school: (schoolName || "").trim(),
-          isActive: true,
+          // CARD-REQUIRED-TO-PUBLISH: live immediately only when billing-ready; a
+          // card-free monthly chapter is reserved isActive=false (provisioned but
+          // its PUBLIC subdomain not yet live) and published later when billing is
+          // added (platform-billing webhook flips it true).
+          isActive: billingReady,
           stripeCustomerId: null,
           stripeSubscriptionId: null,
           subscriptionStatus,
@@ -445,6 +468,14 @@ export async function POST(req: Request) {
       // this the site is subject to takedown (messaged in the welcome email). The
       // auto-takedown cron is intentionally NOT built — this is the stored value.
       "billing.paymentDeadline": paymentDeadlineIso,
+      // PENDING-PUBLICATION SIGNAL. "true" only for a NOT-billing-ready chapter
+      // (card-free monthly), whose central Tenant.isActive is false. app/page.tsx
+      // reads this to tell a pending-billing chapter (show a neutral "launching
+      // soon — billing setup in progress" page) apart from an operator HARD-suspend
+      // (which never carries this flag), and the platform-billing webhook clears it
+      // to "false" the moment it publishes the chapter. Present-and-explicit for a
+      // billing-ready chapter too so the key exists from day one.
+      "billing.pendingActivation": billingReady ? "false" : "true",
       // Recruitment-term label (e.g. "Fall '26") drives every season/year string
       // on the public site. Seeded present-and-default so a fresh tenant edits one
       // field in /admin/settings instead of hunting hardcoded literals.
@@ -501,7 +532,7 @@ export async function POST(req: Request) {
     // requires a card up front. `cardProvided` is also threaded into the welcome
     // email so the copy never claims "no card required" when one was charged.
     const isSubscriptionPlan = normalizedPlan === "monthly" || normalizedPlan === "yearly";
-    const cardProvided = Boolean(paymentMethodId);
+    // `cardProvided` is computed up top (it also drives the billing-ready gate).
     const requiresPayment = Boolean(stripe) && isSubscriptionPlan;
 
     if (requiresPayment && stripe) {
@@ -630,7 +661,10 @@ export async function POST(req: Request) {
       data: {
         name: fraternityName.trim(),
         school: (schoolName || "").trim(),
-        isActive: true,
+        // CARD-REQUIRED-TO-PUBLISH: keep the reservation's gate. A card-free
+        // monthly chapter stays isActive=false (public subdomain dark) even though
+        // its trialing subscription now exists; it publishes once billing is added.
+        isActive: billingReady,
         stripeCustomerId,
         stripeSubscriptionId,
         subscriptionStatus: finalSubscriptionStatus,
@@ -665,7 +699,12 @@ export async function POST(req: Request) {
       ? "localhost"
       : (process.env.APP_BASE_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || host).trim();
     const proto = isLocal ? "http" : "https";
-    const redirectUrl = `${proto}://${subdomain}.${domain}${port}/admin`;
+    // A NOT-live (card-free monthly) chapter lands on /admin/billing — the "add
+    // billing to publish" step — so the founder immediately sees how to take the
+    // public site live. A billing-ready chapter goes straight to the dashboard.
+    const redirectUrl = `${proto}://${subdomain}.${domain}${port}${
+      billingReady ? "/admin" : "/admin/billing"
+    }`;
 
     // Provisioning succeeded — a full tenant (schema + admin + registry row)
     // now exists. Log subdomain + outcome; no password/PII/secret.
@@ -686,7 +725,9 @@ export async function POST(req: Request) {
     // admin URL points at the new chapter's subdomain /admin.
     try {
       const adminEmailAddr = adminEmail.trim().toLowerCase();
-      const adminUrl = `https://${subdomain}.${domain}/admin`;
+      // A NOT-live (card-free monthly) chapter's CTA lands on the add-billing step
+      // so the founder can publish; a live chapter's CTA opens the dashboard.
+      const adminUrl = `https://${subdomain}.${domain}${billingReady ? "/admin" : "/admin/billing"}`;
       const chapterDisplay = [
         fraternityName.trim(),
         (greekLetters || "").trim(),
@@ -712,7 +753,7 @@ export async function POST(req: Request) {
       // (it bills $800 today, no trial), so the copy reflects an immediate charge.
       const monthlyCardClauseHtml = cardProvided
         ? `Your card is saved — you won't be charged until your <strong>first month free</strong> ends.`
-        : `<strong>No card required to launch.</strong> Add one in Admin → Billing before your free month ends to keep your site live.`;
+        : `<strong>Your public site publishes as soon as you add a card.</strong> Add one in <strong>Admin → Billing</strong> to take your chapter live — you still won't be charged during your first free month.`;
       const billingLineHtml =
         normalizedPlan === "yearly"
           ? isPromoValid
@@ -725,7 +766,7 @@ export async function POST(req: Request) {
           : `Your <strong>first month is free</strong> — full access to every feature. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees). ${monthlyCardClauseHtml}`;
       const monthlyCardClauseText = cardProvided
         ? "Your card is saved — you won't be charged until your first free month ends."
-        : "No card required to launch. Add one in Admin -> Billing before your free month ends to keep your site live.";
+        : "Your public site publishes as soon as you add a card. Add one in Admin -> Billing to take your chapter live - you still won't be charged during your first free month.";
       const billingLineText =
         normalizedPlan === "yearly"
           ? isPromoValid
@@ -736,44 +777,68 @@ export async function POST(req: Request) {
           : isPromoValid
           ? `Your first month is free. Promo code ${promoCode} applied: 3 months free total! Then $50/mo + $200 per rush cycle. ${monthlyCardClauseText}`
           : `Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). ${monthlyCardClauseText}`;
+      // Live vs NOT-live (card-free monthly) copy. A not-live chapter must NEVER be
+      // told "your chapter is live" / "no card required to launch"; instead the copy
+      // says the PUBLIC site publishes once a payment method is added.
+      const introLine1Html = billingReady
+        ? `Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉`
+        : `Hi ${escHtml(adminFirst)}, your Greekstack chapter is set up and ready to launch. 🎉`;
+      const introLine2Html = billingReady
+        ? `Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.`
+        : `Your admin, roster, dues, events, and compliance tools are all set up — sign in any time. Your <strong>public rush site</strong> goes live the moment you add a payment method, so head to <strong>Admin → Billing</strong> to publish it.`;
+      const headsUpHtml = billingReady
+        ? `<p style="margin:16px 0 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;"><strong>Heads up:</strong> please set up payment within <strong>2 weeks</strong> of going live (by <strong>${escHtml(deadlineLabel)}</strong>) from <strong>Admin → Billing</strong>. If payment isn't set up by then, your site will be taken down — we don't want that to happen, so just add a method before the deadline and you're all set.</p>`
+        : `<p style="margin:16px 0 0;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;color:#1e40af;"><strong>One step left to go live:</strong> your public site stays private until you add a payment method in <strong>Admin → Billing</strong>. It's free for your <strong>first month</strong>, so add a card now to publish your chapter — you won't be charged today.</p>`;
       const welcomeBody = `
-        <p style="margin:0 0 16px;">Hi ${escHtml(adminFirst)}, your chapter is live on Greekstack. 🎉</p>
-        <p style="margin:0 0 16px;">Everything — your public rush site, member roster, dues, events, and compliance trail — is ready to go. Sign in to your admin to finish setup and personalize your page.</p>
+        <p style="margin:0 0 16px;">${introLine1Html}</p>
+        <p style="margin:0 0 16px;">${introLine2Html}</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #eeeef2;border-radius:10px;padding:6px 14px;">
           <tr><td style="padding:6px 0;color:#71717a;">Chapter</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escHtml(chapterDisplay)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Plan</td><td style="padding:6px 0;text-align:right;">${escHtml(planLabel)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
-          <tr><td style="padding:6px 0;color:#71717a;">Your site</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.${escHtml(domain)}</a></td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">${billingReady ? "Your site" : "Publish at"}</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.${escHtml(domain)}</a></td></tr>
         </table>
         <p style="margin:16px 0 0;">${billingLineHtml}</p>
         <p style="margin:16px 0 0;">Keep an eye on your inbox — <strong>Ben, the founder, will personally email you</strong> shortly to say hi and make sure you have everything you need to get going.</p>
-        <p style="margin:16px 0 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;"><strong>Heads up:</strong> please set up payment within <strong>2 weeks</strong> of going live (by <strong>${escHtml(deadlineLabel)}</strong>) from <strong>Admin → Billing</strong>. If payment isn't set up by then, your site will be taken down — we don't want that to happen, so just add a method before the deadline and you're all set.</p>`;
+        ${headsUpHtml}`;
       const html = renderEmail({
         brandHex,
         chapterName: chapterDisplay || fraternityName.trim(),
         chapterSubline: (schoolName || "").trim() || undefined,
         heading: "Welcome to Greekstack",
         bodyHtml: welcomeBody,
-        cta: { label: "Open your admin dashboard", url: adminUrl },
+        cta: {
+          label: billingReady ? "Open your admin dashboard" : "Add billing to publish your site",
+          url: adminUrl,
+        },
         footerNote:
           "You're receiving this because a Greekstack chapter was created with this email.",
       });
       await sendEmail({
         to: adminEmailAddr,
-        subject: `Your chapter is live on Greekstack — ${chapterDisplay || fraternityName.trim()}`,
+        subject: billingReady
+          ? `Your chapter is live on Greekstack — ${chapterDisplay || fraternityName.trim()}`
+          : `Add billing to publish your Greekstack chapter — ${chapterDisplay || fraternityName.trim()}`,
         html,
         text: renderEmailText({
           heading: "Welcome to Greekstack",
           lines: [
-            `Hi ${adminFirst}, your chapter ${chapterDisplay} is live.`,
+            billingReady
+              ? `Hi ${adminFirst}, your chapter ${chapterDisplay} is live.`
+              : `Hi ${adminFirst}, your chapter ${chapterDisplay} is set up. Add a payment method in Admin -> Billing to publish your public site.`,
             `Plan: ${planLabel}`,
             `Admin login: ${adminEmailAddr}`,
-            `Your site: ${adminUrl}`,
+            billingReady ? `Your site: ${adminUrl}` : `Publish your site: ${adminUrl}`,
             billingLineText,
             "Keep an eye on your inbox — Ben, the founder, will personally email you shortly.",
-            `Heads up: please set up payment within 2 weeks of going live (by ${deadlineLabel}) from Admin -> Billing, or your site will be taken down.`,
+            billingReady
+              ? `Heads up: please set up payment within 2 weeks of going live (by ${deadlineLabel}) from Admin -> Billing, or your site will be taken down.`
+              : `One step left to go live: your public site stays private until you add a payment method in Admin -> Billing. Your first month is free, so add a card to publish - you won't be charged today.`,
           ],
-          cta: { label: "Open your admin dashboard", url: adminUrl },
+          cta: {
+            label: billingReady ? "Open your admin dashboard" : "Add billing to publish your site",
+            url: adminUrl,
+          },
           chapterName: chapterDisplay || fraternityName.trim(),
         }),
       }).catch((e) =>
@@ -808,13 +873,21 @@ export async function POST(req: Request) {
       await sendSalesEmail({
         heading: "New chapter signed up",
         subject: `New Greekstack chapter — ${chapterDisplay || fraternityName.trim()}`,
-        intro: `A new chapter just launched on Greekstack. They've been told to expect a personal email from you, and that payment must be set up within 2 weeks (by ${deadlineLabel}).`,
+        intro: billingReady
+          ? `A new chapter just launched on Greekstack. They've been told to expect a personal email from you, and that payment must be set up within 2 weeks (by ${deadlineLabel}).`
+          : `A new chapter just signed up on Greekstack (card-free monthly). Their PUBLIC site is NOT live yet — it publishes automatically once they add a payment method in Admin -> Billing. They've been told to expect a personal email from you.`,
         fields: [
           { label: "Chapter", value: chapterDisplay || fraternityName.trim() },
           { label: "School", value: (schoolName || "").trim() },
           { label: "Admin name", value: (adminName || "").trim() },
           { label: "Admin email", value: adminEmailAddr },
           { label: "Plan", value: planLabelOwner },
+          {
+            label: "Status",
+            value: billingReady
+              ? "Live"
+              : "Pending billing (public site not yet published)",
+          },
           { label: "Promo Code", value: isPromoValid ? `${promoCode} (Applied)` : "—" },
           { label: "Instagram", value: igDisplay },
           { label: "Site", value: `${subdomain}.${domain}` },

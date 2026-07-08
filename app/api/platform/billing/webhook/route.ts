@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { centralDb } from "@/lib/prisma";
+import { centralDb, getTenantClient } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { errorSink, logger } from "@/lib/logger";
 
@@ -139,6 +139,92 @@ async function resolveSubdomain(
   return null;
 }
 
+/**
+ * CARD-REQUIRED-TO-PUBLISH — publish a PENDING-billing chapter once a real billing
+ * arrangement lands. A card-free MONTHLY chapter is provisioned with central
+ * Tenant.isActive=false (its PUBLIC subdomain dark) + a tenant SiteConfig
+ * "billing.pendingActivation"="true" flag (set at onboard). When it later adds a
+ * card (a card-backed trialing/active subscription, or a completed subscription
+ * Checkout) via the platform-billing path, we flip isActive=true so app/page.tsx
+ * begins serving the public site, and clear the pending flag.
+ *
+ * GATED ON THE PENDING FLAG so this can NEVER un-suspend an operator HARD-suspend:
+ * we publish ONLY a chapter that onboard explicitly marked pending. An operator-
+ * suspended chapter carries no "true" pending flag, so a routine card-backed
+ * subscription event leaves it suspended. If we cannot read the flag we do NOT
+ * flip (fail safe — never re-activate on uncertainty).
+ *
+ * Idempotent (no-op once already active), best-effort, NEVER throws (so it can't
+ * fail the webhook — the caller returns 200 and Stripe stops retrying).
+ */
+async function publishTenantIfPendingBilling(subdomain: string): Promise<void> {
+  try {
+    const row = await centralDb.tenant
+      .findUnique({ where: { subdomain }, select: { isActive: true } })
+      .catch(() => null);
+    // Already live (or unknown) → nothing to publish. Idempotent for redeliveries.
+    if (!row || row.isActive === true) return;
+
+    // Only publish a chapter onboard marked pending-billing — never re-activate an
+    // operator hard-suspend (which has no "true" pending flag).
+    let pending = false;
+    try {
+      const tenantDb = getTenantClient(subdomain);
+      const flag = await tenantDb.siteConfig.findUnique({
+        where: { key: "billing.pendingActivation" },
+        select: { value: true },
+      });
+      pending = flag?.value === "true";
+    } catch {
+      return; // can't confirm pending → fail safe, do NOT flip
+    }
+    if (!pending) return;
+
+    await centralDb.tenant.update({
+      where: { subdomain },
+      data: { isActive: true },
+    });
+
+    // Clear the pending flag so app/page.tsx serves the live site and a LATER
+    // operator suspend is never mistaken for pending-billing.
+    try {
+      const tenantDb = getTenantClient(subdomain);
+      await tenantDb.siteConfig.upsert({
+        where: { key: "billing.pendingActivation" },
+        update: { value: "false" },
+        create: { key: "billing.pendingActivation", value: "false" },
+      });
+    } catch (e) {
+      errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "clear_pending_flag_failed" });
+    }
+
+    logger.info("platform.billing.tenant_published", { route: ROUTE, tenant: subdomain });
+  } catch (e) {
+    errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "publish_pending_billing_failed" });
+  }
+}
+
+/**
+ * True when the subscription is backed by a payment method — its own default PM,
+ * or (fallback) the customer's default PM. A card-free trial has NEITHER, so this
+ * distinguishes "adding a card during the trial" from the initial card-free launch.
+ * Best-effort: any lookup error resolves to false (we simply don't publish yet).
+ */
+async function subscriptionHasCard(stripe: Stripe, sub: Stripe.Subscription): Promise<boolean> {
+  if (sub.default_payment_method) return true;
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id || null;
+  if (!customerId) return false;
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if (customer && !(customer as any).deleted) {
+      return Boolean((customer as any).invoice_settings?.default_payment_method);
+    }
+  } catch {
+    // ignore — treat as no card yet
+  }
+  return false;
+}
+
 /** Narrow Stripe's subscription.status to the values entitlement cares about. */
 function narrowStatus(s: string | null | undefined): string {
   switch (s) {
@@ -175,7 +261,7 @@ function isRushCycle(metadata: Stripe.Metadata | null | undefined): boolean {
 }
 
 async function handleSubscriptionEvent(
-  _stripe: Stripe,
+  stripe: Stripe,
   sub: Stripe.Subscription,
 ): Promise<void> {
   // RUSH-CYCLE GUARD — the rush add-on is its own subscription; skip the mirror.
@@ -225,6 +311,17 @@ async function handleSubscriptionEvent(
     tenant: subdomain,
     status,
   });
+
+  // CARD-REQUIRED-TO-PUBLISH — a card-backed trialing/active subscription is the
+  // signal that a pending-billing (card-free monthly) chapter now has a real
+  // billing arrangement, so publish its public site. Gated on the pending flag
+  // inside the helper (never un-suspends an operator hard-suspend). Best-effort.
+  if (
+    (status === "trialing" || status === "active") &&
+    (await subscriptionHasCard(stripe, sub))
+  ) {
+    await publishTenantIfPendingBilling(subdomain);
+  }
 }
 
 async function handleInvoiceEvent(
@@ -387,6 +484,12 @@ async function handleCheckoutCompleted(
     .catch((e) => errorSink(e, { route: ROUTE, tenant: subdomain, outcome: "tenant_update_failed" }));
 
   logger.info("platform.billing.checkout_synced", { route: ROUTE, tenant: subdomain, status });
+
+  // CARD-REQUIRED-TO-PUBLISH — a completed subscription Checkout collected a
+  // payment method, so publish a pending-billing chapter (e.g. one that re-
+  // subscribed after its card-free trial cancelled). Gated on the pending flag
+  // (never un-suspends an operator hard-suspend). Best-effort.
+  await publishTenantIfPendingBilling(subdomain);
 }
 
 /**

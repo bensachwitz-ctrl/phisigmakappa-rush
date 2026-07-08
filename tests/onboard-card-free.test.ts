@@ -1,18 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------------------------------------------------------------------------
-// POST /api/onboard — CARD-FREE MONTHLY launch + YEARLY card requirement.
+// POST /api/onboard — CARD-FREE MONTHLY provisioning + YEARLY card requirement.
 //
-// Market-readiness fix for the "no card required to launch" copy/behavior
-// mismatch:
-//   • MONTHLY without a paymentMethodId now LAUNCHES (true free trial): the
-//     route creates a single trialing subscription with NO payment method and
-//     trial_settings.end_behavior.missing_payment_method="cancel" (never
-//     silently charges), and skips paymentMethods.attach / customers.update and
-//     the secondary rush subscription.
-//   • MONTHLY with a paymentMethodId keeps the prior behavior (covered in
-//     onboard-stripe.test.ts).
+// CARD-REQUIRED-TO-PUBLISH: a card-free MONTHLY signup is fully PROVISIONED (the
+// founder can log into /admin) but its PUBLIC subdomain does NOT go live until
+// billing is added. So this signup:
+//   • creates a single trialing subscription with NO payment method and
+//     trial_settings.end_behavior.missing_payment_method="cancel" (never silently
+//     charges), skipping paymentMethods.attach / customers.update + the rush sub;
+//   • reserves + finalizes the central registry row with isActive=FALSE (public
+//     subdomain not yet live — it publishes later when billing lands);
+//   • seeds the tenant "billing.pendingActivation"="true" flag so the public page
+//     shows "launching soon — billing setup in progress"; and
+//   • redirects the founder to /admin/billing (the "add billing to publish" step).
+//   • MONTHLY with a paymentMethodId is billing-ready → live (onboard-stripe.test).
 //   • YEARLY without a paymentMethodId is a hard 400 (it bills $800 today).
+// The webhook side (adding billing later flips isActive=true) is covered in
+// platform-billing-publish.test.ts.
 // ---------------------------------------------------------------------------
 
 const mocks = vi.hoisted(() => ({
@@ -160,13 +165,25 @@ describe("POST /api/onboard — card-free MONTHLY launch", () => {
     // Safe end-behavior: cancel (never silently charge) if no PM by trial end.
     expect(subArg.trial_settings?.end_behavior?.missing_payment_method).toBe("cancel");
 
-    // Registry row records the customer + trialing status under the monthly plan.
-    // The subdomain is reserved up front via tenant.create; the Stripe ids +
-    // status are finalized on the row via tenant.update.
+    // CARD-REQUIRED-TO-PUBLISH — a card-free monthly chapter is provisioned but
+    // its PUBLIC subdomain is NOT live yet: the reserved registry row is created
+    // with isActive=false...
+    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          subdomain: "freelaunch",
+          isActive: false,
+          plan: "monthly",
+        }),
+      }),
+    );
+    // ...and the final row update KEEPS isActive=false (still not publicly live),
+    // while recording the customer + trialing status under the monthly plan.
     expect(mocks.mockTenantUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { subdomain: "freelaunch" },
         data: expect.objectContaining({
+          isActive: false,
           stripeCustomerId: "cust_cf",
           stripeSubscriptionId: "sub_cf",
           subscriptionStatus: "trialing",
@@ -174,6 +191,21 @@ describe("POST /api/onboard — card-free MONTHLY launch", () => {
         }),
       }),
     );
+
+    // The pending-publication signal is seeded in the tenant schema so app/page.tsx
+    // shows the "launching soon — billing setup in progress" page (not the
+    // operator-suspend page) and the webhook can clear it on publish.
+    expect(mocks.mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { key: "billing.pendingActivation" },
+        update: { value: "true" },
+        create: { key: "billing.pendingActivation", value: "true" },
+      }),
+    );
+
+    // The founder is redirected to /admin/billing (the "add billing to publish"
+    // step), NOT straight to the dashboard.
+    expect(String(body.url)).toMatch(/\/admin\/billing$/);
   });
 });
 
