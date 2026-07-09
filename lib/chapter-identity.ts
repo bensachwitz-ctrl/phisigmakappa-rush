@@ -7,9 +7,12 @@ import { getSiteConfig } from "@/lib/site-config";
  * imports from here so a re-brand for another chapter (Beta Sigma @ Maryland,
  * Epsilon @ Drexel, etc.) propagates without scattered string edits.
  *
- * Reference defaults match the Phi Sig Gamma Triton USC build, so an existing
- * deploy without cfg overrides renders unchanged. A net-new chapter runs
- * /admin/setup once and every surface re-brands.
+ * Fallbacks are NEUTRAL platform placeholders (fraternityName "Your Chapter",
+ * fraternityShort/national "Greekstack", empty greekLetters/foundingYear/school
+ * — see APEX_IDENTITY and the `|| "Your Chapter"` fallbacks in
+ * chapterIdentityFromCfg), NOT any specific reference chapter. A deploy without
+ * cfg overrides renders the generic placeholders; a net-new chapter runs
+ * /admin/setup once and every surface re-brands from its own SiteConfig.
  *
  * Use the typed `ChapterIdentity` shape so consumers can destructure exactly
  * the fields they need rather than passing the whole cfg around.

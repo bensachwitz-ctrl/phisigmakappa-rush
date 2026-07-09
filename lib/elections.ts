@@ -21,6 +21,24 @@ export const ELECTION_STATUSES: ElectionStatus[] = [
   "SEATED",
 ];
 
+// ── Voter eligibility ────────────────────────────────────────────────────────
+// WHO may cast a ballot, keyed off Brother.status (schema-per-tenant Brother
+// row; allowed values PROSPECT | PLEDGE | INITIATE | ACTIVE | INACTIVE |
+// ALUMNUS | EXPELLED). Only a fully-initiated, currently-active member votes:
+//   • ACTIVE   — an active member of the chapter.
+//   • INITIATE — a just-crossed brother (full member, pre-"active" bookkeeping).
+// PROSPECT/PLEDGE have NOT been initiated; INACTIVE/ALUMNUS/EXPELLED are no
+// longer active members. Single-sourced here so the vote-cast gates (mobile +
+// portal ballot routes) and the eligible-roster COUNT (lib/mobile-elections
+// `totalEligible`) can never drift apart — an expelled/inactive/alumnus member
+// with a live session must not be able to cast a COUNTED ballot.
+export const VOTING_ELIGIBLE_STATUSES = ["ACTIVE", "INITIATE"] as const;
+
+/** Whether a brother with the given lifecycle status may cast a ballot. */
+export function isVoterEligible(status: string | null | undefined): boolean {
+  return status != null && (VOTING_ELIGIBLE_STATUSES as readonly string[]).includes(status);
+}
+
 /** Minimal candidate shape the tally needs (id + denormalized display name). */
 export interface TallyCandidate {
   id: string;

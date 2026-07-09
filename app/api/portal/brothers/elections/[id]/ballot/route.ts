@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother, isSameOrigin } from "@/lib/auth";
-import { isVotingOpen } from "@/lib/elections";
+import { isVotingOpen, isVoterEligible } from "@/lib/elections";
 import { errorSink } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -48,6 +48,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const brother = await getCurrentBrother();
   if (!brother) {
     return NextResponse.json({ ok: false, error: "Sign in first" }, { status: 401 });
+  }
+  // VOTER ELIGIBILITY — a signed-in session is NOT enough. Only a currently-
+  // active, fully-initiated member (Brother.status in {ACTIVE, INITIATE}) may
+  // cast a COUNTED ballot; an expelled/inactive/alumnus member (or an admin
+  // resolved to such a Brother row) is rejected here BEFORE any ballot is
+  // written. Single-sourced with the eligible-roster count (isVoterEligible).
+  if (!isVoterEligible(brother.status)) {
+    return NextResponse.json(
+      { ok: false, error: "Only active members can vote." },
+      { status: 403 },
+    );
   }
 
   const body = await req.json().catch(() => null);

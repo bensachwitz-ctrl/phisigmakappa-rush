@@ -81,7 +81,34 @@ type TenantReconcile = {
   reconciled: number;
   failed: number;
   checked: number;
+  reversed: number;
 };
+
+// ── REVERSAL BACKSTOP (refund / dispute) ─────────────────────────────────────
+// The Stripe webhook (charge.refunded / charge.dispute.*) is the primary path
+// that reverses a PAID row when money is given back. A DROPPED such webhook
+// leaves a refunded/disputed DuesPayment (or AlumniDonation) stuck PAID — money
+// left Stripe while the ledger still claims it AND the brother keeps a paid
+// badge. This cron is the belt: it LISTS recent refunds + disputes from Stripe
+// ONCE per run (cheap, only real reversals surface — not every PAID row), then
+// each tenant reconciles any of its still-PAID rows whose PaymentIntent shows up
+// in that list, applying the SAME reversal the webhook would.
+//
+// COVERAGE WINDOW: only refunds/disputes CREATED within this window are swept.
+// Generous enough to cover the common refund window and the ~120-day card
+// dispute window; a reversal older than this is out of scope for the belt (the
+// webhook is the primary path). Bounded item cap guards a pathological run.
+const REVERSAL_LOOKBACK_MS = 130 * 24 * 60 * 60 * 1000; // ~130 days
+const REVERSAL_MAX_ITEMS = 500; // cap refunds/disputes scanned per run (each list)
+
+/** A reversal Stripe reports for one PaymentIntent, normalized for the sweep. */
+type ReversalIntent = {
+  full: boolean; // full reversal (clears the brother's dues badge) vs partial
+  cause: "refund" | "dispute";
+  refundedCents: number;
+};
+/** PaymentIntent id → the reversal to apply. */
+type ReversalMap = Map<string, ReversalIntent>;
 
 export async function GET(req: Request) {
   if (!isAuthorized(req)) {
@@ -99,6 +126,17 @@ export async function GET(req: Request) {
   // in the webhook's settling window and shouldn't be raced.
   const cutoff = new Date(Date.now() - 10 * 60 * 1000);
 
+  // REVERSAL BACKSTOP — list recent refunds + disputes ONCE (account-wide) so the
+  // per-tenant sweep can reconcile dropped reversal webhooks with a single
+  // indexed query per tenant and ZERO extra Stripe calls per row. Best-effort: an
+  // empty map just means no reversal backstop this run (never fails the cron).
+  let reversalMap: ReversalMap = new Map();
+  try {
+    reversalMap = await listRecentReversals(stripe, new Date(Date.now() - REVERSAL_LOOKBACK_MS));
+  } catch (err) {
+    errorSink(err, { route: ROUTE, outcome: "reversal_list_failed" });
+  }
+
   let perTenant: Array<{
     tenant: string;
     ok: boolean;
@@ -106,7 +144,7 @@ export async function GET(req: Request) {
     error?: string;
   }>;
   try {
-    perTenant = await forEachTenant(async (db) => reconcileTenant(db, stripe, cutoff));
+    perTenant = await forEachTenant(async (db) => reconcileTenant(db, stripe, cutoff, reversalMap));
   } catch (err) {
     errorSink(err, { route: ROUTE, outcome: "catastrophic_failure" });
     return NextResponse.json(
@@ -115,18 +153,20 @@ export async function GET(req: Request) {
     );
   }
 
-  const totals = { reconciled: 0, failed: 0, checked: 0 };
+  const totals = { reconciled: 0, failed: 0, checked: 0, reversed: 0 };
   const tenants = perTenant.map((t) => {
     if (t.ok && t.result) {
       totals.reconciled += t.result.reconciled;
       totals.failed += t.result.failed;
       totals.checked += t.result.checked;
+      totals.reversed += t.result.reversed;
       return {
         tenant: t.tenant,
         ok: true as const,
         reconciled: t.result.reconciled,
         failed: t.result.failed,
         checked: t.result.checked,
+        reversed: t.result.reversed,
       };
     }
     return { tenant: t.tenant, ok: false as const, error: t.error };
@@ -161,6 +201,7 @@ export async function GET(req: Request) {
     reconciled: totals.reconciled,
     failed: totals.failed,
     checked: totals.checked,
+    reversed: totals.reversed,
     published,
     tenantCount: tenants.length,
   };
@@ -220,10 +261,12 @@ async function reconcileTenant(
   db: PrismaClient,
   stripe: NonNullable<ReturnType<typeof getStripe>>,
   cutoff: Date,
+  reversalMap: ReversalMap,
 ): Promise<TenantReconcile> {
   let reconciled = 0;
   let failed = 0;
   let checked = 0;
+  let reversed = 0;
 
   // ── DUES ────────────────────────────────────────────────────────────────
   const duesPending = await db.duesPayment.findMany({
@@ -469,5 +512,253 @@ async function reconcileTenant(
     }
   }
 
-  return { reconciled, failed, checked };
+  // ── REVERSALS (refund / dispute backstop) ─────────────────────────────────
+  // Reconcile any still-PAID dues/donation row whose PaymentIntent appears in
+  // the account-wide refund/dispute list (a reversal whose webhook was dropped).
+  // One indexed query per table; NO per-row Stripe calls. Idempotent: we only
+  // ever act on a status="PAID" row, and the reversal flips it out of PAID so a
+  // later run re-checking the same PI is a clean no-op.
+  const reversalPiIds = [...reversalMap.keys()];
+  if (reversalPiIds.length > 0) {
+    const paidDues = await db.duesPayment
+      .findMany({ where: { status: "PAID", stripePaymentIntentId: { in: reversalPiIds } } })
+      .catch(() => [] as any[]);
+    for (const payment of paidDues) {
+      const intent = payment.stripePaymentIntentId
+        ? reversalMap.get(payment.stripePaymentIntentId)
+        : undefined;
+      if (!intent) continue;
+      try {
+        if (await applyDuesReversal(db, payment, intent)) reversed++;
+      } catch (err) {
+        errorSink(err, {
+          route: ROUTE,
+          kind: "dues_reversal",
+          paymentId: payment.id,
+          outcome: "row_reconcile_failed",
+        });
+      }
+    }
+
+    // Donations: only a FULL reversal (full refund OR dispute) drops a donation
+    // out of PAID. A PARTIAL donation refund intentionally STAYS PAID (mirrors
+    // the webhook — it must not fall out of PAID-only "donations raised"), so
+    // there is no stuck state for the belt to fix; skip it here (also keeps this
+    // sweep idempotent — a partial would otherwise re-audit every run).
+    const paidDonations = await db.alumniDonation
+      .findMany({ where: { status: "PAID", stripePaymentIntentId: { in: reversalPiIds } } })
+      .catch(() => [] as any[]);
+    for (const donation of paidDonations) {
+      const intent = donation.stripePaymentIntentId
+        ? reversalMap.get(donation.stripePaymentIntentId)
+        : undefined;
+      if (!intent || !intent.full) continue;
+      try {
+        if (await applyDonationReversal(db, donation, intent)) reversed++;
+      } catch (err) {
+        errorSink(err, {
+          route: ROUTE,
+          kind: "donation_reversal",
+          donationId: donation.id,
+          outcome: "row_reconcile_failed",
+        });
+      }
+    }
+  }
+
+  return { reconciled, failed, checked, reversed };
+}
+
+/**
+ * List recent refunds + disputes from Stripe and normalize them into a
+ * PaymentIntent → ReversalIntent map. Account-wide (Stripe carries no chapter
+ * subdomain), listed ONCE per cron run so the per-tenant sweep needs no per-row
+ * Stripe calls. Both lists are bounded (created ≥ `since`, capped item count).
+ *
+ * Semantics mirror the webhook's reverseByPaymentIntent:
+ *   • refund → full when the charge's cumulative amount_refunded ≥ amount, else
+ *     partial (kept so the dues badge-clear only fires on a full refund);
+ *   • dispute → a FULL reversal, EXCEPT a "won" dispute (funds restored to the
+ *     chapter) which is NOT a reversal and is skipped. Disputes take precedence
+ *     over a refund on the same PaymentIntent.
+ */
+async function listRecentReversals(
+  stripe: NonNullable<ReturnType<typeof getStripe>>,
+  since: Date,
+): Promise<ReversalMap> {
+  const map: ReversalMap = new Map();
+  const createdGte = Math.floor(since.getTime() / 1000);
+
+  // 1. Recent refunds — expand the charge so we can tell full vs partial from the
+  //    cumulative amount_refunded (all refunds on one charge report the same
+  //    current cumulative total, so order doesn't matter).
+  const refunds = await stripe.refunds
+    .list({ created: { gte: createdGte }, limit: 100, expand: ["data.charge"] })
+    .autoPagingToArray({ limit: REVERSAL_MAX_ITEMS });
+  for (const refund of refunds) {
+    const piId =
+      typeof refund.payment_intent === "string"
+        ? refund.payment_intent
+        : refund.payment_intent?.id || null;
+    if (!piId) continue;
+    const charge =
+      refund.charge && typeof refund.charge !== "string" ? refund.charge : null;
+    const amount = charge?.amount ?? 0;
+    const refunded = charge?.amount_refunded ?? refund.amount ?? 0;
+    const full = amount > 0 ? refunded >= amount : true;
+    map.set(piId, { full, cause: "refund", refundedCents: refunded });
+  }
+
+  // 2. Recent disputes — a WON dispute means the funds were restored to the
+  //    chapter, so it is NOT a reversal (skip). Any other status (open / lost)
+  //    means the funds are withdrawn → full reversal. Dispute wins precedence.
+  const disputes = await stripe.disputes
+    .list({ created: { gte: createdGte }, limit: 100 })
+    .autoPagingToArray({ limit: REVERSAL_MAX_ITEMS });
+  for (const dispute of disputes) {
+    const piId =
+      typeof dispute.payment_intent === "string"
+        ? dispute.payment_intent
+        : dispute.payment_intent?.id || null;
+    if (!piId) continue;
+    if (dispute.status === "won") {
+      // Funds restored — never a reversal. If a refund on the same PI was also
+      // listed, the dispute-won signal wins: drop any refund entry for this PI.
+      map.delete(piId);
+      continue;
+    }
+    map.set(piId, { full: true, cause: "dispute", refundedCents: 0 });
+  }
+
+  return map;
+}
+
+/**
+ * Apply a dropped-webhook DUES reversal, mirroring the dues branch of the
+ * webhook's reverseByPaymentIntent. Re-reads the row inside so a webhook that
+ * landed between the list and now is a no-op (only a still-PAID row is touched):
+ *   • full  → row REFUNDED + clear the brother's duesPaid badge & dues mirror;
+ *   • partial → row REFUNDED, badge kept (they paid the term; treasurer
+ *     reconciles the partial). Audited as "stripe-reconcile". Returns whether it
+ *     applied a change.
+ */
+async function applyDuesReversal(
+  db: PrismaClient,
+  payment: { id: string; brotherId: string; amountCents: number; year: string },
+  intent: ReversalIntent,
+): Promise<boolean> {
+  const fresh = await db.duesPayment
+    .findUnique({ where: { id: payment.id }, select: { status: true } })
+    .catch(() => null);
+  if (!fresh || fresh.status !== "PAID") return false; // webhook already handled it
+
+  const note =
+    intent.cause === "dispute"
+      ? "Chargeback/dispute opened (reconciled)"
+      : "Refunded via Stripe (reconciled)";
+
+  if (intent.full) {
+    await db
+      .$transaction([
+        db.duesPayment.update({
+          where: { id: payment.id },
+          data: { status: "REFUNDED", notes: note },
+        }),
+        db.brother.update({
+          where: { id: payment.brotherId },
+          data: { duesPaid: false, duesPaidAt: null, duesPaymentId: null },
+        }),
+      ])
+      .catch(async () => {
+        // If the brother update fails (row gone), still mark the payment.
+        await db.duesPayment
+          .update({ where: { id: payment.id }, data: { status: "REFUNDED", notes: note } })
+          .catch(() => {});
+      });
+  } else {
+    await db.duesPayment
+      .update({ where: { id: payment.id }, data: { status: "REFUNDED", notes: note } })
+      .catch(() => {});
+  }
+
+  const brother = await db.brother
+    .findUnique({ where: { id: payment.brotherId }, select: { name: true } })
+    .catch(() => null);
+
+  await db.auditLog
+    .create({
+      data: {
+        actorId: null,
+        actorName: "stripe-reconcile",
+        action: intent.cause === "dispute" ? "DUES_DISPUTED" : "DUES_REFUNDED",
+        subjectType: "Brother",
+        subjectId: payment.brotherId,
+        subjectName: brother?.name || null,
+        details: `$${(payment.amountCents / 100).toFixed(2)} — ${note}${intent.full ? " (full)" : " (partial)"} · ${payment.year}`,
+        ipAddress: null,
+      },
+    })
+    .catch(() => {});
+
+  logger.info("dues.reversed", {
+    route: ROUTE,
+    outcome: intent.cause === "dispute" ? "disputed" : "refunded",
+    full: intent.full,
+    amountCents: payment.amountCents,
+    reconciled: true,
+  });
+  return true;
+}
+
+/**
+ * Apply a dropped-webhook DONATION reversal (full only — partial donation
+ * refunds intentionally stay PAID). Mirrors the donation branch of the webhook's
+ * reverseByPaymentIntent. Re-reads inside so a webhook that landed first is a
+ * no-op. Returns whether it applied a change.
+ */
+async function applyDonationReversal(
+  db: PrismaClient,
+  donation: { id: string; alumniId: string; amountCents: number; campaign: string | null },
+  intent: ReversalIntent,
+): Promise<boolean> {
+  const fresh = await db.alumniDonation
+    .findUnique({ where: { id: donation.id }, select: { status: true } })
+    .catch(() => null);
+  if (!fresh || fresh.status !== "PAID") return false;
+
+  const note =
+    intent.cause === "dispute"
+      ? "Chargeback/dispute opened (reconciled)"
+      : "Refunded via Stripe (reconciled)";
+
+  await db.alumniDonation
+    .update({ where: { id: donation.id }, data: { status: "REFUNDED", notes: note } })
+    .catch(() => {});
+
+  const alum = await db.alumniProfile
+    .findUnique({ where: { id: donation.alumniId }, select: { fullName: true } })
+    .catch(() => null);
+
+  await db.auditLog
+    .create({
+      data: {
+        actorId: null,
+        actorName: "stripe-reconcile",
+        action: intent.cause === "dispute" ? "ALUMNI_DONATION_DISPUTED" : "ALUMNI_DONATION_REFUNDED",
+        subjectType: "AlumniProfile",
+        subjectId: donation.alumniId,
+        subjectName: alum?.fullName || null,
+        details: `$${(donation.amountCents / 100).toFixed(2)} — ${note} · campaign: ${donation.campaign || "General"}`,
+        ipAddress: null,
+      },
+    })
+    .catch(() => {});
+
+  logger.info("alumni.donation.reversed", {
+    route: ROUTE,
+    outcome: intent.cause === "dispute" ? "disputed" : "refunded",
+    amountCents: donation.amountCents,
+    reconciled: true,
+  });
+  return true;
 }

@@ -429,9 +429,11 @@ export function WebsiteBuilderClient({
         // #2 — write to the CANONICAL keys the public renderer actually reads,
         // so these controls change the LIVE site (they previously wrote to
         // website.* keys nothing consumed, so Save was a silent no-op while the
-        // toast claimed "updated immediately"). orientation is kept on its own
-        // key (the in-builder preview honors it; live renderer support is a
-        // separate follow-up) so it still round-trips here.
+        // toast claimed "updated immediately"). orientation is now HONORED live:
+        // the Classic hero (components/site/templates/hero-classic.tsx) reads
+        // website.orientation and flips its two columns for "split-right"
+        // ("centered"/"split-left"/unset keep the default headline-left layout,
+        // so existing deploys render unchanged).
         "website.orientation": orientation,
         "brand.logoUrl": logo,
         "brand.heroImageUrl": hero,

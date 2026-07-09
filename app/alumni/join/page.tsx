@@ -5,6 +5,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -32,6 +33,14 @@ export default async function AlumniJoinPage() {
     host = headers().get("host") || headers().get("x-forwarded-host") || "";
   } catch {}
   if (getSubdomain(host) === null) notFound();
+
+  // GO-LIVE GATE — do not expose the alumni signup surface (chapter identity +
+  // "Join the network" funnel) for a suspended or still-pending-billing chapter
+  // (same gated state app/page.tsx and the other public pages render). Runs
+  // BEFORE any chapter config is read, so a not-yet-live chapter never leaks its
+  // identity through this page.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
 
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);

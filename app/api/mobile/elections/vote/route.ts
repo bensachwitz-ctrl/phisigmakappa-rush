@@ -4,6 +4,7 @@ import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { auditMobileExec } from "@/lib/mobile-exec-auth";
 import { buildMobileElectionView } from "@/lib/mobile-elections";
+import { isVoterEligible } from "@/lib/elections";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,6 +99,14 @@ async function handlePost(req: Request): Promise<NextResponse> {
     select: { id: true, name: true, status: true },
   });
   if (!brother) {
+    return NextResponse.json({ error: "Only active members can vote." }, { status: 403 });
+  }
+  // VOTER ELIGIBILITY — a live session is NOT enough: only a currently-active,
+  // fully-initiated member (Brother.status in {ACTIVE, INITIATE}) may cast a
+  // COUNTED ballot. An expelled/inactive/alumnus member who still holds a token
+  // is rejected here BEFORE any ballot is written. Single-sourced with the
+  // eligible-roster count in lib/mobile-elections (isVoterEligible).
+  if (!isVoterEligible(brother.status)) {
     return NextResponse.json({ error: "Only active members can vote." }, { status: 403 });
   }
 

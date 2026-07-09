@@ -9,6 +9,19 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * Thrown from inside the seating transaction when the atomic CLOSED→SEATED claim
+ * update affects zero rows — meaning a concurrent request already seated this
+ * election. Caught by the outer handler and surfaced as a clean 409, so a
+ * double-submit never double-seats (see the TOCTOU note on POST).
+ */
+class ElectionAlreadySeatedError extends Error {
+  constructor() {
+    super("Election already seated");
+    this.name = "ElectionAlreadySeatedError";
+  }
+}
+
+/**
  * POST /api/admin/elections/[id]/seat-winners — install the winners
  * (CLOSED → SEATED).
  *
@@ -27,6 +40,16 @@ export const dynamic = "force-dynamic";
  *
  * Idempotency / safety: runs inside a single transaction. Ties and zero-ballot
  * seats are SKIPPED (reported back in `skipped`) — never force a winner.
+ *
+ * CONCURRENCY (TOCTOU): the outer canSeatWinners() check reads election.status
+ * OUTSIDE the transaction, so two near-simultaneous submits could both observe
+ * CLOSED and both seat — double-seating every officer. To close that window the
+ * transaction FIRST claims the CLOSED→SEATED transition with a CONDITIONAL update
+ * (`updateMany where status='CLOSED'`) and asserts exactly one row changed; the
+ * losing request's claim matches zero rows (the row is already SEATED, and the
+ * winner holds the row lock until commit) → it aborts and rolls back before any
+ * assignment is created, surfacing a clean 409. The outer check stays for a fast,
+ * friendly fail on the common (non-concurrent) path.
  *
  * SECRET BALLOT: ballots are read as `{ candidateId }` only — voterBrotherId is
  * never selected, so seating can't expose who voted for whom.
@@ -79,6 +102,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const seatedSummaries: { seat: string; winner: string; assignmentId: string | null }[] = [];
 
     await prisma.$transaction(async (tx) => {
+      // ATOMIC CLAIM — flip CLOSED→SEATED conditionally FIRST, inside the txn, so
+      // exactly one concurrent submit can proceed. The conditional update takes a
+      // row lock on the election; a racing txn re-evaluates `status='CLOSED'`
+      // after the winner commits, matches zero rows, and we abort before seating
+      // anything (rolls back). This replaces the old trailing unconditional
+      // status update that left the TOCTOU window open.
+      const claim = await tx.election.updateMany({
+        where: { id: election.id, status: "CLOSED" },
+        data: { status: "SEATED" },
+      });
+      if (claim.count !== 1) throw new ElectionAlreadySeatedError();
+
       for (const plan of seatable) {
         if (!plan.winnerCandidateId) continue;
         const winnerBrotherId = candidateBrother.get(plan.winnerCandidateId) ?? null;
@@ -126,11 +161,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           assignmentId,
         });
       }
-
-      await tx.election.update({
-        where: { id: election.id },
-        data: { status: "SEATED" },
-      });
+      // NOTE: no trailing status update — the CLOSED→SEATED flip was already
+      // claimed atomically at the top of this transaction.
     });
 
     const skipped = plans
@@ -150,6 +182,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     return NextResponse.json({ ok: true, seated: seatedSummaries, skipped });
   } catch (err) {
+    // A concurrent submit already seated this election — the atomic claim inside
+    // the transaction rolled us back before any assignment was created. Surface a
+    // clean 409 (not a 500) so the double-submit is a harmless no-op.
+    if (err instanceof ElectionAlreadySeatedError) {
+      return NextResponse.json(
+        { ok: false, error: "This election was already seated." },
+        { status: 409 },
+      );
+    }
     errorSink(err, { route: "/api/admin/elections/[id]/seat-winners", method: "POST" });
     return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
   }

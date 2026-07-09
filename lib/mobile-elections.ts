@@ -17,7 +17,7 @@
 // returned only to THAT member (they already know how they voted).
 
 import type { PrismaClient } from "@prisma/client";
-import { tallySeat } from "@/lib/elections";
+import { tallySeat, VOTING_ELIGIBLE_STATUSES } from "@/lib/elections";
 
 /** A candidate as the mobile spotlight renders it. */
 export interface MobileElectionCandidate {
@@ -99,9 +99,11 @@ export async function buildMobileElectionView(
   if (!election) return { election: null, myBallot: {} };
 
   // Total eligible voters = the active roster (the audience that may cast a
-  // ballot). Real count, not a fabricated number.
+  // ballot). Real count, not a fabricated number. The eligible-status set is
+  // single-sourced with the vote-cast gates (lib/elections VOTING_ELIGIBLE_STATUSES)
+  // so "who may vote" and "how many may vote" can never drift apart.
   const totalEligible = await db.brother
-    .count({ where: { status: { in: ["ACTIVE", "INITIATE"] } } })
+    .count({ where: { status: { in: [...VOTING_ELIGIBLE_STATUSES] } } })
     .catch(() => 0);
 
   // Candidate display metadata (year) — denormalized name lives on the
@@ -136,10 +138,25 @@ export async function buildMobileElectionView(
     }
   }
 
-  // A set of unique voter-seat pairs gives the chapter-wide "ballots cast"
-  // headline (distinct ballots across all seats). We already have per-seat
-  // ballot rows; sum them for the headline (one ballot row per voter per seat).
-  let ballotsCast = 0;
+  // CHAPTER-WIDE PARTICIPATION HEADLINE — count DISTINCT voters, not the sum of
+  // per-seat ballots. In a multi-seat election a member casts one ballot PER
+  // seat, so summing per-seat totals over-counts a single voter as many times as
+  // seats they voted on (a 3-seat ballot filled by 10 members would read "30
+  // ballots cast"). The headline means "how many members have participated", so
+  // we count distinct voterBrotherId across all of this election's seats. This
+  // reads voterBrotherId for an AGGREGATE COUNT ONLY — it is never paired with a
+  // candidate choice, so the secret ballot is preserved.
+  const allSeatIds = election.seats.map((s) => s.id);
+  const ballotsCast = allSeatIds.length
+    ? await db.electionBallot
+        .findMany({
+          where: { seatId: { in: allSeatIds } },
+          select: { voterBrotherId: true },
+          distinct: ["voterBrotherId"],
+        })
+        .then((rows) => rows.length)
+        .catch(() => 0)
+    : 0;
 
   // The query above only ever returns an OPEN election, so per-candidate counts
   // are revealed ONLY when an officer explicitly opts in (admin tally). Every
@@ -153,7 +170,6 @@ export async function buildMobileElectionView(
       s.candidates.map((c) => ({ id: c.id, name: c.name })),
       s.ballots,
     );
-    ballotsCast += tally.totalBallots;
     const votesById = new Map(tally.results.map((r) => [r.candidateId, r.votes]));
     return {
       id: s.id,

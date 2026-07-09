@@ -31,6 +31,18 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
     cfg, identity, terms, nextEvent,
     heroEyebrow, heroLead, heroTail, heroHighlight, heroHighlightPhrases,
   } = ctx;
+
+  // LAYOUT ORIENTATION (website.orientation) — honored live, not just in the
+  // builder preview. The default hero is headline-LEFT / photo-collage-RIGHT
+  // (== the builder's "split-left": text on the left). "split-right" flips the
+  // two columns so the headline sits on the RIGHT. "centered"/unset keep the
+  // default so existing deploys (whose persisted default is "centered") render
+  // byte-identical — the go-live / behavior-preservation contract.
+  const headlineRight = cfg["website.orientation"] === "split-right";
+  const gridColsClass = headlineRight
+    ? "lg:grid-cols-[1fr_1.1fr]"
+    : "lg:grid-cols-[1.1fr_1fr]";
+
   return (
     <>
       {/* AnimatedBackground (tone="brand") paints drifting aurora blobs in the
@@ -95,8 +107,8 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
         </div>
 
         <div className="container section-y">
-          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center">
-            <div className="max-w-2xl animate-slide-up">
+          <div className={`grid ${gridColsClass} gap-8 lg:gap-14 items-center`}>
+            <div className={`max-w-2xl animate-slide-up${headlineRight ? " lg:order-2" : ""}`}>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm animate-heartbeat">
                 <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
@@ -170,7 +182,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
                 <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
               </span>
               <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{identity.greekLetters} chapter</span>
+                <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{identity.greekLetters ? `${identity.greekLetters} chapter` : identity.fraternityShort}</span>
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
@@ -186,7 +198,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
             {/* Hero photo collage — real chapter posts via Instagram embed.
                 The grid tilts in 3D toward the cursor with a brand-colored
                 glow; the "Since {year}" badge stays pinned outside the tilt. */}
-            <div className="relative animate-slide-up [animation-delay:200ms]">
+            <div className={`relative animate-slide-up [animation-delay:200ms]${headlineRight ? " lg:order-1" : ""}`}>
               <Tilt3DCard max={7} glareColor={BRAND_TILT_GLOW} className="rounded-2xl gs-float-shadow">
                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:gap-4">
                   <PostTile
@@ -210,12 +222,17 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
                   />
                 </div>
               </Tilt3DCard>
-              <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
-                <span className="text-center leading-tight">
-                  <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
-                  <span className="block text-base font-semibold">{identity.foundingYear}</span>
-                </span>
-              </div>
+              {/* "SINCE <year>" founding badge — rendered ONLY when the chapter has
+                  a founding year on file, so a chapter without one never shows an
+                  empty "SINCE" chip. */}
+              {identity.foundingYear ? (
+                <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
+                  <span className="text-center leading-tight">
+                    <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
+                    <span className="block text-base font-semibold">{identity.foundingYear}</span>
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
 
