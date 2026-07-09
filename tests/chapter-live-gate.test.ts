@@ -89,6 +89,12 @@ describe("every public chapter page wires the shared gate", () => {
     "app/parents/page.tsx",
     "app/bid/[token]/page.tsx",
     "app/check-in/[code]/page.tsx",
+    // Newly closed gaps: the public alumni-signup landing and the alum invite
+    // redemption shell (a server wrapper around the "use client" onboarding form)
+    // must also gate, so a suspended / pending-billing chapter never leaks its
+    // identity or alumni surface through them.
+    "app/alumni/join/page.tsx",
+    "app/alumni/onboard/[token]/page.tsx",
   ];
 
   it.each(PAGES)("%s imports and calls chapterLiveGate", (rel) => {
