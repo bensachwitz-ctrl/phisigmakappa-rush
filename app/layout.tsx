@@ -8,7 +8,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { buildBrandThemeStyle } from "@/lib/brand-theme";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
 import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
-import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
+import { chapterLiveMetadataGate, chapterLiveState } from "@/lib/chapter-live-guard";
 import { getSubdomain } from "@/lib/prisma";
 import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
 import { ChatwootWidget } from "@/components/site/chatwoot-widget";
@@ -198,8 +198,17 @@ export async function generateViewport(): Promise<Viewport> {
   const host = requestHost();
   let themeColor = GREEKSTACK.themeColor;
   if (getSubdomain(host) !== null) {
-    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-    themeColor = safeHex(cfg["brand.primaryHex"], "#2563eb");
+    // GO-LIVE VIEWPORT GATE — themeColor paints the iOS status-bar / PWA chrome,
+    // a same-class identity signal as the <title>/JSON-LD leaks. A suspended /
+    // pending-billing chapter must NOT tint the chrome with its brand color, so
+    // only a LIVE chapter recolors; a dark one keeps the neutral platform navy
+    // (GREEKSTACK.themeColor — the same value the apex and NEUTRAL_METADATA's
+    // Greekstack brand use). generateViewport is a SEPARATE App Router execution
+    // path from generateMetadata's gate, so it needs its own chapterLiveState read.
+    if ((await chapterLiveState()) === "live") {
+      const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+      themeColor = safeHex(cfg["brand.primaryHex"], "#2563eb");
+    }
   }
   return {
     themeColor,
@@ -499,9 +508,17 @@ export default async function RootLayout({
   }
 
   const siteUrl = resolveMetadataBase(host).origin;
+  // GO-LIVE JSON-LD GATE — the body's chapter-identity JSON-LD is a SEPARATE
+  // execution path from generateMetadata's <title>/OG gate, so a suspended /
+  // pending-billing chapter would still emit its CollegeOrUniversity graph
+  // (name / greek letters / school) here. Emit the neutral platform Greekstack
+  // graph (byte-identical to the apex node) for any non-live chapter; only a
+  // LIVE chapter ships buildStructuredData. Apex short-circuits — no registry read.
+  const ldState = isApex ? "apex" : await chapterLiveState();
   const structuredData =
-    isApex
-      ? {
+    ldState === "live"
+      ? buildStructuredData(cfg, siteUrl)
+      : {
           "@context": "https://schema.org",
           "@graph": [
             {
@@ -520,8 +537,7 @@ export default async function RootLayout({
               inLanguage: "en-US",
             },
           ],
-        }
-      : buildStructuredData(cfg, siteUrl);
+        };
 
   // Serialize + escape <, >, & so a cfg value containing "</script>" cannot break
   // out of the ld+json <script> tag (stored XSS — e.g. an admin saving a chapter
