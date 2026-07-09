@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { OnboardingForm } from "@/components/site/onboarding-form";
 import { Wordmark } from "@/components/brand/wordmark";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import Link from "next/link";
@@ -31,6 +32,14 @@ async function fetchInvite(token: string, base: string) {
 }
 
 export default async function OnboardPage({ params }: { params: { token: string } }) {
+  // GO-LIVE GATE — a suspended or still-pending-billing chapter must not serve its
+  // member-invite redemption funnel; render the shared neutral launching-soon /
+  // inactive state instead of leaking the chapter's identity (greekLetters in the
+  // heading + generateMetadata title). Runs before any chapter config is read.
+  // Mirrors app/alumni/join/page.tsx and the alumni-onboard server shell.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
+
   let base = "";
   try {
     const host = headers().get("host") || "";

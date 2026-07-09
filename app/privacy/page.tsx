@@ -6,6 +6,7 @@ import { IconShieldCheck } from "@/components/brand/icons";
 import { IconArrowLeft } from "@/components/brand/icons/contact";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { cleanUrl, cleanMailto } from "@/lib/utils";
 
@@ -85,6 +86,13 @@ export default async function PrivacyPage() {
   if (getSubdomain(requestHost()) === null) {
     return <PlatformPrivacyPage />;
   }
+  // GO-LIVE GATE — the TENANT privacy policy renders chapter identity (fraternity
+  // name, greekLetters, school) in its title, meta, and body, so a suspended or
+  // still-pending-billing chapter must show the shared neutral state here too.
+  // The apex branch above is unaffected: chapterLiveGate() returns null on the
+  // apex. Mirrors app/alumni/join/page.tsx.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
   return <ChapterPrivacyPage />;
 }
 

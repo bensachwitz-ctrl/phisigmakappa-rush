@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getPortalSession } from "@/lib/portal-auth";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import BrothersLoginPage from "./BrothersLoginPage";
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default async function BrothersPortalRootPage() {
+  // GO-LIVE GATE — the public brothers login must not render a suspended or
+  // still-pending-billing chapter's identity (the "{School} · {Chapter}" lockup).
+  // Runs before any chapter config/identity is read. Mirrors app/alumni/join/page.tsx.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
+
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   if (cfg["chapter.onboarded"] !== "true") {
     redirect("/onboard");

@@ -7,6 +7,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
 import { UserPlus, ArrowLeft, Calendar, FileText, Mail } from "lucide-react";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import type { Metadata } from "next";
@@ -24,6 +25,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PnmPortalPage() {
+  // GO-LIVE GATE — runs BEFORE any chapter config is read, so a suspended or
+  // still-pending-billing chapter never leaks its identity (tab title, meta,
+  // ΦΣ branding, rush CTAs) through the public rush PNM portal. Renders the same
+  // neutral launching-soon / inactive state every other public chapter surface
+  // does. Mirrors app/alumni/join/page.tsx.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
 

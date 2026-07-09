@@ -95,6 +95,20 @@ describe("every public chapter page wires the shared gate", () => {
     // identity or alumni surface through them.
     "app/alumni/join/page.tsx",
     "app/alumni/onboard/[token]/page.tsx",
+    // Iteration-2 sweep: every remaining PUBLIC, unauthenticated surface that
+    // itself reads chapter config/identity (getSiteConfig / chapterIdentityFromCfg
+    // / getChapterIdentity) and renders it — the public rush PNM portal, the
+    // member-invite redemption page, the portal sign-in hub, both pre-auth portal
+    // login pages (each renders the "{School} · {Chapter}" lockup), and the TENANT
+    // branch of the dual apex/tenant privacy policy. Each must gate so a suspended
+    // / pending-billing chapter never leaks its identity (tab title, meta, ΦΣ
+    // branding, sign-in CTAs) through them.
+    "app/portal/pnm/page.tsx",
+    "app/onboard/[token]/page.tsx",
+    "app/portal/page.tsx",
+    "app/portal/alumni/page.tsx",
+    "app/portal/brothers/page.tsx",
+    "app/privacy/page.tsx",
   ];
 
   it.each(PAGES)("%s imports and calls chapterLiveGate", (rel) => {

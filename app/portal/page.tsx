@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getSubdomain } from "@/lib/prisma";
+import { chapterLiveGate } from "@/components/site/chapter-status";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -71,6 +72,13 @@ export default async function PortalHubPage() {
     host = headers().get("host") || headers().get("x-forwarded-host") || "";
   } catch {}
   if (getSubdomain(host) === null) notFound();
+
+  // GO-LIVE GATE — runs BEFORE any chapter config is read, so a suspended or
+  // still-pending-billing chapter never leaks its identity (greekLetters meta,
+  // ΦΣ FloatingSymbols glyphs, portal sign-in copy) through the portal hub.
+  // Mirrors app/alumni/join/page.tsx.
+  const gate = await chapterLiveGate();
+  if (gate) return gate;
 
   const cfg = await getSiteConfig();
   if (cfg["chapter.onboarded"] !== "true") {
