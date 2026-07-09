@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getSubdomain, getRegistrySubdomain, isTenantActive } from "@/lib/prisma";
-import { isPendingBilling } from "@/lib/chapter-live-guard";
+import { isPendingBilling, chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import {
   ChapterInactivePage,
   ChapterLaunchingSoonPage,
@@ -25,6 +25,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Run recruitment, dues, events, treasury, and alumni for your fraternity or sorority on one branded site — live the same day. First month free, no credit card.",
     };
   }
+
+  // GO-LIVE METADATA GATE — the chapter home BODY already renders the neutral
+  // inactive / launching-soon page for a suspended / pending-billing chapter, but
+  // generateMetadata is a separate execution path and would still emit the chapter's
+  // identity <title>/OG. Gate it too; a live chapter → null, keep identity metadata.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
 
   return generateChapterMetadata();
 }

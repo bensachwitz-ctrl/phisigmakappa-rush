@@ -8,6 +8,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { buildBrandThemeStyle } from "@/lib/brand-theme";
 import { ChapterIdentityProvider } from "@/components/brand/chapter-identity-context";
 import { chapterIdentityFromCfg, APEX_IDENTITY } from "@/lib/chapter-identity";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSubdomain } from "@/lib/prisma";
 import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
 import { ChatwootWidget } from "@/components/site/chatwoot-widget";
@@ -129,6 +130,18 @@ export async function generateMetadata(): Promise<Metadata> {
       other: { "mobile-web-app-capable": "yes" },
     };
   }
+
+  // GO-LIVE METADATA GATE — a suspended / pending-billing chapter must not leak its
+  // identity through the LAYOUT-level metadata either. This <head> metadata (the
+  // title.template, description, and OG/Twitter tags) merges into EVERY page's head:
+  // the template re-appends the chapter name onto pages that neutralised their OWN
+  // generateMetadata, and the gated pages that have NO generateMetadata inherit it
+  // wholesale. generateMetadata is a separate execution path from the body's
+  // chapterLiveGate(), so the neutral inactive / launching-soon BODY still shipped a
+  // chapter-identity <head> without this. Apex is handled above (returns before
+  // here), so the gate only fires for a real, non-live tenant.
+  const metaGate = await chapterLiveMetadataGate();
+  if (metaGate) return { ...metaGate, metadataBase };
 
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";

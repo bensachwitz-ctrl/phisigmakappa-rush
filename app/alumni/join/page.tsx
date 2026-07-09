@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -17,6 +18,12 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
+  // GO-LIVE METADATA GATE — a suspended / pending-billing chapter must not leak its
+  // greekLetters through the tab title + meta here (separate execution path from the
+  // body's chapterLiveGate). Live/apex → null, keep the identity meta.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
   return {

@@ -11,6 +11,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma, getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { publicAlumniView } from "@/lib/alumni";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
@@ -23,6 +24,12 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
+  // GO-LIVE METADATA GATE — a suspended / pending-billing chapter must not leak its
+  // greekLetters + fraternityName through the title/description/OG here (separate
+  // execution path from the body's chapterLiveGate). Live/apex → null, keep identity.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
+
   const cfg = await getSiteConfig();
   const id = chapterIdentityFromCfg(cfg);
   const title = `${id.greekLetters} Alumni Network — ${id.fraternityName}`;

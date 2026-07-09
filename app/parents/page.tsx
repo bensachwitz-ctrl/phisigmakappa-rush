@@ -7,6 +7,7 @@ import { PublicFooter } from "@/components/site/footer";
 import { Crest } from "@/components/brand/wordmark";
 import { getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
@@ -19,6 +20,12 @@ export const dynamic = "force-dynamic";
 
 // Dynamic so a chapter rename updates the SERP card without a code edit.
 export async function generateMetadata(): Promise<Metadata> {
+  // GO-LIVE METADATA GATE — a suspended / pending-billing chapter must not leak its
+  // fraternityName + greekLetters through the title/description/OG here (separate
+  // execution path from the body's chapterLiveGate). Live/apex → null, keep identity.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
+
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
   const greekLetters = cfg["chapter.greekLetters"] || "";

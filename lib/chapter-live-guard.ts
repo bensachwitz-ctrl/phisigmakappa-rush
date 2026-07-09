@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import {
   getSubdomain,
@@ -74,4 +75,49 @@ export async function chapterLiveState(): Promise<ChapterLiveState> {
   // hard-suspend. The pending flag lives in the chapter's own schema, keyed by the
   // schema-form subdomain getSubdomain returns.
   return (await isPendingBilling(subdomain)) ? "pending-billing" : "suspended";
+}
+
+// ---------------------------------------------------------------------------
+// METADATA go-live gate. generateMetadata() runs as a SEPARATE App Router
+// execution path from the page body: gating the body with chapterLiveGate() still
+// lets generateMetadata emit the chapter's <title> / description / OG + Twitter
+// tags (and, on alumni/[id], an opted-in alum's name) into <head> for a suspended
+// / pending-billing chapter. This is the generateMetadata sibling of
+// chapterLiveGate — same decision (chapterLiveState), but it yields NEUTRAL
+// metadata instead of a JSX page, so a public page's generateMetadata (and the
+// root layout's) can short-circuit to the platform-neutral head.
+// ---------------------------------------------------------------------------
+
+const NEUTRAL_DESCRIPTION =
+  "Greekstack is the white-label platform for Greek-letter chapter recruitment, member management, and communications.";
+
+/**
+ * Brand-NEUTRAL metadata for a chapter that is NOT live. Carries zero chapter
+ * identity (no greek letters, name, school, or member/alum PII), an ABSOLUTE title
+ * so the root layout's title.template can't re-append the chapter name, and
+ * robots:noindex so a dark subdomain isn't indexed. Matches the platform
+ * "Greekstack" brand the neutral inactive / launching-soon BODY already shows.
+ */
+export const NEUTRAL_METADATA: Metadata = {
+  title: { absolute: "Greekstack" },
+  description: NEUTRAL_DESCRIPTION,
+  openGraph: { title: "Greekstack", description: NEUTRAL_DESCRIPTION, type: "website" },
+  twitter: { card: "summary_large_image", title: "Greekstack", description: NEUTRAL_DESCRIPTION },
+  robots: { index: false, follow: false },
+};
+
+/**
+ * generateMetadata sibling of chapterLiveGate(): returns NEUTRAL_METADATA to emit
+ * INSTEAD of identity-derived metadata when this chapter is suspended / pending-
+ * billing, or null on a LIVE chapter OR the apex — in which case the caller builds
+ * its own metadata (a live chapter shows its identity; apex pages already emit
+ * neutral platform metadata). Call at the TOP of an identity-derived
+ * generateMetadata, before any getSiteConfig / DB lookup, so no chapter data or
+ * member PII is even fetched for a dark chapter:
+ *   `const gated = await chapterLiveMetadataGate(); if (gated) return gated;`
+ */
+export async function chapterLiveMetadataGate(): Promise<Metadata | null> {
+  const state = await chapterLiveState();
+  if (state === "pending-billing" || state === "suspended") return NEUTRAL_METADATA;
+  return null; // "live" or "apex" → caller builds its own metadata
 }

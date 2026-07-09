@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma, getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { publicAlumniView } from "@/lib/alumni";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
@@ -31,6 +32,12 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  // GO-LIVE METADATA GATE — return NEUTRAL metadata BEFORE the profile lookup so a
+  // suspended / pending-billing chapter neither fetches nor emits an opted-in
+  // alum's name + graduation year into the <title>. Live/apex → null, proceed.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
+
   try {
     const row = await prisma.alumniProfile.findUnique({ where: { id: params.id } });
     if (!row || !row.optInDirectory) return {};

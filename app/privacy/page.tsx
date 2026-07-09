@@ -7,6 +7,7 @@ import { IconArrowLeft } from "@/components/brand/icons/contact";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
 import { getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { cleanUrl, cleanMailto } from "@/lib/utils";
 
@@ -50,6 +51,14 @@ export async function generateMetadata() {
       },
     };
   }
+
+  // GO-LIVE METADATA GATE (tenant branch) — a suspended / pending-billing chapter
+  // must not leak its fraternityName + greekLetters through the tenant privacy
+  // policy's title/description/OG (separate execution path from the body's
+  // chapterLiveGate). The apex branch above already returns neutral Greekstack
+  // metadata and is unaffected (gate returns null on the apex).
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
 
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";

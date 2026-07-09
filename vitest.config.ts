@@ -10,6 +10,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 //   here and can't collide with the Vitest runner.
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  // The app's tsconfig sets jsx:"preserve" (Next compiles JSX itself). The test
+  // transformer (oxc, via Rolldown-Vite) inherits that and would leave JSX
+  // untransformed, so a test that imports a page module living in a .tsx file (e.g.
+  // to unit-test its exported generateMetadata) fails to parse. Force the automatic
+  // JSX runtime for the test transform only — this is additive (no suite imports
+  // rendered JSX) and does not touch the Next build, which keeps the tsconfig setting.
+  oxc: { jsx: { runtime: "automatic" } },
   test: {
     environment: "node",
     globals: true,

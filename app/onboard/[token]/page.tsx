@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { OnboardingForm } from "@/components/site/onboarding-form";
 import { Wordmark } from "@/components/brand/wordmark";
 import { chapterLiveGate } from "@/components/site/chapter-status";
+import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import Link from "next/link";
@@ -14,6 +15,13 @@ export const dynamic = "force-dynamic";
 // generated from the chapter's own identity (greek letters) so a white-label
 // deploy never shows another chapter's name. Reads cfg (force-dynamic).
 export async function generateMetadata(): Promise<Metadata> {
+  // GO-LIVE METADATA GATE — a suspended / pending-billing chapter must not leak its
+  // greekLetters through the <title> here (generateMetadata is a separate execution
+  // path from the body's chapterLiveGate, so the neutral inactive BODY still ships a
+  // chapter-identity <head> without this). Live/apex → null, keep the identity title.
+  const gated = await chapterLiveMetadataGate();
+  if (gated) return gated;
+
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const { greekLetters } = chapterIdentityFromCfg(cfg);
   return {
