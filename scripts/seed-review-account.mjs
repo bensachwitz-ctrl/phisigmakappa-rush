@@ -45,9 +45,21 @@ function hashPassword(plain) {
 
 const SUBDOMAIN = (process.env.GS_REVIEW_SUBDOMAIN || "phisig").replace(/[^a-z0-9_]/gi, "_").toLowerCase();
 const EMAIL = (process.env.GS_REVIEW_EMAIL || "appreview@greekstack.app").trim().toLowerCase();
-const PASSWORD = process.env.GS_REVIEW_PASSWORD || "GreekStack!Review2026";
+// NO hardcoded password: this seeds a REAL, working login on a live chapter, so a
+// baked-in default would commit a usable credential to the repo. Supply it at run
+// time (the current value lives in ios/AppStore/LISTING.md for the Apple reviewer):
+//   GS_REVIEW_PASSWORD='...' node scripts/seed-review-account.mjs
+const PASSWORD = process.env.GS_REVIEW_PASSWORD || "";
 const NAME = process.env.GS_REVIEW_NAME || "Apple App Review";
 const POSITION = process.env.GS_REVIEW_POSITION || "President";
+
+if (!PASSWORD) {
+  console.error(
+    "✗ Set GS_REVIEW_PASSWORD to the reviewer password (see ios/AppStore/LISTING.md), e.g.\n" +
+      "    GS_REVIEW_PASSWORD='GreekStack!Review2026' node scripts/seed-review-account.mjs",
+  );
+  process.exit(1);
+}
 
 async function main() {
   const base = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
