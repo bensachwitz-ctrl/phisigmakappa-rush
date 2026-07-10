@@ -8,7 +8,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Scheduler } from "@/components/site/scheduler";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ShieldCheck, MailCheck } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -63,24 +63,56 @@ export default async function SchedulePage() {
   const calDiyUrl = cfg["calendar.calDiyUrl"] || "";
 
   return (
-    <div className="min-h-screen bg-cream-50 text-maroon-950">
+    <div className="relative min-h-screen overflow-x-clip bg-cream-50 text-maroon-950">
+      {/* Soft, chapter-tinted ambient wash behind the header. Static (no motion)
+          and brand-token-driven (maroon-* is bound to the live --brand-primary
+          ramp), so it recolors per tenant and never adds an off-brand platform hue. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[440px] overflow-hidden"
+      >
+        <div className="absolute left-1/2 top-[-11rem] h-96 w-96 -translate-x-1/2 rounded-full bg-maroon-500/10 blur-3xl" />
+        <div className="absolute right-[-7rem] top-2 h-72 w-72 rounded-full bg-maroon-400/10 blur-3xl" />
+      </div>
+
       <PublicNav />
 
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
-        <header className="text-center mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon-100 text-maroon-700 text-xs font-medium uppercase tracking-wider mb-3">
-            <CalendarDays className="w-3.5 h-3.5" aria-hidden />
-            Calendar Booking
-          </div>
-          <h1 className="text-2xl sm:text-5xl font-bold tracking-tight text-maroon-900 mb-3">
-            Book an appointment
-          </h1>
-          <p className="text-base sm:text-lg text-maroon-700 max-w-2xl mx-auto">
-            Select a meeting type, date, and time slot. We will automatically sync the event to our calendar and send you details.
+      <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-10 sm:py-20">
+        <header className="text-center mb-12 sm:mb-14">
+          {/* Classical eyebrow: the chapter's own identity, set in the Cinzel
+              display face (inscriptional caps). Replaces the generic "Calendar
+              Booking" chip. */}
+          <p className="flex flex-wrap items-center justify-center gap-x-[0.45em] gap-y-1 font-display text-[11px] font-semibold uppercase leading-none tracking-[0.28em] text-maroon-700 sm:text-xs">
+            <CalendarDays className="h-3.5 w-3.5 text-maroon-600" aria-hidden />
+            <span>Schedule with {id.fraternityShort || "the chapter"}</span>
           </p>
+          {/* Brand hairline divider with a centered diamond: a restrained
+              classical accent, tinted in the chapter color (not platform blue). */}
+          <span aria-hidden className="mx-auto mt-4 mb-6 flex w-28 items-center justify-center gap-2">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent to-maroon-300" />
+            <span className="h-1.5 w-1.5 rotate-45 rounded-[1px] bg-maroon-500" />
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent to-maroon-300" />
+          </span>
+          <h1 className="mx-auto max-w-3xl text-[clamp(2rem,5.6vw,3.5rem)] font-bold leading-[1.04] tracking-tight text-maroon-900 [text-wrap:balance]">
+            Grab time with the chapter.
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-pretty font-serif text-lg italic leading-relaxed text-maroon-700 sm:text-xl">
+            Pick a meeting type, a day, and a time. We&apos;ll sync it straight to the chapter calendar and email you the details.
+          </p>
+          {/* Trust chips: two calm reassurances, brand-token surfaces. */}
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-xs text-maroon-700">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-maroon-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur">
+              <MailCheck className="h-3.5 w-3.5 text-maroon-600" aria-hidden />
+              Instant email confirmation
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-maroon-200 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur">
+              <ShieldCheck className="h-3.5 w-3.5 text-maroon-600" aria-hidden />
+              Synced to the chapter calendar
+            </span>
+          </div>
         </header>
 
-        <Scheduler 
+        <Scheduler
           calDiyUrl={calDiyUrl} 
           chapterShort={id.fraternityShort} 
           schoolShort={id.schoolShort}
