@@ -12,7 +12,8 @@ import fs from "fs";
 import path from "path";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
-import { platformSubscriptionDescription } from "@/lib/platform-billing";
+import { platformSubscriptionDescription, getOrCreateFullWaiverCoupon } from "@/lib/platform-billing";
+import { isFeeWaiverPromo } from "@/lib/promo";
 import { resolveTemplateId } from "@/components/site/templates/template-orders";
 import { normalizeSubdomain, checkSubdomainFormat } from "@/lib/reserved-subdomains";
 import { applyTenantDdl } from "@/lib/tenant-ddl";
@@ -164,7 +165,13 @@ export async function POST(req: Request) {
   }
 
   const promoCode = typeof rawPromoCode === "string" ? rawPromoCode.trim().toUpperCase() : "";
-  const isPromoValid = ["GREEKFREE", "WELCOME100", "SILICON"].includes(promoCode);
+  // FULL FEE WAIVER (bensachwitzrocks, case-insensitive) — waives BOTH the
+  // monthly/platform fee and the per-rush-cycle fee (100% off) via a reusable
+  // Stripe coupon applied to the subscriptions created below. Recognized as a
+  // valid promo so it's recorded on the chapter's config + surfaced in email.
+  const isFeeWaiver = isFeeWaiverPromo(rawPromoCode);
+  const isPromoValid =
+    ["GREEKFREE", "WELCOME100", "SILICON"].includes(promoCode) || isFeeWaiver;
 
   // schemaName is built ONLY from the sanitized subdomain ([a-z0-9-] -> _), so
   // it is safe to interpolate into raw SQL (no injection surface).
@@ -268,6 +275,10 @@ export async function POST(req: Request) {
     const cardProvided = Boolean(paymentMethodId);
     const billingReady =
       cardProvided ||
+      // A full-fee-waiver chapter owes $0 forever — its billing arrangement is
+      // complete with nothing to collect, so its public site goes live now (no
+      // "add a card to publish" gate for a chapter that will never be charged).
+      isFeeWaiver ||
       normalizedPlan === "yearly" ||
       normalizedPlan === "custom" ||
       normalizedPlan === "dues_percentage";
@@ -548,6 +559,18 @@ export async function POST(req: Request) {
         );
       }
       try {
+        // FULL FEE WAIVER coupon (100% off, forever) — resolved once and attached
+        // to BOTH the platform subscription and the rush-cycle subscription below
+        // so a `bensachwitzrocks` chapter is never charged for either fee.
+        let waiverCouponId: string | null = null;
+        if (isFeeWaiver) {
+          try {
+            waiverCouponId = await getOrCreateFullWaiverCoupon(stripe);
+          } catch (couponErr: any) {
+            errorSink(couponErr, { route: ROUTE, tenant: subdomain, outcome: "waiver_coupon_failed" });
+          }
+        }
+
         // 1. Create a Customer
         const customer = await stripe.customers.create({
           email: adminEmail.trim().toLowerCase(),
@@ -588,9 +611,19 @@ export async function POST(req: Request) {
           },
         };
 
+        // Attach the 100%-off waiver coupon so this platform subscription bills $0.
+        if (waiverCouponId) {
+          subParams.discounts = [{ coupon: waiverCouponId }];
+        }
+
         if (normalizedPlan === "monthly") {
           subParams.trial_period_days = 30; // first month free
-          if (!cardProvided) {
+          // A fully-waived subscription needs no card ever ($0 invoices), so do
+          // NOT arm the "cancel if no payment method at trial end" behavior — that
+          // would tear down a legitimately free chapter's subscription. Only the
+          // ordinary card-free trial (which must collect a card to keep billing)
+          // gets the cancel-on-missing-PM guard.
+          if (!cardProvided && !isFeeWaiver) {
             // CARD-FREE MONTHLY LAUNCH. The chapter goes live on a 30-day trial
             // with NO payment method. trial_settings tells Stripe what to do if
             // the trial ends and no card was ever added: CANCEL the subscription
@@ -616,7 +649,11 @@ export async function POST(req: Request) {
         //    when the chapter adds payment in Admin → Billing (mirrors the
         //    platform-billing rush add-on flow). This keeps a card-free launch to
         //    exactly ONE trialing subscription with safe end-behavior.
-        if (normalizedPlan === "monthly" && cardProvided) {
+        // A card-free chapter normally sets rush up later (no default PM to bill),
+        // but a WAIVER chapter's rush cycle is $0 forever, so mint it now with the
+        // coupon attached — that makes the "rush fee waived" promise real from day
+        // one without ever needing a card.
+        if (normalizedPlan === "monthly" && (cardProvided || waiverCouponId)) {
           try {
             const rushPriceId = await getOrCreateStripePrice(stripe, "rush");
             const rushSub = await stripe.subscriptions.create({
@@ -628,6 +665,8 @@ export async function POST(req: Request) {
               payment_settings: {
                 save_default_payment_method: "on_subscription",
               },
+              // 100%-off waiver so the rush-cycle subscription bills $0 forever.
+              ...(waiverCouponId ? { discounts: [{ coupon: waiverCouponId }] } : {}),
             });
             stripeRushSubscriptionId = rushSub.id;
           } catch (rushErr: any) {
@@ -754,8 +793,9 @@ export async function POST(req: Request) {
       const monthlyCardClauseHtml = cardProvided
         ? `Your card is saved — you won't be charged until your <strong>first month free</strong> ends.`
         : `<strong>Your public site publishes as soon as you add a card.</strong> Add one in <strong>Admin → Billing</strong> to take your chapter live — you still won't be charged during your first free month.`;
-      const billingLineHtml =
-        normalizedPlan === "yearly"
+      const billingLineHtml = isFeeWaiver
+        ? `Promo code <strong>${escHtml(promoCode)}</strong> is applied to your chapter — <strong>100% off, all fees waived</strong>. Your monthly platform fee AND every $200 rush-cycle fee are fully covered, so you'll never be charged. Full access to every feature, no card required.`
+        : normalizedPlan === "yearly"
           ? isPromoValid
             ? `You're on the <strong>Annual plan — $800/year</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you'll receive <strong>$150 off your first year</strong> ($650 total)! Your card was charged today and includes every rush-cycle fee for the year.`
             : `You're on the <strong>Annual plan — $800/year</strong>, charged today, which includes every rush-cycle fee. Full access to every feature.`
@@ -767,8 +807,9 @@ export async function POST(req: Request) {
       const monthlyCardClauseText = cardProvided
         ? "Your card is saved — you won't be charged until your first free month ends."
         : "Your public site publishes as soon as you add a card. Add one in Admin -> Billing to take your chapter live - you still won't be charged during your first free month.";
-      const billingLineText =
-        normalizedPlan === "yearly"
+      const billingLineText = isFeeWaiver
+        ? `Promo code ${promoCode} applied: 100% off, all fees waived. Your monthly platform fee and every $200 rush-cycle fee are fully covered - you'll never be charged. Full access, no card required.`
+        : normalizedPlan === "yearly"
           ? isPromoValid
             ? `You're on the Annual plan — $800/year. Promo code ${promoCode} applied: $150 off your first year ($650 total). Charged today, includes all rush fees.`
             : "You're on the Annual plan — $800/year, charged today, includes all rush fees."

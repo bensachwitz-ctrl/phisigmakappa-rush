@@ -265,6 +265,42 @@ export function AdminNav({
                 </Link>
               );
             })}
+            {/* Switch portal — the top-bar PortalSwitcher is desktop-only
+                (hidden lg:flex), so on phones an admin needs a way to flip to
+                the member / alumni portals they're authorized for. Render the
+                authorized destinations here when there's more than one door. */}
+            {portalDestinations && portalDestinations.length > 1 && (
+              <div className="col-span-2 border-t border-border mt-2 pt-2">
+                <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Switch portal
+                </p>
+                <div className="grid grid-cols-2 gap-1">
+                  {portalDestinations.map((d) => {
+                    const isCurrent = d.key === "admin";
+                    return (
+                      <Link
+                        key={d.key}
+                        href={d.href}
+                        aria-current={isCurrent ? "page" : undefined}
+                        className={cn(
+                          "inline-flex min-h-[44px] items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors",
+                          isCurrent
+                            ? "bg-secondary text-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                        )}
+                      >
+                        {d.label}
+                        {isCurrent && (
+                          <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Current
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <button
               onClick={logout}
               className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground col-span-2 border-t border-border mt-2 pt-3"

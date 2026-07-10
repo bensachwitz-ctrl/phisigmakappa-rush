@@ -63,7 +63,7 @@ export function PortalSwitcher({
       <span className="flex flex-col items-start leading-tight min-w-0">
         <span className="truncate text-sm font-semibold text-foreground">{currentLabel}</span>
         {isAdminOverride && (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-amber-600">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-amber-700">
             Admin override
           </span>
         )}
@@ -74,7 +74,7 @@ export function PortalSwitcher({
   // Only one door: render a non-interactive chip.
   if (destinations.length <= 1) {
     return (
-      <div className={cn("inline-flex items-center rounded-lg px-2 py-1", className)}>
+      <div className={cn("inline-flex min-h-[44px] items-center rounded-lg px-2 py-1", className)}>
         {chip}
       </div>
     );
@@ -86,7 +86,7 @@ export function PortalSwitcher({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 transition-colors hover:bg-secondary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-[state=open]:bg-secondary",
+            "inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 transition-colors hover:bg-secondary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-[state=open]:bg-secondary",
             className,
           )}
           aria-label="Switch portal"

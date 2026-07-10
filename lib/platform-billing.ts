@@ -559,3 +559,30 @@ export function billingReturnOrigin(host: string | null): string {
     "http://localhost:3000"
   );
 }
+
+/** Stable id for the reusable 100%-off full-fee-waiver coupon. */
+export const FULL_WAIVER_COUPON_ID = "greekstack_full_waiver";
+
+/**
+ * Resolve (creating once, then reusing) the 100%-off, `duration:"forever"` Stripe
+ * coupon that backs the `bensachwitzrocks` full-fee-waiver promo (see lib/promo).
+ * Attaching it to a platform or rush-cycle subscription zeroes every invoice for
+ * that subscription's life. Idempotent by the stable id — the first redeeming
+ * chapter creates it, everyone else reuses it; a deleted coupon is re-created.
+ * MIGRATION-FREE: a Stripe object, no local schema.
+ */
+export async function getOrCreateFullWaiverCoupon(stripe: Stripe): Promise<string> {
+  try {
+    const existing = await stripe.coupons.retrieve(FULL_WAIVER_COUPON_ID);
+    if (existing && !(existing as any).deleted) return existing.id;
+  } catch {
+    // Not found (or transient) — create it below.
+  }
+  const coupon = await stripe.coupons.create({
+    id: FULL_WAIVER_COUPON_ID,
+    percent_off: 100,
+    duration: "forever",
+    name: "Greek Stack Full Fee Waiver",
+  });
+  return coupon.id;
+}

@@ -58,12 +58,24 @@ export function OnboardingForm({
     setErrors((e) => (e[k as string] ? { ...e, [k as string]: "" } : e));
   }
 
+  // Stable id for a field's inline error line, so the input can point at it via
+  // aria-describedby when errored (screen readers announce the message + tie it
+  // to the field). Undefined when the field is clean so we never describe a field
+  // by a message that isn't rendered.
+  const errId = (name: string): string | undefined =>
+    errors[name] ? `onb-err-${name}` : undefined;
+
+  // Merge an optional static describedby (e.g. a help line) with the error id,
+  // dropping falsy parts. Returns undefined when there's nothing to describe.
+  const describedBy = (name: string, extra?: string): string | undefined =>
+    [extra, errId(name)].filter(Boolean).join(" ") || undefined;
+
   // Inline error line rendered under a field. Returns null when the field is
-  // clean so it never reserves space.
+  // clean so it never reserves space. Carries the id errId() points at.
   function FieldError({ name }: { name: string }) {
     if (!errors[name]) return null;
     return (
-      <p role="alert" className="mt-1.5 text-xs font-medium text-destructive">
+      <p id={`onb-err-${name}`} role="alert" className="mt-1.5 text-xs font-medium text-destructive">
         {errors[name]}
       </p>
     );
@@ -94,8 +106,14 @@ export function OnboardingForm({
       agreedToHazingWaiver: z.literal(true, {
         errorMap: () => ({ message: "You must agree to the Zero-Tolerance Anti-Hazing Policy" }),
       }),
-      password: z.string().min(6, "Pick a password at least 6 characters long"),
-      confirmPassword: z.string().min(6, "Confirm password is required"),
+      // Password rule aligned with lib/otp validateNewPassword + the alumni
+      // register flow: 8+ chars with at least one letter AND one number.
+      password: z
+        .string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[a-zA-Z]/, "Password must contain a letter")
+        .regex(/[0-9]/, "Password must contain a number"),
+      confirmPassword: z.string().min(8, "Confirm password is required"),
     }).refine((data) => data.password === data.confirmPassword, {
       message: "Passwords don't match",
       path: ["confirmPassword"],
@@ -196,7 +214,7 @@ export function OnboardingForm({
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label htmlFor="onb-name" className="mb-1.5 inline-block">Full name *</Label>
-            <Input id="onb-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Mark Laughery" required autoComplete="name" aria-invalid={!!errors.name} />
+            <Input id="onb-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Mark Laughery" required autoComplete="name" aria-invalid={!!errors.name} aria-describedby={describedBy("name")} />
             <FieldError name="name" />
           </div>
 
@@ -221,7 +239,7 @@ export function OnboardingForm({
                   onClick={() => set("year", y)}
                   aria-pressed={form.year === y}
                   className={
-                    "rounded-full border px-3 py-1.5 text-sm transition " +
+                    "min-h-[44px] rounded-full border px-3 py-1.5 text-sm transition " +
                     (form.year === y
                       ? "bg-phisig-red text-white border-phisig-red"
                       : "border-border bg-card text-muted-foreground hover:text-foreground")
@@ -273,7 +291,7 @@ export function OnboardingForm({
                     if (f) uploadHeadshot(f);
                   }}
                 />
-                <span className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
+                <span className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary">
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Upload className="h-3.5 w-3.5" aria-hidden="true" />}
                   {form.headshotUrl ? "Replace photo" : "Upload photo"}
                 </span>
@@ -296,7 +314,7 @@ export function OnboardingForm({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Set your sign-in</p>
               <p id="onb-pw-help" className="mt-1 text-xs text-muted-foreground">
-                Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Pick a password you'll remember - it's the only way back into your account.
+                Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Use at least 8 characters with a letter and a number - it's the only way back into your account.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -307,11 +325,11 @@ export function OnboardingForm({
                   type="password"
                   value={form.password}
                   onChange={(e) => set("password", e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters, with a letter and a number"
                   autoComplete="new-password"
                   required
-                  minLength={6}
-                  aria-describedby="onb-pw-help"
+                  minLength={8}
+                  aria-describedby={describedBy("password", "onb-pw-help")}
                   aria-invalid={!!errors.password}
                 />
                 <FieldError name="password" />
@@ -326,8 +344,9 @@ export function OnboardingForm({
                   placeholder="Re-enter password"
                   autoComplete="new-password"
                   required
-                  minLength={6}
+                  minLength={8}
                   aria-invalid={!!errors.confirmPassword}
+                  aria-describedby={describedBy("confirmPassword")}
                 />
                 <FieldError name="confirmPassword" />
               </div>
@@ -348,6 +367,8 @@ export function OnboardingForm({
                 checked={form.agreedToHazingWaiver}
                 onCheckedChange={(checked) => set("agreedToHazingWaiver", checked === true)}
                 className="mt-1 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
+                aria-invalid={!!errors.agreedToHazingWaiver}
+                aria-describedby={describedBy("agreedToHazingWaiver")}
               />
               <div className="flex-1">
                 <Label htmlFor="onb-hazing-waiver" className="text-xs font-normal text-slate-600 leading-normal cursor-pointer select-none">
@@ -367,6 +388,7 @@ export function OnboardingForm({
                 required
                 className="bg-white border-slate-300 font-medium"
                 aria-invalid={!!errors.signatureName}
+                aria-describedby={describedBy("signatureName")}
               />
               <FieldError name="signatureName" />
             </div>

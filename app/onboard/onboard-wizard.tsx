@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
+import { isFeeWaiverPromo } from "@/lib/promo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1599,7 +1600,8 @@ export default function OnboardWizard() {
                       )}
                       {promoApplied && (
                         <SummaryRow label="Promo Code">
-                          <span className="text-emerald-400 font-bold">{appliedCode}</span> (Applied)
+                          <span className="text-emerald-400 font-bold">{appliedCode}</span>{" "}
+                          {isFeeWaiverPromo(appliedCode) ? "(100% off - all fees waived)" : "(Applied)"}
                         </SummaryRow>
                       )}
                     </div>
@@ -2032,9 +2034,12 @@ function PricingStep({
   };
 
   const handleApplyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
+    const raw = promoCode.trim();
+    const code = raw.toUpperCase();
     if (!code) return;
-    if (["GREEKFREE", "WELCOME100", "SILICON"].includes(code)) {
+    // `bensachwitzrocks` (case-insensitive) is the full-fee-waiver code; the
+    // others are marketing codes. Both are accepted here and echoed to the server.
+    if (isFeeWaiverPromo(raw) || ["GREEKFREE", "WELCOME100", "SILICON"].includes(code)) {
       setPromoApplied(true);
       setAppliedCode(code);
       setPromoError("");
@@ -2245,7 +2250,15 @@ function PricingStep({
           {promoApplied && (
             <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Promo code <strong>{appliedCode}</strong> applied successfully! Discount will be reflected on your first invoice.
+              {isFeeWaiverPromo(appliedCode) ? (
+                <span>
+                  Promo code <strong>{appliedCode}</strong> applied: <strong>100% off, all fees waived</strong>. Your monthly platform fee and every rush-cycle fee are fully covered.
+                </span>
+              ) : (
+                <span>
+                  Promo code <strong>{appliedCode}</strong> applied successfully! Discount will be reflected on your first invoice.
+                </span>
+              )}
             </p>
           )}
           {promoError && (

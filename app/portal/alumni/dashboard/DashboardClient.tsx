@@ -782,8 +782,8 @@ export default function DashboardClient({
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-amber-400/40 blur-lg" />
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(217,119,6,0.6)] ring-1 ring-amber-700/20">
+                <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-500/30 blur-lg" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
                   <GraduationCap className="w-5 h-5" />
                 </div>
               </div>

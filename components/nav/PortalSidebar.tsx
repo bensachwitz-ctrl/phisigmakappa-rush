@@ -93,12 +93,21 @@ export function PortalSidebar({
               style={{ backgroundColor: "hsl(var(--primary))" }}
             />
             {Icon && (
-              <Icon
-                className={cn(
-                  "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "" : "text-muted-foreground",
-                )}
-              />
+              // The icon (with the accent bar) carries the brand color via
+              // currentColor; the label stays text-foreground so a light brand
+              // color keeps AA contrast. The Icon components accept only
+              // className, so the tint rides on a wrapping span's color.
+              <span
+                className="inline-flex shrink-0"
+                style={isActive ? { color: "hsl(var(--primary))" } : undefined}
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isActive ? "" : "text-muted-foreground",
+                  )}
+                />
+              </span>
             )}
             <span className="truncate">{it.label}</span>
             {it.badge != null && it.badge !== "" && (
@@ -116,9 +125,11 @@ export function PortalSidebar({
             : "text-muted-foreground hover:bg-secondary hover:text-foreground",
         );
         // Tinted active background driven by the chapter brand var so the rail
-        // re-brands per tenant with no hardcoded color.
+        // re-brands per tenant with no hardcoded color. The label itself stays
+        // text-foreground (from `cls`) so a light brand color keeps AA contrast;
+        // only the accent bar + icon carry hsl(var(--primary)).
         const activeStyle: React.CSSProperties | undefined = isActive
-          ? { backgroundColor: "hsl(var(--primary) / 0.10)", color: "hsl(var(--primary))" }
+          ? { backgroundColor: "hsl(var(--primary) / 0.10)" }
           : undefined;
 
         if (it.onSelect) {

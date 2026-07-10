@@ -1170,13 +1170,13 @@ export default function BrothersDashboardClient({
                 </div>
                 <div>
                   <h4 className="font-bold text-sm sm:text-base text-cream-100 flex items-center gap-1.5 leading-snug">
-                    Get the Greek Stack Companion iOS App
+                    Greek Stack Companion iOS App
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider border border-amber-500/30">
-                      Recommended
+                      Coming soon
                     </span>
                   </h4>
                   <p className="text-xs text-cream-200/90 max-w-2xl mt-1 leading-normal">
-                    Native speed with tactile haptics, universal links that open straight to the right page, and full offline access to your chapter roster and calendar.
+                    A native companion app is on the way: tactile haptics, universal links that open straight to the right page, and offline access to your chapter roster and calendar. Preview what is coming and get notified when it ships.
                   </p>
                 </div>
               </div>
@@ -1193,7 +1193,7 @@ export default function BrothersDashboardClient({
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-maroon-950 text-xs font-bold rounded-xl shadow-[0_4px_14px_rgba(245,158,11,0.3)] transition duration-200 hover:-translate-y-px"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Install Guide
+                  Learn more
                 </Link>
               </div>
             </div>
