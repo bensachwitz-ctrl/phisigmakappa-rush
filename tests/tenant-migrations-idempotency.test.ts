@@ -108,6 +108,44 @@ describe("applyPendingTenantMigrations — real portal_password_reset file", () 
   });
 });
 
+describe("applyPendingTenantMigrations — schema pinning (search_path fix)", () => {
+  // getTenantClient's `?schema=` URL param qualifies Prisma's OWN model queries but
+  // does NOT set the connection search_path (it stays `"$user", public`), so a raw
+  // UNQUALIFIED migration statement runs against public — the exact bug that left
+  // PortalPasswordReset + PortalUser.mustReset out of every chapter schema. When a
+  // `schema` is given, the applier must run inside an interactive transaction whose
+  // FIRST statement pins `search_path` to that schema, so the unqualified DDL lands
+  // in the tenant schema, not public.
+  it("wraps in a transaction that SETs search_path to the schema BEFORE any DDL", async () => {
+    const order: string[] = [];
+    const tx = { $executeRawUnsafe: vi.fn(async (sql: string) => { order.push(sql); return 1; }) };
+    const db = {
+      $executeRawUnsafe: vi.fn(async () => 1), // must NOT be used on the pinned path
+      $transaction: vi.fn(async (fn: any) => fn(tx)),
+    };
+    const results = await applyPendingTenantMigrations(db as any, {
+      files: ["2026-07-10_portal_mustreset.sql"],
+      schema: "schema_phisig",
+    });
+
+    expect(results[0].ok).toBe(true);
+    // Ran inside a transaction, NOT via the bare client.
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(db.$executeRawUnsafe).not.toHaveBeenCalled();
+    // FIRST statement pins the tenant schema; the real DDL comes AFTER it.
+    expect(order[0]).toBe('SET search_path TO "schema_phisig", public');
+    expect(order[1]).toMatch(/ALTER TABLE "PortalUser" ADD COLUMN IF NOT EXISTS "mustReset"/);
+  });
+
+  it("falls back to the direct (unpinned) path when no schema is given", async () => {
+    const { db, executed } = recordingDb();
+    await applyPendingTenantMigrations(db as any, { files: ["2026-07-10_portal_mustreset.sql"] });
+    // No SET search_path is injected on the legacy/test path.
+    expect(executed.some((s) => /SET search_path/.test(s))).toBe(false);
+    expect(executed.some((s) => /ALTER TABLE "PortalUser"/.test(s))).toBe(true);
+  });
+});
+
 describe("applyPendingMigrationsToAllTenants — fans out via forEachTenantIncludingInactive", () => {
   it("uses the INACTIVE-inclusive iterator and applies the curated set to a pending/inactive tenant", async () => {
     const { db } = recordingDb();

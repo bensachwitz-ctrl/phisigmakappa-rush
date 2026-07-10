@@ -1,0 +1,24 @@
+-- APPLY TO PROD — OWNER/CONTROLLED STEP
+-- =============================================================================
+-- PortalUser.mustReset — the OTP-reset "force new password" flag.
+--
+-- The prisma model PortalUser has `mustReset Boolean @default(false)` (set true
+-- when an OTP-reset session is issued, cleared once a new password is chosen), and
+-- the runtime reads/writes it (lib/portal-auth, app/api/portal/reset/*, and every
+-- Prisma read of PortalUser RETURNs it). But the column was MISSING from
+-- lib/schema.sql — so every tenant provisioned from that DDL lacked it, and ANY
+-- Prisma PortalUser read/write (portal + mobile login, which do findFirst/upsert)
+-- errors "column mustReset does not exist" on those schemas. This heals them.
+--
+-- New tenants now get the column from lib/schema.sql at onboard time. EXISTING
+-- tenant schemas are patched by running this file once PER tenant schema
+-- (fanned out by lib/tenant-migrations.ts → the apply-tenant-migrations cron).
+--
+-- HOW TO APPLY (per existing tenant schema; repeat for each):
+--     SET search_path TO "schema_<subdomain>";
+--     \i prisma/manual-migrations/2026-07-10_portal_mustreset.sql
+--
+-- IDEMPOTENT: ADD COLUMN IF NOT EXISTS — re-running is a clean no-op.
+-- =============================================================================
+
+ALTER TABLE "PortalUser" ADD COLUMN IF NOT EXISTS "mustReset" BOOLEAN NOT NULL DEFAULT false;

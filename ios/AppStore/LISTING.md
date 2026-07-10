@@ -122,8 +122,8 @@ demo is on the website only).
   School:            University of South Carolina
   Chapter:           Phi Sigma Kappa
   Sign-in tab:       Brother
-  Email:             <PROVIDE A REVIEW MEMBER EMAIL>
-  Password:          <PROVIDE A REVIEW PASSWORD>
+  Email:             appreview@greekstack.app
+  Password:          GreekStack!Review2026
 
   (The provided account is an OFFICER account, so you can also test the
    "Member view / Exec view" switcher at the top of the dashboard.)

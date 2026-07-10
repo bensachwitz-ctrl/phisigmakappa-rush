@@ -664,6 +664,7 @@ CREATE TABLE "PortalUser" (
     "alumniId" TEXT,
     "magicToken" TEXT,
     "magicTokenExpiresAt" TIMESTAMP(3),
+    "mustReset" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastLoginAt" TIMESTAMP(3),
 

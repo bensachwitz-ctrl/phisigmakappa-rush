@@ -41,6 +41,7 @@ export const IDEMPOTENT_MANUAL_MIGRATIONS = [
   "2026-06-15_auditlog_hashchain.sql",
   "2026-06-30_section_builder.sql",
   "2026-07-07_portal_password_reset.sql",
+  "2026-07-10_portal_mustreset.sql",
 ] as const;
 
 /** Default on-disk location of the manual-migration files (repo-relative). */
@@ -70,12 +71,26 @@ export interface MigrationFileResult {
  * without aborting the others. Returns a per-file summary.
  */
 export async function applyPendingTenantMigrations(
-  db: Pick<PrismaClient, "$executeRawUnsafe">,
-  opts?: { dir?: string; files?: readonly string[] },
+  db: Pick<PrismaClient, "$executeRawUnsafe"> & Partial<Pick<PrismaClient, "$transaction">>,
+  opts?: { dir?: string; files?: readonly string[]; schema?: string },
 ): Promise<MigrationFileResult[]> {
   const dir = opts?.dir ?? manualMigrationsDir();
   const files = opts?.files ?? IDEMPOTENT_MANUAL_MIGRATIONS;
+  const schema = opts?.schema;
   const results: MigrationFileResult[] = [];
+
+  // Swallow only "already exists" (idempotency); rethrow anything else so a real
+  // problem surfaces per-file.
+  const run = async (
+    exec: (sql: string) => Promise<unknown>,
+    stmt: string,
+  ): Promise<void> => {
+    try {
+      await exec(stmt);
+    } catch (err: any) {
+      if (!err?.message?.includes("already exists")) throw err;
+    }
+  };
 
   for (const file of files) {
     let statements: string[];
@@ -88,15 +103,24 @@ export async function applyPendingTenantMigrations(
     }
 
     try {
-      for (const stmt of statements) {
-        try {
-          await db.$executeRawUnsafe(stmt);
-        } catch (err: any) {
-          // Idempotency: an "already exists" race is not a failure — the object is
-          // already present, which is exactly the state we want. Rethrow anything
-          // else so a genuine problem surfaces per-tenant.
-          if (!err?.message?.includes("already exists")) throw err;
-        }
+      if (schema && typeof db.$transaction === "function") {
+        // CORRECT per-tenant application. getTenantClient's `?schema=schema_<sub>`
+        // URL param makes Prisma QUALIFY its own model queries but does NOT set the
+        // connection search_path (it stays `"$user", public`). So a raw, UNQUALIFIED
+        // migration statement would run against `public`, not the tenant schema —
+        // which is exactly how PortalPasswordReset + PortalUser.mustReset failed to
+        // reach any chapter schema. An INTERACTIVE transaction holds ONE connection,
+        // so a leading `SET search_path` persists across every statement, pinning the
+        // unqualified identifiers to THIS tenant's schema. `schema` is derived from a
+        // sanitized subdomain ([a-z0-9_]), so it is safe to interpolate.
+        await (db.$transaction as PrismaClient["$transaction"])(async (tx) => {
+          await tx.$executeRawUnsafe(`SET search_path TO "${schema}", public`);
+          for (const stmt of statements) await run((s) => tx.$executeRawUnsafe(s), stmt);
+        });
+      } else {
+        // Back-compat / unit-test path: no schema pinning (caller has already bound
+        // search_path, or is asserting raw statement emission).
+        for (const stmt of statements) await run((s) => db.$executeRawUnsafe(s), stmt);
       }
       results.push({ file, statements: statements.length, ok: true });
     } catch (err: any) {
@@ -126,5 +150,12 @@ export async function applyPendingTenantMigrations(
 export async function applyPendingMigrationsToAllTenants(): Promise<
   Array<{ tenant: string; ok: boolean; result?: MigrationFileResult[]; error?: string }>
 > {
-  return forEachTenantIncludingInactive(async (db) => applyPendingTenantMigrations(db));
+  return forEachTenantIncludingInactive(async (db, tenant) => {
+    // Pin each file's statements to THIS tenant's schema (see the search_path note
+    // in applyPendingTenantMigrations). Schema name is derived from the sanitized
+    // subdomain, identical to getTenantClient — so unqualified DDL lands in the
+    // chapter's schema, not public.
+    const schema = `schema_${String(tenant.subdomain).replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase()}`;
+    return applyPendingTenantMigrations(db, { schema });
+  });
 }
