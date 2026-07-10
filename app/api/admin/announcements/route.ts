@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getCurrentBrotherId } from "@/lib/auth";
 import { guardOfficer, withAdminArea } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
+import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,6 +83,32 @@ export async function POST(req: Request) {
       (parsed.data.channels !== "inapp" ? ` · channels: ${parsed.data.channels}` : ""),
     req,
   });
+
+  // notify #2 — fan an IMMEDIATE announcement out to each opted-in recipient's
+  // chosen external channels (per-user prefs). Scheduled sends route later, when
+  // the cron flips them to sent. Best-effort: never throws, never blocks the
+  // publish on a channel failure. In-app delivery is the existing feed card.
+  if (!isScheduled) {
+    const roles =
+      created.audience === "ALUMNI"
+        ? ["alumni"]
+        : created.audience === "RUSHES"
+          ? ["pnm"]
+          : created.audience === "ALL"
+            ? undefined
+            : ["brother"];
+    const recipients = await listPortalRecipients(roles);
+    await routeEventToRecipients(
+      {
+        event: "announcement.posted",
+        title: created.title,
+        body: created.body,
+        url: "/portal/brothers/dashboard",
+      },
+      recipients,
+    );
+  }
+
   return NextResponse.json({ ok: true, announcement: created });
 }
 

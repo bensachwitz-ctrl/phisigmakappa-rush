@@ -35,13 +35,24 @@ export async function sendNotification(input: NotifyMessage): Promise<NotifyResu
       chapter = undefined;
     }
   }
-  const msg: NotifyMessage = { ...input, chapter };
+  return sendNotificationWith({ ...input, chapter }, config);
+}
 
+/**
+ * Fan out with an EXPLICIT config — used by the per-user routing layer
+ * (lib/notify/prefs.ts) which overlays each recipient's own delivery targets
+ * onto the chapter config, so it must not re-resolve the tenant config per
+ * recipient. Does NOT fetch the chapter identity (the caller sets msg.chapter).
+ */
+export async function sendNotificationWith(
+  input: NotifyMessage,
+  config: NotifyConfig,
+): Promise<NotifyResult> {
   const requested = input.channels && input.channels.length ? input.channels : ALL_CHANNELS;
   const selected = requested.filter((c) => config.enabledChannels.includes(c));
 
   const results = await Promise.all(
-    selected.map((channel) => dispatchOne(channel, msg, config)),
+    selected.map((channel) => dispatchOne(channel, input, config)),
   );
   return { results };
 }

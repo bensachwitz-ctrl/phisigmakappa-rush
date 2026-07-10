@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SettingsManager } from "@/components/admin/settings-manager";
+import { NotifyChannelsAdminCard } from "@/components/notify/notify-channels-admin-card";
 import { ExternalLink } from "lucide-react";
 
 import { IconSpark } from "@/components/brand/icons";
@@ -60,6 +61,8 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsManager initial={settings} envIntegrations={envIntegrations} />
+
+      <NotifyChannelsAdminCard initialValue={settings["notify.channels"]} />
     </div>
   );
 }

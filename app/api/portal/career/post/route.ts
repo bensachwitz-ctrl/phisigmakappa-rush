@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPortalSession, isAdminOverride } from "@/lib/portal-auth";
+import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,19 @@ export async function POST(req: Request) {
         postedByRole,
       },
     });
+
+    // notify #2 — route the new opportunity to every opted-in member's chosen
+    // external channels. Best-effort; never blocks the post on a channel failure.
+    const recipients = await listPortalRecipients(["brother", "alumni"]);
+    await routeEventToRecipients(
+      {
+        event: "job.posted",
+        title: `New opportunity: ${title}`,
+        body: `${company}${location ? ` · ${location}` : ""}`,
+        url: "/portal/brothers/dashboard",
+      },
+      recipients,
+    );
 
     return NextResponse.json({ ok: true, job });
   } catch (err: any) {

@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";
+import { NotifyPrefsCard } from "@/components/notify/notify-prefs-card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
@@ -1157,6 +1158,8 @@ export default function DashboardClient({
                   </div>
                 </form>
               </div>
+
+              <NotifyPrefsCard />
             </div>
           )}
 

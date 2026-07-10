@@ -6,6 +6,7 @@ import { guardOfficerOrAdmin } from "@/lib/permissions";
 import { guardBillingWrite } from "@/lib/billing-guard";
 import { audit } from "@/lib/audit";
 import { pushEventToCalDiy } from "@/lib/events";
+import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,6 +144,19 @@ export async function POST(req: Request) {
     if (!created.isPrivate) {
       calDiy = await pushEventToCalDiy(created).catch(() => null);
     }
+
+    // notify #2 — route the new event to each opted-in recipient's chosen
+    // external channels (per-user prefs). Best-effort; never blocks the create.
+    const recipients = await listPortalRecipients(["brother", "alumni"]);
+    await routeEventToRecipients(
+      {
+        event: "event.posted",
+        title: `New event: ${created.name}`,
+        body: created.description || created.location || "A new chapter event was posted.",
+        url: "/portal/brothers/dashboard",
+      },
+      recipients,
+    );
 
     return NextResponse.json({ ok: true, event: created, calDiy });
   } catch (err) {

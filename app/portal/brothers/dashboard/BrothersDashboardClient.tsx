@@ -48,6 +48,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { PublicFooter } from "@/components/site/footer";
+import { NotifyPrefsCard } from "@/components/notify/notify-prefs-card";
 import { useToast } from "@/components/ui/toast";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
@@ -2806,6 +2807,8 @@ export default function BrothersDashboardClient({
                 </div>
 
               </div>
+
+              <NotifyPrefsCard />
             </div>
           )}
           </div>{/* /role="tabpanel" */}
