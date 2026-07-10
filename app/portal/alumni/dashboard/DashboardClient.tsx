@@ -54,6 +54,9 @@ import {
   IconEvents,
   IconGiving,
 } from "@/components/brand/icons";
+import { PortalSwitcher } from "@/components/nav/PortalSwitcher";
+import { PortalSidebar, type PortalSidebarItem } from "@/components/nav/PortalSidebar";
+import type { PortalDestination } from "@/components/nav/portal-nav";
 
 interface Alumnus {
   id: string;
@@ -309,6 +312,8 @@ interface DashboardClientProps {
   jobPostings: JobPosting[];
   announcements: Announcement[];
   isAdmin: boolean;
+  /** Authorized portal-switcher destinations (computed server-side). */
+  portalDestinations: PortalDestination[];
 }
 
 export default function DashboardClient({
@@ -323,6 +328,7 @@ export default function DashboardClient({
   jobPostings,
   announcements,
   isAdmin,
+  portalDestinations,
 }: DashboardClientProps) {
   const router = useRouter();
   const { push } = useToast();
@@ -747,6 +753,27 @@ export default function DashboardClient({
     }
   };
 
+  // Single source of truth for the alumni portal's MAIN sections — shared by the
+  // desktop left rail (PortalSidebar) and the mobile tab scroller so the two nav
+  // surfaces stay in lockstep.
+  const alumniTabs = [
+    { id: "overview", label: "Overview", icon: IconActivity },
+    { id: "profile", label: "My Profile", icon: IconProfile },
+    { id: "pnms", label: "Hometown PNMs", icon: IconMap },
+    { id: "brothers", label: `Active ${terms.members}`, icon: IconMembers },
+    { id: "alumni", label: "Alumni Directory", icon: IconGraduation },
+    { id: "polls", label: "Surveys & Polls", icon: IconPolls },
+    { id: "events", label: "Events Calendar", icon: IconEvents },
+    { id: "donate", label: "Donate & Support", icon: IconGiving },
+  ];
+  const alumniSidebarItems: PortalSidebarItem[] = alumniTabs.map((t) => ({
+    key: t.id,
+    label: t.label,
+    icon: t.icon,
+    active: activeTab === t.id,
+    onSelect: () => setActiveTab(t.id),
+  }));
+
   return (
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
       <div>
@@ -774,6 +801,12 @@ export default function DashboardClient({
             )}
 
             <div className="flex items-center gap-3">
+              {/* Portal switcher — flip between the portals this session may access. */}
+              <PortalSwitcher
+                current="alumni"
+                destinations={portalDestinations}
+                isAdminOverride={isAdmin}
+              />
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-maroon-700 hover:text-maroon-900 border border-maroon-100 rounded-lg px-3 py-1.5 hover:bg-cream-50 transition"
@@ -785,19 +818,27 @@ export default function DashboardClient({
           </div>
         </header>
 
-        {/* Inner Navigation Tabs */}
-        <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Content — two columns on desktop: a left page rail (the alumni
+            portal's MAIN sections) + the active section panel. On mobile the rail
+            collapses to the horizontal tab scroller below, so there is no
+            duplicate nav and no horizontal overflow. */}
+        <div className="max-w-6xl mx-auto px-4 py-6 lg:flex lg:gap-6">
+          <aside className="hidden lg:block w-56 shrink-0">
+            <div className="sticky top-24">
+              <div className="rounded-xl border border-maroon-100 bg-white/70 p-2 shadow-sm backdrop-blur-sm">
+                <PortalSidebar
+                  items={alumniSidebarItems}
+                  ariaLabel="Alumni portal sections"
+                  heading="Alumni Portal"
+                />
+              </div>
+            </div>
+          </aside>
+          <div className="min-w-0 flex-1">
           {(() => {
-            const tabs = [
-              { id: "overview", label: "Overview", icon: IconActivity },
-              { id: "profile", label: "My Profile", icon: IconProfile },
-              { id: "pnms", label: "Hometown PNMs", icon: IconMap },
-              { id: "brothers", label: `Active ${terms.members}`, icon: IconMembers },
-              { id: "alumni", label: "Alumni Directory", icon: IconGraduation },
-              { id: "polls", label: "Surveys & Polls", icon: IconPolls },
-              { id: "events", label: "Events Calendar", icon: IconEvents },
-              { id: "donate", label: "Donate & Support", icon: IconGiving },
-            ];
+            // `alumniTabs` is hoisted to component scope (shared with the desktop
+            // left rail) so the two nav surfaces stay in lockstep.
+            const tabs = alumniTabs;
             const onTabKeyDown = (e: React.KeyboardEvent) => {
               const idx = tabs.findIndex((t) => t.id === activeTab);
               const cur = idx < 0 ? 0 : idx;
@@ -816,7 +857,7 @@ export default function DashboardClient({
               <div
                 role="tablist"
                 aria-label="Alumni dashboard sections"
-                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
+                className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {tabs.map((tab) => {
@@ -2065,6 +2106,7 @@ export default function DashboardClient({
             </div>
           )}
           </div>{/* /role="tabpanel" */}
+          </div>{/* /flex-1 panel column */}
         </div>
       </div>
 

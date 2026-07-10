@@ -18,8 +18,10 @@ import {
   IconMenu, IconClose, IconChevronDown, IconExternal, IconSignOut, IconGrid,
 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
+import { PortalSwitcher } from "@/components/nav/PortalSwitcher";
+import type { PortalDestination } from "@/components/nav/portal-nav";
 
-type NavItem = {
+export type NavItem = {
   href: string;
   label: string;
   icon: React.ComponentType<any>;
@@ -39,7 +41,7 @@ type NavItem = {
 // the rest collapse into a tidy "More" dropdown so the bar never overflows even
 // with 16 sections. The mobile menu (below) keeps listing all of them in a grid.
 // `domain` mirrors each page's checkOfficerPermission(domain,"read") gate.
-const ITEMS: NavItem[] = [
+export const ITEMS: NavItem[] = [
   { href: "/admin", label: "Rush", icon: IconDashboard, adminOnly: false, group: "primary" },
   { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: true, group: "primary" },
   { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary", domain: "brothers" },
@@ -80,6 +82,28 @@ const ITEMS: NavItem[] = [
   { href: "/admin/help", label: "Help", icon: IconHelp, adminOnly: false, group: "more" },
 ];
 
+/**
+ * Role/permission filter for the officer-console nav — the SINGLE predicate
+ * shared by the top bar's mobile menu AND the left-side PortalSidebar (via
+ * admin-shell) so both surfaces hide exactly the same links. Mirrors the
+ * treasurer-money-nav test's `navItemVisible`:
+ *   - adminOnly items require real admin access;
+ *   - admins (and ungated items) always show;
+ *   - a non-admin officer only sees a domain link they can actually read.
+ */
+export function filterNavItems(
+  items: NavItem[],
+  isAdmin: boolean,
+  readableDomains?: string[],
+): NavItem[] {
+  const readable = new Set(readableDomains || []);
+  return items.filter((it) => {
+    if (it.adminOnly && !isAdmin) return false;
+    if (isAdmin || !it.domain) return true;
+    return readable.has(it.domain);
+  });
+}
+
 /** Does `href` match `pathname` as an exact hit or a path-segment prefix? */
 function hrefMatches(pathname: string, href: string): boolean {
   return pathname === href || (href !== "/admin" && pathname.startsWith(href + "/"));
@@ -104,6 +128,7 @@ function bestActiveHref(pathname: string, items: NavItem[]): string | null {
 export function AdminNav({
   isAdmin = true,
   readableDomains,
+  portalDestinations,
 }: {
   isAdmin?: boolean;
   /** GATE-3 FIX 4: the per-domain READ permissions a NON-ADMIN officer holds.
@@ -111,38 +136,25 @@ export function AdminNav({
    *  a tab they'd only get an "access required" card from. Ignored for admins
    *  (who see everything). `undefined` = no filtering (back-compat / admin). */
   readableDomains?: string[];
+  /** Authorized portal-switcher destinations (computed server-side). When absent
+   *  or single, the switcher renders a static chip. */
+  portalDestinations?: PortalDestination[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = React.useState(false);
-  // Domain set the viewer can read; admins implicitly read every domain.
-  const readable = React.useMemo(
-    () => new Set(readableDomains || []),
-    [readableDomains],
+  // The full per-role visible section list (shared predicate with the left
+  // PortalSidebar). The desktop primary sections now live in the sidebar; here
+  // the list drives the mobile grid menu.
+  const items = React.useMemo(
+    () => filterNavItems(ITEMS, isAdmin, readableDomains),
+    [isAdmin, readableDomains],
   );
-  const items = ITEMS.filter((it) => {
-    // adminOnly items require real admin access.
-    if (it.adminOnly && !isAdmin) return false;
-    // Admins (and items with no per-domain read gate) are always shown.
-    if (isAdmin || !it.domain) return true;
-    // A non-admin officer only sees a domain link they can actually read —
-    // otherwise the tab would dead-end on the "access required" card.
-    return readable.has(it.domain);
-  });
-
-  const primaryItems = items.filter((it) => it.group === "primary");
-  // "Help" gets its own dedicated affordance on desktop, so keep it out of the
-  // overflow dropdown to avoid duplication; it still lives in the mobile grid.
-  const moreItems = items.filter((it) => it.group === "more" && it.href !== "/admin/help");
 
   // Compute the single active href across ALL visible items (longest match
   // wins) so exactly one nav item highlights — on /admin/dues/connect that's
   // "Payouts", never also "Dues".
   const activeHref = bestActiveHref(pathname, items);
-
-  // Surface the active overflow section on the "More" trigger so the user keeps
-  // their bearings when they're on, say, /admin/officers.
-  const activeMore = moreItems.find((it) => it.href === activeHref);
 
   // Close mobile menu on route change
   React.useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -160,78 +172,19 @@ export function AdminNav({
           <Wordmark variant="compact" />
         </Link>
 
-        {/* Desktop nav — pinned primary items + a "More" overflow dropdown so the
-            bar stays slim and never wraps. */}
-        <nav aria-label="Admin sections" className="hidden lg:flex items-center gap-0.5 min-w-0">
-          {primaryItems.map((it) => {
-            const active = it.href === activeHref;
-            return (
-              <Link
-                key={it.href}
-                href={it.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
-                  active
-                    ? "bg-phisig-red text-white shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                )}
-              >
-                <it.icon className="h-4 w-4" aria-hidden="true" />
-                {it.label}
-              </Link>
-            );
-          })}
-
-          {moreItems.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-current={activeMore ? "page" : undefined}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-[state=open]:bg-secondary data-[state=open]:text-foreground",
-                    activeMore
-                      ? "bg-phisig-red text-white shadow-sm hover:bg-phisig-red-dark data-[state=open]:bg-phisig-red-dark data-[state=open]:text-white"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  )}
-                >
-                  {activeMore ? (
-                    <activeMore.icon className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <IconGrid className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  {activeMore ? activeMore.label : "More"}
-                  <IconChevronDown className="h-3.5 w-3.5 opacity-70 transition-transform" aria-hidden="true" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Chapter sections</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {moreItems.map((it) => {
-                  const active = it.href === activeHref;
-                  return (
-                    <DropdownMenuItem key={it.href} asChild>
-                      <Link
-                        href={it.href}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          active && "bg-phisig-red/10 text-phisig-red focus:bg-phisig-red/15 focus:text-phisig-red"
-                        )}
-                      >
-                        <it.icon
-                          className={cn("h-4 w-4", active ? "text-phisig-red" : "text-muted-foreground")}
-                          aria-hidden="true"
-                        />
-                        <span className="font-medium">{it.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </nav>
+        {/* Portal switcher — "flip through from the top" between the persona
+            areas this session is authorized for. The per-section links now live
+            in the left PortalSidebar (desktop) + the mobile grid menu (below),
+            so the top bar stays slim and never wraps. */}
+        {portalDestinations && portalDestinations.length > 0 && (
+          <div className="hidden lg:flex min-w-0">
+            <PortalSwitcher
+              current="admin"
+              destinations={portalDestinations}
+              isAdminOverride={isAdmin}
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           {/* ⌘K discovery hint — desktop only, dispatches a synthetic ⌘K

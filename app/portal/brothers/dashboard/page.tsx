@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
+import { buildPortalDestinations } from "@/components/nav/portal-nav";
 import BrothersDashboardClient from "./BrothersDashboardClient";
 import type { Metadata } from "next";
 
@@ -32,6 +33,10 @@ export default async function BrothersDashboardPage() {
   }
 
   let brother;
+  // Whether this member ALSO has a linked alumni profile — drives whether the
+  // portal-switcher offers the Alumni portal (spec: only if they actually have
+  // an alumni profile). Admin override adds every portal regardless.
+  let hasAlumniProfile = false;
   try {
     let brotherId: string | null | undefined = null;
     if (sess.portal) {
@@ -39,6 +44,7 @@ export default async function BrothersDashboardPage() {
         where: { id: sess.portal.userId },
       });
       brotherId = portalUser?.brotherId;
+      hasAlumniProfile = !!portalUser?.alumniId;
     }
 
     if (sess.isAdmin && !brotherId) {
@@ -289,6 +295,17 @@ export default async function BrothersDashboardPage() {
   // null and the widget simply doesn't render.
   const standing = await loadMemberStanding(brother.id).catch(() => null);
 
+  // Authorized portal-switcher destinations. A plain member sees Member (and
+  // Alumni only when they hold an alumni profile); an admin override may flip
+  // into any portal. buildPortalDestinations guarantees a non-admin member is
+  // NEVER offered the officer console.
+  const portalDestinations = buildPortalDestinations({
+    current: "member",
+    isAdmin: sess.isAdmin,
+    hasBrotherProfile: true,
+    hasAlumniProfile,
+  });
+
   // Formatting helper
   const formattedBrother = {
     ...brother,
@@ -396,6 +413,7 @@ export default async function BrothersDashboardPage() {
       duesConfig={duesConfig}
       standing={standing ? { score: standing.result.score, max: standing.result.max, pct: standing.result.pct, standing: standing.result.standing, breakdown: standing.result.breakdown } : null}
       isAdmin={sess.isAdmin}
+      portalDestinations={portalDestinations}
     />
   );
 }

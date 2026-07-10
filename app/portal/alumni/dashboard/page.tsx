@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
+import { buildPortalDestinations } from "@/components/nav/portal-nav";
 import DashboardClient from "./DashboardClient";
 import type { Metadata } from "next";
 
@@ -39,6 +40,10 @@ export default async function AlumniDashboardPage() {
   // snag" error boundary. redirect() is re-thrown via isNextSignal so the
   // not-registered / not-found redirects still work.
   let alumniProfile;
+  // Whether this alumnus ALSO has a linked active-member profile — drives whether
+  // the portal-switcher offers the Member portal. Admin override adds every
+  // portal regardless.
+  let hasBrotherProfile = false;
   try {
     // Resolve alumni profile ID
     let alumniId: string | null | undefined = null;
@@ -47,6 +52,7 @@ export default async function AlumniDashboardPage() {
         where: { id: sess.portal.userId },
       });
       alumniId = portalUser?.alumniId;
+      hasBrotherProfile = !!portalUser?.brotherId;
     }
 
     if (sess.isAdmin && !alumniId) {
@@ -306,6 +312,12 @@ export default async function AlumniDashboardPage() {
       jobPostings={formattedJobPostings}
       announcements={formattedAnnouncements}
       isAdmin={sess.isAdmin}
+      portalDestinations={buildPortalDestinations({
+        current: "alumni",
+        isAdmin: sess.isAdmin,
+        hasBrotherProfile,
+        hasAlumniProfile: true,
+      })}
     />
   );
 }

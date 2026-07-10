@@ -81,6 +81,9 @@ import {
   IconTreasury,
   IconAddMember,
 } from "@/components/brand/icons";
+import { PortalSwitcher } from "@/components/nav/PortalSwitcher";
+import { PortalSidebar, type PortalSidebarItem } from "@/components/nav/PortalSidebar";
+import type { PortalDestination } from "@/components/nav/portal-nav";
 
 // Interfaces to ensure strict type safety matching the server page props
 interface Brother {
@@ -307,6 +310,8 @@ interface BrothersDashboardClientProps {
   duesConfig: DuesConfig;
   standing: MemberStanding | null;
   isAdmin: boolean;
+  /** Authorized portal-switcher destinations (computed server-side). */
+  portalDestinations: PortalDestination[];
 }
 
 // Browser-safe JSON parser for chapter surveys
@@ -541,6 +546,7 @@ export default function BrothersDashboardClient({
   duesConfig,
   standing,
   isAdmin,
+  portalDestinations,
 }: BrothersDashboardClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -606,6 +612,31 @@ export default function BrothersDashboardClient({
   // surface at all. Exec/admin still see it (gated to a "set it up" empty state)
   // so a treasurer can finish configuration from inside the portal.
   const showDues = duesConfig.configured || showExecSurface;
+
+  // Single source of truth for the member portal's MAIN sections — consumed by
+  // BOTH the desktop left rail (PortalSidebar) and the mobile tab scroller so the
+  // two nav surfaces can never drift. In-page tabs drive `activeTab`; standalone
+  // routes (Elections, Reimbursements) are plain links.
+  const inPageTabs: { id: string; label: string; icon: LucideIcon | typeof IconActivity }[] = [
+    { id: "overview", label: "Overview", icon: IconActivity },
+    { id: "events", label: "Events & RSVPs", icon: IconEvents },
+    { id: "service", label: "Service Hours", icon: IconServiceHours },
+    ...(showDues ? [{ id: "dues", label: "Chapter Dues", icon: IconDues }] : []),
+    { id: "alumni", label: "Alumni Directory", icon: IconMembers },
+    { id: "polls", label: "Chapter Polls", icon: IconPolls },
+    { id: "profile", label: "My Profile", icon: IconProfile },
+  ];
+  const memberSidebarItems: PortalSidebarItem[] = [
+    ...inPageTabs.map((t) => ({
+      key: t.id,
+      label: t.label,
+      icon: t.icon,
+      active: activeTab === t.id,
+      onSelect: () => setActiveTab(t.id),
+    })),
+    { key: "elections", label: "Officer Elections", icon: IconElections, href: "/portal/brothers/elections" },
+    { key: "reimbursements", label: "Reimbursements", icon: IconDues, href: "/portal/brothers/reimbursements" },
+  ];
 
   // Career board states
   const [alumniTab, setAlumniTab] = useState("directory"); // "directory" or "careers"
@@ -1104,8 +1135,14 @@ export default function BrothersDashboardClient({
             )}
 
             <div className="flex items-center gap-3">
+              {/* Portal switcher — flip between the portals this session may access. */}
+              <PortalSwitcher
+                current="member"
+                destinations={portalDestinations}
+                isAdminOverride={isAdmin}
+              />
               {brother.position && (
-                <Badge className="bg-amber-600 text-white border-none py-1 px-2.5 font-semibold text-xs tracking-wider uppercase">
+                <Badge className="bg-amber-600 text-white border-none py-1 px-2.5 font-semibold text-xs tracking-wider uppercase hidden sm:inline-flex">
                   {brother.position}
                 </Badge>
               )}
@@ -1163,9 +1200,24 @@ export default function BrothersDashboardClient({
           </div>
         )}
 
-        {/* Dashboard Content Container */}
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          
+        {/* Dashboard Content Container — two columns on desktop: a left page rail
+            (the member portal's MAIN sections) + the active section panel. On
+            mobile the rail collapses to the horizontal tab scroller below, so
+            there is no duplicate nav and no horizontal overflow. */}
+        <div className="max-w-6xl mx-auto px-4 py-6 lg:flex lg:gap-6">
+          <aside className="hidden lg:block w-56 shrink-0">
+            <div className="sticky top-24">
+              <div className="rounded-xl border border-maroon-100 bg-white/70 p-2 shadow-sm backdrop-blur-sm">
+                <PortalSidebar
+                  items={memberSidebarItems}
+                  ariaLabel="Member portal sections"
+                  heading={`${terms.member} Portal`}
+                />
+              </div>
+            </div>
+          </aside>
+          <div className="min-w-0 flex-1">
+
           {/* R45 Navigation tabs row — WAI-ARIA tabs pattern. In-page tabs use
               role="tab" + aria-selected + aria-controls and roving tabindex with
               ArrowLeft/Right; the panel below is one role="tabpanel" labelled by
@@ -1173,17 +1225,8 @@ export default function BrothersDashboardClient({
               navigates to a separate route, so it stays a plain link-button with
               aria-current="page" and is excluded from the roving keyboard set. */}
           {(() => {
-            const inPageTabs = [
-              { id: "overview", label: "Overview", icon: IconActivity },
-              { id: "events", label: "Events & RSVPs", icon: IconEvents },
-              { id: "service", label: "Service Hours", icon: IconServiceHours },
-              // Chapter Dues tab is hidden entirely until dues is configured (or
-              // for exec/admin, who get a "set it up" surface) — see showDues.
-              ...(showDues ? [{ id: "dues", label: "Chapter Dues", icon: IconDues }] : []),
-              { id: "alumni", label: "Alumni Directory", icon: IconMembers },
-              { id: "polls", label: "Chapter Polls", icon: IconPolls },
-              { id: "profile", label: "My Profile", icon: IconProfile },
-            ];
+            // `inPageTabs` is hoisted to component scope (shared with the desktop
+            // left rail) so the two nav surfaces stay in lockstep.
             const onTabKeyDown = (e: React.KeyboardEvent) => {
               const idx = inPageTabs.findIndex((t) => t.id === activeTab);
               // If the active tab isn't an in-page tab (shouldn't happen), start at 0.
@@ -1203,7 +1246,7 @@ export default function BrothersDashboardClient({
               <div
                 role="tablist"
                 aria-label="Dashboard sections"
-                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
+                className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide border-b border-maroon-100 pb-3 mb-6"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {inPageTabs.map((tab) => {
@@ -2767,6 +2810,7 @@ export default function BrothersDashboardClient({
           )}
           </div>{/* /role="tabpanel" */}
 
+          </div>{/* /flex-1 panel column */}
         </div>
       </div>
 
