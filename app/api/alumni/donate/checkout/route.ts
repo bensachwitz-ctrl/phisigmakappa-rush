@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { prisma, getSubdomain } from "@/lib/prisma";
-import { getSiteConfig } from "@/lib/site-config";
+import { getSubdomain } from "@/lib/prisma";
 import { getStripe, getSiteUrl } from "@/lib/stripe";
 import { getConnectAccountId, isConnectChargesReady } from "@/lib/stripe-connect";
-import { getPortalSession, isAdminOverride } from "@/lib/portal-auth";
+import { resolveDonateActor } from "@/lib/donate-actor";
+import { isApexHost } from "@/lib/tenant-host";
+import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { errorSink } from "@/lib/logger";
 import { z } from "zod";
 import type Stripe from "stripe";
@@ -13,6 +14,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ROUTE = "/api/alumni/donate/checkout";
+
+// CORS preflight for the bundled native app. The native shell calls this cross-
+// origin (apex-hosted backend, Capacitor origin) with Authorization + Content-
+// Type, so the WebView fires an OPTIONS preflight. The web app is same-origin and
+// never preflights — it sees no CORS header and behaves exactly as before.
+export function OPTIONS(req: Request) {
+  return mobilePreflightResponse(req.headers.get("origin"));
+}
+
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const headers = mobileCorsHeaders(req.headers.get("origin"));
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
 
 // The donor's alumniId is ALWAYS derived from the authenticated portal session
 // (see below) — never from the request body. We deliberately omit alumniId from
@@ -41,39 +56,27 @@ const RATE_MAX = 10; // ~10 checkout attempts per IP per hour
 const RATE_STATUS = "DONATE_CHECKOUT"; // RushSubmitLog discriminator for this route
 
 export async function POST(req: Request) {
+  return withCors(req, await handlePost(req));
+}
+
+async function handlePost(req: Request): Promise<NextResponse> {
   try {
-    // ── AuthZ: donor identity comes from the portal session, never the body ──
-    // Only a logged-in alumnus (or an admin overriding into the alumni portal —
-    // the same override the dashboard page honors) may open a donation checkout.
-    // This is the sole caller path (app/portal/alumni/dashboard/DashboardClient
-    // .tsx). Resolving alumniId from the session kills the prior abuse where any
-    // anonymous caller could POST an arbitrary alumniId to create PENDING rows +
-    // live Stripe sessions AND leak that alum's email via customer_email.
-    const sess = getPortalSession();
-    const isAdmin = isAdminOverride();
+    // Parse the body up front — the native transport carries { subdomain } for
+    // Bearer-token auth (the web transport authenticates via cookie and sends no
+    // subdomain). amountCents/campaign/notes are validated further below.
+    const body = await req.json().catch(() => ({}));
 
-    if ((!sess || sess.role !== "alumni") && !isAdmin) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    // ── AuthZ + tenant context (BOTH transports) ─────────────────────────────
+    // Web: portal cookie session (+ admin override) → alumniId via global prisma.
+    // Native: tenant-bound Bearer token + body.subdomain → alumniId via the tenant
+    // client. The donor's alumniId is ALWAYS identity-derived, NEVER from the body
+    // — killing the prior abuse where any caller could POST an arbitrary alumniId
+    // to create PENDING rows + live Stripe sessions AND leak that alum's email.
+    const actor = await resolveDonateActor(req, (body as any)?.subdomain);
+    if (!actor.ok) {
+      return NextResponse.json({ ok: false, error: actor.error }, { status: actor.status });
     }
-
-    // Map the portal session (PortalUser id) → the AlumniProfile id. Same
-    // pattern as app/api/alumni/vouch/route.ts and the dashboard page loader.
-    let alumniId: string | null = null;
-    if (sess?.role === "alumni") {
-      const portalUser = await prisma.portalUser.findUnique({
-        where: { id: sess.userId },
-      });
-      alumniId = portalUser?.alumniId || null;
-    }
-    if (isAdmin && !alumniId) {
-      // Admin override (no alumni cookie): fall back to the first alumnus, exactly
-      // as the dashboard page does when an admin views the alumni portal.
-      const firstAlumni = await prisma.alumniProfile.findFirst();
-      alumniId = firstAlumni?.id || null;
-    }
-    if (!alumniId) {
-      return NextResponse.json({ ok: false, error: "Alumni profile not found" }, { status: 404 });
-    }
+    const { alumniId, db, cfg, transport } = actor;
 
     // ── Per-IP rate limit (DB-backed; see RATE_* above) ──────────────────────
     const ip =
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
     if (ip !== "unknown") {
       try {
         const since = new Date(Date.now() - RATE_WINDOW_MS);
-        const recent = await prisma.rushSubmitLog.count({
+        const recent = await db.rushSubmitLog.count({
           where: { ipAddress: ip, status: RATE_STATUS, createdAt: { gte: since } },
         });
         if (recent >= RATE_MAX) {
@@ -93,13 +96,12 @@ export async function POST(req: Request) {
           );
         }
         // Record this attempt (best-effort; a failed log must not block the donor).
-        prisma.rushSubmitLog.create({ data: { ipAddress: ip, status: RATE_STATUS } }).catch(() => {});
+        db.rushSubmitLog.create({ data: { ipAddress: ip, status: RATE_STATUS } }).catch(() => {});
       } catch {
         // Fail open on a DB error so a glitch doesn't break a legitimate donation.
       }
     }
 
-    const body = await req.json().catch(() => ({}));
     const parsed = DonationSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -108,8 +110,9 @@ export async function POST(req: Request) {
 
     const { amountCents, campaign, notes } = parsed.data;
 
-    // Fetch the SESSION-resolved alumni profile (id derived above, not from body).
-    const alumni = await prisma.alumniProfile.findUnique({
+    // Fetch the identity-resolved alumni profile (id derived above, not from body)
+    // from the caller's chapter schema (tenant client on native, global on web).
+    const alumni = await db.alumniProfile.findUnique({
       where: { id: alumniId },
     });
 
@@ -117,7 +120,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Alumni profile not found" }, { status: 404 });
     }
 
-    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
     const stripe = getStripe();
     
     if (!stripe) {
@@ -180,7 +182,7 @@ export async function POST(req: Request) {
 
     let guard: GuardResult;
     try {
-      guard = await prisma.$transaction(
+      guard = await db.$transaction(
         async (tx): Promise<GuardResult> => {
           const since = new Date(Date.now() - DUP_WINDOW_MS);
           const recent = await tx.alumniDonation.findFirst({
@@ -249,10 +251,29 @@ export async function POST(req: Request) {
 
     const siteUrl = getSiteUrl();
     const currency = (cfg["dues.currency"] || "usd").toLowerCase();
-    // Chapter subdomain — read from the request Host so the platform's single
-    // webhook endpoint (called server-to-server by Stripe with NO subdomain)
-    // can route the event back to THIS chapter's schema via metadata.subdomain.
-    const sub = getSubdomain(headers().get("host")) || "";
+    // Chapter subdomain — native callers carry it explicitly (apex-hosted, no
+    // chapter Host header); web callers derive it from the request Host. Used both
+    // for the redirect origin AND the Stripe metadata.subdomain the single
+    // platform webhook (called server-to-server with NO subdomain) routes each
+    // event back to THIS chapter's schema by.
+    const sub = actor.subdomain || getSubdomain(headers().get("host")) || "";
+
+    // POST-PAYMENT REDIRECT ORIGIN. Web callers carry the chapter Host, so
+    // getSiteUrl()/the apex origin resolves the success page correctly. Native
+    // callers are apex-hosted but resolved `sub`, so rebuild the chapter-host
+    // origin from it — the success page reads the donation via the Host-proxied
+    // client, and only the CHAPTER host resolves that chapter's schema (mirrors
+    // the app/api/dues/checkout native redirect). Web behavior is unchanged.
+    const hostHeader = headers().get("host");
+    const apexBaseDomain = (
+      process.env.APP_BASE_DOMAIN ||
+      process.env.NEXT_PUBLIC_APP_DOMAIN ||
+      "greekstack.vercel.app"
+    ).replace(/^\.+/, "");
+    const origin =
+      transport === "native" && sub
+        ? `https://${sub}.${apexBaseDomain}`
+        : siteUrl;
 
     // Base Checkout params — IDENTICAL to the legacy platform-collects flow.
     // metadata.subdomain MUST stay intact so the single platform webhook can
@@ -281,8 +302,8 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${siteUrl}/portal/alumni/donate/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/portal/alumni/dashboard`,
+      success_url: `${origin}/portal/alumni/donate/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/portal/alumni/dashboard`,
       metadata: {
         alumniId,
         donationId: donation.id,
@@ -353,12 +374,12 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     
-    // Save stripe session ID on the donation record
-    await prisma.alumniDonation.update({
+    // Save stripe session ID on the donation record (caller's chapter schema).
+    await db.alumniDonation.update({
       where: { id: donation.id },
       data: { stripeSessionId: session.id },
     });
-    
+
     return NextResponse.json({ ok: true, url: session.url });
   } catch (err: any) {
     errorSink(err, {

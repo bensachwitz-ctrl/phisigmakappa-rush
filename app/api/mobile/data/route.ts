@@ -7,6 +7,11 @@ import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { computeMemberCapabilities } from "@/lib/member-capabilities";
 import { currentPeriod } from "@/lib/treasury";
 import { buildMobileElectionView } from "@/lib/mobile-elections";
+import {
+  isConnectChargesReady,
+  CONNECT_ACCOUNT_KEY,
+  CONNECT_CHARGES_KEY,
+} from "@/lib/stripe-connect";
 
 export const dynamic = "force-dynamic";
 
@@ -230,7 +235,27 @@ async function handleGet(req: Request): Promise<NextResponse> {
             bio: alum.bio,
           };
 
+          // DONATE GATE (money integrity) — the alumni Donate action is offered
+          // ONLY when the chapter has a connected, charges-ready Stripe account
+          // (isConnectChargesReady), EXACTLY as the web alumni dashboard gates it
+          // (app/portal/alumni/dashboard/page.tsx). Otherwise the app shows the
+          // donation HISTORY but NO Donate button — and the checkout route ALSO
+          // re-enforces the same gate server-side, so a tampered client gains
+          // nothing. Fail-closed on a config read hiccup.
+          let donateEnabled = false;
+          try {
+            const connectCfgs = await db.siteConfig.findMany({
+              where: { key: { in: [CONNECT_ACCOUNT_KEY, CONNECT_CHARGES_KEY] } },
+            });
+            const connectCfg: Record<string, string> = {};
+            for (const c of connectCfgs) connectCfg[c.key] = c.value;
+            donateEnabled = isConnectChargesReady(connectCfg);
+          } catch {
+            donateEnabled = false;
+          }
+
           dues = {
+            donateEnabled,
             donations: alum.donations.map((d) => ({
               id: d.id,
               amountCents: d.amountCents,

@@ -1167,6 +1167,13 @@
 
     // ── MEMBER: Dues (balance + real Stripe checkout) ─────────────────────────
     function paintDues(main, d) {
+      // ALUMNI see a GIVING surface here, not brother dues. A logged-in alumnus
+      // has no chapter dues balance; rendering the brother shape showed them a
+      // bogus $0 "unpaid dues" prompt. Branch to their donation history + a
+      // Donate action (gated on the chapter being Stripe-connected, matching the
+      // web alumni portal). Role is server-provided (d.role) — never client-set.
+      var role = d.role || (S.session && S.session.user && S.session.user.role) || "brother";
+      if (role === "alumni") { paintDonate(main, d); return; }
       var dues = d.dues || {}; var cfg = dues.config || {};
       main.appendChild(el('<h2 class="section">Dues</h2>'));
       main.appendChild(el(
@@ -1205,6 +1212,79 @@
           "</div>"
         ));
       });
+    }
+
+    // ── ALUMNI: Give back (donation history + real Stripe donate checkout) ─────
+    // Mirrors the web alumni dashboard: shows lifetime giving + history and, when
+    // the chapter is Stripe-connected (dues.donateEnabled, computed server-side
+    // via isConnectChargesReady), a Donate action that opens a real Stripe
+    // Checkout in the system browser. The checkout route re-enforces the same
+    // connect gate + derives the donor from the token, so this is UI only.
+    function paintDonate(main, d) {
+      var dues = d.dues || {};
+      var donations = dues.donations || [];
+      var lifetime = 0;
+      donations.forEach(function (x) { if (x.status === "PAID") lifetime += (x.amountCents || 0); });
+      main.appendChild(el('<h2 class="section">Give back</h2>'));
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">Your lifetime giving</div>' +
+          '<div class="v">' + money(lifetime) + '</div>' +
+          '<div style="font-size:12px;opacity:.85;margin-top:4px">' + donations.length + ' donation' + (donations.length === 1 ? "" : "s") + ' on record</div>' +
+        '</div>'
+      ));
+      if (dues.donateEnabled) {
+        var give = el('<button class="btn">Donate to the chapter</button>');
+        give.onclick = function () { haptic(); donateSheet(); };
+        main.appendChild(give);
+      } else {
+        main.appendChild(el('<div class="alert info">Online giving isn\'t set up for this chapter yet. Reach out to the chapter treasurer to make a gift.</div>'));
+      }
+      main.appendChild(el('<h2 class="section">Donation history</h2>'));
+      if (!donations.length) { main.appendChild(el('<div class="empty">No donations yet. Your gifts will appear here.</div>')); return; }
+      donations.forEach(function (p) {
+        main.appendChild(el(
+          '<div class="card" style="display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div class="h" style="margin:0">' + esc(p.campaign || "General") + '</div><div class="small">' + esc(new Date(p.recordedAt).toLocaleDateString()) + '</div></div>' +
+            '<div style="text-align:right"><div class="h" style="margin:0">' + money(p.amountCents) + '</div><div class="small" style="color:' + (p.status === "PAID" ? "var(--ok)" : "var(--gold)") + '">' + esc(p.status) + "</div></div>" +
+          "</div>"
+        ));
+      });
+    }
+
+    // Donation amount/campaign sheet → POST /api/alumni/donate/checkout (Bearer,
+    // token-derived donor) → open the returned Stripe Checkout URL externally.
+    function donateSheet() {
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Donate to the chapter</h2>'));
+      var form = el('<form>' +
+        '<div class="field"><label>Amount (USD)</label><input required type="number" min="5" step="1" inputmode="decimal" placeholder="50" /></div>' +
+        '<div class="field"><label>Fund / campaign (optional)</label><input placeholder="General" /></div>' +
+        '<div class="field"><label>Note (optional)</label><input placeholder="In honor of…" /></div>' +
+        '<button class="btn" type="submit">Continue to secure checkout</button>' +
+        '<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>' +
+      '</form>');
+      var ins = form.querySelectorAll("input");
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        var amt = parseFloat(ins[0].value);
+        if (isNaN(amt) || amt < 5) { toast("Enter an amount of at least $5.", "err"); return; }
+        submit.disabled = true; submit.textContent = "Opening checkout…";
+        try {
+          var res = await authPost("/api/alumni/donate/checkout", {
+            amountCents: Math.round(amt * 100),
+            campaign: ins[1].value.trim() || "General",
+            notes: ins[2].value.trim() || ""
+          });
+          if (res.ok && res.data.url) { ov.remove(); openExternal(res.data.url); }
+          else if (res.status === 409) { toast(res.data.error || "A donation is already in progress.", "info"); ov.remove(); }
+          else { toast(res.data.error || "Couldn't start the donation. Try again.", "err"); submit.disabled = false; submit.textContent = "Continue to secure checkout"; }
+        } catch (err) { toast("Couldn't reach Stripe. Try again.", "err"); submit.disabled = false; submit.textContent = "Continue to secure checkout"; }
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
     }
 
     // ── MEMBER: Directory ─────────────────────────────────────────────────────
@@ -1525,7 +1605,14 @@
         tabs = [["feed", "Roster", ICON.directory], ["events", "Announce", ICON.feed], ["rush", "Rush", ICON.rush], ["dues", "Dues", ICON.dues], ["profile", "Profile", ICON.shield]];
       } else {
         tabs = [["feed", "Feed", ICON.feed], ["events", "Events", ICON.events], ["rush", "Rush", ICON.rush]];
-        if (duesEnabled()) tabs.push(["dues", "Dues", ICON.dues]);
+        // Alumni get a "Give" tab (donation history + Donate) in place of "Dues" —
+        // they carry no chapter dues balance. It shows when the chapter enabled
+        // dues OR is Stripe-connected for giving; otherwise alumni fall through to
+        // the Directory like other members.
+        var isAlum = !!(S.data && S.data.role === "alumni");
+        var canGive = isAlum && !!(S.data && S.data.dues && S.data.dues.donateEnabled);
+        if (duesEnabled()) tabs.push(["dues", isAlum ? "Give" : "Dues", ICON.dues]);
+        else if (canGive) tabs.push(["dues", "Give", ICON.dues]);
         else tabs.push(["directory", "Directory", ICON.directory]);
         // Vote tab — appears ONLY while a ballot the member can vote in is open
         // (electionOpen). Pulled in before Profile so the live ballot is one tap
