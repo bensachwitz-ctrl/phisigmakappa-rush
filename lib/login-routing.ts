@@ -257,6 +257,41 @@ export function groupChaptersBySchool(
   return groups;
 }
 
+/**
+ * The distinct SCHOOLS present in the chapter list, each with how many chapters
+ * it has, for the simple "choose your school first" step. Schools sort
+ * alphabetically with the school-less "Other chapters" bucket kept last. Pure +
+ * deterministic (built on the same grouping the picker uses).
+ */
+export interface SchoolOption {
+  school: string;
+  count: number;
+}
+
+export function distinctSchools(chapters: ChapterRouteTarget[]): SchoolOption[] {
+  return groupChaptersBySchool(chapters).map((g) => ({
+    school: g.school,
+    count: g.chapters.length,
+  }));
+}
+
+/** The chapters that belong to a chosen school (matches groupChaptersBySchool's
+ *  bucketing so a school selected in step 1 always yields its step-2 chapters). */
+export function chaptersForSchool(
+  chapters: ChapterRouteTarget[],
+  school: string,
+): ChapterRouteTarget[] {
+  const group = groupChaptersBySchool(chapters).find((g) => g.school === school);
+  return group ? group.chapters : [];
+}
+
+/** Does a school name match a free-text query? (used by the school-step search). */
+export function schoolMatchesQuery(school: string, query: string): boolean {
+  const q = searchNeedle(query.trim());
+  if (!q) return true;
+  return searchNeedle(school).includes(q);
+}
+
 /** Lowercase, accent-folded haystack for fuzzy-ish substring search. */
 export function searchNeedle(s: string): string {
   return (s || "")

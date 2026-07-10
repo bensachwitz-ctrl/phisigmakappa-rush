@@ -3,6 +3,9 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   buildChapterLoginUrl,
+  distinctSchools,
+  chaptersForSchool,
+  schoolMatchesQuery,
   type ChapterRouteTarget,
   type PortalKind,
 } from "@/lib/login-routing";
@@ -210,4 +213,47 @@ describe("buildChapterLoginUrl — first two segments resolve to an on-disk page
       });
     }
   }
+});
+
+// ── School-first entry helpers (login-entry.tsx step 1 → step 2) ─────────────
+// The simple "choose your school, then your chapter" flow depends on three pure
+// helpers agreeing with each other: a school listed by distinctSchools() must
+// resolve back to a non-empty chaptersForSchool(), and its count must match.
+describe("school-first entry helpers", () => {
+  const ROSTER: ChapterRouteTarget[] = [
+    { subdomain: "phisig", name: "Phi Sigma Kappa", school: "Clemson", domain: null },
+    { subdomain: "sigchi", name: "Sigma Chi", school: "Clemson", domain: null },
+    { subdomain: "kappa", name: "Kappa Alpha", school: "Auburn", domain: null },
+    { subdomain: "loner", name: "Independent Colony", school: null, domain: null },
+  ];
+
+  it("distinctSchools groups + counts, keeping the school-less bucket last", () => {
+    const schools = distinctSchools(ROSTER);
+    expect(schools.map((s) => s.school)).toEqual([
+      "Auburn",
+      "Clemson",
+      "Other chapters",
+    ]);
+    const clemson = schools.find((s) => s.school === "Clemson");
+    expect(clemson?.count).toBe(2);
+    expect(schools.find((s) => s.school === "Other chapters")?.count).toBe(1);
+  });
+
+  it("every distinct school resolves to its (non-empty, count-matching) chapters", () => {
+    for (const s of distinctSchools(ROSTER)) {
+      const chapters = chaptersForSchool(ROSTER, s.school);
+      expect(chapters.length).toBe(s.count);
+      expect(chapters.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("chaptersForSchool returns [] for an unknown school (never throws)", () => {
+    expect(chaptersForSchool(ROSTER, "Nonexistent U")).toEqual([]);
+  });
+
+  it("schoolMatchesQuery is case/accent-insensitive substring, empty q matches all", () => {
+    expect(schoolMatchesQuery("Clemson", "clem")).toBe(true);
+    expect(schoolMatchesQuery("Clemson", "  ")).toBe(true);
+    expect(schoolMatchesQuery("Clemson", "auburn")).toBe(false);
+  });
 });
