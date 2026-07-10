@@ -4,9 +4,13 @@ import DemoLoader from "./DemoLoader";
 export const dynamic = "force-dynamic";
 
 /**
- * The iOS shell (capacitor.config.ts server.url) and the web marketing site both
- * load /app. We read the CENTRAL chapter registry (public."Tenant") so the
- * cold-start School→Chapter picker is built from REAL chapters. We widen the
+ * This is the WEB /app route (the React member client). The native iOS app no
+ * longer loads it: capacitor.config.ts has server.url REMOVED and ships the
+ * bundled mobile-shell/index.html instead, which reaches the same chapters over
+ * /api/mobile/*. This route still serves the marketing-site /app preview and any
+ * browser that opens /app directly. We read the CENTRAL chapter registry
+ * (public."Tenant") so the cold-start School→Chapter picker is built from REAL
+ * chapters. We widen the
  * select beyond listActiveTenants() to include `domain` (custom-domain routing)
  * and `isActive` so the client can route + badge correctly. Fully defensive: any
  * DB hiccup yields [] and the picker falls back to the inert demo chapters.
