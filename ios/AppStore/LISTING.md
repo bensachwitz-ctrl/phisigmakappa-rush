@@ -36,8 +36,8 @@ Greek Stack is the all-in-one app for your fraternity or sorority chapter. Sign 
 
 Built for brothers, sisters, alumni, and officers alike.
 
-TRY IT WITHOUT AN ACCOUNT
-Tap "See the live demo" on the first screen to explore a full sample chapter — Feed, Events, Rush, Dues, Directory, Profile, and the officer view — with no sign-in required.
+SIMPLE SIGN-IN
+Open the app, pick your school and your chapter, and sign in with the account your chapter gave you — as a brother/sister or as an alum. The whole app then re-skins to your chapter's letters and colors.
 
 EVERYTHING YOUR CHAPTER NEEDS
 • Feed & announcements — never miss chapter news; open the app to see the latest posts the moment they go up.
@@ -113,23 +113,34 @@ experience is BUNDLED in the binary (it is not a webview wrapper pointed at a
 website); it talks to each chapter's backend over our HTTPS APIs and adds native
 features (haptics, universal/deep links, offline cache).
 
-NO-LOGIN DEMO for review (no account needed):
-On the first screen, tap "See the live demo — no sign in." The app loads a fully
-interactive, read-only sample chapter (Phi Sigma Kappa) with no credentials, so
-you can exercise every feature:
+HOW TO SIGN IN FOR REVIEW (a working account is provided — the app is login-only):
+On the first screen, tap your school, then your chapter, then sign in with the
+credentials below. The app is scoped to a single private chapter, so a real
+member account is required to review it (there is no in-app demo; the marketing
+demo is on the website only).
+
+  School:            University of South Carolina
+  Chapter:           Phi Sigma Kappa
+  Sign-in tab:       Brother
+  Email:             <PROVIDE A REVIEW MEMBER EMAIL>
+  Password:          <PROVIDE A REVIEW PASSWORD>
+
+  (The provided account is an OFFICER account, so you can also test the
+   "Member view / Exec view" switcher at the top of the dashboard.)
+
+After signing in you can exercise every feature:
   • Feed (announcements + career posts)
   • Events (RSVP + add to calendar)
-  • Rush (recruitment pipeline)
   • Dues (balance + the "Pay online with Stripe" action)
   • Directory (actives + alumni)
+  • Rush (recruitment pipeline)   • Vote (chapter elections, when a ballot is open)
   • Profile — including the "Delete account" action
   • Exec view (officer tools: roster add/remove, reset links, announcements,
     dues collection) via the "Member view / Exec view" switcher at the top
 
 ACCOUNT DELETION (Guideline 5.1.1(v)):
-Profile screen → "Delete account" → confirm. For a real signed-in member this
-deletes their account and member data; in the demo it confirms and returns to the
-chapter picker. No separate website visit is required.
+Profile screen → "Delete account" → confirm. This deletes the signed-in member's
+account and member data in-app; no separate website visit is required.
 
 USER-GENERATED CONTENT — REPORT + BLOCK (Guideline 1.2):
 The app shows cross-member content (officer announcements, a member/alumni
@@ -147,14 +158,9 @@ directory, alumni career posts). Two mitigations are in place:
      path). Every directory member row also has a "Block" control: blocking
      hides that member's directory listing and content on the device
      immediately (persisted across launches) and notifies an admin; it is
-     reversible from a "Blocked members" list. To exercise in the demo: open
-     Directory → tap the flag (Report) or the no-entry (Block) icon on any row,
-     or tap "Report" under any Feed card.
-
-To test a real sign-in if desired:
-  Chapter/subdomain: <PROVIDE A TEST CHAPTER>
-  Email: <PROVIDE A TEST MEMBER EMAIL>
-  Password: <PROVIDE A TEST PASSWORD>
+     reversible from a "Blocked members" list. To exercise after signing in:
+     open Directory → tap the flag (Report) or the no-entry (Block) icon on any
+     row, or tap "Report" under any Feed card.
 
 DUES: tapping "Pay online with Stripe" opens the chapter's Stripe Checkout in the
 system browser. These are real-world chapter membership dues collected via the
@@ -166,8 +172,13 @@ record of any prior donations on their profile; making a donation is web-only
 (done on the chapter's website), so there is no in-app purchase path for
 donations to review here.
 ```
-> Fill the `<...>` test-account placeholders before submitting, OR rely on the
-> no-login demo path (recommended — guarantees the reviewer can exercise the app).
+> REQUIRED before submitting: fill the `<PROVIDE A REVIEW MEMBER EMAIL>` /
+> `<PROVIDE A REVIEW PASSWORD>` placeholders with a WORKING officer account on the
+> Phi Sigma Kappa (USC) chapter. The app is login-only (no in-app demo), so Apple
+> WILL reject with Guideline 2.1 if they cannot sign in. To create the account:
+> chapter admin console → Roster → add a Brother with your reviewer email and mark
+> them an officer, then set/confirm a password (or use the "send reset link" and
+> set one). Verify the credentials sign in on the live app before you submit.
 
 ## Copyright
 ```
