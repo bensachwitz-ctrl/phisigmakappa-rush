@@ -949,22 +949,72 @@
         card.appendChild(reportLink({ type: "announcement", id: a.id, name: a.title }));
         main.appendChild(card);
       });
-      // Career posts surface in the feed too (alumni opportunities).
+      // Career posts surface in the feed too (alumni opportunities). Any signed-in
+      // member or alumnus may post one (the server route gates only on a valid
+      // tenant token, not an officer seat), so the section + Post action always
+      // render — even with no listings yet — rather than hiding behind content.
       var careers = d.careers || [];
-      if (careers.length) {
-        main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
-        careers.forEach(function (c) {
-          var card = el(
-            '<div class="card">' +
-              '<span class="pill brand">Career</span>' +
-              '<div class="h">' + esc(c.title) + "</div>" +
-              '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
-            "</div>"
-          );
-          card.appendChild(reportLink({ type: "career", id: c.id, name: c.title }));
-          main.appendChild(card);
-        });
+      main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
+      var postBtn = el('<button class="btn ghost" type="button">Post an opportunity</button>');
+      postBtn.onclick = function () { haptic(); careerPostSheet(d); };
+      main.appendChild(postBtn);
+      if (!careers.length) {
+        main.appendChild(el('<div class="empty">No opportunities yet. Share a job or internship with the chapter.</div>'));
       }
+      careers.forEach(function (c) {
+        var card = el(
+          '<div class="card">' +
+            '<span class="pill brand">Career</span>' +
+            '<div class="h">' + esc(c.title) + "</div>" +
+            '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
+          "</div>"
+        );
+        card.appendChild(reportLink({ type: "career", id: c.id, name: c.title }));
+        main.appendChild(card);
+      });
+    }
+
+    // Career-post sheet → POST /api/mobile/career/post. Required by the server:
+    // title, company, description, contactName, contactEmail; optional: location,
+    // requirements, salary, contactPhone. Contact fields prefill from the poster's
+    // own profile as a convenience (still fully editable before submit).
+    function careerPostSheet(d) {
+      var p = d.profile || {};
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Post an opportunity</h2>'));
+      var form = el('<form>' +
+        '<div class="field"><label>Title *</label><input data-k="title" required placeholder="Software Engineering Intern" /></div>' +
+        '<div class="field"><label>Company *</label><input data-k="company" required placeholder="Acme Corp" /></div>' +
+        '<div class="field"><label>Location</label><input data-k="location" placeholder="Austin, TX / Remote" /></div>' +
+        '<div class="field"><label>Description *</label><textarea data-k="description" rows="3" required style="width:100%;box-sizing:border-box" placeholder="What the role involves…"></textarea></div>' +
+        '<div class="field"><label>Requirements</label><textarea data-k="requirements" rows="2" style="width:100%;box-sizing:border-box" placeholder="Nice-to-haves…"></textarea></div>' +
+        '<div class="field"><label>Salary</label><input data-k="salary" placeholder="$25/hr or $90k" /></div>' +
+        '<div class="field"><label>Contact name *</label><input data-k="contactName" required /></div>' +
+        '<div class="field"><label>Contact email *</label><input data-k="contactEmail" type="email" inputmode="email" autocapitalize="off" required /></div>' +
+        '<div class="field"><label>Contact phone</label><input data-k="contactPhone" inputmode="tel" /></div>' +
+        '<button class="btn" type="submit">Publish opportunity</button>' +
+        '<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>' +
+      '</form>');
+      form.querySelector('[data-k="contactName"]').value = p.name || (S.session && S.session.user && S.session.user.email) || "";
+      form.querySelector('[data-k="contactEmail"]').value = p.email || (S.session && S.session.user && S.session.user.email) || "";
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        var payload = {};
+        form.querySelectorAll("[data-k]").forEach(function (el2) { payload[el2.getAttribute("data-k")] = el2.value.trim(); });
+        if (!payload.title || !payload.company || !payload.description || !payload.contactName || !payload.contactEmail) {
+          toast("Title, company, description, and contact name + email are required.", "err"); return;
+        }
+        submit.disabled = true; submit.textContent = "Publishing…";
+        try {
+          var res = await authPost("/api/mobile/career/post", payload);
+          if (res.ok) { ov.remove(); toast("Opportunity posted.", "ok"); await refetchDashboard(); }
+          else { toast(res.data.error || "Couldn't post the opportunity. Try again.", "err"); submit.disabled = false; submit.textContent = "Publish opportunity"; }
+        } catch (err) { toast("Network error. Try again.", "err"); submit.disabled = false; submit.textContent = "Publish opportunity"; }
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
     }
 
     // Small "Report" affordance appended to a content card. Wired to the real
