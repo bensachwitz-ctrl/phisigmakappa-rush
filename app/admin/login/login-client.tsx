@@ -187,7 +187,15 @@ export default function LoginClient() {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="bpw" className="mb-1.5 inline-block">Your password</Label>
+                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                        <Label htmlFor="bpw" className="inline-block">Your password</Label>
+                        <Link
+                          href="/portal/brothers"
+                          className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -202,7 +210,7 @@ export default function LoginClient() {
                         />
                       </div>
                       <p className="mt-1.5 text-xs text-muted-foreground">
-                        You set this when you completed your onboarding form. Forgot it? Ask the admin to send a fresh invite link.
+                        You set this when you completed your onboarding form. Forgot it? Reset it from the Brother Portal with a one-time email code.
                       </p>
                     </div>
                   </>
@@ -259,9 +267,19 @@ export default function LoginClient() {
             </CardContent>
           </Card>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Forgot your password? Ask the admin to send you a fresh onboarding link.
-          </p>
+          {mode === "brother" ? (
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Forgot your password?{" "}
+              <Link href="/portal/brothers" className="font-medium text-foreground underline underline-offset-2 hover:opacity-80">
+                Reset it from the Brother Portal
+              </Link>
+              .
+            </p>
+          ) : (
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Admin sign-in uses a single shared chapter credential. Forgot it? Ask another e-board officer, or contact support.
+            </p>
+          )}
           {/* Honest disclosure: brute-force throttle is real, so make the rule
               public. Tells legitimate users why a 5th wrong attempt locks them
               out and gives the e-board cover when a teammate complains. */}

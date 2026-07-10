@@ -32,6 +32,10 @@ export function OnboardingForm({
   const [done, setDone] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  // Per-field inline validation messages (keyed by form field name). Shown under
+  // the offending input so the invitee sees exactly what to fix, instead of only
+  // a transient toast. Cleared per-field as the user edits.
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [form, setForm] = React.useState({
     name: prefill.name,
     email: prefill.email,
@@ -50,6 +54,19 @@ export function OnboardingForm({
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((s) => ({ ...s, [k]: v }));
+    // Clear this field's inline error the moment the user starts correcting it.
+    setErrors((e) => (e[k as string] ? { ...e, [k as string]: "" } : e));
+  }
+
+  // Inline error line rendered under a field. Returns null when the field is
+  // clean so it never reserves space.
+  function FieldError({ name }: { name: string }) {
+    if (!errors[name]) return null;
+    return (
+      <p role="alert" className="mt-1.5 text-xs font-medium text-destructive">
+        {errors[name]}
+      </p>
+    );
   }
 
   async function uploadHeadshot(file: File) {
@@ -93,6 +110,15 @@ export function OnboardingForm({
     });
 
     if (!result.success) {
+      // Surface EVERY failing field inline (not just the first), so the invitee
+      // can fix them all at once, and still toast + focus the first one.
+      const fieldErrors: Record<string, string> = {};
+      for (const iss of result.error.issues) {
+        const k = iss.path[0] as string;
+        if (k && !fieldErrors[k]) fieldErrors[k] = iss.message;
+      }
+      setErrors(fieldErrors);
+
       const issue = result.error.issues[0];
       push({ title: issue.message, variant: "destructive" });
 
@@ -112,6 +138,7 @@ export function OnboardingForm({
       return;
     }
 
+    setErrors({});
     setBusy(true);
     try {
       const res = await fetch(`/api/onboard/${token}`, {
@@ -169,7 +196,8 @@ export function OnboardingForm({
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label htmlFor="onb-name" className="mb-1.5 inline-block">Full name *</Label>
-            <Input id="onb-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Mark Laughery" required autoComplete="name" />
+            <Input id="onb-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Mark Laughery" required autoComplete="name" aria-invalid={!!errors.name} />
+            <FieldError name="name" />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -284,7 +312,9 @@ export function OnboardingForm({
                   required
                   minLength={6}
                   aria-describedby="onb-pw-help"
+                  aria-invalid={!!errors.password}
                 />
+                <FieldError name="password" />
               </div>
               <div>
                 <Label htmlFor="onb-confirm" className="mb-1.5 inline-block">Confirm password *</Label>
@@ -297,7 +327,9 @@ export function OnboardingForm({
                   autoComplete="new-password"
                   required
                   minLength={6}
+                  aria-invalid={!!errors.confirmPassword}
                 />
+                <FieldError name="confirmPassword" />
               </div>
             </div>
           </div>
@@ -317,9 +349,12 @@ export function OnboardingForm({
                 onCheckedChange={(checked) => set("agreedToHazingWaiver", checked === true)}
                 className="mt-1 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
               />
-              <Label htmlFor="onb-hazing-waiver" className="text-xs font-normal text-slate-600 leading-normal cursor-pointer select-none">
-                I agree to the Zero-Tolerance Anti-Hazing Policy and certify that my digital signature constitutes a binding acceptance of these terms.
-              </Label>
+              <div className="flex-1">
+                <Label htmlFor="onb-hazing-waiver" className="text-xs font-normal text-slate-600 leading-normal cursor-pointer select-none">
+                  I agree to the Zero-Tolerance Anti-Hazing Policy and certify that my digital signature constitutes a binding acceptance of these terms.
+                </Label>
+                <FieldError name="agreedToHazingWaiver" />
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -331,12 +366,14 @@ export function OnboardingForm({
                 placeholder={prefill.name}
                 required
                 className="bg-white border-slate-300 font-medium"
+                aria-invalid={!!errors.signatureName}
               />
+              <FieldError name="signatureName" />
             </div>
           </div>
 
-          <Button type="submit" disabled={busy} size="lg" className="w-full">
-            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Complete my profile"}
+          <Button type="submit" disabled={busy || uploading} size="lg" className="w-full">
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading photo…</> : "Complete my profile"}
           </Button>
         </form>
       </CardContent>

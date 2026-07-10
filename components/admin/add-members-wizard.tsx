@@ -802,8 +802,8 @@ function BulkForm({
               <Plus className="h-3.5 w-3.5" /> Row
             </Button>
           </div>
-          <div className="max-h-[40vh] overflow-y-auto">
-            <table className="w-full text-sm">
+          <div className="max-h-[40vh] overflow-auto">
+            <table className="w-full min-w-[560px] text-sm">
               <thead className="sticky top-0 bg-card z-[1]">
                 <tr className="text-left text-[10px] uppercase tracking-wide text-muted-foreground">
                   <th className="w-8 px-2 py-2" />
@@ -907,8 +907,8 @@ function ReviewStep({
       {/* Bulk preview (first 8) */}
       {mode === "bulk" && (
         <div className="rounded-xl border border-border overflow-hidden">
-          <div className="max-h-[34vh] overflow-y-auto">
-            <table className="w-full text-sm">
+          <div className="max-h-[34vh] overflow-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead className="sticky top-0 bg-card">
                 <tr className="text-left text-[10px] uppercase tracking-wide text-muted-foreground">
                   {bulkColumns.map((c) => (
