@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
 import { buildPortalDestinations } from "@/components/nav/portal-nav";
+import { isDuesConfigured } from "@/lib/dues-config";
 import BrothersDashboardClient from "./BrothersDashboardClient";
 import type { Metadata } from "next";
 
@@ -286,8 +287,12 @@ export default async function BrothersDashboardPage() {
     // "Configured" = the chapter has actually set dues up: online dues is enabled
     // AND a positive amount is set. A chapter that never touched dues (no plan, no
     // amount) is NOT configured, so the member-facing Dues card/tab is hidden for
-    // plain members (exec/admin still see it so they can finish setup).
-    configured: duesEnabled && duesAmountCents > 0,
+    // plain members (exec/admin still see it so they can finish setup). Routed
+    // through the shared isDuesConfigured predicate so this verdict can never
+    // drift from the alumni portal or the unit tests.
+    configured: isDuesConfigured(
+      Object.fromEntries(configs.map((c) => [c.key, c.value])),
+    ),
   };
 
   // Engagement / good-standing — computed from existing signals (no new tables).

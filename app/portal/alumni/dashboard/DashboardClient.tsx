@@ -916,265 +916,28 @@ export default function DashboardClient({
           {/* TAB CONTENTS — single panel labelled by the active tab. */}
           <div role="tabpanel" id="alumni-tabpanel" aria-labelledby={`alumtab-${activeTab}`}>
 
-          {/* OVERVIEW TAB */}
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
-                  <h2 className="text-xl font-bold text-maroon-900 mb-3">Welcome to the Alumni Portal</h2>
-                  <p className="text-sm text-maroon-700 leading-relaxed mb-4">
-                    As an alum of {fraternityName}, your involvement is crucial to our chapter&apos;s growth.
-                    Through this portal, you can connect with undergraduate {terms.membersLower}, review local PNMs, vote on
-                    active alumni polls, and coordinate for homecoming events.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-cream-50 rounded-xl border border-maroon-50">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 block mb-1">Your Location</span>
-                      <p className="text-sm font-bold text-maroon-900">
-                        {alumni.city && alumni.state ? `${alumni.city}, ${alumni.state}` : "Not specified"}
-                      </p>
-                      <button 
-                        onClick={() => setActiveTab("pnms")} 
-                        className="text-xs font-semibold text-maroon-700 hover:text-maroon-900 mt-2 block underline"
-                      >
-                        Change settings & find PNMs &rarr;
-                      </button>
-                    </div>
-
-                    <div className="p-4 bg-cream-50 rounded-xl border border-maroon-50">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 block mb-1">Your Vouches</span>
-                      <p className="text-sm font-bold text-maroon-900">{vouchList.length} Active {vouchList.length === 1 ? "Vouch" : "Vouches"}</p>
-                      <button 
-                        onClick={() => setActiveTab("pnms")} 
-                        className="text-xs font-semibold text-maroon-700 hover:text-maroon-900 mt-2 block underline"
-                      >
-                        Manage vouches &rarr;
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chapter Announcements Feed Card */}
-                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] space-y-4">
-                  <h3 className="font-bold text-maroon-900 text-base flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-maroon-600" />
-                    Chapter Announcements
-                  </h3>
-                  {announcementList.length > 0 ? (
-                    <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1">
-                      {announcementList.map((a) => (
-                        <div
-                          key={a.id}
-                          onClick={() => setActiveAnnouncement(a)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              setActiveAnnouncement(a);
-                            }
-                          }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 text-left relative hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(10,24,56,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
-                            a.pinned
-                              ? "bg-amber-50/50 hover:bg-amber-50 border-amber-200"
-                              : "bg-cream-50/30 hover:bg-cream-50 border-maroon-100"
-                          }`}
-                        >
-                          {a.pinned && (
-                            <Badge className="bg-amber-500 text-white border-none py-0.5 px-1.5 text-[9px] uppercase font-bold tracking-wider absolute top-3.5 right-3.5">
-                              Pinned
-                            </Badge>
-                          )}
-                          <h4 className="font-bold text-maroon-900 text-sm pr-16">{a.title}</h4>
-                          <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{a.body}</p>
-                          
-                          {a.poll && (
-                            <div 
-                              className="mt-3 p-3 rounded-xl bg-white/70 border border-maroon-100/50 space-y-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <p className="text-[11px] font-bold text-maroon-900 flex items-center gap-1.5">
-                                <Vote className="w-3.5 h-3.5 text-maroon-600" />
-                                {a.poll.question}
-                              </p>
-                              <div className="grid grid-cols-1 gap-1.5">
-                                {safeParseOptions(a.poll.options).map((o) => {
-                                  const optionVotes = a.poll!.votes.filter((v) => v.optionId === o.id).length;
-                                  const totalVotes = a.poll!.votes.length;
-                                  const pct = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
-                                  const isSelected = a.poll!.votes.some((v) => v.alumniId === alumni.id && v.optionId === o.id);
-
-                                  return (
-                                    <button
-                                      key={o.id}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVote(a.poll!.id, o.id);
-                                      }}
-                                      disabled={votingOnPollId === a.poll!.id}
-                                      className={`w-full text-left p-2 rounded-lg border text-[11px] transition flex flex-col relative overflow-hidden justify-center min-h-[34px] ${
-                                        isSelected
-                                          ? "border-maroon-800 bg-maroon-50/20"
-                                          : "border-maroon-100/70 hover:border-maroon-300 hover:bg-cream-50/50 bg-white/40"
-                                      }`}
-                                    >
-                                      <div
-                                        className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
-                                          isSelected ? "bg-maroon-200/20" : "bg-maroon-100/5"
-                                        }`}
-                                        style={{ width: `${pct}%` }}
-                                      ></div>
-
-                                      <div className="flex justify-between items-center z-10 w-full px-1">
-                                        <span className={`flex items-center gap-1 ${
-                                          isSelected ? "text-maroon-950 font-bold" : "text-maroon-800 font-medium"
-                                        }`}>
-                                          {isSelected && <Check className="w-3.5 h-3.5 text-maroon-800 flex-shrink-0" />}
-                                          {o.label}
-                                        </span>
-                                        <span className="font-bold text-maroon-900 font-mono text-[10px]">
-                                          {pct}% ({optionVotes})
-                                        </span>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              <div className="text-[9px] text-maroon-400 font-semibold uppercase flex justify-between px-1">
-                                <span>{a.poll.votes.length} votes cast</span>
-                                <span>Anonymous Poll</span>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2 items-center text-[10px] text-maroon-400 mt-3 font-semibold uppercase tracking-wider">
-                            <span>By: {a.author?.name || "Chapter Officer"} {a.author?.position ? `(${a.author.position})` : ""}</span>
-                            <span>•</span>
-                            <span>{new Date(a.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <PortalEmpty
-                      icon={MessageSquare}
-                      illustration={IllustrationInbox}
-                      title="No announcements yet"
-                      sub="Chapter news and notices will show up here the moment they're posted."
-                    />
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
-                  <h2 className="text-lg font-bold text-maroon-900 mb-4">Quick Stats & Insights</h2>
-                  <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-                    <div className="p-3 bg-cream-50/50 rounded-xl border border-maroon-50">
-                      <p className="text-2xl font-black text-maroon-800">{brothers.length}</p>
-                      <p className="text-xs text-maroon-600 font-medium">Actives</p>
-                    </div>
-                    <div className="p-3 bg-cream-50/50 rounded-xl border border-maroon-50">
-                      <p className="text-2xl font-black text-maroon-800">{alumniNetwork.length}</p>
-                      <p className="text-xs text-maroon-600 font-medium">Alumni</p>
-                    </div>
-                    <div className="p-3 bg-cream-50/50 rounded-xl border border-maroon-50">
-                      <p className="text-2xl font-black text-maroon-800">{allPnms.length}</p>
-                      <p className="text-xs text-maroon-600 font-medium">PNMs in Rush</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* DONATION HISTORY */}
-                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
-                  <h2 className="text-lg font-bold text-maroon-900 mb-4 flex items-center gap-2">
-                    <Heart className="w-5 h-5 text-amber-600 fill-amber-600/10" />
-                    Your Donation History
-                  </h2>
-                  {donations && donations.length > 0 ? (
-                    <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-                      {donations.map((d) => (
-                        <div key={d.id} className="flex justify-between items-center p-3 rounded-xl border border-maroon-50 bg-cream-50/20 text-sm">
-                          <div>
-                            <p className="font-bold text-maroon-900">{d.campaign || "General Donation"}</p>
-                            <p className="text-[10px] text-maroon-500">
-                              {new Date(d.recordedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}
-                              {d.notes ? ` · ${d.notes}` : ""}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-black text-maroon-800">${(d.amountCents / 100).toFixed(2)}</span>
-                            <span className={`block text-[9px] font-bold uppercase tracking-wider ${
-                              d.status === "PAID" ? "text-emerald-600" : "text-amber-600"
-                            }`}>
-                              {d.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 bg-cream-50/30 rounded-xl border border-maroon-50/60 border-dashed">
-                      <p className="text-xs text-maroon-600 mb-2">No donations recorded yet.</p>
-                      <button 
-                        onClick={() => setActiveTab("donate")} 
-                        className="inline-flex items-center gap-1 text-xs font-bold text-maroon-800 hover:text-maroon-950 underline"
-                      >
-                        Make your first donation &rarr;
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                <div className="relative overflow-hidden bg-gradient-to-br from-maroon-800 to-maroon-950 text-cream-50 rounded-2xl p-6 shadow-[0_18px_44px_-20px_rgba(10,24,56,0.7)] ring-1 ring-maroon-900/30">
-                  <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-amber-400/15 blur-3xl" />
-                  <h3 className="relative text-base font-bold mb-2">Next Chapter Event</h3>
-                  {events.length > 0 ? (
-                    <div>
-                      <h4 className="text-lg font-bold text-amber-300">{events[0].name}</h4>
-                      <p className="text-xs text-cream-200/80 mt-1 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {new Date(events[0].startsAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                      {events[0].location && (
-                        <p className="text-xs text-cream-200/80 mt-1 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {events[0].location}
-                        </p>
-                      )}
-                      <button
-                        onClick={() => setActiveTab("events")}
-                        className="w-full bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-maroon-950 font-bold text-xs py-2 rounded-lg mt-4 shadow-[0_6px_16px_-6px_rgba(217,119,6,0.7)] transition-all duration-200 active:scale-[0.98]"
-                      >
-                        View Calendar
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-cream-200/60">No upcoming alumni events scheduled.</p>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-5 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
-                  <h3 className="text-sm font-bold text-maroon-900 mb-3 flex items-center gap-1.5">
-                    <Vote className="w-4 h-4 text-amber-600" />
-                    Quick Survey
-                  </h3>
-                  {pollList.length > 0 ? (
-                    <div>
-                      <p className="text-xs font-semibold text-maroon-800 mb-2">{pollList[0].question}</p>
-                      <button 
-                        onClick={() => setActiveTab("polls")} 
-                        className="text-xs font-semibold text-maroon-600 hover:text-maroon-900 underline block"
-                      >
-                        Participate in Polls &rarr;
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-maroon-600">No active polls.</p>
-                  )}
-                </div>
-              </div>
+          {/* NETWORKING SUB-NAV — shown across all Networking surfaces. */}
+          {activeTab === "networking" && (
+            <div className="flex flex-wrap gap-1 border-b border-maroon-100 mb-6">
+              {[
+                { id: "careers", label: "Careers" },
+                { id: "connect", label: "Connect" },
+                { id: "mentorship", label: "Mentorship" },
+                { id: "polls", label: "Polls" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setNetworkingTab(t.id)}
+                  aria-pressed={networkingTab === t.id}
+                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
+                    networkingTab === t.id
+                      ? "border-maroon-800 text-maroon-900"
+                      : "border-transparent text-maroon-500 hover:text-maroon-800"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           )}
 
@@ -1397,8 +1160,8 @@ export default function DashboardClient({
             </div>
           )}
 
-          {/* HOMETOWN PNMS TAB */}
-          {activeTab === "pnms" && (
+          {/* NETWORKING: MENTORSHIP SUB-TAB (hometown PNM matching + vouches) */}
+          {activeTab === "networking" && networkingTab === "mentorship" && (
             <div className="space-y-6">
               <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Hometown PNM Matching</h2>
@@ -1542,8 +1305,8 @@ export default function DashboardClient({
             </div>
           )}
 
-          {/* ACTIVE BROTHERS TAB */}
-          {activeTab === "brothers" && (
+          {/* NETWORKING: CONNECT SUB-TAB (active member roster) */}
+          {activeTab === "networking" && networkingTab === "connect" && (
             <div className="space-y-6">
               <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-3">Undergraduate Active Roster</h2>
@@ -1593,35 +1356,10 @@ export default function DashboardClient({
             </div>
           )}
 
-          {/* ALUMNI DIRECTORY & CAREERS TAB */}
+          {/* ALUMNI DIRECTORY TAB (name, grad year, location, role, contact) */}
           {activeTab === "alumni" && (
             <div className="space-y-6 animate-fade-in text-left">
-              {/* Sub-tabs for Alumni Directory & Careers */}
-              <div className="flex border-b border-maroon-100 mb-6">
-                <button
-                  onClick={() => setNetworkingTab("directory")}
-                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
-                    networkingTab === "directory"
-                      ? "border-maroon-800 text-maroon-900"
-                      : "border-transparent text-maroon-500 hover:text-maroon-800"
-                  }`}
-                >
-                  Alumni Directory
-                </button>
-                <button
-                  onClick={() => setNetworkingTab("careers")}
-                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
-                    networkingTab === "careers"
-                      ? "border-maroon-800 text-maroon-900"
-                      : "border-transparent text-maroon-500 hover:text-maroon-800"
-                  }`}
-                >
-                  Career Opportunities
-                </button>
-              </div>
-
-              {networkingTab === "directory" ? (
-                <>
+              <>
                   <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                     <h2 className="text-xl font-bold text-maroon-900 mb-3">Alumni Directory & Network</h2>
                     <div className="relative">
@@ -1698,7 +1436,12 @@ export default function DashboardClient({
                     )}
                   </div>
                 </>
-              ) : (
+            </div>
+          )}
+
+          {/* NETWORKING: CAREER BOARD SUB-TAB */}
+          {activeTab === "networking" && networkingTab === "careers" && (
+            <div className="space-y-6 animate-fade-in text-left">
                 <>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -1830,12 +1573,11 @@ export default function DashboardClient({
                     );
                   })()}
                 </>
-              )}
             </div>
           )}
 
-          {/* SURVEYS & POLLS TAB */}
-          {activeTab === "polls" && (
+          {/* NETWORKING: POLLS SUB-TAB */}
+          {activeTab === "networking" && networkingTab === "polls" && (
             <div className="space-y-6 max-w-2xl mx-auto">
               <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-2">Alumni Opinion Polls</h2>
@@ -2016,16 +1758,127 @@ export default function DashboardClient({
                   </div>
                 )}
               </div>
+
+              {/* Chapter Announcements Feed */}
+              <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)] space-y-4">
+                <h3 className="font-bold text-maroon-900 text-base flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-maroon-600" />
+                  Chapter Announcements
+                </h3>
+                {announcementList.length > 0 ? (
+                  <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1">
+                    {announcementList.map((a) => (
+                      <div
+                        key={a.id}
+                        onClick={() => setActiveAnnouncement(a)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setActiveAnnouncement(a);
+                          }
+                        }}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 text-left relative hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(10,24,56,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
+                          a.pinned
+                            ? "bg-amber-50/50 hover:bg-amber-50 border-amber-200"
+                            : "bg-cream-50/30 hover:bg-cream-50 border-maroon-100"
+                        }`}
+                      >
+                        {a.pinned && (
+                          <Badge className="bg-amber-500 text-white border-none py-0.5 px-1.5 text-[9px] uppercase font-bold tracking-wider absolute top-3.5 right-3.5">
+                            Pinned
+                          </Badge>
+                        )}
+                        <h4 className="font-bold text-maroon-900 text-sm pr-16">{a.title}</h4>
+                        <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{a.body}</p>
+
+                        {a.poll && (
+                          <div
+                            className="mt-3 p-3 rounded-xl bg-white/70 border border-maroon-100/50 space-y-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <p className="text-[11px] font-bold text-maroon-900 flex items-center gap-1.5">
+                              <Vote className="w-3.5 h-3.5 text-maroon-600" />
+                              {a.poll.question}
+                            </p>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {safeParseOptions(a.poll.options).map((o) => {
+                                const optionVotes = a.poll!.votes.filter((v) => v.optionId === o.id).length;
+                                const totalVotes = a.poll!.votes.length;
+                                const pct = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+                                const isSelected = a.poll!.votes.some((v) => v.alumniId === alumni.id && v.optionId === o.id);
+
+                                return (
+                                  <button
+                                    key={o.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleVote(a.poll!.id, o.id);
+                                    }}
+                                    disabled={votingOnPollId === a.poll!.id}
+                                    className={`w-full text-left p-2 rounded-lg border text-[11px] transition flex flex-col relative overflow-hidden justify-center min-h-[34px] ${
+                                      isSelected
+                                        ? "border-maroon-800 bg-maroon-50/20"
+                                        : "border-maroon-100/70 hover:border-maroon-300 hover:bg-cream-50/50 bg-white/40"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500 ${
+                                        isSelected ? "bg-maroon-200/20" : "bg-maroon-100/5"
+                                      }`}
+                                      style={{ width: `${pct}%` }}
+                                    ></div>
+
+                                    <div className="flex justify-between items-center z-10 w-full px-1">
+                                      <span className={`flex items-center gap-1 ${
+                                        isSelected ? "text-maroon-950 font-bold" : "text-maroon-800 font-medium"
+                                      }`}>
+                                        {isSelected && <Check className="w-3.5 h-3.5 text-maroon-800 flex-shrink-0" />}
+                                        {o.label}
+                                      </span>
+                                      <span className="font-bold text-maroon-900 font-mono text-[10px]">
+                                        {pct}% ({optionVotes})
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="text-[9px] text-maroon-400 font-semibold uppercase flex justify-between px-1">
+                              <span>{a.poll.votes.length} votes cast</span>
+                              <span>Anonymous Poll</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 items-center text-[10px] text-maroon-400 mt-3 font-semibold uppercase tracking-wider">
+                          <span>By: {a.author?.name || "Chapter Officer"} {a.author?.position ? `(${a.author.position})` : ""}</span>
+                          <span>•</span>
+                          <span>{new Date(a.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <PortalEmpty
+                    icon={MessageSquare}
+                    illustration={IllustrationInbox}
+                    title="No announcements yet"
+                    sub="Chapter news and notices will show up here the moment they're posted."
+                  />
+                )}
+              </div>
             </div>
           )}
 
-          {/* DONATE & SUPPORT TAB */}
-          {activeTab === "donate" && (
+          {/* EVENTS: DONATE & SUPPORT (only when the chapter has Stripe connected) */}
+          {activeTab === "events" && stripeConnected && (
             <div className="space-y-6 max-w-xl mx-auto">
               <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                 <h2 className="text-xl font-bold text-maroon-900 mb-1">Donate &amp; Support Chapter</h2>
                 <p className="text-sm text-maroon-700">
-                  Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and you&apos;re charged exactly the amount you enter &mdash; no platform fee is added on top.
+                  Your contributions directly support active brothers, academic scholarships, and physical house improvements. Stripe processing is secure, and you&apos;re charged exactly the amount you enter, with no platform fee added on top.
                 </p>
               </div>
 
