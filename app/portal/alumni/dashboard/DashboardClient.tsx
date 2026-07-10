@@ -829,7 +829,7 @@ export default function DashboardClient({
               </div>
             )}
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               {/* Portal switcher — flip between the portals this session may access. */}
               <PortalSwitcher
                 current="alumni"
@@ -841,7 +841,7 @@ export default function DashboardClient({
               <button
                 onClick={() => setActiveTab("profile")}
                 aria-pressed={activeTab === "profile"}
-                className={`inline-flex items-center gap-1 text-xs font-semibold rounded-lg px-3 py-1.5 border transition ${
+                className={`inline-flex items-center gap-1 text-xs font-semibold rounded-lg px-3 py-1.5 min-h-[40px] border transition ${
                   activeTab === "profile"
                     ? "bg-maroon-800 text-cream-50 border-transparent shadow"
                     : "text-maroon-700 hover:text-maroon-900 border-maroon-100 hover:bg-cream-50"
@@ -852,7 +852,7 @@ export default function DashboardClient({
               </button>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-maroon-700 hover:text-maroon-900 border border-maroon-100 rounded-lg px-3 py-1.5 hover:bg-cream-50 transition"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-maroon-700 hover:text-maroon-900 border border-maroon-100 rounded-lg px-3 py-1.5 min-h-[40px] hover:bg-cream-50 transition"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 Sign Out
@@ -933,8 +933,16 @@ export default function DashboardClient({
             );
           })()}
 
-          {/* TAB CONTENTS — single panel labelled by the active tab. */}
-          <div role="tabpanel" id="alumni-tabpanel" aria-labelledby={`alumtab-${activeTab}`}>
+          {/* TAB CONTENTS — single panel labelled by a STABLE, always-present
+              heading id. The mobile `alumtab-*` tab buttons only exist below lg
+              (and never for the Profile view, which isn't a tab), so pointing the
+              panel at them left aria-labelledby dangling on desktop / Profile.
+              The sr-only heading below is always rendered and carries the active
+              section name. */}
+          <div role="tabpanel" id="alumni-tabpanel" aria-labelledby="alumni-panel-heading">
+            <h2 id="alumni-panel-heading" className="sr-only">
+              {(alumniTabs.find((t) => t.id === activeTab)?.label) || "My Profile"} section
+            </h2>
 
           {/* NETWORKING SUB-NAV — shown across all Networking surfaces. */}
           {activeTab === "networking" && (
@@ -949,7 +957,7 @@ export default function DashboardClient({
                   key={t.id}
                   onClick={() => setNetworkingTab(t.id)}
                   aria-pressed={networkingTab === t.id}
-                  className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
+                  className={`pb-3 min-h-[44px] text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-maroon-500/40 ${
                     networkingTab === t.id
                       ? "border-maroon-800 text-maroon-900"
                       : "border-transparent text-maroon-500 hover:text-maroon-800"
@@ -2065,7 +2073,7 @@ export default function DashboardClient({
         }}
       >
         {showPostJobModal && (
-          <DialogContent className="max-w-lg w-full gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
+          <DialogContent className="max-w-lg w-full gap-0 max-h-[85vh] overflow-y-auto rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
               <DialogHeader className="text-left">
                 <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">
@@ -2087,7 +2095,7 @@ export default function DashboardClient({
                 </div>
               ) : (
                 <form onSubmit={handlePostJob} className="space-y-3 text-xs">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Opportunity Title*</label>
                       <input
@@ -2112,7 +2120,7 @@ export default function DashboardClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Location</label>
                       <input
@@ -2135,7 +2143,7 @@ export default function DashboardClient({
                     </div>
                   </div>
 
-                  <div className="border-t border-maroon-50 pt-2 grid grid-cols-3 gap-3">
+                  <div className="border-t border-maroon-50 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="col-span-1">
                       <label className="block text-[10px] font-bold text-maroon-900 uppercase tracking-wide mb-1">Contact Name*</label>
                       <input
@@ -2261,7 +2269,7 @@ export default function DashboardClient({
           dismiss (Radix renders its own accessible close affordance). */}
       <Dialog open={!!activeAnnouncement} onOpenChange={(o) => !o && setActiveAnnouncement(null)}>
         {activeAnnouncement && (
-          <DialogContent className="max-w-xl w-full gap-0 overflow-hidden rounded-2xl border-maroon-100 bg-white p-0 text-left">
+          <DialogContent className="max-w-xl w-full gap-0 max-h-[85vh] overflow-y-auto rounded-2xl border-maroon-100 bg-white p-0 text-left">
             <div className="p-6 space-y-4">
               <DialogHeader className="text-left pr-8">
                 <span className="text-[10px] font-bold text-maroon-500 uppercase tracking-wider block mb-1">

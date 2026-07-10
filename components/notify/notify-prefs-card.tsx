@@ -33,6 +33,9 @@ export function NotifyPrefsCard() {
   const [unavailable, setUnavailable] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  // Track the save OUTCOME so the status line is colored + announced correctly
+  // (green success vs red error) instead of always reading as success.
+  const [saveOk, setSaveOk] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -81,8 +84,10 @@ export function NotifyPrefsCard() {
           email: email.trim() || "",
         }),
       });
+      setSaveOk(res.ok);
       setStatus(res.ok ? "Notification preferences saved." : "Could not save. Please try again.");
     } catch {
+      setSaveOk(false);
       setStatus("A connection error occurred.");
     } finally {
       setSaving(false);
@@ -106,10 +111,10 @@ export function NotifyPrefsCard() {
         <p className="text-xs text-maroon-500">Loading preferences...</p>
       ) : data ? (
         <form onSubmit={save} className="space-y-5">
-          <div>
-            <span className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-2">
+          <fieldset>
+            <legend className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-2">
               Notify me about
-            </span>
+            </legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {data.eventTypes.map((ev) => (
                 <label
@@ -128,12 +133,12 @@ export function NotifyPrefsCard() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
 
-          <div>
-            <span className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-2">
+          <fieldset>
+            <legend className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-2">
               Deliver to
-            </span>
+            </legend>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {data.offeredChannels.map((ch) => (
                 <label
@@ -152,7 +157,7 @@ export function NotifyPrefsCard() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {channels.has("email") && (
             <div>
@@ -174,7 +179,11 @@ export function NotifyPrefsCard() {
           )}
 
           {status && (
-            <p role="status" className="text-xs font-semibold text-emerald-700">
+            <p
+              role="status"
+              aria-live="polite"
+              className={`text-xs font-semibold ${saveOk ? "text-emerald-700" : "text-red-700"}`}
+            >
               {status}
             </p>
           )}
