@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Bell } from "lucide-react";
 import { ALL_CHANNELS, type NotifyChannel } from "@/lib/notify/types";
-import { CHANNEL_LABELS } from "@/lib/notify/prefs";
+import { CHANNEL_LABELS } from "@/lib/notify/labels";
 
 /**
  * Chapter admin control (notify #2): which notification channels the chapter

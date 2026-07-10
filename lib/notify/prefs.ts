@@ -25,32 +25,12 @@ import {
   type NotifyEventType,
   type NotifyMessage,
 } from "./types";
+// Pure label constants live in ./labels (no server imports) so client
+// components can import them without pulling this server graph. Re-exported
+// here so every existing `@/lib/notify/prefs` import keeps working.
+import { NOTIFY_EVENT_TYPES, EVENT_TYPE_LABELS, CHANNEL_LABELS } from "./labels";
 
-/** Canonical, user-selectable event types (the prefs UI enumerates these). */
-export const NOTIFY_EVENT_TYPES: NotifyEventType[] = [
-  "event.posted",
-  "announcement.posted",
-  "job.posted",
-  "dues.reminder",
-];
-
-/** Human labels for the prefs UI (no em-dash in copy). */
-export const EVENT_TYPE_LABELS: Record<string, string> = {
-  "event.posted": "New events",
-  "announcement.posted": "Announcements",
-  "job.posted": "Job and internship posts",
-  "dues.reminder": "Dues reminders",
-};
-
-export const CHANNEL_LABELS: Record<NotifyChannel, string> = {
-  inapp: "In-app",
-  email: "Email",
-  telegram: "Telegram",
-  slack: "Slack",
-  discord: "Discord",
-  webhook: "Webhook",
-  teams: "Teams",
-};
+export { NOTIFY_EVENT_TYPES, EVENT_TYPE_LABELS, CHANNEL_LABELS };
 
 export interface UserNotifyPrefs {
   /** Channels this user wants delivery on. */
