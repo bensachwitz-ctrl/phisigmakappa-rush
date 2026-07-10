@@ -83,6 +83,7 @@ import {
   IconAddMember,
 } from "@/components/brand/icons";
 import { PortalSwitcher } from "@/components/nav/PortalSwitcher";
+import { WhatsNew } from "@/components/portal/whats-new";
 import { PortalSidebar, type PortalSidebarItem } from "@/components/nav/PortalSidebar";
 import type { PortalDestination } from "@/components/nav/portal-nav";
 
@@ -1154,6 +1155,8 @@ export default function BrothersDashboardClient({
             )}
 
             <div className="flex items-center gap-3">
+              {/* In-app changelog — unseen-badged, dismissible, client-only. */}
+              <WhatsNew />
               {/* Portal switcher — flip between the portals this session may access. */}
               <PortalSwitcher
                 current="member"

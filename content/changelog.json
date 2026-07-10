@@ -1,0 +1,26 @@
+[
+  {
+    "id": "one-tap-sign-in",
+    "version": "1.4.0",
+    "label": "Simpler, faster sign-in",
+    "description": "Getting into your portal is now a single step. Your session stays put across the web and the mobile app, so you spend less time logging in and more time on chapter business.",
+    "type": "improvement",
+    "releasedAt": "2026-07-08"
+  },
+  {
+    "id": "alumni-giving",
+    "version": "1.3.0",
+    "label": "Give back in a couple of taps",
+    "description": "Alumni can now see their giving history and make a donation to the chapter right from the dashboard — no more chasing down a separate link.",
+    "type": "feature",
+    "releasedAt": "2026-06-30"
+  },
+  {
+    "id": "profile-editing",
+    "version": "1.2.0",
+    "label": "Edit your profile in-app",
+    "description": "Update your contact details, photo, and preferences directly in the portal. Changes sync everywhere the chapter sees you.",
+    "type": "feature",
+    "releasedAt": "2026-06-18"
+  }
+]
