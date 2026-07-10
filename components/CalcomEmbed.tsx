@@ -62,7 +62,11 @@ export function CalcomEmbed({
           loading="lazy"
           className="h-[640px] w-full"
           style={{ border: 0 }}
-          allow="camera; microphone; fullscreen; clipboard-write"
+          // A booking iframe never needs camera/microphone. Granting them to an
+          // admin-supplied URL on a public page is an unnecessary permission
+          // surface, so we only allow fullscreen + clipboard-write (the embed
+          // host is already constrained by calcomEmbedUrl).
+          allow="fullscreen; clipboard-write"
         />
       </div>
     </section>

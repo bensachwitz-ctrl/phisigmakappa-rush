@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPortalSession, isAdminOverride } from "@/lib/portal-auth";
 import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
+import { getOfficerPermissionsForBrother } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -37,17 +38,22 @@ export async function POST(req: Request) {
   let postedById = "admin-override";
   let postedByName = "Chapter Admin";
   let postedByRole = "admin";
+  // Officer/admin gate for the notify blast (below). A regular member or alumnus
+  // may still post a job, but must NOT be able to fan a push to every brother +
+  // alumnus — that is a spam/abuse vector. Admin override is always privileged.
+  let posterBrotherId: string | null = null;
 
   if (sess) {
     postedById = sess.userId;
     postedByRole = sess.role; // 'brother' or 'alumni'
-    
+
     const portalUser = await prisma.portalUser.findUnique({
       where: { id: sess.userId },
     });
-    
+
     if (portalUser) {
       if (portalUser.role === "brother" && portalUser.brotherId) {
+        posterBrotherId = portalUser.brotherId;
         const brother = await prisma.brother.findUnique({ where: { id: portalUser.brotherId } });
         if (brother) postedByName = brother.name;
       } else if (portalUser.role === "alumni" && portalUser.alumniId) {
@@ -56,6 +62,20 @@ export async function POST(req: Request) {
       } else {
         postedByName = portalUser.email;
       }
+    }
+  }
+
+  // Resolve whether the poster is privileged enough to trigger the chapter-wide
+  // notification fan-out: admin override, or a brother holding >=1 active officer
+  // assignment. Best-effort — a lookup error means "not privileged" (no blast),
+  // never a failed post.
+  let mayNotify = admin;
+  if (!mayNotify && posterBrotherId) {
+    try {
+      const perms = await getOfficerPermissionsForBrother(posterBrotherId);
+      mayNotify = !!perms.superAdmin || Object.keys(perms.domain || {}).length > 0;
+    } catch {
+      mayNotify = false;
     }
   }
 
@@ -79,20 +99,28 @@ export async function POST(req: Request) {
 
     // notify #2 — route the new opportunity to every opted-in member's chosen
     // external channels. Best-effort; never blocks the post on a channel failure.
-    const recipients = await listPortalRecipients(["brother", "alumni"]);
-    await routeEventToRecipients(
-      {
-        event: "job.posted",
-        title: `New opportunity: ${title}`,
-        body: `${company}${location ? ` · ${location}` : ""}`,
-        url: "/portal/brothers/dashboard",
-      },
-      recipients,
-    );
+    // GATED: only an officer/admin post fans out chapter-wide (anti-spam).
+    if (mayNotify) {
+      const recipients = await listPortalRecipients(["brother", "alumni"]);
+      await routeEventToRecipients(
+        {
+          event: "job.posted",
+          title: `New opportunity: ${title}`,
+          body: `${company}${location ? ` · ${location}` : ""}`,
+          url: "/portal/brothers/dashboard",
+        },
+        recipients,
+      );
+    }
 
     return NextResponse.json({ ok: true, job });
   } catch (err: any) {
+    // Log the real cause server-side; NEVER echo err.message (may carry DB /
+    // schema internals) back to the portal caller.
     console.error("Error creating job posting:", err);
-    return NextResponse.json({ error: `Database error: ${err.message}` }, { status: 550 });
+    return NextResponse.json(
+      { error: "Could not create the job posting. Please try again." },
+      { status: 500 },
+    );
   }
 }

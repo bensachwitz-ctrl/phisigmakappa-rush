@@ -75,6 +75,11 @@ describe("alumni donation checkout double-charge guard", () => {
     vi.clearAllMocks();
     mocks.getPortalSession.mockReturnValue({ role: "alumni", userId: "pu1" });
     mocks.isAdminOverride.mockReturnValue(false);
+    // The route now REQUIRES a connected, charges-ready payout account (money-
+    // integrity gate); these double-charge cases exercise the happy path, so the
+    // chapter is connect-ready. The gate itself is covered by
+    // tests/donation-connect-gate.test.ts.
+    mocks.isConnectChargesReady.mockReturnValue(true);
     mocks.portalUserFindUnique.mockResolvedValue({ id: "pu1", alumniId: "a1" });
     mocks.alumniFindUnique.mockResolvedValue({ id: "a1", email: "alum@chapter.org" });
     mocks.getStripe.mockReturnValue({

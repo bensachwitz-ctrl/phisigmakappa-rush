@@ -1,4 +1,5 @@
 import { sendEmail } from "@/lib/email";
+import { renderEmail } from "@/lib/email-template";
 import type { ChannelResult, NotifyChannel, NotifyMessage } from "./types";
 import type { NotifyConfig } from "./config";
 
@@ -103,9 +104,52 @@ export async function sendDiscord(msg: NotifyMessage, cfg: NotifyConfig): Promis
   return postJson("discord", cfg.discord.webhook, { content: plainText(msg).slice(0, 1900) });
 }
 
+/**
+ * SSRF guard for the admin-supplied generic-webhook URL. The chapter pastes this
+ * in /admin/settings, so it is attacker-influenceable and the request is made
+ * server-side from our infra — an unvalidated fetch could be pointed at cloud
+ * metadata (169.254.169.254), localhost, or an internal RFC-1918 host to probe /
+ * exfiltrate. We require an https/http URL to a PUBLIC host and block loopback,
+ * link-local, and private ranges. Hostname literals are checked directly; a
+ * DNS-name is allowed through (we can't resolve here) but the obvious literal
+ * targets an attacker would use are refused.
+ */
+function isBlockedWebhookHost(rawUrl: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(rawUrl);
+  } catch {
+    return true; // unparseable → block
+  }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return true;
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, ""); // strip IPv6 brackets
+  if (!host) return true;
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host === "::1" || host === "0.0.0.0") return true;
+  // IPv6 loopback / unique-local / link-local shorthands.
+  if (host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")) return true;
+  // IPv4 literal → range checks (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16).
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if ([a, Number(m[2]), Number(m[3]), Number(m[4])].some((n) => n > 255)) return true;
+    if (a === 127) return true; // loopback
+    if (a === 10) return true; // private
+    if (a === 172 && b >= 16 && b <= 31) return true; // private
+    if (a === 192 && b === 168) return true; // private
+    if (a === 169 && b === 254) return true; // link-local (incl. cloud metadata)
+    if (a === 0) return true; // "this" network
+  }
+  return false;
+}
+
 // ── Generic webhook (chapter's own endpoint) ─────────────────────────────────
 export async function sendWebhook(msg: NotifyMessage, cfg: NotifyConfig): Promise<ChannelResult> {
   if (!cfg.webhook.url) return { channel: "webhook", skipped: true, reason: NOT_CONFIGURED };
+  // SSRF: refuse a webhook aimed at a private/loopback/link-local host.
+  if (isBlockedWebhookHost(cfg.webhook.url)) {
+    return { channel: "webhook", ok: false, error: "blocked-non-public-host" };
+  }
   const headers: Record<string, string> = cfg.webhook.secret
     ? { "X-Notify-Secret": cfg.webhook.secret }
     : {};
@@ -133,11 +177,21 @@ export async function sendEmailChannel(
   const to = (msg.email || cfg.email.to || "").trim();
   if (!to) return { channel: "email", skipped: true, reason: "no-recipient" };
 
-  const safeBody = escapeHtml(msg.body);
-  const linkHtml = msg.url
-    ? `<p><a href="${escapeAttr(msg.url)}">Open</a></p>`
-    : "";
-  const html = `<p>${safeBody}</p>${linkHtml}`;
+  // Route through the shared white-label wrapper so the notify email carries the
+  // chapter masthead/branding AND the CAN-SPAM unsubscribe footer — the same
+  // opt-out affordance every other broadcast email gets. escapeHtml keeps the
+  // caller-supplied body safe; renderEmail escapes the heading + CTA url itself.
+  const bodyHtml = `<p>${escapeHtml(msg.body)}</p>`;
+  const html = renderEmail({
+    brandHex: cfg.brand.hex,
+    chapterName: cfg.brand.chapterName,
+    heading: msg.title,
+    bodyHtml,
+    cta: msg.url ? { label: "Open", url: msg.url } : null,
+    unsubscribe: true,
+    unsubscribeText:
+      "You can change which notifications you receive, or turn them off, in your portal settings.",
+  });
   const text = plainText(msg);
 
   const res = await sendEmail({ to, subject: msg.title, html, text });
@@ -155,10 +209,6 @@ function escapeHtml(s: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-function escapeAttr(s: string): string {
-  return escapeHtml(s).replace(/"/g, "&quot;");
 }
 
 /** Adapter lookup by channel. "inapp" has no external adapter — the relay

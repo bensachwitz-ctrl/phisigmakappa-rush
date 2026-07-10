@@ -5,18 +5,19 @@ import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { guardBillingWrite } from "@/lib/billing-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { audit } from "@/lib/audit";
+import { maskSecretConfig } from "@/lib/settings-secret";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Secret-shaped config keys are masked in the GET payload (write-only). The
-// dues.stripeWebhookSecret leaking to a member let them forge Stripe events;
-// publishable keys (no "secret" in the name) are still returned. The per-chapter
-// messaging credentials (resend.apiKey, twilio.authToken) are also masked here —
-// they grant send-on-your-behalf access — while their non-secret companions
-// (resend.fromEmail, twilio.accountSid, twilio.phoneNumber, stripePublishableKey)
-// stay readable so the admin UI can show what's configured.
-const SECRET_KEY_RE = /secret|resend\.apikey|twilio\.authtoken/i;
+// Secret-shaped config keys are masked WRITE-ONLY in the GET payload via the
+// shared lib/settings-secret helper (same masking the server-rendered settings
+// page applies before handing config to the client). It covers dues/webhook
+// secrets, the resend.apiKey/twilio.authToken provider creds, AND the notify push
+// destinations (slack/teams/discord webhooks, telegram bot token, generic webhook
+// url) — each is a bearer credential for its channel. Non-secret companions
+// (resend.fromEmail, twilio.accountSid/phoneNumber, stripePublishableKey,
+// telegram.chatId) stay readable so the admin UI can show what's configured.
 
 export async function GET() {
   // Admins only — isAdminAuthed() accepts a plain MEMBER cookie (adminFlag=0),
@@ -24,11 +25,7 @@ export async function GET() {
   // admin ROLE, matching the PATCH gate.
   if (!isAdminRole()) return NextResponse.json({ ok: false }, { status: 403 });
   const all = await getSiteConfig();
-  const settings: Record<string, string> = {};
-  for (const [k, v] of Object.entries(all)) {
-    settings[k] = SECRET_KEY_RE.test(k) ? (v ? "••••••••" : "") : v;
-  }
-  return NextResponse.json({ settings });
+  return NextResponse.json({ settings: maskSecretConfig(all) });
 }
 
 const PatchSchema = z.object({

@@ -3,14 +3,20 @@ import type { NotifyChannel } from "./types";
 import { ALL_CHANNELS } from "./types";
 
 /**
- * Per-tenant notify-channel credential resolution — mirrors
- * lib/messaging-config.ts's "tenant SiteConfig, env fallback" pattern.
+ * Per-tenant notify-channel credential resolution.
  *
- * Every channel resolves from chapter cfg keys first, then a global env var, so
- * a single-tenant deploy can wire a default while a white-label tenant sets its
- * own webhook per chapter in /admin/settings. A channel whose required config is
- * missing resolves to nulls, and its adapter no-ops — NEVER a hardcoded secret,
- * NEVER a throw.
+ * TENANT ISOLATION (P1): the per-destination channels (teams / telegram / slack /
+ * discord / generic webhook) resolve STRICTLY from the current chapter's cfg —
+ * there is NO global `process.env.NOTIFY_*` fallback. A shared operator webhook /
+ * token would otherwise become the silent default for EVERY tenant that never set
+ * its own, so a chapter with no per-tenant secret would post into the operator's
+ * single channel (cross-tenant leak). A channel with no per-tenant secret is
+ * therefore INERT — its adapter no-ops. NEVER a hardcoded secret, NEVER a throw.
+ *
+ * (Email is the one exception the relay allows a shared provider for, but that is
+ *  handled inside lib/email — it is addressed per-recipient, so there is no
+ *  cross-tenant destination to leak. This resolver only carries the chapter-level
+ *  fallback recipient address, never a provider secret.)
  *
  * cfg keys:
  *   notify.teams.webhook
@@ -46,6 +52,14 @@ export interface EmailChannelConfig {
   to: string | null;
 }
 
+/** Chapter branding for the email channel's HTML wrapper (lib/email-template).
+ *  Resolved purely from cfg so the notify email inherits the same white-label
+ *  masthead/CTA color + chapter name as every other transactional email. */
+export interface NotifyBrandConfig {
+  hex: string | null;
+  chapterName: string | null;
+}
+
 export interface NotifyConfig {
   teams: TeamsConfig;
   telegram: TelegramConfig;
@@ -53,6 +67,7 @@ export interface NotifyConfig {
   discord: DiscordConfig;
   webhook: GenericWebhookConfig;
   email: EmailChannelConfig;
+  brand: NotifyBrandConfig;
   /** Which channels the CHAPTER has enabled/offers. Defaults to ALL when the
    *  admin has not restricted the set. A channel not in this list is never
    *  dispatched even if its secret is present. */
@@ -83,38 +98,46 @@ function parseEnabledChannels(raw: string | undefined | null): NotifyChannel[] {
 
 /**
  * Pure resolver — takes an already-loaded cfg map so it's trivially unit-testable
- * without mocking getSiteConfig. Applies the cfg-first, env-fallback rule.
+ * without mocking getSiteConfig.
+ *
+ * Per-destination channel secrets resolve STRICTLY from the tenant cfg (NO env
+ * fallback) so a shared operator channel can never become another tenant's silent
+ * default — see the tenant-isolation note at the top of this file.
  */
 export function resolveNotifyConfig(cfg: Record<string, string>): NotifyConfig {
   return {
     teams: {
-      webhook: clean(cfg["notify.teams.webhook"]) || clean(process.env.NOTIFY_TEAMS_WEBHOOK),
+      webhook: clean(cfg["notify.teams.webhook"]),
     },
     telegram: {
-      botToken:
-        clean(cfg["notify.telegram.botToken"]) || clean(process.env.NOTIFY_TELEGRAM_BOT_TOKEN),
-      chatId: clean(cfg["notify.telegram.chatId"]) || clean(process.env.NOTIFY_TELEGRAM_CHAT_ID),
+      botToken: clean(cfg["notify.telegram.botToken"]),
+      chatId: clean(cfg["notify.telegram.chatId"]),
     },
     slack: {
-      webhook: clean(cfg["notify.slack.webhook"]) || clean(process.env.NOTIFY_SLACK_WEBHOOK),
+      webhook: clean(cfg["notify.slack.webhook"]),
     },
     discord: {
-      webhook: clean(cfg["notify.discord.webhook"]) || clean(process.env.NOTIFY_DISCORD_WEBHOOK),
+      webhook: clean(cfg["notify.discord.webhook"]),
     },
     webhook: {
-      url: clean(cfg["notify.webhook.url"]) || clean(process.env.NOTIFY_WEBHOOK_URL),
-      secret: clean(cfg["notify.webhook.secret"]) || clean(process.env.NOTIFY_WEBHOOK_SECRET),
+      url: clean(cfg["notify.webhook.url"]),
+      secret: clean(cfg["notify.webhook.secret"]),
     },
     email: {
       to: clean(cfg["notify.email.to"]),
+    },
+    brand: {
+      hex: clean(cfg["brand.primaryHex"]),
+      chapterName:
+        clean(cfg["chapter.fraternityShort"]) || clean(cfg["chapter.fraternityName"]),
     },
     enabledChannels: parseEnabledChannels(cfg["notify.channels"]),
   };
 }
 
-/** Resolve the notify config for the CURRENT request's tenant. Degrades to
- *  DEFAULTS + env in a no-Host context (cron/script), same as the sibling
- *  messaging-config helpers. */
+/** Resolve the notify config for the CURRENT request's tenant. In a no-Host
+ *  context (cron/script) getSiteConfig yields an empty map, so every channel
+ *  resolves INERT — never a shared operator default. */
 export async function getNotifyConfig(): Promise<NotifyConfig> {
   const cfg = await getSiteConfig().catch(() => ({}) as Record<string, string>);
   return resolveNotifyConfig(cfg);

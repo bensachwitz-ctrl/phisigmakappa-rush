@@ -43,4 +43,25 @@ describe("calcomEmbedUrl", () => {
       "https://cal.phisigusc.com/meeting?duration=30&embed=true&theme=light",
     );
   });
+
+  // SSRF / clickjacking guard: an admin-supplied URL is rendered in an <iframe>,
+  // so a full URL is only embedded when it targets a KNOWN scheduler host.
+  it("self-hides (returns '') for a full URL on an unknown host", () => {
+    expect(calcomEmbedUrl("https://evil.example.com/steal")).toBe("");
+    expect(calcomEmbedUrl("https://calendly-phish.com/x")).toBe("");
+  });
+
+  it("rejects a non-http(s) scheme", () => {
+    expect(calcomEmbedUrl("javascript:alert(1)")).toBe("");
+    expect(calcomEmbedUrl("data:text/html,<script>1</script>")).toBe("");
+  });
+
+  it("allows the cal.com / cal.diy families", () => {
+    expect(calcomEmbedUrl("https://cal.com/team/phisig")).toBe(
+      "https://cal.com/team/phisig?embed=true&theme=light",
+    );
+    expect(calcomEmbedUrl("https://app.cal.diy/phisig")).toBe(
+      "https://app.cal.diy/phisig?embed=true&theme=light",
+    );
+  });
 });

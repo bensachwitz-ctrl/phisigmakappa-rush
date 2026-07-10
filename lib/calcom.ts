@@ -15,13 +15,48 @@
 export function calcomEmbedUrl(raw: string | undefined | null): string {
   const v = (raw || "").trim();
   if (!v) return "";
-  // A full http(s) URL (self-hosted Cal.diy or any booking link) is used as-is;
-  // anything else is treated as a Cal.com username / username/event-type slug.
-  const base = /^https?:\/\//i.test(v)
-    ? v
-    : `https://cal.com/${v.replace(/^\/+/, "")}`;
+  let base: string;
+  if (/^https?:\/\//i.test(v)) {
+    // A full URL is only embedded when it points at a KNOWN scheduler host. The
+    // value is admin-supplied and rendered in an <iframe>, so an arbitrary host
+    // (or a javascript:/data: scheme) must NEVER load — return "" so the caller
+    // self-hides instead. Allowed: cal.com (+ subdomains), cal.diy (+ subdomains),
+    // and self-hosted Cal instances whose host starts with "cal." (the documented
+    // pattern, e.g. cal.phisigusc.com).
+    let u: URL;
+    try {
+      u = new URL(v);
+    } catch {
+      return "";
+    }
+    if (u.protocol !== "https:" && u.protocol !== "http:") return "";
+    if (!isAllowedSchedulerHost(u.hostname)) return "";
+    base = v;
+  } else {
+    // Bare username / username/event-type slug → the canonical cal.com host.
+    // Validate the slug shape so a stray scheme ("javascript:…") or junk can't be
+    // pasted into the path; a real Cal handle is only word chars, -, _, ., and /.
+    const slug = v.replace(/^\/+/, "");
+    if (!/^[\w\-./]+$/.test(slug)) return "";
+    base = `https://cal.com/${slug}`;
+  }
   // Append the inline-embed + light-theme hints without clobbering any query
   // string the chapter already included on a self-hosted URL.
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}embed=true&theme=light`;
+}
+
+/** Allowlist for the embed host — cal.com / cal.diy families + self-hosted Cal
+ *  instances (host label starting with "cal."). Prevents an admin-supplied URL
+ *  from loading an arbitrary origin inside the booking iframe. */
+export function isAllowedSchedulerHost(hostname: string): boolean {
+  const host = (hostname || "").toLowerCase();
+  if (!host) return false;
+  return (
+    host === "cal.com" ||
+    host.endsWith(".cal.com") ||
+    host === "cal.diy" ||
+    host.endsWith(".cal.diy") ||
+    host.startsWith("cal.")
+  );
 }

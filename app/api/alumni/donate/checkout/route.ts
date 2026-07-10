@@ -126,7 +126,26 @@ export async function POST(req: Request) {
         { status: 503 }
       );
     }
-    
+
+    // ── CONNECT-READY SERVER GATE (money integrity) ──────────────────────────
+    // The dashboard hides the Donate action unless this chapter has a connected,
+    // charges-ready Stripe account (isConnectChargesReady) — so donations always
+    // land in the CHAPTER's account, not the platform's. That gate was UI-only:
+    // a crafted POST bypassed it and the checkout fell through to the platform-
+    // collect branch, routing the donor's money to Greek Stack's own account.
+    // Enforce the SAME condition server-side: no connected payout account → no
+    // checkout. Match the dashboard so the button and the API agree.
+    if (!isConnectChargesReady(cfg)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Online donations are not available for this chapter yet. Please contact the chapter treasurer.",
+        },
+        { status: 403 }
+      );
+    }
+
     // Record the SAME platform fee that the charge will actually take (see the
     // Connect block below). The fee is only charged via application_fee_amount
     // when this chapter has a connected, charges-ready account AND set a

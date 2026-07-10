@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { maskSecretConfig } from "@/lib/settings-secret";
 import { SettingsManager } from "@/components/admin/settings-manager";
 import { NotifyChannelsAdminCard } from "@/components/notify/notify-channels-admin-card";
 import { ExternalLink } from "lucide-react";
@@ -17,7 +18,25 @@ export default async function SettingsPage() {
   if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fsettings");
   if (!isAdminRole()) redirect("/admin");
 
-  const settings = await getSiteConfig();
+  const rawSettings = await getSiteConfig();
+  // SECRET MASK (P2): this page hands the chapter config to the CLIENT
+  // SettingsManager as props, so it must mask write-only secrets the SAME way the
+  // JSON GET route does — otherwise dues/webhook secrets, provider keys, AND the
+  // notify push destinations (slack/teams/discord webhooks, telegram bot token,
+  // generic webhook url) would ship to the browser in the initial props. The
+  // client only ever sees "set" (mask) or "not set" ("").
+  const settings = maskSecretConfig(rawSettings);
+  // Presence booleans for the notify channel-secret admin card — computed from
+  // the RAW config (before masking) so the card can show "Set" / "Not set" per
+  // credential WITHOUT ever receiving the secret value itself.
+  const notifySecretsSet: Record<string, boolean> = {
+    "notify.slack.webhook": !!rawSettings["notify.slack.webhook"],
+    "notify.teams.webhook": !!rawSettings["notify.teams.webhook"],
+    "notify.discord.webhook": !!rawSettings["notify.discord.webhook"],
+    "notify.telegram.botToken": !!rawSettings["notify.telegram.botToken"],
+    "notify.webhook.url": !!rawSettings["notify.webhook.url"],
+    "notify.webhook.secret": !!rawSettings["notify.webhook.secret"],
+  };
   // Platform-level credential presence (BOOLEANS ONLY — never the values). Lets
   // the settings UI show an honest "Connected" badge per integration: a chapter
   // that leaves the per-chapter fields blank still sends via the platform
@@ -62,7 +81,11 @@ export default async function SettingsPage() {
 
       <SettingsManager initial={settings} envIntegrations={envIntegrations} />
 
-      <NotifyChannelsAdminCard initialValue={settings["notify.channels"]} />
+      <NotifyChannelsAdminCard
+        initialValue={settings["notify.channels"]}
+        secretsSet={notifySecretsSet}
+        telegramChatId={rawSettings["notify.telegram.chatId"] || ""}
+      />
     </div>
   );
 }
