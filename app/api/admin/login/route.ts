@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, centralDb, getRegistrySubdomain } from "@/lib/prisma";
 import { setBrotherCookie, clearAdminCookie } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
 import { getClientIp } from "@/lib/client-ip";
@@ -120,7 +120,35 @@ export async function POST(req: Request) {
     // non-secret default so existing logins don't break.
     const expectedUser = process.env.ADMIN_USERNAME || "Phisig";
     // In production, the default/empty password NEVER enables the shared path.
-    const expectedPass = sharedDisabledInProd ? undefined : rawAdminPass;
+    const expectedPassRaw = sharedDisabledInProd ? undefined : rawAdminPass;
+
+    // ── TENANT-BOUND shared credential (multi-tenant isolation) ──────────────
+    // A single global ADMIN_PASSWORD must NOT grant admin on EVERY chapter of a
+    // multi-tenant apex deploy: the `prisma` proxy resolves the tenant schema
+    // from the request Host, so an unbound shared credential would mint an admin
+    // session on whatever chapter the caller points the Host at. We bind it:
+    //   • If ADMIN_TENANT_SUBDOMAIN is set, the shared credential is valid ONLY
+    //     when the request arrives on THAT chapter's host.
+    //   • If it is unset, the shared path is permitted ONLY on a single-tenant
+    //     deploy (≤1 active chapter in the central registry). On a multi-tenant
+    //     apex with no designated chapter it is DISABLED — only per-chapter DB
+    //     admins (the branch below) may log in, so one secret can't admin all.
+    let sharedTenantOk = false;
+    if (expectedPassRaw) {
+      const adminTenant = (process.env.ADMIN_TENANT_SUBDOMAIN || "").trim().toLowerCase();
+      const reqSub = (getRegistrySubdomain(req.headers.get("host")) || "").toLowerCase();
+      if (adminTenant) {
+        sharedTenantOk = !!reqSub && reqSub === adminTenant;
+      } else {
+        // No designated chapter → only safe on a single-tenant deploy. Fail
+        // CLOSED (treat as multi-tenant) if the count can't be read.
+        const activeTenants = await centralDb.tenant
+          .count({ where: { isActive: true } })
+          .catch(() => 2);
+        sharedTenantOk = activeTenants <= 1;
+      }
+    }
+    const expectedPass = sharedTenantOk ? expectedPassRaw : undefined;
     const sharedConfigured = !!expectedPass;
 
     const sharedUserOk =

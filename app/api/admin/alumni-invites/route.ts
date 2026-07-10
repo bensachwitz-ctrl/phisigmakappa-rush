@@ -36,7 +36,13 @@ const InviteSchema = z.object({
 });
 
 function baseUrl(req: Request) {
-  return process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || `${new URL(req.url).origin}`;
+  // Match brother-invites EXACTLY: SITE_URL, else the request origin — which is
+  // THIS chapter's subdomain host (the officer creates the invite while signed
+  // into their chapter admin). Do NOT fall back to NEXT_PUBLIC_SITE_URL: on the
+  // multi-tenant deploy that is set to the platform APEX, so alumni invite links
+  // would resolve to the apex (which can't resolve a tenant) and onboarding would
+  // never complete for any chapter's alumni.
+  return process.env.SITE_URL || `${new URL(req.url).origin}`;
 }
 
 /** Escape caller-supplied plain strings before HTML interpolation. */
