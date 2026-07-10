@@ -111,29 +111,14 @@ async function handlePost(req: Request): Promise<NextResponse> {
   });
 
   if (!portalUser) {
-    // Check if they are in the database but not onboarded yet
-    if (role === "brother") {
-      const brother = await db.brother.findFirst({
-        where: { email: { equals: email, mode: "insensitive" } },
-      });
-      if (brother) {
-        return NextResponse.json({
-          error: "Your account is not activated yet. Please locate your onboarding email/SMS or contact the Chapter Secretary to request a new invite link.",
-        }, { status: 400 });
-      }
-    } else {
-      // In prisma, the model is AlumniProfile
-      const alum = await db.alumniProfile.findFirst({
-        where: { email: { equals: email, mode: "insensitive" } },
-      });
-      if (alum) {
-        return NextResponse.json({
-          error: "Your alumni account is not activated yet. Please register first or ask an administrator for an invite link.",
-        }, { status: 400 });
-      }
-    }
-
-    // Generic successful message to prevent enumeration, but indicating nothing found
+    // ENUMERATION HARDENING: return the SAME neutral 200 whether the email is
+    // completely unknown OR belongs to a not-yet-activated roster member
+    // (Brother / AlumniProfile without a PortalUser). Branching the response on
+    // whether a Brother/AlumniProfile exists would leak chapter membership to an
+    // unauthenticated caller. A not-activated member has no PortalUser to reset,
+    // so there is genuinely nothing to send here — the neutral message is honest
+    // and non-oracular. Legitimate not-yet-onboarded members complete their
+    // account via the invite/onboarding link, not this reset endpoint.
     return NextResponse.json({
       ok: true,
       message: "If your email is registered in our portal, a password reset link has been sent.",

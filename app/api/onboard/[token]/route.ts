@@ -77,6 +77,36 @@ export async function POST(req: Request, { params }: { params: { token: string }
   const passwordHash = data.password ? hashPassword(data.password) : undefined;
 
   const existing = await prisma.brother.findUnique({ where: { name: cleanName } });
+
+  // ACCOUNT-TAKEOVER GUARD (P0): a redeem may only update an EXISTING brother when
+  // that brother is the invite's own bound target. Otherwise an invite holder could
+  // supply the name of any current member (including an ADMIN) and overwrite their
+  // passwordHash, seizing the account. Bind the redeem to the invite via, in order:
+  //   1. a pre-bound target brotherId (defensive; not currently set until completion),
+  //   2. the invite's prefillName matching the existing brother's name, or
+  //   3. the invite's email matching the existing brother's email.
+  // If the invite has no bound target that matches this existing brother, we reject:
+  // the caller may still create a brand-new brother (the `else` branch below), but may
+  // never mutate an unrelated member's record.
+  if (existing) {
+    const norm = (s: string | null | undefined) => (s || "").trim().toLowerCase();
+    const inviteName = norm(invite.prefillName);
+    const inviteEmail = norm(invite.email);
+    const existingName = norm(existing.name);
+    const existingEmail = norm(existing.email);
+
+    const boundByBrotherId = !!invite.brotherId && invite.brotherId === existing.id;
+    const boundByName = inviteName.length > 0 && inviteName === existingName;
+    const boundByEmail = inviteEmail.length > 0 && inviteEmail === existingEmail;
+
+    if (!boundByBrotherId && !boundByName && !boundByEmail) {
+      return NextResponse.json(
+        { ok: false, error: "This name is already registered to another member. Please contact your chapter administrator." },
+        { status: 409 },
+      );
+    }
+  }
+
   let brother;
   if (existing) {
     brother = await prisma.brother.update({
