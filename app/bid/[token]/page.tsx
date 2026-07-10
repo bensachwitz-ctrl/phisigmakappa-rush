@@ -78,30 +78,56 @@ export default async function BidPage({ params }: { params: { token: string } })
   const rushEmail = cfg["contact.rushEmail"] || "";
 
   return (
-    <div className="min-h-screen bg-phisig-mist">
-      <div className="container py-6">
+    <div className="relative min-h-screen overflow-x-clip bg-phisig-mist">
+      {/* Soft, chapter-tinted ambient wash: brand-token-driven (phisig-red is
+          bound to the live --brand-primary) and static (reduced-motion-safe), so
+          this celebratory moment reads premium in ANY chapter's color. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[520px] overflow-hidden"
+      >
+        <div className="absolute left-1/2 top-[-13rem] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-phisig-red/12 blur-3xl" />
+        <div className="absolute right-[-8rem] top-6 h-72 w-72 rounded-full bg-phisig-red/10 blur-3xl" />
+      </div>
+
+      <div className="relative container py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <Wordmark variant="compact" />
         </Link>
       </div>
 
-      <div className="container max-w-xl py-8 sm:py-16">
+      <div className="relative container max-w-xl py-8 sm:py-16">
         {result.kind === "ok" && (
           <div className="text-center">
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red text-white shadow-lg shadow-phisig-red/30 mb-5">
-              <ShieldCheck className="h-6 w-6" aria-hidden="true" />
-            </span>
-            <span className="block text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+            {/* Elevated brand seal with a soft halo: the emotional anchor for the
+                bid. Gentle entrance (self-disables under prefers-reduced-motion). */}
+            <div className="relative mx-auto mb-6 inline-flex">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-phisig-red/30 blur-2xl"
+              />
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-[0_16px_36px_-12px_hsl(var(--primary)/0.55)] ring-1 ring-white/20 motion-safe:animate-scale-in">
+                <ShieldCheck className="h-7 w-7" aria-hidden="true" />
+              </span>
+            </div>
+            <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-phisig-red">
               Bid invitation · {chapterAttribution}
             </span>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+            <h1 className="mx-auto mt-3 max-w-lg text-[clamp(2rem,6vw,3.25rem)] font-bold leading-[1.05] tracking-tight [text-wrap:balance]">
               {result.rush.name}, you've been bid.
             </h1>
-            <p className="mt-3 text-muted-foreground leading-relaxed">
+            {/* Brand hairline divider with a centered diamond: a restrained
+                classical flourish, tinted in the chapter color. */}
+            <span aria-hidden className="mx-auto mt-5 mb-1 flex w-24 items-center justify-center gap-2">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-phisig-red/40" />
+              <span className="h-1.5 w-1.5 rotate-45 rounded-[1px] bg-phisig-red" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-phisig-red/40" />
+            </span>
+            <p className="mx-auto mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground sm:text-lg">
               The brothers of {chapterAttribution} have voted, deliberated, and want you in this brotherhood.
-              This is the official bid — your one-click response below.
+              This is the official bid. Your one-click response is below.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+            <p className="mt-3 text-xs text-muted-foreground inline-flex items-center gap-1.5">
               <Clock className="h-3 w-3" aria-hidden="true" />
               Link expires {new Date(result.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </p>
