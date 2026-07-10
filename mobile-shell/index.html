@@ -26,10 +26,10 @@
     Offline-tolerant: the last good dashboard is cached on-device (Preferences)
     and the session persists across launches.
 
-    NO-LOGIN DEMO: the built-in "Demo Chapter" loads a fully interactive,
-    READ-ONLY sample dashboard (no credentials) so a reviewer / cold-start user
-    can see the whole app — Feed, Events, Rush, Dues, Directory, Vote, Profile,
-    and an officer/Exec view — without an account.
+    LOGIN-ONLY: the app has NO in-app demo. A member picks School → Chapter and
+    signs in (Brother / Alumni) to reach their real per-chapter dashboard over
+    the mobile APIs. The marketing DEMO lives only on the website. (App reviewers
+    are given real chapter credentials in the App Review notes.)
 
     This bundled client mirrors the richer React member surface
     (app/app/MobileAppClient.tsx) as closely as a dependency-free static client
@@ -240,7 +240,7 @@
   /* ============================================================================
      Greek Stack — bundled native client (vanilla, dependency-free).
      State machine: boot → picker(school→chapter) → login → dashboard.
-     Demo path: picker → demo chapter → READ-ONLY sample dashboard (no login).
+     Login-only: NO in-app demo (the marketing demo lives on the website).
      Talks to the platform via the API base. Offline-tolerant + session-persistent.
      ========================================================================== */
   (function () {
@@ -490,103 +490,6 @@
     // a chapter for the picker, so the cold chrome never keeps a tenant's color).
     function resetBrand() { document.documentElement.style.setProperty("--brand", GS_BRAND); document.documentElement.style.setProperty("--brand2", GS_BRAND2); }
 
-    // ── Built-in demo chapter (offline / empty-registry fallback + showcase) ───
-    // The "Demo Chapter" is the no-login showcase — picking it loads SAMPLE_DATA
-    // straight into the dashboard (no auth), so a reviewer / cold-start user sees
-    // the whole app. It carries its own brand so the showcase still re-skins.
-    var DEMO_CHAPTER = {
-      id: "demo-1", subdomain: "demo", name: "Phi Sigma Kappa (Demo)",
-      school: "Greekstack University", domain: null, demo: true,
-      brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" }
-    };
-    var DEMO = [DEMO_CHAPTER];
-
-    // ── Read-only SAMPLE dashboard (Apple 2.1: a real, no-login experience) ────
-    // Mirrors the shape of /api/mobile/data so every paint function renders it
-    // unchanged. capabilities.exec is true here so the showcase can demonstrate
-    // the officer/Exec view too (it is a demo, not a real session).
-    function sampleData() {
-      var now = Date.now();
-      return {
-        chapter: { subdomain: "demo", name: "Phi Sigma Kappa", schoolName: "Greekstack University",
-          brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" } },
-        role: "brother",
-        demo: true,
-        capabilities: { exec: true, duesEnabled: true },
-        profile: {
-          id: "demo-brother-id", name: "Alex Mercer", email: "alex.mercer@demo.edu",
-          phone: "(803) 555-0144", year: "Senior", major: "Computer Science",
-          position: "President", pledgeClass: "Phi Class", hometown: "Charleston, SC", status: "ACTIVE"
-        },
-        standing: { score: 92, max: 100, pct: 92, standing: "GOOD" },
-        billing: null,
-        announcements: [
-          { id: "a1", title: "Chapter Meeting Sunday at 7 PM", pinned: true, authorName: "Alex Mercer", authorRole: "President",
-            createdAt: new Date(now - 2 * 3600000).toISOString(),
-            body: "We will discuss fall rush prep and vote on the new budget. Attendance is mandatory for all active brothers. Location: Chapter Room." },
-          { id: "a2", title: "Community Service Day — Saturday", pinned: false, authorName: "Jack Snyder", authorRole: "Philanthropy Chair",
-            createdAt: new Date(now - 86400000).toISOString(),
-            body: "Join us at the Special Olympics center at 9 AM. Wear letters. We need 15+ brothers to hit our semester hours." }
-        ],
-        events: [
-          { id: "e1", name: "Fall Rush Kickoff BBQ", location: "Chapter House Lawn", startsAt: new Date(now + 2 * 86400000).toISOString(),
-            description: "Meet the brothers, free food, lawn games. Bring a friend.", myRsvp: { status: "GOING" } },
-          { id: "e2", name: "Alumni Networking Night", location: "Student Union, Ballroom B", startsAt: new Date(now + 6 * 86400000).toISOString(),
-            description: "Connect with alumni across finance, tech, and law.", myRsvp: null },
-          { id: "e3", name: "Philanthropy 5K", location: "Campus Quad", startsAt: new Date(now + 12 * 86400000).toISOString(),
-            description: "Run/walk to raise money for the chapter's national charity.", myRsvp: { status: "MAYBE" } }
-        ],
-        dues: {
-          config: { enabled: true, amountCents: 45000, year: "2026-fall", label: "Active Brother Dues" },
-          isPaid: false,
-          payments: [
-            { id: "p1", year: "2026-spring", amountCents: 45000, method: "STRIPE", status: "PAID", createdAt: new Date(now - 120 * 86400000).toISOString() }
-          ]
-        },
-        treasury: {
-          balanceCents: 1284750, duesCollectedCents: 1890000, duesOutstandingCents: 360000
-        },
-        roster: {
-          actives: [
-            { id: "b1", name: "Alex Mercer", position: "President", major: "Computer Science", year: "Senior", email: "alex.mercer@demo.edu" },
-            { id: "b2", name: "Daniel Cho", position: "Treasurer", major: "Finance", year: "Junior", email: "daniel.cho@demo.edu" },
-            { id: "b3", name: "Marcus Webb", position: "Recruitment", major: "Marketing", year: "Junior", email: "marcus.webb@demo.edu" },
-            { id: "b4", name: "Ethan Park", position: "Social Chair", major: "Economics", year: "Sophomore", email: "ethan.park@demo.edu" },
-            { id: "b5", name: "Jordan Lee", position: "Member", major: "Biology", year: "Sophomore", email: "jordan.lee@demo.edu" }
-          ],
-          alumni: [
-            { id: "al1", name: "James Holloway", graduationYear: 2012, employer: "Goldman Sachs", jobTitle: "VP", email: "j.holloway@alum.com" },
-            { id: "al2", name: "Sarah Kim", graduationYear: 2015, employer: "Google", jobTitle: "PM", email: "s.kim@alum.com" }
-          ]
-        },
-        careers: [
-          { id: "c1", title: "Software Engineer Intern", company: "Northrop", location: "Charleston, SC", postedByName: "James Holloway '12" }
-        ],
-        pnms: [
-          { id: "pnm1", name: "Tyler Brooks", major: "Mechanical Eng.", year: "Freshman", status: "ACTIVE", votesCount: 8 },
-          { id: "pnm2", name: "Chris Nolan", major: "Accounting", year: "Sophomore", status: "BID_EXTENDED", votesCount: 12 },
-          { id: "pnm3", name: "Aaron Diaz", major: "Political Sci.", year: "Freshman", status: "ACTIVE", votesCount: 5 },
-          { id: "pnm4", name: "Sam Whitfield", major: "Undeclared", year: "Freshman", status: "ACTIVE", votesCount: 3 }
-        ],
-        // Demo open election so the no-login showcase exercises the Vote tab +
-        // spotlight (same shape lib/mobile-elections returns). myBallot is empty
-        // so the demo starts unvoted; casting locally fills it in.
-        election: {
-          id: "el-demo", title: "Spring 2026 Officer Elections", ballotsCast: 18, totalEligible: 42,
-          seats: [
-            { id: "seat-pres", title: "President", candidates: [
-              { id: "cand-1", name: "Alex Mercer", year: "Senior", blurb: "Two terms on exec; ran the best rush in chapter history.", votes: 11 },
-              { id: "cand-2", name: "Daniel Cho", year: "Junior", blurb: "Treasurer; wants a transparent budget and bigger philanthropy.", votes: 7 }
-            ] },
-            { id: "seat-trea", title: "Treasurer", candidates: [
-              { id: "cand-3", name: "Ethan Park", year: "Sophomore", blurb: "Will move dues fully online and cut late payments.", votes: 9 },
-              { id: "cand-4", name: "Jordan Lee", year: "Sophomore", blurb: "Detail-oriented; clean books and on-time reimbursements.", votes: 9 }
-            ] }
-          ]
-        },
-        myBallot: {}
-      };
-    }
 
     // ── App state ──────────────────────────────────────────────────────────
     // tab ∈ feed/events/rush/dues/directory/elections/profile; view ∈ member/exec.
@@ -611,9 +514,11 @@
       try {
         var r = await fetch(api("/api/mobile/registry"), { headers: { Accept: "application/json" } });
         var j = await r.json();
-        if (j && j.ok && Array.isArray(j.chapters) && j.chapters.length) return j.chapters.concat(DEMO);
+        if (j && j.ok && Array.isArray(j.chapters)) return j.chapters;
       } catch (e) {}
-      return DEMO;
+      // No demo fallback on iOS — the app is login-only. On a network miss the
+      // picker renders its empty/retry state (see showPicker) rather than a demo.
+      return [];
     }
     async function login(subdomain, email, password, role) {
       var r = await fetch(api("/api/mobile/auth"), {
@@ -756,39 +661,52 @@
       var schoolNames = Object.keys(schools).sort();
 
       if (!pickerSchool) {
-        main.appendChild(el('<h2 class="section">Choose your school</h2>'));
-        var sb = el('<div class="search"><input placeholder="Search schools" inputmode="search" autocapitalize="words" /></div>');
-        main.appendChild(sb);
-        var list = el('<div></div>');
-        function paintSchools(q) {
-          list.innerHTML = "";
-          var filtered = schoolNames.filter(function (n) { return n.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
-          if (!filtered.length) { list.appendChild(el('<div class="empty">No schools match “' + esc(q) + '”.</div>')); return; }
-          filtered.forEach(function (name) {
-            var any = schools[name][0];
-            var b = brandFor(any);
-            var row = el(
-              '<button class="row">' +
-                '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(name)) + "</div>" +
-                '<div class="meta"><div class="name">' + esc(name) + '</div><div class="school">' + schools[name].length + " chapter" + (schools[name].length > 1 ? "s" : "") + "</div></div>" +
-                '<div class="chev">›</div>' +
-              "</button>"
-            );
-            row.onclick = function () { haptic(); pickerSchool = name; pickerQuery = ""; showPicker(); };
-            list.appendChild(row);
-          });
+        // Logo-anchored entry — the owner's "simple with the logo, then choose
+        // school and chapter" ask. The canonical GreekStack crest + wordmark sit
+        // above the school step so the app opens on-brand (only at the school
+        // level; drilling into a school swaps this for the chapter list).
+        main.appendChild(el(
+          '<div class="pickhero">' +
+            '<div class="crest-disc" aria-hidden="true">' + CREST_SVG + '</div>' +
+            '<div class="wordmark">Greek<span class="grad">stack</span></div>' +
+            '<div class="sub">Find your chapter to sign in</div>' +
+          '</div>'
+        ));
+        if (!schoolNames.length) {
+          // Login-only app: no demo fallback. If the registry is empty (offline
+          // or none provisioned yet), show a friendly retry that RE-FETCHES the
+          // real registry — never a sample chapter.
+          main.appendChild(el('<div class="empty" style="margin-top:8px">No chapters are available yet.<br/>Check your connection, or check back soon.</div>'));
+          var retry = el('<button class="btn ghost" type="button" style="margin-top:14px">Retry</button>');
+          retry.onclick = async function () { haptic(); S.chapters = await getRegistry(); showPicker(); };
+          main.appendChild(retry);
+        } else {
+          main.appendChild(el('<h2 class="section">Choose your school</h2>'));
+          var sb = el('<div class="search"><input placeholder="Search schools" inputmode="search" autocapitalize="words" /></div>');
+          main.appendChild(sb);
+          var list = el('<div></div>');
+          function paintSchools(q) {
+            list.innerHTML = "";
+            var filtered = schoolNames.filter(function (n) { return n.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+            if (!filtered.length) { list.appendChild(el('<div class="empty">No schools match “' + esc(q) + '”.</div>')); return; }
+            filtered.forEach(function (name) {
+              var any = schools[name][0];
+              var b = brandFor(any);
+              var row = el(
+                '<button class="row">' +
+                  '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(name)) + "</div>" +
+                  '<div class="meta"><div class="name">' + esc(name) + '</div><div class="school">' + schools[name].length + " chapter" + (schools[name].length > 1 ? "s" : "") + "</div></div>" +
+                  '<div class="chev">›</div>' +
+                "</button>"
+              );
+              row.onclick = function () { haptic(); pickerSchool = name; pickerQuery = ""; showPicker(); };
+              list.appendChild(row);
+            });
+          }
+          sb.querySelector("input").oninput = function (e) { paintSchools(e.target.value); };
+          paintSchools("");
+          main.appendChild(list);
         }
-        sb.querySelector("input").oninput = function (e) { paintSchools(e.target.value); };
-        paintSchools("");
-        main.appendChild(list);
-
-        // No-login demo entry — always offered, even with a populated registry, so
-        // a cold-start user (or App reviewer) can see the whole app immediately.
-        main.appendChild(el('<h2 class="section">Just exploring?</h2>'));
-        var demoBtn = el('<button class="btn ghost">See the live demo — no sign in</button>');
-        demoBtn.onclick = function () { haptic(); enterDemo(); };
-        main.appendChild(demoBtn);
-        main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">A read-only sample chapter so you can try every feature before you sign in.</p>'));
       } else {
         main.appendChild(el('<h2 class="section">' + esc(pickerSchool) + "</h2>"));
         var chs = schools[pickerSchool] || [];
@@ -804,8 +722,6 @@
           );
           row.onclick = function () {
             haptic();
-            // The demo chapter loads the no-login showcase; real chapters → login.
-            if (c.demo) { enterDemo(); return; }
             applyBrand(c); showLogin(c);
           };
           cl.appendChild(row);
@@ -814,16 +730,6 @@
       }
       wrap.appendChild(main);
       render(wrap);
-    }
-
-    // ── No-login demo: load the read-only sample dashboard straight away ───────
-    function enterDemo() {
-      S.demo = true;
-      S.session = { token: null, user: { email: "alex.mercer@demo.edu" }, subdomain: "demo", tenant: DEMO_CHAPTER };
-      S.data = sampleData();
-      S.tab = "feed"; S.view = "member";
-      applyBrand(S.session.tenant);
-      paintDashboard(false);
     }
 
     // ── Screen: Login ─────────────────────────────────────────────────────────
@@ -872,10 +778,18 @@
       };
       main.appendChild(form);
 
-      // Friendly off-ramp to the no-login demo from the login screen too.
-      var demoBtn = el('<button class="btn ghost" type="button" style="margin-top:10px">Explore the demo instead</button>');
-      demoBtn.onclick = function () { haptic(); enterDemo(); };
-      main.appendChild(demoBtn);
+      // Forgot-password off-ramp — opens the chapter's web reset flow in the
+      // system browser (the app itself is login-only; no demo path).
+      var forgot = el('<button class="btn ghost" type="button" style="margin-top:10px">Forgot password?</button>');
+      forgot.onclick = function () {
+        haptic();
+        // Open THIS chapter's web reset flow in the system browser. Prefer the
+        // chapter's custom domain; else its subdomain under the platform apex.
+        var apexHost = API_BASE.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        var host = tenant.domain ? tenant.domain : (tenant.subdomain + "." + apexHost);
+        openExternal("https://" + host + "/portal/reset-password");
+      };
+      main.appendChild(forgot);
 
       main.appendChild(el('<p class="small" style="margin-top:14px;text-align:center">Use the credentials your chapter gave you. Your session is bound to ' + esc(tenant.name) + " only.</p>"));
 
@@ -1686,7 +1600,6 @@
       // Find the chapter in the registry so we can theme + go straight to login.
       var match = (S.chapters || []).filter(function (c) { return c.subdomain === sub; })[0];
       if (match) {
-        if (match.demo) { enterDemo(); return true; }
         applyBrand(match);
         showLogin(match);
         return true;
