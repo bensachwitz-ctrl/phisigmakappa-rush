@@ -94,3 +94,32 @@ export function buildPortalDestinations(opts: {
     .filter((k) => keys.has(k))
     .map((key) => ({ key, ...PORTAL_HOMES[key] }));
 }
+
+// ── Alumni portal information architecture ───────────────────────────────────
+// The alumni portal's PRIMARY navigation is EXACTLY three tabs. This shape lives
+// here (pure, framework-free) so the client dashboard renders the same three-tab
+// nav that this module can be unit-tested against — the two can never drift.
+
+/** Stable id union for the alumni portal's three primary tabs. */
+export type AlumniTabId = "events" | "networking" | "alumni";
+
+export interface AlumniTab {
+  id: AlumniTabId;
+  label: string;
+}
+
+/**
+ * The alumni portal's three primary tabs, in display order:
+ *  - Events      — chapter events + the announcements feed + a (conditional)
+ *                  Donate action shown only when the chapter has Stripe connected.
+ *  - Networking  — career board, active-member connections, mentorship, and polls.
+ *  - Alumni List — the alumni directory (name, grad year, location, role, contact).
+ * Labels are chapter-agnostic and carry no em-dash so they stay grep-clean.
+ */
+export function buildAlumniTabs(): AlumniTab[] {
+  return [
+    { id: "events", label: "Events" },
+    { id: "networking", label: "Networking" },
+    { id: "alumni", label: "Alumni List" },
+  ];
+}

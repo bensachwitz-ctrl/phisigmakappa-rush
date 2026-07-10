@@ -56,7 +56,7 @@ import {
 } from "@/components/brand/icons";
 import { PortalSwitcher } from "@/components/nav/PortalSwitcher";
 import { PortalSidebar, type PortalSidebarItem } from "@/components/nav/PortalSidebar";
-import type { PortalDestination } from "@/components/nav/portal-nav";
+import { buildAlumniTabs, type PortalDestination } from "@/components/nav/portal-nav";
 
 interface Alumnus {
   id: string;
@@ -311,6 +311,9 @@ interface DashboardClientProps {
   donations: Donation[];
   jobPostings: JobPosting[];
   announcements: Announcement[];
+  /** True only when the chapter has Stripe Connect ready to accept charges.
+   *  Gates whether the Donate action appears in the Events tab at all. */
+  stripeConnected: boolean;
   isAdmin: boolean;
   /** Authorized portal-switcher destinations (computed server-side). */
   portalDestinations: PortalDestination[];
@@ -327,6 +330,7 @@ export default function DashboardClient({
   donations,
   jobPostings,
   announcements,
+  stripeConnected,
   isAdmin,
   portalDestinations,
 }: DashboardClientProps) {
@@ -335,7 +339,10 @@ export default function DashboardClient({
   // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
   // stay /portal/* — only visible labels re-genders for sororities / pro orgs.
   const { fraternityName, terms } = useChapterIdentity();
-  const [activeTab, setActiveTab] = useState("overview");
+  // The alumni portal exposes EXACTLY three primary tabs (Events, Networking,
+  // Alumni List). "profile" is a secondary view reached from the header, not a
+  // primary tab, so it is never in `alumniTabs`.
+  const [activeTab, setActiveTab] = useState<string>("events");
   // Roving-tabindex focus targets for the WAI-ARIA dashboard tablist.
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -371,8 +378,9 @@ export default function DashboardClient({
   const [alumniSearch, setAlumniSearch] = useState("");
   const [pnmSearch, setPnmSearch] = useState("");
 
+  // Networking sub-navigation: which surface of the Networking tab is showing.
+  const [networkingTab, setNetworkingTab] = useState("careers"); // careers | connect | mentorship | polls
   // Career board states
-  const [alumniTab, setAlumniTab] = useState("directory"); // "directory" or "careers"
   const [localJobPostings, setLocalJobPostings] = useState<JobPosting[]>(jobPostings || []);
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
@@ -753,19 +761,20 @@ export default function DashboardClient({
     }
   };
 
-  // Single source of truth for the alumni portal's MAIN sections — shared by the
-  // desktop left rail (PortalSidebar) and the mobile tab scroller so the two nav
-  // surfaces stay in lockstep.
-  const alumniTabs = [
-    { id: "overview", label: "Overview", icon: IconActivity },
-    { id: "profile", label: "My Profile", icon: IconProfile },
-    { id: "pnms", label: "Hometown PNMs", icon: IconMap },
-    { id: "brothers", label: `Active ${terms.members}`, icon: IconMembers },
-    { id: "alumni", label: "Alumni Directory", icon: IconGraduation },
-    { id: "polls", label: "Surveys & Polls", icon: IconPolls },
-    { id: "events", label: "Events Calendar", icon: IconEvents },
-    { id: "donate", label: "Donate & Support", icon: IconGiving },
-  ];
+  // Single source of truth for the alumni portal's THREE primary sections —
+  // shared by the desktop left rail (PortalSidebar) and the mobile tab scroller
+  // so the two nav surfaces stay in lockstep. The id/label shape comes from the
+  // pure, unit-tested buildAlumniTabs(); icons are attached here (React-only).
+  const ALUMNI_TAB_ICON: Record<string, typeof IconEvents> = {
+    events: IconEvents,
+    networking: IconMembers,
+    alumni: IconGraduation,
+  };
+  const alumniTabs = buildAlumniTabs().map((t) => ({
+    id: t.id,
+    label: t.label,
+    icon: ALUMNI_TAB_ICON[t.id],
+  }));
   const alumniSidebarItems: PortalSidebarItem[] = alumniTabs.map((t) => ({
     key: t.id,
     label: t.label,
@@ -807,6 +816,20 @@ export default function DashboardClient({
                 destinations={portalDestinations}
                 isAdminOverride={isAdmin}
               />
+              {/* My Profile — a secondary account view (not one of the three
+                  primary tabs), reachable from the header on every tab. */}
+              <button
+                onClick={() => setActiveTab("profile")}
+                aria-pressed={activeTab === "profile"}
+                className={`inline-flex items-center gap-1 text-xs font-semibold rounded-lg px-3 py-1.5 border transition ${
+                  activeTab === "profile"
+                    ? "bg-maroon-800 text-cream-50 border-transparent shadow"
+                    : "text-maroon-700 hover:text-maroon-900 border-maroon-100 hover:bg-cream-50"
+                }`}
+              >
+                <IconProfile className="w-3.5 h-3.5" />
+                My Profile
+              </button>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-maroon-700 hover:text-maroon-900 border border-maroon-100 rounded-lg px-3 py-1.5 hover:bg-cream-50 transition"
@@ -1576,9 +1599,9 @@ export default function DashboardClient({
               {/* Sub-tabs for Alumni Directory & Careers */}
               <div className="flex border-b border-maroon-100 mb-6">
                 <button
-                  onClick={() => setAlumniTab("directory")}
+                  onClick={() => setNetworkingTab("directory")}
                   className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
-                    alumniTab === "directory"
+                    networkingTab === "directory"
                       ? "border-maroon-800 text-maroon-900"
                       : "border-transparent text-maroon-500 hover:text-maroon-800"
                   }`}
@@ -1586,9 +1609,9 @@ export default function DashboardClient({
                   Alumni Directory
                 </button>
                 <button
-                  onClick={() => setAlumniTab("careers")}
+                  onClick={() => setNetworkingTab("careers")}
                   className={`pb-3 text-sm font-bold tracking-wide uppercase px-4 border-b-2 transition-all ${
-                    alumniTab === "careers"
+                    networkingTab === "careers"
                       ? "border-maroon-800 text-maroon-900"
                       : "border-transparent text-maroon-500 hover:text-maroon-800"
                   }`}
@@ -1597,7 +1620,7 @@ export default function DashboardClient({
                 </button>
               </div>
 
-              {alumniTab === "directory" ? (
+              {networkingTab === "directory" ? (
                 <>
                   <div className="rounded-2xl border border-maroon-100/80 bg-white/85 backdrop-blur-xl p-6 ring-1 ring-maroon-900/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.85)_inset,0_10px_30px_-16px_rgba(10,24,56,0.22)]">
                     <h2 className="text-xl font-bold text-maroon-900 mb-3">Alumni Directory & Network</h2>

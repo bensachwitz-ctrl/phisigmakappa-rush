@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireRole, portalMustResetRedirect } from "@/lib/portal-auth";
 import { buildPortalDestinations } from "@/components/nav/portal-nav";
+import { getSiteConfig } from "@/lib/site-config";
+import { isConnectChargesReady } from "@/lib/stripe-connect";
 import DashboardClient from "./DashboardClient";
 import type { Metadata } from "next";
 
@@ -287,6 +289,19 @@ export default async function AlumniDashboardPage() {
     createdAt: j.createdAt.toISOString(),
   }));
 
+  // Stripe-connected gate for the alumni Donate action. The Donate section only
+  // renders when the chapter has a connected Express account that can accept
+  // charges (isConnectChargesReady) — otherwise the alumni portal shows NO
+  // Donate surface at all. Fail-closed on any config read error.
+  let stripeConnected = false;
+  try {
+    const cfg = await getSiteConfig();
+    stripeConnected = isConnectChargesReady(cfg);
+  } catch (err) {
+    if (isNextSignal(err)) throw err;
+    stripeConnected = false;
+  }
+
   const formattedAnnouncements = announcements.map(a => ({
     ...a,
     createdAt: a.createdAt.toISOString(),
@@ -311,6 +326,7 @@ export default async function AlumniDashboardPage() {
       donations={formattedDonations}
       jobPostings={formattedJobPostings}
       announcements={formattedAnnouncements}
+      stripeConnected={stripeConnected}
       isAdmin={sess.isAdmin}
       portalDestinations={buildPortalDestinations({
         current: "alumni",
