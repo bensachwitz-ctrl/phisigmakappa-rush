@@ -1095,7 +1095,7 @@
       var pnms = d.pnms || [];
       main.appendChild(el('<h2 class="section">Recruitment</h2>'));
       if (!pnms.length) {
-        main.appendChild(el('<div class="empty">No prospective members in the pipeline right now.</div>'));
+        main.appendChild(el('<div class="empty">Recruitment updates appear here. When your chapter is rushing, the pipeline and bid news show up on this tab.</div>'));
         return;
       }
       var bids = pnms.filter(function (p) { return p.status === "BID_EXTENDED"; }).length;
@@ -1674,8 +1674,74 @@
       });
     }
 
-    // ── OFFICER: Rush pipeline (read board) ───────────────────────────────────
-    function paintExecRush(main, d) { paintRush(main, d); }
+    // ── OFFICER: Rush pipeline (MANAGE — advance / bid / reject a PNM) ─────────
+    // Each PNM gets status-action buttons that POST /api/mobile/exec/rush (officer-
+    // gated server-side via authorizeMobileExec) then refetch. Non-officers never
+    // reach this (exec lens is server-cleared) AND the route re-gates every write.
+    function paintExecRush(main, d) {
+      var pnms = d.pnms || [];
+      main.appendChild(el('<h2 class="section">Recruitment pipeline</h2>'));
+      if (!pnms.length) {
+        main.appendChild(el('<div class="empty">No prospective members in the pipeline yet. Add PNMs from the web console, then advance them here.</div>'));
+        return;
+      }
+      var bids = pnms.filter(function (p) { return p.status === "BID_EXTENDED"; }).length;
+      main.appendChild(el(
+        '<div class="stats three">' +
+          '<div class="stat"><div class="v">' + pnms.length + '</div><div class="l">In pipeline</div></div>' +
+          '<div class="stat"><div class="v">' + bids + '</div><div class="l">Bids out</div></div>' +
+          '<div class="stat"><div class="v">' + (pnms.length - bids) + '</div><div class="l">Active</div></div>' +
+        '</div>'
+      ));
+      pnms.forEach(function (p) { main.appendChild(execRushRow(p)); });
+    }
+    var RUSH_STATUS_LABEL = { ACTIVE: "Active", BID_EXTENDED: "Bid sent", ACCEPTED: "Accepted", DECLINED: "Declined", DROPPED: "Dropped" };
+    function execRushRow(p) {
+      var b = brandFor(S.session.tenant);
+      var card = el('<div class="card"></div>');
+      card.appendChild(el(
+        '<div class="row" style="cursor:default;border:0;padding:0;margin-bottom:10px">' +
+          '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(p.name)) + "</div>" +
+          '<div class="meta"><div class="name">' + esc(p.name) + '</div><div class="school">' + esc([p.major, p.year].filter(Boolean).join(" · ")) + "</div></div>" +
+          '<span class="pill ' + (p.status === "BID_EXTENDED" ? "brand" : "muted") + '" style="margin:0">' + esc(RUSH_STATUS_LABEL[p.status] || p.status) + "</span>" +
+        "</div>"
+      ));
+      var actions = el('<div style="display:flex;gap:8px;flex-wrap:wrap"></div>');
+      if (p.status !== "BID_EXTENDED" && p.status !== "ACCEPTED") {
+        var bid = el('<button class="btn ghost" type="button" style="width:auto;flex:1;min-width:104px">Extend bid</button>');
+        bid.onclick = function () { haptic(); rushAdvance(p, "BID_EXTENDED"); };
+        actions.appendChild(bid);
+      }
+      if (p.status !== "ACCEPTED") {
+        var acc = el('<button class="btn" type="button" style="width:auto;flex:1;min-width:104px">Accept</button>');
+        acc.onclick = function () { haptic(); rushAdvance(p, "ACCEPTED"); };
+        actions.appendChild(acc);
+      }
+      var rej = el('<button class="btn danger" type="button" style="width:auto;flex:1;min-width:104px">Reject</button>');
+      rej.onclick = function () { haptic(); rushAdvance(p, "DROPPED"); };
+      actions.appendChild(rej);
+      card.appendChild(actions);
+      return card;
+    }
+    async function rushAdvance(p, status) {
+      var verb = { BID_EXTENDED: "extend a bid to", ACCEPTED: "accept", DROPPED: "reject" }[status] || "update";
+      var yes = await confirmDialog({
+        title: "Update " + p.name + "?",
+        message: "Are you sure you want to " + verb + " " + p.name + "?",
+        confirmText: "Confirm", danger: status === "DROPPED"
+      });
+      if (!yes) return;
+      var res = await authPost("/api/mobile/exec/rush", { pnmId: p.id, status: status });
+      if (res.ok) {
+        if (res.data && res.data.pnms) S.data.pnms = res.data.pnms;
+        toast(p.name + " updated.", "ok");
+        await refetchDashboard();
+      } else if (res.status === 403) {
+        toast("Only chapter officers can manage recruitment.", "err");
+      } else {
+        toast(res.data.error || "Couldn't update the PNM. Try again.", "err");
+      }
+    }
 
     // ── OFFICER: Dues management (collection summary) ─────────────────────────
     function paintExecDues(main, d) {
