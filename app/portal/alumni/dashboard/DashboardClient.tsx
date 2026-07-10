@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";
 import { NotifyPrefsCard } from "@/components/notify/notify-prefs-card";
 import { useToast } from "@/components/ui/toast";
-import { avatarSrc } from "@/lib/image-url";
+import { avatarSrc, imageSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -339,7 +339,9 @@ export default function DashboardClient({
   const { push } = useToast();
   // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
   // stay /portal/* — only visible labels re-genders for sororities / pro orgs.
-  const { fraternityName, terms } = useChapterIdentity();
+  const { fraternityName, terms, logoUrl, schoolShort, schoolName } = useChapterIdentity();
+  const hasLogo = !!(logoUrl && logoUrl.trim());
+  const schoolLabel = schoolShort || schoolName;
   // The alumni portal exposes EXACTLY three primary tabs (Events, Networking,
   // Alumni List). "profile" is a secondary view reached from the header, not a
   // primary tab, so it is never in `alumniTabs`.
@@ -793,12 +795,29 @@ export default function DashboardClient({
             <div className="flex items-center gap-3">
               <div className="relative">
                 <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-500/30 blur-lg" />
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
+                {hasLogo ? (
+                  /* Chapter-uploaded logo (white-label). */
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={imageSrc(logoUrl, { w: 80, h: 80, crop: "limit" })}
+                    alt={fraternityName}
+                    className="w-10 h-10 rounded-xl object-contain bg-white ring-1 ring-maroon-900/20 shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)]"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                )}
               </div>
               <div>
-                <h1 className="text-lg font-bold text-maroon-900 leading-tight">Alumni Network Portal</h1>
+                <h1 className="text-lg font-bold text-maroon-900 leading-tight">
+                  {fraternityName && fraternityName !== "Your Chapter"
+                    ? `${fraternityName} Alumni`
+                    : "Alumni Network Portal"}
+                  {schoolLabel && (
+                    <span className="ml-2 text-xs font-semibold text-maroon-500 align-middle">{schoolLabel}</span>
+                  )}
+                </h1>
                 <p className="text-xs text-maroon-600">Welcome, {terms.member} {alumni.fullName}</p>
               </div>
             </div>

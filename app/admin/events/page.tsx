@@ -5,6 +5,8 @@ import { BrotherEventsSection } from "@/components/brother/brother-events-sectio
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { IconEvents } from "@/components/brand/icons";
 import { getCurrentSession } from "@/lib/auth";
+import { getSiteConfig } from "@/lib/site-config";
+import { CalcomEmbed } from "@/components/CalcomEmbed";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,12 @@ export default async function AdminEventsPage() {
     createdAt: e.createdAt.toISOString(),
     updatedAt: e.updatedAt.toISOString(),
   }));
+
+  // Chapter's optional Cal.com / Cal.diy scheduler handle. Set on
+  // /admin/settings → Calendar; blank = the CalcomEmbed self-hides so this
+  // surface is never a broken frame.
+  const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+  const calDiyUrl = cfg["calendar.calDiyUrl"] || "";
 
   return (
     <div className="container py-8">
@@ -65,6 +73,15 @@ export default async function AdminEventsPage() {
           <BrotherEventsSection />
         </section>
       )}
+
+      {/* Self-serve scheduling — the chapter's Cal.com / Cal.diy booker, shown to
+          brothers and visitors when a handle is configured. Self-hides otherwise. */}
+      <div className="mb-10">
+        <CalcomEmbed
+          calUrl={calDiyUrl}
+          subtitle="Grab a time with the chapter for rush coffees, interviews, and more."
+        />
+      </div>
 
       {isAdmin && (
         <section id="manage-events" aria-labelledby="admin-events-heading" className="scroll-mt-24">

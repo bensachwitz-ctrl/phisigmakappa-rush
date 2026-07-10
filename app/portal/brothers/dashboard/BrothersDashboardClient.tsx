@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { avatarSrc } from "@/lib/image-url";
+import { avatarSrc, imageSrc } from "@/lib/image-url";
 import {
   Users,
   CheckCircle,
@@ -556,7 +556,10 @@ export default function BrothersDashboardClient({
   const { push } = useToast();
   // Member-noun vocabulary (Brother/Sister/Member) for display copy. Route paths
   // under /portal/brothers stay as-is — only visible labels re-genders per org.
-  const { greekLetters, terms } = useChapterIdentity();
+  const { greekLetters, terms, logoUrl, schoolShort, schoolName, fraternityName } =
+    useChapterIdentity();
+  const hasLogo = !!(logoUrl && logoUrl.trim());
+  const schoolLabel = schoolShort || schoolName;
   const [activeTab, setActiveTab] = useState("overview");
 
   const [showPromoBanner, setShowPromoBanner] = useState(false);
@@ -1118,12 +1121,27 @@ export default function BrothersDashboardClient({
             <div className="flex items-center gap-3">
               <div className="relative">
                 <span aria-hidden className="absolute inset-0 -z-10 rounded-xl bg-maroon-500/30 blur-lg" />
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
-                  <Users className="w-5 h-5" />
-                </div>
+                {hasLogo ? (
+                  /* Chapter-uploaded logo (white-label). eslint-disable-next-line @next/next/no-img-element */
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={imageSrc(logoUrl, { w: 80, h: 80, crop: "limit" })}
+                    alt={fraternityName}
+                    className="w-10 h-10 rounded-xl object-contain bg-white ring-1 ring-maroon-900/20 shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)]"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-700 to-maroon-900 text-cream-50 flex items-center justify-center font-bold shadow-[0_6px_16px_-6px_rgba(10,24,56,0.6)] ring-1 ring-maroon-900/20">
+                    <Users className="w-5 h-5" />
+                  </div>
+                )}
               </div>
               <div>
-                <h1 className="text-lg font-bold text-maroon-900 leading-tight">{greekLetters} Portal</h1>
+                <h1 className="text-lg font-bold text-maroon-900 leading-tight">
+                  {greekLetters ? `${greekLetters} Portal` : `${terms.member} Portal`}
+                  {schoolLabel && (
+                    <span className="ml-2 text-xs font-semibold text-maroon-500 align-middle">{schoolLabel}</span>
+                  )}
+                </h1>
                 <p className="text-xs text-maroon-600">Active {terms.member} Workspace • {brother.name}</p>
               </div>
             </div>
