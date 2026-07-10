@@ -1,3 +1,5 @@
+import { isIP } from "node:net";
+import { lookup } from "node:dns/promises";
 import { sendEmail } from "@/lib/email";
 import { renderEmail } from "@/lib/email-template";
 import type { ChannelResult, NotifyChannel, NotifyMessage } from "./types";
@@ -104,17 +106,87 @@ export async function sendDiscord(msg: NotifyMessage, cfg: NotifyConfig): Promis
   return postJson("discord", cfg.discord.webhook, { content: plainText(msg).slice(0, 1900) });
 }
 
+/** True when a 32-bit IPv4 value falls in a loopback/private/link-local/reserved
+ *  range that must never be a webhook target. */
+function isPrivateIpv4(value: number): boolean {
+  const a = (value >>> 24) & 255;
+  const b = (value >>> 16) & 255;
+  if (a === 0) return true; // 0.0.0.0/8 ("this" network, incl. 0.0.0.0)
+  if (a === 127) return true; // loopback 127.0.0.0/8
+  if (a === 10) return true; // private 10.0.0.0/8
+  if (a === 172 && b >= 16 && b <= 31) return true; // private 172.16.0.0/12
+  if (a === 192 && b === 168) return true; // private 192.168.0.0/16
+  if (a === 169 && b === 254) return true; // link-local 169.254.0.0/16 (cloud metadata)
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+  if (a >= 224) return true; // multicast 224/4 + reserved 240/4
+  return false;
+}
+
+/**
+ * Parse an IPv4 literal in ANY of the notations the C resolver (inet_aton) — and
+ * therefore fetch/undici and getaddrinfo — accept: dotted-quad, but also decimal
+ * (2130706433), octal (0177.0.0.1), hex (0x7f.0.0.1 / 0x7f000001), and the
+ * 1-to-3-part shorthands. Returns the 32-bit value, or null when the host is not
+ * an IPv4 literal at all (a real DNS hostname). This is what defeats the encoded-
+ * IP SSRF bypasses that a naive "startsWith('127.')" check misses.
+ */
+function parseLooseIpv4(host: string): number | null {
+  const parts = host.split(".");
+  if (parts.length < 1 || parts.length > 4) return null;
+  const nums: number[] = [];
+  for (const p of parts) {
+    if (p === "") return null;
+    let n: number;
+    if (/^0x[0-9a-f]+$/i.test(p)) n = parseInt(p, 16);
+    else if (/^0[0-7]+$/.test(p)) n = parseInt(p, 8);
+    else if (/^[0-9]+$/.test(p)) n = parseInt(p, 10);
+    else return null; // a non-numeric label → not an IPv4 literal
+    if (!Number.isFinite(n) || n < 0) return null;
+    nums.push(n);
+  }
+  const last = nums.length - 1;
+  for (let i = 0; i < last; i++) if (nums[i] > 255) return null;
+  if (nums[last] >= Math.pow(256, 4 - last)) return null; // final part holds the rest
+  let value = nums[last];
+  for (let i = 0; i < last; i++) value += nums[i] * Math.pow(256, 3 - i);
+  return value >>> 0;
+}
+
+/** Classify an IPv6 literal (already lowercased, no brackets) as private/reserved,
+ *  including ::1 loopback, :: unspecified, fc00::/7 ULA, fe80::/10 link-local, and
+ *  IPv4-mapped forms (::ffff:127.0.0.1 / ::ffff:7f00:1). */
+function isPrivateIpv6(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "::1" || h === "::") return true;
+  if (h.startsWith("fc") || h.startsWith("fd")) return true; // fc00::/7
+  if (/^fe[89ab]/.test(h)) return true; // fe80::/10
+  const dotted = /::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(h);
+  if (dotted) {
+    const v = parseLooseIpv4(dotted[1]);
+    return v != null && isPrivateIpv4(v);
+  }
+  const hex = /::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(h);
+  if (hex) {
+    const v = (((parseInt(hex[1], 16) << 16) >>> 0) + parseInt(hex[2], 16)) >>> 0;
+    return isPrivateIpv4(v);
+  }
+  return false;
+}
+
 /**
  * SSRF guard for the admin-supplied generic-webhook URL. The chapter pastes this
- * in /admin/settings, so it is attacker-influenceable and the request is made
- * server-side from our infra — an unvalidated fetch could be pointed at cloud
+ * in /admin/settings, so it is attacker-influenceable and the fetch is made
+ * server-side from our infra — an unvalidated request could be pointed at cloud
  * metadata (169.254.169.254), localhost, or an internal RFC-1918 host to probe /
- * exfiltrate. We require an https/http URL to a PUBLIC host and block loopback,
- * link-local, and private ranges. Hostname literals are checked directly; a
- * DNS-name is allowed through (we can't resolve here) but the obvious literal
- * targets an attacker would use are refused.
+ * exfiltrate. We: require http(s); reject localhost + internal TLDs; canonicalize
+ * an IP literal in ANY notation and reject private/reserved ranges (defeats the
+ * decimal/octal/hex/IPv6-mapped bypasses); and finally DNS-resolve a hostname,
+ * blocking if ANY resolved address is private/reserved (defeats DNS rebinding).
+ * Returns true = BLOCK. Best-effort: a DNS error fails OPEN (the literal bypasses
+ * are already refused above), so a transient resolver hiccup can't wedge a
+ * legitimate public webhook.
  */
-function isBlockedWebhookHost(rawUrl: string): boolean {
+async function isBlockedWebhookTarget(rawUrl: string): Promise<boolean> {
   let u: URL;
   try {
     u = new URL(rawUrl);
@@ -125,20 +197,28 @@ function isBlockedWebhookHost(rawUrl: string): boolean {
   const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, ""); // strip IPv6 brackets
   if (!host) return true;
   if (host === "localhost" || host.endsWith(".localhost")) return true;
-  if (host === "::1" || host === "0.0.0.0") return true;
-  // IPv6 loopback / unique-local / link-local shorthands.
-  if (host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")) return true;
-  // IPv4 literal → range checks (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16).
-  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
-  if (m) {
-    const [a, b] = [Number(m[1]), Number(m[2])];
-    if ([a, Number(m[2]), Number(m[3]), Number(m[4])].some((n) => n > 255)) return true;
-    if (a === 127) return true; // loopback
-    if (a === 10) return true; // private
-    if (a === 172 && b >= 16 && b <= 31) return true; // private
-    if (a === 192 && b === 168) return true; // private
-    if (a === 169 && b === 254) return true; // link-local (incl. cloud metadata)
-    if (a === 0) return true; // "this" network
+  if (host.endsWith(".local") || host.endsWith(".internal")) return true;
+
+  // IPv6 literal.
+  if (isIP(host) === 6 || host.includes(":")) return isPrivateIpv6(host);
+
+  // IPv4 literal in any notation (decimal/octal/hex/shorthand).
+  const v4 = parseLooseIpv4(host);
+  if (v4 != null) return isPrivateIpv4(v4);
+
+  // Real hostname → resolve and block if ANY address is private/reserved.
+  try {
+    const addrs = await lookup(host, { all: true });
+    for (const a of addrs) {
+      if (a.family === 4) {
+        const parsed = parseLooseIpv4(a.address);
+        if (parsed != null && isPrivateIpv4(parsed)) return true;
+      } else if (a.family === 6 && isPrivateIpv6(a.address.toLowerCase())) {
+        return true;
+      }
+    }
+  } catch {
+    // Fail open — encoded-IP literals are already blocked without DNS.
   }
   return false;
 }
@@ -146,8 +226,8 @@ function isBlockedWebhookHost(rawUrl: string): boolean {
 // ── Generic webhook (chapter's own endpoint) ─────────────────────────────────
 export async function sendWebhook(msg: NotifyMessage, cfg: NotifyConfig): Promise<ChannelResult> {
   if (!cfg.webhook.url) return { channel: "webhook", skipped: true, reason: NOT_CONFIGURED };
-  // SSRF: refuse a webhook aimed at a private/loopback/link-local host.
-  if (isBlockedWebhookHost(cfg.webhook.url)) {
+  // SSRF: refuse a webhook aimed at a private/loopback/link-local/rebinding host.
+  if (await isBlockedWebhookTarget(cfg.webhook.url)) {
     return { channel: "webhook", ok: false, error: "blocked-non-public-host" };
   }
   const headers: Record<string, string> = cfg.webhook.secret

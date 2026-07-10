@@ -1,5 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { calcomEmbedUrl } from "@/lib/calcom";
+
+// Self-hosted Cal instances are admitted only via an EXACT-match env allowlist
+// (never a prefix of the leftmost label). Register one for the tests below.
+const prevSelfHosted = process.env.CALCOM_SELF_HOSTED_HOSTS;
+beforeAll(() => {
+  process.env.CALCOM_SELF_HOSTED_HOSTS = "cal.phisigusc.com, book.chapter.example";
+});
+afterAll(() => {
+  if (prevSelfHosted === undefined) delete process.env.CALCOM_SELF_HOSTED_HOSTS;
+  else process.env.CALCOM_SELF_HOSTED_HOSTS = prevSelfHosted;
+});
 
 // Pins the Cal.com / Cal.diy handle resolver used by <CalcomEmbed> on the Events
 // surface. The single `calendar.calDiyUrl` settings field must accept three
@@ -32,7 +43,7 @@ describe("calcomEmbedUrl", () => {
     );
   });
 
-  it("passes a full self-hosted URL through, appending embed params", () => {
+  it("passes an env-allowlisted self-hosted URL through, appending embed params", () => {
     expect(calcomEmbedUrl("https://cal.phisigusc.com/meeting")).toBe(
       "https://cal.phisigusc.com/meeting?embed=true&theme=light",
     );
@@ -63,5 +74,22 @@ describe("calcomEmbedUrl", () => {
     expect(calcomEmbedUrl("https://app.cal.diy/phisig")).toBe(
       "https://app.cal.diy/phisig?embed=true&theme=light",
     );
+  });
+
+  // Host-allowlist must be EXACT / explicit-subdomain — never a prefix of the
+  // leftmost label (an unanchored startsWith("cal.") would admit cal.attacker.com).
+  it("admits exact + subdomain matches and env-listed self-hosted hosts", () => {
+    expect(calcomEmbedUrl("https://cal.com/x")).not.toBe("");
+    expect(calcomEmbedUrl("https://sub.cal.com/x")).not.toBe("");
+    expect(calcomEmbedUrl("https://book.chapter.example/x")).toBe(
+      "https://book.chapter.example/x?embed=true&theme=light",
+    );
+  });
+
+  it("rejects look-alike and unlisted hosts", () => {
+    expect(calcomEmbedUrl("https://cal.attacker.com/x")).toBe("");
+    expect(calcomEmbedUrl("https://notcal.com/x")).toBe("");
+    expect(calcomEmbedUrl("https://evilcal.com/x")).toBe("");
+    expect(calcomEmbedUrl("https://unlisted-self-hosted.example/x")).toBe("");
   });
 });

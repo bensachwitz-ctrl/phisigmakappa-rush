@@ -10,8 +10,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 //   3. EMAIL UNSUBSCRIBE (P2): notify email is routed through lib/email-template
 //      so it carries the CAN-SPAM opt-out footer.
 
-const mocks = vi.hoisted(() => ({ sendEmail: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  sendEmail: vi.fn(),
+  // DNS lookup seam for the SSRF hostname path. Default: a public address.
+  dnsLookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}));
 vi.mock("@/lib/email", () => ({ sendEmail: mocks.sendEmail }));
+vi.mock("node:dns/promises", () => ({ lookup: mocks.dnsLookup }));
 
 import { resolveNotifyConfig } from "@/lib/notify/config";
 import { sendWebhook, sendEmailChannel } from "@/lib/notify/channels";
@@ -69,11 +74,13 @@ describe("notify tenant isolation — no env fallback for per-destination channe
 describe("notify webhook SSRF guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.dnsLookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, text: async () => "" }));
   });
   afterEach(() => vi.unstubAllGlobals());
 
   const blocked = [
+    // Plain literals.
     "http://127.0.0.1/hook",
     "http://localhost/hook",
     "http://10.0.0.5/hook",
@@ -82,7 +89,16 @@ describe("notify webhook SSRF guard", () => {
     "http://169.254.169.254/latest/meta-data", // cloud metadata
     "http://[::1]/hook",
     "http://0.0.0.0/hook",
-    "ftp://example.com/hook", // non-http scheme
+    // Alternate IP encodings that a naive prefix check misses.
+    "http://2130706433/hook", // decimal 127.0.0.1
+    "http://0177.0.0.1/hook", // octal
+    "http://0x7f.0.0.1/hook", // hex octet
+    "http://0x7f000001/hook", // single hex
+    "http://127.1/hook", // shorthand 127.0.0.1
+    "http://[::ffff:127.0.0.1]/hook", // IPv4-mapped IPv6
+    "http://[::ffff:a9fe:a9fe]/hook", // IPv4-mapped metadata (169.254.169.254)
+    // Scheme / parse failures.
+    "ftp://example.com/hook",
     "not a url",
   ];
 
@@ -95,7 +111,15 @@ describe("notify webhook SSRF guard", () => {
     });
   }
 
-  it("allows a public host", async () => {
+  it("blocks a hostname that DNS-resolves to a private address (rebinding)", async () => {
+    mocks.dnsLookup.mockResolvedValue([{ address: "10.1.2.3", family: 4 }]);
+    const cfg = resolveNotifyConfig({ "notify.webhook.url": "https://rebind.attacker.example/gs" });
+    const r = await sendWebhook(baseMsg, cfg);
+    expect(r).toMatchObject({ channel: "webhook", ok: false });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("allows a public host (DNS resolves to a public address)", async () => {
     const cfg = resolveNotifyConfig({ "notify.webhook.url": "https://hooks.example.com/gs" });
     const r = await sendWebhook(baseMsg, cfg);
     expect(r).toMatchObject({ channel: "webhook", ok: true });
