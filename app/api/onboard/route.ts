@@ -553,14 +553,21 @@ export async function POST(req: Request) {
     const requiresPayment = Boolean(stripe) && isSubscriptionPlan;
 
     if (requiresPayment && stripe) {
-      // YEARLY requires a card (it bills $800 immediately — no trial). MONTHLY
-      // does NOT: it can launch card-free on a 30-day trial, matching the
-      // "no card required to launch" promise. Only YEARLY without a card is a
-      // hard stop. Throwing (not a bare return) routes through the outer catch so
-      // the freshly-created schema is dropped and the subdomain frees up cleanly.
-      if (normalizedPlan === "yearly" && !cardProvided) {
+      // CARD REQUIRED AT SIGNUP (P2a). Any plan that creates a charging Stripe
+      // subscription — MONTHLY or YEARLY — must have a card on file at signup.
+      // The owner's spec is "require a card, first month free, don't charge month
+      // 1": the free first month is delivered by the trial (trial_period_days),
+      // NOT by launching card-free, so the card is captured now and billing
+      // simply resumes after the free month ends. The SINGLE deliberate exception
+      // is a full-fee-waiver chapter — it owes $0 forever via the 100%-off coupon
+      // and genuinely never needs a card. Throwing (not a bare return) routes
+      // through the outer catch so the freshly-created schema is dropped and the
+      // subdomain frees up cleanly (no orphaned schema/Stripe objects).
+      if (!cardProvided && !isFeeWaiver) {
         throw new OnboardClientError(
-          `A payment method is required to launch on the Annual plan (billed immediately, no trial). Choose the Monthly plan to start your first month free with no card required.`,
+          normalizedPlan === "yearly"
+            ? `A payment method is required to launch on the Annual plan (billed $800 today, no trial).`
+            : `A payment method is required to start your chapter. You won't be charged during your first free month — your card is saved so billing can continue after it ends.`,
           400,
         );
       }
@@ -621,9 +628,30 @@ export async function POST(req: Request) {
         if (waiverCouponId) {
           subParams.discounts = [{ coupon: waiverCouponId }];
         }
+        // ANNUAL PROMO — NO REAL DISCOUNT WIRED (P1 / owner TODO). Marketing codes
+        // are trial-length perks (see the monthly extended trial above); they do
+        // NOT include a dollar-off on the Annual plan, and the welcome email now
+        // states the real $800 charge for annual (copy-truth). If you want annual
+        // promo codes to grant a genuine "$150 off first year", create a Stripe
+        // coupon (amount_off:15000, duration:"once", currency:"usd") in your
+        // account, expose its id via env (e.g. STRIPE_ANNUAL_PROMO_COUPON_ID), and
+        // attach it here for yearly + isPromoValid — then update the yearly email
+        // copy to the discounted total. Until that coupon exists, we do NOT attach
+        // a fabricated coupon id (it would error) and we do NOT promise a discount.
 
         if (normalizedPlan === "monthly") {
           subParams.trial_period_days = 30; // first month free
+          // MARKETING-PROMO EXTENDED TRIAL (P1). The marketing codes
+          // (GREEKFREE / WELCOME100 / SILICON) promise "3 months free total" in
+          // the welcome email. Deliver that as a REAL Stripe effect instead of an
+          // empty copy claim: extend this platform subscription's free trial to
+          // 90 days so the chapter is genuinely not charged for the first three
+          // months — matching the email exactly (the extended trial IS the perk,
+          // so no coupon is needed). A fee-waiver chapter is already $0 forever
+          // via the coupon, so leave its trial at 30; non-promo monthly stays 30.
+          if (isPromoValid && !isFeeWaiver) {
+            subParams.trial_period_days = 90; // 3 months free total (marketing promo)
+          }
           // A fully-waived subscription needs no card ever ($0 invoices), so do
           // NOT arm the "cancel if no payment method at trial end" behavior — that
           // would tear down a legitimately free chapter's subscription. Only the
@@ -803,7 +831,7 @@ export async function POST(req: Request) {
         ? `Promo code <strong>${escHtml(promoCode)}</strong> is applied to your chapter — <strong>100% off, all fees waived</strong>. Your monthly platform fee AND every $200 rush-cycle fee are fully covered, so you'll never be charged. Full access to every feature, no card required.`
         : normalizedPlan === "yearly"
           ? isPromoValid
-            ? `You're on the <strong>Annual plan — $800/year</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you'll receive <strong>$150 off your first year</strong> ($650 total)! Your card was charged today and includes every rush-cycle fee for the year.`
+            ? `You're on the <strong>Annual plan — $800/year</strong>, charged today, which includes every rush-cycle fee. Promo code <strong>${escHtml(promoCode)}</strong> is noted on your account — annual pricing is already all-inclusive at $800, so <strong>your total today is $800</strong>. Full access to every feature.`
             : `You're on the <strong>Annual plan — $800/year</strong>, charged today, which includes every rush-cycle fee. Full access to every feature.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
@@ -817,7 +845,7 @@ export async function POST(req: Request) {
         ? `Promo code ${promoCode} applied: 100% off, all fees waived. Your monthly platform fee and every $200 rush-cycle fee are fully covered - you'll never be charged. Full access, no card required.`
         : normalizedPlan === "yearly"
           ? isPromoValid
-            ? `You're on the Annual plan — $800/year. Promo code ${promoCode} applied: $150 off your first year ($650 total). Charged today, includes all rush fees.`
+            ? `You're on the Annual plan — $800/year, charged today, includes all rush fees. Promo code ${promoCode} is noted, but annual pricing is already all-inclusive at $800 — your total today is $800.`
             : "You're on the Annual plan — $800/year, charged today, includes all rush fees."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."

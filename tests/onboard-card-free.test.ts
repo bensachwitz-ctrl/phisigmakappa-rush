@@ -1,23 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------------------------------------------------------------------------
-// POST /api/onboard — CARD-FREE MONTHLY provisioning + YEARLY card requirement.
-//
-// CARD-REQUIRED-TO-PUBLISH: a card-free MONTHLY signup is fully PROVISIONED (the
-// founder can log into /admin) but its PUBLIC subdomain does NOT go live until
-// billing is added. So this signup:
-//   • creates a single trialing subscription with NO payment method and
-//     trial_settings.end_behavior.missing_payment_method="cancel" (never silently
-//     charges), skipping paymentMethods.attach / customers.update + the rush sub;
-//   • reserves + finalizes the central registry row with isActive=FALSE (public
-//     subdomain not yet live — it publishes later when billing lands);
-//   • seeds the tenant "billing.pendingActivation"="true" flag so the public page
-//     shows "launching soon — billing setup in progress"; and
-//   • redirects the founder to /admin/billing (the "add billing to publish" step).
-//   • MONTHLY with a paymentMethodId is billing-ready → live (onboard-stripe.test).
-//   • YEARLY without a paymentMethodId is a hard 400 (it bills $800 today).
-// The webhook side (adding billing later flips isActive=true) is covered in
-// platform-billing-publish.test.ts.
+// POST /api/onboard — CARD REQUIRED at signup for any charging subscription
+// plan (P2a). The owner's spec is "require a card, first month free, don't
+// charge month 1": the free first month is delivered by the trial
+// (trial_period_days), NOT by launching card-free. So the SERVER now rejects a
+// subscription-plan signup (monthly OR yearly) that arrives without a
+// paymentMethodId — closing the direct-API hole where a card-free monthly POST
+// still provisioned a dark (isActive=false) chapter.
+//   • MONTHLY without a card  → hard 400 (was a card-free "dark launch").
+//   • YEARLY  without a card  → hard 400 (it bills $800 today, no trial).
+//   • MONTHLY / YEARLY with a card → provisioned + billed (onboard-stripe /
+//     onboard-plans cover the happy path).
+// The SINGLE deliberate exception is a full-fee-waiver chapter (owes $0 forever
+// via the 100%-off coupon); it is not exercised here (see promo-fee-waiver).
+// Both rejections happen AFTER schema creation and roll the schema back cleanly,
+// and neither creates a Stripe customer/subscription.
 // ---------------------------------------------------------------------------
 
 const mocks = vi.hoisted(() => ({
@@ -119,28 +117,30 @@ function baseBody(overrides: Record<string, unknown>) {
   };
 }
 
-describe("POST /api/onboard — card-free MONTHLY launch", () => {
+function issuedDropSchema(): boolean {
+  return mocks.mockExecuteRawUnsafe.mock.calls
+    .map((c) => String(c[0]))
+    .some((sql) => /DROP SCHEMA IF EXISTS/i.test(sql));
+}
+
+describe("POST /api/onboard — MONTHLY without a card is rejected (P2a)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.mockTenantFindUnique.mockResolvedValue(null);
     mocks.mockExecuteRawUnsafe.mockResolvedValue(true);
     mocks.mockTenantCreate.mockResolvedValue({ id: "tenant-cf" });
     mocks.mockTenantUpdate.mockResolvedValue({ id: "tenant-cf" });
+    mocks.mockTenantDelete.mockResolvedValue({ id: "tenant-cf" });
     mocks.mockBrotherCreate.mockResolvedValue({ id: "brother-cf" });
     mocks.mockPortalUserCreate.mockResolvedValue({ id: "portal-cf" });
     mocks.mockSendEmail.mockResolvedValue({ ok: true });
     mocks.mockSendSalesEmail.mockResolvedValue({ ok: true });
     mocks.mockUpsert.mockResolvedValue(true);
-    mocks.mockStripeCustomersCreate.mockResolvedValue({ id: "cust_cf" });
-    mocks.mockStripePricesList.mockResolvedValue({ data: [{ id: "price_cf" }] });
-    mocks.mockStripeSubscriptionsCreate.mockResolvedValue({
-      id: "sub_cf",
-      status: "trialing",
-      trial_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-    });
+    mocks.mockStripeSubscriptionsCancel.mockResolvedValue({ id: "sub_x", status: "canceled" });
+    mocks.mockStripeCustomersDel.mockResolvedValue({ id: "cust_x", deleted: true });
   });
 
-  it("launches monthly without a card: one trialing sub, no attach/update, safe trial_settings", async () => {
+  it("rejects a card-free monthly signup (400), creates no Stripe customer/subscription, and rolls back the schema", async () => {
     const req = new Request("https://greekstack.vercel.app/api/onboard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -148,64 +148,18 @@ describe("POST /api/onboard — card-free MONTHLY launch", () => {
     });
 
     const res = await POST(req);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.ok).toBe(true);
+    expect(body.ok).toBe(false);
+    expect(String(body.error)).toMatch(/payment method is required/i);
 
-    // A customer is still created (so the chapter can add a card later)...
-    expect(mocks.mockStripeCustomersCreate).toHaveBeenCalledTimes(1);
-    // ...but with no card there is nothing to attach or set as default.
-    expect(mocks.mockStripePaymentMethodsAttach).not.toHaveBeenCalled();
-    expect(mocks.mockStripeCustomersUpdate).not.toHaveBeenCalled();
+    // The card is required BEFORE any Stripe object is created — no customer,
+    // no subscription (so nothing is billed and nothing needs Stripe rollback).
+    expect(mocks.mockStripeCustomersCreate).not.toHaveBeenCalled();
+    expect(mocks.mockStripeSubscriptionsCreate).not.toHaveBeenCalled();
 
-    // Exactly ONE subscription (no rush add-on without a card).
-    expect(mocks.mockStripeSubscriptionsCreate).toHaveBeenCalledTimes(1);
-    const subArg = mocks.mockStripeSubscriptionsCreate.mock.calls[0][0];
-    expect(subArg.trial_period_days).toBe(30);
-    // Safe end-behavior: cancel (never silently charge) if no PM by trial end.
-    expect(subArg.trial_settings?.end_behavior?.missing_payment_method).toBe("cancel");
-
-    // CARD-REQUIRED-TO-PUBLISH — a card-free monthly chapter is provisioned but
-    // its PUBLIC subdomain is NOT live yet: the reserved registry row is created
-    // with isActive=false...
-    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          subdomain: "freelaunch",
-          isActive: false,
-          plan: "monthly",
-        }),
-      }),
-    );
-    // ...and the final row update KEEPS isActive=false (still not publicly live),
-    // while recording the customer + trialing status under the monthly plan.
-    expect(mocks.mockTenantUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { subdomain: "freelaunch" },
-        data: expect.objectContaining({
-          isActive: false,
-          stripeCustomerId: "cust_cf",
-          stripeSubscriptionId: "sub_cf",
-          subscriptionStatus: "trialing",
-          plan: "monthly",
-        }),
-      }),
-    );
-
-    // The pending-publication signal is seeded in the tenant schema so app/page.tsx
-    // shows the "launching soon — billing setup in progress" page (not the
-    // operator-suspend page) and the webhook can clear it on publish.
-    expect(mocks.mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { key: "billing.pendingActivation" },
-        update: { value: "true" },
-        create: { key: "billing.pendingActivation", value: "true" },
-      }),
-    );
-
-    // The founder is redirected to /admin/billing (the "add billing to publish"
-    // step), NOT straight to the dashboard.
-    expect(String(body.url)).toMatch(/\/admin\/billing$/);
+    // The half-created schema is rolled back so the subdomain frees up cleanly.
+    expect(issuedDropSchema()).toBe(true);
   });
 });
 
@@ -215,6 +169,9 @@ describe("POST /api/onboard — YEARLY still requires a card", () => {
     mocks.mockTenantFindUnique.mockResolvedValue(null);
     mocks.mockExecuteRawUnsafe.mockResolvedValue(true);
     mocks.mockUpsert.mockResolvedValue(true);
+    mocks.mockTenantCreate.mockResolvedValue({ id: "tenant-y" });
+    mocks.mockTenantUpdate.mockResolvedValue({ id: "tenant-y" });
+    mocks.mockTenantDelete.mockResolvedValue({ id: "tenant-y" });
     mocks.mockBrotherCreate.mockResolvedValue({ id: "b" });
     mocks.mockPortalUserCreate.mockResolvedValue({ id: "p" });
     mocks.mockStripeSubscriptionsCancel.mockResolvedValue({ id: "sub_x", status: "canceled" });
@@ -235,9 +192,6 @@ describe("POST /api/onboard — YEARLY still requires a card", () => {
     expect(String(body.error)).toMatch(/payment method is required|Annual plan/i);
     expect(mocks.mockStripeSubscriptionsCreate).not.toHaveBeenCalled();
     // The half-created schema is rolled back (DROP SCHEMA issued on the central db).
-    const dropped = mocks.mockExecuteRawUnsafe.mock.calls
-      .map((c) => String(c[0]))
-      .some((sql) => /DROP SCHEMA IF EXISTS/i.test(sql));
-    expect(dropped).toBe(true);
+    expect(issuedDropSchema()).toBe(true);
   });
 });
