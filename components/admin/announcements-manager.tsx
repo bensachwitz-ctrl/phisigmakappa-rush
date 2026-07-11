@@ -22,6 +22,13 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DraftWithAI } from "@/components/admin/draft-with-ai";
+import { RichTextEditor, RichTextContent } from "@/components/ui/rich-text-editor";
+import { isRichTextEmpty } from "@/lib/rich-text";
+
+/** True when a stored body is rich HTML (vs a legacy plain-text announcement). */
+function looksLikeHtml(s: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(s);
+}
 
 type Announcement = {
   id: string;
@@ -108,7 +115,7 @@ export function AnnouncementsManager({
   }
 
   async function save() {
-    if (!form.title.trim() || !form.body.trim()) {
+    if (!form.title.trim() || isRichTextEmpty(form.body)) {
       push({ title: "Title and body required", variant: "destructive" });
       return;
     }
@@ -242,7 +249,11 @@ export function AnnouncementsManager({
                       </Badge>
                     </div>
                     <h3 className="mt-2 text-lg font-semibold tracking-tight">{a.title}</h3>
-                    <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{a.body}</p>
+                    {looksLikeHtml(a.body) ? (
+                      <RichTextContent html={a.body} className="mt-1.5 text-sm text-muted-foreground leading-relaxed" />
+                    ) : (
+                      <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{a.body}</p>
+                    )}
                     <div className="mt-3 text-xs text-muted-foreground">
                       {a.author?.name ? `Posted by ${a.author.name} · ` : ""}
                       {format(new Date(a.createdAt), "MMM d, yyyy 'at' h:mm a")}
@@ -288,10 +299,10 @@ export function AnnouncementsManager({
                   onDraft={(text) => setForm((f) => ({ ...f, body: text }))}
                 />
               </div>
-              <Textarea
+              <RichTextEditor
                 value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                rows={5}
+                onChange={(html) => setForm((f) => ({ ...f, body: html }))}
+                ariaLabel="Announcement body"
                 placeholder="Hey brothers - chapter is moved to Tuesday 7pm at the house. Bring dues if you haven't paid yet."
               />
             </div>

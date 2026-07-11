@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTenantClient, centralDb } from "@/lib/prisma";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { loadMemberStanding } from "@/lib/points-server";
 import { getEntitlement } from "@/lib/entitlement";
@@ -603,7 +604,8 @@ async function handleGet(req: Request): Promise<NextResponse> {
       announcements: announcements.map((a) => ({
         id: a.id,
         title: a.title,
-        body: a.body,
+        // Native app renders plain text — downgrade any rich (HTML) body.
+        body: htmlToPlainText(a.body),
         pinned: a.pinned,
         createdAt: a.createdAt.toISOString(),
         authorName: a.author?.name || "System",

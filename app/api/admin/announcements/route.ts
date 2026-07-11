@@ -5,6 +5,7 @@ import { isAdminAuthed, getCurrentBrotherId } from "@/lib/auth";
 import { guardOfficer, withAdminArea } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
+import { sanitizeRichText, htmlToPlainText } from "@/lib/rich-text";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,7 +61,9 @@ export async function POST(req: Request) {
   const created = await prisma.announcement.create({
     data: {
       title: parsed.data.title,
-      body: parsed.data.body,
+      // Rich-text body: sanitize the (Tiptap) HTML server-side before storing —
+      // defense-in-depth so a direct POST can't persist a script/handler payload.
+      body: sanitizeRichText(parsed.data.body),
       audience: parsed.data.audience,
       pinned: parsed.data.pinned,
       pollId: parsed.data.pollId || undefined,
@@ -102,7 +105,8 @@ export async function POST(req: Request) {
       {
         event: "announcement.posted",
         title: created.title,
-        body: created.body,
+        // Downgrade the rich body to plain text for SMS/email/push channels.
+        body: htmlToPlainText(created.body),
         url: "/portal/brothers/dashboard",
       },
       recipients,
@@ -121,6 +125,8 @@ export async function PATCH(req: Request) {
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
   const { id, ...rest } = parsed.data;
+  // Sanitize the rich-text body on edit too (same defense-in-depth as create).
+  if (typeof rest.body === "string") rest.body = sanitizeRichText(rest.body);
   const before = await prisma.announcement.findUnique({
     where: { id },
     select: { title: true, pinned: true },

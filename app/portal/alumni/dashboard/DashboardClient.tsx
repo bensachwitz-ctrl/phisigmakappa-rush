@@ -32,6 +32,7 @@ import { PublicFooter } from "@/components/site/footer";
 import { NotifyPrefsCard } from "@/components/notify/notify-prefs-card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc, imageSrc } from "@/lib/image-url";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -1824,7 +1825,7 @@ export default function DashboardClient({
                           </Badge>
                         )}
                         <h4 className="font-bold text-maroon-900 text-sm pr-16">{a.title}</h4>
-                        <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{a.body}</p>
+                        <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{htmlToPlainText(a.body)}</p>
 
                         {a.poll && (
                           <div

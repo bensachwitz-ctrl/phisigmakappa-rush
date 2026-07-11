@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { avatarSrc, imageSrc } from "@/lib/image-url";
+import { htmlToPlainText } from "@/lib/rich-text";
 import {
   Users,
   CheckCircle,
@@ -1571,7 +1572,7 @@ export default function BrothersDashboardClient({
                             </Badge>
                           )}
                           <h4 className="font-bold text-maroon-900 text-sm pr-16">{a.title}</h4>
-                          <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{a.body}</p>
+                          <p className="text-xs text-maroon-600 line-clamp-2 mt-1.5 leading-relaxed">{htmlToPlainText(a.body)}</p>
                           
                           {a.poll && (
                             <div 
