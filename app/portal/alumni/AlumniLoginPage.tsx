@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, Lock, UserPlus } from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconMail as Mail, IconLock as Lock, IconUserPlus as UserPlus } from "@/components/brand/icons";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import { GreekstackLogo } from "@/components/brand/greekstack-logo";
 import { PortalForgotOtpFlow } from "@/components/portal/forgot-password-otp";

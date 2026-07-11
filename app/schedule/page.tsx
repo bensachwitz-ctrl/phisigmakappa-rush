@@ -8,7 +8,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Scheduler } from "@/components/site/scheduler";
-import { CalendarDays, ShieldCheck, MailCheck } from "lucide-react";
+import { IconCalendar as CalendarDays, IconShieldCheck as ShieldCheck, IconMail as MailCheck } from "@/components/brand/icons";
 import { IconArrowLeft } from "@/components/brand/icons";
 import type { Metadata } from "next";
 

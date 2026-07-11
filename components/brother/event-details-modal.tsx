@@ -10,10 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
-import {
-  CheckCircle2, XCircle, HelpCircle, Clock, MapPin, Shirt,
-  Lock, Globe, Loader2, Users, Heart, Crown, PartyPopper, Calendar,
-} from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconHelp as HelpCircle, IconClock as Clock, IconPin as MapPin, IconShirt as Shirt, IconLock as Lock, IconGlobe as Globe, IconSpinner as Loader2, IconMembers as Users, IconHeart as Heart, IconCrown as Crown, IconParty as PartyPopper, IconCalendar as Calendar } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { formatDate, formatTime } from "@/lib/utils";
 import { RichTextContent } from "@/components/ui/rich-text-editor";

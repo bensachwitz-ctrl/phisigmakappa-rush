@@ -12,7 +12,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import AlumniJoinForm from "./_form";
-import { ArrowLeft, Users } from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconMembers as Users } from "@/components/brand/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";

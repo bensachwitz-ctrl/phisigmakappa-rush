@@ -10,7 +10,7 @@
 // lives only in this browser's localStorage.
 
 import * as React from "react";
-import { Sparkles, X } from "lucide-react";
+import { IconSpark as Sparkles, IconClose as X } from "@/components/brand/icons";
 import changelogData from "@/content/changelog.json";
 import {
   latestVersion,

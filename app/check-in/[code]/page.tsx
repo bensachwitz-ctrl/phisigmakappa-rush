@@ -6,7 +6,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { Wordmark } from "@/components/brand/wordmark";
 import { CheckInForm } from "@/components/site/check-in-form";
-import { CalendarDays, MapPin, Clock } from "lucide-react";
+import { IconCalendar as CalendarDays, IconPin as MapPin, IconClock as Clock } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

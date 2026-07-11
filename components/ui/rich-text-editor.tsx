@@ -17,9 +17,7 @@ import * as React from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import {
-  Bold, Italic, Heading2, List, ListOrdered, Quote, Link2, Undo2, Redo2,
-} from "lucide-react";
+import { IconBold as Bold, IconItalic as Italic, IconHeading as Heading2, IconList as List, IconListOrdered as ListOrdered, IconQuote as Quote, IconLink as Link2, IconUndo as Undo2, IconRedo as Redo2 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { sanitizeRichText } from "@/lib/rich-text";
 

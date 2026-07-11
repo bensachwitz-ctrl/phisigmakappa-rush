@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  Vote, Lock, CheckCircle2, Loader2, ArrowLeft, Trophy, ShieldCheck, AlertTriangle, Users,
-} from "lucide-react";
+import { IconBallot as Vote, IconLock as Lock, IconCheckCircle as CheckCircle2, IconSpinner as Loader2, IconArrowLeft as ArrowLeft, IconStanding as Trophy, IconShieldCheck as ShieldCheck, IconAlert as AlertTriangle, IconMembers as Users } from "@/components/brand/icons";
 
 /**
  * Member officer-elections voter (brothers portal). Mirrors the maroon/cream

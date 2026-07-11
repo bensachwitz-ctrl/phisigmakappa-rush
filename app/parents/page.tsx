@@ -11,10 +11,7 @@ import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
-import {
-  ShieldCheck, ArrowLeft, Mail, Phone, MapPin, GraduationCap,
-  HandHeart, Lock, FileText, Users, Heart, Building2, ArrowRight,
-} from "lucide-react";
+import { IconShieldCheck as ShieldCheck, IconArrowLeft as ArrowLeft, IconMail as Mail, IconPhone as Phone, IconPin as MapPin, IconGraduation as GraduationCap, IconService as HandHeart, IconLock as Lock, IconFileText as FileText, IconMembers as Users, IconHeart as Heart, IconBuilding as Building2, IconArrowRight as ArrowRight } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

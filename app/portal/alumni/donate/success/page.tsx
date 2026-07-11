@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight, Clock, Heart, AlertCircle } from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconArrowRight as ArrowRight, IconClock as Clock, IconHeart as Heart, IconAlertCircle as AlertCircle } from "@/components/brand/icons";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 

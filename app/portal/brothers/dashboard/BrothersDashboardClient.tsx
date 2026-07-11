@@ -6,39 +6,7 @@ import Link from "next/link";
 import { avatarSrc, imageSrc } from "@/lib/image-url";
 import { htmlToPlainText } from "@/lib/rich-text";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import {
-  Users,
-  CheckCircle,
-  Calendar,
-  DollarSign,
-  Settings,
-  Activity,
-  FileText,
-  Check,
-  Search,
-  Building,
-  LogOut,
-  Mail,
-  Phone,
-  MessageSquare,
-  ShieldAlert,
-  ChevronRight,
-  Plus,
-  Lock,
-  Upload,
-  Download,
-  ExternalLink,
-  Clock,
-  Clipboard,
-  AlertCircle,
-  Award,
-  Heart,
-  HelpCircle,
-  ChevronDown,
-  Vote,
-  Smartphone,
-  type LucideIcon,
-} from "lucide-react";
+import { IconMembers as Users, IconCheckCircle as CheckCircle, IconCalendar as Calendar, IconDollarSign as DollarSign, IconSettings as Settings, IconActivity as Activity, IconFileText as FileText, IconCheck as Check, IconSearch as Search, IconBuilding as Building, IconLogOut as LogOut, IconMail as Mail, IconPhone as Phone, IconMessage as MessageSquare, IconRiskDesk as ShieldAlert, IconChevronRight as ChevronRight, IconPlus as Plus, IconLock as Lock, IconUpload as Upload, IconDownload as Download, IconExternal as ExternalLink, IconClock as Clock, IconClipboard as Clipboard, IconAlertCircle as AlertCircle, IconAward as Award, IconHeart as Heart, IconHelp as HelpCircle, IconChevronDown as ChevronDown, IconBallot as Vote, IconSmartphone as Smartphone, type GsIcon as LucideIcon } from "@/components/brand/icons";
 import { isNative } from "@/lib/native-bridge";
 import { isOfficerPosition } from "@/lib/member-capabilities";
 import { Button } from "@/components/ui/button";

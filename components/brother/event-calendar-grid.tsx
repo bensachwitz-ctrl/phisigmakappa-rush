@@ -1,20 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  Users,
-  Crown,
-  PartyPopper,
-  Calendar as CalendarIcon,
-  CheckCircle2,
-  HelpCircle,
-  XCircle,
-  MapPin,
-  Loader2,
-} from "lucide-react";
+import { IconChevronLeft as ChevronLeft, IconChevronRight as ChevronRight, IconHeart as Heart, IconMembers as Users, IconCrown as Crown, IconParty as PartyPopper, IconCalendar as CalendarIcon, IconCheckCircle as CheckCircle2, IconHelp as HelpCircle, IconXCircle as XCircle, IconPin as MapPin, IconSpinner as Loader2 } from "@/components/brand/icons";
 import { cn, formatTime } from "@/lib/utils";
 import { EVENT_CATEGORIES } from "@/components/admin/events-manager";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";

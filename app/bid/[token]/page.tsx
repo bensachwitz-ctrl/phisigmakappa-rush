@@ -6,7 +6,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { Wordmark } from "@/components/brand/wordmark";
 import { BidResponseForm } from "@/components/site/bid-response-form";
 import { ConfettiPayoff } from "@/components/ui/confetti";
-import { CheckCircle2, XCircle, Clock, ShieldCheck } from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconClock as Clock, IconShieldCheck as ShieldCheck } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

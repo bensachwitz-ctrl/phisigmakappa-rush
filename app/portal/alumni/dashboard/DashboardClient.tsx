@@ -2,30 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Users, 
-  GraduationCap, 
-  MapPin, 
-  CheckCircle, 
-  Calendar, 
-  Vote, 
-  Search,
-  Check,
-  Building,
-  LogOut,
-  Mail,
-  Phone,
-  ShieldAlert,
-  ChevronRight,
-  BookOpen,
-  Heart,
-  Briefcase,
-  Linkedin,
-  type LucideIcon,
-  Plus,
-  Award,
-  MessageSquare,
-} from "lucide-react";
+import { IconMembers as Users, IconGraduation as GraduationCap, IconPin as MapPin, IconCheckCircle as CheckCircle, IconCalendar as Calendar, IconBallot as Vote, IconSearch as Search, IconCheck as Check, IconBuilding as Building, IconLogOut as LogOut, IconMail as Mail, IconPhone as Phone, IconRiskDesk as ShieldAlert, IconChevronRight as ChevronRight, IconLibrary as BookOpen, IconHeart as Heart, IconBriefcase as Briefcase, IconLinkedin as Linkedin, type GsIcon as LucideIcon, IconPlus as Plus, IconAward as Award, IconMessage as MessageSquare } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublicFooter } from "@/components/site/footer";

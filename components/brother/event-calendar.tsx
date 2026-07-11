@@ -11,20 +11,7 @@ import { htmlToPlainText } from "@/lib/rich-text";
 import { avatarSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import { IconSpark } from "@/components/brand/icons";
-import {
-  CalendarDays,
-  MapPin,
-  Lock,
-  Globe,
-  CheckCircle2,
-  HelpCircle,
-  XCircle,
-  Users,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Shirt,
-  } from "lucide-react";
+import { IconCalendar as CalendarDays, IconPin as MapPin, IconLock as Lock, IconGlobe as Globe, IconCheckCircle as CheckCircle2, IconHelp as HelpCircle, IconXCircle as XCircle, IconMembers as Users, IconChevronDown as ChevronDown, IconChevronUp as ChevronUp, IconSpinner as Loader2, IconShirt as Shirt } from "@/components/brand/icons";
 
 type RsvpStatus = "GOING" | "NOT_GOING" | "MAYBE";
 

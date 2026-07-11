@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Plus,
-  Trash2,
-  Lock,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-} from "lucide-react";
+import { IconPlus as Plus, IconTrash as Trash2, IconLock as Lock, IconClock as Clock, IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconSpinner as Loader2 } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

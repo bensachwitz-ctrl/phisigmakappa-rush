@@ -12,21 +12,7 @@ import { PublicNav } from "@/components/site/nav";
 // tree, which silently broke (omitted) the footer on this screen.
 import { PublicFooterClient } from "@/components/site/footer-client";
 import { Button } from "@/components/ui/button";
-import { 
-  GraduationCap, 
-  ArrowLeft, 
-  ArrowRight, 
-  User, 
-  Mail, 
-  Lock, 
-  MapPin, 
-  Briefcase, 
-  Phone, 
-  CheckCircle,
-  Calendar,
-  BookOpen,
-  Award
-} from "lucide-react";
+import { IconGraduation as GraduationCap, IconArrowLeft as ArrowLeft, IconArrowRight as ArrowRight, IconUser as User, IconMail as Mail, IconLock as Lock, IconPin as MapPin, IconBriefcase as Briefcase, IconPhone as Phone, IconCheckCircle as CheckCircle, IconCalendar as Calendar, IconLibrary as BookOpen, IconAward as Award } from "@/components/brand/icons";
 
 export default function AlumniRegisterPage() {
   const router = useRouter();

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowLeft, Calendar, FileText, Mail } from "lucide-react";
+import { IconUserPlus as UserPlus, IconArrowLeft as ArrowLeft, IconCalendar as Calendar, IconFileText as FileText, IconMail as Mail } from "@/components/brand/icons";
 import { chapterLiveGate } from "@/components/site/chapter-status";
 import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { getSiteConfig } from "@/lib/site-config";

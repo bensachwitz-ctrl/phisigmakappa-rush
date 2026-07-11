@@ -15,14 +15,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  GraduationCap,
-  MapPin,
-  Briefcase,
-  Linkedin,
-  Lock,
-} from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconGraduation as GraduationCap, IconPin as MapPin, IconBriefcase as Briefcase, IconLinkedin as Linkedin, IconLock as Lock } from "@/components/brand/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";

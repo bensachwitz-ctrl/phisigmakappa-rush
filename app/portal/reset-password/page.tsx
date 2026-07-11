@@ -9,7 +9,7 @@ import { PublicNav } from "@/components/site/nav";
 // tree, which silently broke (omitted) the footer on this screen.
 import { PublicFooterClient } from "@/components/site/footer-client";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowLeft, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { IconLock as Lock, IconArrowLeft as ArrowLeft, IconCheckCircle as CheckCircle2, IconAlertCircle as AlertCircle, IconRefresh as RefreshCw } from "@/components/brand/icons";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 
 // NOTE: force-dynamic route config lives in the sibling server-component

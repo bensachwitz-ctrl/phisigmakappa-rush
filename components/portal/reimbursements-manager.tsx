@@ -2,19 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  DollarSign,
-  Plus,
-  Receipt,
-  FileText,
-  ExternalLink,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconDollarSign as DollarSign, IconPlus as Plus, IconReceipt as Receipt, IconFileText as FileText, IconExternal as ExternalLink, IconClock as Clock, IconCheckCircle as CheckCircle, IconXCircle as XCircle, IconWallet as Wallet, type GsIcon as LucideIcon } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";

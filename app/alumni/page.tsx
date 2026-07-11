@@ -19,7 +19,7 @@ import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, MapPin, Briefcase, ArrowRight } from "lucide-react";
+import { IconGraduation as GraduationCap, IconPin as MapPin, IconBriefcase as Briefcase, IconArrowRight as ArrowRight } from "@/components/brand/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";

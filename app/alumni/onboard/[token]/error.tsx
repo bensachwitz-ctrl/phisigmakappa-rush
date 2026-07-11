@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, XCircle } from "lucide-react";
+import { IconRefresh as RefreshCw, IconXCircle as XCircle } from "@/components/brand/icons";
 
 // Segment-scoped error boundary for the alumni invite-redemption flow.
 //

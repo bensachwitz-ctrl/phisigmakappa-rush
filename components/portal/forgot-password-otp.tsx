@@ -20,7 +20,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, KeyRound, Lock, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { IconMail as Mail, IconKey as KeyRound, IconLock as Lock, IconArrowLeft as ArrowLeft, IconCheckCircle as CheckCircle2 } from "@/components/brand/icons";
 
 type Step = "email" | "code" | "password" | "done";
 
