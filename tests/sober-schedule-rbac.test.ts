@@ -82,7 +82,9 @@ function primeSession(opts: {
   // POST data (no existing shift → create)
   mocks.soberShiftFindFirst.mockResolvedValue(null);
   mocks.soberShiftCreate.mockResolvedValue({ id: "shift-1", day: "Thursday", shiftHours: "22:00-00:00" });
-  mocks.brotherFindUnique.mockResolvedValue({ name: "Pledge One" });
+  // The POST handler now re-validates the target memberId resolves to a PLEDGE
+  // in this chapter before writing — so the happy-path fixture is a real pledge.
+  mocks.brotherFindUnique.mockResolvedValue({ name: "Pledge One", status: "PLEDGE" });
 }
 
 function postReq(body: Record<string, unknown>) {
@@ -166,6 +168,68 @@ describe("POST/GET /api/admin/sober-schedule — risk RBAC (P2b)", () => {
     primeSession({ isAdmin: true, brotherId: "admin", assignments: [] });
     const postRes = await POST(postReq(VALID_SHIFT));
     expect(postRes.status).toBe(200);
+    expect(mocks.soberShiftCreate).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── #67 security review — server-side PLEDGE validation on the WRITE path ──────
+//
+// The GET list and the scheduler dropdown only ever OFFER pledges, but a
+// risk:write officer (who is legitimately allowed to WRITE) can bypass the
+// client and POST an arbitrary memberId. Without a server-side check that would
+// create an out-of-spec sober-driver assignment pointing at a non-PLEDGE (or a
+// bogus id). These tests drive the REAL POST handler with a passing risk:write
+// officer and assert the memberId is validated against Brother.status === PLEDGE
+// BEFORE any upsert — so RBAC is satisfied but the row is still rejected.
+describe("POST /api/admin/sober-schedule — memberId must resolve to a PLEDGE (#67)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("a risk:write officer CANNOT assign an ACTIVE (non-pledge) brother", async () => {
+    primeSession({ isAdmin: false, brotherId: "risk-officer", assignments: assignment({ risk: "write" }) });
+    // Target memberId resolves to a real brother, but they're ACTIVE, not a PLEDGE.
+    mocks.brotherFindUnique.mockResolvedValue({ name: "Active Al", status: "ACTIVE" });
+
+    const res = await POST(postReq({ ...VALID_SHIFT, memberId: "active-al" }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.ok).toBe(false);
+    // No shift row may be created OR updated for an out-of-spec target.
+    expect(mocks.soberShiftCreate).not.toHaveBeenCalled();
+    expect(mocks.soberShiftUpdate).not.toHaveBeenCalled();
+  });
+
+  it("a risk:write officer CANNOT assign a bogus / nonexistent memberId", async () => {
+    primeSession({ isAdmin: false, brotherId: "risk-officer", assignments: assignment({ risk: "write" }) });
+    // Target memberId matches no brother in this chapter's schema.
+    mocks.brotherFindUnique.mockResolvedValue(null);
+
+    const res = await POST(postReq({ ...VALID_SHIFT, memberId: "does-not-exist" }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.ok).toBe(false);
+    expect(mocks.soberShiftCreate).not.toHaveBeenCalled();
+    expect(mocks.soberShiftUpdate).not.toHaveBeenCalled();
+  });
+
+  it("even a super-admin CANNOT assign a non-pledge (guard is not RBAC-bypassable)", async () => {
+    primeSession({ isAdmin: true, brotherId: "admin", assignments: [] });
+    mocks.brotherFindUnique.mockResolvedValue({ name: "Active Al", status: "ACTIVE" });
+
+    const res = await POST(postReq({ ...VALID_SHIFT, memberId: "active-al" }));
+    expect(res.status).toBe(400);
+    expect(mocks.soberShiftCreate).not.toHaveBeenCalled();
+    expect(mocks.soberShiftUpdate).not.toHaveBeenCalled();
+  });
+
+  it("a valid PLEDGE assignment by a risk:write officer still succeeds", async () => {
+    primeSession({ isAdmin: false, brotherId: "risk-officer", assignments: assignment({ risk: "write" }) });
+    // primeSession already returns a PLEDGE from brotherFindUnique.
+    const res = await POST(postReq(VALID_SHIFT));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
     expect(mocks.soberShiftCreate).toHaveBeenCalledTimes(1);
   });
 });

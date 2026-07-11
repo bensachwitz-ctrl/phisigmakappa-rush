@@ -98,6 +98,25 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = ShiftSchema.parse(body);
 
+    // SECURITY: only a PLEDGE may be assigned as sober driver. The GET list and
+    // the scheduler dropdown only ever OFFER pledges, but a risk:write officer
+    // can bypass the client and POST an arbitrary memberId — so re-validate the
+    // target here before writing. The `prisma` client is already scoped to the
+    // request's tenant SCHEMA, so this lookup can only see THIS chapter's
+    // brothers (no cross-tenant leak; there is no chapterId column to filter
+    // on). A missing member — or one whose status isn't PLEDGE — is rejected 400
+    // (mirrors the route's other bad-request responses) and NO shift is written.
+    const member = await prisma.brother.findUnique({
+      where: { id: parsed.memberId },
+      select: { name: true, status: true },
+    });
+    if (!member || member.status !== "PLEDGE") {
+      return NextResponse.json(
+        { ok: false, error: "Selected member is not an assignable pledge" },
+        { status: 400 },
+      );
+    }
+
     // Upsert the shift: we identify a shift uniquely by day and shiftHours
     // so we don't end up with duplicate slots on the same night.
     const existing = await prisma.soberDriverShift.findFirst({
@@ -125,16 +144,11 @@ export async function POST(req: Request) {
       });
     }
 
-    const member = await prisma.brother.findUnique({
-      where: { id: parsed.memberId },
-      select: { name: true },
-    });
-
     await audit({
       action: "SOBER_DRIVER_ASSIGNED",
       subjectType: "SoberDriver",
       subjectId: shift.id,
-      subjectName: member?.name || parsed.memberId,
+      subjectName: member.name || parsed.memberId,
       details: `${parsed.day} (${parsed.shiftHours})`,
       req,
     });
