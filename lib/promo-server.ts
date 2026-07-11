@@ -13,9 +13,12 @@
 // from env at call time so the operator can rotate/disable the code without a
 // deploy:
 //   FEE_WAIVER_CODES            comma-separated allowlist (case-insensitive).
-//                               UNSET → falls back to the single legacy code so
-//                               existing legitimate use keeps working; set it to
-//                               "" to disable the waiver entirely.
+//                               UNSET or "" → NO waiver code is granted (the
+//                               feature is OFF until explicitly configured); set
+//                               it to your active waiver code(s) to enable. There
+//                               is deliberately NO hardcoded fallback: an
+//                               unconfigured env must never default-grant a
+//                               forever-100%-off coupon.
 //   FEE_WAIVER_MAX_REDEMPTIONS  hard cap on how many chapters may ever redeem it
 //                               (default 5) — enforced on the Stripe coupon
 //                               (max_redemptions) in lib/platform-billing.
@@ -31,15 +34,20 @@
 
 import { isMarketingPromo } from "@/lib/promo";
 
-/**
- * Legacy full-fee-waiver code, used ONLY as the allowlist fallback when
- * FEE_WAIVER_CODES is unset — preserves the founder's existing free-forever
- * chapters without requiring an env change. Prefer setting FEE_WAIVER_CODES.
- */
-const LEGACY_FALLBACK_WAIVER_CODE = "bensachwitzrocks";
 const DEFAULT_MAX_REDEMPTIONS = 5;
 
-/** Allowlisted full-fee-waiver codes (lower-cased). Env-driven; legacy fallback when unset. */
+/**
+ * Allowlisted full-fee-waiver codes (lower-cased), read from FEE_WAIVER_CODES.
+ *
+ * REQUIRES EXPLICIT CONFIG. When FEE_WAIVER_CODES is UNSET (or blank) this
+ * returns an EMPTY allowlist — so NO code grants the 100%-off, duration:
+ * "forever" waiver by default. The prior implementation fell back to a hardcoded
+ * legacy code (`bensachwitzrocks`) whenever the env was unconfigured, which
+ * silently default-granted a forever-free coupon on any deploy that hadn't set
+ * the env. The waiver is a real, intended feature — but it must be turned ON
+ * deliberately by setting FEE_WAIVER_CODES (comma-separated, case-insensitive),
+ * never by omission.
+ */
 export function feeWaiverAllowlist(): string[] {
   const raw = process.env.FEE_WAIVER_CODES;
   if (typeof raw === "string" && raw.trim() !== "") {
@@ -48,8 +56,9 @@ export function feeWaiverAllowlist(): string[] {
       .map((c) => c.trim().toLowerCase())
       .filter(Boolean);
   }
-  // UNSET → legacy fallback (legitimate use preserved). "" → empty (disabled).
-  return typeof raw === "string" ? [] : [LEGACY_FALLBACK_WAIVER_CODE];
+  // UNSET or "" → empty allowlist (no fallback grant). The waiver stays OFF
+  // until the operator explicitly configures FEE_WAIVER_CODES.
+  return [];
 }
 
 /** Hard cap on total waiver redemptions (default 5). Enforced on the Stripe coupon. */

@@ -39,21 +39,31 @@ async function validate(code: unknown) {
   return res.json() as Promise<{ ok: boolean; valid: boolean; waiver: boolean }>;
 }
 
-describe("fee-waiver allowlist (env-driven, legacy fallback)", () => {
-  it("recognizes the legacy code when FEE_WAIVER_CODES is UNSET (legitimate use preserved)", () => {
+describe("fee-waiver allowlist (env-driven, REQUIRES explicit config)", () => {
+  it("grants NOTHING when FEE_WAIVER_CODES is UNSET (no hardcoded fallback)", () => {
+    // P2c: an unconfigured env must NOT default-grant the forever-100%-off
+    // coupon. The legacy `bensachwitzrocks` code no longer works by omission —
+    // the allowlist is empty until the operator explicitly sets the env.
     vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    expect(feeWaiverAllowlist()).toEqual([]);
+    expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
+    expect(isFeeWaiverPromo("BENSACHWITZROCKS")).toBe(false);
+  });
+
+  it("works when FEE_WAIVER_CODES is explicitly CONFIGURED (case/space-insensitive)", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     expect(feeWaiverAllowlist()).toEqual(["bensachwitzrocks"]);
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(true);
     expect(isFeeWaiverPromo("BENSACHWITZROCKS")).toBe(true);
     expect(isFeeWaiverPromo("  bensachwitzrocks  ")).toBe(true);
   });
 
-  it("honors a custom allowlist and rejects the legacy code once overridden", () => {
+  it("honors a custom multi-code allowlist and rejects codes outside it", () => {
     vi.stubEnv("FEE_WAIVER_CODES", "founder-2026, ops-comp");
     expect(feeWaiverAllowlist()).toEqual(["founder-2026", "ops-comp"]);
     expect(isFeeWaiverPromo("FOUNDER-2026")).toBe(true);
     expect(isFeeWaiverPromo("ops-comp")).toBe(true);
-    // The old hardcoded code no longer works once the allowlist is set.
+    // A code not on the configured allowlist never grants the waiver.
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
   });
 
@@ -63,8 +73,8 @@ describe("fee-waiver allowlist (env-driven, legacy fallback)", () => {
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
   });
 
-  it("rejects unknown / empty / non-string codes", () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+  it("rejects unknown / empty / non-string codes even when the env is configured", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     expect(isFeeWaiverPromo("WELCOME100")).toBe(false);
     expect(isFeeWaiverPromo("bensachwitz")).toBe(false);
     expect(isFeeWaiverPromo("")).toBe(false);
@@ -75,14 +85,14 @@ describe("fee-waiver allowlist (env-driven, legacy fallback)", () => {
 
 describe("fee-waiver expiry + redemption cap", () => {
   it("refuses an allowlisted code once past FEE_WAIVER_EXPIRES_AT", () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     vi.stubEnv("FEE_WAIVER_EXPIRES_AT", "2000-01-01T00:00:00Z");
     expect(feeWaiverRedeemBy()?.getTime()).toBe(Date.parse("2000-01-01T00:00:00Z"));
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
   });
 
   it("still accepts before an expiry that is in the future", () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     vi.stubEnv("FEE_WAIVER_EXPIRES_AT", "2999-01-01T00:00:00Z");
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(true);
   });
@@ -98,8 +108,8 @@ describe("fee-waiver expiry + redemption cap", () => {
 });
 
 describe("applyPromoToFees + isPromoValid", () => {
-  it("the waiver code zeroes BOTH fees (100% off)", () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+  it("a CONFIGURED waiver code zeroes BOTH fees (100% off)", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     const out = applyPromoToFees("bensachwitzrocks", FEES);
     expect(out).toEqual({ platformCents: 0, rushCents: 0, waived: true });
   });
@@ -109,11 +119,23 @@ describe("applyPromoToFees + isPromoValid", () => {
     expect(out).toEqual({ platformCents: 5000, rushCents: 20000, waived: false });
   });
 
-  it("isPromoValid accepts marketing codes AND a valid waiver", () => {
+  it("does NOT waive fees for the legacy code when the env is unset (no fallback grant)", () => {
     vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    const out = applyPromoToFees("bensachwitzrocks", FEES);
+    expect(out).toEqual({ platformCents: 5000, rushCents: 20000, waived: false });
+  });
+
+  it("isPromoValid accepts marketing codes AND a CONFIGURED waiver", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     expect(isPromoValid("WELCOME100")).toBe(true);
     expect(isPromoValid("bensachwitzrocks")).toBe(true);
     expect(isPromoValid("nope")).toBe(false);
+  });
+
+  it("isPromoValid still accepts marketing codes but NOT the waiver when env is unset", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    expect(isPromoValid("WELCOME100")).toBe(true);
+    expect(isPromoValid("bensachwitzrocks")).toBe(false);
   });
 });
 
@@ -146,10 +168,16 @@ describe("validate-promo endpoint mirrors the server rules", () => {
     expect(out).toMatchObject({ ok: true, valid: true, waiver: false });
   });
 
-  it("accepts the allowlisted waiver code and flags it as a waiver", async () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+  it("accepts a CONFIGURED waiver code and flags it as a waiver", async () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     const out = await validate("bensachwitzrocks");
     expect(out).toMatchObject({ ok: true, valid: true, waiver: true });
+  });
+
+  it("does NOT flag the waiver for the legacy code when the env is unset (no fallback grant)", async () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    const out = await validate("bensachwitzrocks");
+    expect(out).toMatchObject({ ok: true, valid: false, waiver: false });
   });
 
   it("rejects a random guessed code (client can't self-grant via the endpoint)", async () => {
@@ -163,8 +191,8 @@ describe("validate-promo endpoint mirrors the server rules", () => {
     expect(out).toMatchObject({ ok: true, valid: false, waiver: false });
   });
 
-  it("classifyPromo agrees with the endpoint shape", () => {
-    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+  it("classifyPromo agrees with the endpoint shape (waiver requires configured env)", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "bensachwitzrocks");
     expect(classifyPromo("bensachwitzrocks")).toEqual({ valid: true, waiver: true });
     expect(classifyPromo("WELCOME100")).toEqual({ valid: true, waiver: false });
     expect(classifyPromo("xxx")).toEqual({ valid: false, waiver: false });
