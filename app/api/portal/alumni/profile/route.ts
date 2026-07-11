@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getPortalSession, isAdminOverride } from "@/lib/portal-auth";
+import { sanitizeRichText, isRichTextEmpty } from "@/lib/rich-text";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,7 +116,9 @@ export async function PATCH(req: Request) {
   if (data.state !== undefined) updateData.state = data.state || null;
   if (data.employer !== undefined) updateData.employer = data.employer || null;
   if (data.jobTitle !== undefined) updateData.jobTitle = data.jobTitle || null;
-  if (data.bio !== undefined) updateData.bio = data.bio || null;
+  // Rich-text bio: sanitize the (Tiptap) HTML server-side before storing; an
+  // empty rich doc (Tiptap emits "<p></p>") collapses to null, not markup.
+  if (data.bio !== undefined) updateData.bio = isRichTextEmpty(data.bio) ? null : sanitizeRichText(data.bio);
   if (data.linkedinUrl !== undefined) updateData.linkedinUrl = data.linkedinUrl || null;
   if (data.optInDirectory !== undefined) updateData.optInDirectory = data.optInDirectory;
   if (data.optInNewsletter !== undefined) updateData.optInNewsletter = data.optInNewsletter;

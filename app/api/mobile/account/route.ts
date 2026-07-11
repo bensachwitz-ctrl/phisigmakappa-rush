@@ -3,6 +3,7 @@ import { centralDb, getTenantClient } from "@/lib/prisma";
 import { verifyPortalTokenForTenant } from "@/lib/portal-auth";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { auditMobileExec } from "@/lib/mobile-exec-auth";
+import { sanitizeRichText } from "@/lib/rich-text";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -127,6 +128,9 @@ async function handlePost(req: Request): Promise<NextResponse> {
         bio: optStr(body.bio, 2000),
       };
       for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
+      // Rich-text bio: sanitize server-side before storing (defense-in-depth
+      // vs. a direct API POST — the native shell itself sends plain text).
+      if (typeof data.bio === "string") data.bio = sanitizeRichText(data.bio);
 
       const updated = await db.brother.update({
         where: { id: portalUser.brotherId },
@@ -167,6 +171,8 @@ async function handlePost(req: Request): Promise<NextResponse> {
         preferredName: optStr(body.preferredName, 120),
       };
       for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
+      // Rich-text bio: sanitize server-side before storing (see brother branch).
+      if (typeof data.bio === "string") data.bio = sanitizeRichText(data.bio);
 
       const updated = await db.alumniProfile.update({
         where: { id: portalUser.alumniId },

@@ -13,6 +13,7 @@ import { prisma, getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
 import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { publicAlumniView } from "@/lib/alumni";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -231,7 +232,7 @@ function AlumniCard({ alum, anchorId }: { alum: AlumniRow; anchorId?: string }) 
         </p>
       )}
       {alum.bio && (
-        <p className="text-xs text-maroon-600 mt-3 line-clamp-2 italic">{alum.bio}</p>
+        <p className="text-xs text-maroon-600 mt-3 line-clamp-2 italic">{htmlToPlainText(alum.bio)}</p>
       )}
     </Link>
   );

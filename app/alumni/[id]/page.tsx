@@ -9,6 +9,7 @@ import { prisma, getSubdomain } from "@/lib/prisma";
 import { chapterLiveGate } from "@/components/site/chapter-status";
 import { chapterLiveMetadataGate } from "@/lib/chapter-live-guard";
 import { publicAlumniView } from "@/lib/alumni";
+import { RichTextContent } from "@/components/ui/rich-text-editor";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { PublicNav } from "@/components/site/nav";
@@ -135,7 +136,12 @@ export default async function AlumniProfilePage({ params, searchParams }: PagePr
           {/* Bio */}
           {safe.bio && (
             <div className="bg-cream-50 border border-maroon-100 rounded-xl px-4 py-3 mb-6">
-              <p className="text-sm text-maroon-800 italic leading-relaxed">{safe.bio}</p>
+              {/* Full profile view: render the rich (Tiptap) bio; RichTextContent
+                  re-sanitizes and a legacy plain-text bio renders as escaped text. */}
+              <RichTextContent
+                html={safe.bio}
+                className="text-sm text-maroon-800 italic leading-relaxed"
+              />
             </div>
           )}
 

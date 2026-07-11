@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   audit: vi.fn(async () => {}),
   pushEventToCalDiy: vi.fn(async () => null),
   listPortalRecipients: vi.fn(async () => [{ id: "r1", role: "brother" }]),
-  routeEventToRecipients: vi.fn(async () => {}),
+  routeEventToRecipients: vi.fn(async (_payload: { body: string }, _recipients: unknown) => {}),
   eventCreate: vi.fn(async (args: any) => ({
     id: "ev_new",
     name: args?.data?.name ?? "Event",

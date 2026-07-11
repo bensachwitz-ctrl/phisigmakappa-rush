@@ -33,6 +33,7 @@ import { NotifyPrefsCard } from "@/components/notify/notify-prefs-card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc, imageSrc } from "@/lib/image-url";
 import { htmlToPlainText } from "@/lib/rich-text";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -1133,16 +1134,14 @@ export default function DashboardClient({
                     <label htmlFor="alum-bio" className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
                       Biography
                     </label>
-                    <textarea
+                    <RichTextEditor
                       id="alum-bio"
-                      rows={5}
-                      maxLength={2000}
-                      placeholder="Share a brief bio - your career, how you stay involved, and how fellow alumni can connect with you."
                       value={profileForm.bio}
-                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                      className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-amber-500 text-xs text-maroon-900 resize-none leading-relaxed"
+                      onChange={(html) => setProfileForm({ ...profileForm, bio: html })}
+                      ariaLabel="Biography"
+                      placeholder="Share a brief bio - your career, how you stay involved, and how fellow alumni can connect with you."
                     />
-                    <p className="text-[10px] text-right text-maroon-500 mt-1">{2000 - profileForm.bio.length} characters remaining</p>
+                    <p className="text-[10px] text-right text-maroon-500 mt-1">{Math.max(0, 2000 - profileForm.bio.length)} characters remaining</p>
                   </div>
 
                   {/* Privacy / communication preferences */}
@@ -1435,7 +1434,7 @@ export default function DashboardClient({
 
                             {a.bio && (
                               <p className="text-xs text-maroon-600 line-clamp-2 mt-1 italic border-l-2 border-amber-300 pl-2">
-                                &ldquo;{a.bio}&rdquo;
+                                &ldquo;{htmlToPlainText(a.bio)}&rdquo;
                               </p>
                             )}
                           </div>

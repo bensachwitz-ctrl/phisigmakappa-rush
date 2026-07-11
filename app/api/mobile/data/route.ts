@@ -141,7 +141,7 @@ async function handleGet(req: Request): Promise<NextResponse> {
             pledgeClass: brother.pledgeClass,
             hometown: brother.hometown,
             gradYear: brother.gradYear,
-            bio: brother.bio,
+            bio: htmlToPlainText(brother.bio),
             headshotUrl: brother.headshotUrl,
             status: brother.status,
             duesPaid: brother.duesPaid,
@@ -234,7 +234,7 @@ async function handleGet(req: Request): Promise<NextResponse> {
             employer: alum.employer,
             jobTitle: alum.jobTitle,
             linkedinUrl: alum.linkedinUrl,
-            bio: alum.bio,
+            bio: htmlToPlainText(alum.bio),
           };
 
           // DONATE GATE (money integrity) — the alumni Donate action is offered
@@ -639,7 +639,7 @@ async function handleGet(req: Request): Promise<NextResponse> {
           employer: al.employer,
           jobTitle: al.jobTitle,
           linkedinUrl: al.linkedinUrl,
-          bio: al.bio,
+          bio: htmlToPlainText(al.bio),
         })),
       },
       careers: jobPostings.map((j) => ({

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentBrother } from "@/lib/auth";
+import { sanitizeRichText, isRichTextEmpty } from "@/lib/rich-text";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,7 +79,9 @@ export async function PATCH(req: Request) {
       phone: data.phone || null,
       year: data.year || null,
       major: data.major || null,
-      bio: data.bio || null,
+      // Rich-text bio: sanitize the (Tiptap) HTML server-side before storing; an
+      // empty rich doc (Tiptap emits "<p></p>") collapses to null, not markup.
+      bio: isRichTextEmpty(data.bio) ? null : sanitizeRichText(data.bio),
       headshotUrl: data.headshotUrl || null,
       updatedAt: new Date(),
     },

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { avatarSrc, imageSrc } from "@/lib/image-url";
 import { htmlToPlainText } from "@/lib/rich-text";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Users,
   CheckCircle,
@@ -2337,7 +2338,7 @@ export default function BrothersDashboardClient({
 
                             {a.bio && (
                               <p className="text-xs text-maroon-600 line-clamp-3 leading-relaxed font-normal italic">
-                                &ldquo;{a.bio}&rdquo;
+                                &ldquo;{htmlToPlainText(a.bio)}&rdquo;
                               </p>
                             )}
 
@@ -2794,12 +2795,11 @@ export default function BrothersDashboardClient({
                       <label className="block text-xs font-semibold uppercase tracking-wide text-maroon-900 mb-1">
                         Biography & Career Goals
                       </label>
-                      <textarea
-                        rows={5}
-                        placeholder="Write a brief bio outlining your current activities, interest areas, big/little linkages, and future career plans."
+                      <RichTextEditor
                         value={profileForm.bio}
-                        onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                        className="w-full px-3 py-2 bg-cream-50 border border-maroon-100 rounded-xl focus:outline-none focus:border-maroon-500 text-xs text-maroon-900 resize-none leading-relaxed"
+                        onChange={(html) => setProfileForm({ ...profileForm, bio: html })}
+                        ariaLabel="Biography and career goals"
+                        placeholder="Write a brief bio outlining your current activities, interest areas, big/little linkages, and future career plans."
                       />
                     </div>
 
