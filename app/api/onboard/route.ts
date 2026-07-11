@@ -13,7 +13,12 @@ import path from "path";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { platformSubscriptionDescription, getOrCreateFullWaiverCoupon } from "@/lib/platform-billing";
-import { isFeeWaiverPromo } from "@/lib/promo";
+// SERVER-ONLY waiver validation (allowlist + cap + expiry). isFeeWaiverPromo must
+// come from lib/promo-server — importing it from the client-safe lib/promo would
+// leak the waiver code into the browser bundle. Marketing codes are non-secret
+// and stay in the client-safe lib/promo.
+import { isFeeWaiverPromo } from "@/lib/promo-server";
+import { isMarketingPromo } from "@/lib/promo";
 import { resolveTemplateId } from "@/components/site/templates/template-orders";
 import { normalizeSubdomain, checkSubdomainFormat } from "@/lib/reserved-subdomains";
 import { applyTenantDdl } from "@/lib/tenant-ddl";
@@ -170,8 +175,9 @@ export async function POST(req: Request) {
   // Stripe coupon applied to the subscriptions created below. Recognized as a
   // valid promo so it's recorded on the chapter's config + surfaced in email.
   const isFeeWaiver = isFeeWaiverPromo(rawPromoCode);
-  const isPromoValid =
-    ["GREEKFREE", "WELCOME100", "SILICON"].includes(promoCode) || isFeeWaiver;
+  // Marketing codes (non-secret) are validated via the shared client-safe helper;
+  // the fee waiver is validated server-only above. Single source of truth for both.
+  const isPromoValid = isMarketingPromo(rawPromoCode) || isFeeWaiver;
 
   // schemaName is built ONLY from the sanitized subdomain ([a-z0-9-] -> _), so
   // it is safe to interpolate into raw SQL (no injection surface).

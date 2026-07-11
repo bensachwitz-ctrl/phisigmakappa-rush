@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
-import { isFeeWaiverPromo } from "@/lib/promo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -178,6 +177,10 @@ export default function OnboardWizard() {
   const [promoApplied, setPromoApplied] = React.useState(false);
   const [promoError, setPromoError] = React.useState("");
   const [appliedCode, setAppliedCode] = React.useState("");
+  // Whether the applied code is the full-fee waiver — decided by the server
+  // (/api/onboard/validate-promo), never recomputed on the client, so the waiver
+  // code itself never lives in the browser bundle.
+  const [appliedWaiver, setAppliedWaiver] = React.useState(false);
   // Animation direction for the step transition: 1 = advancing, -1 = going back.
   // Drives the directional slide in the AnimatePresence wrapper below.
   const [dir, setDir] = React.useState<1 | -1>(1);
@@ -1478,6 +1481,8 @@ export default function OnboardWizard() {
                   setPromoError={setPromoError}
                   appliedCode={appliedCode}
                   setAppliedCode={setAppliedCode}
+                  appliedWaiver={appliedWaiver}
+                  setAppliedWaiver={setAppliedWaiver}
                 />
               )}
 
@@ -1601,7 +1606,7 @@ export default function OnboardWizard() {
                       {promoApplied && (
                         <SummaryRow label="Promo Code">
                           <span className="text-emerald-400 font-bold">{appliedCode}</span>{" "}
-                          {isFeeWaiverPromo(appliedCode) ? "(100% off - all fees waived)" : "(Applied)"}
+                          {appliedWaiver ? "(100% off - all fees waived)" : "(Applied)"}
                         </SummaryRow>
                       )}
                     </div>
@@ -2009,6 +2014,8 @@ function PricingStep({
   setPromoError,
   appliedCode,
   setAppliedCode,
+  appliedWaiver,
+  setAppliedWaiver,
 }: {
   plan: PlanId;
   onChange: (p: PlanId) => void;
@@ -2020,8 +2027,11 @@ function PricingStep({
   setPromoError: (e: string) => void;
   appliedCode: string;
   setAppliedCode: (c: string) => void;
+  appliedWaiver: boolean;
+  setAppliedWaiver: (w: boolean) => void;
 }) {
   const collectDues = plan === "dues_percentage";
+  const [applyingPromo, setApplyingPromo] = React.useState(false);
   const monthlySelected = plan === "monthly" || plan === "semester";
   const yearlySelected = plan === "yearly";
 
@@ -2033,26 +2043,46 @@ function PricingStep({
     }
   };
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     const raw = promoCode.trim();
-    const code = raw.toUpperCase();
-    if (!code) return;
-    // `bensachwitzrocks` (case-insensitive) is the full-fee-waiver code; the
-    // others are marketing codes. Both are accepted here and echoed to the server.
-    if (isFeeWaiverPromo(raw) || ["GREEKFREE", "WELCOME100", "SILICON"].includes(code)) {
-      setPromoApplied(true);
-      setAppliedCode(code);
-      setPromoError("");
-      try {
-        window.GreekStackNative?.hapticNotify?.("success");
-      } catch {}
-    } else {
-      setPromoError("Invalid promo code. Please try again.");
+    if (!raw || applyingPromo) return;
+    // Validation is SERVER-SIDE (/api/onboard/validate-promo). The client no
+    // longer knows the fee-waiver code — the server decides whether the code is
+    // valid and whether it is the full waiver, so the secret never ships in this
+    // bundle. The server (/api/onboard) re-validates and is the real grant point.
+    setApplyingPromo(true);
+    setPromoError("");
+    try {
+      const res = await fetch("/api/onboard/validate-promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: raw }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.valid) {
+        setPromoApplied(true);
+        setAppliedCode(raw.toUpperCase());
+        setAppliedWaiver(Boolean(data.waiver));
+        setPromoError("");
+        try {
+          window.GreekStackNative?.hapticNotify?.("success");
+        } catch {}
+      } else {
+        setPromoError("Invalid promo code. Please try again.");
+        setPromoApplied(false);
+        setAppliedCode("");
+        setAppliedWaiver(false);
+        try {
+          window.GreekStackNative?.hapticNotify?.("error");
+        } catch {}
+      }
+    } catch {
+      setPromoError("Couldn't validate that code. Please try again.");
       setPromoApplied(false);
       setAppliedCode("");
-      try {
-        window.GreekStackNative?.hapticNotify?.("error");
-      } catch {}
+      setAppliedWaiver(false);
+    } finally {
+      setApplyingPromo(false);
     }
   };
 
@@ -2242,15 +2272,16 @@ function PricingStep({
             <button
               type="button"
               onClick={handleApplyPromo}
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl transition press"
+              disabled={applyingPromo}
+              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl transition press disabled:opacity-60"
             >
-              Apply
+              {applyingPromo ? "Checking…" : "Apply"}
             </button>
           </div>
           {promoApplied && (
             <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 animate-spring-in">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {isFeeWaiverPromo(appliedCode) ? (
+              {appliedWaiver ? (
                 <span>
                   Promo code <strong>{appliedCode}</strong> applied: <strong>100% off, all fees waived</strong>. Your monthly platform fee and every rush-cycle fee are fully covered.
                 </span>

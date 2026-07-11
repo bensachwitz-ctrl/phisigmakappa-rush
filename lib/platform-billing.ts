@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { centralDb } from "@/lib/prisma";
+import { feeWaiverMaxRedemptions, feeWaiverRedeemBy } from "@/lib/promo-server";
 
 /**
  * PLATFORM BILLING helpers — the chapter PAYING Greekstack.
@@ -578,11 +579,18 @@ export async function getOrCreateFullWaiverCoupon(stripe: Stripe): Promise<strin
   } catch {
     // Not found (or transient) — create it below.
   }
+  // Cap total redemptions + honor an optional expiry so a leaked code can never
+  // mint unlimited free-forever chapters (the original vulnerability). These bind
+  // at CREATION — an already-existing coupon keeps whatever caps it was created
+  // with; the allowlist + expiry in lib/promo-server are the primary gate.
+  const redeemBy = feeWaiverRedeemBy();
   const coupon = await stripe.coupons.create({
     id: FULL_WAIVER_COUPON_ID,
     percent_off: 100,
     duration: "forever",
     name: "Greek Stack Full Fee Waiver",
+    max_redemptions: feeWaiverMaxRedemptions(),
+    ...(redeemBy ? { redeem_by: Math.floor(redeemBy.getTime() / 1000) } : {}),
   });
   return coupon.id;
 }

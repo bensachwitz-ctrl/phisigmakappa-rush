@@ -1,33 +1,70 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import fs from "fs";
+import path from "path";
 import {
-  FEE_WAIVER_PROMO_CODE,
   isFeeWaiverPromo,
+  isPromoValid,
+  classifyPromo,
   applyPromoToFees,
-} from "@/lib/promo";
+  feeWaiverAllowlist,
+  feeWaiverMaxRedemptions,
+  feeWaiverRedeemBy,
+} from "@/lib/promo-server";
+import { isMarketingPromo, MARKETING_PROMO_CODES } from "@/lib/promo";
+import { POST as validatePromo } from "@/app/api/onboard/validate-promo/route";
 
 /**
- * PRIORITY 3 — `bensachwitzrocks` full-fee-waiver coupon.
+ * P1 #2 — full-fee-waiver coupon hardening.
  *
- * The recognized code (case-insensitive) waives BOTH the monthly/platform fee
- * AND the per-rush-cycle fee (100% off); any unknown / absent code leaves both
- * fees intact. lib/promo is the single source of truth the onboarding/checkout
- * server path (app/api/onboard) and the wizard UI both reason about, so this
- * pins the "what does this code waive" contract.
+ * The waiver code is now SERVER-ONLY, allowlisted (env FEE_WAIVER_CODES with a
+ * legacy fallback), redemption-capped, and expirable — and the literal no longer
+ * ships in the client bundle. These tests pin: (a) the server allowlist/expiry
+ * contract, (b) that the client-safe module can NOT self-grant the waiver, and
+ * (c) that the validate endpoint mirrors the server rules.
  */
 
-// Realistic platform + rush fee amounts (cents): $50/mo platform, $200 rush.
 const FEES = { platformCents: 5000, rushCents: 20000 };
 
-describe("fee-waiver promo recognition", () => {
-  it("recognizes the exact code and common casings/whitespace", () => {
-    expect(isFeeWaiverPromo(FEE_WAIVER_PROMO_CODE)).toBe(true);
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+async function validate(code: unknown) {
+  const req = new Request("https://x/api/onboard/validate-promo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  const res = await validatePromo(req);
+  return res.json() as Promise<{ ok: boolean; valid: boolean; waiver: boolean }>;
+}
+
+describe("fee-waiver allowlist (env-driven, legacy fallback)", () => {
+  it("recognizes the legacy code when FEE_WAIVER_CODES is UNSET (legitimate use preserved)", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    expect(feeWaiverAllowlist()).toEqual(["bensachwitzrocks"]);
     expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(true);
     expect(isFeeWaiverPromo("BENSACHWITZROCKS")).toBe(true);
-    expect(isFeeWaiverPromo("BenSachwitzRocks")).toBe(true);
     expect(isFeeWaiverPromo("  bensachwitzrocks  ")).toBe(true);
   });
 
+  it("honors a custom allowlist and rejects the legacy code once overridden", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "founder-2026, ops-comp");
+    expect(feeWaiverAllowlist()).toEqual(["founder-2026", "ops-comp"]);
+    expect(isFeeWaiverPromo("FOUNDER-2026")).toBe(true);
+    expect(isFeeWaiverPromo("ops-comp")).toBe(true);
+    // The old hardcoded code no longer works once the allowlist is set.
+    expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
+  });
+
+  it("disables the waiver entirely when FEE_WAIVER_CODES is empty string", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "");
+    expect(feeWaiverAllowlist()).toEqual([]);
+    expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
+  });
+
   it("rejects unknown / empty / non-string codes", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
     expect(isFeeWaiverPromo("WELCOME100")).toBe(false);
     expect(isFeeWaiverPromo("bensachwitz")).toBe(false);
     expect(isFeeWaiverPromo("")).toBe(false);
@@ -36,28 +73,100 @@ describe("fee-waiver promo recognition", () => {
   });
 });
 
-describe("applyPromoToFees — waiver zeroes BOTH fees, unknown does not", () => {
-  it("the waiver code zeroes the platform AND rush fees (100% off)", () => {
-    const out = applyPromoToFees("bensachwitzrocks", FEES);
-    expect(out.platformCents).toBe(0);
-    expect(out.rushCents).toBe(0);
-    expect(out.waived).toBe(true);
+describe("fee-waiver expiry + redemption cap", () => {
+  it("refuses an allowlisted code once past FEE_WAIVER_EXPIRES_AT", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    vi.stubEnv("FEE_WAIVER_EXPIRES_AT", "2000-01-01T00:00:00Z");
+    expect(feeWaiverRedeemBy()?.getTime()).toBe(Date.parse("2000-01-01T00:00:00Z"));
+    expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(false);
   });
 
-  it("is case-insensitive for the waiver", () => {
-    const out = applyPromoToFees("BENSACHWITZROCKS", FEES);
+  it("still accepts before an expiry that is in the future", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    vi.stubEnv("FEE_WAIVER_EXPIRES_AT", "2999-01-01T00:00:00Z");
+    expect(isFeeWaiverPromo("bensachwitzrocks")).toBe(true);
+  });
+
+  it("defaults the redemption cap to 5 and honors an override", () => {
+    vi.stubEnv("FEE_WAIVER_MAX_REDEMPTIONS", undefined as any);
+    expect(feeWaiverMaxRedemptions()).toBe(5);
+    vi.stubEnv("FEE_WAIVER_MAX_REDEMPTIONS", "2");
+    expect(feeWaiverMaxRedemptions()).toBe(2);
+    vi.stubEnv("FEE_WAIVER_MAX_REDEMPTIONS", "0"); // invalid → default
+    expect(feeWaiverMaxRedemptions()).toBe(5);
+  });
+});
+
+describe("applyPromoToFees + isPromoValid", () => {
+  it("the waiver code zeroes BOTH fees (100% off)", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    const out = applyPromoToFees("bensachwitzrocks", FEES);
     expect(out).toEqual({ platformCents: 0, rushCents: 0, waived: true });
   });
 
-  it("an UNKNOWN code leaves both fees unchanged (no waiver)", () => {
+  it("an UNKNOWN code leaves both fees unchanged", () => {
     const out = applyPromoToFees("WELCOME100", FEES);
-    expect(out.platformCents).toBe(5000);
-    expect(out.rushCents).toBe(20000);
-    expect(out.waived).toBe(false);
+    expect(out).toEqual({ platformCents: 5000, rushCents: 20000, waived: false });
   });
 
-  it("an absent code leaves both fees unchanged", () => {
-    expect(applyPromoToFees("", FEES)).toEqual({ platformCents: 5000, rushCents: 20000, waived: false });
-    expect(applyPromoToFees(null, FEES)).toEqual({ platformCents: 5000, rushCents: 20000, waived: false });
+  it("isPromoValid accepts marketing codes AND a valid waiver", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    expect(isPromoValid("WELCOME100")).toBe(true);
+    expect(isPromoValid("bensachwitzrocks")).toBe(true);
+    expect(isPromoValid("nope")).toBe(false);
+  });
+});
+
+describe("CLIENT cannot self-grant the waiver", () => {
+  it("the client-safe module does not recognize the waiver code as valid", () => {
+    // isMarketingPromo is the ONLY promo check available to the client bundle,
+    // and it must never treat a waiver code as valid.
+    expect(isMarketingPromo("bensachwitzrocks")).toBe(false);
+    expect(MARKETING_PROMO_CODES).not.toContain("bensachwitzrocks");
+  });
+
+  it("the client-safe lib/promo.ts source contains no waiver literal", () => {
+    const src = fs.readFileSync(path.join(process.cwd(), "lib", "promo.ts"), "utf8");
+    expect(src.toLowerCase()).not.toContain("bensachwitz");
+  });
+
+  it("the client wizard does not import the server-only waiver module or hardcode the code", () => {
+    const src = fs.readFileSync(
+      path.join(process.cwd(), "app", "onboard", "onboard-wizard.tsx"),
+      "utf8",
+    );
+    expect(src.toLowerCase()).not.toContain("bensachwitz");
+    expect(src).not.toContain("promo-server");
+  });
+});
+
+describe("validate-promo endpoint mirrors the server rules", () => {
+  it("accepts a marketing code (not a waiver)", async () => {
+    const out = await validate("WELCOME100");
+    expect(out).toMatchObject({ ok: true, valid: true, waiver: false });
+  });
+
+  it("accepts the allowlisted waiver code and flags it as a waiver", async () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    const out = await validate("bensachwitzrocks");
+    expect(out).toMatchObject({ ok: true, valid: true, waiver: true });
+  });
+
+  it("rejects a random guessed code (client can't self-grant via the endpoint)", async () => {
+    const out = await validate("totally-made-up-code");
+    expect(out).toMatchObject({ ok: true, valid: false, waiver: false });
+  });
+
+  it("does not flag the waiver once the allowlist excludes it", async () => {
+    vi.stubEnv("FEE_WAIVER_CODES", "some-other-code");
+    const out = await validate("bensachwitzrocks");
+    expect(out).toMatchObject({ ok: true, valid: false, waiver: false });
+  });
+
+  it("classifyPromo agrees with the endpoint shape", () => {
+    vi.stubEnv("FEE_WAIVER_CODES", undefined as any);
+    expect(classifyPromo("bensachwitzrocks")).toEqual({ valid: true, waiver: true });
+    expect(classifyPromo("WELCOME100")).toEqual({ valid: true, waiver: false });
+    expect(classifyPromo("xxx")).toEqual({ valid: false, waiver: false });
   });
 });
