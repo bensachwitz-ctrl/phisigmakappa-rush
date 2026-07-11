@@ -162,6 +162,14 @@ describe("preset-picker UI (item 4) stages the preset + per-axis overrides", () 
   it("previews real glyphs from each icon family (SiteIcon) so the choice is visible", () => {
     expect(src).toMatch(/<SiteIcon/);
   });
+  it("the Layout editor supports drag-and-drop reorder plus accessible up/down (item 3)", () => {
+    expect(src).toMatch(/reorderSections\(/);
+    expect(src).toMatch(/onDragStart=/);
+    expect(src).toMatch(/draggable/);
+    // keyboard fallback preserved
+    expect(src).toMatch(/moveUp\(/);
+    expect(src).toMatch(/moveDown\(/);
+  });
 });
 
 describe("TEMPLATE_META wired to the new declarative axes", () => {

@@ -19,7 +19,7 @@ import {
   Save, RefreshCw, Flame, Trophy, Heart,
   GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote,
   Users, Crown, HelpCircle, MapPin, Rocket, ShieldCheck, ChevronUp, ChevronDown,
-  LayoutGrid, Palette, Check, Sparkles,
+  LayoutGrid, Palette, Check, Sparkles, GripVertical,
 } from "lucide-react";
 // Import the PURE template data (orders/meta/resolver) — NOT template-config,
 // which also pulls in the hero .tsx components. This client only needs the meta
@@ -446,6 +446,20 @@ export function WebsiteBuilderClient({
   React.useEffect(() => {
     setSections(getOrderedSections());
   }, [getOrderedSections]);
+
+  // Drag-and-drop reorder for the Layout list (item 3). The up/down buttons stay
+  // as the accessible + touch fallback; both mutate the same `sections` order.
+  const [dragIdx, setDragIdx] = React.useState<number | null>(null);
+  const [overIdx, setOverIdx] = React.useState<number | null>(null);
+  const reorderSections = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0) return;
+    setSections((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
 
   const moveUp = (index: number) => {
     if (index === 0) return;
@@ -1073,7 +1087,12 @@ export function WebsiteBuilderClient({
           {tab === "layout" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold tracking-tight">Layout Hierarchy</h2>
+                <div>
+                  <h2 className="text-lg font-semibold tracking-tight">Layout Hierarchy</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Drag a section to reorder, or use the arrows. Toggle Show to add or remove it from the page.
+                  </p>
+                </div>
                 <Button variant="outline" size="sm" onClick={resetToDefaults} disabled={busy} className="text-xs gap-1.5 h-8">
                   <RefreshCw className="h-3 w-3" />
                   Reset to defaults
@@ -1086,11 +1105,36 @@ export function WebsiteBuilderClient({
                   const isAlwaysVisible = !sect.showKey;
 
                   return (
-                    <Card key={sect.id} className={`transition-all duration-200 border-l-4 ${
-                      sect.visible ? "border-l-phisig-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50"
-                    }`}>
+                    <Card
+                      key={sect.id}
+                      draggable
+                      onDragStart={() => setDragIdx(index)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (overIdx !== index) setOverIdx(index);
+                      }}
+                      onDrop={() => {
+                        if (dragIdx !== null) reorderSections(dragIdx, index);
+                        setDragIdx(null);
+                        setOverIdx(null);
+                      }}
+                      onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
+                      className={cn(
+                        "transition-all duration-200 border-l-4",
+                        sect.visible ? "border-l-phisig-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50",
+                        dragIdx === index && "opacity-50",
+                        overIdx === index && dragIdx !== index && "ring-2 ring-phisig-red/40",
+                      )}
+                    >
                       <CardContent className="p-4 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className="hidden sm:flex h-9 w-6 shrink-0 cursor-grab items-center justify-center text-slate-400 active:cursor-grabbing"
+                            aria-hidden="true"
+                            title="Drag to reorder"
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </span>
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
                             <Icon className="h-5 w-5" />
                           </span>
