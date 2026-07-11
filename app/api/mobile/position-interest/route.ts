@@ -117,7 +117,11 @@ async function handlePost(req: Request): Promise<NextResponse> {
     // member sees "we let <holder> know". Never leaks contact details.
     let notifiedName: string | null = null;
     try {
-      const targetRole = officerToolset(positionTitle).roleKey;
+      // Match on the NORMALIZED positionSlug, never the free-text positionTitle:
+      // the slug is the canonical role identifier the picker sends (and what the
+      // interest inbox filter matches on), so a title typo ("Treaurer") can't
+      // silently resolve to "member" and drop the holder notification.
+      const targetRole = officerToolset(positionSlug).roleKey;
       const holders = await db.brother.findMany({
         where: { status: "ACTIVE", position: { not: null } },
         select: { name: true, position: true },

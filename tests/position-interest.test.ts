@@ -24,6 +24,40 @@ describe("holder matching (mirror the route's officerToolset role match)", () =>
   it("a plain member string never matches a holder", () => {
     expect(sameRole("Active Member", "Active Member")).toBe(false);
   });
+
+  // Both routes now resolve the role from the NORMALIZED positionSlug, never the
+  // free-text positionTitle. This proves the fix: a typo'd display title routes
+  // correctly by slug where it would silently misroute (→ "member") by title.
+  it("routes a title-TYPO interest to the sitting holder via the canonical slug", () => {
+    const typoTitle = "Treaurer"; // member fat-fingered the display title
+    const canonicalSlug = "treasurer"; // the picker still sent the canonical slug
+
+    // The (buggy) title path collapses the typo to a plain member → no match.
+    expect(officerToolset(typoTitle).roleKey).toBe("member");
+    // The (fixed) slug path resolves to the real role, so the Treasurer is notified.
+    expect(officerToolset(canonicalSlug).roleKey).toBe("treasurer");
+    expect(sameRole(canonicalSlug, "Treasurer")).toBe(true);
+  });
+
+  it("resolves hyphenated multi-word slugs (recruitment-chair) that a typo'd title would miss", () => {
+    expect(officerToolset("recruitment-chair").roleKey).toBe("recruitment-chair");
+    expect(sameRole("recruitment-chair", "Recruitment Chair")).toBe(true);
+    // A typo'd title falls back to the generic "officer" floor, not the real seat.
+    expect(officerToolset("Recruitmnt Chair").roleKey).not.toBe("recruitment-chair");
+  });
+});
+
+describe("both position-interest routes match on positionSlug, not positionTitle", () => {
+  it("the POST holder-match resolves the target role from positionSlug", () => {
+    const src = readFileSync(root("app/api/mobile/position-interest/route.ts"), "utf8");
+    expect(src).toMatch(/officerToolset\(positionSlug\)\.roleKey/);
+    expect(src).not.toMatch(/officerToolset\(positionTitle\)/);
+  });
+  it("the GET inbox-filter resolves each interest's role from pi.positionSlug", () => {
+    const src = readFileSync(root("app/api/mobile/data/route.ts"), "utf8");
+    expect(src).toMatch(/officerToolset\(pi\.positionSlug\)\.roleKey/);
+    expect(src).not.toMatch(/officerToolset\(pi\.positionTitle\)/);
+  });
 });
 
 describe("position-interest wiring source-pins", () => {

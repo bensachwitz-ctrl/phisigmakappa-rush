@@ -506,7 +506,9 @@ async function handleGet(req: Request): Promise<NextResponse> {
           select: { id: true, brotherName: true, positionSlug: true, positionTitle: true, message: true, createdAt: true },
         });
         positionInterests = openInterests
-          .filter((pi) => isPresidentLike || (myRole && officerToolset(pi.positionTitle).roleKey === myRole))
+          // Match on the NORMALIZED positionSlug, not the free-text positionTitle,
+          // so a title typo can't route an interest away from the sitting holder.
+          .filter((pi) => isPresidentLike || (myRole && officerToolset(pi.positionSlug).roleKey === myRole))
           .map((pi) => ({
             id: pi.id,
             brotherName: pi.brotherName,
