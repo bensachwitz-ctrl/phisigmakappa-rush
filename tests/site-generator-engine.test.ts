@@ -139,6 +139,31 @@ describe("resolveSiteConfig — reconciles preset + per-axis overrides", () => {
   });
 });
 
+describe("preset-picker UI (item 4) stages the preset + per-axis overrides", () => {
+  const src = require("node:fs").readFileSync(
+    resolve(__dirname, "..", "app/admin/website/website-builder-client.tsx"),
+    "utf8",
+  ) as string;
+  it("renders the full preset catalog and resolves the chosen preset", () => {
+    expect(src).toMatch(/TEMPLATE_PRESETS\.map/);
+    expect(src).toMatch(/resolveTemplatePreset\(/);
+  });
+  it("exposes per-axis overrides (component set + icon family) that fall back to the preset default", () => {
+    expect(src).toMatch(/componentSetOverride/);
+    expect(src).toMatch(/iconFamilyOverride/);
+    expect(src).toMatch(/effectiveComponentSet.*componentSetOverride \?\? activePreset\.componentSet/s);
+    expect(src).toMatch(/effectiveIconFamily.*iconFamilyOverride \?\? activePreset\.iconFamily/s);
+  });
+  it("persists the exact cfg keys the public renderer's resolveSiteConfig reads", () => {
+    expect(src).toMatch(/"website\.preset": presetId/);
+    expect(src).toMatch(/"website\.componentSet": effectiveComponentSet/);
+    expect(src).toMatch(/"website\.iconFamily": effectiveIconFamily/);
+  });
+  it("previews real glyphs from each icon family (SiteIcon) so the choice is visible", () => {
+    expect(src).toMatch(/<SiteIcon/);
+  });
+});
+
 describe("TEMPLATE_META wired to the new declarative axes", () => {
   it("every base template declares a valid component set + icon family", () => {
     for (const m of TEMPLATE_META) {

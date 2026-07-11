@@ -30,6 +30,26 @@ import {
 } from "@/components/site/templates/template-orders";
 import type { TemplateId } from "@/components/site/templates/types";
 import { EditableLivePreview } from "@/components/onboard/editable-live-preview";
+// Item 4 — the preset picker chooses a whole visual SYSTEM (preset = base template
+// x component set x icon family x motion) with per-axis overrides. All are pure
+// data (lib/site-generator/*) so the picker, live preview, and public renderer
+// resolve them identically via resolveSiteConfig.
+import {
+  TEMPLATE_PRESETS,
+  resolveTemplatePreset,
+  type TemplatePreset,
+} from "@/lib/site-generator/template-presets";
+import {
+  COMPONENT_SETS,
+  COMPONENT_SET_IDS,
+  type ComponentSetId,
+} from "@/lib/site-generator/component-sets";
+import {
+  ICON_FAMILIES,
+  ICON_FAMILY_IDS,
+  type IconFamilyId,
+} from "@/lib/site-generator/icon-families";
+import { SiteIcon } from "@/components/site/site-icon";
 
 interface SectionConfig {
   id: string;
@@ -71,7 +91,7 @@ const DEFAULT_ORDER = [
 const GS_PRIMARY = "#2563eb";
 const GS_SECONDARY = "#f59e0b";
 
-type TabId = "templates" | "brand" | "layout" | "tweak";
+type TabId = "presets" | "templates" | "brand" | "layout" | "tweak";
 
 /* ── 44px swatch + hex input (lifted from onboard/editable-live-preview.tsx) ── */
 function ColorEditable({
@@ -115,6 +135,57 @@ function ColorEditable({
         />
       </div>
     </div>
+  );
+}
+
+/* ── Per-axis override chip (44px tap target, one accent) ─────────────────── */
+function AxisChip({
+  label, sub, active, onClick,
+}: { label: string; sub?: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "inline-flex min-h-[44px] flex-col items-start justify-center rounded-lg border px-3 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+        active
+          ? "border-phisig-red bg-phisig-red-soft/50 text-phisig-red"
+          : "border-border bg-background text-foreground hover:border-phisig-red/40",
+      )}
+    >
+      <span className="text-xs font-semibold leading-tight">{label}</span>
+      {sub && <span className="text-[10px] capitalize text-muted-foreground leading-tight">{sub}</span>}
+    </button>
+  );
+}
+
+/* ── Icon-family override chip — previews real glyphs FROM that family ─────── */
+const ICON_PREVIEW: Array<React.ComponentProps<typeof SiteIcon>["name"]> = [
+  "star", "calendar", "users", "shield", "heart", "trophy",
+];
+function IconFamilyChip({
+  label, family, active, onClick,
+}: { label: string; family: IconFamilyId; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "flex min-h-[44px] items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+        active
+          ? "border-phisig-red bg-phisig-red-soft/40"
+          : "border-border bg-background hover:border-phisig-red/40",
+      )}
+    >
+      <span className="text-xs font-semibold">{label}</span>
+      <span className="flex items-center gap-1.5 text-phisig-red">
+        {ICON_PREVIEW.map((n) => (
+          <SiteIcon key={n} family={family} name={n} className="h-4 w-4" />
+        ))}
+      </span>
+    </button>
   );
 }
 
@@ -186,7 +257,7 @@ export function WebsiteBuilderClient({
   const router = useRouter();
   const { push } = useToast();
   const [busy, setBusy] = React.useState(false);
-  const [tab, setTab] = React.useState<TabId>("templates");
+  const [tab, setTab] = React.useState<TabId>("presets");
 
   // Local config state to dynamically sync overrides with live preview
   const [config, setConfig] = React.useState<Record<string, string>>(initialConfig);
@@ -270,6 +341,36 @@ export function WebsiteBuilderClient({
   const [secondaryHex, setSecondaryHex] = React.useState(
     initialConfig["brand.secondaryHex"] || GS_SECONDARY,
   );
+
+  // ── Item 4: staged preset + per-axis overrides (component set / icon family) ─
+  // An override is null when the axis should FOLLOW the preset default; picking a
+  // chip pins an explicit override. Switching preset clears both back to null so
+  // each preset starts from its own cohesive defaults, then can be tweaked.
+  const [presetId, setPresetId] = React.useState<string>(
+    resolveTemplatePreset(initialConfig["website.preset"]).id,
+  );
+  const rawSetOverride = initialConfig["website.componentSet"];
+  const rawIconOverride = initialConfig["website.iconFamily"];
+  const [componentSetOverride, setComponentSetOverride] = React.useState<ComponentSetId | null>(
+    rawSetOverride && (COMPONENT_SET_IDS as readonly string[]).includes(rawSetOverride)
+      ? (rawSetOverride as ComponentSetId)
+      : null,
+  );
+  const [iconFamilyOverride, setIconFamilyOverride] = React.useState<IconFamilyId | null>(
+    rawIconOverride && (ICON_FAMILY_IDS as readonly string[]).includes(rawIconOverride)
+      ? (rawIconOverride as IconFamilyId)
+      : null,
+  );
+  const activePreset = resolveTemplatePreset(presetId);
+  const effectiveComponentSet: ComponentSetId = componentSetOverride ?? activePreset.componentSet;
+  const effectiveIconFamily: IconFamilyId = iconFamilyOverride ?? activePreset.iconFamily;
+
+  const selectPreset = (p: TemplatePreset) => {
+    setPresetId(p.id);
+    setTemplate(p.baseTemplate); // keep the base-template state (Template tab) in sync
+    setComponentSetOverride(null); // per-axis overrides reset to this preset's defaults
+    setIconFamilyOverride(null);
+  };
 
   // New configuration states
   const [orientation, setOrientation] = React.useState<"centered" | "split-left" | "split-right">(
@@ -419,6 +520,12 @@ export function WebsiteBuilderClient({
       const updates: Record<string, string> = {
         "website.sections": JSON.stringify(sections.map(s => s.id)),
         "website.template": template,
+        // Item 4 — persist the chosen preset + the RESOLVED axes (override, or the
+        // preset default when no override). resolveSiteConfig on the public renderer
+        // reads these exact keys, so what the picker stages is what the page renders.
+        "website.preset": presetId,
+        "website.componentSet": effectiveComponentSet,
+        "website.iconFamily": effectiveIconFamily,
         "brand.primaryHex": primaryHex.trim(),
         "brand.secondaryHex": secondaryHex.trim(),
         // Brand soft tint (was a no-op handler in the preview — now persisted).
@@ -615,6 +722,7 @@ export function WebsiteBuilderClient({
   };
 
   const TABS: { id: TabId; label: string; icon: React.ComponentType<any> }[] = [
+    { id: "presets", label: "Presets", icon: Sparkles },
     { id: "templates", label: "Template", icon: LayoutGrid },
     { id: "brand", label: "Brand", icon: Palette },
     { id: "layout", label: "Layout", icon: ChevronUp },
@@ -686,6 +794,144 @@ export function WebsiteBuilderClient({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {/* ── PRESET PICKER (item 4) ────────────────────────────────────── */}
+          {tab === "presets" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Pick a design preset</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  A preset is a whole look - a layout, a component style, an icon
+                  set, and a motion feel, tuned to go together. Pick one, then
+                  fine-tune any part below. Your content and colors carry over.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {TEMPLATE_PRESETS.map((p) => {
+                  const selected = presetId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => selectPreset(p)}
+                      className={cn(
+                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+                        selected ? "border-phisig-red shadow-md" : "border-border hover:border-phisig-red/40 hover:shadow-sm",
+                      )}
+                    >
+                      {selected && (
+                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white shadow">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-phisig-red-soft to-phisig-mist">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.thumb} alt={`${p.name} preview`} className="h-full w-full object-cover" loading="lazy" />
+                      </span>
+                      <span className="flex flex-1 flex-col gap-1.5 p-3">
+                        <span className="text-sm font-semibold">{p.name}</span>
+                        <span className="text-xs leading-relaxed text-muted-foreground">{p.blurb}</span>
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {[p.componentSet, p.iconFamily, p.motion].map((tag) => (
+                            <span key={tag} className="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-slate-500">
+                              {tag}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* ── Per-axis overrides ─────────────────────────────────────── */}
+              <div className="space-y-5 rounded-xl border border-border bg-card/50 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Fine-tune this preset</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Override any single part. &ldquo;Preset default&rdquo; follows{" "}
+                    <strong>{activePreset.name}</strong>; picking another pins it.
+                  </p>
+                </div>
+
+                {/* Component set */}
+                <div>
+                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Component style
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <AxisChip
+                      label="Preset default"
+                      sub={activePreset.componentSet}
+                      active={componentSetOverride === null}
+                      onClick={() => setComponentSetOverride(null)}
+                    />
+                    {COMPONENT_SETS.map((s) => (
+                      <AxisChip
+                        key={s.id}
+                        label={s.label}
+                        sub={s.radius}
+                        active={componentSetOverride === s.id}
+                        onClick={() => setComponentSetOverride(s.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Icon family — with a live glyph preview drawn FROM that family */}
+                <div>
+                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Icon family
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <IconFamilyChip
+                      label="Preset default"
+                      family={activePreset.iconFamily}
+                      active={iconFamilyOverride === null}
+                      onClick={() => setIconFamilyOverride(null)}
+                    />
+                    {ICON_FAMILIES.map((f) => (
+                      <IconFamilyChip
+                        key={f.id}
+                        label={f.label}
+                        family={f.id}
+                        active={iconFamilyOverride === f.id}
+                        onClick={() => setIconFamilyOverride(f.id)}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    One family renders across the whole page - never mixed.
+                  </p>
+                </div>
+
+                {/* Motion (comes from the preset; shown for context) */}
+                <div>
+                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Motion
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                    <span className="capitalize font-medium">{activePreset.motion}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {activePreset.motion === "cinematic"
+                        ? "2.5D depth + scroll reveals (reduced-motion safe)"
+                        : activePreset.motion === "reveal"
+                          ? "gentle scroll reveals"
+                          : "minimal, restrained"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-background/60 p-3 text-xs text-slate-600">
+                  <span className="font-medium text-foreground">Resolved system:</span>{" "}
+                  {activePreset.name} · {effectiveComponentSet} components ·{" "}
+                  {effectiveIconFamily} icons · {activePreset.motion} motion
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── TEMPLATE GALLERY ──────────────────────────────────────────── */}
           {tab === "templates" && (
             <div className="space-y-4">
@@ -1097,6 +1343,8 @@ export function WebsiteBuilderClient({
               <div className="rounded-lg border border-border bg-card/60 p-3 text-xs text-slate-600">
                 <div className="font-medium text-foreground">Staged</div>
                 <ul className="mt-1.5 space-y-1">
+                  <li>Preset: <strong>{activePreset.name}</strong></li>
+                  <li>System: <strong className="capitalize">{effectiveComponentSet}</strong> · <strong className="capitalize">{effectiveIconFamily}</strong> icons</li>
                   <li>Template: <strong className="capitalize">{TEMPLATE_META.find((t) => t.id === template)?.name}</strong></li>
                   <li className="flex items-center gap-1.5">
                     Brand:
