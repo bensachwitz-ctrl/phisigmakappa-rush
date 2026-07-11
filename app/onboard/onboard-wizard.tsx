@@ -583,17 +583,10 @@ export default function OnboardWizard() {
     }
   }
 
-  // Skip the card on the MONTHLY plan and launch card-free (true free trial).
-  // The API creates a trialing subscription with NO payment method and a safe
-  // cancel-at-trial-end behavior, so "no card required to launch" is literally
-  // true. Only valid for monthly — yearly bills today and must collect a card.
-  function skipPayment() {
-    if (plan !== "monthly") return;
-    setPaymentMethodId(null);
-    setPaymentError(null);
-    setDir(1);
-    setStep("launch");
-  }
+  // Item 6: card-free launch removed. A card is now required at the payment step
+  // (goNext gates Continue on a verified payment method). The chapter still gets
+  // a free first month via the Stripe trial — it just keeps a card on file so
+  // billing resumes automatically after the trial and a receipt is emailed.
 
   function goPrev() {
     if (step === "launch") {
@@ -1622,19 +1615,12 @@ export default function OnboardWizard() {
                             {plan === "custom" ? "Custom plan" : "Dues-Share plan"}
                           </span>.
                         </>
-                      ) : plan === "monthly" && !paymentMethodId ? (
-                        <>
-                          No card required - you&apos;re launching free on the{" "}
-                          <span className="font-semibold text-white">
-                            Monthly Plan (first month free)
-                          </span>. Add a card in Admin → Billing before your free month ends.
-                        </>
                       ) : (
                         <>
-                          Card verified securely. You&apos;re launching on the{" "}
+                          Card verified securely - you won&apos;t be charged today. You&apos;re launching on the{" "}
                           <span className="font-semibold text-white">
-                            {plan === "yearly" ? "Annual Plan ($800/year, billed today)" : "Monthly Plan ($50/mo + $200/rush, first month free)"}
-                          </span>.
+                            {plan === "yearly" ? "Annual Plan ($800/year, billed today)" : "Monthly Plan (first month free, then $50/mo + $200/rush)"}
+                          </span>. A receipt is on its way to your email.
                         </>
                       )}
                     </span>
@@ -1697,21 +1683,12 @@ export default function OnboardWizard() {
 
               {!isLastStep ? (
                 <div className="flex items-center gap-3">
-                  {/* MONTHLY-only: launch card-free (a true free trial). The API
-                      creates a trialing subscription with NO payment method, so the
-                      "no card required to launch" promise on the marketing site is
-                      literally true. Yearly omits this because it bills $800 today. */}
-                  {step === "payment" && plan === "monthly" && (
-                    <Button
-                      type="button"
-                      variant="glass"
-                      onClick={skipPayment}
-                      disabled={busy}
-                      className="text-slate-200 transition-transform hover:-translate-x-0.5"
-                    >
-                      Skip - start free without a card
-                    </Button>
-                  )}
+                  {/* Item 6: a card is now REQUIRED to launch. The old "skip -
+                      start free without a card" button is removed — the chapter
+                      still gets its FREE FIRST MONTH (a Stripe trial), but with a
+                      card on file so billing continues automatically after the
+                      trial and a receipt is emailed on launch. The payment step's
+                      Continue is gated on a verified card in goNext(). */}
                   <Magnetic strength={14} radius={80}>
                     <ShimmerBorder rounded="rounded-full">
                       <Button
@@ -2336,7 +2313,7 @@ function PricingStep({
         <span>
           {collectDues
             ? "Your dues-share chapter goes live today. No card required. Reach out to our team after launch to configure dues payments."
-            : "First month free - add a card now, or skip and add it later. You won't be charged today."
+            : "First month free with your card on file - you won't be charged today, and a receipt is emailed when you launch."
           }
         </span>
       </p>

@@ -836,6 +836,29 @@ export async function POST(req: Request) {
       const headsUpHtml = billingReady
         ? `<p style="margin:16px 0 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;"><strong>Heads up:</strong> please set up payment within <strong>2 weeks</strong> of going live (by <strong>${escHtml(deadlineLabel)}</strong>) from <strong>Admin → Billing</strong>. If payment isn't set up by then, your site will be taken down — we don't want that to happen, so just add a method before the deadline and you're all set.</p>`
         : `<p style="margin:16px 0 0;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;color:#1e40af;"><strong>One step left to go live:</strong> your public site stays private until you add a payment method in <strong>Admin → Billing</strong>. It's free for your <strong>first month</strong>, so add a card now to publish your chapter — you won't be charged today.</p>`;
+      // Item 6 — RECEIPT / first invoice. When a card is on file (now required to
+      // launch on monthly, always on yearly), include an explicit receipt block:
+      // what was charged today ($0 on a monthly free-trial launch), the card-on-
+      // file confirmation, and when/what the first real charge will be. A fee-
+      // waiver chapter is $0 forever, so it gets a "no charge" line instead.
+      const firstChargeLabel =
+        finalTrialEndsAt
+          ? finalTrialEndsAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+          : null;
+      const chargedTodayLabel = isFeeWaiver
+        ? "$0.00 (all fees waived)"
+        : normalizedPlan === "yearly"
+        ? "$800.00 (annual, includes all rush fees)"
+        : "$0.00 (first month free)";
+      const firstChargeRowHtml =
+        !isFeeWaiver && normalizedPlan === "monthly" && firstChargeLabel
+          ? `<tr><td style="padding:6px 0;color:#71717a;">First charge</td><td style="padding:6px 0;text-align:right;">${escHtml(firstChargeLabel)} - $50/mo + $200/rush cycle</td></tr>`
+          : "";
+      const receiptRowsHtml = cardProvided
+        ? `<tr><td style="padding:6px 0;color:#71717a;">Payment method</td><td style="padding:6px 0;text-align:right;">Card on file</td></tr>
+          <tr><td style="padding:6px 0;color:#71717a;">Charged today</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escHtml(chargedTodayLabel)}</td></tr>
+          ${firstChargeRowHtml}`
+        : "";
       const welcomeBody = `
         <p style="margin:0 0 16px;">${introLine1Html}</p>
         <p style="margin:0 0 16px;">${introLine2Html}</p>
@@ -844,6 +867,7 @@ export async function POST(req: Request) {
           <tr><td style="padding:6px 0;color:#71717a;">Plan</td><td style="padding:6px 0;text-align:right;">${escHtml(planLabel)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">${billingReady ? "Your site" : "Publish at"}</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.${escHtml(domain)}</a></td></tr>
+          ${receiptRowsHtml}
         </table>
         <p style="margin:16px 0 0;">${billingLineHtml}</p>
         <p style="margin:16px 0 0;">Keep an eye on your inbox — <strong>Ben, the founder, will personally email you</strong> shortly to say hi and make sure you have everything you need to get going.</p>
