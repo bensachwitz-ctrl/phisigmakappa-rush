@@ -35,7 +35,9 @@ export interface TemplatePreset {
   /** One-line description for the picker card. */
   blurb: string;
   /** Which distinct LAYOUT FAMILY this reads as (taste: keep these varied). */
-  family: "classic" | "modern" | "bold" | "editorial" | "minimal" | "photo" | "cinematic";
+  family:
+    | "classic" | "modern" | "bold" | "editorial" | "minimal" | "photo"
+    | "cinematic" | "gallery" | "zine" | "civic";
   /** The existing renderer template this preset draws with. */
   baseTemplate: TemplateId;
   /** The cohesive component set (buttons/cards/nav/badges/inputs). */
@@ -49,9 +51,13 @@ export interface TemplatePreset {
 }
 
 /**
- * The template catalog. Foundation ships 6 distinct presets across 6 layout
- * families; more (to 8-10) add as pure data. No two share both family AND
- * component set, so every pick is a visibly different system.
+ * The template catalog — 10 distinct presets across 10 layout families. A preset
+ * is a whole SYSTEM = base hero layout × component set × icon family × motion, so
+ * each reads as a genuinely different template even though they compose the three
+ * base heroes. INVARIANTS (proven by test): no family repeats, and no two presets
+ * share both family AND component set — so every pick is a visibly different look.
+ * Exactly one preset (`cinematic`) is the 2.5D depth treatment (item 6). Adding
+ * an 11th is pure data: append an entry with a fresh family + component-set combo.
  */
 export const TEMPLATE_PRESETS: TemplatePreset[] = [
   {
@@ -112,13 +118,57 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
   {
     id: "cinematic",
     name: "Cinematic",
-    blurb: "Full-bleed imagery with subtle 2.5D depth and scroll-reveals. Immersive — and vestibular-safe on reduced-motion.",
+    blurb: "Full-bleed imagery with subtle 2.5D depth and scroll-reveals. Immersive, and vestibular-safe on reduced-motion.",
     family: "cinematic",
     baseTemplate: "bold",
     componentSet: "soft",
     iconFamily: "hugeicons",
     motion: "cinematic",
     thumb: "/templates/cinematic.svg",
+  },
+  {
+    id: "photo-story",
+    name: "Photo Story",
+    blurb: "Photography leads every section with pill-soft chrome and airy spacing. Let your best chapter shots carry the page.",
+    family: "photo",
+    baseTemplate: "modern",
+    componentSet: "soft",
+    iconFamily: "radix",
+    motion: "reveal",
+    thumb: "/templates/photo-story.svg",
+  },
+  {
+    id: "gallery-grid",
+    name: "Gallery Grid",
+    blurb: "A poster banner over a tidy card grid with hairline borders. Structured and gallery-like, calm and confident.",
+    family: "gallery",
+    baseTemplate: "bold",
+    componentSet: "refined",
+    iconFamily: "phosphor",
+    motion: "reveal",
+    thumb: "/templates/gallery-grid.svg",
+  },
+  {
+    id: "zine",
+    name: "Zine",
+    blurb: "Poster-scale banner with serif headlines, thin rules, and hard edges. Reads like a printed recruitment zine.",
+    family: "zine",
+    baseTemplate: "bold",
+    componentSet: "editorial",
+    iconFamily: "phosphor",
+    motion: "reveal",
+    thumb: "/templates/zine.svg",
+  },
+  {
+    id: "civic-crest",
+    name: "Civic Crest",
+    blurb: "The Classic crest hero with block-bold buttons and offset shadows. Institutional weight with a loud, unmistakable voice.",
+    family: "civic",
+    baseTemplate: "classic",
+    componentSet: "brutal",
+    iconFamily: "tabler",
+    motion: "restrained",
+    thumb: "/templates/civic-crest.svg",
   },
 ];
 

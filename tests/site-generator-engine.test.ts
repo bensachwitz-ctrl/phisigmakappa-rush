@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   ICON_FAMILIES,
   ICON_FAMILY_IDS,
@@ -73,21 +75,41 @@ describe("component sets — cohesive per-template systems, anti-slop", () => {
 });
 
 describe("template presets — extensible catalog, distinct systems", () => {
-  it("ships >=6 presets, each a base template + component set + icon family", () => {
-    expect(TEMPLATE_PRESETS.length).toBeGreaterThanOrEqual(6);
+  it("ships >=10 presets, each a base template + component set + icon family", () => {
+    expect(TEMPLATE_PRESETS.length).toBeGreaterThanOrEqual(10);
     for (const p of TEMPLATE_PRESETS) {
       expect(["classic", "modern", "bold"]).toContain(p.baseTemplate);
       expect(COMPONENT_SET_IDS).toContain(p.componentSet);
       expect(ICON_FAMILY_IDS).toContain(p.iconFamily);
     }
   });
+  it("no layout family repeats (every preset reads as a distinct family)", () => {
+    const families = TEMPLATE_PRESETS.map((p) => p.family);
+    expect(new Set(families).size).toBe(families.length);
+  });
   it("no two presets share BOTH layout family and component set (all visibly distinct)", () => {
     const combos = TEMPLATE_PRESETS.map((p) => `${p.family}:${p.componentSet}`);
     expect(new Set(combos).size).toBe(combos.length);
   });
+  it("has exactly one CINEMATIC 2.5D depth preset (motion=cinematic)", () => {
+    const cinematic = TEMPLATE_PRESETS.filter((p) => p.motion === "cinematic");
+    expect(cinematic).toHaveLength(1);
+    expect(cinematic[0].family).toBe("cinematic");
+  });
+  it("has unique ids and stable string ids", () => {
+    const ids = TEMPLATE_PRESETS.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^[a-z0-9-]+$/);
+  });
   it("resolves an unknown preset id to the default", () => {
     expect(resolveTemplatePreset("nope").id).toBe(DEFAULT_PRESET_ID);
     expect(resolveTemplatePreset("editorial").componentSet).toBe("editorial");
+  });
+  it("every preset points at a thumbnail that actually exists on disk (no broken cards)", () => {
+    for (const p of TEMPLATE_PRESETS) {
+      const file = resolve(__dirname, "..", "public", p.thumb.replace(/^\//, ""));
+      expect(existsSync(file), `${p.id} thumb missing: ${p.thumb}`).toBe(true);
+    }
   });
 });
 

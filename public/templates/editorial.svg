@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="editorial template wireframe">
+  <rect width="400" height="300" fill="#f8fafc"/>
+  <rect x="0" y="0" width="400" height="150" rx="0" fill="#e5e7eb"/>
+  <rect x="24" y="34" width="110" height="12" rx="0" fill="#111827"/>
+  <rect x="24" y="56" width="150" height="18" rx="0" fill="#111827"/>
+  <rect x="24" y="82" width="120" height="18" rx="0" fill="#111827" opacity="0.6"/>
+  <rect x="24" y="116" width="84" height="16" rx="0" fill="#111827"/>
+  <rect x="232" y="26" width="144" height="108" rx="0" fill="#111827" opacity="0.85"/>
+  
+  
+  <rect x="24" y="168" width="352" height="2" fill="#111827" opacity="0.7"/>
+  <rect x="24" y="190" width="104" height="70" rx="0" fill="#ffffff" stroke="#111827" stroke-opacity="0.25" stroke-width="1"/>
+  <circle cx="42" cy="210" r="8" fill="#111827" opacity="0.9"/>
+  <rect x="58" y="205" width="52" height="8" rx="4" fill="#111827" opacity="0.8"/>
+  <rect x="36" y="230" width="80" height="7" rx="4" fill="#111827" opacity="0.3"/>
+  <rect x="36" y="242" width="62" height="7" rx="4" fill="#111827" opacity="0.3"/>
+  <rect x="148" y="190" width="104" height="70" rx="0" fill="#ffffff" stroke="#111827" stroke-opacity="0.25" stroke-width="1"/>
+  <circle cx="166" cy="210" r="8" fill="#111827" opacity="0.9"/>
+  <rect x="182" y="205" width="52" height="8" rx="4" fill="#111827" opacity="0.8"/>
+  <rect x="160" y="230" width="80" height="7" rx="4" fill="#111827" opacity="0.3"/>
+  <rect x="160" y="242" width="62" height="7" rx="4" fill="#111827" opacity="0.3"/>
+  <rect x="272" y="190" width="104" height="70" rx="0" fill="#ffffff" stroke="#111827" stroke-opacity="0.25" stroke-width="1"/>
+  <circle cx="290" cy="210" r="8" fill="#111827" opacity="0.9"/>
+  <rect x="306" y="205" width="52" height="8" rx="4" fill="#111827" opacity="0.8"/>
+  <rect x="284" y="230" width="80" height="7" rx="4" fill="#111827" opacity="0.3"/>
+  <rect x="284" y="242" width="62" height="7" rx="4" fill="#111827" opacity="0.3"/>
+</svg>
