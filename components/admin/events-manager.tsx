@@ -4,7 +4,8 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -476,8 +477,11 @@ export function EventsManager({
                           </div>
                         </div>
                         {e.description && (
+                          // Admin list preview: downgrade the rich body to plain
+                          // text so the 2-line clamp stays clean (full formatting
+                          // renders on the member calendar / portal).
                           <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">
-                            {e.description}
+                            {htmlToPlainText(e.description)}
                           </p>
                         )}
                       </div>
@@ -576,7 +580,12 @@ export function EventsManager({
             </div>
             <div>
               <Label className="mb-1 inline-block">Description</Label>
-              <Textarea rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="What it is, who it's for, anything brothers should know." />
+              <RichTextEditor
+                value={form.description}
+                onChange={(html) => update("description", html)}
+                ariaLabel="Event description"
+                placeholder="What it is, who it's for, anything brothers should know."
+              />
             </div>
             <div>
               <Label className="mb-1.5 inline-block">Category</Label>

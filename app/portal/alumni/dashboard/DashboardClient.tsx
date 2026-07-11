@@ -1736,7 +1736,7 @@ export default function DashboardClient({
                           
                           {event.description && (
                             <p className="text-sm text-maroon-700 mb-4 line-clamp-3 leading-relaxed">
-                              {event.description}
+                              {htmlToPlainText(event.description)}
                             </p>
                           )}
 
@@ -1763,7 +1763,7 @@ export default function DashboardClient({
                         {/* Calendar export options */}
                         <div className="mt-6 pt-4 border-t border-maroon-50 flex flex-wrap gap-2">
                           <a
-                            href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}/${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}&details=${encodeURIComponent(event.description || "")}&location=${encodeURIComponent(event.location || "")}`}
+                            href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}/${parsedDate.toISOString().replace(/-|:|\.\d\d\d/g, "")}&details=${encodeURIComponent(htmlToPlainText(event.description))}&location=${encodeURIComponent(event.location || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 text-center bg-cream-50 hover:bg-cream-100 text-maroon-900 border border-maroon-200 text-xs font-semibold py-2 rounded-lg transition min-w-0"

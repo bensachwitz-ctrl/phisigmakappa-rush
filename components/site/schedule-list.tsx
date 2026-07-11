@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, MapPin, Shirt } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/utils";
 import { getChapterIdentity } from "@/lib/chapter-identity";
+import { htmlToPlainText } from "@/lib/rich-text";
 
 export async function ScheduleList() {
   const identity = await getChapterIdentity().catch(() => null);
@@ -96,7 +97,7 @@ export async function ScheduleList() {
                   </h3>
                   {e.description && (
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {e.description}
+                      {htmlToPlainText(e.description)}
                     </p>
                   )}
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">

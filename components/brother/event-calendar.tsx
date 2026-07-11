@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatDate, formatTime } from "@/lib/utils";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { avatarSrc } from "@/lib/image-url";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 import { IconSpark } from "@/components/brand/icons";
@@ -219,7 +220,9 @@ function EventCard({
     setNoteDraft(event.mine?.note || "");
   }, [event.mine?.note]);
 
-  const desc = event.description || "";
+  // Downgrade the rich (Tiptap) body to plain text before truncating so the
+  // char-slice never cuts inside a tag (the full formatting shows in the modal).
+  const desc = htmlToPlainText(event.description);
   const descIsLong = desc.length > 180;
   const visibleDesc = expandedDesc || !descIsLong ? desc : desc.slice(0, 180).trimEnd() + "…";
 

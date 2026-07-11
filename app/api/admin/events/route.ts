@@ -6,6 +6,7 @@ import { guardOfficerOrAdmin, guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { pushEventToCalDiy } from "@/lib/events";
 import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
+import { sanitizeRichText, htmlToPlainText } from "@/lib/rich-text";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,7 +65,9 @@ export async function POST(req: Request) {
         where: { id: data.id },
         data: {
           name: data.name,
-          description: data.description || null,
+          // Rich-text body: sanitize the (Tiptap) HTML server-side before storing
+          // (defense-in-depth so a direct POST can't persist a script/handler).
+          description: data.description ? sanitizeRichText(data.description) : null,
           location: data.location || null,
           dressCode: data.dressCode || null,
           startsAt: new Date(data.startsAt),
@@ -117,7 +120,8 @@ export async function POST(req: Request) {
     const created = await prisma.event.create({
       data: {
         name: data.name,
-        description: data.description || null,
+        // Rich-text body: sanitize server-side before storing (see edit branch).
+        description: data.description ? sanitizeRichText(data.description) : null,
         location: data.location || null,
         dressCode: data.dressCode || null,
         startsAt: startsAtDate,
@@ -151,7 +155,8 @@ export async function POST(req: Request) {
       {
         event: "event.posted",
         title: `New event: ${created.name}`,
-        body: created.description || created.location || "A new chapter event was posted.",
+        // Downgrade the rich body to plain text for SMS/email/push channels.
+        body: htmlToPlainText(created.description) || created.location || "A new chapter event was posted.",
         url: "/portal/brothers/dashboard",
       },
       recipients,

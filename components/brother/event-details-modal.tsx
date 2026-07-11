@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate, formatTime } from "@/lib/utils";
+import { RichTextContent } from "@/components/ui/rich-text-editor";
 
 import { IconSpark } from "@/components/brand/icons";
 // Per-category icon + tone — kept in lockstep with EVENT_CATEGORIES in
@@ -197,7 +198,13 @@ export function EventDetailsModal({
             </div>
           </div>
           {e?.description && (
-            <p className="mt-3 text-sm text-white/90 leading-relaxed">{e.description}</p>
+            // Full event view: render the rich (Tiptap) body. RichTextContent
+            // re-sanitizes before injecting, and a legacy plain-text description
+            // renders as safe escaped text.
+            <RichTextContent
+              html={e.description}
+              className="mt-3 text-sm text-white/90 leading-relaxed"
+            />
           )}
         </div>
 

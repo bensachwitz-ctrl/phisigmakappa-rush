@@ -614,7 +614,9 @@ async function handleGet(req: Request): Promise<NextResponse> {
       events: events.map((e) => ({
         id: e.id,
         name: e.name,
-        description: e.description,
+        // The native shell renders plain text — downgrade the rich (Tiptap) body
+        // to plain text (same as the announcement body above).
+        description: htmlToPlainText(e.description),
         location: e.location,
         dressCode: e.dressCode,
         startsAt: e.startsAt.toISOString(),

@@ -1712,7 +1712,7 @@ export default function BrothersDashboardClient({
                           </div>
                           <h3 className="font-bold text-maroon-900 text-lg leading-snug">{e.name}</h3>
                           {e.description && (
-                            <p className="text-xs text-maroon-600 leading-relaxed font-normal">{e.description}</p>
+                            <p className="text-xs text-maroon-600 leading-relaxed font-normal">{htmlToPlainText(e.description)}</p>
                           )}
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 text-xs text-maroon-700 font-medium">
