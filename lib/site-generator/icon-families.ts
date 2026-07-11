@@ -53,7 +53,7 @@ export const ICON_FAMILIES: IconFamily[] = [
     pkg: "@phosphor-icons/react",
     strokeWidth: 1.5,
     blurb: "Flexible, friendly line icons with an even weight.",
-    available: false,
+    available: true,
   },
   {
     id: "hugeicons",
@@ -61,7 +61,7 @@ export const ICON_FAMILIES: IconFamily[] = [
     pkg: "hugeicons-react",
     strokeWidth: 1.5,
     blurb: "A large, modern stroke set with a crisp geometric feel.",
-    available: false,
+    available: true,
   },
   {
     id: "radix",
@@ -69,7 +69,7 @@ export const ICON_FAMILIES: IconFamily[] = [
     pkg: "@radix-ui/react-icons",
     strokeWidth: null, // solid, no stroke
     blurb: "Minimal 15px solid icons — precise and restrained.",
-    available: false,
+    available: true,
   },
   {
     id: "tabler",
@@ -77,7 +77,7 @@ export const ICON_FAMILIES: IconFamily[] = [
     pkg: "@tabler/icons-react",
     strokeWidth: 2,
     blurb: "A big, consistent 2px-stroke set with wide coverage.",
-    available: false,
+    available: true,
   },
 ];
 

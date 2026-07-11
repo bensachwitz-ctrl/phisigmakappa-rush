@@ -65,6 +65,19 @@ const nextConfig = {
     // tenant-tagged error capture). Inert unless SENTRY_DSN is set — the hook
     // self-gates, so there is no runtime cost when Sentry is unconfigured.
     instrumentationHook: true,
+    // Tree-shake the icon barrels: the site-generator's selectable icon families
+    // (site-icon.tsx) reference ~20 named glyphs per library, but a bare barrel
+    // import would pull the WHOLE package (Tabler alone is 6,200+ components) into
+    // the bundle. optimizePackageImports rewrites the barrel to per-icon imports
+    // so only the referenced glyphs ship — a page renders exactly ONE family, and
+    // now only that family's used glyphs are in its chunk.
+    optimizePackageImports: [
+      "lucide-react",
+      "@phosphor-icons/react",
+      "hugeicons-react",
+      "@radix-ui/react-icons",
+      "@tabler/icons-react",
+    ],
   },
   // Silence the cosmetic "Critical dependency: require function is used in a way
   // in which dependencies cannot be statically extracted" warning emitted by
