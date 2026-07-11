@@ -44,7 +44,16 @@ const initial: { title: string; body: string; audience: Audience; pinned: boolea
   pollId: null,
 };
 
-export function AnnouncementsManager({ initial: initialAnnouncements }: { initial: Announcement[] }) {
+export function AnnouncementsManager({
+  initial: initialAnnouncements,
+  canWrite = true,
+}: {
+  initial: Announcement[];
+  // Whether the viewing officer holds announcements:write. A read-only officer
+  // (announcements:read, e.g. Risk chair) sees the list but no compose / edit /
+  // delete / broadcast controls — all of which the API 403s for them anyway.
+  canWrite?: boolean;
+}) {
   const { push } = useToast();
   const [list, setList] = React.useState<Announcement[]>(initialAnnouncements);
   const [editing, setEditing] = React.useState<Announcement | null>(null);
@@ -183,14 +192,16 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
         <p className="text-sm text-muted-foreground">
           {list.length === 0 ? "No announcements yet." : `${list.length} announcement${list.length === 1 ? "" : "s"}`}
         </p>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setBroadcastOpen(true)}>
-            <Send className="h-4 w-4" /> Broadcast (text/email)
-          </Button>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" /> New announcement
-          </Button>
-        </div>
+        {canWrite && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setBroadcastOpen(true)}>
+              <Send className="h-4 w-4" /> Broadcast (text/email)
+            </Button>
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" /> New announcement
+            </Button>
+          </div>
+        )}
       </div>
 
       {list.length === 0 ? (
@@ -203,12 +214,14 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
               Use this for chapter meeting reminders, philanthropy events, dues deadlines, or anything the brothers need to know. Pin urgent ones.
             </p>
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <Button onClick={openCreate} size="sm"><Plus className="h-3.5 w-3.5" /> New announcement</Button>
-              <Button onClick={() => setBroadcastOpen(true)} variant="outline" size="sm">
-                <Send className="h-3.5 w-3.5" /> Broadcast
-              </Button>
-            </div>
+            {canWrite && (
+              <div className="mt-5 flex items-center justify-center gap-2">
+                <Button onClick={openCreate} size="sm"><Plus className="h-3.5 w-3.5" /> New announcement</Button>
+                <Button onClick={() => setBroadcastOpen(true)} variant="outline" size="sm">
+                  <Send className="h-3.5 w-3.5" /> Broadcast
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -235,17 +248,19 @@ export function AnnouncementsManager({ initial: initialAnnouncements }: { initia
                       {format(new Date(a.createdAt), "MMM d, yyyy 'at' h:mm a")}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => togglePin(a)} aria-label={a.pinned ? "Unpin announcement" : "Pin announcement"} title={a.pinned ? "Unpin" : "Pin"}>
-                      <Pin className={cn("h-4 w-4", a.pinned && "fill-current text-phisig-red")} />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(a)} aria-label="Edit announcement" title="Edit">
-                      <Edit3 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete announcement" title="Delete">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {canWrite && (
+                    <div className="flex flex-col gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => togglePin(a)} aria-label={a.pinned ? "Unpin announcement" : "Pin announcement"} title={a.pinned ? "Unpin" : "Pin"}>
+                        <Pin className={cn("h-4 w-4", a.pinned && "fill-current text-phisig-red")} />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(a)} aria-label="Edit announcement" title="Edit">
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete announcement" title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

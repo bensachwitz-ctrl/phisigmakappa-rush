@@ -1,21 +1,26 @@
 import { redirect } from "next/navigation";
 import { Megaphone } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
+import { checkOfficerPermission } from "@/lib/permissions";
+import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { AnnouncementsManager } from "@/components/admin/announcements-manager";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnnouncementsPage() {
-  // Admin-only. The middleware only checks for *a* session, not the role, so
-  // without this gate any logged-in brother could open the announcements console
-  // by direct URL. Gated with isAdminRole (not the "announcements" officer
-  // domain) to stay consistent with the announcements write API, whose
-  // POST/PATCH/DELETE are all isAdminRole-only — so an officer let in by the
-  // domain would see a page where every control 403s.
+  // Gated on the "announcements" officer domain — NOT isAdminRole. The write API
+  // (POST/PATCH/DELETE + broadcast) already admits officers holding
+  // announcements:write (Secretary, Recruitment, Philanthropy, Brotherhood
+  // chairs), but this page previously redirected every non-admin, so those
+  // officers had a working backend and NO reachable compose UI. Now a read-holder
+  // reaches the page (graceful card if not) and canWrite governs the controls, so
+  // the nav ↔ page ↔ API all agree on the "announcements" permission.
   if (!isAdminAuthed()) redirect("/admin/login?from=%2Fadmin%2Fannouncements");
-  if (!isAdminRole()) redirect("/admin");
+  const { allowed: canRead } = await checkOfficerPermission("announcements", "read");
+  if (!canRead) return <OfficerAccessRequired title="Announcements" permission="Announcements" />;
+  const { allowed: canWrite } = await checkOfficerPermission("announcements", "write");
 
   let announcements: any[] = [];
   try {
@@ -38,7 +43,7 @@ export default async function AnnouncementsPage() {
         title="Announcements"
         subtitle="Post chapter-wide updates. Pin urgent ones to the top. Use Broadcast to text/email all members."
       />
-      <AnnouncementsManager initial={serializable as any} />
+      <AnnouncementsManager initial={serializable as any} canWrite={canWrite} />
     </div>
   );
 }

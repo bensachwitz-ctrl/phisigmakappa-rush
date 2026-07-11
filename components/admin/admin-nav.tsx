@@ -57,7 +57,11 @@ export const ITEMS: NavItem[] = [
   { href: "/admin/chores", label: "Chores", icon: IconChores, adminOnly: false, group: "more", domain: "house" },
   { href: "/admin/polls", label: "Polls", icon: IconBallot, adminOnly: false, group: "more" },
   { href: "/admin/elections", label: "Elections", icon: IconElections, adminOnly: false, group: "more", domain: "elections" },
-  { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: true, group: "more", domain: "announcements" },
+  // News (announcements) is officer-reachable: the page + write API admit officers
+  // holding announcements:read/write. adminOnly:true short-circuited the domain
+  // filter and hid it from exactly those officers (same defect the money-nav fix
+  // cured) — drop it so the `announcements` domain governs discovery.
+  { href: "/admin/announcements", label: "News", icon: IconComms, adminOnly: false, group: "more", domain: "announcements" },
   { href: "/admin/service", label: "Service", icon: IconService, adminOnly: false, group: "more", domain: "service" },
   { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
   { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more", domain: "documents" },

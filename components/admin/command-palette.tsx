@@ -73,7 +73,7 @@ export function CommandPalette({
       { id: "nav-service", group: "Navigate", icon: IconService, label: "Service hours", href: "/admin/service", synonyms: ["philanthropy", "volunteer", "community", "hours"] },
       { id: "nav-polls", group: "Navigate", icon: IconBallot, label: "Polls", href: "/admin/polls", synonyms: ["vote", "decision"] },
       { id: "nav-events", group: "Navigate", icon: IconEvents, label: "Events", href: "/admin/events", synonyms: ["calendar", "schedule", "rsvp"], adminOnly: true },
-      { id: "nav-news", group: "Navigate", icon: IconComms, label: "News / Announcements", href: "/admin/announcements", synonyms: ["broadcast", "post", "blast"], adminOnly: true },
+      { id: "nav-news", group: "Navigate", icon: IconComms, label: "News / Announcements", href: "/admin/announcements", synonyms: ["broadcast", "post", "blast"], domain: "announcements" },
       { id: "nav-officers", group: "Navigate", icon: IconSecurity, label: "Officers / RBAC", href: "/admin/officers", synonyms: ["roles", "permissions", "positions", "eboard", "executive", "rbac", "access"], adminOnly: true },
       { id: "nav-library", group: "Navigate", icon: IconLibrary, label: "Library / Documents", href: "/admin/library", synonyms: ["docs", "files", "bylaws", "resources", "documents"] },
       { id: "nav-audit", group: "Navigate", icon: IconAuditLog, label: "Audit log", href: "/admin/audit", synonyms: ["history", "governance", "trail", "who changed"], adminOnly: true },
