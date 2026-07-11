@@ -326,8 +326,17 @@ async function handlePost(req: Request): Promise<NextResponse> {
         quantity: 1,
       },
     ],
-    success_url: `${origin}/admin/dues/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/admin/brothers`,
+    // PORTAL-AWARE return routes. The payer is the signed-in BROTHER, most often
+    // a portal-only member (or a native caller landing in the system browser with
+    // NO session). The old /admin/* targets are middleware-gated, so those payers
+    // were bounced to /admin/login and never saw a receipt even though the webhook
+    // recorded the charge. /portal/brothers/dues/success is NOT admin-gated and
+    // renders the receipt purely from the (unguessable) Stripe session id, so it
+    // works for portal members, native callers, and admins alike. Cancel returns
+    // the member to their portal dashboard (a lost session falls through to the
+    // portal login, never /admin/login).
+    success_url: `${origin}/portal/brothers/dues/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/portal/brothers/dashboard?dues=canceled`,
     metadata: {
       brotherId: brother.id,
       duesPaymentId: payment.id,
