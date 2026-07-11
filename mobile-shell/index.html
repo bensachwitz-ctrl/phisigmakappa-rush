@@ -87,9 +87,23 @@
       border-radius:50%;width:26px;height:26px;display:inline-block;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+    /* Fluid native scroll (item 8): momentum + contained overscroll so the body
+       scroller never rubber-bands the shell, and a vestibular-safe reduced-motion
+       branch that flattens every transition/animation to instant. Motion here is
+       transform/opacity only - no layout-animating properties, no scroll listeners. */
+    body{-webkit-overflow-scrolling:touch}
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+        transition-duration:.001ms!important;scroll-behavior:auto!important}
+    }
+    /* Opaque nav bar instead of a blurred sticky header: a per-frame backdrop
+       blur repaints the whole viewport on every scroll frame (the iOS jank the
+       owner saw). An opaque bar with a hairline border reads native AND scrolls
+       at 60fps. will-change promotes it to its own compositor layer so content
+       scrolling underneath never repaints it. */
     header.topbar{position:sticky;top:0;display:flex;align-items:center;gap:10px;
-      padding:14px 16px calc(14px) 16px;background:linear-gradient(180deg,var(--bg) 60%,transparent);
-      backdrop-filter:saturate(140%) blur(8px);z-index:5}
+      padding:14px 16px calc(14px) 16px;background:var(--bg);
+      border-bottom:1px solid var(--line);z-index:5;will-change:transform}
     /* Topbar crest — the navy temple in a gold disc, matching the boot screen +
        the site/app icon. Holds an inline SVG (not text). */
     header.topbar .mark{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
@@ -114,8 +128,10 @@
     .search{margin:6px 0 4px}
     .row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
       padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);
-      margin-bottom:10px;min-height:56px}
-    .row:active{transform:scale(.99)}
+      margin-bottom:10px;min-height:56px;transition:transform .09s ease}
+    .row:active{transform:scale(.985)}
+    @media(prefers-reduced-motion:reduce){.row{transition:none}.row:active{transform:none}}
+    .tabbar{will-change:transform}
     .row .crest{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
       font-weight:800;font-size:15px;flex:none;color:#fff}
     .row .meta{flex:1;min-width:0}
@@ -981,7 +997,7 @@
     function careerPostSheet(d) {
       var p = d.profile || {};
       var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
-      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
       sheet.appendChild(el('<h2 class="section" style="margin-top:0">Post an opportunity</h2>'));
       var form = el('<form>' +
         '<div class="field"><label>Title *</label><input data-k="title" required placeholder="Software Engineering Intern" /></div>' +
@@ -1512,7 +1528,7 @@
             ["bio", "Bio", p.bio || "", true]
           ];
       var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
-      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
       sheet.appendChild(el('<h2 class="section" style="margin-top:0">Edit profile</h2>'));
       var form = el('<form></form>');
       fields.forEach(function (f) {
