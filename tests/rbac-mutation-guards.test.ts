@@ -83,6 +83,10 @@ const CHANGED_ROUTES: { rel: string; domain: string }[] = [
   { rel: "app/api/admin/rushees/[id]/bid/route.ts", domain: "rushPipeline" },
   { rel: "app/api/send-sms/route.ts", domain: "rushPipeline" },
   { rel: "app/api/admin/attendance/route.ts", domain: "events" },
+  // P2b — sober-driver scheduling is a Risk-Management function. Its writes used
+  // to gate on isAdminRole() (super-admin ONLY), so a Risk Manager holding
+  // risk:write could not save. Now gated on guardOfficer("risk","write").
+  { rel: "app/api/admin/sober-schedule/route.ts", domain: "risk" },
   { rel: "app/api/admin/alumni-invites/route.ts", domain: "alumni" },
   { rel: "app/api/admin/brother-invites/route.ts", domain: "brothers" },
   { rel: "app/api/admin/brothers/route.ts", domain: "brothers" },

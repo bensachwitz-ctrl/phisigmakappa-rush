@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { IconSearch as Search, IconRiskDesk as ShieldAlert, IconAlert as AlertTriangle, IconEye as Eye, IconSpinner as Loader2, IconCalendar as Calendar, IconUser as User, IconCheckCircle as CheckCircle2, IconFileText as FileText, IconChevronRight as ChevronRight, IconUserCheck as UserCheck, IconShieldCheck as Shield } from "@/components/brand/icons";
+import { IconSearch as Search, IconRiskDesk as ShieldAlert, IconAlert as AlertTriangle, IconEye as Eye, IconSpinner as Loader2, IconCalendar as Calendar, IconUser as User, IconCheckCircle as CheckCircle2, IconFileText as FileText, IconChevronRight as ChevronRight, IconUserCheck as UserCheck, IconShieldCheck as Shield, IconCar as Car } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type IncidentAcknowledgment = {
@@ -197,11 +198,22 @@ export function RiskClient({
             Triage anonymous or identified safety and hazing incident reports. Honoring full anonymity.
           </p>
         </div>
-        {!canWrite && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Read-only Mode
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Sober-driver scheduling is a Risk-Management function — surface it
+              from the Risk Desk so a Risk Manager can select + log drivers
+              without needing the rushPipeline-gated /admin/rushees page. */}
+          <Link
+            href="/admin/risk/sober-drivers"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          >
+            <Car className="h-4 w-4 text-phisig-red" /> Sober Driver Schedule
+          </Link>
+          {!canWrite && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Read-only Mode
+            </span>
+          )}
+        </div>
       </div>
 
       {/* KPI stats */}

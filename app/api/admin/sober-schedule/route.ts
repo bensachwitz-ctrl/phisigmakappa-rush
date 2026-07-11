@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
-import { guardBillingWrite } from "@/lib/billing-guard";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Sober-driver scheduling is a RISK-MANAGEMENT function. Owner spec: "Risk Mgmt
+// = select + log sober driver." Both the read (roster + shift PII) and the write
+// (select/log a driver) are gated on the `risk` officer domain — read on
+// risk:read, write on risk:write — so a non-super-admin Risk Manager who holds
+// risk:write can BOTH load and save the schedule. Chapter admins pass via
+// SUPER_ADMIN_PERMISSIONS (guardOfficer returns them for isAdmin sessions); a
+// plain member with no risk access is 403'd. guardOfficer's write path also
+// enforces the platform-billing lockout (assertBillingActive), so a locked-out
+// chapter can read but not edit — no separate billing guard needed.
+//
+// (Previously the writes gated on isAdminRole() — super-admin ONLY — so a Risk
+// Manager holding risk:write could not save; and the UI lived only on the
+// rushPipeline-gated /admin/rushees page, so they could not reach it either. The
+// select/log UI is now also surfaced at /admin/risk/sober-drivers.)
 
 const ShiftSchema = z.object({
   day: z.string().min(2).max(40),
@@ -16,11 +30,12 @@ const ShiftSchema = z.object({
 });
 
 export async function GET() {
-  // Returns chapter-wide PII (every pledge's + shift member's email/phone), so
-  // it needs the officer/admin floor (the API twin of the /admin layout
-  // boundary), not isAdminAuthed() alone — which any valid member-login cookie
-  // passes, letting a bounced plain member read the roster's contact details.
-  const denied = await guardOfficerOrAdmin();
+  if (!isAdminAuthed()) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+  // Returns chapter-wide PII (every pledge's + shift member's email/phone). Gate
+  // on risk:read so only a risk officer/admin can load it.
+  const denied = await guardOfficer("risk", "read");
   if (denied) return denied;
 
   try {
@@ -72,12 +87,12 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
-  // Billing WRITE guard (P1): a locked-out chapter may not edit the sober schedule.
-  const billingLocked = await guardBillingWrite();
-  if (billingLocked) return billingLocked;
+  // WRITE gated on risk:write (admins pass via SUPER_ADMIN_PERMISSIONS). This is
+  // the fix for a Risk Manager who holds risk:write but not super-admin: the old
+  // isAdminRole() gate rejected them. guardOfficer also enforces the billing
+  // WRITE lockout (a locked-out chapter may not edit the sober schedule).
+  const denied = await guardOfficer("risk", "write");
+  if (denied) return denied;
 
   try {
     const body = await req.json();
@@ -138,12 +153,10 @@ export async function DELETE(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
-  // Billing WRITE guard (P1): a locked-out chapter may not edit the sober schedule.
-  const billingLocked = await guardBillingWrite();
-  if (billingLocked) return billingLocked;
+  // WRITE gated on risk:write (admins pass via SUPER_ADMIN_PERMISSIONS);
+  // guardOfficer also enforces the billing WRITE lockout.
+  const denied = await guardOfficer("risk", "write");
+  if (denied) return denied;
 
   try {
     const url = new URL(req.url);
