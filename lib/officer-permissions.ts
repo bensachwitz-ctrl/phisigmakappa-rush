@@ -202,6 +202,15 @@ export const DEFAULT_OFFICER_CATALOG: OfficerSeed[] = [
       r("brothers"), r("events"), r("announcements"),
     ]),
   },
+  {
+    title: "Alumni Relations",
+    slug: "alumni-relations",
+    description: "Manages the alumni network — alumni logins/roster, alumni announcements, giving relationships.",
+    sortOrder: 140,
+    permissions: perms([
+      r("brothers"), w("alumni"), w("announcements"), r("events"),
+    ]),
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
