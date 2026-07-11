@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, getCurrentBrother, isAdminRole } from "@/lib/auth";
+import { isAdminAuthed, getCurrentBrother } from "@/lib/auth";
 import { guardOfficer } from "@/lib/permissions";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
@@ -122,7 +122,13 @@ async function sendSms(to: string, link: string, sender: string, identity: Chapt
 
 export async function GET() {
   if (!isAdminAuthed()) return NextResponse.json({ ok: false }, { status: 401 });
-  if (!isAdminRole()) return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  // alumni:read — the Alumni Relations officer (and any alumni-domain officer)
+  // must be able to LIST alumni logins/invites, not just create/delete them. The
+  // POST/DELETE below already gate on alumni:write; this aligns the read side so
+  // the whole surface works for the role (super-admins pass either way). Was
+  // isAdminRole()-only, which locked the new officer out of the list.
+  const denied = await guardOfficer("alumni", "read");
+  if (denied) return denied;
   const invites = await prisma.alumniInvite.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,

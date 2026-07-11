@@ -148,12 +148,25 @@ describe("matchOfficerRole / permissionsForPosition", () => {
   });
 });
 
-describe("Alumni Relations role is seeded into the catalog", () => {
+describe("Alumni Relations role is seeded into the catalog (item 4)", () => {
   it("exists with alumni+announcements write", () => {
     const role = DEFAULT_OFFICER_CATALOG.find((s) => s.slug === "alumni-relations");
     expect(role).toBeTruthy();
     expect(role!.permissions.domain.alumni).toBe("write");
     expect(role!.permissions.domain.announcements).toBe("write");
+  });
+
+  it("the alumni-invites API gates LIST on alumni:read (not admins-only) so the role can manage logins", () => {
+    const { readFileSync } = require("node:fs") as typeof import("node:fs");
+    const { resolve } = require("node:path") as typeof import("node:path");
+    const src = readFileSync(
+      resolve(__dirname, "..", "app/api/admin/alumni-invites/route.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/guardOfficer\("alumni",\s*"read"\)/); // GET aligned
+    expect(src).toMatch(/guardOfficer\("alumni",\s*"write"\)/); // POST/DELETE
+    // the old admins-only floor on GET is gone
+    expect(/if \(!isAdminRole\(\)\) return/.test(src)).toBe(false);
   });
 });
 
