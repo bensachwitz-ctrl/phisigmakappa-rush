@@ -108,6 +108,39 @@ describe("applyPendingTenantMigrations — real portal_password_reset file", () 
   });
 });
 
+describe("applyPendingTenantMigrations — real position_interest heal (item 8)", () => {
+  const POSITION_MIGRATION = "2026-07-11_position_interest.sql";
+
+  it("is in the curated idempotent set so the cron fans it out to existing tenants", () => {
+    expect(IDEMPOTENT_MANUAL_MIGRATIONS).toContain(POSITION_MIGRATION);
+  });
+
+  it("creates the PositionInterest table + its 3 indexes (4 statements), so existing schemas self-heal", async () => {
+    const { db, executed } = recordingDb();
+    const results = await applyPendingTenantMigrations(db as any, { files: [POSITION_MIGRATION] });
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ file: POSITION_MIGRATION, ok: true });
+    // CREATE TABLE + 3 CREATE INDEX = 4 statements.
+    expect(executed).toHaveLength(4);
+    expect(executed.some((s) => /CREATE TABLE IF NOT EXISTS "PositionInterest"/.test(s))).toBe(true);
+    expect(executed.filter((s) => /CREATE INDEX IF NOT EXISTS/.test(s))).toHaveLength(3);
+    // Purely additive — no destructive DROP/ALTER-away lands in a tenant schema.
+    expect(executed.some((s) => /\bDROP\b/i.test(s))).toBe(false);
+  });
+
+  it("is IDEMPOTENT: a re-run reporting 'already exists' does NOT throw and reports ok", async () => {
+    const db = {
+      $executeRawUnsafe: vi.fn(async () => {
+        throw new Error(`relation "PositionInterest" already exists`);
+      }),
+    };
+    const results = await applyPendingTenantMigrations(db as any, { files: [POSITION_MIGRATION] });
+    expect(results[0].ok).toBe(true);
+    expect(db.$executeRawUnsafe).toHaveBeenCalledTimes(4);
+  });
+});
+
 describe("applyPendingTenantMigrations — schema pinning (search_path fix)", () => {
   // getTenantClient's `?schema=` URL param qualifies Prisma's OWN model queries but
   // does NOT set the connection search_path (it stays `"$user", public`), so a raw

@@ -42,6 +42,7 @@ export const IDEMPOTENT_MANUAL_MIGRATIONS = [
   "2026-06-30_section_builder.sql",
   "2026-07-07_portal_password_reset.sql",
   "2026-07-10_portal_mustreset.sql",
+  "2026-07-11_position_interest.sql",
 ] as const;
 
 /** Default on-disk location of the manual-migration files (repo-relative). */
