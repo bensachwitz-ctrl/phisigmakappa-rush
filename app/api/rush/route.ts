@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { enrichRushee } from "@/lib/enrich";
+import { runEnrichment } from "@/lib/enrichment/provider";
+import {
+  parseEnvelope,
+  serializeEnvelope,
+  readConsentState,
+  applyConsent,
+  applyResult,
+} from "@/lib/enrichment/store";
+import { canEnrich, makeEnrichmentConsent } from "@/lib/enrichment/consent";
+import { summarizeHits, describeHits } from "@/lib/enrichment/protected-class";
+import { audit } from "@/lib/audit";
 import { getSiteConfig } from "@/lib/site-config";
 import { chapterIdentityFromCfg } from "@/lib/chapter-identity";
 import { isAdminAuthed } from "@/lib/auth";
@@ -89,21 +99,64 @@ async function sendDoubleOptInSms(phone: string, firstName: string, receiptId: s
 }
 
 /**
- * Auto-enrich a rushee in the background — non-blocking. The submission
- * response goes back to the rushee immediately; enrichment writes to DB
- * when it resolves so the admin sees enriched info on the next page view.
+ * Auto-enrich a rushee in the background — non-blocking. The submission response
+ * goes back to the rushee immediately; enrichment writes to DB when it resolves.
+ *
+ * #44 PRIVACY-FIRST: enrichment runs ONLY when the PNM affirmatively consented on
+ * the form (`consented`). Without consent we do nothing — no lookup, no record —
+ * so a legacy form (no consent checkbox) never triggers research. When consented,
+ * we snapshot the enrichment consent (method "rush-form"), pass the canEnrich()
+ * gate, run the provider registry (which redacts protected-class signals), store
+ * the redacted result + provenance via the envelope helper, and audit the lookup.
  */
-async function autoEnrichInBackground(rushId: string, rushee: {
-  name: string; hometown: string | null; major: string | null; year: string | null;
-}) {
+async function autoEnrichInBackground(
+  rushId: string,
+  rushee: { name: string; hometown: string | null; major: string | null; year: string | null },
+  opts: { consented: boolean },
+) {
   try {
-    const enrichment = await enrichRushee(rushee);
+    if (!opts.consented) return; // no consent → no enrichment (privacy-first default)
+
+    const existing = await prisma.rush.findUnique({
+      where: { id: rushId },
+      select: { enrichmentData: true },
+    });
+    // Record the enrichment consent onto the envelope first.
+    let env = applyConsent(
+      parseEnvelope(existing?.enrichmentData),
+      makeEnrichmentConsent({ method: "rush-form" }),
+    );
+    if (!canEnrich(readConsentState(env)).ok) {
+      await prisma.rush.update({ where: { id: rushId }, data: { enrichmentData: serializeEnvelope(env) } });
+      return;
+    }
+
+    const cfg = await getSiteConfig().catch(() => ({}) as Record<string, string>);
+    const out = await runEnrichment({
+      name: rushee.name,
+      hometown: rushee.hometown,
+      major: rushee.major,
+      year: rushee.year,
+      schoolName: cfg["chapter.schoolName"] || "",
+      schoolShort: cfg["chapter.schoolShort"] || "",
+      schoolUrl: cfg["chapter.schoolUrl"] || "",
+      fetchedBy: "rush-form",
+    });
+    if (!out) {
+      await prisma.rush.update({ where: { id: rushId }, data: { enrichmentData: serializeEnvelope(env) } });
+      return;
+    }
+    env = applyResult(env, out.result, out.providerId, summarizeHits(out.redactions));
     await prisma.rush.update({
       where: { id: rushId },
-      data: {
-        enrichmentData: JSON.stringify(enrichment),
-        enrichedAt: new Date(),
-      },
+      data: { enrichmentData: serializeEnvelope(env), enrichedAt: new Date() },
+    });
+    await audit({
+      action: "RUSH_ENRICH",
+      subjectType: "Rush",
+      subjectId: rushId,
+      subjectName: rushee.name,
+      details: `auto (rush-form consent); provider=${out.providerId}; redacted=${describeHits(out.redactions) || "none"}`,
     });
   } catch (err) {
     // Enrichment is best-effort. Never let a failure here affect the user.
@@ -152,6 +205,11 @@ const RushSchema = z.object({
   // a consent record the user never granted (the prior client-only gate could be
   // bypassed by any direct POST).
   consent: z.boolean(),
+  // #44 SEPARATE enrichment consent (distinct from the TCPA messaging `consent`
+  // above): the PNM's affirmative OK for the chapter to review PUBLIC info about
+  // them. Optional + defaults to no enrichment — a legacy form that omits it
+  // simply never triggers a lookup (privacy-first).
+  enrichConsent: z.boolean().optional(),
   website: z.string().max(500).optional().or(z.literal("")),
   customAnswers: z.record(z.string(), z.string().max(1000)).optional(),
 });
@@ -426,12 +484,16 @@ export async function POST(req: Request) {
 
     // Fire auto-enrichment — searches Google/LinkedIn/IG/USC directory/MaxPreps
     // for additional info about the rushee. Doesn't block the response.
-    autoEnrichInBackground(created.id, {
-      name: data.name,
-      hometown: data.hometown || null,
-      major: data.major || null,
-      year: data.year || null,
-    });
+    autoEnrichInBackground(
+      created.id,
+      {
+        name: data.name,
+        hometown: data.hometown || null,
+        major: data.major || null,
+        year: data.year || null,
+      },
+      { consented: data.enrichConsent === true },
+    );
 
     // Fire double-opt-in confirmation SMS in the background.
     sendDoubleOptInSms(data.phone, data.name.split(/\s+/)[0] || "there", receipt.id, orgLabel);
