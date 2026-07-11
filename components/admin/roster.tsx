@@ -55,6 +55,9 @@ import {
   Wand2,
   RefreshCw,
   Copy,
+  ShieldCheck,
+  ShieldAlert,
+  ExternalLink,
 } from "lucide-react";
 import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
 import { EmptyState } from "@/components/admin/empty-state";
@@ -944,10 +947,21 @@ function RushDetail({
   const [enrichment, setEnrichment] = React.useState<Enrichment | null>(null);
   const [quickLinks, setQuickLinks] = React.useState<{ label: string; url: string }[]>([]);
   const [enrichBusy, setEnrichBusy] = React.useState(false);
+  // #44 consent/provenance state driving the opt-in research panel.
+  const [gate, setGate] = React.useState<{ ok: boolean; reason?: string; stale?: boolean } | null>(null);
+  const [consent, setConsent] = React.useState<{ version: string; agreedAt: string; method: string } | null>(null);
+  const [optOut, setOptOut] = React.useState<{ at: string } | null>(null);
+  const [provenance, setProvenance] = React.useState<{ source: string; fetchedAt: string; providerLabel?: string } | null>(null);
+  const [redactions, setRedactions] = React.useState<Record<string, number> | null>(null);
+  const [disclosure, setDisclosure] = React.useState<{ version: string; text: string } | null>(null);
+  const [consentBusy, setConsentBusy] = React.useState(false);
   const { push } = useToast();
 
   React.useEffect(() => {
     if (!rush) return;
+    // Reset per-PNM enrichment state so a previous rushee's data never flashes.
+    setEnrichment(null); setQuickLinks([]); setGate(null); setConsent(null);
+    setOptOut(null); setProvenance(null); setRedactions(null); setDisclosure(null);
     fetch(`/api/admin/vote?rushId=${rush.id}`)
       .then((r) => r.json())
       .then((j) => setAllVotes(j.votes || []))
@@ -958,6 +972,12 @@ function RushDetail({
         if (j.ok) {
           setEnrichment(j.enrichment || null);
           setQuickLinks(j.quickLinks || []);
+          setGate(j.gate || null);
+          setConsent(j.consent || null);
+          setOptOut(j.optOut || null);
+          setProvenance(j.provenance || null);
+          setRedactions(j.redactions || null);
+          setDisclosure(j.disclosure || null);
         }
       })
       .catch(() => {});
@@ -978,13 +998,67 @@ function RushDetail({
         body: JSON.stringify({ rushId: rush.id }),
       });
       const j = await res.json();
+      // 403 = consent gate blocked the lookup (no consent / opted out).
+      if (res.status === 403) {
+        setGate(j.gate ?? { ok: false, reason: j.reason });
+        push({ title: j.message || "Consent required first", variant: "destructive" });
+        return;
+      }
       if (!res.ok || !j.ok) throw new Error(j.error || "Enrich failed");
       setEnrichment(j.enrichment);
+      setProvenance(j.provenance || null);
+      setRedactions(j.redactions || null);
+      setGate(j.gate || null);
       push({ title: "Researched", variant: "success" });
     } catch (err: any) {
       push({ title: err.message || "Research failed", variant: "destructive" });
     } finally {
       setEnrichBusy(false);
+    }
+  }
+
+  // Record the disclosure + consent (admin attests a lawful/on-file basis) so the
+  // consent gate opens for this PNM.
+  async function recordConsent() {
+    if (!rush) return;
+    setConsentBusy(true);
+    try {
+      const res = await fetch("/api/admin/enrich", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rushId: rush.id }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || "Failed to record consent");
+      setConsent(j.consent || null);
+      setOptOut(null);
+      setGate(j.gate || null);
+      push({ title: "Consent recorded", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Failed", variant: "destructive" });
+    } finally {
+      setConsentBusy(false);
+    }
+  }
+
+  // Opt the PNM OUT and delete everything gathered (right-to-delete).
+  async function optOutEnrich() {
+    if (!rush) return;
+    setConsentBusy(true);
+    try {
+      const res = await fetch(`/api/admin/enrich?rushId=${rush.id}`, { method: "DELETE" });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || "Failed to opt out");
+      setEnrichment(null);
+      setProvenance(null);
+      setRedactions(null);
+      setOptOut({ at: new Date().toISOString() });
+      setGate({ ok: false, reason: "opted-out" });
+      push({ title: "Opted out and deleted", variant: "success" });
+    } catch (err: any) {
+      push({ title: err.message || "Failed", variant: "destructive" });
+    } finally {
+      setConsentBusy(false);
     }
   }
 
@@ -1090,6 +1164,143 @@ function RushDetail({
         </div>
 
         <NotesEditor rush={rush} onSaved={onNotesSaved} />
+
+        {/* #44 — Public web research (OPT-IN, privacy-guarded). Consent gate,
+            provenance, and protected-class redaction are enforced server-side;
+            this panel captures consent, runs the lookup, shows provenance +
+            redaction count, and supports opt-out + delete. */}
+        <div className="rounded-xl border border-border bg-secondary/30 p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <Label className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <Search className="h-3.5 w-3.5" /> Public web research
+            </Label>
+            {provenance && (
+              <span className="text-[11px] text-muted-foreground">
+                {provenance.providerLabel || provenance.source}
+                {(() => {
+                  try {
+                    return ` · ${format(new Date(provenance.fetchedAt), "MMM d, h:mm a")}`;
+                  } catch {
+                    return "";
+                  }
+                })()}
+              </span>
+            )}
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            {optOut ? (
+              <p className="flex items-center gap-1.5 text-amber-700">
+                <ShieldAlert className="h-3.5 w-3.5" /> Opted out. Gathered data was deleted.
+              </p>
+            ) : consent ? (
+              <p className="flex items-center gap-1.5 text-emerald-700">
+                <ShieldCheck className="h-3.5 w-3.5" /> Consent on file
+                {gate?.stale ? " (disclosure updated — re-confirm recommended)" : ""}.
+              </p>
+            ) : (
+              <p className="flex items-start gap-1.5">
+                <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" /> No consent on file. Public/consented
+                sources only; protected-class data is never stored. This is not a background check.
+              </p>
+            )}
+            {disclosure && (
+              <details className="mt-1.5">
+                <summary className="cursor-pointer hover:text-foreground">View disclosure</summary>
+                <p className="mt-1.5 leading-relaxed">{disclosure.text}</p>
+              </details>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {!consent && !optOut && (
+              <Button size="sm" variant="outline" onClick={recordConsent} disabled={consentBusy}>
+                {consentBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                Record consent
+              </Button>
+            )}
+            <Button size="sm" onClick={runEnrich} disabled={enrichBusy || !gate?.ok} title={!gate?.ok ? "Record consent first" : undefined}>
+              {enrichBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : enrichment ? (
+                <RefreshCw className="h-4 w-4" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+              {enrichment ? "Re-run research" : "Run research"}
+            </Button>
+            {(consent || enrichment) && !optOut && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={optOutEnrich}
+                disabled={consentBusy}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" /> Opt out &amp; delete
+              </Button>
+            )}
+          </div>
+
+          {redactions && Object.keys(redactions).length > 0 && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Protected-class signals auto-removed:{" "}
+              {Object.values(redactions).reduce((a, b) => a + (b as number), 0)}.
+            </p>
+          )}
+
+          {enrichment &&
+            (enrichment.summary ||
+              (enrichment.bullets && enrichment.bullets.length > 0) ||
+              (enrichment.links && enrichment.links.length > 0)) && (
+              <div className="mt-3 space-y-2 text-sm">
+                {enrichment.summary && <p className="text-foreground/90">{enrichment.summary}</p>}
+                {enrichment.bullets && enrichment.bullets.length > 0 && (
+                  <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                    {enrichment.bullets.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+                {enrichment.links && enrichment.links.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {enrichment.links.map((l, i) => (
+                      <a
+                        key={i}
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-secondary"
+                      >
+                        <ExternalLink className="h-3 w-3" /> {l.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+          {quickLinks.length > 0 && (
+            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Manual research links
+              </summary>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {quickLinks.map((l, i) => (
+                  <a
+                    key={i}
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 hover:bg-secondary"
+                  >
+                    <ExternalLink className="h-3 w-3" /> {l.label}
+                  </a>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onRemove(rush.id)} className="text-destructive hover:text-destructive">
