@@ -2,6 +2,7 @@ import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
 import { sendEmail } from "@/lib/email";
 import { renderEmail } from "@/lib/email-template";
+import { sendApnsPush } from "./apns";
 import type { ChannelResult, NotifyChannel, NotifyMessage } from "./types";
 import type { NotifyConfig } from "./config";
 
@@ -291,6 +292,22 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
+// ── Push (APNs — per-user device tokens) ─────────────────────────────────────
+export async function sendPushChannel(
+  msg: NotifyMessage,
+  _cfg: NotifyConfig,
+): Promise<ChannelResult> {
+  // Per-user routing supplies the recipient's registered device tokens on the
+  // message; no tokens → nobody to push to. APNs credentials come from env (see
+  // lib/notify/apns) and the send path is inert when they're absent.
+  const tokens = msg.pushTokens || [];
+  if (!tokens.length) return { channel: "push", skipped: true, reason: "no-tokens" };
+  const res = await sendApnsPush(tokens, { title: msg.title, body: msg.body, url: msg.url });
+  if (res.skipped) return { channel: "push", skipped: true, reason: res.reason || NOT_CONFIGURED };
+  if (res.sent > 0) return { channel: "push", ok: true, id: `${res.sent}/${res.results.length}` };
+  return { channel: "push", ok: false, error: res.results[0]?.error || "all-failed" };
+}
+
 /** Adapter lookup by channel. "inapp" has no external adapter — the relay
  *  acknowledges it as skipped (the in-app feed is written elsewhere). */
 export const ADAPTERS: Partial<
@@ -302,4 +319,5 @@ export const ADAPTERS: Partial<
   discord: sendDiscord,
   webhook: sendWebhook,
   email: sendEmailChannel,
+  push: sendPushChannel,
 };

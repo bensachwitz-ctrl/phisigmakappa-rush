@@ -118,6 +118,72 @@ export async function getUserPrefs(userId: string): Promise<UserNotifyPrefs> {
   return parsePrefs(cfg[prefsKey(userId)]);
 }
 
+// ── Per-user APNs device tokens ──────────────────────────────────────────────
+// Stored the SAME migration-free way as prefs: one SiteConfig row per user, key
+// `notify.pushtokens.<userId>`, value = JSON array of device tokens. A member can
+// have several devices; capped so a buggy client can't grow the row unbounded.
+const PUSH_TOKENS_PREFIX = "notify.pushtokens.";
+const MAX_DEVICES_PER_USER = 10;
+
+function pushTokensKey(userId: string): string {
+  return `${PUSH_TOKENS_PREFIX}${userId}`;
+}
+
+/** Parse a stored device-token JSON array. Empty / malformed → []. */
+export function parsePushTokens(raw: string | undefined | null): string[] {
+  const s = (raw ?? "").trim();
+  if (!s) return [];
+  try {
+    const parsed = JSON.parse(s);
+    if (!Array.isArray(parsed)) return [];
+    return [
+      ...new Set(
+        parsed
+          .filter((t): t is string => typeof t === "string")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      ),
+    ].slice(0, MAX_DEVICES_PER_USER);
+  } catch {
+    return [];
+  }
+}
+
+/** All registered device tokens for a user. */
+export async function getUserPushTokens(userId: string): Promise<string[]> {
+  const cfg = await getSiteConfig().catch(() => ({}) as Record<string, string>);
+  return parsePushTokens(cfg[pushTokensKey(userId)]);
+}
+
+/** Register a device token for a user (idempotent upsert; caps device count). */
+export async function addUserPushToken(userId: string, token: string): Promise<void> {
+  const clean = (token || "").trim();
+  if (!clean) return;
+  const existing = await getUserPushTokens(userId);
+  if (existing.includes(clean)) return;
+  const next = [clean, ...existing].slice(0, MAX_DEVICES_PER_USER);
+  const value = JSON.stringify(next);
+  await prisma.siteConfig.upsert({
+    where: { key: pushTokensKey(userId) },
+    update: { value },
+    create: { key: pushTokensKey(userId), value },
+  });
+}
+
+/** Remove a device token for a user (e.g. on logout / APNs 410 Unregistered). */
+export async function removeUserPushToken(userId: string, token: string): Promise<void> {
+  const clean = (token || "").trim();
+  if (!clean) return;
+  const existing = await getUserPushTokens(userId);
+  if (!existing.includes(clean)) return;
+  const value = JSON.stringify(existing.filter((t) => t !== clean));
+  await prisma.siteConfig.upsert({
+    where: { key: pushTokensKey(userId) },
+    update: { value },
+    create: { key: pushTokensKey(userId), value },
+  });
+}
+
 /** Persist one user's prefs (upsert, no migration — reuses SiteConfig). */
 export async function setUserPrefs(userId: string, prefs: UserNotifyPrefs): Promise<void> {
   const value = JSON.stringify(normalizePrefs(prefs));
@@ -181,9 +247,20 @@ export async function routeEventToRecipients(
       const channels = resolveUserChannels(prefs, base.event, config.enabledChannels);
       if (!channels.length) return;
       const email = prefs.email || r.email;
+      // When the user opted into push, attach their registered device tokens
+      // (read from the same cfg map that carries prefs). No tokens → the push
+      // adapter stays inert for this recipient.
+      const pushTokens = channels.includes("push")
+        ? parsePushTokens(cfg[pushTokensKey(r.userId)])
+        : [];
       try {
         await sendNotificationWith(
-          { ...base, channels, ...(email ? { email } : {}) },
+          {
+            ...base,
+            channels,
+            ...(email ? { email } : {}),
+            ...(pushTokens.length ? { pushTokens } : {}),
+          },
           config,
         );
       } catch {

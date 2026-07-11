@@ -24,6 +24,7 @@ export type NotifyChannel =
   | "discord"
   | "webhook"
   | "email"
+  | "push"
   | "inapp";
 
 /** All externally-dispatchable channels, in a stable order. */
@@ -34,6 +35,7 @@ export const ALL_CHANNELS: NotifyChannel[] = [
   "discord",
   "webhook",
   "email",
+  "push",
   "inapp",
 ];
 
@@ -63,6 +65,10 @@ export interface NotifyMessage {
   /** Direct email recipient for the email channel (per-user routing). Falls back
    *  to the chapter-level `notify.email.to` cfg when unset. */
   email?: string;
+  /** APNs device tokens for the push channel (per-user routing). The push adapter
+   *  is inert when this is empty (nobody to push to). Set by the prefs layer from
+   *  each recipient's registered devices. */
+  pushTokens?: string[];
   /** Restrict dispatch to these channels. Default = every enabled channel. */
   channels?: NotifyChannel[];
 }

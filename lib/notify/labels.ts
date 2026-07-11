@@ -31,6 +31,7 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
 export const CHANNEL_LABELS: Record<NotifyChannel, string> = {
   inapp: "In-app",
   email: "Email",
+  push: "Push (mobile app)",
   telegram: "Telegram",
   slack: "Slack",
   discord: "Discord",

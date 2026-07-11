@@ -33,8 +33,15 @@ import {
 //   • snapshot the last view for offline boot (cacheLastView)
 //   • fire native haptics on taps/actions (hapticImpact/Selection/Notify)
 // On web these are still defined but every underlying call no-ops, so callers
-// don't need their own platform checks. (No push: the shipped shell does not use
-// push notifications — see lib/native-bridge.ts.)
+// don't need their own platform checks.
+//
+// PUSH: the server side of push is now wired — an APNs "push" notify channel
+// (lib/notify/apns.ts) plus a per-user device-token store + /api/push/register.
+// The bridge exposes `registerPushToken(token)`: the native shell obtains the
+// APNs device token from the OS (didRegisterForRemoteNotifications) and calls
+// this to bind it to the signed-in member. On web there is no device token, so
+// it is simply never called. Collecting the token requires the native shell's own
+// APNs registration (Info.plist aps-environment + registerForRemoteNotifications).
 
 declare global {
   interface Window {
@@ -51,8 +58,32 @@ declare global {
       // Open an absolute http(s) URL externally (system browser natively, new
       // tab on web). Used by the picker's "greekstack.com" website link.
       openExternalUrl: (url: string) => boolean;
+      // Register an APNs device token for push. The native shell calls this from
+      // its didRegisterForRemoteNotifications callback; binds the token to the
+      // signed-in member via /api/push/register. Resolves false on web / no token.
+      registerPushToken: (token: string) => Promise<boolean>;
       restoredSession?: NativeSession | null;
     };
+  }
+}
+
+/**
+ * POST an APNs device token to the server, bound to the current portal session
+ * (same-origin cookie). Best-effort — never throws; resolves true only on a 2xx.
+ */
+async function registerPushToken(token: string): Promise<boolean> {
+  const t = (token || "").trim();
+  if (!t) return false;
+  try {
+    const res = await fetch("/api/push/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token: t }),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
 
@@ -70,6 +101,7 @@ export default function NativeBridge() {
       hapticSelection,
       hapticNotify,
       openExternalUrl,
+      registerPushToken,
       restoredSession: null,
     };
 
