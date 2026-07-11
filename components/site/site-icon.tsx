@@ -122,6 +122,24 @@ const FAMILY_GLYPHS: Record<IconFamilyId, Record<SiteIconName, Glyph>> = {
 export const SITE_ICON_NAMES = Object.keys(FAMILY_GLYPHS.brand) as SiteIconName[];
 
 /**
+ * Map the chapter-config icon vocabulary (the lucide-named strings stored in cfg
+ * for highlight/value/recent chips, e.g. "Crown", "Trophy", "GraduationCap") to a
+ * SiteIconName so those chips can render from the CHOSEN family instead of always
+ * lucide. Unknown strings fall back to "star" (a safe, on-brand default) so a
+ * typo'd cfg icon never renders nothing.
+ */
+const CFG_ICON_TO_SEMANTIC: Record<string, SiteIconName> = {
+  Crown: "crown", Trophy: "trophy", HandHeart: "heart", Users: "users",
+  Award: "medal", Star: "star", Heart: "heart", GraduationCap: "grad-cap",
+  BookOpen: "grad-cap", Music: "sparkle", Building2: "house", Flame: "flame",
+  ShieldCheck: "shield", Calendar: "calendar", MapPin: "pin",
+};
+
+export function siteIconNameFor(cfgIcon: string | null | undefined): SiteIconName {
+  return CFG_ICON_TO_SEMANTIC[(cfgIcon || "").trim()] ?? "star";
+}
+
+/**
  * Look up the concrete glyph component for a (family, name). Always defined:
  * every family covers the full semantic set. Exported for the picker preview +
  * the unit test that proves there are no holes.

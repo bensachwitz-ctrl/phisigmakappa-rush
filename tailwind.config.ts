@@ -87,6 +87,19 @@ const config: Config = {
           paper: "#FFFFFF",
           mist: "#F5F5F7",
         },
+        // ── `brand` alias → the SAME live accent vars as phisig-red ───────────
+        // The site-generator component sets (lib/site-generator/component-sets.ts)
+        // are written against generic `bg-brand` / `text-brand` / `border-brand` /
+        // `bg-brand-dark` / `bg-brand-soft` utilities so a set stays app-agnostic.
+        // Bind them to the chapter's live --brand-primary* CSS vars — the exact
+        // same source phisig-red reads — so a component set recolors per chapter
+        // with no rebuild and the page keeps ONE locked accent (never a second hue).
+        // The DEFAULT key makes bare `bg-brand` / `text-brand` resolve.
+        brand: {
+          DEFAULT: "var(--brand-primary, #2563eb)",
+          dark: "var(--brand-primary-dark, #1e40af)",
+          soft: "var(--brand-primary-soft, #eff6ff)",
+        },
         // ── Secondary / accent brand color (the platform's royal-blue+gold
         //    "gold"). Bound to the `--brand-secondary` CSS var that
         //    app/layout.tsx injects from cfg["brand.secondaryHex"], with the

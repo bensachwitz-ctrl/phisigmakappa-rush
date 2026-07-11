@@ -33,8 +33,8 @@ import { SectionEyebrow } from "@/components/site/templates/helpers";
 import {
   TEMPLATE_HERO,
   TEMPLATE_ORDER,
-  resolveTemplateId,
 } from "@/components/site/templates/template-config";
+import { resolveSiteConfig } from "@/lib/site-generator/template-presets";
 import type { SectionContext } from "@/components/site/templates/types";
 import { getStructuredOrder, getSectionContentByKey } from "@/lib/section-builder";
 
@@ -361,9 +361,16 @@ export default async function ChapterLandingPage({
   // closure vars the old inline sectionMap captured are threaded through this one
   // explicit ctx object (tsc proves the plumbing is complete). The active
   // template only swaps the hero variant + the default section order.
-  const template = resolveTemplateId(cfg["website.template"]);
+  // Resolve the full visual-system config (preset -> base template x component
+  // set x icon family x motion, with per-axis cfg overrides). The base template
+  // still drives the hero + default order; the component set + icon family now
+  // flow into the section bodies so a preset actually restyles rendered chrome.
+  const siteConfig = resolveSiteConfig(cfg);
+  const template = siteConfig.baseTemplate;
   const ctx: SectionContext = {
     template,
+    componentSet: siteConfig.componentSet,
+    iconFamily: siteConfig.iconFamily,
     cfg, identity, terms, isPhiSig, booth,
     stats, eboard, VALUES, TIMELINE, FAQ, HIGHLIGHTS, RECENT, FEED,
     nextEvent, webcalUrl, termLabelShort, termLabelLong, customQuestions,
@@ -405,7 +412,13 @@ export default async function ChapterLandingPage({
     });
   }
   return (
-    <div className="relative min-h-screen overflow-x-clip">
+    <div
+      className="relative min-h-screen overflow-x-clip"
+      data-preset={siteConfig.presetId}
+      data-component-set={siteConfig.componentSet}
+      data-icon-family={siteConfig.iconFamily}
+      data-motion={siteConfig.motion}
+    >
       <div aria-hidden="true" className="fixed inset-0 z-[-10] bg-background" />
       {/* Drifting Greek letters rendered globally by app/layout.tsx — chapter-
           specific glyphs + brand color resolved there from cfg. */}

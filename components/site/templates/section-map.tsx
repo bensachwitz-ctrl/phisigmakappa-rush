@@ -24,6 +24,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
+import { SiteIcon, siteIconNameFor } from "@/components/site/site-icon";
+import { getComponentSet } from "@/lib/site-generator/component-sets";
+import { cn } from "@/lib/utils";
 import type { SectionContext } from "./types";
 import {
   BRAND_TILT_GLOW, SectionEyebrow, ContactPill, chipIconFor,
@@ -50,8 +53,20 @@ export function buildSectionMap(
     cfg, identity, terms, isPhiSig,
     stats, eboard, VALUES, TIMELINE, FAQ, HIGHLIGHTS, RECENT, FEED,
     nextEvent, webcalUrl, termLabelShort, termLabelLong, customQuestions,
-    template,
+    template, componentSet, iconFamily,
   } = ctx;
+
+  // The chosen component set (buttons/cards/nav/badges/inputs) + icon family flow
+  // into the section chrome so a preset actually restyles rendered components, not
+  // just the section order. `set` carries the class tokens; icons draw from the
+  // ONE chosen family via <SiteIcon>. Applied at representative, contained seams
+  // (the highlights band + the values cards) so a set/family swap is visible while
+  // the finely-tuned hero + heavy sections stay byte-stable.
+  const set = getComponentSet(componentSet);
+  // Radius for the 3D-tilt WRAPPER around a set-styled card, matched to the set's
+  // corner language so the wrapper's clip never fights the card's own corners.
+  const cardWrapRadius =
+    set.radius === "round" ? "rounded-3xl" : set.radius === "sharp" ? "rounded-md" : "rounded-2xl";
 
   // Bold promotes the stats strip to a big-type 2×2 grid; the other templates
   // keep the original 4-up band. A class swap on the existing markup, not a fork.
@@ -104,18 +119,26 @@ export function buildSectionMap(
         {cfg["show.highlightsBanner"] !== "false" && (
       <section className="border-b border-border bg-gradient-to-b from-secondary/40 to-secondary/10 overflow-hidden">
         <div className="container py-5 flex flex-wrap items-center gap-2 sm:gap-2.5 justify-center">
-          {HIGHLIGHTS.map((h) => {
-            const Icon = chipIconFor(h.icon);
-            return (
-              <span
-                key={h.label}
-                className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-phisig-red/30 hover:text-foreground hover:shadow-md hover:shadow-phisig-red/10"
-              >
-                <Icon className="h-3.5 w-3.5 text-phisig-red transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
-                <span>{h.label}</span>
-              </span>
-            );
-          })}
+          {HIGHLIGHTS.map((h) => (
+            // Chip chrome comes from the chosen component set's `badge` token, and
+            // the glyph is drawn from the chosen icon family — so switching preset
+            // visibly restyles this row (pill vs square vs block) and reweights its
+            // icons, while the hover lift stays consistent across sets.
+            <span
+              key={h.label}
+              className={cn(
+                set.badge,
+                "group gap-1.5 whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
+              )}
+            >
+              <SiteIcon
+                family={iconFamily}
+                name={siteIconNameFor(h.icon)}
+                className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110"
+              />
+              <span>{h.label}</span>
+            </span>
+          ))}
         </div>
       </section>
       )}
@@ -138,8 +161,12 @@ export function buildSectionMap(
         <Reveal3D stagger={0.09} className="grid md:grid-cols-3 gap-4 sm:gap-5">
           {VALUES.map((v) => (
             <Reveal3DItem key={v.title} className="h-full">
-              <Tilt3DCard max={8} glareColor={BRAND_TILT_GLOW} className="h-full rounded-2xl">
-                <div className="h-full rounded-2xl border border-border bg-card p-6 sm:p-7 relative overflow-hidden group transition-colors hover:border-phisig-red/30">
+              {/* Card surface comes from the chosen component set — soft-rounded,
+                  sharp editorial rule, or brutal offset shadow — so a preset swap
+                  visibly re-skins these cards. The tilt wrapper radius tracks the
+                  set so its clip never fights the card corners. */}
+              <Tilt3DCard max={8} glareColor={BRAND_TILT_GLOW} className={cn("h-full", cardWrapRadius)}>
+                <div className={cn(set.card, "h-full p-6 sm:p-7 relative overflow-hidden group transition-colors")}>
                   <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
                   <IconChip icon={chipIconFor(v.icon)} tone="brand" size="lg" className="relative transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
                   <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>

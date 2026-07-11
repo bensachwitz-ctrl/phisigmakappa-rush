@@ -2,6 +2,8 @@ import type React from "react";
 import type { ChapterIdentity, ChapterTerms } from "@/lib/chapter-identity";
 import type { FeedPost } from "@/components/site/instagram-feed";
 import type { FormFieldConfig } from "@/lib/rush-form-config";
+import type { ComponentSetId } from "@/lib/site-generator/component-sets";
+import type { IconFamilyId } from "@/lib/site-generator/icon-families";
 
 /**
  * The three chapter-site templates. The renderer
@@ -55,6 +57,15 @@ export type NextEvent = {
 export interface SectionContext {
   /** The active template — section bodies read this for thin layout variant hints. */
   template: TemplateId;
+  /**
+   * The resolved visual-system axes (item 3/7). A preset picks a component set +
+   * icon family; the section bodies read these to restyle their chrome (badge/card
+   * tokens) and draw icons from the ONE chosen family — so a preset actually
+   * changes how the rendered page looks, not just its section order. Stored as
+   * plain ids (lib/site-generator/*) resolved once in the renderer.
+   */
+  componentSet: ComponentSetId;
+  iconFamily: IconFamilyId;
   cfg: Record<string, string>;
   identity: ChapterIdentity;
   terms: ChapterTerms;
