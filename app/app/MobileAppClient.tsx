@@ -2195,8 +2195,22 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   // it (real officer, or the demo showcase). A regular member never sees the
   // "Exec board" option — it isn't in their menu and the gate above blocks it.
   const visiblePersonas = VIEW_PERSONAS.filter((p) => p.id !== "exec" || execAllowed);
+  // POSITION-SPECIFIC officer toolset (item-1 RBAC core). For a REAL officer the
+  // server sends `capabilities.officerTools` = the role LABEL + the tools that
+  // exact position's permissions grant. In the DEMO there is no server session,
+  // so it's null → keep the full showcase exec nav + the generic "Exec" label.
+  const officerToolsMeta = (dashboardData?.capabilities as any)?.officerTools as
+    | { roleKey: string; label: string; tools: Array<{ id: string; label: string }> }
+    | null
+    | undefined;
+  const officerToolIdSet = new Set((officerToolsMeta?.tools || []).map((t) => t.id));
+  const execRoleLabel = officerToolsMeta?.label || "Exec";
   const personaShortLabel =
-    viewPersona === "exec" ? "Exec view" : viewPersona === "alumni" ? "Alumni view" : "Member view";
+    viewPersona === "exec"
+      ? execRoleLabel
+      : viewPersona === "alumni"
+      ? "Alumni view"
+      : "Member view";
 
   // ── Per-persona bottom nav (feature 3) ────────────────────────────────────
   // All personas share the 5 nav SLOTS (so the active-pill geometry is
@@ -2220,13 +2234,28 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
     { id: "directory", icon: IconWhiteLabel, label: "Network" },
     { id: "settings", icon: IconChapter, label: "Profile" },
   ];
-  const execNav: { id: TabId; icon: any; label: string }[] = [
+  const execNavFull: { id: TabId; icon: any; label: string }[] = [
     { id: "feed", icon: IconMembers, label: "Roster" },
     { id: "events", icon: IconComms, label: "Announce" },
     { id: "rush", icon: IconGrowth, label: "Rush" },
     ...(duesVisible ? [{ id: "dues" as TabId, icon: IconDues, label: "Dues" }] : []),
     { id: "directory", icon: IconSecurity, label: "Console" },
   ];
+  // Each exec nav slot maps 1:1 to the tool that justifies it — so a Treasurer
+  // never sees the Rush slot, a Social Chair never sees Dues, etc. Roster stays
+  // for every officer (they all hold brothers:read). Real officer → scoped nav;
+  // demo → full showcase nav.
+  const EXEC_TAB_TOOL: Record<TabId, string> = {
+    feed: "roster",
+    events: "announce",
+    rush: "rush",
+    dues: "dues",
+    directory: "settings",
+    settings: "settings",
+  };
+  const execNav = officerToolsMeta
+    ? execNavFull.filter((n) => n.id === "feed" || officerToolIdSet.has(EXEC_TAB_TOOL[n.id]))
+    : execNavFull;
   const navItems = viewRole === "exec" ? execNav : role === "alumni" ? alumniNav : memberNav;
   const activeNavIndex = Math.max(0, navItems.findIndex((n) => n.id === activeTab));
 
@@ -2862,7 +2891,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       {viewRole === "exec"
-                        ? "Exec"
+                        ? execRoleLabel
                         : role === "brother"
                         ? (execToggleActive && dashboardData?.profile?.position ? dashboardData.profile.position : "Member")
                         : "Alumnus"}

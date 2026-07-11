@@ -164,3 +164,43 @@ describe("officerToolIds convenience", () => {
     expect(Array.isArray(ids)).toBe(true);
   });
 });
+
+// ── Mobile exec-nav scoping (mirror MobileAppClient EXEC_TAB_TOOL filter) ─────
+// The client filters the exec bottom-nav so each slot only shows when the
+// officer's toolset holds the tool that justifies it (Roster always shows).
+// Pin the mapping so a Treasurer never gets a Rush slot, a Social Chair never
+// gets Dues, etc.
+describe("exec nav slot filtering (mirror the .tsx predicate)", () => {
+  const EXEC_TAB_TOOL: Record<string, string> = {
+    feed: "roster",
+    events: "announce",
+    rush: "rush",
+    dues: "dues",
+    directory: "settings",
+  };
+  const visibleTabs = (position: string): string[] => {
+    const ids = new Set(officerToolIds(position));
+    return ["feed", "events", "rush", "dues", "directory"].filter(
+      (t) => t === "feed" || ids.has(EXEC_TAB_TOOL[t]),
+    );
+  };
+
+  it("President sees every exec slot", () => {
+    expect(visibleTabs("President")).toEqual(["feed", "events", "rush", "dues", "directory"]);
+  });
+  it("Treasurer sees Roster + Dues only (no Rush/Announce/Console)", () => {
+    expect(visibleTabs("Treasurer")).toEqual(["feed", "dues"]);
+  });
+  it("Recruitment Chair sees Roster + Announce + Rush (no Dues/Console)", () => {
+    expect(visibleTabs("Recruitment Chair")).toEqual(["feed", "events", "rush"]);
+  });
+  it("Social Chair sees Roster only via this 1:1 map (events-write has no announce slot)", () => {
+    // Social Chair has events:write but not announcements:write, and the Announce
+    // slot is gated on announce specifically — so no false 'post announcement'
+    // affordance leaks (the server would reject it anyway).
+    expect(visibleTabs("Social Chair")).toEqual(["feed"]);
+  });
+  it("Alumni Relations sees Roster + Announce", () => {
+    expect(visibleTabs("Alumni Relations")).toEqual(["feed", "events"]);
+  });
+});

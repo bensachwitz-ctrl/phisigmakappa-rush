@@ -5,6 +5,7 @@ import { loadMemberStanding } from "@/lib/points-server";
 import { getEntitlement } from "@/lib/entitlement";
 import { mobileCorsHeaders, mobilePreflightResponse } from "@/lib/mobile-cors";
 import { computeMemberCapabilities } from "@/lib/member-capabilities";
+import { officerToolset } from "@/lib/officer-tools";
 import { currentPeriod } from "@/lib/treasury";
 import { buildMobileElectionView } from "@/lib/mobile-elections";
 import {
@@ -422,6 +423,12 @@ async function handleGet(req: Request): Promise<NextResponse> {
     //     the surface is hidden client-side AND never serialized here). Officers
     //     get a lightweight treasury rollup + the current rush pipeline.
     const caps = computeMemberCapabilities(sess.role, memberPosition, duesEnabled);
+    // POSITION-SPECIFIC officer tool page (item-1 RBAC core). Only an exec-cleared
+    // session gets a toolset; it is computed server-side from the member's REAL
+    // admin-set position so the client renders the correct role LABEL
+    // ("President Tools", "Risk Management Tools", …) and ONLY the tools that
+    // position's permissions grant. A non-officer gets null → no officer surface.
+    const officerTools = caps.exec ? officerToolset(memberPosition) : null;
     let treasury:
       | {
           period: string;
@@ -537,7 +544,7 @@ async function handleGet(req: Request): Promise<NextResponse> {
       // regular member gets `exec:false`, so the client must not (and the data
       // layer does not) surface exec-only tools/data to them. `duesEnabled`
       // mirrors the flag the dues payload above was gated on.
-      capabilities: caps,
+      capabilities: { ...caps, officerTools },
       // EXEC-ONLY data — present ONLY when capabilities.exec is true (see the
       // gated block above). For a non-officer these are simply absent from the
       // payload (null), so the data never leaves the server for them.
