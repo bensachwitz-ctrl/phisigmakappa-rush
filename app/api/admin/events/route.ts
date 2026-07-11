@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
-import { guardBillingWrite } from "@/lib/billing-guard";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficerOrAdmin, guardOfficer } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
 import { pushEventToCalDiy } from "@/lib/events";
 import { routeEventToRecipients, listPortalRecipients } from "@/lib/notify/prefs";
@@ -44,14 +43,14 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  // Admin-only — only the rush chair / e-board should create or edit events.
-  // Members see events through /api/brother/events (read-only).
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
-  // Billing WRITE guard (P1): a locked-out chapter may not create/edit/delete events.
-  const billingLocked = await guardBillingWrite();
-  if (billingLocked) return billingLocked;
+  // events:write — the P2 fix. This route was isAdminRole()-only, but the RBAC
+  // model has genuine events officers (Secretary, Recruitment/Social/Philanthropy/
+  // Brotherhood Chair, VP, Marshal) who hold events:write and read the admin event
+  // list yet couldn't create/edit. Gate on the events domain (super-admins still
+  // pass) so those officers can manage events — mirroring the announcements
+  // pattern. requireOfficerPermission also runs the billing-write guard for us.
+  const denied = await guardOfficer("events", "write");
+  if (denied) return denied;
   try {
     const body = await req.json();
     const data = EventSchema.parse(body);
@@ -171,12 +170,10 @@ export async function DELETE(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
-  // Billing WRITE guard (P1): a locked-out chapter may not create/edit/delete events.
-  const billingLocked = await guardBillingWrite();
-  if (billingLocked) return billingLocked;
+  // events:write (P2) — see POST above. Deleting an event is an events-domain
+  // write, so an events officer may do it; guardOfficer also runs the billing guard.
+  const denied = await guardOfficer("events", "write");
+  if (denied) return denied;
   const { id } = await req.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
   const victim = await prisma.event.findUnique({

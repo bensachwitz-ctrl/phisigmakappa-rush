@@ -125,7 +125,19 @@ function parseLocalTimeInTimeZone(localTimeStr: string, timeZone: string): Date 
   return new Date(utcDate.getTime() - offsetMs);
 }
 
-export function EventsManager({ initial: initialEvents }: { initial: Event[] }) {
+export function EventsManager({
+  initial: initialEvents,
+  canWrite = true,
+}: {
+  initial: Event[];
+  /**
+   * Whether the caller holds events:write. Defaults true so existing (admin)
+   * call sites are unchanged; when false the manager is read-only — a
+   * roster-reading events officer sees the schedule but no create/edit/delete
+   * controls (the API re-gates writes on events:write regardless).
+   */
+  canWrite?: boolean;
+}) {
   const { push } = useToast();
   const { timeZone } = useChapterIdentity();
   const [events, setEvents] = React.useState<Event[]>(initialEvents);
@@ -201,10 +213,11 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
   // create dialog without prop-drilling. Scoped to a unique event name so
   // it can't collide with anything else.
   React.useEffect(() => {
+    if (!canWrite) return; // read-only officers can't pop the create dialog
     const handler = () => openCreate();
     window.addEventListener("phisig:open-add-event", handler);
     return () => window.removeEventListener("phisig:open-add-event", handler);
-  }, []);
+  }, [canWrite]);
 
   function openEdit(e: Event) {
     setEditingId(e.id);
@@ -343,16 +356,18 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
             ? `${filteredEvents.length} of ${events.length} events found`
             : `${events.length} event${events.length === 1 ? "" : "s"} scheduled`}
         </p>
-        <div className="flex flex-wrap gap-2">
-          {events.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={deleteAll} className="text-muted-foreground hover:text-destructive" disabled={busy}>
-              <Trash2 className="h-3.5 w-3.5" /> Clear all
+        {canWrite && (
+          <div className="flex flex-wrap gap-2">
+            {events.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={deleteAll} className="text-muted-foreground hover:text-destructive" disabled={busy}>
+                <Trash2 className="h-3.5 w-3.5" /> Clear all
+              </Button>
+            )}
+            <Button onClick={openCreate} size="sm">
+              <Plus className="h-4 w-4" /> Add event
             </Button>
-          )}
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4" /> Add event
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       {events.length > 0 && (
@@ -400,7 +415,7 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
           description={
             "Add the chapter's first event. Pick a category (Rush, Date, Brotherhood, Chapter, Social) - each shows up color-coded on the brother calendar. Toggle Invite-only to hide it from the public website while keeping it visible to logged-in brothers."
           }
-          primaryAction={{ label: "Add event", onClick: openCreate }}
+          primaryAction={canWrite ? { label: "Add event", onClick: openCreate } : undefined}
         />
       ) : filteredEvents.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-secondary/5">
@@ -481,14 +496,16 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
 
                     {/* Actions: Grid-aligned on desktop, stacked/padded block on mobile */}
                     <div className="col-span-2 sm:col-span-1 p-3 flex flex-row sm:flex-col items-center gap-1.5 justify-end sm:justify-center border-t sm:border-t-0 border-border bg-secondary/10 sm:bg-transparent">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEdit(e)}
-                        className="flex-1 sm:flex-none h-8"
-                      >
-                        <Edit3 className="h-3.5 w-3.5 mr-1" /> Edit
-                      </Button>
+                      {canWrite && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEdit(e)}
+                          className="flex-1 sm:flex-none h-8"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 mr-1" /> Edit
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -510,14 +527,16 @@ export function EventsManager({ initial: initialEvents }: { initial: Event[] }) 
                           <QrCode className="h-3.5 w-3.5 mr-1" /> QR
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-destructive shrink-0 h-8 px-2"
-                        onClick={() => remove(e.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {canWrite && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-destructive shrink-0 h-8 px-2"
+                          onClick={() => remove(e.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

@@ -55,7 +55,7 @@ export const ITEMS: NavItem[] = [
   // the manager's isAdmin prop) — adminOnly:true hid it from brothers-domain
   // officers. Drop it so the brothers domain governs discovery.
   { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: false, group: "more", domain: "brothers" },
-  { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary", domain: "events" },
+  { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: false, group: "primary", domain: "events" },
   { href: "/admin/meetings", label: "Meetings", icon: IconMeetings, adminOnly: false, group: "primary", domain: "brothers" },
   { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more", domain: "events" },
   { href: "/admin/risk", label: "Risk Desk", icon: IconRiskDesk, adminOnly: false, group: "primary", domain: "risk" },

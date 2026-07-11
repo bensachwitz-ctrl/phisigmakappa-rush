@@ -179,7 +179,7 @@ describe("exec nav slot filtering (mirror the .tsx predicate)", () => {
     directory: "settings",
   };
   const visibleTabs = (position: string): string[] => {
-    const ids = new Set(officerToolIds(position));
+    const ids = new Set<string>(officerToolIds(position));
     return ["feed", "events", "rush", "dues", "directory"].filter(
       (t) => t === "feed" || ids.has(EXEC_TAB_TOOL[t]),
     );
