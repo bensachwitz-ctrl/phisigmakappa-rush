@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentBrotherId } from "@/lib/auth";
+import { getCurrentBrotherIdAsync } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ const Schema = z.object({
  * submission for the same meeting overwrites the reason (no duplicates).
  */
 export async function POST(req: Request) {
-  const me = getCurrentBrotherId();
+  const me = await getCurrentBrotherIdAsync();
   if (!me) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
   const body = await req.json().catch(() => null);
   const parsed = Schema.safeParse(body);

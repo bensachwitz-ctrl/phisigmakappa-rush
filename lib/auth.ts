@@ -168,6 +168,44 @@ export function getCurrentBrotherId(): string | null {
   return parsed.brotherId;
 }
 
+/**
+ * Portal-aware variant of getCurrentBrotherId(). Resolves the acting brother's
+ * id from EITHER the admin cookie (phisig_admin) OR a portal brother session
+ * (phisig_portal) — mirroring the two-cookie resolution getCurrentBrother()
+ * already does, but returning just the id (no full Brother fetch on the admin
+ * path).
+ *
+ * Why this exists: the synchronous getCurrentBrotherId() only reads the admin
+ * cookie. Member self-service routes (announcements mark-read, service-hours,
+ * expenses, chores-complete, excused-absence) are reachable by a plain portal
+ * member who holds ONLY a phisig_portal cookie — for them the sync helper
+ * returns null and the route 401s even though they're validly signed in.
+ * Those member routes must call THIS async variant. Admin routes that attribute
+ * an action to the acting admin can keep the cheaper synchronous getCurrentBrotherId().
+ */
+export async function getCurrentBrotherIdAsync(): Promise<string | null> {
+  // 1. Admin cookie (fast, no DB round-trip).
+  const adminId = getCurrentBrotherId();
+  if (adminId) return adminId;
+
+  // 2. Portal brother session — map portalUser.id → brotherId (needs a DB read).
+  //    Dynamic import mirrors getCurrentBrother() and avoids a circular dep.
+  try {
+    const { getPortalSession } = await import("./portal-auth");
+    const portalSess = getPortalSession();
+    if (portalSess && portalSess.role === "brother") {
+      const portalUser = await prisma.portalUser.findUnique({
+        where: { id: portalSess.userId },
+        select: { brotherId: true },
+      });
+      if (portalUser?.brotherId) return portalUser.brotherId;
+    }
+  } catch {
+    // Treat any lookup failure as unauthenticated — never throw from an auth read.
+  }
+  return null;
+}
+
 export async function getCurrentBrother() {
   // 1. Check admin session first
   const id = getCurrentBrotherId();

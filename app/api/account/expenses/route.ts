@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentBrother, getCurrentBrotherId, isSameOrigin } from "@/lib/auth";
+import { getCurrentBrother, getCurrentBrotherIdAsync, isSameOrigin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -61,7 +61,7 @@ function rateLimited(key: string): boolean {
 
 /** GET /api/account/expenses — the signed-in brother's own requests. */
 export async function GET() {
-  const me = getCurrentBrotherId();
+  const me = await getCurrentBrotherIdAsync();
   if (!me) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
   try {
     const expenses = await prisma.expense.findMany({

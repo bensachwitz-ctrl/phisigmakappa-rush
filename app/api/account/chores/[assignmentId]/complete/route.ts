@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentBrotherId } from "@/lib/auth";
+import { getCurrentBrotherIdAsync } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ const Schema = z.object({
  * already, status no longer mutable from the member side).
  */
 export async function POST(req: Request, { params }: { params: { assignmentId: string } }) {
-  const me = getCurrentBrotherId();
+  const me = await getCurrentBrotherIdAsync();
   if (!me) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const parsed = Schema.safeParse(body || {});

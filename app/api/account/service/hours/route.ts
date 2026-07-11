@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentBrother, getCurrentBrotherId } from "@/lib/auth";
+import { getCurrentBrother, getCurrentBrotherIdAsync } from "@/lib/auth";
 import { auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -16,7 +16,7 @@ const PostSchema = z.object({
 
 /** GET /api/account/service/hours — own log (most recent first). */
 export async function GET() {
-  const me = getCurrentBrotherId();
+  const me = await getCurrentBrotherIdAsync();
   if (!me) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
   const hours = await prisma.serviceHourLog.findMany({
     where: { memberId: me },
@@ -28,7 +28,7 @@ export async function GET() {
 
 /** POST /api/account/service/hours — member logs hours. */
 export async function POST(req: Request) {
-  const me = getCurrentBrotherId();
+  const me = await getCurrentBrotherIdAsync();
   if (!me) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
   const body = await req.json().catch(() => null);
   const parsed = PostSchema.safeParse(body);

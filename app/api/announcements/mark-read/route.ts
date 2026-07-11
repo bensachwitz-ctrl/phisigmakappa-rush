@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentBrotherId } from "@/lib/auth";
+import { getCurrentBrotherIdAsync } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ const Schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const brotherId = getCurrentBrotherId();
+  const brotherId = await getCurrentBrotherIdAsync();
   if (!brotherId) {
     return NextResponse.json(
       { ok: false, error: "Sign in to mark announcements read." },
