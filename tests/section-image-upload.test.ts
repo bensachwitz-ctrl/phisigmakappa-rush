@@ -31,6 +31,16 @@ describe("upload-section-image route: admin-gated, sharp-optimized, Blob-stored"
     expect(src).toMatch(/SECTION_MAX_DIM/);
     expect(src).toMatch(/hero:\s*\d+/);
   });
+  it("allowlists the caller-supplied section hint (unknown -> null)", () => {
+    expect(src).toMatch(/ALLOWED_SECTIONS\s*=\s*\[\s*"hero",\s*"about",\s*"spotlight",\s*"logo"\s*\]/);
+    expect(src).toMatch(/ALLOWED_SECTIONS as readonly string\[\]\)\.includes\(rawSection\)/);
+  });
+  it("caps the sharp-failure fallback so it can't emit a huge data-URL", () => {
+    expect(src).toMatch(/FALLBACK_MAX_BYTES\s*=\s*1024\s*\*\s*1024/);
+    // On decode failure a >1MB original is rejected (400), not echoed back raw.
+    expect(src).toMatch(/inputBuf\.length > FALLBACK_MAX_BYTES/);
+    expect(src).toMatch(/status:\s*400/);
+  });
 });
 
 describe("SectionImageUploader: drag-drop upload + paste-a-URL field", () => {
@@ -43,6 +53,19 @@ describe("SectionImageUploader: drag-drop upload + paste-a-URL field", () => {
   it("supports drag-and-drop AND a paste-a-URL field", () => {
     expect(src).toMatch(/onDrop=/);
     expect(src).toMatch(/type="url"/);
+  });
+  it("sanitizes the pasted URL (XSS/SSRF) before persisting or rendering it", () => {
+    expect(src).toMatch(/from "@\/lib\/safe-image-url"/);
+    expect(src).toMatch(/sanitizeImageUrl\(/);
+    // The preview <img> only renders a value that passes the safety gate.
+    expect(src).toMatch(/value && isSafeImageUrl\(value\)/);
+  });
+});
+
+describe("Layout reorder is bounds-guarded against a stale drag index", () => {
+  const src = readFileSync(root("app/admin/website/website-builder-client.tsx"), "utf8");
+  it("bails when from/to run past the current list length", () => {
+    expect(src).toMatch(/from >= prev\.length \|\| to >= prev\.length/);
   });
 });
 

@@ -473,6 +473,10 @@ export function WebsiteBuilderClient({
   const reorderSections = (from: number, to: number) => {
     if (from === to || from < 0 || to < 0) return;
     setSections((prev) => {
+      // Upper-bound guard: a stale drag index (list shrank mid-drag / a race)
+      // could otherwise splice out `undefined` and reinsert it, corrupting the
+      // order. Bail on any index past the end.
+      if (from >= prev.length || to >= prev.length) return prev;
       const next = [...prev];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { UploadCloud, LinkIcon, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isSafeImageUrl, sanitizeImageUrl } from "@/lib/safe-image-url";
 
 // Item 2 — per-section image uploader. A drag-and-drop dropzone that POSTs to
 // /api/upload-section-image (which sharp-optimizes and stores on Vercel Blob),
@@ -28,6 +29,15 @@ export function SectionImageUploader({
   const inputId = React.useId();
   const [busy, setBusy] = React.useState(false);
   const [dragOver, setDragOver] = React.useState(false);
+  // The URL field keeps its own draft so the admin can type freely, but an
+  // unsafe value (javascript:/data:text/html → XSS, http://localhost / private
+  // IP → SSRF) is NEVER committed to `value` (which persists to cfg and renders
+  // into the live-site <img src>). We commit the moment the draft is already
+  // safe (covers a full-URL paste) and re-sanitize on blur.
+  const [urlDraft, setUrlDraft] = React.useState(value);
+  React.useEffect(() => {
+    setUrlDraft(value);
+  }, [value]);
 
   const upload = React.useCallback(
     async (file: File) => {
@@ -96,7 +106,7 @@ export function SectionImageUploader({
             <Loader2 className="h-5 w-5 animate-spin text-phisig-red" aria-hidden="true" />
             <span className="text-xs text-muted-foreground">Optimizing &amp; uploading…</span>
           </>
-        ) : value ? (
+        ) : value && isSafeImageUrl(value) ? (
           <span className="flex flex-col items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt={`${label} preview`} className="max-h-24 w-auto rounded-md object-contain" />
@@ -118,8 +128,22 @@ export function SectionImageUploader({
         <input
           type="url"
           inputMode="url"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={urlDraft}
+          onChange={(e) => {
+            const next = e.target.value;
+            setUrlDraft(next);
+            // Commit only a value that is ALREADY safe (a full-URL paste), or a
+            // cleared field. A dangerous / private-host / still-partial value
+            // waits for blur so mid-typing isn't clobbered but can never persist.
+            if (next === "" || sanitizeImageUrl(next) === next.trim()) {
+              onChange(sanitizeImageUrl(next));
+            }
+          }}
+          onBlur={() => {
+            const safe = sanitizeImageUrl(urlDraft);
+            setUrlDraft(safe);
+            onChange(safe);
+          }}
           placeholder="…or paste an image URL"
           spellCheck={false}
           aria-label={`${label} URL`}

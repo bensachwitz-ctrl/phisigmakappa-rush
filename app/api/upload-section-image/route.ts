@@ -17,10 +17,21 @@ export const dynamic = "force-dynamic";
 // slot gets a fast, correctly-oriented image without the admin resizing anything.
 
 const MAX_BYTES = 15 * 1024 * 1024; // 15 MB in; sharp shrinks it hard on the way out
+// If sharp CAN'T decode the upload we may fall back to the original bytes — but
+// only when they're small enough to be a safe stored asset / data-URL preview.
+// A large undecodable file would otherwise balloon into a ~20MB base64 data-URL
+// that blows past the browser AND the 20k section-content cap, so cap the raw
+// fallback at 1 MB and 400 anything bigger.
+const FALLBACK_MAX_BYTES = 1024 * 1024; // 1 MB
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/gif", "image/avif"];
+// The section hint is caller-controlled and lands in the stored filename, so it
+// is ALLOWLISTED (not just length-clamped): an unknown value collapses to null
+// rather than silently driving the default dimension and injecting an arbitrary
+// filename slug.
+const ALLOWED_SECTIONS = ["hero", "about", "spotlight", "logo"] as const;
 // Per-section target max dimension. The hero is full-bleed (wants more pixels);
 // portrait cards (about/spotlight) and logos need far fewer. Data-driven so a new
-// section slot just adds a key; unknown sections fall back to a safe default.
+// section slot just adds a key; a null (unknown) section falls back to a safe default.
 const SECTION_MAX_DIM: Record<string, number> = {
   hero: 2000,
   about: 1200,
@@ -46,7 +57,13 @@ export async function POST(req: Request) {
   try {
     const form = await req.formData();
     const file = form.get("file");
-    const section = (form.get("section") as string | null)?.toString().slice(0, 40) || null;
+    const rawSection = (form.get("section") as string | null)?.toString().slice(0, 40) || null;
+    // Allowlist: an unrecognized section is treated as "no hint" (null) so it
+    // can neither pick a surprise dimension nor inject an arbitrary filename slug.
+    const section =
+      rawSection && (ALLOWED_SECTIONS as readonly string[]).includes(rawSection)
+        ? rawSection
+        : null;
 
     if (!file || !(file instanceof Blob)) {
       return NextResponse.json({ ok: false, error: "No file provided" }, { status: 400 });
@@ -74,8 +91,16 @@ export async function POST(req: Request) {
         .webp({ quality: 82 })
         .toBuffer();
     } catch {
-      // If sharp can't decode it (rare), fall back to the original bytes so the
-      // admin still gets their image rather than an opaque failure.
+      // sharp couldn't decode it (rare). Fall back to the ORIGINAL bytes only if
+      // they're small enough to be a safe stored asset / data-URL preview; a
+      // large undecodable file would otherwise become a ~20MB base64 data-URL
+      // that exceeds the browser + the 20k section-content cap. Reject instead.
+      if (inputBuf.length > FALLBACK_MAX_BYTES) {
+        return NextResponse.json(
+          { ok: false, error: "Couldn't process that image. Try a smaller or standard JPG/PNG." },
+          { status: 400 },
+        );
+      }
       processed = inputBuf;
       contentType = blob.type || "image/jpeg";
     }
