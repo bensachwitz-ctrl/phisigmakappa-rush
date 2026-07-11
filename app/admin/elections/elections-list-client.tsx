@@ -13,9 +13,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import {
-  Vote, Plus, Loader2, ChevronRight, Users2, ListChecks, ShieldCheck,
-} from "lucide-react";
+import { IconBallot as Vote, IconPlus as Plus, IconSpinner as Loader2, IconChevronRight as ChevronRight, IconMembers as Users2, IconChores as ListChecks, IconShieldCheck as ShieldCheck } from "@/components/brand/icons";
 import { ElectionStatusBadge, defaultTermCode } from "./status-badge";
 
 export type ElectionRow = {

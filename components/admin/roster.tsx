@@ -32,33 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
-import {
-  Mail,
-  MessageSquare,
-  Search,
-  Loader2,
-  ArrowUpDown,
-  Phone,
-  GraduationCap,
-  MapPin,
-  Trash2,
-  Send,
-  X,
-  ThumbsUp,
-  ThumbsDown,
-  Minus,
-  Star,
-  User,
-  Calendar,
-  CheckCircle2,
-  Download,
-  Wand2,
-  RefreshCw,
-  Copy,
-  ShieldCheck,
-  ShieldAlert,
-  ExternalLink,
-} from "lucide-react";
+import { IconMail as Mail, IconMessage as MessageSquare, IconSearch as Search, IconSpinner as Loader2, IconArrowSort as ArrowUpDown, IconPhone as Phone, IconGraduation as GraduationCap, IconPin as MapPin, IconTrash as Trash2, IconSend as Send, IconClose as X, IconThumbsUp as ThumbsUp, IconThumbsDown as ThumbsDown, IconMinus as Minus, IconStar as Star, IconUser as User, IconCalendar as Calendar, IconCheckCircle as CheckCircle2, IconDownload as Download, IconWand as Wand2, IconRefresh as RefreshCw, IconCopy as Copy, IconShieldCheck as ShieldCheck, IconRiskDesk as ShieldAlert, IconExternal as ExternalLink } from "@/components/brand/icons";
 import { PnmCompareModal } from "@/components/admin/pnm-compare-modal";
 import { EmptyState } from "@/components/admin/empty-state";
 import { IllustrationRoster } from "@/components/brand/illustrations";

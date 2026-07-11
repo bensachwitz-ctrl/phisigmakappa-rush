@@ -7,9 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { avatarSrc } from "@/lib/image-url";
-import {
-  Mail, Phone, GraduationCap, MapPin, ThumbsUp, ThumbsDown,
-  Minus, Star, Calendar, } from "lucide-react";
+import { IconMail as Mail, IconPhone as Phone, IconGraduation as GraduationCap, IconPin as MapPin, IconThumbsUp as ThumbsUp, IconThumbsDown as ThumbsDown, IconMinus as Minus, IconStar as Star, IconCalendar as Calendar } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 import { IconSpark } from "@/components/brand/icons";

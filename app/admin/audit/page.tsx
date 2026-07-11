@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getRecentAudit, verifyChain } from "@/lib/audit";
 import { isAdminRole, isAdminAuthed } from "@/lib/auth";
 import { AuditClient } from "@/components/admin/audit-client";
-import { ScrollText, ArrowLeft, ShieldCheck, ShieldAlert } from "lucide-react";
+import { IconAuditLog as ScrollText, IconArrowLeft as ArrowLeft, IconShieldCheck as ShieldCheck, IconRiskDesk as ShieldAlert } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

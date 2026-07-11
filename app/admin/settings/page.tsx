@@ -5,7 +5,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { maskSecretConfig } from "@/lib/settings-secret";
 import { SettingsManager } from "@/components/admin/settings-manager";
 import { NotifyChannelsAdminCard } from "@/components/notify/notify-channels-admin-card";
-import { ExternalLink } from "lucide-react";
+import { IconExternal as ExternalLink } from "@/components/brand/icons";
 
 import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";

@@ -38,11 +38,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
 import { IconSpark } from "@/components/brand/icons";
-import {
-  Users, Plus, MessageCircle, Search, Loader2, TrendingUp,
-  Flame, CalendarCheck, UserX, Send, CheckCircle2, XCircle,
-  ArrowRight, Key, Car, Clock, ShieldAlert, Calendar,
-} from "lucide-react";
+import { IconMembers as Users, IconPlus as Plus, IconMessage as MessageCircle, IconSearch as Search, IconSpinner as Loader2, IconGrowth as TrendingUp, IconFlame as Flame, IconEvents as CalendarCheck, IconUserX as UserX, IconSend as Send, IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconArrowRight as ArrowRight, IconKey as Key, IconCar as Car, IconClock as Clock, IconRiskDesk as ShieldAlert, IconCalendar as Calendar } from "@/components/brand/icons";
 
 export type RusheeListRow = {
   id: string;

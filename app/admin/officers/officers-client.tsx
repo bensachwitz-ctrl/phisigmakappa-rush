@@ -18,10 +18,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  ShieldCheck, Loader2, Pencil, UserPlus, Trash2, RotateCcw,
-  Crown, Users, Briefcase, AlertTriangle,
-} from "lucide-react";
+import { IconShieldCheck as ShieldCheck, IconSpinner as Loader2, IconEdit as Pencil, IconUserPlus as UserPlus, IconTrash as Trash2, IconRefresh as RotateCcw, IconCrown as Crown, IconMembers as Users, IconBriefcase as Briefcase, IconAlert as AlertTriangle } from "@/components/brand/icons";
 import {
   type DomainKey,
   type DomainAccess,

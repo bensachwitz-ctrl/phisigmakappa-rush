@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconSpark } from "@/components/brand/icons";
-import {
-  LayoutDashboard, Users, CalendarDays, Megaphone, Settings,
-  Send, ClipboardCheck, ThumbsUp, Mail, MessageSquare,
-  Wand2, Download, ShieldCheck, BookOpen,
-  TrendingUp, FileText, ScrollText, Trophy, GitCompare, Palette,
-} from "lucide-react";
+import { IconDashboard as LayoutDashboard, IconMembers as Users, IconCalendar as CalendarDays, IconMegaphone as Megaphone, IconSettings as Settings, IconSend as Send, IconChores as ClipboardCheck, IconThumbsUp as ThumbsUp, IconMail as Mail, IconMessage as MessageSquare, IconWand as Wand2, IconDownload as Download, IconShieldCheck as ShieldCheck, IconLibrary as BookOpen, IconGrowth as TrendingUp, IconFileText as FileText, IconAuditLog as ScrollText, IconStanding as Trophy, IconArrowSort as GitCompare, IconBranding as Palette } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

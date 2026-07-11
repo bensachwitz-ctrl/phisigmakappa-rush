@@ -4,7 +4,7 @@ import { isAdminAuthed } from "@/lib/auth";
 import { checkOfficerPermission } from "@/lib/permissions";
 import { OfficerAccessRequired } from "@/components/admin/officer-access-required";
 import { DuesConnectCard } from "@/app/admin/dues/connect-card";
-import { Banknote, ArrowLeft } from "lucide-react";
+import { IconPayouts as Banknote, IconArrowLeft as ArrowLeft } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

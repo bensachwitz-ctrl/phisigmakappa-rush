@@ -9,7 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import { Sparkles, Loader2 } from "lucide-react";
+import { IconSpark as Sparkles, IconSpinner as Loader2 } from "@/components/brand/icons";
 
 /**
  * DraftWithAI — small, INERT-BY-DEFAULT "Draft with AI" affordance for the

@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowDown, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { IconArrowDown as ArrowDown, IconTrendingDown as TrendingDown, IconGrowth as TrendingUp, IconMembers as Users } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 /**

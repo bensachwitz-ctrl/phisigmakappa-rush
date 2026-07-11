@@ -20,10 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/admin/empty-state";
 import { IllustrationCalendar } from "@/components/brand/illustrations";
-import {
-  CalendarDays, MapPin, Plus, Lock, Trash2, Loader2,
-  ClipboardCheck, Users, Search, Edit3, Globe, QrCode,
-} from "lucide-react";
+import { IconCalendar as CalendarDays, IconPin as MapPin, IconPlus as Plus, IconLock as Lock, IconTrash as Trash2, IconSpinner as Loader2, IconChores as ClipboardCheck, IconMembers as Users, IconSearch as Search, IconEdit as Edit3, IconGlobe as Globe, IconQrCode as QrCode } from "@/components/brand/icons";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { IconBell as Bell } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import type { NotifyChannel } from "@/lib/notify/types";
 

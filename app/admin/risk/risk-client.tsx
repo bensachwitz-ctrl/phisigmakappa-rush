@@ -14,10 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Search, ShieldAlert, AlertTriangle, Eye, Loader2, Calendar, User,
-  CheckCircle2, FileText, ChevronRight, UserCheck, Shield
-} from "lucide-react";
+import { IconSearch as Search, IconRiskDesk as ShieldAlert, IconAlert as AlertTriangle, IconEye as Eye, IconSpinner as Loader2, IconCalendar as Calendar, IconUser as User, IconCheckCircle as CheckCircle2, IconFileText as FileText, IconChevronRight as ChevronRight, IconUserCheck as UserCheck, IconShieldCheck as Shield } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type IncidentAcknowledgment = {

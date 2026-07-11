@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
 import { IconCalendarTool } from "@/components/brand/icons/calendar-tool";
-import { ChevronLeft, ChevronRight, CalendarDays, MapPin, CalendarRange } from "lucide-react";
+import { IconChevronLeft as ChevronLeft, IconChevronRight as ChevronRight, IconCalendar as CalendarDays, IconPin as MapPin, IconCalendar as CalendarRange } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { useChapterIdentity } from "@/components/brand/chapter-identity-context";
 

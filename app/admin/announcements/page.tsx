@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Megaphone } from "lucide-react";
+import { IconMegaphone as Megaphone } from "@/components/brand/icons";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/auth";
 import { checkOfficerPermission } from "@/lib/permissions";

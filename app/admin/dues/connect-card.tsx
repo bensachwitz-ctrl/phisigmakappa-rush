@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Banknote,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Loader2,
-  ArrowRight,
-} from "lucide-react";
+import { IconPayouts as Banknote, IconCheckCircle as CheckCircle2, IconClock as Clock, IconAlertCircle as AlertCircle, IconSpinner as Loader2, IconArrowRight as ArrowRight } from "@/components/brand/icons";
 
 /**
  * Stripe Connect payout status + onboarding launcher for the current chapter.

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthed, isAdminRole } from "@/lib/auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { SetupWizard } from "@/components/admin/setup-wizard";
-import { ArrowLeft } from "lucide-react";
+import { IconArrowLeft as ArrowLeft } from "@/components/brand/icons";
 
 import { IconSpark } from "@/components/brand/icons";
 export const dynamic = "force-dynamic";

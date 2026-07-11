@@ -1,8 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Vote, CalendarCheck, Clock, Trophy, Crown,
-} from "lucide-react";
+import { IconBallot as Vote, IconEvents as CalendarCheck, IconClock as Clock, IconStanding as Trophy, IconCrown as Crown } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
 

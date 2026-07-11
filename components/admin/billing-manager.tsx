@@ -12,18 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IconSpark } from "@/components/brand/icons";
-import {
-  CreditCard,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Loader2,
-  ArrowRight,
-  ShieldCheck,
-  Percent,
-  CalendarDays,
-  Repeat,
-} from "lucide-react";
+import { IconBilling as CreditCard, IconCheckCircle as CheckCircle2, IconClock as Clock, IconAlertCircle as AlertCircle, IconSpinner as Loader2, IconArrowRight as ArrowRight, IconShieldCheck as ShieldCheck, IconPercent as Percent, IconCalendar as CalendarDays, IconRefresh as Repeat } from "@/components/brand/icons";
 
 /**
  * Chapter-facing PLATFORM-subscription manager (paying Greekstack).

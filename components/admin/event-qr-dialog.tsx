@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, Check, QrCode as QrIcon, Users, ExternalLink } from "lucide-react";
+import { IconSpinner as Loader2, IconCopy as Copy, IconCheck as Check, IconQrCode as QrIcon, IconMembers as Users, IconExternal as ExternalLink } from "@/components/brand/icons";
 
 type QrInfo = { code: string; url: string; checkInCount: number };
 

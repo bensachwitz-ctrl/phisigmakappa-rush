@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
-import { Compass, LayoutDashboard, LifeBuoy } from "lucide-react";
+import { IconCompass as Compass, IconDashboard as LayoutDashboard, IconLifebuoy as LifeBuoy } from "@/components/brand/icons";
 
 export const metadata: Metadata = {
   title: "Section not found",

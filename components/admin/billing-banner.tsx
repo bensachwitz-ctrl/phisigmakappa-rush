@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AlertTriangle, Clock, CreditCard, X, ArrowRight } from "lucide-react";
+import { IconAlert as AlertTriangle, IconClock as Clock, IconBilling as CreditCard, IconClose as X, IconArrowRight as ArrowRight } from "@/components/brand/icons";
 import { resolveBillingTone, type BillingReason } from "@/lib/billing-banner-tone";
 
 /**

@@ -14,10 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Search, Plus, Trash2, Edit2, Loader2, RotateCw, Calendar, CheckCircle2,
-  AlertTriangle, Play, HelpCircle, User, ShieldAlert, Award
-} from "lucide-react";
+import { IconSearch as Search, IconPlus as Plus, IconTrash as Trash2, IconEdit as Edit2, IconSpinner as Loader2, IconRefresh as RotateCw, IconCalendar as Calendar, IconCheckCircle as CheckCircle2, IconAlert as AlertTriangle, IconPlay as Play, IconHelp as HelpCircle, IconUser as User, IconRiskDesk as ShieldAlert, IconAward as Award } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type ChoreTask = {

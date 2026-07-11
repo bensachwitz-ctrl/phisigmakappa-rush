@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/auth";
 import { checkOfficerPermission } from "@/lib/permissions";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldAlert, ArrowLeft } from "lucide-react";
+import { IconRiskDesk as ShieldAlert, IconArrowLeft as ArrowLeft } from "@/components/brand/icons";
 import { ElectionsListClient } from "./elections-list-client";
 
 export const dynamic = "force-dynamic";

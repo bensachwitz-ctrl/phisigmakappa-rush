@@ -15,10 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Search, Upload, Trash2, Loader2, FileText, Download, FolderOpen,
-  UploadCloud, File as FileIcon, BookMarked,
-} from "lucide-react";
+import { IconSearch as Search, IconUpload as Upload, IconTrash as Trash2, IconSpinner as Loader2, IconFileText as FileText, IconDownload as Download, IconFolder as FolderOpen, IconUpload as UploadCloud, IconFileText as FileIcon, IconLibrary as BookMarked } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type DocumentRow = {

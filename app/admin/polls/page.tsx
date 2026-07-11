@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Vote } from "lucide-react";
+import { IconBallot as Vote } from "@/components/brand/icons";
 import { getCurrentSession } from "@/lib/auth";
 import { PollsFeed } from "@/components/brother/polls-feed";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";

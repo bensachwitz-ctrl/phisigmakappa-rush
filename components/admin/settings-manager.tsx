@@ -15,11 +15,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { imageSrc } from "@/lib/image-url";
 import { cleanUrl } from "@/lib/utils";
-import {
-  Save, Loader2, Image as ImageIcon, Star, Crown, RotateCcw, ExternalLink, Upload, Users, Mail, HandHeart, ShieldCheck,
-  FileText, Plus, Trash2, ArrowUp, ArrowDown, MessageSquareQuote,
-  CalendarDays, ListChecks, Activity, CreditCard, MessageSquare,
-} from "lucide-react";
+import { IconSave as Save, IconSpinner as Loader2, IconImage as ImageIcon, IconStar as Star, IconCrown as Crown, IconRefresh as RotateCcw, IconExternal as ExternalLink, IconUpload as Upload, IconMembers as Users, IconMail as Mail, IconService as HandHeart, IconShieldCheck as ShieldCheck, IconFileText as FileText, IconPlus as Plus, IconTrash as Trash2, IconArrowUp as ArrowUp, IconArrowDown as ArrowDown, IconMessage as MessageSquareQuote, IconCalendar as CalendarDays, IconChores as ListChecks, IconActivity as Activity, IconBilling as CreditCard, IconMessage as MessageSquare } from "@/components/brand/icons";
 import Link from "next/link";
 
 import { IconSpark } from "@/components/brand/icons";

@@ -12,7 +12,7 @@ import { getSiteConfig, DEFAULTS } from "@/lib/site-config";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Reveal } from "@/components/site/reveal";
 import { IconAlumni, IconDues, IconDashboard, IconMembers } from "@/components/brand/icons";
-import { ArrowRight, Vote, User, Landmark, Network, BookUser, CreditCard, LayoutGrid, CalendarRange, Wallet } from "lucide-react";
+import { IconArrowRight as ArrowRight, IconBallot as Vote, IconUser as User, IconLandmark as Landmark, IconFamilyTree as Network, IconDirectory as BookUser, IconBilling as CreditCard, IconGrid as LayoutGrid, IconCalendar as CalendarRange, IconWallet as Wallet } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

@@ -3,9 +3,7 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  ScrollText, User, Vote, Megaphone, Settings, Trash2, Edit3, Search, X, Filter, CreditCard,
-} from "lucide-react";
+import { IconAuditLog as ScrollText, IconUser as User, IconBallot as Vote, IconMegaphone as Megaphone, IconSettings as Settings, IconTrash as Trash2, IconEdit as Edit3, IconSearch as Search, IconClose as X, IconFilter as Filter, IconBilling as CreditCard } from "@/components/brand/icons";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 

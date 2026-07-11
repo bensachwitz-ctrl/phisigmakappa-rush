@@ -10,10 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { IconSpark } from "@/components/brand/icons";
-import {
-  Trophy, Crown, Search, SlidersHorizontal, Loader2, RotateCcw, Save,
-  ChevronDown, ShieldCheck, AlertTriangle, ShieldAlert, Wallet, CalendarCheck,
-  HandHeart, BookOpen, } from "lucide-react";
+import { IconStanding as Trophy, IconCrown as Crown, IconSearch as Search, IconSliders as SlidersHorizontal, IconSpinner as Loader2, IconRefresh as RotateCcw, IconSave as Save, IconChevronDown as ChevronDown, IconShieldCheck as ShieldCheck, IconAlert as AlertTriangle, IconRiskDesk as ShieldAlert, IconWallet as Wallet, IconEvents as CalendarCheck, IconService as HandHeart, IconLibrary as BookOpen } from "@/components/brand/icons";
 import {
   DEFAULT_POINTS_CONFIG,
   standingLabel,

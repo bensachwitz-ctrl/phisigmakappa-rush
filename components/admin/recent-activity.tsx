@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  ScrollText, Vote, Edit3, Megaphone, Settings, User, Trash2, ArrowRight, CreditCard,
-} from "lucide-react";
+import { IconAuditLog as ScrollText, IconBallot as Vote, IconEdit as Edit3, IconMegaphone as Megaphone, IconSettings as Settings, IconUser as User, IconTrash as Trash2, IconArrowRight as ArrowRight, IconBilling as CreditCard } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 import { IconSpark } from "@/components/brand/icons";

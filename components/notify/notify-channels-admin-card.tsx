@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell } from "lucide-react";
+import { IconBell as Bell } from "@/components/brand/icons";
 import { ALL_CHANNELS, type NotifyChannel } from "@/lib/notify/types";
 import { CHANNEL_LABELS } from "@/lib/notify/labels";
 

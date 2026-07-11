@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, GripVertical } from "lucide-react";
+import { IconPlus as Plus, IconTrash as Trash2, IconChevronUp as ChevronUp, IconChevronDown as ChevronDown, IconSave as Save, IconGripVertical as GripVertical } from "@/components/brand/icons";
 import {
   RUSH_FIELD_TYPES,
   serializeRushFormConfig,

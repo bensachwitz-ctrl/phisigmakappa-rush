@@ -16,11 +16,7 @@ import { avatarSrc } from "@/lib/image-url";
 import { AddMembersWizard } from "@/components/admin/add-members-wizard";
 import { EmptyState } from "@/components/admin/empty-state";
 import { IllustrationRoster } from "@/components/brand/illustrations";
-import {
-  Search, Plus, Trash2, Loader2, Edit3, Phone, Mail, GraduationCap,
-  CheckCircle2, Clock, BookOpen, Crown, Users, Send, Copy, Link2,
-  CreditCard, KeyRound,
-} from "lucide-react";
+import { IconSearch as Search, IconPlus as Plus, IconTrash as Trash2, IconSpinner as Loader2, IconEdit as Edit3, IconPhone as Phone, IconMail as Mail, IconGraduation as GraduationCap, IconCheckCircle as CheckCircle2, IconClock as Clock, IconLibrary as BookOpen, IconCrown as Crown, IconMembers as Users, IconSend as Send, IconCopy as Copy, IconLink as Link2, IconBilling as CreditCard, IconKey as KeyRound } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 import { IconSpark } from "@/components/brand/icons";

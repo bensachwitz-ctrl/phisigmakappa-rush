@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Search, BookOpen, GraduationCap, Award, AlertTriangle, ShieldAlert,
-  ChevronUp, ChevronDown, Edit2, Loader2, RefreshCw
-} from "lucide-react";
+import { IconSearch as Search, IconLibrary as BookOpen, IconGraduation as GraduationCap, IconAward as Award, IconAlert as AlertTriangle, IconRiskDesk as ShieldAlert, IconChevronUp as ChevronUp, IconChevronDown as ChevronDown, IconEdit as Edit2, IconSpinner as Loader2, IconRefresh as RefreshCw } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type AcademicBrother = {

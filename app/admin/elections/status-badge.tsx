@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
-import { FileEdit, Vote, Lock, CheckCircle2 } from "lucide-react";
+import { IconFileText as FileEdit, IconBallot as Vote, IconLock as Lock, IconCheckCircle as CheckCircle2 } from "@/components/brand/icons";
 
 /**
  * Status pill shared across the elections admin surfaces. Pure presentational —

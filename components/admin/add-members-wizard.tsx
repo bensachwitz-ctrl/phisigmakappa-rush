@@ -35,10 +35,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import {
-  Users, GraduationCap, User, UsersRound, ArrowRight, ArrowLeft, Loader2,
-  CheckCircle2, AlertTriangle, Trash2, Plus, ClipboardPaste, Mail, MinusCircle,
-} from "lucide-react";
+import { IconMembers as Users, IconGraduation as GraduationCap, IconUser as User, IconMembers as UsersRound, IconArrowRight as ArrowRight, IconArrowLeft as ArrowLeft, IconSpinner as Loader2, IconCheckCircle as CheckCircle2, IconAlert as AlertTriangle, IconTrash as Trash2, IconPlus as Plus, IconClipboard as ClipboardPaste, IconMail as Mail, IconMinusCircle as MinusCircle } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 import { IconSpark } from "@/components/brand/icons";

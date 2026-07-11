@@ -13,10 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
-import {
-  Plus, Trash2, Loader2, Edit3, Wallet, TrendingUp, Scale, Receipt,
-  Check, X, BadgeCheck, ExternalLink, FolderOpen, Clock3,
-} from "lucide-react";
+import { IconPlus as Plus, IconTrash as Trash2, IconSpinner as Loader2, IconEdit as Edit3, IconWallet as Wallet, IconGrowth as TrendingUp, IconScale as Scale, IconReceipt as Receipt, IconCheck as Check, IconClose as X, IconCheckCircle as BadgeCheck, IconExternal as ExternalLink, IconFolder as FolderOpen, IconClock as Clock3 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 // ─── Types (mirror the Prisma models, serialized to the client) ────────────

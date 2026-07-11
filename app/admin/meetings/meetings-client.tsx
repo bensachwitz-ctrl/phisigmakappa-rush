@@ -16,10 +16,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Search, Plus, Loader2, CalendarDays, CalendarCheck, Users, ClipboardCheck, MapPin,
-  AlertTriangle, CheckCircle2, UserCheck, Clock, XCircle, Trash2, RotateCw,
-} from "lucide-react";
+import { IconSearch as Search, IconPlus as Plus, IconSpinner as Loader2, IconCalendar as CalendarDays, IconEvents as CalendarCheck, IconMembers as Users, IconChores as ClipboardCheck, IconPin as MapPin, IconAlert as AlertTriangle, IconCheckCircle as CheckCircle2, IconUserCheck as UserCheck, IconClock as Clock, IconXCircle as XCircle, IconTrash as Trash2, IconRefresh as RotateCw } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 // Allowed member statuses for the requiredFor multi-select (mirrors

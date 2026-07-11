@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UploadCloud, LinkIcon, X, Loader2 } from "lucide-react";
+import { IconUpload as UploadCloud, IconLink as LinkIcon, IconClose as X, IconSpinner as Loader2 } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { isSafeImageUrl, sanitizeImageUrl } from "@/lib/safe-image-url";
 

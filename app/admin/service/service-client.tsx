@@ -15,10 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Search, Plus, Loader2, CheckCircle2, XCircle, HeartHandshake,
-  Calendar, Building2, ExternalLink, User, Hourglass,
-} from "lucide-react";
+import { IconSearch as Search, IconPlus as Plus, IconSpinner as Loader2, IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconAlumni as HeartHandshake, IconCalendar as Calendar, IconBuilding as Building2, IconExternal as ExternalLink, IconUser as User, IconHourglass as Hourglass } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 type HourLog = {

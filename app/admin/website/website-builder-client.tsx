@@ -15,12 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Save, RefreshCw, Flame, Trophy, Heart,
-  GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote,
-  Users, Crown, HelpCircle, MapPin, Rocket, ShieldCheck, ChevronUp, ChevronDown,
-  LayoutGrid, Palette, Check, Sparkles, GripVertical, Monitor, Smartphone,
-} from "lucide-react";
+import { IconSave as Save, IconRefresh as RefreshCw, IconFlame as Flame, IconStanding as Trophy, IconHeart as Heart, IconGraduation as GraduationCap, IconUserPlus as UserPlus, IconInstagram as Instagram, IconCalendar as CalendarDays, IconCalendar as CalendarRange, IconQuote as Quote, IconMembers as Users, IconCrown as Crown, IconHelp as HelpCircle, IconPin as MapPin, IconRocket as Rocket, IconShieldCheck as ShieldCheck, IconChevronUp as ChevronUp, IconChevronDown as ChevronDown, IconGrid as LayoutGrid, IconBranding as Palette, IconCheck as Check, IconSpark as Sparkles, IconGripVertical as GripVertical, IconMonitor as Monitor, IconSmartphone as Smartphone } from "@/components/brand/icons";
 // Import the PURE template data (orders/meta/resolver) — NOT template-config,
 // which also pulls in the hero .tsx components. This client only needs the meta
 // + the id resolver.

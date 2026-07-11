@@ -13,10 +13,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ArrowLeft, Plus, Trash2, Loader2, Vote, Lock, CheckCircle2, Crown,
-  AlertTriangle, UserPlus, Pencil, ListChecks, Trophy,
-} from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconPlus as Plus, IconTrash as Trash2, IconSpinner as Loader2, IconBallot as Vote, IconLock as Lock, IconCheckCircle as CheckCircle2, IconCrown as Crown, IconAlert as AlertTriangle, IconUserPlus as UserPlus, IconEdit as Pencil, IconChores as ListChecks, IconStanding as Trophy } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 import { ElectionStatusBadge } from "../status-badge";
 

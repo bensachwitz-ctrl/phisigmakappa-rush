@@ -1,26 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  GraduationCap,
-  Search,
-  Trash2,
-  UserPlus,
-  Upload,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Send,
-  Copy,
-  Link2,
-  X,
-  Loader2,
-  KeyRound
-} from "lucide-react";
+import { IconGraduation as GraduationCap, IconSearch as Search, IconTrash as Trash2, IconUserPlus as UserPlus, IconUpload as Upload, IconMail as Mail, IconPhone as Phone, IconPin as MapPin, IconBuilding as Building, IconCheckCircle as CheckCircle, IconXCircle as XCircle, IconPlus as Plus, IconSend as Send, IconCopy as Copy, IconLink as Link2, IconClose as X, IconSpinner as Loader2, IconKey as KeyRound } from "@/components/brand/icons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,

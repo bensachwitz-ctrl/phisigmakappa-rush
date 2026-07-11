@@ -12,14 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
-import {
-  Banknote,
-  ArrowLeft,
-  ArrowRight,
-  Settings,
-  Landmark,
-  Users,
-} from "lucide-react";
+import { IconPayouts as Banknote, IconArrowLeft as ArrowLeft, IconArrowRight as ArrowRight, IconSettings as Settings, IconLandmark as Landmark, IconMembers as Users } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

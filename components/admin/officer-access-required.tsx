@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldAlert, ArrowLeft } from "lucide-react";
+import { IconRiskDesk as ShieldAlert, IconArrowLeft as ArrowLeft } from "@/components/brand/icons";
 
 /**
  * Graceful "you don't have access to this domain" card for /admin/* pages.

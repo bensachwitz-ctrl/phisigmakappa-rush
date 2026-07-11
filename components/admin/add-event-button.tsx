@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { IconPlus as Plus } from "@/components/brand/icons";
 
 /**
  * Page-header "+ Add event" CTA. Lives ABOVE the brother calendar so admins

@@ -12,7 +12,7 @@ import {
   PLATFORM_PLAN_NAME,
   PLATFORM_PLAN_PRICE_CENTS,
 } from "@/lib/platform-billing";
-import { CreditCard, ArrowLeft } from "lucide-react";
+import { IconBilling as CreditCard, IconArrowLeft as ArrowLeft } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

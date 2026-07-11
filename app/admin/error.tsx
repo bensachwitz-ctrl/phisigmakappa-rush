@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
-import { RefreshCcw, LayoutDashboard, TriangleAlert } from "lucide-react";
+import { IconRefresh as RefreshCcw, IconDashboard as LayoutDashboard, IconAlert as TriangleAlert } from "@/components/brand/icons";
 
 /**
  * Error boundary *within* the admin chrome. Rendering this inside app/admin keeps

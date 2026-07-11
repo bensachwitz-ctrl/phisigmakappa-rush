@@ -15,10 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
-import {
-  Megaphone, Plus, Pin, Trash2, Loader2, Edit3, Send,
-  Users, MessageSquare, Mail,
-} from "lucide-react";
+import { IconMegaphone as Megaphone, IconPlus as Plus, IconPin as Pin, IconTrash as Trash2, IconSpinner as Loader2, IconEdit as Edit3, IconSend as Send, IconMembers as Users, IconMessage as MessageSquare, IconMail as Mail } from "@/components/brand/icons";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DraftWithAI } from "@/components/admin/draft-with-ai";

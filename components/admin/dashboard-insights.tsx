@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  TrendingUp, CheckCircle2, Users, Calendar,
-  ThumbsUp, ThumbsDown, ArrowRight, Vote,
-  Download, FileText, ScrollText,
-} from "lucide-react";
+import { IconGrowth as TrendingUp, IconCheckCircle as CheckCircle2, IconMembers as Users, IconCalendar as Calendar, IconThumbsUp as ThumbsUp, IconThumbsDown as ThumbsDown, IconArrowRight as ArrowRight, IconBallot as Vote, IconDownload as Download, IconFileText as FileText, IconAuditLog as ScrollText } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 import { IconSpark } from "@/components/brand/icons";

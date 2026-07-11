@@ -12,19 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import {
-  Search,
-  Loader2,
-  ChevronRight,
-  X,
-  Users,
-  GitBranch,
-  UserPlus,
-  Crown,
-  CornerDownRight,
-  Link2Off,
-  Check,
-} from "lucide-react";
+import { IconSearch as Search, IconSpinner as Loader2, IconChevronRight as ChevronRight, IconClose as X, IconMembers as Users, IconFamilyTree as GitBranch, IconUserPlus as UserPlus, IconCrown as Crown, IconReply as CornerDownRight, IconUnlink as Link2Off, IconCheck as Check } from "@/components/brand/icons";
 import { IconFamily } from "@/components/brand/icons/family";
 import { cn } from "@/lib/utils";
 

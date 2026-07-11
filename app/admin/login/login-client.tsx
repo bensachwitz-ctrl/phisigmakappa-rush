@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
-import { Loader2, Lock, ArrowLeft, User, KeyRound, ShieldCheck } from "lucide-react";
+import { IconSpinner as Loader2, IconLock as Lock, IconArrowLeft as ArrowLeft, IconUser as User, IconKey as KeyRound, IconShieldCheck as ShieldCheck } from "@/components/brand/icons";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 

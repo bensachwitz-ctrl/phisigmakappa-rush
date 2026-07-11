@@ -32,10 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { avatarSrc } from "@/lib/image-url";
-import {
-  ArrowLeft, Send, UserCheck, UserX, MessageSquarePlus, Loader2,
-  Calendar, Mail, Phone, MapPin, Copy, RefreshCw, FileText,
-} from "lucide-react";
+import { IconArrowLeft as ArrowLeft, IconSend as Send, IconUserCheck as UserCheck, IconUserX as UserX, IconMessage as MessageSquarePlus, IconSpinner as Loader2, IconCalendar as Calendar, IconMail as Mail, IconPhone as Phone, IconPin as MapPin, IconCopy as Copy, IconRefresh as RefreshCw, IconFileText as FileText } from "@/components/brand/icons";
 import { format } from "date-fns";
 
 import { IconSpark } from "@/components/brand/icons";
