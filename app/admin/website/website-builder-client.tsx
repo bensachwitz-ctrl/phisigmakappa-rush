@@ -50,6 +50,7 @@ import {
   type IconFamilyId,
 } from "@/lib/site-generator/icon-families";
 import { SiteIcon } from "@/components/site/site-icon";
+import { SectionImageUploader } from "@/components/admin/section-image-uploader";
 
 interface SectionConfig {
   id: string;
@@ -189,6 +190,15 @@ function IconFamilyChip({
   );
 }
 
+// Item 2 — per-section IMAGE slots. Each maps to the same `${sectionId}.${key}`
+// cfg key the section renderer already reads (about.slug / spotlight.slug are the
+// section photo slots), so an uploaded Blob URL flows straight to the public page.
+// Data-driven: add a section + slot here and its uploader appears in the editor.
+const IMAGE_FIELDS: Record<string, { key: string; label: string }[]> = {
+  about: [{ key: "slug", label: "About photo" }],
+  spotlight: [{ key: "slug", label: "Spotlight photo" }],
+};
+
 const EDITABLE_FIELDS: Record<string, { key: string; label: string; type: "input" | "textarea" }[]> = {
   hero: [
     { key: "h1.lead", label: "Headline Lead", type: "input" },
@@ -278,6 +288,11 @@ export function WebsiteBuilderClient({
         ? `rush.${f.key}`
         : `${sectionId}.${f.key}`;
       initialValues[f.key] = config[fullKey] || "";
+    });
+    // Seed image-slot values (item 2) so the uploader shows the current photo and
+    // an edit round-trips through the same save path as the text fields.
+    (IMAGE_FIELDS[sectionId] || []).forEach((f) => {
+      initialValues[f.key] = config[`${sectionId}.${f.key}`] || "";
     });
     setEditFields(initialValues);
   };
@@ -1488,6 +1503,19 @@ export function WebsiteBuilderClient({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Item 2 — per-section image slots (upload -> sharp -> Blob, or paste a URL) */}
+            {editingSectionId && IMAGE_FIELDS[editingSectionId]?.map((field) => (
+              <SectionImageUploader
+                key={field.key}
+                label={field.label}
+                section={editingSectionId}
+                value={editFields[field.key] || ""}
+                onChange={(url) => setEditFields((prev) => ({ ...prev, [field.key]: url }))}
+                onError={(message) =>
+                  push({ title: "Couldn't use that image", description: message, variant: "destructive" })
+                }
+              />
+            ))}
             {editingSectionId && EDITABLE_FIELDS[editingSectionId]?.map((field) => (
               <div key={field.key} className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-500 block">
