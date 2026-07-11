@@ -72,7 +72,6 @@ const nextConfig = {
     // so only the referenced glyphs ship — a page renders exactly ONE family, and
     // now only that family's used glyphs are in its chunk.
     optimizePackageImports: [
-      "lucide-react",
       "@phosphor-icons/react",
       "hugeicons-react",
       "@radix-ui/react-icons",
