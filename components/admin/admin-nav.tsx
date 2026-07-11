@@ -43,7 +43,11 @@ export type NavItem = {
 // `domain` mirrors each page's checkOfficerPermission(domain,"read") gate.
 export const ITEMS: NavItem[] = [
   { href: "/admin", label: "Rush", icon: IconDashboard, adminOnly: false, group: "primary" },
-  { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: true, group: "primary" },
+  // PNMs (rushees) is the Recruitment Chair's surface: the page gates on
+  // rushPipeline:read and the mutations on rushPipeline:write. adminOnly:true
+  // short-circuited the domain filter and hid it from the Rush chair — drop it and
+  // gate on the rushPipeline domain so they discover it.
+  { href: "/admin/rushees", label: "PNMs", icon: IconRecruitment, adminOnly: false, group: "primary", domain: "rushPipeline" },
   { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary", domain: "brothers" },
   { href: "/admin/directory", label: "Directory", icon: IconDirectory, adminOnly: false, group: "more", domain: "brothers" },
   { href: "/admin/standing", label: "Standing", icon: IconStanding, adminOnly: false, group: "more", domain: "siteSettings" },

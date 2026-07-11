@@ -16,8 +16,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
+import { guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 import { RUSH_STATUSES } from "@/lib/utils";
 
@@ -108,9 +108,11 @@ export async function PATCH(
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  // Editing / deleting a PNM (incl. status changes like DROPPED) is a recruitment
+  // action — admins OR officers holding rushPipeline:write. Previously
+  // isAdminRole()-only, so the Rush chair's edit/delete controls 403'd.
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Origin not allowed" }, { status: 403 });
   }

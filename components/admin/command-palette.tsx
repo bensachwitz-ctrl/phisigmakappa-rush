@@ -61,7 +61,7 @@ export function CommandPalette({
     const base: Cmd[] = [
       // Navigate
       { id: "nav-rush", group: "Navigate", icon: IconDashboard, label: "Rush dashboard", href: "/admin", synonyms: ["pnms", "candidates", "decisions", "stats", "kpi"] },
-      { id: "nav-rushees", group: "Navigate", icon: IconRecruitment, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], adminOnly: true },
+      { id: "nav-rushees", group: "Navigate", icon: IconRecruitment, label: "PNMs / Rushees", href: "/admin/rushees", synonyms: ["candidates", "recruits", "potential new members", "pledges", "interest"], domain: "rushPipeline" },
       { id: "nav-brothers", group: "Navigate", icon: IconMembers, label: "Brothers", href: "/admin/brothers", synonyms: ["roster", "people", "members", "directory"] },
       { id: "nav-directory", group: "Navigate", icon: IconDirectory, label: "Member Directory", href: "/admin/directory", synonyms: ["roster", "composite", "members", "contact", "people", "majors", "hometown", "phonebook"] },
       { id: "nav-family", group: "Navigate", icon: IconFamilyTree, label: "Big / Little Family Tree", href: "/admin/family", synonyms: ["big", "little", "lineage", "family", "pledge class", "littles", "bigs", "tree"], adminOnly: true },

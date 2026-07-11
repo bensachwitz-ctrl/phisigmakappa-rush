@@ -12,7 +12,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
+import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { guardBillingWrite } from "@/lib/billing-guard";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 import { getChapterIdentity, type ChapterIdentity } from "@/lib/chapter-identity";
@@ -138,9 +139,11 @@ export async function POST(
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  // Extending a bid is a recruitment decision — admins OR officers holding
+  // rushPipeline:write (Recruitment Chair). Previously isAdminRole()-only, so the
+  // Rush chair's "Extend bid" button 403'd despite the page admitting them.
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Origin not allowed" }, { status: 403 });
   }

@@ -18,8 +18,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminAuthed, isAdminRole, isSameOrigin } from "@/lib/auth";
-import { guardOfficerOrAdmin } from "@/lib/permissions";
+import { isAdminAuthed, isSameOrigin } from "@/lib/auth";
+import { guardOfficer, guardOfficerOrAdmin } from "@/lib/permissions";
 import { actorFromRequest, auditAndNotify } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -113,9 +113,12 @@ export async function POST(req: Request) {
   if (!isAdminAuthed()) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
-  }
+  // Adding a PNM is a recruitment action — admins OR officers holding
+  // rushPipeline:write (the Recruitment Chair) may do it, matching the /admin/rush
+  // status/notes API. Previously isAdminRole()-only, which 403'd the Rush chair's
+  // "Add PNM" button even though the page admits them via rushPipeline:read.
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
   if (!isSameOrigin(req)) {
     return NextResponse.json({ ok: false, error: "Origin not allowed" }, { status: 403 });
   }

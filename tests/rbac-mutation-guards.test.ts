@@ -76,6 +76,12 @@ const CHANGED_ROUTES: { rel: string; domain: string }[] = [
   { rel: "app/api/admin/broadcast/route.ts", domain: "announcements" },
   { rel: "app/api/admin/rush/route.ts", domain: "rushPipeline" },
   { rel: "app/api/admin/enrich/route.ts", domain: "rushPipeline" },
+  // P1 #4 — the Recruitment Chair's PNM controls (add / edit / delete / bid) +
+  // bulk-text were isAdminRole()-only, so a rushPipeline:write officer 403'd.
+  { rel: "app/api/admin/rushees/route.ts", domain: "rushPipeline" },
+  { rel: "app/api/admin/rushees/[id]/route.ts", domain: "rushPipeline" },
+  { rel: "app/api/admin/rushees/[id]/bid/route.ts", domain: "rushPipeline" },
+  { rel: "app/api/send-sms/route.ts", domain: "rushPipeline" },
   { rel: "app/api/admin/attendance/route.ts", domain: "events" },
   { rel: "app/api/admin/alumni-invites/route.ts", domain: "alumni" },
   { rel: "app/api/admin/brother-invites/route.ts", domain: "brothers" },

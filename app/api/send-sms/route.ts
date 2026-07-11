@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { isAdminRole } from "@/lib/auth";
+import { isAdminAuthed } from "@/lib/auth";
+import { guardOfficer } from "@/lib/permissions";
 import { getTwilioConfig } from "@/lib/messaging-config";
 import { getSiteConfig } from "@/lib/site-config";
 import { filterOptedOut, isWithinQuietHours } from "@/lib/tcpa";
@@ -55,11 +56,16 @@ async function sendTwilio(opts: {
 }
 
 export async function POST(req: Request) {
-  // Admin ROLE only — an SMS blast spends Twilio credits and texts every rushee,
-  // so a plain member session (adminFlag=0) must not be able to fire it.
-  if (!isAdminRole()) {
-    return NextResponse.json({ ok: false, error: "Admins only" }, { status: 403 });
+  // An SMS blast spends Twilio credits and texts every rushee/roster member, so a
+  // plain member session must not fire it — but the Recruitment Chair's "Bulk
+  // text" sheet is a legitimate recruitment tool. Admits admins OR officers
+  // holding rushPipeline:write (matching the rushees mutation routes); was
+  // isAdminRole()-only, which 403'd the Rush chair.
+  if (!isAdminAuthed()) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
+  const denied = await guardOfficer("rushPipeline", "write");
+  if (denied) return denied;
 
   let payload: z.infer<typeof PayloadSchema>;
   try {
