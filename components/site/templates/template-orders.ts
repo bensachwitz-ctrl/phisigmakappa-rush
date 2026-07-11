@@ -76,6 +76,15 @@ export type TemplateMeta = {
   blurb: string;
   /** Static mockup thumbnail in /public/templates/. */
   thumb: string;
+  /**
+   * Data-driven visual-system defaults (item 7). Each base template ships a
+   * default component set + icon family so a template pick is a whole cohesive
+   * system, not just a layout. Stored as plain ids (see lib/site-generator/*)
+   * so the picker/preview/renderer resolve them without importing this .ts's
+   * type — and new sets/families add without touching this file.
+   */
+  componentSet: string;
+  iconFamily: string;
 };
 
 /** Gallery cards for the /admin/website Template Gallery. */
@@ -86,6 +95,8 @@ export const TEMPLATE_META: TemplateMeta[] = [
     blurb:
       "The signature layout — an animated aurora hero with your crest, photo collage, and the full section stack. Timeless and conversion-tested.",
     thumb: "/templates/classic.svg",
+    componentSet: "refined",
+    iconFamily: "brand",
   },
   {
     id: "modern",
@@ -93,6 +104,8 @@ export const TEMPLATE_META: TemplateMeta[] = [
     blurb:
       "An asymmetric split hero — copy on the left, photo collage on the right — with a gold accent rhythm. Form and Instagram lead the page.",
     thumb: "/templates/modern.svg",
+    componentSet: "refined",
+    iconFamily: "brand",
   },
   {
     id: "bold",
@@ -100,5 +113,7 @@ export const TEMPLATE_META: TemplateMeta[] = [
     blurb:
       "A full-bleed photo banner with a centered, poster-scale headline and big-type stats up top. High-contrast and unmistakable.",
     thumb: "/templates/bold.svg",
+    componentSet: "brutal",
+    iconFamily: "tabler",
   },
 ];
