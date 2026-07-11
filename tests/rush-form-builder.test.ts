@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   addField,
   removeField,
@@ -86,6 +88,28 @@ describe("uniqueKey + reindex", () => {
     expect(f.order).toBe(3);
     expect(f.type).toBe("select");
     expect(f.options?.length).toBeGreaterThan(0);
+  });
+});
+
+describe("the form-builder UI is a thin shell over the tested helpers (item 5)", () => {
+  const src = readFileSync(
+    resolve(__dirname, "..", "app/admin/forms/forms-client.tsx"),
+    "utf8",
+  );
+  it("imports its mutations from lib/rush-form-builder, not a private reimplementation", () => {
+    expect(src).toMatch(/from "@\/lib\/rush-form-builder"/);
+    for (const fn of ["addField", "removeField", "reorderFields", "moveField", "updateField", "toggleRequired"]) {
+      expect(src, `UI should call ${fn}`).toContain(fn);
+    }
+  });
+  it("wires drag-and-drop reorder through reorderFields and keyboard move through moveField", () => {
+    expect(src).toMatch(/reorderFields\(f, dragIndex, target\)/);
+    expect(src).toMatch(/moveField\(f, key, dir\)/);
+    // draggable cards make it Form.io-style, not just up/down buttons.
+    expect(src).toMatch(/onDragStart|draggable/);
+  });
+  it("renders a live preview of the built form", () => {
+    expect(src).toMatch(/FormPreview/);
   });
 });
 
