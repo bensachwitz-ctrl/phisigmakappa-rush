@@ -33,9 +33,10 @@ function collectTsx(dir: string): string[] {
   return out;
 }
 
-// Matches a static ES import whose specifier is exactly "lucide-react" or
-// 'lucide-react' (single or double quotes), e.g. `from "lucide-react"`.
-const LUCIDE_IMPORT = /from\s*["']lucide-react["']/;
+// Matches a static ES import from "lucide-react" (single or double quotes) —
+// the bare specifier OR any subpath (e.g. `from "lucide-react/icons"`), so a
+// re-introduction can't evade the guard by importing through a subpath.
+const LUCIDE_IMPORT = /from\s*["']lucide-react(\/|["'])/;
 
 describe("app/app surface is free of raw lucide-react imports", () => {
   const files = collectTsx(APP_DIR);
