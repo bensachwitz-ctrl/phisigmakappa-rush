@@ -74,6 +74,17 @@ export function IconCircle({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
+/** Edit — a pencil laid over its stroke with an accent shaft (edit / rename). */
+export function IconEdit({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 20l1.2-4.2L15 6l3 3L8.2 18.8 4 20Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M4 20l1.2-4.2L15 6l3 3L8.2 18.8 4 20Z" />
+      <path d="M13.5 7.5l3 3" />
+    </IconBase>
+  );
+}
+
 /* ── Files / transfer ───────────────────────────────────────────────────── */
 
 /** Download — an arrow dropping into a tray (save / export / download). */
@@ -650,6 +661,29 @@ export function IconQuote({ accent = GS_ACCENT, ...props }: IconProps) {
     <IconBase {...props}>
       <path d="M5 6.5h4V11H5V6.5ZM15 6.5h4V11h-4V6.5Z" fill={accent} opacity={0.16} stroke="none" />
       <path d="M9 6.5H5V11h4V6.5Zm0 4.5c0 2-1.1 3.6-3 4.6M19 6.5h-4V11h4V6.5Zm0 4.5c0 2-1.1 3.6-3 4.6" />
+    </IconBase>
+  );
+}
+
+/** Save — a floppy disk with a label slot + accent body (save / persist). */
+export function IconSave({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 4.5h11l3 3V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M5 4.5h11l3 3V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5Z" />
+      <path d="M8 4.5v4h6v-4" />
+      <rect x="8" y="12" width="8" height="5" rx="0.6" />
+    </IconBase>
+  );
+}
+
+/** Shirt — a crew tee silhouette with an accent body (merch / apparel / swag). */
+export function IconShirt({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M8.5 3.5L12 6l3.5-2.5 4.5 3-2.5 4L15 12.5V20a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-7.5L6.5 10.5 4 6.5l4.5-3Z" fill={accent} opacity={0.14} stroke="none" />
+      <path d="M8.5 3.5L12 6l3.5-2.5 4.5 3-2.5 4L15 12.5V20a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-7.5L6.5 10.5 4 6.5l4.5-3Z" />
+      <path d="M8.5 3.5A3.5 3.5 0 0 0 12 6a3.5 3.5 0 0 0 3.5-2.5" />
     </IconBase>
   );
 }

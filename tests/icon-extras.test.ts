@@ -28,6 +28,7 @@ const EXPECTED = [
   "IconMinus",
   "IconMinusCircle",
   "IconCircle",
+  "IconEdit",
   "IconDownload",
   "IconFileText",
   "IconClipboard",
@@ -77,6 +78,8 @@ const EXPECTED = [
   "IconList",
   "IconListOrdered",
   "IconQuote",
+  "IconSave",
+  "IconShirt",
   "IconSend",
 ] as const;
 

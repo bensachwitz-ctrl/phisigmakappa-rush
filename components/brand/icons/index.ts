@@ -156,6 +156,7 @@ export {
   IconMinus,
   IconMinusCircle,
   IconCircle,
+  IconEdit,
   IconDownload,
   IconFileText,
   IconClipboard,
@@ -205,6 +206,8 @@ export {
   IconList,
   IconListOrdered,
   IconQuote,
+  IconSave,
+  IconShirt,
   IconSend,
 } from "./extras";
 
