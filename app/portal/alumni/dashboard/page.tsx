@@ -255,6 +255,18 @@ export default async function AlumniDashboardPage() {
     redirect("/portal/alumni?error=unavailable");
   }
 
+  // PNM CONTACT PII HARDENING. Active PNMs (recruits — often minors) have their
+  // email/phone/hometown stripped for a regular alumnus; only an admin override
+  // sees recruit contact info. Alumni still see enough to identify/vouch for a PNM
+  // (name/major/year), but harvesting recruit contact details is no longer
+  // possible from the alumni portal. (Self-serve alumni additionally can't reach
+  // this page at all until email-verified — see /api/portal/alumni/register.)
+  const safePnms = (allPnms || []).map((p) =>
+    sess.isAdmin
+      ? p
+      : { ...p, email: "", phone: "", hometown: "" },
+  );
+
   // Collapse type definition safety
   const formattedAlumni = {
     ...alumniProfile,
@@ -319,7 +331,7 @@ export default async function AlumniDashboardPage() {
       alumni={formattedAlumni}
       brothers={brothers}
       alumniNetwork={alumniNetwork}
-      allPnms={allPnms}
+      allPnms={safePnms}
       vouches={vouches}
       polls={polls}
       events={formattedEvents}

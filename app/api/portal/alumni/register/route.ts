@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { setPortalCookie } from "@/lib/portal-auth";
 import { auditAndNotify, actorFromRequest } from "@/lib/notify";
+import { sendEmail } from "@/lib/email";
+import { renderEmail, renderEmailText } from "@/lib/email-template";
+import { getChapterIdentity } from "@/lib/chapter-identity";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,6 +106,24 @@ export async function POST(req: Request) {
   const inviteEmail = invite?.email ? invite.email.trim().toLowerCase() : null;
   const inviteAuthorizesEmail = !!invite && (inviteEmail === null || inviteEmail === emailNorm);
 
+  // A registration is "self-serve" unless it is proven by a live, authorizing
+  // invite (the same proof the chapter's official onboarding requires). Self-serve
+  // sign-ups are UNTRUSTED — they must not receive an alumni session that can read
+  // the brother roster (email/phone) or active-PNM contact info until they PROVE
+  // control of the email via the verification link below. Invited alumni are
+  // trusted (the chapter vouched for them) and are logged in immediately.
+  const provenByInvite = !!invite && inviteAuthorizesEmail;
+
+  // CONSENT CAPTURE. The invite-onboarding flow requires a data-use/privacy
+  // consent; self-serve previously collected none (a compliance gap). Require the
+  // same explicit consent here before creating anything for a self-serve sign-up.
+  if (!provenByInvite && body.agreedToDataUse !== true) {
+    return NextResponse.json(
+      { error: "Please agree to the data-use & privacy terms to create your alumni account." },
+      { status: 400 },
+    );
+  }
+
   const existingProfile = await prisma.alumniProfile.findFirst({ where: { email } });
 
   let boundProfileId: string | null = null;
@@ -184,10 +207,32 @@ export async function POST(req: Request) {
       .catch(() => {});
   }
 
-  // Set auth cookie
-  setPortalCookie(portalUser.id, "alumni");
+  // ── Session issuance ─────────────────────────────────────────────────────
+  // TRUSTED (invite-proven): the chapter vouched for this person, so log them in
+  // immediately. UNTRUSTED (self-serve): do NOT issue a session — issue an email
+  // verification link instead. Until they click it, they hold no alumni cookie and
+  // therefore cannot reach the dashboard or read the roster / PNM PII at all.
+  let pendingVerification = false;
+  if (provenByInvite) {
+    setPortalCookie(portalUser.id, "alumni");
+  } else {
+    pendingVerification = true;
+    const verifyToken = crypto.randomBytes(24).toString("base64url");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    await prisma.portalUser.update({
+      where: { id: portalUser.id },
+      data: { magicToken: verifyToken, magicTokenExpiresAt: expiresAt },
+    });
+    // Best-effort verification email — a send failure must not fail registration
+    // (the account exists, unverified; they can request a new link by re-trying).
+    try {
+      await sendAlumniVerificationEmail(req, emailNorm, fullName, verifyToken);
+    } catch (err) {
+      console.error("[alumni register] verification email failed:", err);
+    }
+  }
 
-  // Log audit
+  // Log audit (records consent + whether a session was issued vs. verification-pending).
   try {
     const actor = actorFromRequest(req, {
       name: fullName,
@@ -196,7 +241,13 @@ export async function POST(req: Request) {
     await auditAndNotify("alumni.register", {
       actor,
       entity: { type: "AlumniProfile", id: alumniProfile.id, name: fullName },
-      payload: { graduationYear, email: emailNorm, viaInvite: invite?.id ?? null },
+      payload: {
+        graduationYear,
+        email: emailNorm,
+        viaInvite: invite?.id ?? null,
+        consent: provenByInvite ? "invite" : true,
+        pendingVerification,
+      },
     });
   } catch (err) {
     // Ignore audit failures
@@ -204,10 +255,70 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
+    pendingVerification,
     user: {
       id: portalUser.id,
       email: portalUser.email,
       role: portalUser.role,
     },
+  });
+}
+
+/** Public origin of the request (chapter host), used to build the verify link. */
+function requestOrigin(req: Request): string {
+  const host = req.headers.get("host") || "greekstack.vercel.app";
+  const proto = host.includes("localhost") ? "http" : "https";
+  return `${proto}://${host}`;
+}
+
+/**
+ * Send the self-serve alumni email-verification link. Branded with the chapter's
+ * identity when available (best-effort — falls back to a neutral email). The link
+ * hits GET /api/portal/alumni/verify, which validates the token and only THEN
+ * issues the alumni session.
+ */
+async function sendAlumniVerificationEmail(
+  req: Request,
+  toEmail: string,
+  name: string,
+  token: string,
+): Promise<void> {
+  const link = `${requestOrigin(req)}/api/portal/alumni/verify?token=${encodeURIComponent(token)}`;
+  let chapterName = "Your Chapter";
+  let brandHex = "";
+  try {
+    const identity = await getChapterIdentity();
+    chapterName = identity?.fraternityName || chapterName;
+    const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
+    brandHex = cfg["brand.primaryHex"] || "";
+  } catch {
+    // Neutral fallback — the link is what matters.
+  }
+  const firstName = name.trim().split(" ")[0] || "there";
+  const bodyHtml = `
+    <p style="margin:0 0 16px;">Hi ${firstName}, thanks for registering as an alumnus of ${chapterName}.</p>
+    <p style="margin:0 0 16px;">Please confirm your email address to activate your alumni account. This link expires in 24 hours.</p>`;
+  const html = renderEmail({
+    brandHex,
+    chapterName,
+    heading: "Verify your alumni account",
+    bodyHtml,
+    cta: { label: "Verify my email", url: link },
+    footerNote: "You're receiving this because an alumni account was created with this email. If that wasn't you, you can ignore this message.",
+  });
+  await sendEmail({
+    to: toEmail,
+    subject: `Verify your alumni account — ${chapterName}`,
+    html,
+    text: renderEmailText({
+      heading: "Verify your alumni account",
+      lines: [
+        `Hi ${firstName}, confirm your email to activate your alumni account with ${chapterName}.`,
+        `Verify: ${link}`,
+        "This link expires in 24 hours.",
+      ],
+      cta: { label: "Verify my email", url: link },
+      chapterName,
+    }),
   });
 }

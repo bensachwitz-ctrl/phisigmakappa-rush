@@ -33,6 +33,10 @@ export default function AlumniRegisterPage() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreedToDataUse, setAgreedToDataUse] = useState(false);
+  // Set once a self-serve sign-up succeeds: the account exists but is not yet
+  // active — a verification email was sent and no session was issued.
+  const [pendingVerification, setPendingVerification] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -87,6 +91,9 @@ export default function AlumniRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!agreedToDataUse) {
+      return setError("Please agree to the data-use & privacy terms to continue.");
+    }
     setLoading(true);
 
     try {
@@ -99,14 +106,19 @@ export default function AlumniRegisterPage() {
           age: formData.age ? parseInt(formData.age, 10) : null,
           employer: formData.isEmployed === "yes" ? formData.employer : "",
           jobTitle: formData.isEmployed === "yes" ? formData.jobTitle : "",
+          agreedToDataUse,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Registration failed. Please try again.");
+      } else if (data.pendingVerification) {
+        // Self-serve sign-up: no session issued — the user must verify their email
+        // before they can sign in and see any chapter data.
+        setPendingVerification(true);
       } else {
-        // Success - redirect to dashboard
+        // Invite-proven sign-up: logged in immediately.
         router.push("/portal/alumni/dashboard");
       }
     } catch (err) {
@@ -115,6 +127,36 @@ export default function AlumniRegisterPage() {
       setLoading(false);
     }
   };
+
+  if (pendingVerification) {
+    return (
+      <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
+        <div>
+          <PublicNav />
+          <div className="max-w-xl mx-auto px-4 py-16 sm:py-24 text-center">
+            <div className="bg-white rounded-2xl border border-maroon-100 p-8 shadow-sm">
+              <Mail className="w-10 h-10 text-amber-600 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-maroon-900 mb-2">Check your email</h1>
+              <p className="text-sm text-maroon-700 leading-relaxed">
+                We sent a verification link to{" "}
+                <span className="font-semibold text-maroon-900">{formData.email}</span>. Open it to
+                activate your alumni account and access the chapter directory. The link expires in 24
+                hours.
+              </p>
+              <p className="text-xs text-maroon-500 mt-4">
+                Didn&apos;t get it? Check your spam folder, or{" "}
+                <Link href="/portal/alumni" className="underline font-semibold">
+                  return to the alumni sign-in
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+        <PublicFooterClient />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream-50 text-maroon-950 flex flex-col justify-between">
@@ -548,12 +590,28 @@ export default function AlumniRegisterPage() {
                   </div>
                 </div>
 
+                <label className="flex items-start gap-2 text-xs text-maroon-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToDataUse}
+                    onChange={(e) => setAgreedToDataUse(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-maroon-300 text-maroon-700 focus:ring-amber-500"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link href="/privacy" className="underline font-semibold text-maroon-900" target="_blank">
+                      data-use &amp; privacy terms
+                    </Link>{" "}
+                    and consent to my information being stored in the chapter&apos;s alumni directory.
+                  </span>
+                </label>
+
                 <div className="flex gap-3 pt-2">
                   <Button type="button" onClick={handleBack} disabled={loading} className="w-1/2 bg-cream-100 hover:bg-cream-200 text-maroon-900 flex items-center justify-center gap-1 border border-maroon-200">
                     <ArrowLeft className="w-4 h-4" />
                     Back
                   </Button>
-                  <Button type="submit" disabled={loading} className="w-1/2 bg-gradient-to-r from-amber-600 to-maroon-700 hover:from-amber-700 hover:to-maroon-800 text-cream-50 flex items-center justify-center gap-1.5 shadow-md">
+                  <Button type="submit" disabled={loading || !agreedToDataUse} className="w-1/2 bg-gradient-to-r from-amber-600 to-maroon-700 hover:from-amber-700 hover:to-maroon-800 text-cream-50 flex items-center justify-center gap-1.5 shadow-md disabled:opacity-60">
                     {loading ? (
                       <span>Creating Profile...</span>
                     ) : (
