@@ -26,10 +26,10 @@
     Offline-tolerant: the last good dashboard is cached on-device (Preferences)
     and the session persists across launches.
 
-    NO-LOGIN DEMO: the built-in "Demo Chapter" loads a fully interactive,
-    READ-ONLY sample dashboard (no credentials) so a reviewer / cold-start user
-    can see the whole app — Feed, Events, Rush, Dues, Directory, Vote, Profile,
-    and an officer/Exec view — without an account.
+    LOGIN-ONLY: the app has NO in-app demo. A member picks School → Chapter and
+    signs in (Brother / Alumni) to reach their real per-chapter dashboard over
+    the mobile APIs. The marketing DEMO lives only on the website. (App reviewers
+    are given real chapter credentials in the App Review notes.)
 
     This bundled client mirrors the richer React member surface
     (app/app/MobileAppClient.tsx) as closely as a dependency-free static client
@@ -256,7 +256,7 @@
   /* ============================================================================
      Greek Stack — bundled native client (vanilla, dependency-free).
      State machine: boot → picker(school→chapter) → login → dashboard.
-     Demo path: picker → demo chapter → READ-ONLY sample dashboard (no login).
+     Login-only: NO in-app demo (the marketing demo lives on the website).
      Talks to the platform via the API base. Offline-tolerant + session-persistent.
      ========================================================================== */
   (function () {
@@ -506,103 +506,6 @@
     // a chapter for the picker, so the cold chrome never keeps a tenant's color).
     function resetBrand() { document.documentElement.style.setProperty("--brand", GS_BRAND); document.documentElement.style.setProperty("--brand2", GS_BRAND2); }
 
-    // ── Built-in demo chapter (offline / empty-registry fallback + showcase) ───
-    // The "Demo Chapter" is the no-login showcase — picking it loads SAMPLE_DATA
-    // straight into the dashboard (no auth), so a reviewer / cold-start user sees
-    // the whole app. It carries its own brand so the showcase still re-skins.
-    var DEMO_CHAPTER = {
-      id: "demo-1", subdomain: "demo", name: "Phi Sigma Kappa (Demo)",
-      school: "Greekstack University", domain: null, demo: true,
-      brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" }
-    };
-    var DEMO = [DEMO_CHAPTER];
-
-    // ── Read-only SAMPLE dashboard (Apple 2.1: a real, no-login experience) ────
-    // Mirrors the shape of /api/mobile/data so every paint function renders it
-    // unchanged. capabilities.exec is true here so the showcase can demonstrate
-    // the officer/Exec view too (it is a demo, not a real session).
-    function sampleData() {
-      var now = Date.now();
-      return {
-        chapter: { subdomain: "demo", name: "Phi Sigma Kappa", schoolName: "Greekstack University",
-          brand: { primaryHex: "#512888", primaryDarkHex: "#34185a" } },
-        role: "brother",
-        demo: true,
-        capabilities: { exec: true, duesEnabled: true },
-        profile: {
-          id: "demo-brother-id", name: "Alex Mercer", email: "alex.mercer@demo.edu",
-          phone: "(803) 555-0144", year: "Senior", major: "Computer Science",
-          position: "President", pledgeClass: "Phi Class", hometown: "Charleston, SC", status: "ACTIVE"
-        },
-        standing: { score: 92, max: 100, pct: 92, standing: "GOOD" },
-        billing: null,
-        announcements: [
-          { id: "a1", title: "Chapter Meeting Sunday at 7 PM", pinned: true, authorName: "Alex Mercer", authorRole: "President",
-            createdAt: new Date(now - 2 * 3600000).toISOString(),
-            body: "We will discuss fall rush prep and vote on the new budget. Attendance is mandatory for all active brothers. Location: Chapter Room." },
-          { id: "a2", title: "Community Service Day — Saturday", pinned: false, authorName: "Jack Snyder", authorRole: "Philanthropy Chair",
-            createdAt: new Date(now - 86400000).toISOString(),
-            body: "Join us at the Special Olympics center at 9 AM. Wear letters. We need 15+ brothers to hit our semester hours." }
-        ],
-        events: [
-          { id: "e1", name: "Fall Rush Kickoff BBQ", location: "Chapter House Lawn", startsAt: new Date(now + 2 * 86400000).toISOString(),
-            description: "Meet the brothers, free food, lawn games. Bring a friend.", myRsvp: { status: "GOING" } },
-          { id: "e2", name: "Alumni Networking Night", location: "Student Union, Ballroom B", startsAt: new Date(now + 6 * 86400000).toISOString(),
-            description: "Connect with alumni across finance, tech, and law.", myRsvp: null },
-          { id: "e3", name: "Philanthropy 5K", location: "Campus Quad", startsAt: new Date(now + 12 * 86400000).toISOString(),
-            description: "Run/walk to raise money for the chapter's national charity.", myRsvp: { status: "MAYBE" } }
-        ],
-        dues: {
-          config: { enabled: true, amountCents: 45000, year: "2026-fall", label: "Active Brother Dues" },
-          isPaid: false,
-          payments: [
-            { id: "p1", year: "2026-spring", amountCents: 45000, method: "STRIPE", status: "PAID", createdAt: new Date(now - 120 * 86400000).toISOString() }
-          ]
-        },
-        treasury: {
-          balanceCents: 1284750, duesCollectedCents: 1890000, duesOutstandingCents: 360000
-        },
-        roster: {
-          actives: [
-            { id: "b1", name: "Alex Mercer", position: "President", major: "Computer Science", year: "Senior", email: "alex.mercer@demo.edu" },
-            { id: "b2", name: "Daniel Cho", position: "Treasurer", major: "Finance", year: "Junior", email: "daniel.cho@demo.edu" },
-            { id: "b3", name: "Marcus Webb", position: "Recruitment", major: "Marketing", year: "Junior", email: "marcus.webb@demo.edu" },
-            { id: "b4", name: "Ethan Park", position: "Social Chair", major: "Economics", year: "Sophomore", email: "ethan.park@demo.edu" },
-            { id: "b5", name: "Jordan Lee", position: "Member", major: "Biology", year: "Sophomore", email: "jordan.lee@demo.edu" }
-          ],
-          alumni: [
-            { id: "al1", name: "James Holloway", graduationYear: 2012, employer: "Goldman Sachs", jobTitle: "VP", email: "j.holloway@alum.com" },
-            { id: "al2", name: "Sarah Kim", graduationYear: 2015, employer: "Google", jobTitle: "PM", email: "s.kim@alum.com" }
-          ]
-        },
-        careers: [
-          { id: "c1", title: "Software Engineer Intern", company: "Northrop", location: "Charleston, SC", postedByName: "James Holloway '12" }
-        ],
-        pnms: [
-          { id: "pnm1", name: "Tyler Brooks", major: "Mechanical Eng.", year: "Freshman", status: "ACTIVE", votesCount: 8 },
-          { id: "pnm2", name: "Chris Nolan", major: "Accounting", year: "Sophomore", status: "BID_EXTENDED", votesCount: 12 },
-          { id: "pnm3", name: "Aaron Diaz", major: "Political Sci.", year: "Freshman", status: "ACTIVE", votesCount: 5 },
-          { id: "pnm4", name: "Sam Whitfield", major: "Undeclared", year: "Freshman", status: "ACTIVE", votesCount: 3 }
-        ],
-        // Demo open election so the no-login showcase exercises the Vote tab +
-        // spotlight (same shape lib/mobile-elections returns). myBallot is empty
-        // so the demo starts unvoted; casting locally fills it in.
-        election: {
-          id: "el-demo", title: "Spring 2026 Officer Elections", ballotsCast: 18, totalEligible: 42,
-          seats: [
-            { id: "seat-pres", title: "President", candidates: [
-              { id: "cand-1", name: "Alex Mercer", year: "Senior", blurb: "Two terms on exec; ran the best rush in chapter history.", votes: 11 },
-              { id: "cand-2", name: "Daniel Cho", year: "Junior", blurb: "Treasurer; wants a transparent budget and bigger philanthropy.", votes: 7 }
-            ] },
-            { id: "seat-trea", title: "Treasurer", candidates: [
-              { id: "cand-3", name: "Ethan Park", year: "Sophomore", blurb: "Will move dues fully online and cut late payments.", votes: 9 },
-              { id: "cand-4", name: "Jordan Lee", year: "Sophomore", blurb: "Detail-oriented; clean books and on-time reimbursements.", votes: 9 }
-            ] }
-          ]
-        },
-        myBallot: {}
-      };
-    }
 
     // ── App state ──────────────────────────────────────────────────────────
     // tab ∈ feed/events/rush/dues/directory/elections/profile; view ∈ member/exec.
@@ -627,9 +530,11 @@
       try {
         var r = await fetch(api("/api/mobile/registry"), { headers: { Accept: "application/json" } });
         var j = await r.json();
-        if (j && j.ok && Array.isArray(j.chapters) && j.chapters.length) return j.chapters.concat(DEMO);
+        if (j && j.ok && Array.isArray(j.chapters)) return j.chapters;
       } catch (e) {}
-      return DEMO;
+      // No demo fallback on iOS — the app is login-only. On a network miss the
+      // picker renders its empty/retry state (see showPicker) rather than a demo.
+      return [];
     }
     async function login(subdomain, email, password, role) {
       var r = await fetch(api("/api/mobile/auth"), {
@@ -772,39 +677,52 @@
       var schoolNames = Object.keys(schools).sort();
 
       if (!pickerSchool) {
-        main.appendChild(el('<h2 class="section">Choose your school</h2>'));
-        var sb = el('<div class="search"><input placeholder="Search schools" inputmode="search" autocapitalize="words" /></div>');
-        main.appendChild(sb);
-        var list = el('<div></div>');
-        function paintSchools(q) {
-          list.innerHTML = "";
-          var filtered = schoolNames.filter(function (n) { return n.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
-          if (!filtered.length) { list.appendChild(el('<div class="empty">No schools match “' + esc(q) + '”.</div>')); return; }
-          filtered.forEach(function (name) {
-            var any = schools[name][0];
-            var b = brandFor(any);
-            var row = el(
-              '<button class="row">' +
-                '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(name)) + "</div>" +
-                '<div class="meta"><div class="name">' + esc(name) + '</div><div class="school">' + schools[name].length + " chapter" + (schools[name].length > 1 ? "s" : "") + "</div></div>" +
-                '<div class="chev">›</div>' +
-              "</button>"
-            );
-            row.onclick = function () { haptic(); pickerSchool = name; pickerQuery = ""; showPicker(); };
-            list.appendChild(row);
-          });
+        // Logo-anchored entry — the owner's "simple with the logo, then choose
+        // school and chapter" ask. The canonical GreekStack crest + wordmark sit
+        // above the school step so the app opens on-brand (only at the school
+        // level; drilling into a school swaps this for the chapter list).
+        main.appendChild(el(
+          '<div class="pickhero">' +
+            '<div class="crest-disc" aria-hidden="true">' + CREST_SVG + '</div>' +
+            '<div class="wordmark">Greek<span class="grad">stack</span></div>' +
+            '<div class="sub">Find your chapter to sign in</div>' +
+          '</div>'
+        ));
+        if (!schoolNames.length) {
+          // Login-only app: no demo fallback. If the registry is empty (offline
+          // or none provisioned yet), show a friendly retry that RE-FETCHES the
+          // real registry — never a sample chapter.
+          main.appendChild(el('<div class="empty" style="margin-top:8px">No chapters are available yet.<br/>Check your connection, or check back soon.</div>'));
+          var retry = el('<button class="btn ghost" type="button" style="margin-top:14px">Retry</button>');
+          retry.onclick = async function () { haptic(); S.chapters = await getRegistry(); showPicker(); };
+          main.appendChild(retry);
+        } else {
+          main.appendChild(el('<h2 class="section">Choose your school</h2>'));
+          var sb = el('<div class="search"><input placeholder="Search schools" inputmode="search" autocapitalize="words" /></div>');
+          main.appendChild(sb);
+          var list = el('<div></div>');
+          function paintSchools(q) {
+            list.innerHTML = "";
+            var filtered = schoolNames.filter(function (n) { return n.toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+            if (!filtered.length) { list.appendChild(el('<div class="empty">No schools match “' + esc(q) + '”.</div>')); return; }
+            filtered.forEach(function (name) {
+              var any = schools[name][0];
+              var b = brandFor(any);
+              var row = el(
+                '<button class="row">' +
+                  '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(name)) + "</div>" +
+                  '<div class="meta"><div class="name">' + esc(name) + '</div><div class="school">' + schools[name].length + " chapter" + (schools[name].length > 1 ? "s" : "") + "</div></div>" +
+                  '<div class="chev">›</div>' +
+                "</button>"
+              );
+              row.onclick = function () { haptic(); pickerSchool = name; pickerQuery = ""; showPicker(); };
+              list.appendChild(row);
+            });
+          }
+          sb.querySelector("input").oninput = function (e) { paintSchools(e.target.value); };
+          paintSchools("");
+          main.appendChild(list);
         }
-        sb.querySelector("input").oninput = function (e) { paintSchools(e.target.value); };
-        paintSchools("");
-        main.appendChild(list);
-
-        // No-login demo entry — always offered, even with a populated registry, so
-        // a cold-start user (or App reviewer) can see the whole app immediately.
-        main.appendChild(el('<h2 class="section">Just exploring?</h2>'));
-        var demoBtn = el('<button class="btn ghost">See the live demo — no sign in</button>');
-        demoBtn.onclick = function () { haptic(); enterDemo(); };
-        main.appendChild(demoBtn);
-        main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">A read-only sample chapter so you can try every feature before you sign in.</p>'));
       } else {
         main.appendChild(el('<h2 class="section">' + esc(pickerSchool) + "</h2>"));
         var chs = schools[pickerSchool] || [];
@@ -820,8 +738,6 @@
           );
           row.onclick = function () {
             haptic();
-            // The demo chapter loads the no-login showcase; real chapters → login.
-            if (c.demo) { enterDemo(); return; }
             applyBrand(c); showLogin(c);
           };
           cl.appendChild(row);
@@ -830,16 +746,6 @@
       }
       wrap.appendChild(main);
       render(wrap);
-    }
-
-    // ── No-login demo: load the read-only sample dashboard straight away ───────
-    function enterDemo() {
-      S.demo = true;
-      S.session = { token: null, user: { email: "alex.mercer@demo.edu" }, subdomain: "demo", tenant: DEMO_CHAPTER };
-      S.data = sampleData();
-      S.tab = "feed"; S.view = "member";
-      applyBrand(S.session.tenant);
-      paintDashboard(false);
     }
 
     // ── Screen: Login ─────────────────────────────────────────────────────────
@@ -888,10 +794,18 @@
       };
       main.appendChild(form);
 
-      // Friendly off-ramp to the no-login demo from the login screen too.
-      var demoBtn = el('<button class="btn ghost" type="button" style="margin-top:10px">Explore the demo instead</button>');
-      demoBtn.onclick = function () { haptic(); enterDemo(); };
-      main.appendChild(demoBtn);
+      // Forgot-password off-ramp — opens the chapter's web reset flow in the
+      // system browser (the app itself is login-only; no demo path).
+      var forgot = el('<button class="btn ghost" type="button" style="margin-top:10px">Forgot password?</button>');
+      forgot.onclick = function () {
+        haptic();
+        // Open THIS chapter's web reset flow in the system browser. Prefer the
+        // chapter's custom domain; else its subdomain under the platform apex.
+        var apexHost = API_BASE.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        var host = tenant.domain ? tenant.domain : (tenant.subdomain + "." + apexHost);
+        openExternal("https://" + host + "/portal/reset-password");
+      };
+      main.appendChild(forgot);
 
       main.appendChild(el('<p class="small" style="margin-top:14px;text-align:center">Use the credentials your chapter gave you. Your session is bound to ' + esc(tenant.name) + " only.</p>"));
 
@@ -1051,22 +965,72 @@
         card.appendChild(reportLink({ type: "announcement", id: a.id, name: a.title }));
         main.appendChild(card);
       });
-      // Career posts surface in the feed too (alumni opportunities).
+      // Career posts surface in the feed too (alumni opportunities). Any signed-in
+      // member or alumnus may post one (the server route gates only on a valid
+      // tenant token, not an officer seat), so the section + Post action always
+      // render — even with no listings yet — rather than hiding behind content.
       var careers = d.careers || [];
-      if (careers.length) {
-        main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
-        careers.forEach(function (c) {
-          var card = el(
-            '<div class="card">' +
-              '<span class="pill brand">Career</span>' +
-              '<div class="h">' + esc(c.title) + "</div>" +
-              '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
-            "</div>"
-          );
-          card.appendChild(reportLink({ type: "career", id: c.id, name: c.title }));
-          main.appendChild(card);
-        });
+      main.appendChild(el('<h2 class="section">Career opportunities</h2>'));
+      var postBtn = el('<button class="btn ghost" type="button">Post an opportunity</button>');
+      postBtn.onclick = function () { haptic(); careerPostSheet(d); };
+      main.appendChild(postBtn);
+      if (!careers.length) {
+        main.appendChild(el('<div class="empty">No opportunities yet. Share a job or internship with the chapter.</div>'));
       }
+      careers.forEach(function (c) {
+        var card = el(
+          '<div class="card">' +
+            '<span class="pill brand">Career</span>' +
+            '<div class="h">' + esc(c.title) + "</div>" +
+            '<div class="b">' + esc([c.company, c.location].filter(Boolean).join(" · ")) + (c.postedByName ? "\nPosted by " + esc(c.postedByName) : "") + "</div>" +
+          "</div>"
+        );
+        card.appendChild(reportLink({ type: "career", id: c.id, name: c.title }));
+        main.appendChild(card);
+      });
+    }
+
+    // Career-post sheet → POST /api/mobile/career/post. Required by the server:
+    // title, company, description, contactName, contactEmail; optional: location,
+    // requirements, salary, contactPhone. Contact fields prefill from the poster's
+    // own profile as a convenience (still fully editable before submit).
+    function careerPostSheet(d) {
+      var p = d.profile || {};
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Post an opportunity</h2>'));
+      var form = el('<form>' +
+        '<div class="field"><label>Title *</label><input data-k="title" required placeholder="Software Engineering Intern" /></div>' +
+        '<div class="field"><label>Company *</label><input data-k="company" required placeholder="Acme Corp" /></div>' +
+        '<div class="field"><label>Location</label><input data-k="location" placeholder="Austin, TX / Remote" /></div>' +
+        '<div class="field"><label>Description *</label><textarea data-k="description" rows="3" required style="width:100%;box-sizing:border-box" placeholder="What the role involves…"></textarea></div>' +
+        '<div class="field"><label>Requirements</label><textarea data-k="requirements" rows="2" style="width:100%;box-sizing:border-box" placeholder="Nice-to-haves…"></textarea></div>' +
+        '<div class="field"><label>Salary</label><input data-k="salary" placeholder="$25/hr or $90k" /></div>' +
+        '<div class="field"><label>Contact name *</label><input data-k="contactName" required /></div>' +
+        '<div class="field"><label>Contact email *</label><input data-k="contactEmail" type="email" inputmode="email" autocapitalize="off" required /></div>' +
+        '<div class="field"><label>Contact phone</label><input data-k="contactPhone" inputmode="tel" /></div>' +
+        '<button class="btn" type="submit">Publish opportunity</button>' +
+        '<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>' +
+      '</form>');
+      form.querySelector('[data-k="contactName"]').value = p.name || (S.session && S.session.user && S.session.user.email) || "";
+      form.querySelector('[data-k="contactEmail"]').value = p.email || (S.session && S.session.user && S.session.user.email) || "";
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        var payload = {};
+        form.querySelectorAll("[data-k]").forEach(function (el2) { payload[el2.getAttribute("data-k")] = el2.value.trim(); });
+        if (!payload.title || !payload.company || !payload.description || !payload.contactName || !payload.contactEmail) {
+          toast("Title, company, description, and contact name + email are required.", "err"); return;
+        }
+        submit.disabled = true; submit.textContent = "Publishing…";
+        try {
+          var res = await authPost("/api/mobile/career/post", payload);
+          if (res.ok) { ov.remove(); toast("Opportunity posted.", "ok"); await refetchDashboard(); }
+          else { toast(res.data.error || "Couldn't post the opportunity. Try again.", "err"); submit.disabled = false; submit.textContent = "Publish opportunity"; }
+        } catch (err) { toast("Network error. Try again.", "err"); submit.disabled = false; submit.textContent = "Publish opportunity"; }
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
     }
 
     // Small "Report" affordance appended to a content card. Wired to the real
@@ -1147,7 +1111,7 @@
       var pnms = d.pnms || [];
       main.appendChild(el('<h2 class="section">Recruitment</h2>'));
       if (!pnms.length) {
-        main.appendChild(el('<div class="empty">No prospective members in the pipeline right now.</div>'));
+        main.appendChild(el('<div class="empty">Recruitment updates appear here. When your chapter is rushing, the pipeline and bid news show up on this tab.</div>'));
         return;
       }
       var bids = pnms.filter(function (p) { return p.status === "BID_EXTENDED"; }).length;
@@ -1269,6 +1233,13 @@
 
     // ── MEMBER: Dues (balance + real Stripe checkout) ─────────────────────────
     function paintDues(main, d) {
+      // ALUMNI see a GIVING surface here, not brother dues. A logged-in alumnus
+      // has no chapter dues balance; rendering the brother shape showed them a
+      // bogus $0 "unpaid dues" prompt. Branch to their donation history + a
+      // Donate action (gated on the chapter being Stripe-connected, matching the
+      // web alumni portal). Role is server-provided (d.role) — never client-set.
+      var role = d.role || (S.session && S.session.user && S.session.user.role) || "brother";
+      if (role === "alumni") { paintDonate(main, d); return; }
       var dues = d.dues || {}; var cfg = dues.config || {};
       main.appendChild(el('<h2 class="section">Dues</h2>'));
       main.appendChild(el(
@@ -1307,6 +1278,79 @@
           "</div>"
         ));
       });
+    }
+
+    // ── ALUMNI: Give back (donation history + real Stripe donate checkout) ─────
+    // Mirrors the web alumni dashboard: shows lifetime giving + history and, when
+    // the chapter is Stripe-connected (dues.donateEnabled, computed server-side
+    // via isConnectChargesReady), a Donate action that opens a real Stripe
+    // Checkout in the system browser. The checkout route re-enforces the same
+    // connect gate + derives the donor from the token, so this is UI only.
+    function paintDonate(main, d) {
+      var dues = d.dues || {};
+      var donations = dues.donations || [];
+      var lifetime = 0;
+      donations.forEach(function (x) { if (x.status === "PAID") lifetime += (x.amountCents || 0); });
+      main.appendChild(el('<h2 class="section">Give back</h2>'));
+      main.appendChild(el(
+        '<div class="hero">' +
+          '<div class="l">Your lifetime giving</div>' +
+          '<div class="v">' + money(lifetime) + '</div>' +
+          '<div style="font-size:12px;opacity:.85;margin-top:4px">' + donations.length + ' donation' + (donations.length === 1 ? "" : "s") + ' on record</div>' +
+        '</div>'
+      ));
+      if (dues.donateEnabled) {
+        var give = el('<button class="btn">Donate to the chapter</button>');
+        give.onclick = function () { haptic(); donateSheet(); };
+        main.appendChild(give);
+      } else {
+        main.appendChild(el('<div class="alert info">Online giving isn\'t set up for this chapter yet. Reach out to the chapter treasurer to make a gift.</div>'));
+      }
+      main.appendChild(el('<h2 class="section">Donation history</h2>'));
+      if (!donations.length) { main.appendChild(el('<div class="empty">No donations yet. Your gifts will appear here.</div>')); return; }
+      donations.forEach(function (p) {
+        main.appendChild(el(
+          '<div class="card" style="display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div class="h" style="margin:0">' + esc(p.campaign || "General") + '</div><div class="small">' + esc(new Date(p.recordedAt).toLocaleDateString()) + '</div></div>' +
+            '<div style="text-align:right"><div class="h" style="margin:0">' + money(p.amountCents) + '</div><div class="small" style="color:' + (p.status === "PAID" ? "var(--ok)" : "var(--gold)") + '">' + esc(p.status) + "</div></div>" +
+          "</div>"
+        ));
+      });
+    }
+
+    // Donation amount/campaign sheet → POST /api/alumni/donate/checkout (Bearer,
+    // token-derived donor) → open the returned Stripe Checkout URL externally.
+    function donateSheet() {
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Donate to the chapter</h2>'));
+      var form = el('<form>' +
+        '<div class="field"><label>Amount (USD)</label><input required type="number" min="5" step="1" inputmode="decimal" placeholder="50" /></div>' +
+        '<div class="field"><label>Fund / campaign (optional)</label><input placeholder="General" /></div>' +
+        '<div class="field"><label>Note (optional)</label><input placeholder="In honor of…" /></div>' +
+        '<button class="btn" type="submit">Continue to secure checkout</button>' +
+        '<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>' +
+      '</form>');
+      var ins = form.querySelectorAll("input");
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        var amt = parseFloat(ins[0].value);
+        if (isNaN(amt) || amt < 5) { toast("Enter an amount of at least $5.", "err"); return; }
+        submit.disabled = true; submit.textContent = "Opening checkout…";
+        try {
+          var res = await authPost("/api/alumni/donate/checkout", {
+            amountCents: Math.round(amt * 100),
+            campaign: ins[1].value.trim() || "General",
+            notes: ins[2].value.trim() || ""
+          });
+          if (res.ok && res.data.url) { ov.remove(); openExternal(res.data.url); }
+          else if (res.status === 409) { toast(res.data.error || "A donation is already in progress.", "info"); ov.remove(); }
+          else { toast(res.data.error || "Couldn't start the donation. Try again.", "err"); submit.disabled = false; submit.textContent = "Continue to secure checkout"; }
+        } catch (err) { toast("Couldn't reach Stripe. Try again.", "err"); submit.disabled = false; submit.textContent = "Continue to secure checkout"; }
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
     }
 
     // ── MEMBER: Directory ─────────────────────────────────────────────────────
@@ -1399,6 +1443,13 @@
         main.appendChild(el('<div class="card"><div class="h">Standing</div><div class="b">' + esc(d.standing.score) + " / " + esc(d.standing.max) + " (" + esc(d.standing.pct) + "%) · " + esc(d.standing.standing || "") + "</div></div>"));
       }
 
+      // EDIT PROFILE — opens a sheet with ONLY the server's self-editable
+      // whitelisted fields (POST /api/mobile/account). name/email/position/role/
+      // dues/standing are deliberately NOT here — the server rejects them anyway.
+      var edit = el('<button class="btn" type="button" style="margin-top:8px">Edit profile</button>');
+      edit.onclick = function () { haptic(); editProfileSheet(d); };
+      main.appendChild(edit);
+
       var out = el('<button class="btn ghost" type="button" style="margin-top:8px">Sign out</button>');
       out.onclick = async function () { haptic(); await clearSession(); pickerSchool = null; showPicker(); };
       main.appendChild(out);
@@ -1447,6 +1498,66 @@
       main.appendChild(legal);
 
       main.appendChild(el('<p class="small" style="text-align:center;margin-top:10px">Greek Stack · bundled app</p>'));
+    }
+
+    // Edit-profile sheet → POST /api/mobile/account with ONLY the fields the
+    // server whitelists for self-service (per role). The field set is kept in
+    // lockstep with app/api/mobile/account/route.ts — sending anything else is
+    // simply ignored by the server (name/email/role/position are never writable).
+    function editProfileSheet(d) {
+      var p = d.profile || {};
+      var role = d.role || (S.session && S.session.user && S.session.user.role) || "brother";
+      // [key, label, currentValue, isMultiline] — matches the server whitelist.
+      var fields = role === "alumni"
+        ? [
+            ["preferredName", "Preferred name", p.preferredName || "", false],
+            ["phone", "Phone", p.phone || "", false],
+            ["employer", "Employer", p.employer || "", false],
+            ["jobTitle", "Job title", p.jobTitle || "", false],
+            ["city", "City", p.city || "", false],
+            ["state", "State", p.state || "", false],
+            ["linkedinUrl", "LinkedIn URL", p.linkedinUrl || "", false],
+            ["bio", "Bio", p.bio || "", true]
+          ]
+        : [
+            ["phone", "Phone", p.phone || "", false],
+            ["year", "Class year", p.year || "", false],
+            ["major", "Major", p.major || "", false],
+            ["hometown", "Hometown", p.hometown || "", false],
+            ["gradYear", "Graduation year", p.gradYear || "", false],
+            ["bio", "Bio", p.bio || "", true]
+          ];
+      var ov = el('<div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,13,.66);display:grid;place-items:end center;padding:0"></div>');
+      var sheet = el('<div style="width:100%;max-width:520px;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);border-top-left-radius:20px;border-top-right-radius:20px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))"></div>');
+      sheet.appendChild(el('<h2 class="section" style="margin-top:0">Edit profile</h2>'));
+      var form = el('<form></form>');
+      fields.forEach(function (f) {
+        var field = el('<div class="field"><label>' + esc(f[1]) + '</label>' +
+          (f[3]
+            ? '<textarea rows="3" style="width:100%;box-sizing:border-box"></textarea>'
+            : '<input type="text" />') +
+          '</div>');
+        var input = field.querySelector(f[3] ? "textarea" : "input");
+        input.value = f[2];
+        input.setAttribute("data-k", f[0]);
+        form.appendChild(field);
+      });
+      form.appendChild(el('<button class="btn" type="submit">Save changes</button>'));
+      form.appendChild(el('<button class="btn ghost" type="button" style="margin-top:8px" data-cancel>Cancel</button>'));
+      var submit = form.querySelector(".btn");
+      form.querySelector("[data-cancel]").onclick = function () { ov.remove(); };
+      form.onsubmit = async function (e) {
+        e.preventDefault();
+        var payload = {};
+        form.querySelectorAll("[data-k]").forEach(function (el2) { payload[el2.getAttribute("data-k")] = el2.value.trim(); });
+        submit.disabled = true; submit.textContent = "Saving…";
+        try {
+          var res = await authPost("/api/mobile/account", payload);
+          if (res.ok) { ov.remove(); toast("Profile updated.", "ok"); await refetchDashboard(); }
+          else { toast(res.data.error || "Couldn't update your profile. Try again.", "err"); submit.disabled = false; submit.textContent = "Save changes"; }
+        } catch (err) { toast("Network error. Try again.", "err"); submit.disabled = false; submit.textContent = "Save changes"; }
+      };
+      sheet.appendChild(form); ov.appendChild(sheet); document.body.appendChild(ov);
     }
 
     // ── OFFICER: Roster (add / remove / reset — persists to the server) ───────
@@ -1579,8 +1690,74 @@
       });
     }
 
-    // ── OFFICER: Rush pipeline (read board) ───────────────────────────────────
-    function paintExecRush(main, d) { paintRush(main, d); }
+    // ── OFFICER: Rush pipeline (MANAGE — advance / bid / reject a PNM) ─────────
+    // Each PNM gets status-action buttons that POST /api/mobile/exec/rush (officer-
+    // gated server-side via authorizeMobileExec) then refetch. Non-officers never
+    // reach this (exec lens is server-cleared) AND the route re-gates every write.
+    function paintExecRush(main, d) {
+      var pnms = d.pnms || [];
+      main.appendChild(el('<h2 class="section">Recruitment pipeline</h2>'));
+      if (!pnms.length) {
+        main.appendChild(el('<div class="empty">No prospective members in the pipeline yet. Add PNMs from the web console, then advance them here.</div>'));
+        return;
+      }
+      var bids = pnms.filter(function (p) { return p.status === "BID_EXTENDED"; }).length;
+      main.appendChild(el(
+        '<div class="stats three">' +
+          '<div class="stat"><div class="v">' + pnms.length + '</div><div class="l">In pipeline</div></div>' +
+          '<div class="stat"><div class="v">' + bids + '</div><div class="l">Bids out</div></div>' +
+          '<div class="stat"><div class="v">' + (pnms.length - bids) + '</div><div class="l">Active</div></div>' +
+        '</div>'
+      ));
+      pnms.forEach(function (p) { main.appendChild(execRushRow(p)); });
+    }
+    var RUSH_STATUS_LABEL = { ACTIVE: "Active", BID_EXTENDED: "Bid sent", ACCEPTED: "Accepted", DECLINED: "Declined", DROPPED: "Dropped" };
+    function execRushRow(p) {
+      var b = brandFor(S.session.tenant);
+      var card = el('<div class="card"></div>');
+      card.appendChild(el(
+        '<div class="row" style="cursor:default;border:0;padding:0;margin-bottom:10px">' +
+          '<div class="crest" style="background:linear-gradient(135deg,' + b.primary + "," + b.dark + ')">' + esc(initials(p.name)) + "</div>" +
+          '<div class="meta"><div class="name">' + esc(p.name) + '</div><div class="school">' + esc([p.major, p.year].filter(Boolean).join(" · ")) + "</div></div>" +
+          '<span class="pill ' + (p.status === "BID_EXTENDED" ? "brand" : "muted") + '" style="margin:0">' + esc(RUSH_STATUS_LABEL[p.status] || p.status) + "</span>" +
+        "</div>"
+      ));
+      var actions = el('<div style="display:flex;gap:8px;flex-wrap:wrap"></div>');
+      if (p.status !== "BID_EXTENDED" && p.status !== "ACCEPTED") {
+        var bid = el('<button class="btn ghost" type="button" style="width:auto;flex:1;min-width:104px">Extend bid</button>');
+        bid.onclick = function () { haptic(); rushAdvance(p, "BID_EXTENDED"); };
+        actions.appendChild(bid);
+      }
+      if (p.status !== "ACCEPTED") {
+        var acc = el('<button class="btn" type="button" style="width:auto;flex:1;min-width:104px">Accept</button>');
+        acc.onclick = function () { haptic(); rushAdvance(p, "ACCEPTED"); };
+        actions.appendChild(acc);
+      }
+      var rej = el('<button class="btn danger" type="button" style="width:auto;flex:1;min-width:104px">Reject</button>');
+      rej.onclick = function () { haptic(); rushAdvance(p, "DROPPED"); };
+      actions.appendChild(rej);
+      card.appendChild(actions);
+      return card;
+    }
+    async function rushAdvance(p, status) {
+      var verb = { BID_EXTENDED: "extend a bid to", ACCEPTED: "accept", DROPPED: "reject" }[status] || "update";
+      var yes = await confirmDialog({
+        title: "Update " + p.name + "?",
+        message: "Are you sure you want to " + verb + " " + p.name + "?",
+        confirmText: "Confirm", danger: status === "DROPPED"
+      });
+      if (!yes) return;
+      var res = await authPost("/api/mobile/exec/rush", { pnmId: p.id, status: status });
+      if (res.ok) {
+        if (res.data && res.data.pnms) S.data.pnms = res.data.pnms;
+        toast(p.name + " updated.", "ok");
+        await refetchDashboard();
+      } else if (res.status === 403) {
+        toast("Only chapter officers can manage recruitment.", "err");
+      } else {
+        toast(res.data.error || "Couldn't update the PNM. Try again.", "err");
+      }
+    }
 
     // ── OFFICER: Dues management (collection summary) ─────────────────────────
     function paintExecDues(main, d) {
@@ -1627,7 +1804,14 @@
         tabs = [["feed", "Roster", ICON.directory], ["events", "Announce", ICON.feed], ["rush", "Rush", ICON.rush], ["dues", "Dues", ICON.dues], ["profile", "Profile", ICON.shield]];
       } else {
         tabs = [["feed", "Feed", ICON.feed], ["events", "Events", ICON.events], ["rush", "Rush", ICON.rush]];
-        if (duesEnabled()) tabs.push(["dues", "Dues", ICON.dues]);
+        // Alumni get a "Give" tab (donation history + Donate) in place of "Dues" —
+        // they carry no chapter dues balance. It shows when the chapter enabled
+        // dues OR is Stripe-connected for giving; otherwise alumni fall through to
+        // the Directory like other members.
+        var isAlum = !!(S.data && S.data.role === "alumni");
+        var canGive = isAlum && !!(S.data && S.data.dues && S.data.dues.donateEnabled);
+        if (duesEnabled()) tabs.push(["dues", isAlum ? "Give" : "Dues", ICON.dues]);
+        else if (canGive) tabs.push(["dues", "Give", ICON.dues]);
         else tabs.push(["directory", "Directory", ICON.directory]);
         // Vote tab — appears ONLY while a ballot the member can vote in is open
         // (electionOpen). Pulled in before Profile so the live ballot is one tap
@@ -1702,7 +1886,6 @@
       // Find the chapter in the registry so we can theme + go straight to login.
       var match = (S.chapters || []).filter(function (c) { return c.subdomain === sub; })[0];
       if (match) {
-        if (match.demo) { enterDemo(); return true; }
         applyBrand(match);
         showLogin(match);
         return true;

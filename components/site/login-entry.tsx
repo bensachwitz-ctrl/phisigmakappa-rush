@@ -41,7 +41,6 @@ import {
   ShieldCheck,
   ExternalLink,
   School as SchoolIcon,
-  Building2,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -240,7 +239,7 @@ export function LoginEntry({ chapters }: LoginEntryProps) {
 
               {selected ? (
                 <SelectedRow
-                  icon={Building2}
+                  icon={Users}
                   title={selected.name || selected.subdomain}
                   subtitle={chapterDestinationLabel(selected, currentHost)}
                   monogram={monogramFor(selected.name || selected.school || selected.subdomain)}

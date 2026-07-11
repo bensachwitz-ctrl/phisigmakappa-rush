@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   isAdminRole: vi.fn(() => true),
   guardBillingWrite: vi.fn(async () => null),
   guardOfficerOrAdmin: vi.fn(async () => null),
+  guardOfficer: vi.fn(async () => null),
   audit: vi.fn(async () => {}),
   pushEventToCalDiy: vi.fn(async () => null),
   eventCreate: vi.fn(async (args: any) => ({
@@ -45,7 +46,10 @@ vi.mock("@/lib/auth", () => ({
   isAdminAuthed: mocks.isAdminAuthed,
   isAdminRole: mocks.isAdminRole,
 }));
-vi.mock("@/lib/permissions", () => ({ guardOfficerOrAdmin: mocks.guardOfficerOrAdmin }));
+vi.mock("@/lib/permissions", () => ({
+  guardOfficerOrAdmin: mocks.guardOfficerOrAdmin,
+  guardOfficer: mocks.guardOfficer,
+}));
 vi.mock("@/lib/billing-guard", () => ({ guardBillingWrite: mocks.guardBillingWrite }));
 vi.mock("@/lib/audit", () => ({ audit: mocks.audit }));
 vi.mock("@/lib/events", () => ({ pushEventToCalDiy: mocks.pushEventToCalDiy }));

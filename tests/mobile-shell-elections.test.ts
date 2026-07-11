@@ -60,10 +60,18 @@ describe("bundled iOS shell — elections voting surface", () => {
     expect(SHELL).toMatch(/d\.myBallot/);
   });
 
-  it("ships a demo election so the no-login showcase exercises the Vote flow", () => {
-    // sampleData() carries an `election` + empty `myBallot` of the real shape.
-    expect(SHELL).toMatch(/election:\s*\{\s*\n?\s*id:\s*"el-demo"/);
-    expect(SHELL).toMatch(/myBallot:\s*\{\}/);
+  it("is a LOGIN-ONLY shell — no in-app demo election is baked in (demo showcase removed)", () => {
+    // The shipped iOS client is login-only: the in-app demo (DEMO_CHAPTER +
+    // sampleData()) was removed in favor of a logo hero + empty-state, and the
+    // marketing demo now lives only on the website. So NO demo election is baked
+    // into the binary — the elections surface appears only for a REAL signed-in
+    // member whose chapter has a live ballot (server returns election/myBallot;
+    // see electionOpen()). This guards against a demo showcase being reintroduced.
+    expect(SHELL).not.toContain("el-demo");
+    expect(SHELL).not.toMatch(/function sampleData\s*\(/);
+    // The real election wiring (consumed from /api/mobile/data) is still present.
+    expect(SHELL).toMatch(/d\.election/);
+    expect(SHELL).toMatch(/d\.myBallot/);
   });
 
   it("the ios cap-synced copy is byte-identical to the source shell", () => {

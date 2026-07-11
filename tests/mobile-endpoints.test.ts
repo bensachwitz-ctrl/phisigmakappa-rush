@@ -358,7 +358,12 @@ describe("GET /api/mobile/data", () => {
 
     // SERVER-ENFORCED capabilities (market-critical RBAC): this brother's REAL
     // position is President → exec granted; dues flag is on → duesEnabled true.
-    expect(body.capabilities).toEqual({ exec: true, duesEnabled: true });
+    expect(body.capabilities).toMatchObject({ exec: true, duesEnabled: true });
+    // An exec session also carries the position-specific officer toolset (item-1
+    // RBAC core) — computed server-side from the member's REAL admin-set position,
+    // so the client can render the correct role label + only the granted tools.
+    expect(body.capabilities.officerTools).toBeTruthy();
+    expect(body.capabilities.officerTools.label).toContain("Tools");
     expect(body.announcements).toHaveLength(1);
     expect(body.announcements[0].authorRole).toBe("Vice President");
     expect(body.events).toHaveLength(1);
