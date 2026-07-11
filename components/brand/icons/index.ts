@@ -208,6 +208,7 @@ export {
   IconQuote,
   IconSave,
   IconShirt,
+  IconWifiOff,
   IconSend,
 } from "./extras";
 

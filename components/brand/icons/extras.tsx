@@ -688,6 +688,19 @@ export function IconShirt({ accent = GS_ACCENT, ...props }: IconProps) {
   );
 }
 
+/** WifiOff — wifi arcs struck by an accent slash (offline / no connection). */
+export function IconWifiOff({ accent = GS_ACCENT, ...props }: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M4.5 9.5a13 13 0 0 1 4-2.4M12 6.5a13 13 0 0 1 7.5 3" opacity={0.5} />
+      <path d="M7.5 12.6a8 8 0 0 1 3-1.7M13.5 11a8 8 0 0 1 3 1.7" />
+      <path d="M10 15.6a3.4 3.4 0 0 1 4.2.3" />
+      <circle cx="12" cy="19" r="0.7" fill="currentColor" stroke="none" />
+      <path d="M4 4l16 16" stroke={accent} opacity={0.55} strokeWidth={2} />
+    </IconBase>
+  );
+}
+
 /* ── Send ───────────────────────────────────────────────────────────────── */
 
 /** Send — a paper plane lifting off with an accent body (submit / send / share). */

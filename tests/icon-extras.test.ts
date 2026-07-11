@@ -80,6 +80,7 @@ const EXPECTED = [
   "IconQuote",
   "IconSave",
   "IconShirt",
+  "IconWifiOff",
   "IconSend",
 ] as const;
 
