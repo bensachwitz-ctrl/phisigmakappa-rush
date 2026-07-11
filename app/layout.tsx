@@ -13,6 +13,7 @@ import { getSubdomain } from "@/lib/prisma";
 import TelemetryBootstrap from "@/components/site/telemetry-bootstrap";
 import { ChatwootWidget } from "@/components/site/chatwoot-widget";
 import { GreekLetterField } from "@/components/site/greek-letter-field";
+import { resolveUmamiConfig } from "@/lib/umami";
 
 const ALL_FRAT_GLYPHS = [
   "Φ", "Σ", "Κ", "Χ", "Α", "Ω", "Ε", "Β", "Θ", "Π",
@@ -473,6 +474,20 @@ export default async function RootLayout({
   // no <Script>, no network call, output identical to before.
   const plausibleDomain = safeDomain(cfg["analytics.plausibleDomain"]);
 
+  // OPTIONAL Umami analytics — INERT by default, same shape as Plausible above.
+  // Renders the single-line, cookieless (no-PII, no cookie banner) Umami script
+  // only when a website id is configured. Host-level env wins over per-chapter
+  // cfg; the src falls back to Umami Cloud when a self-host URL isn't set. All
+  // inputs are validated in resolveUmamiConfig so a hostile value can't inject
+  // into the rendered <script src> / data-website-id. null → no <Script>, no
+  // network call, output identical to before.
+  const umami = resolveUmamiConfig({
+    envWebsiteId: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+    envSrc: process.env.NEXT_PUBLIC_UMAMI_SRC,
+    cfgWebsiteId: cfg["analytics.umamiWebsiteId"],
+    cfgSrc: cfg["analytics.umamiSrc"],
+  });
+
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy. siteUrl
   // resolves from the live request host (never the hardcoded Phi Sig reference
@@ -577,6 +592,17 @@ export default async function RootLayout({
             defer
             data-domain={plausibleDomain}
             src="https://plausible.io/js/script.js"
+            strategy="afterInteractive"
+          />
+        )}
+        {/* OPTIONAL cookieless analytics — only when a chapter/host configured an
+            Umami website id. Single-line, no cookies, no PII, no consent banner.
+            Inert (not rendered) by default. */}
+        {umami && (
+          <Script
+            defer
+            data-website-id={umami.websiteId}
+            src={umami.src}
             strategy="afterInteractive"
           />
         )}

@@ -361,6 +361,16 @@ export const DEFAULTS = {
   // output. The rush chair sets this per chapter in /admin/settings.
   "analytics.plausibleDomain": "",
 
+  // ── ANALYTICS (Umami — privacy-first, cookieless, MIT self-hostable) ────
+  // OPTIONAL + INERT by default. Set the website id from your Umami dashboard
+  // (and, when self-hosting, analytics.umamiSrc → your instance's /script.js)
+  // and app/layout.tsx injects the single-line, cookieless Umami script — no
+  // cookie banner, no PII. Blank (the default) → no script, no tracking,
+  // byte-identical output. Host-level env (NEXT_PUBLIC_UMAMI_WEBSITE_ID) wins
+  // over this per-chapter cfg. The rush chair sets this in /admin/settings.
+  "analytics.umamiWebsiteId": "",
+  "analytics.umamiSrc": "",
+
   // Section visibility toggles ("true" or "false") — admin can hide any section from the homepage
   "show.statsStrip": "true",
   "show.highlightsBanner": "true",
