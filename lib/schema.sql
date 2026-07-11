@@ -1249,3 +1249,28 @@ CREATE INDEX IF NOT EXISTS "PortalPasswordReset_expiresAt_idx" ON "PortalPasswor
 -- which the provisioning runner ignores).
 ALTER TABLE "PortalPasswordReset" ADD CONSTRAINT "PortalPasswordReset_portalUserId_fkey" FOREIGN KEY ("portalUserId") REFERENCES "PortalUser"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+
+-- ── Position interest (item 3) ───────────────────────────────────────────────
+-- A non-exec brother's interest in running for / holding an officer position.
+-- Mirrors prisma model PositionInterest. Cross-model ids are plain TEXT (no FK
+-- to the large Brother table) so this is purely additive. IF NOT EXISTS so
+-- re-running this DDL against a schema built by an older copy is a clean no-op.
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "PositionInterest" (
+    "id" TEXT NOT NULL,
+    "brotherId" TEXT NOT NULL,
+    "brotherName" TEXT NOT NULL,
+    "positionSlug" TEXT NOT NULL,
+    "positionTitle" TEXT NOT NULL,
+    "message" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'OPEN',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PositionInterest_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "PositionInterest_brotherId_idx" ON "PositionInterest"("brotherId");
+CREATE INDEX IF NOT EXISTS "PositionInterest_positionSlug_idx" ON "PositionInterest"("positionSlug");
+CREATE INDEX IF NOT EXISTS "PositionInterest_status_idx" ON "PositionInterest"("status");

@@ -113,6 +113,12 @@ import { renderPnmDetail } from "./_demo/modals/PnmDetailModal";
 import { renderPostJobModal } from "./_demo/modals/PostJobModal";
 import { renderPostAnnModal } from "./_demo/modals/PostAnnouncementModal";
 import { renderEditProfileModal } from "./_demo/modals/EditProfileModal";
+import { RunForPositionModal } from "@/components/mobile/run-for-position-modal";
+import { DEFAULT_OFFICER_CATALOG } from "@/lib/officer-permissions";
+
+// Positions a member can express interest in running for (item 3). Sourced from
+// the officer catalog so it stays in sync as roles are added.
+const OFFICER_POSITION_TITLES: string[] = DEFAULT_OFFICER_CATALOG.map((s) => s.title);
 
 /** Browser-only: the chapter subdomain this webview is currently served on (or
  *  null on the apex). Used for single-tenant preselect so a deploy already
@@ -198,6 +204,14 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
   const [customSchool, setCustomSchool] = useState("");
   const [customPrimary, setCustomPrimary] = useState("#512888");
   const [customSecondary, setCustomSecondary] = useState("#C9A227");
+
+  // Run-for-a-position (item 3) — the member-side counterpart to officer tools.
+  const [showRunForPosition, setShowRunForPosition] = useState(false);
+  const [interestPosition, setInterestPosition] = useState("");
+  const [interestMessage, setInterestMessage] = useState("");
+  const [submittingInterest, setSubmittingInterest] = useState(false);
+  const [interestDone, setInterestDone] = useState(false);
+  const [interestDoneName, setInterestDoneName] = useState<string | null>(null);
 
   // Demo Side Panel Modals & States
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -1515,6 +1529,52 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       showToast("Network error saving your profile. Try again.", "error");
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  // Item 3: a non-exec brother expresses interest in running for a position.
+  // Demo → showcase confirmation (no server). Real → POST the durable interest;
+  // the current holder sees it in their officer tools so they can mentor.
+  const openRunForPosition = () => {
+    setInterestPosition("");
+    setInterestMessage("");
+    setInterestDone(false);
+    setInterestDoneName(null);
+    setShowRunForPosition(true);
+  };
+  const submitPositionInterest = async () => {
+    if (!interestPosition) return;
+    if (isDemo) {
+      setInterestDoneName(null);
+      setInterestDone(true);
+      return;
+    }
+    if (!token || !selectedTenant) {
+      showToast("Please sign in again.", "error");
+      return;
+    }
+    setSubmittingInterest(true);
+    try {
+      const res = await fetch(apiUrl("/api/mobile/position-interest"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          subdomain: selectedTenant.subdomain,
+          positionTitle: interestPosition,
+          message: interestMessage.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setInterestDoneName(data.notifiedName ?? null);
+        setInterestDone(true);
+      } else {
+        showToast(data.error || "Couldn't record your interest. Try again.", "error");
+      }
+    } catch {
+      showToast("Network error. Try again.", "error");
+    } finally {
+      setSubmittingInterest(false);
     }
   };
 
@@ -2959,6 +3019,38 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
                   </div>
                 ) : (
                   <div key={`member-${activeTab}`} className="animate-spotlight-in">
+                    {/* Item 3: NORMAL BROTHER (non-exec) gets NO exec tools —
+                        instead a single "run for a position" prompt on their home
+                        feed. Shown to a real non-officer brother (execAllowed
+                        false) or in the demo member showcase; never to alumni or
+                        an officer's exec view. */}
+                    {activeTab === "feed" &&
+                      viewPersona === "member" &&
+                      role === "brother" &&
+                      (isDemo || !execAllowed) && (
+                        <button
+                          type="button"
+                          onClick={openRunForPosition}
+                          className="press mb-3 flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-slate-300"
+                        >
+                          <span
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: `${selectedBrand.primaryColor}14`, color: selectedBrand.primaryColor }}
+                          >
+                            <IconAward className="h-5 w-5" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-slate-900">
+                              Want to run for a position?
+                            </span>
+                            <span className="block text-xs text-slate-500">
+                              Tell the current officer you're interested next election.
+                            </span>
+                          </span>
+                          <IconChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                        </button>
+                      )}
+
                     {/* A. FEED TAB (Combined News + Job Listings) */}
                     {activeTab === "feed" && renderFeedTab(ctx)}
 
@@ -2997,6 +3089,22 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
 
               {/* Edit Profile & Professional Info Modal */}
               {showEditProfileModal && renderEditProfileModal(ctx)}
+
+              {/* Run-for-a-position modal (item 3) */}
+              <RunForPositionModal
+                open={showRunForPosition}
+                brandColor={selectedBrand.primaryColor}
+                positions={OFFICER_POSITION_TITLES}
+                position={interestPosition}
+                message={interestMessage}
+                submitting={submittingInterest}
+                done={interestDone}
+                doneName={interestDoneName}
+                onPosition={setInterestPosition}
+                onMessage={setInterestMessage}
+                onSubmit={submitPositionInterest}
+                onClose={() => setShowRunForPosition(false)}
+              />
 
               {/* ════════════════════════════════════════════════════════════════
                   FEATURE SPOTLIGHT — full interactive surfaces for every remaining

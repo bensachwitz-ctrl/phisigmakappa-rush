@@ -1320,3 +1320,27 @@ model SoberDriverShift {
   @@index([memberId])
 }
 
+// ── Position interest (item 3) ───────────────────────────────────────────────
+// A NON-exec brother can express interest in running for / holding an officer
+// position next election. This is the member-side counterpart to the officer
+// tool pages: instead of leaking exec tools onto a member, they get a "run for a
+// position" button → this store + a notification to the current holder so they
+// can mentor. Cross-model references are stored as PLAIN id strings (mirroring
+// the Elections tables) so there's NO new relation on the large Brother model
+// and NO migration risk — the table is purely additive.
+model PositionInterest {
+  id            String   @id @default(cuid())
+  brotherId     String   // the interested member (plain id, no FK)
+  brotherName   String   // denormalized for the officer's notification list
+  positionSlug  String   // catalog slug or normalized free-text
+  positionTitle String   // display title, e.g. "Treasurer"
+  message       String?  // optional note to the current holder
+  status        String   @default("OPEN") // OPEN | ACKNOWLEDGED | CLOSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@index([brotherId])
+  @@index([positionSlug])
+  @@index([status])
+}
+

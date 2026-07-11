@@ -450,6 +450,15 @@ async function handleGet(req: Request): Promise<NextResponse> {
           createdAt: string;
         }>
       | null = null;
+    let positionInterests:
+      | Array<{
+          id: string;
+          brotherName: string;
+          positionTitle: string;
+          message: string | null;
+          createdAt: string;
+        }>
+      | null = null;
 
     if (caps.exec) {
       try {
@@ -480,6 +489,34 @@ async function handleGet(req: Request): Promise<NextResponse> {
       } catch (e) {
         console.error("Failed to load treasury summary (exec):", e);
         treasury = null;
+      }
+
+      try {
+        // Position-interest inbox (item 3): brothers who expressed interest in a
+        // role THIS officer's position covers, so the current holder can mentor
+        // them. We match the interest's role to the officer's own role (the
+        // President — super-admin — sees them all). Best-effort; a miss never
+        // breaks the load. The client renders this in the officer's tools.
+        const myRole = officerTools?.roleKey ?? null;
+        const isPresidentLike = officerTools?.tools.some((t) => t.id === "settings") ?? false;
+        const openInterests = await db.positionInterest.findMany({
+          where: { status: "OPEN" },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+          select: { id: true, brotherName: true, positionSlug: true, positionTitle: true, message: true, createdAt: true },
+        });
+        positionInterests = openInterests
+          .filter((pi) => isPresidentLike || (myRole && officerToolset(pi.positionTitle).roleKey === myRole))
+          .map((pi) => ({
+            id: pi.id,
+            brotherName: pi.brotherName,
+            positionTitle: pi.positionTitle,
+            message: pi.message,
+            createdAt: pi.createdAt.toISOString(),
+          }));
+      } catch (e) {
+        console.error("Failed to load position interests (exec):", e);
+        positionInterests = null;
       }
 
       try {
@@ -550,6 +587,9 @@ async function handleGet(req: Request): Promise<NextResponse> {
       // payload (null), so the data never leaves the server for them.
       treasury,
       pnms,
+      // Item 3: brothers who expressed interest in a role this officer holds, so
+      // the current holder can reach out + mentor. Null for non-officers.
+      positionInterests,
       role: sess.role,
       profile,
       standing,
