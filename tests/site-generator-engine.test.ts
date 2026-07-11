@@ -170,6 +170,13 @@ describe("preset-picker UI (item 4) stages the preset + per-axis overrides", () 
     expect(src).toMatch(/moveUp\(/);
     expect(src).toMatch(/moveDown\(/);
   });
+  it("the live preview has a desktop/mobile viewport toggle that clamps its width (item 7)", () => {
+    expect(src).toMatch(/previewViewport/);
+    expect(src).toMatch(/"desktop"|"mobile"/);
+    expect(src).toMatch(/maxWidth: previewViewport === "mobile"/);
+    // both preview render sites reuse the single shared const
+    expect(src).toMatch(/const livePreview =/);
+  });
 });
 
 describe("TEMPLATE_META wired to the new declarative axes", () => {

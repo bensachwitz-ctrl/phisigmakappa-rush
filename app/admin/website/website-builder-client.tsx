@@ -19,7 +19,7 @@ import {
   Save, RefreshCw, Flame, Trophy, Heart,
   GraduationCap, UserPlus, Instagram, CalendarDays, CalendarRange, Quote,
   Users, Crown, HelpCircle, MapPin, Rocket, ShieldCheck, ChevronUp, ChevronDown,
-  LayoutGrid, Palette, Check, Sparkles, GripVertical,
+  LayoutGrid, Palette, Check, Sparkles, GripVertical, Monitor, Smartphone,
 } from "lucide-react";
 // Import the PURE template data (orders/meta/resolver) — NOT template-config,
 // which also pulls in the hero .tsx components. This client only needs the meta
@@ -396,6 +396,10 @@ export function WebsiteBuilderClient({
   // built-in template + palette preset (no AI, no code-gen, no agents).
   const [tweakPrompt, setTweakPrompt] = React.useState("");
 
+  // #7 — live-preview viewport (desktop / mobile) so the admin can check the
+  // phone layout as they edit. Shared by both preview render sites.
+  const [previewViewport, setPreviewViewport] = React.useState<"desktop" | "mobile">("desktop");
+
   // When the admin switches template, offer to clear any explicit
   // website.sections override so the new template's default order takes effect
   // (an existing override otherwise pins the order across templates).
@@ -745,36 +749,73 @@ export function WebsiteBuilderClient({
 
   // #7 — the interactive live preview, defined once and rendered on EVERY builder
   // tab: inline beside its controls in the Style-Presets tab, and in the shared
-  // right rail for the Template / Brand / Layout tabs, so no tab edits blind.
+  // right rail for the Template / Brand / Layout tabs, so no tab edits blind. A
+  // desktop/mobile viewport toggle constrains the preview width so an admin can
+  // check the phone layout (where most PNMs land) as they edit; the toggle lives
+  // in the shared const so both render sites share one state.
   const livePreview = (
-    <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col justify-center">
-      {/* #6 — read the CANONICAL chapter.* keys (with legacy unprefixed
-          fallback) so each tenant previews THEIR identity instead of always the
-          Phi Sig / USC reference chapter. */}
-      <EditableLivePreview
-        fraternityName={fraternityName}
-        onFraternityName={setFraternityName}
-        greekLetters={config["chapter.greekLetters"] || config["greekLetters"] || "ΦΣΚ"}
-        greekLettersGlyphs={config["chapter.greekLettersGlyphs"] || config["greekLettersGlyphs"] || "ΦΣΚ"}
-        fraternityLetters={config["chapter.fraternityLetters"] || config["fraternityLetters"] || "ΦΣΚ"}
-        schoolName={config["chapter.schoolName"] || config["schoolName"] || "USC"}
-        schoolShort={config["chapter.schoolShort"] || config["schoolShort"] || "USC"}
-        primaryColor={primaryHex}
-        onPrimaryColor={setPrimaryHex}
-        darkColor={secondaryHex}
-        onDarkColor={setSecondaryHex}
-        softColor={softHex}
-        onSoftColor={setSoftHex}
-        heroHeadline={headline}
-        onHeroHeadline={setHeadline}
-        heroTagline={tagline}
-        onHeroTagline={setTagline}
-        subdomain={config["chapter.subdomain"] || config["subdomain"] || "usc"}
-        templateId={template}
-        orientation={orientation}
-        chapterLogo={logo}
-        chapterHero={hero}
-      />
+    <div className="rounded-xl border border-border bg-slate-950 p-4 min-h-[380px] flex flex-col">
+      <div className="mb-3 flex items-center justify-end gap-1" role="group" aria-label="Preview viewport">
+        {([
+          { id: "desktop" as const, label: "Desktop", icon: Monitor },
+          { id: "mobile" as const, label: "Mobile", icon: Smartphone },
+        ]).map((v) => {
+          const active = previewViewport === v.id;
+          const VIcon = v.icon;
+          return (
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setPreviewViewport(v.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors",
+                active ? "bg-white/10 text-white ring-1 ring-white/20" : "text-slate-400 hover:text-slate-200",
+              )}
+            >
+              <VIcon className="h-3.5 w-3.5" />
+              {v.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex-1 flex flex-col justify-center">
+        {/* Width clamp = the viewport simulation. Mobile ~= a 390px phone column;
+            desktop fills the rail. The preview itself updates live from the same
+            state Save persists, so this IS the chapter's public page as staged. */}
+        <div
+          className="mx-auto w-full transition-[max-width] duration-300 ease-out"
+          style={{ maxWidth: previewViewport === "mobile" ? 390 : "100%" }}
+        >
+          {/* #6 — read the CANONICAL chapter.* keys (with legacy unprefixed
+              fallback) so each tenant previews THEIR identity instead of always the
+              Phi Sig / USC reference chapter. */}
+          <EditableLivePreview
+            fraternityName={fraternityName}
+            onFraternityName={setFraternityName}
+            greekLetters={config["chapter.greekLetters"] || config["greekLetters"] || "ΦΣΚ"}
+            greekLettersGlyphs={config["chapter.greekLettersGlyphs"] || config["greekLettersGlyphs"] || "ΦΣΚ"}
+            fraternityLetters={config["chapter.fraternityLetters"] || config["fraternityLetters"] || "ΦΣΚ"}
+            schoolName={config["chapter.schoolName"] || config["schoolName"] || "USC"}
+            schoolShort={config["chapter.schoolShort"] || config["schoolShort"] || "USC"}
+            primaryColor={primaryHex}
+            onPrimaryColor={setPrimaryHex}
+            darkColor={secondaryHex}
+            onDarkColor={setSecondaryHex}
+            softColor={softHex}
+            onSoftColor={setSoftHex}
+            heroHeadline={headline}
+            onHeroHeadline={setHeadline}
+            heroTagline={tagline}
+            onHeroTagline={setTagline}
+            subdomain={config["chapter.subdomain"] || config["subdomain"] || "usc"}
+            templateId={template}
+            orientation={orientation}
+            chapterLogo={logo}
+            chapterHero={hero}
+          />
+        </div>
+      </div>
     </div>
   );
 
