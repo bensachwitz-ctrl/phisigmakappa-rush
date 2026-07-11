@@ -26,6 +26,19 @@ describe("sanitizeRichText — keeps allowed formatting", () => {
     expect(sanitizeRichText('<a href="#top">t</a>')).toContain('href="#top"');
   });
 
+  it("keeps the href on a HYPHENATED hostname (the control-char check must not eat '-')", () => {
+    // Regression guard: the safe-URL check rejects embedded control chars via a
+    // NUL..US range whose raw bytes render like [space-hyphen] in some editors.
+    // A hyphenated domain must keep its href (not be silently downgraded to <a>).
+    const out = sanitizeRichText('<a href="https://my-domain.com/path-name">go</a>');
+    expect(out).toContain('href="https://my-domain.com/path-name"');
+    expect(out).toContain('rel="noopener noreferrer nofollow"');
+    // ...while a javascript: scheme (even hyphen-adjacent) is still stripped.
+    const bad = sanitizeRichText('<a href="javascript:alert-1">x</a>');
+    expect(bad).not.toMatch(/javascript:/i);
+    expect(bad).toBe("<a>x</a>");
+  });
+
   it("returns '' for empty/nullish", () => {
     expect(sanitizeRichText("")).toBe("");
     expect(sanitizeRichText(null)).toBe("");
