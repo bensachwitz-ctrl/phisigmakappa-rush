@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Calendar, Clock } from "lucide-react";
+import { IconCalendar as Calendar, IconClock as Clock } from "@/components/brand/icons";
 
 /**
  * Live ticking countdown to the next public rush event.

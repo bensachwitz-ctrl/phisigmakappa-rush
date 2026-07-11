@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, MapPin, Shirt } from "lucide-react";
+import { IconCalendar as CalendarDays, IconPin as MapPin, IconShirt as Shirt } from "@/components/brand/icons";
 import { formatDate, formatTime } from "@/lib/utils";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 import { htmlToPlainText } from "@/lib/rich-text";

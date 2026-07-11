@@ -8,20 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import {
-  CalendarDays,
-  Clock,
-  CheckCircle2,
-  Calendar,
-  AlertCircle,
-  FileText,
-  User,
-  Mail,
-  Loader2,
-  ExternalLink,
-  ChevronRight,
-  MapPin
-} from "lucide-react";
+import { IconCalendar as CalendarDays, IconClock as Clock, IconCheckCircle as CheckCircle2, IconCalendar as Calendar, IconAlertCircle as AlertCircle, IconFileText as FileText, IconUser as User, IconMail as Mail, IconSpinner as Loader2, IconExternal as ExternalLink, IconChevronRight as ChevronRight, IconPin as MapPin } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 interface SchedulerProps {

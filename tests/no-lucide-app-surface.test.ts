@@ -10,7 +10,7 @@ import { resolve, relative } from "node:path";
 // migrated off raw lucide-react onto the bespoke duotone catalog. This test
 // statically scans every .tsx under app/app/ and fails — with the offending
 // file list — if any reintroduces a `from "lucide-react"` import, so a stray
-// `import { X } from "lucide-react"` can't silently regress the cohesion.
+// `import { IconClose as X } from "@/components/brand/icons";` can't silently regress the cohesion.
 //
 // Runs in the pure-`node` vitest env (no DOM / JSX transform — see
 // vitest.config.ts), so it inspects source text rather than rendering.

@@ -3,11 +3,8 @@ import { Crest } from "@/components/brand/wordmark";
 import { SmartImage } from "@/components/site/smart-image";
 import { imageSrc, isCloudinaryUrl } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
-import {
-  Crown, Trophy, HandHeart, Users, Award, Star, Heart, GraduationCap,
-  BookOpen, Music, Building2, Flame, ShieldCheck, Calendar, MapPin,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { IconCrown as Crown, IconStanding as Trophy, IconService as HandHeart, IconMembers as Users, IconAward as Award, IconStar as Star, IconHeart as Heart, IconGraduation as GraduationCap, IconLibrary as BookOpen, IconMusic as Music, IconBuilding as Building2, IconFlame as Flame, IconShieldCheck as ShieldCheck, IconCalendar as Calendar, IconPin as MapPin } from "@/components/brand/icons";
+import { type GsIcon as LucideIcon } from "@/components/brand/icons";
 
 /* ── Chapter-brand motion tokens ──────────────────────────────────────────
    Every decorative animation layer on the page is tinted to the CHAPTER's

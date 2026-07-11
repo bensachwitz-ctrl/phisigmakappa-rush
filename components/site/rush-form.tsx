@@ -9,10 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
-import {
-  CheckCircle2, ArrowRight, ArrowLeft, Loader2,
-  Check, Upload, X as XIcon,
-} from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconArrowRight as ArrowRight, IconArrowLeft as ArrowLeft, IconSpinner as Loader2, IconCheck as Check, IconUpload as Upload, IconClose as XIcon } from "@/components/brand/icons";
 // Bespoke chapter-brand duotone icons (imported direct from the file, NOT the
 // barrel). They default their accent to the live chapter primary so every mark
 // on the conversion form reads in the CHAPTER color — never platform blue/gold.

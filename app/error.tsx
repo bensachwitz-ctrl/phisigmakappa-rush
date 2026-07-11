@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
-import { RefreshCcw, Home, TriangleAlert } from "lucide-react";
+import { IconRefresh as RefreshCcw, IconHome as Home, IconAlert as TriangleAlert } from "@/components/brand/icons";
 
 export default function Error({
   error,

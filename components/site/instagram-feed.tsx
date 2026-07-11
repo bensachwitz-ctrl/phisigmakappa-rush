@@ -1,6 +1,6 @@
 "use client";
 
-import { Instagram, ExternalLink } from "lucide-react";
+import { IconInstagram as Instagram, IconExternal as ExternalLink } from "@/components/brand/icons";
 import Link from "next/link";
 import { Crest } from "@/components/brand/wordmark";
 import { SmartImage } from "@/components/site/smart-image";

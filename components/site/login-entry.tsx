@@ -31,18 +31,7 @@ import { GreekstackLogo, GreekstackWordmark } from "@/components/brand/greekstac
 import { BrandGlyph } from "@/components/site/brand-glyph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Search,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Users,
-  GraduationCap,
-  ShieldCheck,
-  ExternalLink,
-  School as SchoolIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { IconSearch as Search, IconArrowRight as ArrowRight, IconArrowLeft as ArrowLeft, IconCheck as Check, IconMembers as Users, IconGraduation as GraduationCap, IconShieldCheck as ShieldCheck, IconExternal as ExternalLink, IconSchool as SchoolIcon, type GsIcon as LucideIcon } from "@/components/brand/icons";
 import {
   buildChapterLoginUrl,
   chapterDestinationLabel,

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight as ArrowRight } from "@/components/brand/icons";
 import { cn } from "@/lib/utils";
 
 /**

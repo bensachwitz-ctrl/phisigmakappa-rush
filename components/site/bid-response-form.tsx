@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, XCircle, Loader2, FileText, AlertCircle } from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconXCircle as XCircle, IconSpinner as Loader2, IconFileText as FileText, IconAlertCircle as AlertCircle } from "@/components/brand/icons";
 
 /**
  * Bid-response form — one-click Accept/Decline for the PNM. POSTs to

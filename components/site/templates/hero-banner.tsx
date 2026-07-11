@@ -9,7 +9,7 @@ import {
 } from "@/components/brand/icons/chapter";
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { IconArrowRight as ArrowRight, IconChevronDown as ChevronDown } from "@/components/brand/icons";
 import { cleanUrl, titleCaseAddress } from "@/lib/utils";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import type { SectionContext } from "./types";

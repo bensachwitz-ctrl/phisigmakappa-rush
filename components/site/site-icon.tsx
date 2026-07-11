@@ -23,11 +23,7 @@ import * as React from "react";
 // ── brand default: the app's existing chrome set (lucide-backed, bespoke where a
 //    hand-tuned glyph exists). `brand.pkg` is null, so this is NOT a *selectable*
 //    external library — it is "the app's own set", the offline-safe default. ──
-import {
-  ArrowRight, ShieldCheck, Star, Calendar, Trophy, GraduationCap, Users,
-  MapPin, Heart, Sparkles, Quote, Medal, Home, Instagram, CheckCircle2,
-  Mail, Crown, HelpCircle, Flame, Rocket,
-} from "lucide-react";
+import { IconArrowRight as ArrowRight, IconShieldCheck as ShieldCheck, IconStar as Star, IconCalendar as Calendar, IconStanding as Trophy, IconGraduation as GraduationCap, IconMembers as Users, IconPin as MapPin, IconHeart as Heart, IconSpark as Sparkles, IconQuote as Quote, IconAward as Medal, IconHome as Home, IconInstagram as Instagram, IconCheckCircle as CheckCircle2, IconMail as Mail, IconCrown as Crown, IconHelp as HelpCircle, IconFlame as Flame, IconRocket as Rocket } from "@/components/brand/icons";
 
 import {
   ArrowRight as PhArrowRight, ShieldCheck as PhShieldCheck, Star as PhStar,

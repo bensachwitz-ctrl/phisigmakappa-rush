@@ -4,23 +4,7 @@ import type { Metadata } from "next";
 import { getSubdomain } from "@/lib/prisma";
 import { resolveTestFlightUrl } from "@/lib/ios-app";
 import { GreekstackWordmark } from "@/components/brand/greekstack-logo";
-import { 
-  Smartphone,
-  Download,
-  ArrowLeft,
-  Bell,
-  Link2,
-  WifiOff,
-  CheckCircle2, 
-  QrCode,
-  ShieldCheck,
-  ChevronRight,
-  ExternalLink,
-  Laptop,
-  Calendar,
-  Users,
-  User
-} from "lucide-react";
+import { IconSmartphone as Smartphone, IconDownload as Download, IconArrowLeft as ArrowLeft, IconBell as Bell, IconLink as Link2, IconWifiOff as WifiOff, IconCheckCircle as CheckCircle2, IconQrCode as QrCode, IconShieldCheck as ShieldCheck, IconChevronRight as ChevronRight, IconExternal as ExternalLink, IconMonitor as Laptop, IconCalendar as Calendar, IconMembers as Users, IconUser as User } from "@/components/brand/icons";
 
 export const dynamic = "force-dynamic";
 

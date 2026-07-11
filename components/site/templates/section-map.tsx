@@ -19,10 +19,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
 import { imageSrc, avatarSrc } from "@/lib/image-url";
-import {
-  ArrowRight, ShieldCheck, Quote, Star, Calendar, Award, Instagram,
-  CheckCircle2,
-} from "lucide-react";
+import { IconArrowRight as ArrowRight, IconShieldCheck as ShieldCheck, IconQuote as Quote, IconStar as Star, IconCalendar as Calendar, IconAward as Award, IconInstagram as Instagram, IconCheckCircle as CheckCircle2 } from "@/components/brand/icons";
 import { cleanUrl, cleanMailto, cleanTel, titleCaseAddress } from "@/lib/utils";
 import { SiteIcon, siteIconNameFor } from "@/components/site/site-icon";
 import { getComponentSet } from "@/lib/site-generator/component-sets";

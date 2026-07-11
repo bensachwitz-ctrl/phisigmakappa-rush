@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { avatarSrc } from "@/lib/image-url";
-import { Loader2, Upload } from "lucide-react";
+import { IconSpinner as Loader2, IconUpload as Upload } from "@/components/brand/icons";
 import { IconCheckCircle } from "@/components/brand/icons";
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Grad"];

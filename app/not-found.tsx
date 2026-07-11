@@ -3,7 +3,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { IconChip } from "@/components/ui/icon-chip";
-import { Home, Calendar, Compass } from "lucide-react";
+import { IconHome as Home, IconCalendar as Calendar, IconCompass as Compass } from "@/components/brand/icons";
 import { getChapterIdentity } from "@/lib/chapter-identity";
 
 export const metadata = {

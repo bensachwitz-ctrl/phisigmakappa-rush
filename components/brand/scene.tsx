@@ -3,10 +3,7 @@
  * No external image dependencies → never break.
  */
 import { cn } from "@/lib/utils";
-import {
-  Users, Trophy, Award, HandHeart, BookOpen, Music,
-  Flame, Star, Crown, Building2, MapPin, Heart,
-} from "lucide-react";
+import { IconMembers as Users, IconStanding as Trophy, IconAward as Award, IconService as HandHeart, IconLibrary as BookOpen, IconMusic as Music, IconFlame as Flame, IconStar as Star, IconCrown as Crown, IconBuilding as Building2, IconPin as MapPin, IconHeart as Heart } from "@/components/brand/icons";
 import { Crest } from "@/components/brand/wordmark";
 
 export type SceneTheme =

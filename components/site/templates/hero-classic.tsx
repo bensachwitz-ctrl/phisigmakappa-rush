@@ -11,7 +11,7 @@ import {
 import { RushCountdown } from "@/components/site/rush-countdown";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { IconArrowRight as ArrowRight, IconChevronDown as ChevronDown } from "@/components/brand/icons";
 import { cleanUrl, titleCaseAddress } from "@/lib/utils";
 import { FloatingSymbols } from "@/components/site/floating-symbols";
 import type { SectionContext } from "./types";

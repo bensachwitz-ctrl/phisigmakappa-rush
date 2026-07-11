@@ -16,7 +16,7 @@
  */
 
 import * as React from "react";
-import { CheckCircle2, Loader2, UserPlus } from "lucide-react";
+import { IconCheckCircle as CheckCircle2, IconSpinner as Loader2, IconUserPlus as UserPlus } from "@/components/brand/icons";
 
 type Props = { code: string; orgName: string };
 
