@@ -9,6 +9,7 @@ import { PublicNav } from "@/components/site/nav";
 import { PublicFooter } from "@/components/site/footer";
 import { Scheduler } from "@/components/site/scheduler";
 import { CalendarDays, ShieldCheck, MailCheck } from "lucide-react";
+import { IconArrowLeft } from "@/components/brand/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +79,16 @@ export default async function SchedulePage() {
       <PublicNav />
 
       <div className="relative max-w-5xl mx-auto px-3 sm:px-4 py-10 sm:py-20">
+        {/* Item 5: an explicit "Back to website" affordance so the booking page
+            is never a dead-end (the PublicNav is present but a direct back link
+            reads clearer). 44px target, brand-tinted, bespoke icon (not lucide). */}
+        <a
+          href="/"
+          className="group mb-6 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-maroon-700 transition hover:text-maroon-900"
+        >
+          <IconArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden />
+          Back to website
+        </a>
         <header className="text-center mb-12 sm:mb-14">
           {/* Classical eyebrow: the chapter's own identity, set in the Cinzel
               display face (inscriptional caps). Replaces the generic "Calendar
