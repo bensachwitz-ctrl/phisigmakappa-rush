@@ -51,7 +51,10 @@ export const ITEMS: NavItem[] = [
   { href: "/admin/brothers", label: "Brothers", icon: IconMembers, adminOnly: false, group: "primary", domain: "brothers" },
   { href: "/admin/directory", label: "Directory", icon: IconDirectory, adminOnly: false, group: "more", domain: "brothers" },
   { href: "/admin/standing", label: "Standing", icon: IconStanding, adminOnly: false, group: "more", domain: "siteSettings" },
-  { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: true, group: "more", domain: "brothers" },
+  // Big/Little (family tree) gates on brothers:read (read-only for non-admins via
+  // the manager's isAdmin prop) — adminOnly:true hid it from brothers-domain
+  // officers. Drop it so the brothers domain governs discovery.
+  { href: "/admin/family", label: "Big/Little", icon: IconFamilyTree, adminOnly: false, group: "more", domain: "brothers" },
   { href: "/admin/events", label: "Events", icon: IconEvents, adminOnly: true, group: "primary", domain: "events" },
   { href: "/admin/meetings", label: "Meetings", icon: IconMeetings, adminOnly: false, group: "primary", domain: "brothers" },
   { href: "/admin/calendar", label: "Calendar", icon: IconCalendarTool, adminOnly: false, group: "more", domain: "events" },
@@ -69,7 +72,10 @@ export const ITEMS: NavItem[] = [
   { href: "/admin/service", label: "Service", icon: IconService, adminOnly: false, group: "more", domain: "service" },
   { href: "/admin/officers", label: "Officers", icon: IconSecurity, adminOnly: true, group: "more" },
   { href: "/admin/library", label: "Library", icon: IconLibrary, adminOnly: false, group: "more", domain: "documents" },
-  { href: "/admin/exports", label: "Exports", icon: IconExports, adminOnly: true, group: "more" },
+  // HQ Exports gates on payments:read (+ payments:write via canWrite) — adminOnly
+  // hid it from the Treasurer/payments officer who can use it. Gate on the
+  // payments domain so they discover it.
+  { href: "/admin/exports", label: "Exports", icon: IconExports, adminOnly: false, group: "more", domain: "payments" },
   // GATE-3 FIX (money nav discovery): the three TREASURER money surfaces are
   // officer-reachable — Treasury (payments), Dues hub (dues), Payouts (payments)
   // are all gated on the officer DOMAIN (page + API), so a non-admin Treasurer
