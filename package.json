@@ -21,11 +21,11 @@
     "gen:brand": "node scripts/gen-web-icons.mjs && node scripts/gen-ios-assets.mjs && node scripts/gen-android-assets.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "^8.3.1",
+    "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
-    "@capacitor/core": "^8.3.1",
+    "@capacitor/core": "^8.4.0",
     "@capacitor/haptics": "^8.0.2",
-    "@capacitor/ios": "^8.3.1",
+    "@capacitor/ios": "^8.4.0",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
@@ -77,7 +77,7 @@
     "undici": "6.26.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.3.1",
+    "@capacitor/cli": "^8.4.0",
     "@types/node": "^22.20.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.1",
