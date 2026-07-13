@@ -294,12 +294,14 @@ export default function OnboardWizard() {
   //   "custom"  — Custom build (a "talk to our team" path → the book-a-call/Cal link)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
   // skips straight through still lands on the most generous option.
-  // ("semester" / "dues_percentage" are retained in the persisted union ONLY for
-  // round-trip/back-compat safety with already-provisioned tenants; NEITHER is
-  // offered as a standalone plan anymore.)
+  // ("semester" is retained for back-compat with already-provisioned tenants;
+  // "dues_percentage" is selected via the "Online Dues Collection" toggle, which
+  // waives the monthly platform fee and switches the billing model to a share of
+  // dues collected.)
   const [plan, setPlan] = React.useState<"monthly" | "yearly" | "semester" | "dues_percentage" | "custom">("monthly");
-  // Optional add-on: the chapter wants Greek Stack to collect dues on their behalf.
-  // This is INDEPENDENT of the base plan and requires a human setup call because
+  // Optional: the chapter wants Greek Stack to collect dues on their behalf.
+  // Checking this switches the plan to "dues_percentage" (monthly fee waived;
+  // Greek Stack earns via a share of dues). Requires a human setup call because
   // each chapter's dues amount and Stripe product must be configured individually.
   const [collectDues, setCollectDues] = React.useState(false);
 
@@ -343,7 +345,8 @@ export default function OnboardWizard() {
   const [paymentMethodId, setPaymentMethodId] = React.useState<string | null>(null);
 
   const STEPS = React.useMemo(() => {
-    if (plan === "custom") {
+    // Custom and Dues-Share plans never collect a platform card at signup.
+    if (plan === "custom" || plan === "dues_percentage") {
       return ALL_STEPS.filter((s) => s.id !== "payment");
     }
     return ALL_STEPS;
@@ -587,10 +590,10 @@ export default function OnboardWizard() {
     }
   }
 
-  // Item 6: card-free launch removed. A card is now required at the payment step
-  // (goNext gates Continue on a verified payment method). The chapter still gets
-  // a free first month via the Stripe trial — it just keeps a card on file so
-  // billing resumes automatically after the trial and a receipt is emailed.
+  // Monthly/Annual plans require a card at the payment step (goNext gates Continue
+  // on a verified payment method). The chapter still gets a free first month via
+  // the Stripe trial — it just keeps a card on file so billing resumes automatically
+  // after the trial and a receipt is emailed. Dues-Share and Custom skip payment.
 
   function goPrev() {
     if (step === "launch") {
@@ -901,7 +904,7 @@ export default function OnboardWizard() {
             decorative icons aria-hidden, wraps cleanly on mobile. */}
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
           {[
-            { icon: IconSecurity, text: plan === "custom" ? "No card required" : "Secure Stripe setup" },
+            { icon: IconSecurity, text: plan === "custom" || plan === "dues_percentage" ? "No card required" : "Secure Stripe setup" },
             { icon: IconLaunch, text: "Live in under a minute" },
             { icon: IconCheckCircle, text: "Edit anything later" },
           ].map((t) => {
@@ -1474,7 +1477,12 @@ export default function OnboardWizard() {
                   plan={plan}
                   onChange={setPlan}
                   collectDues={collectDues}
-                  onCollectDuesChange={setCollectDues}
+                  onCollectDuesChange={(checked) => {
+                    setCollectDues(checked);
+                    // Dues-Share waives the monthly platform fee; unchecking reverts
+                    // to the default monthly subscription plan.
+                    setPlan(checked ? "dues_percentage" : "monthly");
+                  }}
                   promoCode={promoCode}
                   setPromoCode={setPromoCode}
                   promoApplied={promoApplied}
@@ -1827,10 +1835,11 @@ function customBuildHref(): string {
  * PRICING STEP — choose how the chapter pays Greekstack. The model is simple:
  *   • Monthly — first month free, then $50/mo + $200 per rush cycle
  *   • Annual  — $800/year, which INCLUDES every rush-cycle fee (best value)
+ *   • Dues-Share — no monthly fee; Greek Stack earns a percentage of dues collected
  * presented as two big radio cards, plus a link out to a "Custom" build that
  * opens a conversation with the team (the Cal.com book-a-call link when configured,
- * else the apex /contact#custom form). NOTHING here collects a card — the founder
- * launches first (first month free) and sets up payment later. Pricing mirrors
+ * else the apex /contact#custom form). Monthly/Annual require a card at signup
+ * (first month free for Monthly); Dues-Share and Custom do not. Pricing mirrors
  * the marketing landing page exactly so a prospect never sees two different
  * numbers.
  *

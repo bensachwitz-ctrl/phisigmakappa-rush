@@ -230,6 +230,37 @@ describe("POST /api/onboard — plan funnels", () => {
     );
   });
 
+  it("dues-share via collectDues toggle: waives platform fee and flags dues for setup", async () => {
+    const res = await POST(
+      makeReq({ subdomain: "duessharetoggle", plan: "dues_percentage", collectDues: true }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+
+    // No platform subscription is created for dues-share; no card is attached.
+    expect(mocks.mockStripeSubscriptionsCreate).not.toHaveBeenCalled();
+    expect(mocks.mockStripePaymentMethodsAttach).not.toHaveBeenCalled();
+
+    expect(mocks.mockTenantCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          plan: "dues_percentage",
+          subscriptionStatus: "active",
+          stripeSubscriptionId: null,
+        }),
+      }),
+    );
+
+    // The tenant config flags online dues collection as pending owner setup.
+    const cfg = Object.fromEntries(
+      mocks.mockUpsert.mock.calls.map((c: any) => [c[0].where.key, c[0].create.value]),
+    );
+    expect(cfg["dues.enabled"]).toBe("true");
+    expect(cfg["dues.collectThroughGreekStack"]).toBe("true");
+    expect(cfg["dues.setupStatus"]).toBe("pending_owner_setup");
+  });
+
   it("custom: talk-to-sales build — no Stripe subscription, active, no trial end", async () => {
     const res = await POST(makeReq({ subdomain: "custombuild", plan: "custom" }));
     expect(res.status).toBe(200);

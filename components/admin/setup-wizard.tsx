@@ -8,18 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-// Remaining raw-lucide CHROME glyphs with no bespoke equivalent yet (see the
-// LUCIDE→BESPOKE TODO at the foot of this file). CheckCircle2 + ArrowRight were
-// migrated to the bespoke utility set (IconCheckCircle / IconArrowRight) below.
-
 import { cn } from "@/lib/utils";
 import { imageSrc } from "@/lib/image-url";
 
 // Bespoke onboarding glyphs — the wizard step rail now fronts each step with a
 // made-for-Greekstack duotone icon (temple / palette / envelope+chat / shield /
-// rocket) instead of generic lucide, matching the bespoke step illustrations.
-// IconCheckCircle / IconArrowRight close the last raw-lucide affordances on the
-// step rail, launch card, and the dashboard FirstRunCard checklist.
+// rocket) matching the bespoke step illustrations.
 import {
   IconSpark,
   IconChapter,
@@ -784,19 +778,8 @@ export function FirstRunCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LUCIDE → BESPOKE TODO (setup wizard + FirstRunCard)
-// ─────────────────────────────────────────────────────────────────────────────
-// The 5 step icons are bespoke, and the step-rail "done" check + every
-// directional arrow are now bespoke (IconCheckCircle / IconArrowRight). The
-// remaining raw lucide here have NO sensible bespoke equivalent yet and are left
-// as-is rather than force a weak match (each keeps identical size/aria):
-//   • ChevronLeft / ChevronRight — Back / Save & continue footer nav
-//   • Loader2                    — in-flight spinners (animate-spin)
-//   • Rocket                     — "Mark setup complete" / launch-my-chapter
-//   • Building2                  — "Advanced settings" card
-//   • AlertCircle                — incomplete-step warning chip
-//   • UserPlus                   — "Invite your e-board" accelerator
-//   • Database / Wand2 / Trash2  — sample-data load/clear actions
-//   • Upload / ImageIcon         — logo uploader affordances
-// Next pass: draw the bespoke counterparts (IconChevron*, IconSpinner, IconRocket,
-// IconUpload, …) in icon-base.tsx and swap these.
+// NOTE: the step icons, checkmarks, arrows, and utility glyphs above are all
+// bespoke (from @/components/brand/icons). The footer nav, spinners, launch,
+// settings, alert, user, database, wand, trash, upload, and image affordances
+// are intentionally kept as the bespoke components already in use; no further
+// icon migration is required.
