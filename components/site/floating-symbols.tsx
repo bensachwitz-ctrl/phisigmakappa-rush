@@ -102,6 +102,10 @@ export function FloatingSymbols({
       });
     }
     setSymbols(items);
+    // schoolsKey is the stable primitive form of schoolNames (arrays are
+    // referentially unstable); the effect only needs to re-run when the
+    // joined value actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [greekLettersGlyphs, fraternityLetters, schoolsKey]);
 
   if (symbols.length === 0) return null;

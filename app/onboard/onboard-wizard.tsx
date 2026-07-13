@@ -293,11 +293,15 @@ export default function OnboardWizard() {
   //   "yearly"  — Annual, $800/year, INCLUDES all rush-cycle fees (best value)
   //   "custom"  — Custom build (a "talk to our team" path → the book-a-call/Cal link)
   // Defaults to "monthly" — the headline first-month-free offer — so a founder who
-  // skips straight through still lands on the most generous, no-card option.
+  // skips straight through still lands on the most generous option.
   // ("semester" / "dues_percentage" are retained in the persisted union ONLY for
   // round-trip/back-compat safety with already-provisioned tenants; NEITHER is
-  // offered in the UI anymore — the model is monthly vs yearly, plus custom.)
+  // offered as a standalone plan anymore.)
   const [plan, setPlan] = React.useState<"monthly" | "yearly" | "semester" | "dues_percentage" | "custom">("monthly");
+  // Optional add-on: the chapter wants Greek Stack to collect dues on their behalf.
+  // This is INDEPENDENT of the base plan and requires a human setup call because
+  // each chapter's dues amount and Stripe product must be configured individually.
+  const [collectDues, setCollectDues] = React.useState(false);
 
   // Contact State
   const [rushEmail, setRushEmail] = React.useState("");
@@ -339,7 +343,7 @@ export default function OnboardWizard() {
   const [paymentMethodId, setPaymentMethodId] = React.useState<string | null>(null);
 
   const STEPS = React.useMemo(() => {
-    if (plan === "custom" || plan === "dues_percentage") {
+    if (plan === "custom") {
       return ALL_STEPS.filter((s) => s.id !== "payment");
     }
     return ALL_STEPS;
@@ -527,7 +531,7 @@ export default function OnboardWizard() {
     }
 
     if (step === "admin") {
-      if (plan === "custom" || plan === "dues_percentage") {
+      if (plan === "custom") {
         setDir(1);
         setStep("launch");
       } else {
@@ -590,7 +594,7 @@ export default function OnboardWizard() {
 
   function goPrev() {
     if (step === "launch") {
-      if (plan === "custom" || plan === "dues_percentage") {
+      if (plan === "custom") {
         setDir(-1);
         setStep("admin");
       } else {
@@ -720,6 +724,9 @@ export default function OnboardWizard() {
           template: mockupTemplate,
           // Pricing method chosen on the pricing step → persisted to the Tenant.
           plan,
+          // Optional add-on: chapter wants Greek Stack to collect dues on their behalf.
+          // Requires a human setup call because each chapter's dues amount is unique.
+          collectDues,
           // Hero copy the founder edited live on the preview (empty = keep the
           // neutral white-label defaults). Trimmed server-side too.
           heroHeadline,
@@ -894,7 +901,7 @@ export default function OnboardWizard() {
             decorative icons aria-hidden, wraps cleanly on mobile. */}
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
           {[
-            { icon: IconSecurity, text: (plan === "custom" || plan === "dues_percentage") ? "No card required" : "Secure Stripe setup" },
+            { icon: IconSecurity, text: plan === "custom" ? "No card required" : "Secure Stripe setup" },
             { icon: IconLaunch, text: "Live in under a minute" },
             { icon: IconCheckCircle, text: "Edit anything later" },
           ].map((t) => {
@@ -1466,6 +1473,8 @@ export default function OnboardWizard() {
                 <PricingStep
                   plan={plan}
                   onChange={setPlan}
+                  collectDues={collectDues}
+                  onCollectDuesChange={setCollectDues}
                   promoCode={promoCode}
                   setPromoCode={setPromoCode}
                   promoApplied={promoApplied}
@@ -1589,6 +1598,13 @@ export default function OnboardWizard() {
                       </SummaryRow>
                       <SummaryRow label="Admin">{adminEmail || "-"}</SummaryRow>
                       <SummaryRow label="Plan">{PLAN_SUMMARY[plan]}</SummaryRow>
+                      {collectDues && (
+                        <SummaryRow label="Dues">
+                          <span className="text-amber-400 font-semibold inline-flex items-center gap-1">
+                            <IconCheck className="h-3.5 w-3.5" /> Online dues collection - setup required
+                          </span>
+                        </SummaryRow>
+                      )}
                       {plan !== "custom" && paymentMethodId && (
                         <SummaryRow label="Payment">
                           <span className="text-emerald-400 font-semibold inline-flex items-center gap-1">
@@ -1608,12 +1624,10 @@ export default function OnboardWizard() {
                   <p className="flex items-center gap-1.5 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-3 py-2.5 text-xs text-emerald-100/90">
                     <IconSecurity className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
                     <span>
-                      {plan === "custom" || plan === "dues_percentage" ? (
+                      {plan === "custom" ? (
                         <>
                           No card required now - you&apos;re launching on the{" "}
-                          <span className="font-semibold text-white">
-                            {plan === "custom" ? "Custom plan" : "Dues-Share plan"}
-                          </span>.
+                          <span className="font-semibold text-white">Custom plan</span>.
                         </>
                       ) : (
                         <>
@@ -1621,6 +1635,7 @@ export default function OnboardWizard() {
                           <span className="font-semibold text-white">
                             {plan === "yearly" ? "Annual Plan ($800/year, billed today)" : "Monthly Plan (first month free, then $50/mo + $200/rush)"}
                           </span>. A receipt is on its way to your email.
+                          {collectDues && " Our team will reach out to configure your chapter's dues collection."}
                         </>
                       )}
                     </span>
@@ -1983,6 +1998,8 @@ function MockupTweakStep({
 function PricingStep({
   plan,
   onChange,
+  collectDues,
+  onCollectDuesChange,
   promoCode,
   setPromoCode,
   promoApplied,
@@ -1996,6 +2013,8 @@ function PricingStep({
 }: {
   plan: PlanId;
   onChange: (p: PlanId) => void;
+  collectDues: boolean;
+  onCollectDuesChange: (v: boolean) => void;
   promoCode: string;
   setPromoCode: (c: string) => void;
   promoApplied: boolean;
@@ -2007,17 +2026,12 @@ function PricingStep({
   appliedWaiver: boolean;
   setAppliedWaiver: (w: boolean) => void;
 }) {
-  const collectDues = plan === "dues_percentage";
   const [applyingPromo, setApplyingPromo] = React.useState(false);
   const monthlySelected = plan === "monthly" || plan === "semester";
   const yearlySelected = plan === "yearly";
 
   const handleDuesToggle = (checked: boolean) => {
-    if (checked) {
-      onChange("dues_percentage");
-    } else {
-      onChange("monthly");
-    }
+    onCollectDuesChange(checked);
   };
 
   const handleApplyPromo = async () => {

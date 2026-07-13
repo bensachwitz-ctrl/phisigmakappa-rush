@@ -6,7 +6,7 @@
 
 - A computer with `git` and `node 20+`
 - A free Vercel account ([vercel.com](https://vercel.com))
-- A free Neon Postgres account ([neon.tech](https://neon.tech)) OR Vercel Postgres add-on
+- A free Supabase account ([supabase.com](https://supabase.com))
 - *(Optional, recommended)* Resend account for email broadcasts ([resend.com](https://resend.com))
 - *(Optional, recommended)* Twilio account for SMS broadcasts + double opt-in webhook ([twilio.com](https://twilio.com))
 
@@ -29,17 +29,13 @@ npm install
 
 ## 3. Provision Postgres
 
-**Option A — Vercel Postgres (recommended):**
-1. Push your fork to GitHub.
-2. Import the repo into Vercel.
-3. Project → Storage → Create Database → Postgres → Connect.
-4. Vercel auto-injects `DATABASE_URL` and `DIRECT_URL` into your project's env vars.
+**Supabase (recommended):**
+1. Create a project at [supabase.com](https://supabase.com).
+2. Project → Database → Connection string → URI.
+3. Copy the **pooled** connection string (port `6543`) → set as `DATABASE_URL`.
+4. Copy the **direct** connection string (port `5432`) → set as both `DATABASE_URL_UNPOOLED` and `DIRECT_URL`.
 
-**Option B — Neon (free tier):**
-1. Sign up at neon.tech, create a project.
-2. Copy the connection string → set as `DATABASE_URL`.
-3. Add `?pgbouncer=true&connection_limit=1` for serverless safety.
-4. `DIRECT_URL` = same connection string without pgbouncer flags.
+> `DATABASE_URL_UNPOOLED` / `DIRECT_URL` are required because the build's `prisma db push` and multi-tenant provisioning (CREATE SCHEMA + DDL in `/api/onboard`) must run over an unpooled connection. Running DDL over the pooled URL can hang or fail.
 
 ## 4. Configure environment
 
@@ -176,7 +172,7 @@ Vercel auto-redeploys. Schema changes auto-apply via `prisma db push` in the bui
 
 ## Tearing down
 
-In Vercel: Project → Settings → Delete Project. Then in Neon (or wherever the DB lives): delete the database. The chapter's data is gone irrecoverably. Export PNMs to CSV first via `/admin → Export` if you want a record.
+In Vercel: Project → Settings → Delete Project. Then in Supabase → Project Settings → General → Delete project. The chapter's data is gone irrecoverably. Export PNMs to CSV first via `/admin → Export` if you want a record.
 
 ## Support
 

@@ -128,6 +128,8 @@ export async function POST(req: Request) {
     adminName, adminEmail, adminPassword, billingPlan,
     // Pricing method + live-edited hero copy from the upgraded wizard.
     plan: rawPlan,
+    // Optional add-on: chapter wants Greek Stack to collect dues on their behalf.
+    collectDues: rawCollectDues,
     heroHeadline, heroTagline,
     // Hero template the founder picked + previewed on the mockup step. Validated
     // through resolveTemplateId below so only a real TemplateId is ever persisted.
@@ -170,6 +172,12 @@ export async function POST(req: Request) {
   }
 
   const promoCode = typeof rawPromoCode === "string" ? rawPromoCode.trim().toUpperCase() : "";
+  // Optional add-on: chapter wants Greek Stack to collect dues on their behalf.
+  // Requires a human setup call because each chapter's dues amount is unique.
+  // Back-compat: the legacy "dues_percentage" standalone plan also means dues
+  // collection is enabled.
+  const collectDues =
+    rawCollectDues === true || rawCollectDues === "true" || String(rawPlan).trim() === "dues_percentage";
   // FULL FEE WAIVER (bensachwitzrocks, case-insensitive) — waives BOTH the
   // monthly/platform fee and the per-rush-cycle fee (100% off) via a reusable
   // Stripe coupon applied to the subscriptions created below. Recognized as a
@@ -478,7 +486,12 @@ export async function POST(req: Request) {
       // field, then the historical default. (The authoritative platform-billing
       // state lives on the central Tenant row written below.)
       "billing.plan": (billingPlan || normalizedPlan || "dues_split").trim(),
-      "dues.enabled": normalizedPlan === "dues_percentage" ? "true" : "false",
+      // Online dues collection is now an optional add-on independent of the base
+      // plan. When selected, a human setup call is required to configure the
+      // chapter's unique dues amount and Stripe product.
+      "dues.enabled": collectDues ? "true" : "false",
+      "dues.collectThroughGreekStack": collectDues ? "true" : "false",
+      "dues.setupStatus": collectDues ? "pending_owner_setup" : "not_requested",
       // Record any successfully applied promo/discount code used at signup.
       "billing.promoCode": isPromoValid ? promoCode : "",
       // 2-week payment deadline (ISO). Set-up-payment-by date from launch; after
@@ -896,8 +909,10 @@ export async function POST(req: Request) {
           <tr><td style="padding:6px 0;color:#71717a;">Admin login</td><td style="padding:6px 0;text-align:right;">${escHtml(adminEmailAddr)}</td></tr>
           <tr><td style="padding:6px 0;color:#71717a;">${billingReady ? "Your site" : "Publish at"}</td><td style="padding:6px 0;text-align:right;"><a href="${escHtml(adminUrl)}" style="color:${/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(brandHex) ? brandHex : "#1F2937"};">${escHtml(subdomain)}.${escHtml(domain)}</a></td></tr>
           ${receiptRowsHtml}
+          ${collectDues ? `<tr><td style="padding:6px 0;color:#71717a;">Dues collection</td><td style="padding:6px 0;text-align:right;font-weight:600;">Pending setup — reply to this email with your dues amount</td></tr>` : ""}
         </table>
         <p style="margin:16px 0 0;">${billingLineHtml}</p>
+        ${collectDues ? `<p style="margin:16px 0 0;"><strong>You selected online dues collection.</strong> Reply to this email with your chapter's dues amount and any payment schedule details, and Ben will configure your custom Stripe product.</p>` : ""}
         <p style="margin:16px 0 0;">Keep an eye on your inbox — <strong>Ben, the founder, will personally email you</strong> shortly to say hi and make sure you have everything you need to get going.</p>
         ${headsUpHtml}`;
       const html = renderEmail({
@@ -926,9 +941,11 @@ export async function POST(req: Request) {
               ? `Hi ${adminFirst}, your chapter ${chapterDisplay} is live.`
               : `Hi ${adminFirst}, your chapter ${chapterDisplay} is set up. Add a payment method in Admin -> Billing to publish your public site.`,
             `Plan: ${planLabel}`,
+            collectDues ? "Dues collection: PENDING — reply with your dues amount to set up your custom Stripe product." : "",
             `Admin login: ${adminEmailAddr}`,
             billingReady ? `Your site: ${adminUrl}` : `Publish your site: ${adminUrl}`,
             billingLineText,
+            collectDues ? "You selected online dues collection. Reply to this email with your chapter's dues amount and payment schedule, and Ben will configure it." : "",
             "Keep an eye on your inbox — Ben, the founder, will personally email you shortly.",
             billingReady
               ? `Heads up: please set up payment within 2 weeks of going live (by ${deadlineLabel}) from Admin -> Billing, or your site will be taken down.`
@@ -965,6 +982,9 @@ export async function POST(req: Request) {
           : normalizedPlan === "custom"
           ? "Custom"
           : "Monthly ($50/mo + $200/rush cycle, first month free)";
+      const duesLabelOwner = collectDues
+        ? "PENDING SETUP — chapter wants Greek Stack to collect dues. Reply to schedule a setup call."
+        : "Not requested";
       const igHandle = (instagramHandle || "").trim();
       const schoolIg = (schoolInstagramHandle || "").trim();
       const igDisplay =
@@ -981,6 +1001,7 @@ export async function POST(req: Request) {
           { label: "Admin name", value: (adminName || "").trim() },
           { label: "Admin email", value: adminEmailAddr },
           { label: "Plan", value: planLabelOwner },
+          { label: "Dues collection", value: duesLabelOwner },
           {
             label: "Status",
             value: billingReady

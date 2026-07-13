@@ -6,6 +6,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // credentials are present, and degrade to an honest fallback otherwise — never
 // fake the live path.
 
+vi.mock("@/lib/site-config", () => ({
+  getSiteConfig: vi.fn().mockResolvedValue({}),
+}));
+
 import { getStripe } from "@/lib/stripe";
 
 describe("Stripe getStripe() env gate", () => {
