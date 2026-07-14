@@ -23,7 +23,7 @@ export function PublicNav({ booth: boothProp, activeSections }: { booth?: boolea
           <span className="hover:opacity-90 transition-opacity">
             <Wordmark variant="compact" />
           </span>
-          <span className="inline-flex items-center rounded-full bg-phisig-red/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+          <span className="inline-flex items-center rounded-full bg-brand-red/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
             Booth mode
           </span>
         </div>

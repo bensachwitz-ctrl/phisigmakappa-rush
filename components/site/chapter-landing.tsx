@@ -208,19 +208,16 @@ export default async function ChapterLandingPage({
   }
   // Chapter identity from cfg — single source of truth for every body-copy
   // mention of the fraternity / chapter / school so a re-skinned tenant (e.g.
-  // Clemson) never shows literal "Phi Sigma Kappa / Gamma Triton / USC" strings.
+  // Clemson) never shows literal "Greek Stack Demo Chapter / Gamma Triton / USC" strings.
   const identity = chapterIdentityFromCfg(cfg);
   // Member-noun vocabulary (Brother/Sister/Member, Brotherhood/Sisterhood/…)
   // derived from chapter.orgType. A fraternity (default) yields the original
   // words verbatim; a sorority/pro org re-genders the highest-visibility copy.
   const { terms } = identity;
-  // Mirror the brand wordmark's org check (components/brand/wordmark.tsx) so the
-  // Phi-Sig-specific heritage artwork (engraved coat of arms, shield JPG) only
-  // renders for an actual Phi Sigma Kappa chapter; every other tenant gets the
-  // generic auto-tinted Crest instead of another fraternity's coat of arms.
-  const isPhiSig = identity.fraternityName.toLowerCase().includes("phi sigma kappa");
+  // The generic auto-tinted Crest is used for every chapter; no org-specific
+  // artwork is gated to any one organization.
   // webcal:// subscribe URL must point at THIS tenant's host, not a hardcoded
-  // Phi Sig reference domain. Derive from the request host (same source the
+  // Demo Chapter reference domain. Derive from the request host (same source the
   // Prisma proxy uses to resolve the tenant); fall back to a relative-less
   // origin only when headers are unavailable (build-time static eval).
   const hostHeader =
@@ -248,7 +245,7 @@ export default async function ChapterLandingPage({
   // pixel below the form is a distraction at a 30-second walk-up on bumpy 4G.
   if (booth) {
     return (
-      <div className="min-h-screen bg-phisig-mist">        <PublicNav booth />
+      <div className="min-h-screen bg-brand-mist">        <PublicNav booth />
         <section className="container py-6 sm:py-10">
           <div className="max-w-2xl mx-auto text-center mb-6 animate-slide-up">
             <div className="mb-4 flex justify-center">
@@ -371,7 +368,7 @@ export default async function ChapterLandingPage({
     template,
     componentSet: siteConfig.componentSet,
     iconFamily: siteConfig.iconFamily,
-    cfg, identity, terms, isPhiSig, booth,
+    cfg, identity, terms, booth,
     stats, eboard, VALUES, TIMELINE, FAQ, HIGHLIGHTS, RECENT, FEED,
     nextEvent, webcalUrl, termLabelShort, termLabelLong, customQuestions,
     heroEyebrow, heroLead, heroTail, heroHighlight, heroHighlightPhrases,
@@ -440,7 +437,7 @@ export default async function ChapterLandingPage({
         )}
       </div>
       <div className="relative z-[2]">
-        <ScrollProgressBar className="bg-gradient-to-r from-phisig-red via-phisig-red to-phisig-red-dark" />
+        <ScrollProgressBar className="bg-gradient-to-r from-brand-red via-brand-red to-brand-red-dark" />
         <PublicNav activeSections={validOrder} />
         {validOrder.map((sectionKey) => (
           <React.Fragment key={sectionKey}>

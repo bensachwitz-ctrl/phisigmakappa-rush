@@ -33,7 +33,7 @@ export function RecentActivity({ entries }: { entries: RecentEntry[] }) {
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h3 className="text-sm font-semibold tracking-tight flex items-center gap-2">
-            <ScrollText className="h-4 w-4 text-phisig-red" aria-hidden="true" />
+            <ScrollText className="h-4 w-4 text-brand-red" aria-hidden="true" />
             Recent chapter activity
           </h3>
           <Link
@@ -122,7 +122,7 @@ function relTime(iso: string): string {
 
 function ActionDot({ action }: { action: string }) {
   const cfg = (() => {
-    if (action.startsWith("RUSH_VOTE")) return { icon: Vote, tone: "phisig-red" as const };
+    if (action.startsWith("RUSH_VOTE")) return { icon: Vote, tone: "brand-red" as const };
     if (action.startsWith("RUSH")) return { icon: Edit3, tone: "amber" as const };
     if (action.startsWith("DUES")) return { icon: CreditCard, tone: "emerald" as const };
     if (action.startsWith("BROTHER")) return { icon: User, tone: "blue" as const };
@@ -138,7 +138,7 @@ function ActionDot({ action }: { action: string }) {
       aria-hidden="true"
       className={cn(
         "inline-flex h-5 w-5 items-center justify-center rounded-full shrink-0 mt-0.5",
-        cfg.tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red",
+        cfg.tone === "brand-red" && "bg-brand-red-soft text-brand-red",
         cfg.tone === "amber" && "bg-amber-50 text-amber-700",
         cfg.tone === "emerald" && "bg-emerald-50 text-emerald-700",
         cfg.tone === "blue" && "bg-blue-50 text-blue-700",

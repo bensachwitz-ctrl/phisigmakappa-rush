@@ -415,7 +415,7 @@ export function AddMembersWizard({
         <div className="px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
           <DialogHeader className="space-y-1">
             <DialogTitle className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-phisig-red text-white" aria-hidden="true">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-red text-white" aria-hidden="true">
                 <IconSpark className="h-4 w-4" />
               </span>
               Add {term.plur}
@@ -565,8 +565,8 @@ function Stepper({ step, reduceMotion }: { step: 1 | 2 | 3; reduceMotion: boolea
                 className={cn(
                   "inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ring-1",
                   !reduceMotion && "transition-colors",
-                  done && "bg-phisig-red text-white ring-phisig-red",
-                  active && "bg-phisig-red-soft text-phisig-red ring-phisig-red",
+                  done && "bg-brand-red text-white ring-brand-red",
+                  active && "bg-brand-red-soft text-brand-red ring-brand-red",
                   !active && !done && "bg-muted text-muted-foreground ring-border"
                 )}
               >
@@ -577,7 +577,7 @@ function Stepper({ step, reduceMotion }: { step: 1 | 2 | 3; reduceMotion: boolea
               </span>
             </div>
             {i < labels.length - 1 && (
-              <span className={cn("h-px flex-1", done ? "bg-phisig-red" : "bg-border")} />
+              <span className={cn("h-px flex-1", done ? "bg-brand-red" : "bg-border")} />
             )}
           </React.Fragment>
         );
@@ -658,16 +658,16 @@ function ChoiceCard({
       aria-pressed={active}
       className={cn(
         "group relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition lift",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40",
         active
-          ? "border-phisig-red bg-phisig-red-soft/40 shadow-sm"
-          : "border-border bg-card hover:border-phisig-red/40"
+          ? "border-brand-red bg-brand-red-soft/40 shadow-sm"
+          : "border-border bg-card hover:border-brand-red/40"
       )}
     >
       <span
         className={cn(
           "inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
-          active ? "bg-phisig-red text-white" : "bg-muted text-muted-foreground group-hover:text-phisig-red"
+          active ? "bg-brand-red text-white" : "bg-muted text-muted-foreground group-hover:text-brand-red"
         )}
       >
         <Icon className="h-4.5 w-4.5" />
@@ -677,7 +677,7 @@ function ChoiceCard({
         <p className="text-xs text-muted-foreground">{sub}</p>
       </div>
       {active && (
-        <span className="absolute top-3 right-3 text-phisig-red">
+        <span className="absolute top-3 right-3 text-brand-red">
           <CheckCircle2 className="h-4 w-4" />
         </span>
       )}
@@ -702,7 +702,7 @@ function SingleForm({
         return (
           <div key={fd.key} className={fd.half ? "" : "col-span-2"}>
             <Label htmlFor={`single-${fd.key}`} className="mb-1 inline-block">
-              {fd.label} {fd.required && <span className="text-phisig-red">*</span>}
+              {fd.label} {fd.required && <span className="text-brand-red">*</span>}
             </Label>
             <Input
               id={`single-${fd.key}`}
@@ -784,7 +784,7 @@ function BulkForm({
         <div className="rounded-xl border border-dashed border-border bg-muted/30 py-8 px-4 text-center">
           <UsersRound className="h-6 w-6 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">Paste a list above to build your import table.</p>
-          <button type="button" onClick={addBlankBulkRow} className="mt-2 text-xs text-phisig-red font-medium hover:underline">
+          <button type="button" onClick={addBlankBulkRow} className="mt-2 text-xs text-brand-red font-medium hover:underline">
             or add a row manually
           </button>
         </div>
@@ -831,7 +831,7 @@ function BulkForm({
                             aria-label={`${c.label} for row ${r._rid + 1}`}
                             className={cn(
                               "w-full rounded-md border bg-background px-2 py-1.5 text-xs outline-none",
-                              "focus:ring-2 focus:ring-phisig-red/30",
+                              "focus:ring-2 focus:ring-brand-red/30",
                               err && ci === 0 ? "border-amber-300" : "border-border"
                             )}
                           />
@@ -936,11 +936,11 @@ function ReviewStep({
 
       {/* Invite opt-in — brothers only (they get portal logins). */}
       {type === "brothers" && (
-        <label className="flex items-start gap-3 rounded-xl border border-border p-4 cursor-pointer hover:border-phisig-red/40 transition">
+        <label className="flex items-start gap-3 rounded-xl border border-border p-4 cursor-pointer hover:border-brand-red/40 transition">
           <Checkbox checked={sendInvites} onCheckedChange={(v) => setSendInvites(!!v)} className="mt-0.5" />
           <span className="text-sm">
             <span className="font-medium flex items-center gap-1.5">
-              <Mail className="h-3.5 w-3.5 text-phisig-red" /> Send a portal invite to everyone with an email
+              <Mail className="h-3.5 w-3.5 text-brand-red" /> Send a portal invite to everyone with an email
             </span>
             <span className="text-xs text-muted-foreground">
               Each one gets a one-time link to set their password and finish their profile. People without an email are added silently.

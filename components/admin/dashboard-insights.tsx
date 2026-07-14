@@ -41,7 +41,7 @@ export type DashboardInsightsProps = {
   bidsExtendedCount: number;
   acceptedCount: number;
   // Brand readiness — fraction of chapter-identity / brand / contact fields
-  // that have been customized off the reference Phi Sig USC defaults. Drives
+  // that have been customized off the reference Demo Chapter USC defaults. Drives
   // the "Finish chapter setup" CTA banner. null hides the banner (e.g. for
   // the reference deploy that doesn't need to nag itself).
   brandReadiness: { customizedFields: number; totalFields: number; isSetupComplete: boolean } | null;
@@ -127,7 +127,7 @@ export function DashboardInsights({
       sub: `${rushes.length} total this cycle`,
       icon: Users,
       href: "/admin",
-      tone: "phisig-red" as const,
+      tone: "brand-red" as const,
     },
     {
       label: "Ready to decide",
@@ -167,7 +167,7 @@ export function DashboardInsights({
       sub: nextEvent ? nextEvent.name : "No upcoming public events",
       icon: Calendar,
       href: "/admin/events",
-      tone: "phisig-red" as const,
+      tone: "brand-red" as const,
     },
   ];
 
@@ -194,12 +194,12 @@ export function DashboardInsights({
               key={kpi.label}
               href={kpi.href}
               className={cn(
-                "group relative block overflow-hidden rounded-2xl border border-phisig-red/10 bg-white/80 backdrop-blur-xl p-3.5",
+                "group relative block overflow-hidden rounded-2xl border border-brand-red/10 bg-white/80 backdrop-blur-xl p-3.5",
                 "ring-1 ring-[hsl(var(--primary)/0.05)]",
                 "shadow-[0_1px_0_0_rgba(255,255,255,0.8)_inset,0_8px_22px_-14px_rgba(11,11,12,0.16)]",
-                "transition-all duration-300 hover:-translate-y-0.5 hover:border-phisig-red/40",
+                "transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-red/40",
                 "hover:shadow-[0_1px_0_0_rgba(255,255,255,0.9)_inset,0_16px_34px_-16px_hsl(var(--primary)/0.28)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
               )}
             >
               {/* tone-colored top accent rule */}
@@ -207,7 +207,7 @@ export function DashboardInsights({
                 aria-hidden
                 className={cn(
                   "absolute inset-x-0 top-0 h-[3px] opacity-70 transition-opacity duration-300 group-hover:opacity-100",
-                  kpi.tone === "phisig-red" && "bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent",
+                  kpi.tone === "brand-red" && "bg-gradient-to-r from-brand-red/70 via-brand-red/30 to-transparent",
                   kpi.tone === "emerald" && "bg-gradient-to-r from-emerald-400/70 via-emerald-400/30 to-transparent",
                   kpi.tone === "amber" && "bg-gradient-to-r from-amber-400/70 via-amber-400/30 to-transparent",
                   kpi.tone === "muted" && "bg-gradient-to-r from-border via-border/40 to-transparent",
@@ -220,7 +220,7 @@ export function DashboardInsights({
                 <span
                   className={cn(
                     "inline-flex h-6 w-6 items-center justify-center rounded-full ring-1 transition-transform duration-300 group-hover:scale-110",
-                    kpi.tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red ring-phisig-red/15",
+                    kpi.tone === "brand-red" && "bg-brand-red-soft text-brand-red ring-brand-red/15",
                     kpi.tone === "emerald" && "bg-emerald-50 text-emerald-700 ring-emerald-200/60",
                     kpi.tone === "amber" && "bg-amber-50 text-amber-700 ring-amber-200/60",
                     kpi.tone === "muted" && "bg-secondary text-muted-foreground ring-border",
@@ -376,10 +376,10 @@ export function DashboardInsights({
 
           {/* Needs YOUR vote */}
           {needsMyVote.length > 0 && (
-            <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-20px_hsl(var(--primary)/0.4)]">
+            <Card className="border-brand-red/20 bg-gradient-to-br from-brand-red-soft/40 via-white to-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_-20px_hsl(var(--primary)/0.4)]">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-phisig-red text-white shrink-0">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-red text-white shrink-0">
                     <Vote className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <div>
@@ -394,14 +394,14 @@ export function DashboardInsights({
                     <li key={rush.id}>
                       <Link
                         href={`/admin/rushees/${rush.id}`}
-                        className="group/row flex items-center justify-between gap-2 rounded-lg border border-phisig-red/10 bg-white px-3 py-2 hover:border-phisig-red/40 hover:bg-phisig-red-soft/30 transition-colors"
+                        className="group/row flex items-center justify-between gap-2 rounded-lg border border-brand-red/10 bg-white px-3 py-2 hover:border-brand-red/40 hover:bg-brand-red-soft/30 transition-colors"
                       >
                         <span className="text-sm font-medium truncate">{rush.name}</span>
                         <span className="flex items-center gap-2 shrink-0">
                           <span className="text-[10px] text-muted-foreground tabular-nums">
                             {rush.voteCount} {rush.voteCount === 1 ? "vote" : "votes"} so far
                           </span>
-                          <ArrowRight className="h-3 w-3 text-phisig-red transition-transform duration-300 group-hover/row:translate-x-0.5" aria-hidden="true" />
+                          <ArrowRight className="h-3 w-3 text-brand-red transition-transform duration-300 group-hover/row:translate-x-0.5" aria-hidden="true" />
                         </span>
                       </Link>
                     </li>
@@ -418,27 +418,27 @@ export function DashboardInsights({
         <span className="text-muted-foreground font-medium">Jump to:</span>
         <Link
           href="/admin/brothers"
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <Users className="h-3 w-3" aria-hidden="true" /> Brothers ({totalBrothers})
         </Link>
         <Link
           href="/admin/events"
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <Calendar className="h-3 w-3" aria-hidden="true" /> Events ({upcomingEvents.length} upcoming)
         </Link>
         <a
           href="/api/admin/export"
           download
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <Download className="h-3 w-3" aria-hidden="true" /> PNM roster CSV
         </a>
         <a
           href="/api/admin/export/brothers"
           download
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <Download className="h-3 w-3" aria-hidden="true" /> Brothers CSV
         </a>
@@ -446,13 +446,13 @@ export function DashboardInsights({
           href="/api/admin/digest"
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <FileText className="h-3 w-3" aria-hidden="true" /> Weekly digest (JSON)
         </a>
         <Link
           href="/admin/audit"
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 hover:bg-secondary hover:border-brand-red/40 transition-colors"
         >
           <ScrollText className="h-3 w-3" aria-hidden="true" /> Audit log
         </Link>

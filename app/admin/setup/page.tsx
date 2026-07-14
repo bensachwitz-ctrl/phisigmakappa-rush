@@ -51,7 +51,7 @@ export default async function SetupPage() {
       </div>
 
       <div className="mb-8">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
           <IconSpark className="h-3 w-3" aria-hidden="true" /> Chapter setup
         </span>
         <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">

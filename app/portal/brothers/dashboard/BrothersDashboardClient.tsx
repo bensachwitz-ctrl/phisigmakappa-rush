@@ -572,13 +572,13 @@ export default function BrothersDashboardClient({
 
   // DEAD-CONTROL FIX (GATE-3 FIX 2): the Quick Admin Console + every other shortcut
   // that LINKS OUT to an /admin/* page must render ONLY for a viewer who actually
-  // holds admin access. A /portal/brothers session carries the `phisig_portal`
-  // cookie, NOT `phisig_admin`; a portal-only OFFICER (isOfficer=true, isAdmin=false)
+  // holds admin access. A /portal/brothers session carries the `greekstack_portal`
+  // cookie, NOT `greekstack_admin`; a portal-only OFFICER (isOfficer=true, isAdmin=false)
   // therefore CANNOT reach /admin/* — every one of those buttons just bounced them
   // to /admin/login. We do NOT bridge a portal officer up to admin (that would
   // weaken tenant/role isolation), so the safe default is to HIDE the dead /admin/*
   // controls for anyone who isn't a real admin. Gate on `isAdmin` (the real
-  // `phisig_admin` capability passed from the server), not officer position.
+  // `greekstack_admin` capability passed from the server), not officer position.
   const canUseAdminLinks = isAdmin;
 
   // DUES VISIBILITY: the Dues card + tab only belong on a member's view when the
@@ -1293,7 +1293,7 @@ export default function BrothersDashboardClient({
               {/* Good-standing widget — your engagement score at a glance */}
               {standing && <StandingWidget standing={standing} memberName={brother.name} />}
 
-              {/* Quick Admin Console — ONLY for a real admin (phisig_admin). A
+              {/* Quick Admin Console — ONLY for a real admin (greekstack_admin). A
                   portal-only officer can't reach /admin/*, so these shortcuts
                   would be dead for them; hide rather than dangle. */}
               {canUseAdminLinks && (

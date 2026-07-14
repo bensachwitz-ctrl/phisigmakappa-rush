@@ -247,7 +247,7 @@ export function AcademicClient({
 
                   <div className="bg-secondary/40 rounded-xl p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-phisig-red shrink-0" />
+                      <BookOpen className="h-4 w-4 text-brand-red shrink-0" />
                       <div>
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Study Hours</p>
                         <p className="text-lg font-bold">{b.studyHours} hrs</p>

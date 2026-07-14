@@ -204,9 +204,9 @@ export function RiskClient({
               without needing the rushPipeline-gated /admin/rushees page. */}
           <Link
             href="/admin/risk/sober-drivers"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-brand-red/40 transition-colors"
           >
-            <Car className="h-4 w-4 text-phisig-red" /> Sober Driver Schedule
+            <Car className="h-4 w-4 text-brand-red" /> Sober Driver Schedule
           </Link>
           {!canWrite && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -306,7 +306,7 @@ export function RiskClient({
       ) : (
         <div className="space-y-3">
           {filtered.map((item) => (
-            <Card key={item.id} className="lift border border-border/80 hover:border-phisig-red/20 transition">
+            <Card key={item.id} className="lift border border-border/80 hover:border-brand-red/20 transition">
               <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -501,7 +501,7 @@ export function RiskClient({
               Close
             </Button>
             {canWrite && selectedIncident && !loadingDetail && (
-              <Button onClick={saveTriage} disabled={savingTriage} className="bg-phisig-red text-white hover:bg-phisig-red-dark">
+              <Button onClick={saveTriage} disabled={savingTriage} className="bg-brand-red text-white hover:bg-brand-red-dark">
                 {savingTriage && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
                 Save Changes
               </Button>

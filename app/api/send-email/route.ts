@@ -31,7 +31,7 @@ function escHtml(s: string): string {
 /**
  * Build the branded rush-blast HTML for one recipient. The masthead + (no CTA
  * here) chrome render in THIS chapter's brand color via renderEmail — the old
- * template hardcoded Phi Sig cardinal (#C8102E). `greeting` personalizes the
+ * template hardcoded Demo Chapter cardinal (#C8102E). `greeting` personalizes the
  * lead line ("Hey Alex,"). Body is admin-typed plain text → escaped + <br/>.
  */
 function blastHtml(opts: {

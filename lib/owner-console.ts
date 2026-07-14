@@ -18,7 +18,7 @@
 //   own AuditLog — visible on that chapter's /admin/audit timeline.
 //
 // SECURITY — every export re-checks `isSuperAdmin()` (the existing gs_superadmin
-// gate from lib/superadmin.ts). A chapter admin's `phisig_admin` cookie can
+// gate from lib/superadmin.ts). A chapter admin's `greekstack_admin` cookie can
 // NEVER satisfy it (separate cookie + separate secret), so a chapter e-board can
 // never reach another chapter's roster through here. This mirrors the gate every
 // /api/platform route already uses — it is ADDITIVE, changing none of it.

@@ -252,12 +252,12 @@ export function CommandPalette({
                       onClick={() => execute(c)}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
-                        isActive ? "bg-phisig-red-soft text-foreground" : "hover:bg-secondary"
+                        isActive ? "bg-brand-red-soft text-foreground" : "hover:bg-secondary"
                       )}
                     >
-                      <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-phisig-red" : "text-muted-foreground")} aria-hidden="true" />
+                      <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-brand-red" : "text-muted-foreground")} aria-hidden="true" />
                       <span className="flex-1 truncate">{c.label}</span>
-                      {isActive && <IconArrowRight className="h-3.5 w-3.5 text-phisig-red shrink-0" aria-hidden="true" />}
+                      {isActive && <IconArrowRight className="h-3.5 w-3.5 text-brand-red shrink-0" aria-hidden="true" />}
                     </button>
                   );
                 })}

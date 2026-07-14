@@ -60,7 +60,7 @@ export function AdminShell({
   }
 
   return (
-    <div className="relative min-h-screen bg-phisig-mist">
+    <div className="relative min-h-screen bg-brand-mist">
       {/* Branded ambient backdrop — two soft, fixed brand-tinted radial washes
           (top-left + a warm band beneath the nav) lift the flat mist canvas into
           a quietly premium surface without ever competing with content. Purely

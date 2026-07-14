@@ -106,7 +106,7 @@ function ColorEditable({
   // mid-type doesn't reset the swatch to black.
   const swatchValue = /^#([0-9a-fA-F]{6})$/.test(value.trim()) ? value.trim() : fallback;
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 transition-colors focus-within:ring-2 focus-within:ring-phisig-red/40 hover:border-phisig-red/30">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 transition-colors focus-within:ring-2 focus-within:ring-brand-red/40 hover:border-brand-red/30">
       <input
         type="color"
         value={swatchValue}
@@ -144,10 +144,10 @@ function AxisChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-[44px] flex-col items-start justify-center rounded-lg border px-3 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+        "inline-flex min-h-[44px] flex-col items-start justify-center rounded-lg border px-3 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50",
         active
-          ? "border-phisig-red bg-phisig-red-soft/50 text-phisig-red"
-          : "border-border bg-background text-foreground hover:border-phisig-red/40",
+          ? "border-brand-red bg-brand-red-soft/50 text-brand-red"
+          : "border-border bg-background text-foreground hover:border-brand-red/40",
       )}
     >
       <span className="text-xs font-semibold leading-tight">{label}</span>
@@ -169,14 +169,14 @@ function IconFamilyChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "flex min-h-[44px] items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+        "flex min-h-[44px] items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50",
         active
-          ? "border-phisig-red bg-phisig-red-soft/40"
-          : "border-border bg-background hover:border-phisig-red/40",
+          ? "border-brand-red bg-brand-red-soft/40"
+          : "border-border bg-background hover:border-brand-red/40",
       )}
     >
       <span className="text-xs font-semibold">{label}</span>
-      <span className="flex items-center gap-1.5 text-phisig-red">
+      <span className="flex items-center gap-1.5 text-brand-red">
         {ICON_PREVIEW.map((n) => (
           <SiteIcon key={n} family={family} name={n} className="h-4 w-4" />
         ))}
@@ -803,7 +803,7 @@ export function WebsiteBuilderClient({
         >
           {/* #6 — read the CANONICAL chapter.* keys (with legacy unprefixed
               fallback) so each tenant previews THEIR identity instead of always the
-              Phi Sig / USC reference chapter. */}
+              Demo Chapter / USC reference chapter. */}
           <EditableLivePreview
             fraternityName={fraternityName}
             onFraternityName={setFraternityName}
@@ -850,7 +850,7 @@ export function WebsiteBuilderClient({
               className={cn(
                 "inline-flex min-h-[40px] items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-card text-phisig-red shadow-sm ring-1 ring-phisig-red/15"
+                  ? "bg-card text-brand-red shadow-sm ring-1 ring-brand-red/15"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -885,16 +885,16 @@ export function WebsiteBuilderClient({
                       aria-pressed={selected}
                       onClick={() => selectPreset(p)}
                       className={cn(
-                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
-                        selected ? "border-phisig-red shadow-md" : "border-border hover:border-phisig-red/40 hover:shadow-sm",
+                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50",
+                        selected ? "border-brand-red shadow-md" : "border-border hover:border-brand-red/40 hover:shadow-sm",
                       )}
                     >
                       {selected && (
-                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white shadow">
+                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-red text-white shadow">
                           <Check className="h-3.5 w-3.5" />
                         </span>
                       )}
-                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-phisig-red-soft to-phisig-mist">
+                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-brand-red-soft to-brand-mist">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={p.thumb} alt={`${p.name} preview`} className="h-full w-full object-cover" loading="lazy" />
                       </span>
@@ -1022,20 +1022,20 @@ export function WebsiteBuilderClient({
                       aria-pressed={selected}
                       onClick={() => setTemplate(tpl.id)}
                       className={cn(
-                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50",
+                        "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50",
                         selected
-                          ? "border-phisig-red shadow-md"
-                          : "border-border hover:border-phisig-red/40 hover:shadow-sm",
+                          ? "border-brand-red shadow-md"
+                          : "border-border hover:border-brand-red/40 hover:shadow-sm",
                       )}
                     >
                       {selected && (
-                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white shadow">
+                        <span className="absolute right-2.5 top-2.5 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-red text-white shadow">
                           <Check className="h-3.5 w-3.5" />
                         </span>
                       )}
                       {/* Mockup thumbnail (static SVG in /public/templates). The
                           <img> degrades to the brand block if the asset is missing. */}
-                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-phisig-red-soft to-phisig-mist">
+                      <span className="relative block aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-brand-red-soft to-brand-mist">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={tpl.thumb}
@@ -1176,9 +1176,9 @@ export function WebsiteBuilderClient({
                       onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
                       className={cn(
                         "transition-all duration-200 border-l-4",
-                        sect.visible ? "border-l-phisig-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50",
+                        sect.visible ? "border-l-brand-red border-border" : "border-l-slate-300 border-border opacity-65 bg-slate-50/50",
                         dragIdx === index && "opacity-50",
-                        overIdx === index && dragIdx !== index && "ring-2 ring-phisig-red/40",
+                        overIdx === index && dragIdx !== index && "ring-2 ring-brand-red/40",
                       )}
                     >
                       <CardContent className="p-4 flex items-center justify-between gap-4">
@@ -1232,7 +1232,7 @@ export function WebsiteBuilderClient({
                                 id={`visible-${sect.id}`}
                                 checked={sect.visible}
                                 onCheckedChange={() => toggleVisibility(sect.id)}
-                                className="h-4 w-4 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
+                                className="h-4 w-4 border-slate-300 data-[state=checked]:bg-brand-red data-[state=checked]:border-brand-red"
                               />
                               <label htmlFor={`visible-${sect.id}`} className="text-xs text-slate-600 font-medium cursor-pointer select-none">
                                 Show
@@ -1300,12 +1300,12 @@ export function WebsiteBuilderClient({
                       value={tweakPrompt}
                       onChange={(e) => setTweakPrompt(e.target.value)}
                       placeholder="e.g., bold dark banner with bright blue highlights and a split left layout"
-                      className="w-full h-24 rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                      className="w-full h-24 rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/40"
                     />
                     <Button
                       onClick={applyStylePreset}
                       disabled={!tweakPrompt.trim()}
-                      className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white gap-1.5"
+                      className="w-full bg-brand-red hover:bg-brand-red-dark text-white gap-1.5"
                     >
                       <Sparkles className="h-4 w-4" />
                       Apply style preset
@@ -1322,7 +1322,7 @@ export function WebsiteBuilderClient({
                         <select
                           value={orientation}
                           onChange={(e: any) => setOrientation(e.target.value)}
-                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/40"
                         >
                           <option value="centered">Centered</option>
                           <option value="split-left">Split Left</option>
@@ -1337,7 +1337,7 @@ export function WebsiteBuilderClient({
                           // Coerce through resolveTemplateId so the staged value is
                           // ALWAYS a real TemplateId the renderer supports.
                           onChange={(e) => setTemplate(resolveTemplateId(e.target.value))}
-                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                          className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/40"
                         >
                           {/* Options sourced from TEMPLATE_META — the SAME single
                               source of truth the public renderer reads, so the
@@ -1422,7 +1422,7 @@ export function WebsiteBuilderClient({
               {livePreview}
             </div>
           )}
-          <Card className="bg-gradient-to-br from-white to-phisig-mist border-phisig-red/10 shadow-md">
+          <Card className="bg-gradient-to-br from-white to-brand-mist border-brand-red/10 shadow-md">
             <CardContent className="p-5 space-y-4">
               <h3 className="font-bold text-base">Actions</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
@@ -1431,7 +1431,7 @@ export function WebsiteBuilderClient({
                 cached safely per subdomain.
               </p>
 
-              <Button onClick={() => handleSave()} disabled={busy} className="w-full bg-phisig-red hover:bg-phisig-red-dark text-white font-medium shadow-sm">
+              <Button onClick={() => handleSave()} disabled={busy} className="w-full bg-brand-red hover:bg-brand-red-dark text-white font-medium shadow-sm">
                 {busy ? (
                   <><RefreshCw className="h-4 w-4 animate-spin mr-2" /> Saving...</>
                 ) : (
@@ -1524,14 +1524,14 @@ export function WebsiteBuilderClient({
                   <textarea
                     value={editFields[field.key] || ""}
                     onChange={(e) => setEditFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    className="w-full h-24 rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                    className="w-full h-24 rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/40"
                   />
                 ) : (
                   <input
                     type="text"
                     value={editFields[field.key] || ""}
                     onChange={(e) => setEditFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-phisig-red/40"
+                    className="w-full rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/40"
                   />
                 )}
               </div>
@@ -1541,7 +1541,7 @@ export function WebsiteBuilderClient({
             <Button variant="outline" onClick={() => setEditingSectionId(null)} disabled={savingSection}>
               Cancel
             </Button>
-            <Button onClick={handleSaveSectionContent} disabled={savingSection} className="gap-1.5 bg-phisig-red hover:bg-phisig-red-dark text-white">
+            <Button onClick={handleSaveSectionContent} disabled={savingSection} className="gap-1.5 bg-brand-red hover:bg-brand-red-dark text-white">
               {savingSection ? (
                 <><RefreshCw className="h-4 w-4 animate-spin" /> Saving...</>
               ) : (

@@ -82,7 +82,7 @@ export default async function DuesHubPage() {
       <div className="mb-8 flex items-start gap-4">
         <IconChip icon={Banknote} tone="brand" size="lg" className="hidden sm:inline-flex" />
         <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
             <Banknote className="h-3 w-3" /> Treasurer
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Dues</h1>
@@ -98,7 +98,7 @@ export default async function DuesHubPage() {
         {CARDS.map((card) => (
           <Card
             key={card.href}
-            className="lift flex flex-col transition-all hover:border-phisig-red/40 hover:shadow-md"
+            className="lift flex flex-col transition-all hover:border-brand-red/40 hover:shadow-md"
           >
             <CardHeader>
               <IconChip icon={card.icon} tone="brand" size="md" className="mb-2" />

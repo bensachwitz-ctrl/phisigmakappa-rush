@@ -47,7 +47,7 @@ export function buildSectionMap(
   hero: React.ReactNode,
 ): Record<string, React.ReactNode> {
   const {
-    cfg, identity, terms, isPhiSig,
+    cfg, identity, terms,
     stats, eboard, VALUES, TIMELINE, FAQ, HIGHLIGHTS, RECENT, FEED,
     nextEvent, webcalUrl, termLabelShort, termLabelLong, customQuestions,
     template, componentSet, iconFamily,
@@ -81,7 +81,7 @@ export function buildSectionMap(
     stats: (
       <>
         {cfg["show.statsStrip"] !== "false" && (
-      <section className="relative bg-gradient-to-br from-phisig-red via-phisig-red to-phisig-red-dark text-white overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-red via-brand-red to-brand-red-dark text-white overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
         {/* Soft top sheen for depth against the hero above */}
         <div className="absolute inset-x-0 top-0 h-px bg-white/20" aria-hidden />
@@ -146,7 +146,7 @@ export function buildSectionMap(
         {cfg["show.values"] !== "false" && (
       <section className="container section-y">
         <Reveal3D className="max-w-2xl mb-10">
-          <span className="inline-flex items-center rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+          <span className="inline-flex items-center rounded-full border border-brand-red/20 bg-brand-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">
             Three principles
           </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">
@@ -164,11 +164,11 @@ export function buildSectionMap(
                   set so its clip never fights the card corners. */}
               <Tilt3DCard max={8} glareColor={BRAND_TILT_GLOW} className={cn("h-full", cardWrapRadius)}>
                 <div className={cn(set.card, "h-full p-6 sm:p-7 relative overflow-hidden group transition-colors")}>
-                  <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-phisig-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
+                  <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-brand-red-soft/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" aria-hidden />
                   <IconChip icon={chipIconFor(v.icon)} tone="brand" size="lg" className="relative transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
                   <h3 className="relative mt-5 text-xl font-semibold tracking-tight">{v.title}</h3>
                   <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{v.body}</p>
-                  <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-phisig-red opacity-[0.08]" aria-hidden="true" />
+                  <Crest className="absolute -bottom-4 -right-4 h-20 w-20 text-brand-red opacity-[0.08]" aria-hidden="true" />
                 </div>
               </Tilt3DCard>
             </Reveal3DItem>
@@ -180,7 +180,7 @@ export function buildSectionMap(
     ),
     register: (
       <>
-        <section id="register" className="relative bg-phisig-mist border-y border-border scroll-mt-20 overflow-hidden">
+        <section id="register" className="relative bg-brand-mist border-y border-border scroll-mt-20 overflow-hidden">
         {/* Themed aurora + grid wash behind the form — brand-toned, reduced-motion
             safe via the foundation component. Sits at the section's base layer;
             the form card renders above it untouched. */}
@@ -192,7 +192,7 @@ export function buildSectionMap(
         <div className="relative container section-y">
           <Reveal3D className="max-w-xl mx-auto text-center mb-8">
             <IconChip icon={IconSparkle} tone="brand" size="md" className="mx-auto mb-4" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-phisig-red">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-red">
               Get on the list
             </span>
             <h2 className="mt-3 text-3xl sm:text-5xl font-semibold tracking-tight">
@@ -207,22 +207,22 @@ export function buildSectionMap(
                 so the conversion section feels considered + premium. */}
             <ul className="mt-5 inline-flex flex-wrap justify-center items-center gap-2 text-xs text-muted-foreground">
               <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-brand-red" />
                 Goes straight to the rush chair
               </li>
               <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-brand-red" />
                 Up to 8 texts per cycle, opt out anytime
               </li>
               <li className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconCheckCircleDuo className="h-3.5 w-3.5 text-phisig-red" />
+                <IconCheckCircleDuo className="h-3.5 w-3.5 text-brand-red" />
                 Never sold or shared
               </li>
             </ul>
             <p className="mt-4 text-[11px] text-muted-foreground">
               18+, or 17 with a parent's permission.{" "}
-              <Link href="/privacy" className="text-phisig-red hover:underline">Privacy</Link>{" "}·{" "}
-              <Link href="/parents" className="text-phisig-red hover:underline">For parents</Link>.
+              <Link href="/privacy" className="text-brand-red hover:underline">Privacy</Link>{" "}·{" "}
+              <Link href="/parents" className="text-brand-red hover:underline">For parents</Link>.
             </p>
           </Reveal3D>
           {/* The conversion form itself is left exactly as shipped — no motion
@@ -247,7 +247,7 @@ export function buildSectionMap(
             Philanthropy events, {terms.collective.toLowerCase()} before finals, the chapter formal
             (FIPG-compliant, third-party vendor, sober transportation), and dry
             tailgates on game day. The {identity.greekLetters} chapter shows up - all year.{" "}
-            <span className="text-phisig-red font-medium">{identity.tagline}</span>
+            <span className="text-brand-red font-medium">{identity.tagline}</span>
           </p>
         </Reveal3D>
         <InstagramFeed
@@ -262,10 +262,10 @@ export function buildSectionMap(
           {RECENT.map((r) => (
             <Reveal3DItem key={r.title} className="h-full">
               <Tilt3DCard max={7} glareColor={BRAND_TILT_GLOW} className="h-full rounded-2xl">
-                <div className="h-full rounded-2xl border border-border bg-card p-5 transition-colors hover:border-phisig-red/30">
+                <div className="h-full rounded-2xl border border-border bg-card p-5 transition-colors hover:border-brand-red/30">
                   <div className="flex items-center gap-2.5">
                     <IconChip icon={chipIconFor(r.icon)} tone="brand" size="sm" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">{r.tag}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">{r.tag}</span>
                   </div>
                   <p className="mt-3 text-sm font-medium leading-snug">{r.title}</p>
                 </div>
@@ -279,7 +279,7 @@ export function buildSectionMap(
             href={cleanUrl(cfg["contact.instagramUrl"])}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-brand-red hover:underline"
           >
             <Instagram className="h-4 w-4" aria-hidden="true" /> Follow {cfg["contact.instagramHandle"]} for the latest
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
@@ -311,25 +311,25 @@ export function buildSectionMap(
               <li key={t.week} className="relative">
                 <Reveal3D delay={i * 0.09} className="h-full">
                   <Tilt3DCard max={7} glareColor={BRAND_TILT_GLOW} className="h-full rounded-2xl">
-                    <div className="relative h-full rounded-2xl border border-border bg-card p-6 transition-colors hover:border-phisig-red/30">
+                    <div className="relative h-full rounded-2xl border border-border bg-card p-6 transition-colors hover:border-brand-red/30">
                       <span className="inline-flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-[11px] font-bold text-white shadow-sm shadow-phisig-red/30">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-[11px] font-bold text-white shadow-sm shadow-brand-red/30">
                           {i + 1}
                         </span>
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
                           {t.week}
                         </span>
                       </span>
                       <h3 className="mt-3 text-base font-semibold">{t.title}</h3>
                       <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{t.body}</p>
-                      <span className="absolute top-5 right-5 text-2xl font-semibold text-phisig-red opacity-15">
+                      <span className="absolute top-5 right-5 text-2xl font-semibold text-brand-red opacity-15">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                     </div>
                   </Tilt3DCard>
                 </Reveal3D>
                 {i < TIMELINE.length - 1 && (
-                  <span className="hidden md:block absolute top-1/2 -right-2.5 h-0.5 w-5 bg-phisig-red/30 z-10" aria-hidden />
+                  <span className="hidden md:block absolute top-1/2 -right-2.5 h-0.5 w-5 bg-brand-red/30 z-10" aria-hidden />
                 )}
               </li>
             ))}
@@ -367,14 +367,14 @@ export function buildSectionMap(
               <div className="flex flex-wrap gap-2">
                 <a
                   href={webcalUrl}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/30 bg-white px-3 py-1.5 text-xs font-medium text-brand-red hover:bg-brand-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Subscribe in Apple Calendar
                 </a>
                 <a
                   href="/api/events.ics"
                   download="chapter-rush.ics"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white px-3 py-1.5 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/30 bg-white px-3 py-1.5 text-xs font-medium text-brand-red hover:bg-brand-red-soft transition-colors"
                 >
                   <Calendar className="h-3 w-3" aria-hidden="true" /> Download .ics
                 </a>
@@ -398,17 +398,17 @@ export function buildSectionMap(
             flips show.testimonial on without adding a quote shows nothing rather than
             a canned/invented one. No fabricated author or rating is rendered. */}
         {cfg["show.testimonial"] !== "false" && (cfg["testimonial.quote"] || "").trim() !== "" && (
-      <section className="border-t border-border bg-gradient-to-b from-phisig-red-soft/40 via-background to-background">
+      <section className="border-t border-border bg-gradient-to-b from-brand-red-soft/40 via-background to-background">
         <div className="container section-y">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <Reveal3D>
-              <Quote className="h-8 w-8 text-phisig-red mb-3" aria-hidden="true" />
+              <Quote className="h-8 w-8 text-brand-red mb-3" aria-hidden="true" />
               <blockquote className="text-2xl sm:text-3xl font-semibold tracking-tight leading-snug">
                 &ldquo;{cfg["testimonial.quote"]}&rdquo;
               </blockquote>
               {(cfg["testimonial.author"] || "").trim() !== "" && (
               <div className="mt-5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-phisig-red text-white flex items-center justify-center font-semibold text-sm">
+                <div className="h-10 w-10 rounded-full bg-brand-red text-white flex items-center justify-center font-semibold text-sm">
                   {cfg["testimonial.author"]
                     .split(/\s+/)
                     .map((s) => s[0])
@@ -466,14 +466,14 @@ export function buildSectionMap(
                 <ul className="mt-6 space-y-2.5 text-sm">
                   {bullets.map((p) => (
                     <li key={p} className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-phisig-red shrink-0 mt-0.5" aria-hidden="true" />
+                      <CheckCircle2 className="h-4 w-4 text-brand-red shrink-0 mt-0.5" aria-hidden="true" />
                       <span>{p}</span>
                     </li>
                   ))}
                 </ul>
               ) : null;
             })()}
-            <p className="mt-6 text-sm text-phisig-red font-medium">
+            <p className="mt-6 text-sm text-brand-red font-medium">
               {identity.tagline}
             </p>
           </Reveal3D>
@@ -485,7 +485,7 @@ export function buildSectionMap(
                 href={/^https?:\/\//.test(cfg["spotlight.slug"]) ? cfg["spotlight.slug"] : `https://www.instagram.com/p/${cfg["spotlight.slug"]}/`}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl shadow-phisig-red/10 block"
+                className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-border bg-secondary shadow-xl shadow-brand-red/10 block"
               >
                 <SmartImage
                   src={imageSrc(cfg["spotlight.slug"], { w: 640, h: 800, crop: "fill", gravity: "auto" })}
@@ -499,7 +499,7 @@ export function buildSectionMap(
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 pointer-events-none" />
                 <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-brand-red shadow-sm">
                     <Star className="h-3 w-3" aria-hidden="true" />{cfg["spotlight.month"] ? <>{cfg["spotlight.month"]} · </> : null}{terms.member} of the Month
                   </span>
                   <p className="mt-2 text-white text-xl font-semibold tracking-tight">
@@ -511,7 +511,7 @@ export function buildSectionMap(
                 </div>
               </a>
             </Tilt3DCard>
-            <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/30 rotate-[-6deg] pointer-events-none z-20">
+            <div className="absolute -top-3 -left-3 hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-red text-white shadow-lg shadow-brand-red/30 rotate-[-6deg] pointer-events-none z-20">
               <Star className="h-6 w-6" aria-hidden="true" />
             </div>
           </div>
@@ -543,7 +543,7 @@ export function buildSectionMap(
             {eboard.map((m) => (
               <Reveal3DItem key={m.name} className="h-full">
                 <Tilt3DCard max={9} glareColor={BRAND_TILT_GLOW} className="h-full rounded-2xl">
-                  <div className="group relative h-full rounded-2xl border border-border bg-card p-5 overflow-hidden transition-colors hover:border-phisig-red/30">
+                  <div className="group relative h-full rounded-2xl border border-border bg-card p-5 overflow-hidden transition-colors hover:border-brand-red/30">
                     <AvatarImage
                       src={m.headshotUrl ? avatarSrc(m.headshotUrl, 112) : ""}
                       alt={`${m.name}, ${m.role}`}
@@ -551,16 +551,16 @@ export function buildSectionMap(
                       width={56}
                       height={56}
                       loading="lazy"
-                      className="h-14 w-14 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card shadow-md shadow-phisig-red/20"
-                      fallbackClassName="h-14 w-14 rounded-full text-base shadow-md shadow-phisig-red/20 ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-card"
+                      className="h-14 w-14 rounded-full object-cover ring-2 ring-brand-red/20 ring-offset-2 ring-offset-card shadow-md shadow-brand-red/20"
+                      fallbackClassName="h-14 w-14 rounded-full text-base shadow-md shadow-brand-red/20 ring-2 ring-brand-red/20 ring-offset-2 ring-offset-card"
                     />
                     <div className="mt-4">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-phisig-red font-semibold">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-brand-red font-semibold">
                         {m.role}
                       </p>
                       <p className="mt-0.5 text-sm font-semibold">{m.name}</p>
                     </div>
-                    <Crest className="absolute -bottom-3 -right-3 h-16 w-16 text-phisig-red opacity-10" aria-hidden="true" />
+                    <Crest className="absolute -bottom-3 -right-3 h-16 w-16 text-brand-red opacity-10" aria-hidden="true" />
                   </div>
                 </Tilt3DCard>
               </Reveal3DItem>
@@ -587,10 +587,10 @@ export function buildSectionMap(
               Parents and prospective members:{" "}
               <span className="font-medium text-foreground">{cfg["contact.advisorName"]}</span>
               {cfg["contact.advisorTitle"] && (<>, {cfg["contact.advisorTitle"]}</>)} - {" "}
-              <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline font-medium">
+              <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-brand-red hover:underline font-medium">
                 {cfg["contact.advisorEmail"]}
               </a>{cfg["contact.rushPhone"] && (
-                <>{" "}· <a href={cleanTel(cfg["contact.rushPhone"])} className="text-phisig-red hover:underline font-medium">{cfg["contact.rushPhone"]}</a></>
+                <>{" "}· <a href={cleanTel(cfg["contact.rushPhone"])} className="text-brand-red hover:underline font-medium">{cfg["contact.rushPhone"]}</a></>
               )}.
             </p>
 
@@ -604,35 +604,20 @@ export function buildSectionMap(
                 `${terms.collective} that lasts well beyond graduation`,
               ].filter(Boolean).map((p) => (
                 <li key={p} className="flex items-start gap-3 text-sm">
-                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-red shrink-0" />
                   <span>{p}</span>
                 </li>
               ))}
             </ul>
 
-            {/* Heritage block — the original Phi Sigma Kappa coat of arms in
-                gold-and-red engraving alongside three cardinal-red Greek
-                glyphs. Both pulled from the supplied chapter brand kit. Sits
-                here in the About section so a parent or rushee scrolling for
-                "is this a real chapter" answer gets the visual confirmation
-                of national heritage in one glance. */}
-            <div className="mt-7 rounded-xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/30 via-white to-phisig-red-soft/10 p-4 flex items-center gap-4">
-              {isPhiSig ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src="/brand/coat-of-arms-vintage.jpg"
-                  alt={`Original ${identity.fraternityName} coat of arms - engraved ${identity.foundingYear}`}
-                  width={84}
-                  height={104}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-[84px] w-auto rounded-md ring-1 ring-phisig-red/10 shadow-sm shrink-0"
-                />
-              ) : (
-                <Crest className="h-[104px] w-auto text-phisig-red shrink-0" aria-hidden="true" />
-              )}
+            {/* Heritage block — the chapter's auto-tinted Crest alongside the
+                founding year. Sits here in the About section so a parent or
+                rushee scrolling for "is this a real chapter" answer gets the
+                visual confirmation of chapter identity in one glance. */}
+            <div className="mt-7 rounded-xl border border-brand-red/15 bg-gradient-to-br from-brand-red-soft/30 via-white to-brand-red-soft/10 p-4 flex items-center gap-4">
+              <Crest className="h-[104px] w-auto text-brand-red shrink-0" aria-hidden="true" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-phisig-red font-semibold">Heritage</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-brand-red font-semibold">Heritage</p>
                 {/* Headline heritage claim is GATED: only assert "one of the
                     oldest" when the org is genuinely old (founded before 1950)
                     OR the chapter supplied its own line. Otherwise lead with a
@@ -666,17 +651,17 @@ export function buildSectionMap(
               <ContactPill icon={IconInstagramDuo} label={cfg["contact.instagramHandle"]} sub="Daily chapter life" />
             </div>
 
-            <div className="mt-8 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4">
+            <div className="mt-8 rounded-xl border border-brand-red/20 bg-brand-red-soft/40 p-4">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="h-4 w-4 text-phisig-red mt-0.5 shrink-0" aria-hidden="true" />
+                <ShieldCheck className="h-4 w-4 text-brand-red mt-0.5 shrink-0" aria-hidden="true" />
                 <div className="text-xs leading-relaxed">
                   <p className="font-semibold text-foreground">Zero-tolerance anti-hazing policy.</p>
                   <p className="mt-1 text-muted-foreground">
                     {cfg["antiHazing.body"]}{" "}
                     Concerns can be reported anonymously to{" "}
                     <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
-                    <a className="text-phisig-red hover:underline" href={cleanMailto(cfg["contact.advisorEmail"])}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
-                    <a className="text-phisig-red hover:underline font-medium" href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener">{cfg["antiHazing.hotline"]}</a>.
+                    <a className="text-brand-red hover:underline" href={cleanMailto(cfg["contact.advisorEmail"])}>{cfg["contact.advisorEmail"]}</a>, or via the national anti-hazing hotline{" "}
+                    <a className="text-brand-red hover:underline font-medium" href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener">{cfg["antiHazing.hotline"]}</a>.
                   </p>
                 </div>
               </div>
@@ -707,7 +692,7 @@ export function buildSectionMap(
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
                 <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-phisig-red shadow-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-brand-red shadow-sm">
                     <Award className="h-3 w-3" aria-hidden="true" /> {cfg["about.caption"] || "Chapter formal"}
                   </span>
                   <p className="mt-3 text-xl font-semibold tracking-tight leading-snug">
@@ -725,7 +710,7 @@ export function buildSectionMap(
                 {terms.collective}<br/>Scholarship<br/>Character
               </p>
             </div>
-            <div className="absolute -top-5 -right-5 hidden sm:flex h-20 w-20 items-center justify-center rounded-full bg-phisig-red text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring z-30">
+            <div className="absolute -top-5 -right-5 hidden sm:flex h-20 w-20 items-center justify-center rounded-full bg-brand-red text-white shadow-xl shadow-brand-red/30 animate-pulse-ring z-30">
               <span className="text-center leading-tight">
                 <span className="block text-[10px] uppercase tracking-[0.16em] opacity-80">Since</span>
                 <span className="block text-lg font-semibold">{identity.foundingYear}</span>
@@ -753,7 +738,7 @@ export function buildSectionMap(
                   href={cleanUrl(cfg["contact.instagramUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="text-phisig-red hover:underline font-medium"
+                  className="text-brand-red hover:underline font-medium"
                 >
                   {cfg["contact.instagramHandle"]}
                 </Link>{" "}
@@ -768,12 +753,12 @@ export function buildSectionMap(
                 <Reveal3DItem
                   as="li"
                   key={item.q}
-                  className="group rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-phisig-red/40 hover:shadow-md"
+                  className="group rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-brand-red/40 hover:shadow-md"
                 >
                   <details className="cursor-pointer">
                     <summary className="flex items-center justify-between gap-4 px-5 py-4 list-none">
                       <span className="text-base font-medium tracking-tight">{item.q}</span>
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red shrink-0 transition-transform group-open:rotate-45">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-red-soft text-brand-red shrink-0 transition-transform group-open:rotate-45">
                         <ArrowRight className="h-3.5 w-3.5 -rotate-45 group-open:rotate-0 transition-transform" aria-hidden="true" />
                       </span>
                     </summary>
@@ -818,9 +803,9 @@ export function buildSectionMap(
                   href={cleanUrl(cfg["contact.mapsUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-brand-red/40 hover:shadow-md hover:shadow-brand-red/10 min-h-[60px]"
                 >
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
                     <IconPin className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Address
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{titleCaseAddress(cfg["contact.address"])}</p>
@@ -832,9 +817,9 @@ export function buildSectionMap(
                   href={cleanUrl(cfg["contact.instagramUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-brand-red/40 hover:shadow-md hover:shadow-brand-red/10 min-h-[60px]"
                 >
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
                     <IconInstagramDuo className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Daily updates
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{cfg["contact.instagramHandle"]}</p>
@@ -844,9 +829,9 @@ export function buildSectionMap(
               <Reveal3DItem className="h-full">
                 <Link
                   href={cleanMailto(cfg["contact.rushEmail"])}
-                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-brand-red/40 hover:shadow-md hover:shadow-brand-red/10 min-h-[60px]"
                 >
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
                     <IconMailDuo className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Rush questions
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{cfg["contact.rushEmail"]}</p>
@@ -858,9 +843,9 @@ export function buildSectionMap(
                   href={cleanUrl(cfg["chapter.schoolUrl"])}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-phisig-red/40 hover:shadow-md hover:shadow-phisig-red/10 min-h-[60px]"
+                  className="group lift block h-full rounded-xl border border-border bg-card p-4 transition-shadow hover:border-brand-red/40 hover:shadow-md hover:shadow-brand-red/10 min-h-[60px]"
                 >
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
                     <IconHouse className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> {identity.schoolShort} chapter info
                   </div>
                   <p className="mt-1.5 text-sm font-semibold">{identity.schoolShort} FSL</p>
@@ -877,7 +862,7 @@ export function buildSectionMap(
     cta: (
       <>
         <section className="container pb-16 sm:pb-20">
-        <Reveal className="rounded-3xl bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-phisig-red/30 ring-1 ring-white/10">
+        <Reveal className="rounded-3xl bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark text-white p-10 sm:p-16 relative overflow-hidden shadow-2xl shadow-brand-red/30 ring-1 ring-white/10">
           <div className="absolute inset-0 bg-grid opacity-15" aria-hidden />
           {/* Soft top-light radial for depth */}
           <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(255,255,255,0.18),transparent_70%)]" aria-hidden />

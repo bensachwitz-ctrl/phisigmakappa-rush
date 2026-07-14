@@ -338,7 +338,7 @@ export function TreasuryManager({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2">
-              <FolderOpen className="h-4.5 w-4.5 text-phisig-red" aria-hidden="true" />
+              <FolderOpen className="h-4.5 w-4.5 text-brand-red" aria-hidden="true" />
               Budget
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -385,7 +385,7 @@ export function TreasuryManager({
                           {/* category subhead row */}
                           <TableRow className="bg-secondary/50 hover:bg-secondary/50">
                             <TableCell className="pl-5 py-2">
-                              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-phisig-red">
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-red">
                                 {g.category}
                               </span>
                             </TableCell>
@@ -457,7 +457,7 @@ export function TreasuryManager({
               {grouped.map((g) => (
                 <div key={g.category} className="space-y-2.5">
                   <div className="flex items-center justify-between px-2 pt-1">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-phisig-red">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-red">
                       {g.category}
                     </span>
                     <div className="text-xs text-muted-foreground flex gap-1">
@@ -471,7 +471,7 @@ export function TreasuryManager({
                     {g.items.map((l) => {
                       const variance = l.budgetedCents - l.actualCents;
                       return (
-                        <Card key={l.id} className="p-4 space-y-3 relative hover:border-phisig-red/30 transition-colors">
+                        <Card key={l.id} className="p-4 space-y-3 relative hover:border-brand-red/30 transition-colors">
                           <div className="flex justify-between items-start gap-3">
                             <div className="min-w-0">
                               <h4 className="font-semibold text-sm text-foreground truncate">{l.label}</h4>
@@ -544,7 +544,7 @@ export function TreasuryManager({
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2">
-              <Receipt className="h-4.5 w-4.5 text-phisig-red" aria-hidden="true" />
+              <Receipt className="h-4.5 w-4.5 text-brand-red" aria-hidden="true" />
               Reimbursements
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -570,7 +570,7 @@ export function TreasuryManager({
                   )}
                 >
                   {labelText}
-                  <span className={cn("ml-1.5 tabular-nums", active ? "text-phisig-red" : "text-muted-foreground/70")}>
+                  <span className={cn("ml-1.5 tabular-nums", active ? "text-brand-red" : "text-muted-foreground/70")}>
                     {statusCounts[s] ?? 0}
                   </span>
                 </button>
@@ -700,8 +700,8 @@ export function TreasuryManager({
 // ════════════════════════════════════════════════════════════════════════════
 
 const TINTS: Record<string, { ring: string; icon: string; glow: string }> = {
-  blue: { ring: "ring-phisig-red/15", icon: "text-phisig-red bg-phisig-red/10", glow: "from-phisig-red/[0.07]" },
-  sky:  { ring: "ring-phisig-red/15", icon: "text-phisig-red bg-phisig-red/10", glow: "from-phisig-red/[0.07]" },
+  blue: { ring: "ring-brand-red/15", icon: "text-brand-red bg-brand-red/10", glow: "from-brand-red/[0.07]" },
+  sky:  { ring: "ring-brand-red/15", icon: "text-brand-red bg-brand-red/10", glow: "from-brand-red/[0.07]" },
   // gold stays SEMANTIC — flags an over-budget variance, not platform decoration.
   gold: { ring: "ring-[var(--gs-gold)]/25", icon: "text-[var(--gs-gold)] bg-[var(--gs-gold)]/10", glow: "from-[var(--gs-gold)]/[0.10]" },
 };
@@ -746,7 +746,7 @@ function ProgressBar({ actual, budgeted }: { actual: number; budgeted: number })
     // No budget set — show a neutral track with the spent portion in sky if any.
     return (
       <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden" aria-hidden="true">
-        {actual > 0 && <div className="h-full w-full bg-phisig-red/40" />}
+        {actual > 0 && <div className="h-full w-full bg-brand-red/40" />}
       </div>
     );
   }
@@ -767,7 +767,7 @@ function ProgressBar({ actual, budgeted }: { actual: number; budgeted: number })
             "h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none",
             over
               ? "bg-gradient-to-r from-[var(--gs-gold)] to-[var(--gs-gold-soft)]"
-              : "bg-gradient-to-r from-phisig-red to-phisig-red-dark"
+              : "bg-gradient-to-r from-brand-red to-brand-red-dark"
           )}
           style={{ width: `${Math.max(pct, actual > 0 ? 4 : 0)}%` }}
         />
@@ -863,7 +863,7 @@ function ExpenseCard({
               href={exp.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-phisig-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-brand-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             >
               <ExternalLink className="h-3 w-3" /> Receipt
             </a>
@@ -928,7 +928,7 @@ function EmptyBudget({ period, onAdd }: { period: string; onAdd: () => void }) {
     <Card className="border-dashed">
       <CardContent className="py-12 px-6 text-center">
         <div className="max-w-sm mx-auto">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red mb-4">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-red/10 text-brand-red mb-4">
             <Wallet className="h-6 w-6" />
           </span>
           <h3 className="text-base font-semibold tracking-tight">No budget lines yet - add your first</h3>

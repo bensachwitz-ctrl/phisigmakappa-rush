@@ -131,11 +131,11 @@ describe("brand-theme helpers", () => {
 //   (a) the STATIC :root fallback in globals.css was cardinal red (351 76% 42%)
 //       while the injected default is platform blue — so a primary CTA flashed
 //       red before the per-chapter <style> applied. Static + injected must agree.
-//   (b) the default <Button> hover reached for phisig-red-dark instead of the
+//   (b) the default <Button> hover reached for brand-red-dark instead of the
 //       --primary token, drifting the hover state off the base hue.
 // These are source-pins (the CSS/Tailwind class strings aren't executable in the
 // node suite), and they are RED→GREEN: before the fix globals.css held
-// "351 76% 42%" and button.tsx held "hover:bg-phisig-red-dark".
+// "351 76% 42%" and button.tsx held "hover:bg-brand-red-dark".
 describe("P1 #5 — static :root defaults agree with the injected brand default", () => {
   const globals = readSrc("app/globals.css");
   const platformHsl = hexToHslTriple(BRAND_DEFAULTS.primary); // "221 83% 53%"
@@ -169,18 +169,18 @@ describe("P1 #5 — the default Button CTA is driven by the --primary token", ()
     expect(button).toContain("hover:bg-primary/90");
   });
 
-  it("the default CTA no longer reaches for the phisig-red-dark token", () => {
-    expect(button).not.toContain("hover:bg-phisig-red-dark");
+  it("the default CTA no longer reaches for the brand-red-dark token", () => {
+    expect(button).not.toContain("hover:bg-brand-red-dark");
   });
 });
 
 // ── P1 #6 — the header/footer Wordmark is config-driven, not hardcoded Phi Sig ─
 // The <Wordmark> in the site nav + footer reads chapter identity from config
-// (via useChapterIdentity) and renders THOSE letters/school. The bundled Phi Sig
-// shield asset is used ONLY behind the isPhiSig gate; every other chapter renders
-// its own uploaded logo or the auto-branded generic shield. These source-pins
-// lock the white-label behavior so a regression to a hardcoded ΦΣΚ / USC / Phi
-// Sig-only mark fails CI.
+// (via useChapterIdentity) and renders THOSE letters/school. No bundled org-
+// specific shield asset is referenced; every chapter renders its own uploaded
+// logo or the auto-branded generic shield. These source-pins lock the white-
+// label behavior so a regression to a hardcoded ΦΣΚ / USC / Phi Sig-only mark
+// fails CI.
 describe("P1 #6 — Wordmark renders config letters/school, not the reference chapter", () => {
   const wordmark = readSrc("components/brand/wordmark.tsx");
 
@@ -197,9 +197,11 @@ describe("P1 #6 — Wordmark renders config letters/school, not the reference ch
     expect(wordmark).not.toMatch(/\bUSC\b/);
   });
 
-  it("uses the Phi Sig shield asset only behind the isPhiSig gate, with a generic + logo fallback", () => {
-    expect(wordmark).toContain("isPhiSig");
-    // Non-Phi-Sig chapters get their own logo or the auto-branded generic shield.
+  it("does not reference the Phi Sig shield asset and exposes a generic + logo fallback", () => {
+    expect(wordmark).not.toContain("isPhiSig");
+    expect(wordmark).not.toContain("coat-of-arms-formal");
+    expect(wordmark).not.toContain("phi-sig.svg");
+    // Every chapter gets its own logo or the auto-branded generic shield.
     expect(wordmark).toContain("logoUrl");
     expect(wordmark).toContain("renderGenericShield");
   });

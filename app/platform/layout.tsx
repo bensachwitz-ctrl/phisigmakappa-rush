@@ -41,7 +41,7 @@ function currentPath(): string {
  * Server-side gate for the /platform tree.
  *
  * Security: redirects any request WITHOUT a valid `gs_superadmin` cookie to the
- * login page. A chapter admin's `phisig_admin` cookie does NOT satisfy
+ * login page. A chapter admin's `greekstack_admin` cookie does NOT satisfy
  * isSuperAdmin() (separate cookie + separate secret), so a chapter e-board can
  * never reach the console here. This is defense-in-depth on top of the API
  * routes, which each independently re-check isSuperAdmin().

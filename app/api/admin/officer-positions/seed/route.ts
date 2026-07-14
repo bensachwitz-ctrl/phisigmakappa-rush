@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // POST /api/admin/officer-positions/seed
 //
-// Idempotent seeder for the 13 default Phi Sigma Kappa officer positions.
+// Idempotent seeder for the 13 default Greek Stack Demo Chapter officer positions.
 // Updates the permissions JSON if the slug exists, inserts otherwise. Safe to
 // re-run anytime the canonical catalog in lib/officer-permissions.ts changes.
 export async function POST() {

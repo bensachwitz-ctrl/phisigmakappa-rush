@@ -28,7 +28,7 @@ export const DEFAULTS = {
   // re-brand for Beta Sigma @ Maryland, Epsilon @ Drexel, etc.
   //
   // White-label DEFAULTS are intentionally BLANK so the apex + any unconfigured
-  // tenant NEVER render a specific chapter (these were Phi Sig reference values
+  // tenant NEVER render a specific chapter (these were Demo Chapter reference values
   // and leaked onto the marketing apex). Provisioning (/admin/setup) seeds the
   // real per-chapter identity; chapterIdentityFromCfg() neutral-fallbacks the rest.
   "chapter.fraternityName": "",
@@ -101,8 +101,8 @@ export const DEFAULTS = {
   // Primary brand color. Each chapter overrides with its school color: USC
   // garnet #73000A, Texas A&M maroon #500000, Penn State blue #001E44, etc.
   // Binds to the `--brand-primary` CSS custom property (NOT the old
-  // `--phisig-red`, which was renamed) that app/layout.tsx injects, so every
-  // component using the `phisig.red`/`brand-*` Tailwind tokens recolors with no
+  // `--brand-red`, which was renamed) that app/layout.tsx injects, so every
+  // component using the `brand-*` Tailwind tokens recolors with no
   // rebuild. New chapters are seeded the GS royal-blue platform identity by the
   // onboarding wizard (app/api/onboard/route.ts); this raw DEFAULT is the legacy
   // fallback for any pre-onboarding/unconfigured read. Format: hex (#RRGGBB).
@@ -190,7 +190,7 @@ export const DEFAULTS = {
   "stats.charity": "$25k+",
   "stats.charity.label": "Raised for charity",
   // WHITE-LABEL: empty so the spotlight/stat copy falls back to the generic
-  // "our philanthropy partner" rather than naming Phi Sig's beneficiary.
+  // "our philanthropy partner" rather than naming Demo Chapter's beneficiary.
   "stats.charity.sub": "",
 
   // Hero headline & CTA — punchier, single-beat reading.
@@ -230,7 +230,7 @@ export const DEFAULTS = {
 
   // Contact — every public-facing email, address, and social link comes from here.
   // WHITE-LABEL: every chapter-specific value defaults EMPTY so a fresh tenant
-  // never leaks Phi Sig's real email domain, Instagram, house address, or maps
+  // never leaks Demo Chapter's real email domain, Instagram, house address, or maps
   // pin. Provisioning (app/api/onboard) seeds the new chapter's own contact
   // values; the rush chair can fill any remaining blanks in /admin/settings.
   // The components tolerate "" (titleCaseAddress/cleanUrl/cleanMailto/cleanTel
@@ -250,7 +250,7 @@ export const DEFAULTS = {
   "contact.mapsUrl": "",
 
   // Philanthropy — beneficiary + concrete dollars raised. Used in highlights, testimonial, etc.
-  // WHITE-LABEL: a generic partner name (never Phi Sig's real beneficiary) so
+  // WHITE-LABEL: a generic partner name (never Demo Chapter's real beneficiary) so
   // the spotlight/about copy reads cleanly for a fresh tenant; the rush chair
   // sets the real partner + amounts per chapter via /admin/settings.
   "philanthropy.beneficiary": "our philanthropy partner",
@@ -355,7 +355,7 @@ export const DEFAULTS = {
 
   // ── ANALYTICS (Plausible — privacy-friendly, cookieless) ──────────────
   // OPTIONAL + INERT by default. Set this to the domain registered in your
-  // Plausible dashboard (e.g. "phisig.greekstack.app") and app/layout.tsx
+  // Plausible dashboard (e.g. "chapter.greekstack.app") and app/layout.tsx
   // injects the lightweight, cookieless Plausible script — no cookie banner
   // required. Left BLANK (the default) → no script, no tracking, byte-identical
   // output. The rush chair sets this per chapter in /admin/settings.
@@ -378,13 +378,13 @@ export const DEFAULTS = {
   // WHITE-LABEL: default OFF for net-new tenants — the Instagram feed only
   // makes sense once a chapter has wired its own feed.json posts. A tenant
   // turns this on in /admin/settings after adding their posts. (The canonical
-  // Phi Sig deployment sets this "true" in its DB.)
+  // Demo Chapter deployment sets this "true" in its DB.)
   "show.instagramFeed": "false",
   "show.timeline": "true",
   // ANTI-FABRICATION: default OFF. The testimonial only appears once a chapter
   // adds a REAL quote + author in /admin/settings AND flips this to "true". A
-  // fresh chapter never ships a canned/invented testimonial. (The canonical Phi
-  // Sig deployment sets this "true" in its DB with its own real alum quote.)
+  // fresh chapter never ships a canned/invented testimonial. (The canonical
+  // reference deployment sets this "true" in its DB with its own real alum quote.)
   "show.testimonial": "false",
   "show.spotlight": "true",
   "show.eboard": "true",
@@ -399,7 +399,7 @@ export type ConfigKey = keyof typeof DEFAULTS;
  * Returns a plain map of key → value strings.
  */
 // On the APEX (no subdomain) the public schema may still hold the seed/first
-// chapter's content rows (e.g. the original Phi Sig identity), which must NEVER
+// chapter's content rows (e.g. the original Demo Chapter identity), which must NEVER
 // render on the generic Greekstack marketing site. These key prefixes are
 // chapter-identity/content; on the apex they are dropped so they fall back to the
 // neutral DEFAULTS. Operational config (brand.*, show.*, dues.*) still applies.

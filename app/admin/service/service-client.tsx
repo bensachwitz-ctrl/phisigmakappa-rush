@@ -357,7 +357,7 @@ export function ServiceClient({
           className={cn(
             "pb-3 px-4 text-sm font-semibold border-b-2 -mb-[2px] transition whitespace-nowrap",
             activeTab === "queue"
-              ? "border-phisig-red text-phisig-red"
+              ? "border-brand-red text-brand-red"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -368,7 +368,7 @@ export function ServiceClient({
           className={cn(
             "pb-3 px-4 text-sm font-semibold border-b-2 -mb-[2px] transition whitespace-nowrap",
             activeTab === "events"
-              ? "border-phisig-red text-phisig-red"
+              ? "border-brand-red text-brand-red"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -379,7 +379,7 @@ export function ServiceClient({
           className={cn(
             "pb-3 px-4 text-sm font-semibold border-b-2 -mb-[2px] transition whitespace-nowrap",
             activeTab === "partners"
-              ? "border-phisig-red text-phisig-red"
+              ? "border-brand-red text-brand-red"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -394,20 +394,20 @@ export function ServiceClient({
           <div className="grid grid-cols-3 gap-3">
             <div className="lift rounded-xl border p-3 bg-card">
               <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-                <Hourglass className="h-3.5 w-3.5 text-phisig-red" />
+                <Hourglass className="h-3.5 w-3.5 text-brand-red" />
                 {statusFilter === "submitted" ? "Pending Reviews" : statusFilter === "approved" ? "Approved Logs" : "Rejected Logs"}
               </div>
               <div className="text-2xl font-bold mt-0.5">{queueStats.count}</div>
             </div>
             <div className="lift rounded-xl border p-3 bg-card">
               <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-                <HeartHandshake className="h-3.5 w-3.5 text-phisig-red" /> Total Hours
+                <HeartHandshake className="h-3.5 w-3.5 text-brand-red" /> Total Hours
               </div>
-              <div className="text-2xl font-bold mt-0.5 text-phisig-red">{queueStats.totalHours.toFixed(1)}</div>
+              <div className="text-2xl font-bold mt-0.5 text-brand-red">{queueStats.totalHours.toFixed(1)}</div>
             </div>
             <div className="lift rounded-xl border p-3 bg-card">
               <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-                <User className="h-3.5 w-3.5 text-phisig-red" /> Members
+                <User className="h-3.5 w-3.5 text-brand-red" /> Members
               </div>
               <div className="text-2xl font-bold mt-0.5">{queueStats.members}</div>
             </div>
@@ -439,7 +439,7 @@ export function ServiceClient({
           {/* List */}
           {loadingHours ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-phisig-red" />
+              <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
             </div>
           ) : filteredHours.length === 0 ? (
             <Card className="text-center py-12 border-dashed bg-gradient-to-b from-muted/30 to-transparent">
@@ -469,11 +469,11 @@ export function ServiceClient({
                     <CardContent className="p-4 flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
                       <div className="space-y-1.5 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-xs font-semibold shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white flex items-center justify-center text-xs font-semibold shrink-0">
                             <User className="h-3.5 w-3.5" />
                           </div>
                           <span className="font-semibold text-sm">{h.member?.name || "Unknown member"}</span>
-                          <Badge className="bg-phisig-red/10 text-phisig-red border-none font-semibold">
+                          <Badge className="bg-brand-red/10 text-brand-red border-none font-semibold">
                             {Number(h.hoursLogged).toFixed(1)} hrs
                           </Badge>
                           {getHourStatusBadge(h.status)}
@@ -590,7 +590,7 @@ export function ServiceClient({
                         <p className="inline-flex items-center gap-1.5">
                           <Building2 className="h-3.5 w-3.5" />
                           {e.partnerUrl ? (
-                            <a href={e.partnerUrl} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline inline-flex items-center gap-1">
+                            <a href={e.partnerUrl} target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline inline-flex items-center gap-1">
                               {e.partnerOrg} <ExternalLink className="h-3 w-3" />
                             </a>
                           ) : (
@@ -664,8 +664,8 @@ export function ServiceClient({
                     <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
                       {p.website && (
                         <p className="inline-flex items-center gap-1.5 truncate">
-                          <ExternalLink className="h-3.5 w-3.5 text-phisig-red shrink-0" />
-                          <a href={p.website} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline truncate">
+                          <ExternalLink className="h-3.5 w-3.5 text-brand-red shrink-0" />
+                          <a href={p.website} target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline truncate">
                             {p.website.replace(/^https?:\/\//, "")}
                           </a>
                         </p>

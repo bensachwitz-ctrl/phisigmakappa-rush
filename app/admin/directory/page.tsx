@@ -90,7 +90,7 @@ export default async function DirectoryPage() {
     <div className="container py-8 space-y-6">
       <div className="flex items-start gap-4">
         <span
-          className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/35 ring-1 ring-white/20"
+          className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-lg shadow-brand-red/35 ring-1 ring-white/20"
           aria-hidden="true"
         >
           <IconDirectory className="h-6 w-6" accent="rgba(255,255,255,0.85)" />

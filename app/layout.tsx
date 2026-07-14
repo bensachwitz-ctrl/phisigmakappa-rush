@@ -22,7 +22,7 @@ const ALL_FRAT_GLYPHS = [
 
 // Greekstack marketing-apex branding. Used by every metadata/viewport surface
 // when the request has no subdomain (greekstack.vercel.app, localhost,
-// www) so NO chapter identity (Phi Sig / Gamma Triton / USC) ever leaks onto
+// www) so NO chapter identity (Demo Chapter / Gamma Triton / USC) ever leaks onto
 // the apex marketing site.
 const GREEKSTACK = {
   title: "Greekstack — chapter rush, roster & TCPA-compliant comms",
@@ -45,7 +45,7 @@ function requestHost(): string | null {
 /**
  * Resolve metadataBase from the live request host so each tenant's OG/Twitter
  * URLs are absolute against THEIR domain, falling back to the configured site
- * URL and finally the apex. Never hardcodes the Phi Sig reference host.
+ * URL and finally the apex. Never hardcodes the Demo Chapter reference host.
  */
 function resolveMetadataBase(host: string | null): URL {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
@@ -193,7 +193,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // generateViewport (was a static export) so themeColor follows the tenant's
-// brand color — and on the apex falls back to Greekstack navy, never Phi Sig
+// brand color — and on the apex falls back to Greekstack navy, never Demo Chapter
 // cardinal red. iOS paints the status-bar/PWA chrome from this value.
 export async function generateViewport(): Promise<Viewport> {
   const host = requestHost();
@@ -253,7 +253,7 @@ function parseCityState(cityState: string): { city: string; region: string; post
 
 function buildStructuredData(cfg: Record<string, string>, siteUrl: string) {
   // Neutral fallbacks only — a chapter that hasn't run /admin/setup yet must
-  // never emit the reference Phi Sig identity into its JSON-LD. Optional fields
+  // never emit the reference Demo Chapter identity into its JSON-LD. Optional fields
   // are omitted entirely when their cfg value is blank rather than guessed.
   const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
   const fraternityShort = cfg["chapter.fraternityShort"] || fraternityName;
@@ -490,7 +490,7 @@ export default async function RootLayout({
 
   // JSON-LD built per-request from current cfg so a chapter rename / school
   // change propagates to the Knowledge Panel record without a redeploy. siteUrl
-  // resolves from the live request host (never the hardcoded Phi Sig reference
+  // resolves from the live request host (never the hardcoded Demo Chapter reference
   // host). On the apex we emit a generic Greekstack Organization node instead
   // of the chapter CollegeOrUniversity graph so no chapter identity leaks.
   const host = requestHost();

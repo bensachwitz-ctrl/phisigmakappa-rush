@@ -199,7 +199,7 @@ export function ExportsClient({
                   maxLength={32}
                 />
               </div>
-              <Button onClick={runExport} disabled={running} className="gs-sheen bg-phisig-red text-white hover:bg-phisig-red-dark">
+              <Button onClick={runExport} disabled={running} className="gs-sheen bg-brand-red text-white hover:bg-brand-red-dark">
                 {running ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
                 Run Export
               </Button>

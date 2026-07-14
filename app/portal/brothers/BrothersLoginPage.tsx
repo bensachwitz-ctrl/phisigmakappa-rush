@@ -15,7 +15,7 @@ import { PortalForgotOtpFlow } from "@/components/portal/forgot-password-otp";
 // issued by an e-board officer. No third-party / social sign-in.
 
 export interface BrothersLoginPageProps {
-  /** "{Fraternity} {SchoolShort}" lockup line under the seal (e.g. "Phi Sig USC"). */
+  /** "{Fraternity} {SchoolShort}" lockup line under the seal (e.g. "Demo Chapter USC"). */
   chapterName?: string | null;
   /** Full school name for the "{School} · {Chapter}" subline. */
   schoolName?: string | null;

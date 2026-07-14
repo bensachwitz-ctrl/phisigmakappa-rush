@@ -51,7 +51,7 @@ const CATEGORY_ICON: Record<string, CategoryIcon> = {
 // with EVENT_CATEGORIES and the card list — but here we want a slightly
 // brighter "dot" presentation rather than a stripe, so we use text-* tokens.
 const CATEGORY_ICON_COLOR: Record<string, string> = {
-  RUSH: "text-phisig-red",
+  RUSH: "text-brand-red",
   DATE: "text-pink-500",
   BROTHERHOOD: "text-blue-500",
   CHAPTER: "text-amber-500",
@@ -327,9 +327,9 @@ export function EventCalendarGrid({
     const target = document.getElementById(`event-card-${eventId}`);
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
-      target.classList.add("ring-2", "ring-phisig-red", "ring-offset-2");
+      target.classList.add("ring-2", "ring-brand-red", "ring-offset-2");
       window.setTimeout(() => {
-        target.classList.remove("ring-2", "ring-phisig-red", "ring-offset-2");
+        target.classList.remove("ring-2", "ring-brand-red", "ring-offset-2");
       }, 1500);
     }
   };
@@ -349,7 +349,7 @@ export function EventCalendarGrid({
             type="button"
             onClick={() => setFocused((f) => addMonths(f, -1))}
             aria-label="Previous month"
-            className="press inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40"
+            className="press inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -359,7 +359,7 @@ export function EventCalendarGrid({
               setFocused(startOfMonth(today));
               setSelectedKey(null);
             }}
-            className="press inline-flex h-9 items-center rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40"
+            className="press inline-flex h-9 items-center rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
           >
             Today
           </button>
@@ -367,7 +367,7 @@ export function EventCalendarGrid({
             type="button"
             onClick={() => setFocused((f) => addMonths(f, 1))}
             aria-label="Next month"
-            className="press inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40"
+            className="press inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -428,9 +428,9 @@ export function EventCalendarGrid({
                   // Bottom edge: drop the bottom border on the last row.
                   idx >= 35 && "border-b-0",
                   inMonth
-                    ? "bg-background hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-phisig-red/40"
+                    ? "bg-background hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-red/40"
                     : "bg-secondary/20 text-muted-foreground/40 cursor-default",
-                  isToday && inMonth && "bg-phisig-red-soft/60 ring-1 ring-inset ring-phisig-red",
+                  isToday && inMonth && "bg-brand-red-soft/60 ring-1 ring-inset ring-brand-red",
                   isSelected && inMonth && !isToday && "bg-secondary",
                 )}
               >
@@ -438,7 +438,7 @@ export function EventCalendarGrid({
                   <span
                     className={cn(
                       "text-xs font-semibold sm:text-sm",
-                      isToday && "text-phisig-red",
+                      isToday && "text-brand-red",
                       !inMonth && "text-muted-foreground/50",
                     )}
                   >
@@ -566,7 +566,7 @@ function DayPanelRow({
   let rsvpLabel = "Not yet";
   if (event.mine) {
     if (event.mine.status === "GOING") {
-      rsvpIcon = <CheckCircle2 className="h-3.5 w-3.5 text-phisig-red" />;
+      rsvpIcon = <CheckCircle2 className="h-3.5 w-3.5 text-brand-red" />;
       rsvpLabel = "Going";
     } else if (event.mine.status === "MAYBE") {
       rsvpIcon = <HelpCircle className="h-3.5 w-3.5 text-amber-500" />;
@@ -582,7 +582,7 @@ function DayPanelRow({
       <button
         type="button"
         onClick={onClick}
-        className="lift group flex w-full items-stretch gap-2 rounded-lg border border-border bg-background text-left hover:border-phisig-red/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40"
+        className="lift group flex w-full items-stretch gap-2 rounded-lg border border-border bg-background text-left hover:border-brand-red/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
       >
         <span aria-hidden="true" className={cn("w-1 shrink-0 self-stretch rounded-l-lg", stripe)} />
         <div className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1 px-2.5 py-2 text-sm">

@@ -47,7 +47,7 @@ const APEX_HOSTS = new Set<string>([
   "greek-life-systems.vercel.app",
 ]);
 
-/** Apex host SUFFIXES a chapter subdomain hangs off (e.g. "phisig.greekstack.vercel.app"). */
+/** Apex host SUFFIXES a chapter subdomain hangs off (e.g. "chapter.greekstack.vercel.app"). */
 const APEX_SUFFIXES = [
   ".greekstack.vercel.app",
   ".greeklifesystems.vercel.app",

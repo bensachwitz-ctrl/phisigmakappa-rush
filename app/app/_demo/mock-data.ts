@@ -48,6 +48,18 @@ export interface FraternityBrand {
 // means all ~35 consumers inherit a safe fill with zero per-site changes.
 const RAW_FRATERNITY_BRANDS: FraternityBrand[] = [
   {
+    id: "greekstack",
+    name: "Greek Stack Chapter",
+    letters: "GS",
+    primaryColor: "#2563eb", // Royal Blue
+    primaryHover: "#1e40af",
+    secondaryColor: "#f59e0b", // Gold
+    textColor: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    crestUrl: ""
+  },
+  {
     id: "phi-sig",
     name: "Phi Sigma Kappa",
     letters: "ΦΣΚ",
@@ -149,14 +161,12 @@ export function brandSecondary(b: Pick<FraternityBrand, "primaryColor" | "second
 
 /** Split a chapter's Greek-letter string into glyphs for the drifting letter
  *  field: every individual letter PLUS the chapter's joined monogram (owner
- *  round-8: single Greek letters and the frat's letters drift TOGETHER — "Φ",
- *  "Σ", "Κ" and "ΦΣΚ" all cross the screen). De-duplicating singles is
- *  intentionally avoided so "ΦΣΚ" rains all three. Falls back to a generic
- *  set when empty. NOTE: index 0 is always a single letter
+ *  round-8: single letters and the chapter's letters drift TOGETHER). Falls
+ *  back to a generic set when empty. NOTE: index 0 is always a single letter
  *  (pledgeClassFromBrand depends on it). */
 export function glyphsFromBrand(letters: string | undefined): string[] {
   const greek = (letters || "").match(/[Ͱ-Ͽἀ-῿]/g) || [];
-  if (!greek.length) return ["Φ", "Σ", "Κ", "ΦΣΚ"];
+  if (!greek.length) return ["G", "S", "GS"];
   return greek.length > 1 ? [...greek, greek.join("")] : greek;
 }
 

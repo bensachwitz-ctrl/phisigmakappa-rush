@@ -28,7 +28,7 @@ export type CalendarItem = {
 };
 
 // ── Source → chip styling ────────────────────────────────────────────────────
-// events = chapter brand red (phisig-red), meetings = sky/secondary, dues =
+// events = chapter brand red (brand-red), meetings = sky/secondary, dues =
 // gold/amber. Kept as full class strings (not interpolated) so Tailwind's JIT
 // always sees them.
 const SOURCE_META: Record<
@@ -47,10 +47,10 @@ const SOURCE_META: Record<
 > = {
   event: {
     label: "Event",
-    dot: "bg-phisig-red",
-    chip: "bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/20 hover:bg-phisig-red/15",
-    tile: "bg-phisig-red/10",
-    agendaRing: "ring-phisig-red/30",
+    dot: "bg-brand-red",
+    chip: "bg-brand-red/10 text-brand-red ring-1 ring-brand-red/20 hover:bg-brand-red/15",
+    tile: "bg-brand-red/10",
+    agendaRing: "ring-brand-red/30",
   },
   meeting: {
     label: "Meeting",
@@ -353,7 +353,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                   className={cn(
                     "min-h-[5.5rem] rounded-xl border p-1.5 transition-colors lg:min-h-[6.5rem]",
                     inMonth ? "bg-card/70" : "bg-muted/20 text-muted-foreground/60",
-                    isToday && "border-phisig-red/50 ring-1 ring-phisig-red/30 bg-phisig-red/[0.04]"
+                    isToday && "border-brand-red/50 ring-1 ring-brand-red/30 bg-brand-red/[0.04]"
                   )}
                 >
                   <div className="mb-1 flex items-center justify-between px-0.5">
@@ -361,7 +361,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                       className={cn(
                         "inline-flex h-6 min-w-6 items-center justify-center rounded-full text-xs tabular-nums",
                         isToday
-                          ? "bg-phisig-red font-bold text-white"
+                          ? "bg-brand-red font-bold text-white"
                           : inMonth
                           ? "font-medium text-foreground"
                           : "text-muted-foreground/60"
@@ -422,7 +422,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
       {/* ── AGENDA — upcoming items grouped by date (the mobile-primary view) ─── */}
       <section aria-label="Upcoming agenda" className="space-y-3">
         <div className="flex items-center gap-2">
-          <CalendarRange className="h-4 w-4 text-phisig-red" aria-hidden="true" />
+          <CalendarRange className="h-4 w-4 text-brand-red" aria-hidden="true" />
           <h2 className="text-lg font-semibold tracking-tight">Upcoming</h2>
         </div>
 
@@ -456,7 +456,7 @@ export function CalendarView({ items }: { items: CalendarItem[] }) {
                       {isToday ? "Today" : fullDayLabel(group.date, timeZone)}
                     </h3>
                     {isToday && (
-                      <span className="rounded-full bg-phisig-red/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-phisig-red ring-1 ring-phisig-red/20">
+                      <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-red ring-1 ring-brand-red/20">
                         {fullDayLabel(group.date, timeZone)}
                       </span>
                     )}

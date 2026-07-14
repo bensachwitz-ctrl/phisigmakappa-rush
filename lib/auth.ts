@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import crypto from "crypto";
 import { prisma, getSubdomain } from "@/lib/prisma";
 
-const COOKIE_NAME = "phisig_admin";
+const COOKIE_NAME = "greekstack_admin";
 const MAX_AGE = 60 * 60 * 12; // 12h
 const DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me";
 
@@ -170,15 +170,15 @@ export function getCurrentBrotherId(): string | null {
 
 /**
  * Portal-aware variant of getCurrentBrotherId(). Resolves the acting brother's
- * id from EITHER the admin cookie (phisig_admin) OR a portal brother session
- * (phisig_portal) — mirroring the two-cookie resolution getCurrentBrother()
+ * id from EITHER the admin cookie (greekstack_admin) OR a portal brother session
+ * (greekstack_portal) — mirroring the two-cookie resolution getCurrentBrother()
  * already does, but returning just the id (no full Brother fetch on the admin
  * path).
  *
  * Why this exists: the synchronous getCurrentBrotherId() only reads the admin
  * cookie. Member self-service routes (announcements mark-read, service-hours,
  * expenses, chores-complete, excused-absence) are reachable by a plain portal
- * member who holds ONLY a phisig_portal cookie — for them the sync helper
+ * member who holds ONLY a greekstack_portal cookie — for them the sync helper
  * returns null and the route 401s even though they're validly signed in.
  * Those member routes must call THIS async variant. Admin routes that attribute
  * an action to the acting admin can keep the cheaper synchronous getCurrentBrotherId().

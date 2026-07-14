@@ -45,12 +45,12 @@ const DISCLOSURE_VERSION = "2026-05-05";
  * rates may apply", message-frequency, "Reply STOP to opt out, HELP for help",
  * and the not-a-condition-of-membership clause. Only the chapter IDENTITY is
  * substituted. When cfg is unset the org falls back to a NEUTRAL "this chapter"
- * (never "Phi Sigma Kappa"), so the apex / an unconfigured tenant still stores
+ * (never "Greek Stack Demo Chapter"), so the apex / an unconfigured tenant still stores
  * a legally-complete receipt.
  */
 function buildSmsDisclosureText(cfg: Record<string, string>): string {
   const id = chapterIdentityFromCfg(cfg);
-  // "Phi Sigma Kappa Gamma Triton (USC)" → built from the tenant's identity;
+  // "Greek Stack Demo Chapter Gamma Triton (USC)" → built from the tenant's identity;
   // neutral "this chapter" when nothing is configured.
   const org =
     [id.chapterFullName, id.schoolShort ? `(${id.schoolShort})` : ""]

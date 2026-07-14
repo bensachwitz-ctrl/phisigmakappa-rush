@@ -49,8 +49,8 @@ type CategoryStyle = {
 const CATEGORY_STYLES: Record<string, CategoryStyle> = {
   RUSH: {
     label: "Rush",
-    stripe: "bg-phisig-red",
-    badge: "bg-phisig-red-soft text-phisig-red ring-1 ring-phisig-red/20",
+    stripe: "bg-brand-red",
+    badge: "bg-brand-red-soft text-brand-red ring-1 ring-brand-red/20",
   },
   DATE: {
     label: "Date",
@@ -126,7 +126,7 @@ export function EventCalendar({
 
   if (loading) {
     return (
-      <Card className="border-phisig-red/10">
+      <Card className="border-brand-red/10">
         <CardContent className="py-16 text-center text-sm text-muted-foreground">
           <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin" />
           Loading the calendar…
@@ -137,9 +137,9 @@ export function EventCalendar({
 
   if (events.length === 0) {
     return (
-      <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 to-white animate-soft-enter">
+      <Card className="border-brand-red/20 bg-gradient-to-br from-brand-red-soft/40 to-white animate-soft-enter">
         <CardContent className="py-12 px-6 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-red text-white shadow-lg shadow-brand-red/20">
             <IconSpark className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-semibold tracking-tight">
@@ -361,7 +361,7 @@ function EventCard({
                     <button
                       type="button"
                       onClick={onOpenDetails}
-                      className="press text-left hover:text-phisig-red transition-colors underline-offset-4 hover:underline"
+                      className="press text-left hover:text-brand-red transition-colors underline-offset-4 hover:underline"
                       aria-label={`See full RSVP breakdown for ${event.name}`}
                     >
                       {event.name}
@@ -398,7 +398,7 @@ function EventCard({
                   <button
                     type="button"
                     onClick={() => setExpandedDesc((v) => !v)}
-                    className="ml-1 inline text-phisig-red hover:underline focus-visible:underline focus-visible:outline-none"
+                    className="ml-1 inline text-brand-red hover:underline focus-visible:underline focus-visible:outline-none"
                   >
                     {expandedDesc ? "show less" : "read more"}
                   </button>
@@ -418,7 +418,7 @@ function EventCard({
                 active={event.mine?.status === "GOING"}
                 loading={busy === "GOING"}
                 disabled={busy !== null}
-                activeClass="bg-phisig-red text-white hover:bg-phisig-red-dark border-transparent"
+                activeClass="bg-brand-red text-white hover:bg-brand-red-dark border-transparent"
                 onClick={() => setStatus("GOING")}
               />
               <RsvpButton
@@ -491,7 +491,7 @@ function EventCard({
                   <button
                     type="button"
                     onClick={() => setShowNote(true)}
-                    className="text-xs text-phisig-red hover:underline focus-visible:underline focus-visible:outline-none"
+                    className="text-xs text-brand-red hover:underline focus-visible:underline focus-visible:outline-none"
                   >
                     + Add a note
                   </button>
@@ -506,7 +506,7 @@ function EventCard({
                 type="button"
                 onClick={toggleRoster}
                 aria-expanded={expandedRoster}
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-phisig-red hover:bg-phisig-red-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40"
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-brand-red hover:bg-brand-red-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
               >
                 <Users className="h-3.5 w-3.5" />
                 {expandedRoster ? "Hide" : "Show"} who's going
@@ -590,7 +590,7 @@ function RsvpButton({
       aria-label={`RSVP ${label}`}
       className={cn(
         "press inline-flex h-11 items-center justify-center gap-1.5 rounded-md border text-sm font-medium transition-all",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50 focus-visible:ring-offset-1",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50 focus-visible:ring-offset-1",
         "disabled:opacity-60 disabled:cursor-not-allowed",
         active
           ? activeClass
@@ -611,7 +611,7 @@ function CountsPill({
   return (
     <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full bg-secondary/60 px-3 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
       <span className="inline-flex items-center gap-1">
-        <span className="h-1.5 w-1.5 rounded-full bg-phisig-red" aria-hidden="true" />
+        <span className="h-1.5 w-1.5 rounded-full bg-brand-red" aria-hidden="true" />
         <span className="text-foreground">{counts.GOING}</span> going
       </span>
       <span className="text-border" aria-hidden="true">·</span>
@@ -697,7 +697,7 @@ function Avatar({ name, src }: { name: string; src: string | null }) {
   }
   return (
     <span
-      className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-phisig-red-soft text-[10px] font-semibold text-phisig-red ring-1 ring-phisig-red/20"
+      className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-red-soft text-[10px] font-semibold text-brand-red ring-1 ring-brand-red/20"
       aria-hidden="true"
     >
       {initial}

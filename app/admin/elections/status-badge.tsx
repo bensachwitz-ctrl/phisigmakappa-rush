@@ -25,7 +25,7 @@ export function ElectionStatusBadge({ status }: { status: string }) {
       );
     case "SEATED":
       return (
-        <Badge className="bg-phisig-red-soft text-phisig-red">
+        <Badge className="bg-brand-red-soft text-brand-red">
           <CheckCircle2 className="mr-1 h-3 w-3" /> Seated
         </Badge>
       );

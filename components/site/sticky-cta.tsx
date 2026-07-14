@@ -45,7 +45,7 @@ export function StickyCTA() {
         show ? "translate-y-0" : "translate-y-full pointer-events-none",
       )}
     >
-      <Button asChild size="lg" className="w-full shadow-2xl shadow-phisig-red/30 group">
+      <Button asChild size="lg" className="w-full shadow-2xl shadow-brand-red/30 group">
         <Link href="#register">
           Register for rush
           <ArrowRight className="h-4 w-4 ml-auto transition-transform group-hover:translate-x-0.5" />

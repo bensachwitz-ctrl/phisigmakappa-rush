@@ -256,7 +256,7 @@ export async function POST(req: Request) {
     // from the seed step below) because the atomic reservation row needs them.
     // See the fuller rationale on the seed-side `updates` block.
     //   monthly/semester → Base, trialing;  dues_percentage/custom/yearly → active.
-    const ALLOWED_PLANS = new Set(["monthly", "yearly", "semester", "dues_percentage", "custom"]);
+    const ALLOWED_PLANS = new Set(["monthly", "yearly", "semester", "dues_percentage", "custom", "trial"]);
     const normalizedPlan =
       typeof rawPlan === "string" && ALLOWED_PLANS.has(rawPlan.trim())
         ? rawPlan.trim()
@@ -267,12 +267,13 @@ export async function POST(req: Request) {
       normalizedPlan === "yearly"
         ? "active"
         : "trialing";
-    // Reservation trial end mirrors the final rule (custom has no trial). The
-    // final, Stripe-refined value is written by the tenant.update at the end.
+    // Reservation trial end mirrors the final rule (custom has no trial; trial
+    // gets the same 30-day horizon as monthly). The final, Stripe-refined value
+    // is written by the tenant.update at the end.
     const reservationTrialEndsAt =
       normalizedPlan === "custom"
         ? null
-        : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     // CARD-REQUIRED-TO-PUBLISH gate. A chapter is "billing-ready" at onboarding
     // when a REAL billing arrangement already exists, and only then does its
@@ -295,7 +296,8 @@ export async function POST(req: Request) {
       isFeeWaiver ||
       normalizedPlan === "yearly" ||
       normalizedPlan === "custom" ||
-      normalizedPlan === "dues_percentage";
+      normalizedPlan === "dues_percentage" ||
+      normalizedPlan === "trial";
 
     // 1b. RESERVE the subdomain ATOMICALLY, BEFORE any DDL or seed. The unique
     //     constraint on public."Tenant".subdomain is the race arbiter: of two
@@ -417,15 +419,15 @@ export async function POST(req: Request) {
       "chapter.charterYear": (charterYear || "").trim(),
       "chapter.foundingYear": (foundingYear || "").trim(),
       // White-label: never default to a specific org's letters (the old "ΦΣΚ"
-      // fallback rained Phi Sig's glyphs over the hero of any chapter that didn't
+      // fallback rained Demo Chapter's glyphs over the hero of any chapter that didn't
       // supply its own). Fall back to the chapter's national-org letters derived
       // from the wizard, else empty (the hero then shows the brand-tinted Crest).
       "chapter.fraternityLetters": (fraternityLetters || greekLettersGlyphs || "").trim(),
       // WHITE-LABEL DEFAULT: a brand-new chapter that doesn't pick a color in the
       // wizard starts on the GS royal-blue + gold PLATFORM identity — the SAME
       // runtime fallback app/layout.tsx uses (#2563eb / #1e40af / #eff6ff) — not
-      // Phi Sig's cardinal red, which clashed with the blue marketing site and
-      // rained one chapter's brand over every fresh tenant. Phi Sig keeps its red
+      // Demo Chapter's cardinal red, which clashed with the blue marketing site and
+      // rained one chapter's brand over every fresh tenant. Demo Chapter keeps its red
       // via its OWN saved SiteConfig; this only changes the unconfigured default.
       "brand.primaryHex": (primaryColor || "#2563eb").trim(),
       "brand.primaryDarkHex": (darkColor || "#1e40af").trim(),
@@ -549,10 +551,11 @@ export async function POST(req: Request) {
     });
 
     // 5. Stripe Customer & Subscription setup (if required by plan & Stripe is configured)
-    const TRIAL_DAYS = 14;
+    const TRIAL_DAYS = 30;
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
     let finalSubscriptionStatus: string = subscriptionStatus;
-    let finalTrialEndsAt: Date | null = normalizedPlan === "custom" ? null : trialEndsAt;
+    let finalTrialEndsAt: Date | null =
+      normalizedPlan === "custom" ? null : trialEndsAt;
 
     const stripe = getStripe();
     // Whether this signup attaches a card right now. MONTHLY can launch WITHOUT
@@ -831,6 +834,8 @@ export async function POST(req: Request) {
           ? "Annual plan ($800/year, includes all rush fees)"
           : normalizedPlan === "custom"
           ? "Custom plan"
+          : normalizedPlan === "trial"
+          ? "Free trial — no payment required"
           : "Monthly plan ($50/mo + $200/rush cycle, first month free)";
       // Card-state aware so the copy NEVER claims "no card required" when one was
       // charged. Monthly: "no card required" only when the founder skipped the
@@ -848,6 +853,8 @@ export async function POST(req: Request) {
             : `You're on the <strong>Annual plan — $800/year</strong>, charged today, which includes every rush-cycle fee. Full access to every feature.`
           : normalizedPlan === "custom"
           ? `Your <strong>Custom plan</strong> is active — full access to every feature, no card required. We'll be in touch to finalize the details tailored to your chapter.`
+          : normalizedPlan === "trial"
+          ? `You're on the <strong>free trial</strong> — full access to every feature for 30 days, no card required. Upgrade to a paid plan any time from <strong>Admin → Billing</strong>.`
           : isPromoValid
           ? `Your <strong>first month is free</strong>. With promo code <strong>${escHtml(promoCode)}</strong> applied, you get an additional 2 months free (<strong>3 months free total</strong>)! After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees). ${monthlyCardClauseHtml}`
           : `Your <strong>first month is free</strong> — full access to every feature. After that it's <strong>$50/mo + $200 per rush cycle</strong> (or switch to <strong>$800/year</strong>, which includes all rush fees). ${monthlyCardClauseHtml}`;
@@ -862,6 +869,8 @@ export async function POST(req: Request) {
             : "You're on the Annual plan — $800/year, charged today, includes all rush fees."
           : normalizedPlan === "custom"
           ? "Your Custom plan is active — full access, no card required. We'll be in touch to finalize details."
+          : normalizedPlan === "trial"
+          ? "You're on the free trial — full access for 30 days, no card required. Upgrade any time from Admin -> Billing."
           : isPromoValid
           ? `Your first month is free. Promo code ${promoCode} applied: 3 months free total! Then $50/mo + $200 per rush cycle. ${monthlyCardClauseText}`
           : `Your first month is free — then $50/mo + $200 per rush cycle (or $800/year, which includes all rush fees). ${monthlyCardClauseText}`;
@@ -981,6 +990,8 @@ export async function POST(req: Request) {
           ? "Annual ($800/year, includes all rush fees)"
           : normalizedPlan === "custom"
           ? "Custom"
+          : normalizedPlan === "trial"
+          ? "Free trial (no payment required)"
           : "Monthly ($50/mo + $200/rush cycle, first month free)";
       const duesLabelOwner = collectDues
         ? "PENDING SETUP — chapter wants Greek Stack to collect dues. Reply to schedule a setup call."

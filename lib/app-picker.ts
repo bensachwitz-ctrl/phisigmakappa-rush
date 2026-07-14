@@ -104,7 +104,7 @@ export function findSchoolColors(school: string | null | undefined): [string, st
  *   1. An explicit preset (org-name match) — the richest, hand-tuned brands.
  *   2. Else synthesize a brand from the chapter's SCHOOL colors (lib/schools.ts),
  *      so a real chapter with no recognizable org still themes to its campus.
- *   3. Else fall back to the first preset (Phi Sig) — never undefined.
+ *   3. Else fall back to the generic Greek Stack brand preset — never undefined.
  */
 export function resolveChapterBrand(input: { name?: string | null; subdomain: string; school?: string | null; brandId?: string | null }): FraternityBrand {
   const presetId = input.brandId || presetBrandIdForChapter(input.name, input.subdomain);
@@ -118,8 +118,8 @@ export function resolveChapterBrand(input: { name?: string | null; subdomain: st
     return makeCustomBrand({
       name: input.name || "Chapter",
       // The picker has no per-chapter Greek letters from the registry; derive a
-      // monogram from the chapter name's capital initials, falling back to ΦΣΚ.
-      letters: lettersFromName(input.name) || "ΦΣΚ",
+      // monogram from the chapter name's capital initials, falling back to GS.
+      letters: lettersFromName(input.name) || "GS",
       primaryColor: primary,
       secondaryColor: secondary && /^#([0-9a-fA-F]{6})$/.test(secondary) ? secondary : undefined,
     });

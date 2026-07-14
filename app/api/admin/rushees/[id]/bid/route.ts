@@ -64,7 +64,7 @@ async function sendBidEmail(
     const orgEsc = esc(org);
     // renderEmail tints the masthead + "View your bid" CTA with THIS chapter's
     // brand color (neutral platform fallback) — the old template hardcoded the
-    // Phi Sig cardinal #a3001a, so a navy/gold chapter sent a red bid email.
+    // Demo Chapter cardinal #a3001a, so a navy/gold chapter sent a red bid email.
     const html = renderEmail({
       brandHex,
       chapterName: identity.chapterAttribution || identity.fraternityName,

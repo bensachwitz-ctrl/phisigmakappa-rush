@@ -78,16 +78,16 @@ export default async function BidPage({ params }: { params: { token: string } })
   const rushEmail = cfg["contact.rushEmail"] || "";
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-phisig-mist">
-      {/* Soft, chapter-tinted ambient wash: brand-token-driven (phisig-red is
+    <div className="relative min-h-screen overflow-x-clip bg-brand-mist">
+      {/* Soft, chapter-tinted ambient wash: brand-token-driven (brand-red is
           bound to the live --brand-primary) and static (reduced-motion-safe), so
           this celebratory moment reads premium in ANY chapter's color. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[520px] overflow-hidden"
       >
-        <div className="absolute left-1/2 top-[-13rem] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-phisig-red/12 blur-3xl" />
-        <div className="absolute right-[-8rem] top-6 h-72 w-72 rounded-full bg-phisig-red/10 blur-3xl" />
+        <div className="absolute left-1/2 top-[-13rem] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-brand-red/12 blur-3xl" />
+        <div className="absolute right-[-8rem] top-6 h-72 w-72 rounded-full bg-brand-red/10 blur-3xl" />
       </div>
 
       <div className="relative container py-6">
@@ -104,13 +104,13 @@ export default async function BidPage({ params }: { params: { token: string } })
             <div className="relative mx-auto mb-6 inline-flex">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-phisig-red/30 blur-2xl"
+                className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-brand-red/30 blur-2xl"
               />
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-[0_16px_36px_-12px_hsl(var(--primary)/0.55)] ring-1 ring-white/20 motion-safe:animate-scale-in">
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-[0_16px_36px_-12px_hsl(var(--primary)/0.55)] ring-1 ring-white/20 motion-safe:animate-scale-in">
                 <ShieldCheck className="h-7 w-7" aria-hidden="true" />
               </span>
             </div>
-            <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-phisig-red">
+            <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-brand-red">
               Bid invitation · {chapterAttribution}
             </span>
             <h1 className="mx-auto mt-3 max-w-lg text-[clamp(2rem,6vw,3.25rem)] font-bold leading-[1.05] tracking-tight [text-wrap:balance]">
@@ -119,9 +119,9 @@ export default async function BidPage({ params }: { params: { token: string } })
             {/* Brand hairline divider with a centered diamond: a restrained
                 classical flourish, tinted in the chapter color. */}
             <span aria-hidden className="mx-auto mt-5 mb-1 flex w-24 items-center justify-center gap-2">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-phisig-red/40" />
-              <span className="h-1.5 w-1.5 rotate-45 rounded-[1px] bg-phisig-red" />
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-phisig-red/40" />
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-brand-red/40" />
+              <span className="h-1.5 w-1.5 rotate-45 rounded-[1px] bg-brand-red" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-brand-red/40" />
             </span>
             <p className="mx-auto mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground sm:text-lg">
               The brothers of {chapterAttribution} have voted, deliberated, and want you in this brotherhood.
@@ -158,7 +158,7 @@ export default async function BidPage({ params }: { params: { token: string } })
                 : " The chapter wishes you the best wherever you land."}
             </p>
             <p className="mt-4 text-xs text-muted-foreground">
-              Need to change your mind? Email <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">{rushEmail}</a>.
+              Need to change your mind? Email <a href={`mailto:${rushEmail}`} className="text-brand-red hover:underline">{rushEmail}</a>.
             </p>
           </div>
         )}
@@ -168,7 +168,7 @@ export default async function BidPage({ params }: { params: { token: string } })
             <h1 className="text-2xl font-semibold tracking-tight">This bid link has expired.</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Bid links are valid for 14 days. Reach out to{" "}
-              <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">{rushEmail}</a>{" "}
+              <a href={`mailto:${rushEmail}`} className="text-brand-red hover:underline">{rushEmail}</a>{" "}
               and the rush chair can re-issue.
             </p>
           </div>
@@ -179,7 +179,7 @@ export default async function BidPage({ params }: { params: { token: string } })
             <h1 className="text-2xl font-semibold tracking-tight">Bid link not found.</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Double-check the link from your email or text. If it still doesn't work, email{" "}
-              <a href={`mailto:${rushEmail}`} className="text-phisig-red hover:underline">{rushEmail}</a>.
+              <a href={`mailto:${rushEmail}`} className="text-brand-red hover:underline">{rushEmail}</a>.
             </p>
           </div>
         )}

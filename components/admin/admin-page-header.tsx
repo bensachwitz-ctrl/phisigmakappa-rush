@@ -36,14 +36,14 @@ export function AdminPageHeader({
     <Reveal
       as="div"
       className={cn(
-        "mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-gradient-to-br from-phisig-red-soft/50 via-white to-white p-5 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)] sm:p-6",
+        "mb-6 relative overflow-hidden rounded-2xl border border-brand-red/10 bg-gradient-to-br from-brand-red-soft/50 via-white to-white p-5 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)] sm:p-6",
         className
       )}
     >
       {/* Soft brand radial in the top-right corner for depth (decorative). */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-phisig-red/10 blur-3xl"
+        className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-brand-red/10 blur-3xl"
       />
       <div className="relative flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">

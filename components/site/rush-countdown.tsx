@@ -36,7 +36,7 @@ export function RushCountdown({
 
   if (!startsAt) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-brand-red shadow-sm">
         <Calendar className="h-3 w-3" /> Fall &apos;26 schedule drops in August
       </span>
     );
@@ -53,7 +53,7 @@ export function RushCountdown({
     // Schedule rolled past the last event we know about — server should send
     // a fresh next event on the next render. Show a quiet placeholder.
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-brand-red shadow-sm">
         <Calendar className="h-3 w-3" /> More rush events coming
       </span>
     );
@@ -61,7 +61,7 @@ export function RushCountdown({
 
   if (isLive) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red bg-phisig-red px-3 py-1 text-xs font-semibold text-white shadow-md shadow-phisig-red/30">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-red bg-brand-red px-3 py-1 text-xs font-semibold text-white shadow-md shadow-brand-red/30">
         <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
         Happening now: {eventName}
         {eventLocation && <span className="opacity-90 font-normal hidden sm:inline">· {eventLocation}</span>}
@@ -82,7 +82,7 @@ export function RushCountdown({
     : `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/30 bg-white/95 backdrop-blur px-3 py-1 text-xs font-semibold text-phisig-red shadow-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/30 bg-white/95 backdrop-blur px-3 py-1 text-xs font-semibold text-brand-red shadow-sm">
       <Clock className="h-3 w-3" />
       <span className="hidden sm:inline">Next event:</span>
       <span className="font-semibold">{eventName || "Rush"}</span>

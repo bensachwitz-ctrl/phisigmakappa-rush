@@ -252,7 +252,7 @@ describe("server-side page/route gate denies officers outside their domain", () 
 // Owner-reported / audit-found leak: the admin LAYOUT only did `if (!session)
 // redirect("/admin/login")`, and the Edge middleware only verifies the session
 // is VALID — neither checks isAdmin. But the public member-login branch (POST
-// /api/admin/login, mode:"brother") mints the SAME `phisig_admin` cookie with
+// /api/admin/login, mode:"brother") mints the SAME `greekstack_admin` cookie with
 // isAdmin=false for any plain brother. So a regular member who signed into the
 // member app carried a cookie that satisfied both gates and could open EVERY
 // /admin/* page that didn't independently call requireOfficerPermission — the
@@ -628,7 +628,7 @@ describe("GET /api/mobile/data — server-enforced capabilities", () => {
 
 // ── GATE-3 FIX 2 — Brothers dashboard Quick Admin Console: no DEAD /admin/* ────
 // shortcuts for a portal-only officer. A /portal/brothers session carries the
-// `phisig_portal` cookie, NOT `phisig_admin`, so a portal-only OFFICER
+// `greekstack_portal` cookie, NOT `greekstack_admin`, so a portal-only OFFICER
 // (isOfficer=true, isAdmin=false) CANNOT reach /admin/* — every shortcut just
 // bounced them to /admin/login. The console + the "Add/Manage events" + "Set up
 // dues" /admin/* links are now gated on REAL admin access (`canUseAdminLinks =
@@ -651,7 +651,7 @@ describe("brothers dashboard admin shortcuts (GATE-3 FIX 2) — no dead /admin/*
 
   it("a portal-only OFFICER (isOfficer=true, isAdmin=false) gets NO admin shortcuts", () => {
     // isOfficer is true, but the admin-link gate ignores it — only real admin
-    // access (the phisig_admin cookie → isAdmin) unlocks the /admin/* links.
+    // access (the greekstack_admin cookie → isAdmin) unlocks the /admin/* links.
     expect(canUseAdminLinks(false)).toBe(false);
   });
 

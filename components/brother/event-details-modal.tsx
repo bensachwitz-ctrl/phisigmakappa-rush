@@ -21,7 +21,7 @@ import { IconSpark } from "@/components/brand/icons";
 // component imports nothing from there to keep the bundle smaller in the
 // modal-only case (it's the only consumer of these tones inside this file).
 const CATEGORY_META: Record<string, { label: string; tone: string; icon: React.ComponentType<{ className?: string }> }> = {
-  RUSH:        { label: "Rush event",     tone: "bg-phisig-red text-white",  icon: IconSpark    },
+  RUSH:        { label: "Rush event",     tone: "bg-brand-red text-white",  icon: IconSpark    },
   DATE:        { label: "Date event",     tone: "bg-pink-500 text-white",    icon: Heart       },
   BROTHERHOOD: { label: "Brotherhood",    tone: "bg-blue-500 text-white",    icon: Users       },
   CHAPTER:     { label: "Chapter",        tone: "bg-amber-500 text-white",   icon: Crown       },
@@ -296,7 +296,7 @@ export function EventDetailsModal({
                 { id: "GOING",        label: "Going",        color: "text-emerald-600 border-emerald-500" },
                 { id: "MAYBE",        label: "Maybe",        color: "text-amber-600 border-amber-500"     },
                 { id: "NOT_GOING",    label: "Not going",    color: "text-zinc-700 border-zinc-700"        },
-                { id: "NO_RESPONSE",  label: "No response",  color: "text-phisig-red border-phisig-red"   },
+                { id: "NO_RESPONSE",  label: "No response",  color: "text-brand-red border-brand-red"   },
               ] as { id: Tab; label: string; color: string }[]
             ).map(({ id, label, color }) => {
               const active = tab === id;
@@ -371,7 +371,7 @@ export function EventDetailsModal({
                       loading="lazy"
                     />
                   ) : (
-                    <div className="h-9 w-9 rounded-full bg-phisig-red-soft text-phisig-red flex items-center justify-center text-sm font-semibold">
+                    <div className="h-9 w-9 rounded-full bg-brand-red-soft text-brand-red flex items-center justify-center text-sm font-semibold">
                       {r.brother.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -397,7 +397,7 @@ export function EventDetailsModal({
               <span className="font-medium text-emerald-600">{data.counts.GOING}</span> going ·{" "}
               <span className="font-medium text-amber-600">{data.counts.MAYBE}</span> maybe ·{" "}
               <span className="font-medium text-zinc-700">{data.counts.NOT_GOING}</span> not going ·{" "}
-              <span className="font-medium text-phisig-red">{data.counts.NO_RESPONSE}</span> no response
+              <span className="font-medium text-brand-red">{data.counts.NO_RESPONSE}</span> no response
             </span>
             <span>
               {data.counts.TOTAL_BROTHERS} active brother{data.counts.TOTAL_BROTHERS === 1 ? "" : "s"}

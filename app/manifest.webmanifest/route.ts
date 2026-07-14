@@ -92,7 +92,7 @@ export async function GET() {
       headers: {
         "Content-Type": "application/manifest+json",
         // Per-tenant now — must not be shared across hosts by a CDN. Keep it
-        // private + short so Clemson never gets Phi Sig's cached manifest.
+        // private + short so Clemson never gets Demo Chapter's cached manifest.
         "Cache-Control": "private, max-age=0, must-revalidate",
       },
     }

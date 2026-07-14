@@ -85,14 +85,14 @@ function BottomTab({
         // 44px+ minimum touch target per Apple HIG / WCAG 2.5.5.
         "min-h-[58px]",
         emphasis
-          ? "text-phisig-red"
+          ? "text-brand-red"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
       <span
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-          emphasis ? "bg-phisig-red/10" : "bg-transparent"
+          emphasis ? "bg-brand-red/10" : "bg-transparent"
         )}
       >
         <Icon className="h-5 w-5" />

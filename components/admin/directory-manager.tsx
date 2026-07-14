@@ -262,7 +262,7 @@ export function DirectoryManager({ initial }: { initial: DirectoryRow[] }) {
                 type="button"
                 onClick={() => setRawQuery("")}
                 aria-label="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
               >
                 <XGlyph />
               </button>
@@ -323,7 +323,7 @@ export function DirectoryManager({ initial }: { initial: DirectoryRow[] }) {
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red rounded px-1"
+              className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red rounded px-1"
             >
               Clear all
             </button>
@@ -402,7 +402,7 @@ function MemberCard({ b }: { b: DirectoryRow }) {
   const meta = [b.major, b.hometown].filter(Boolean).join(" · ");
 
   return (
-    <div className="group relative h-full rounded-2xl border border-border/70 bg-card p-5 transition-all duration-300 gs-card-glow hover:-translate-y-1 hover:border-phisig-red/40">
+    <div className="group relative h-full rounded-2xl border border-border/70 bg-card p-5 transition-all duration-300 gs-card-glow hover:-translate-y-1 hover:border-brand-red/40">
       <div className="flex items-start gap-3.5">
         <Avatar name={b.name} src={b.headshotUrl} exec={exec} />
         <div className="min-w-0 flex-1">
@@ -413,7 +413,7 @@ function MemberCard({ b }: { b: DirectoryRow }) {
                 "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ring-1",
                 exec
                   ? "bg-amber-50 text-amber-700 ring-amber-200"
-                  : "bg-phisig-red/10 text-phisig-red ring-phisig-red/20"
+                  : "bg-brand-red/10 text-brand-red ring-brand-red/20"
               )}
             >
               {exec && <CrownGlyph />}
@@ -441,7 +441,7 @@ function MemberCard({ b }: { b: DirectoryRow }) {
           {st.label}
         </span>
         {b.pledgeClass && (
-          <span className="inline-flex items-center rounded-full bg-phisig-red/10 px-2 py-0.5 text-[10px] font-semibold text-phisig-red ring-1 ring-phisig-red/20">
+          <span className="inline-flex items-center rounded-full bg-brand-red/10 px-2 py-0.5 text-[10px] font-semibold text-brand-red ring-1 ring-brand-red/20">
             {b.pledgeClass}
           </span>
         )}
@@ -488,7 +488,7 @@ function Avatar({ name, src, exec }: { name: string; src: string | null; exec: b
         alt=""
         className={cn(
           "h-14 w-14 rounded-full object-cover shrink-0 ring-2 ring-offset-2 ring-offset-card",
-          exec ? "ring-[color:var(--gs-gold)]" : "ring-phisig-red/55"
+          exec ? "ring-[color:var(--gs-gold)]" : "ring-brand-red/55"
         )}
       />
     );
@@ -497,7 +497,7 @@ function Avatar({ name, src, exec }: { name: string; src: string | null; exec: b
     <div
       className={cn(
         "h-14 w-14 shrink-0 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ring-2 ring-offset-2 ring-offset-card",
-        "bg-gradient-to-br from-phisig-red to-phisig-red-dark",
+        "bg-gradient-to-br from-brand-red to-brand-red-dark",
         exec ? "ring-[color:var(--gs-gold)]" : "ring-white/40"
       )}
       aria-hidden="true"
@@ -523,7 +523,7 @@ function ContactAction({
       href={href}
       aria-label={label}
       title={title}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground transition-all hover:border-phisig-red/50 hover:bg-secondary hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:ring-offset-1"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground transition-all hover:border-brand-red/50 hover:bg-secondary hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-1"
     >
       {children}
     </a>
@@ -597,7 +597,7 @@ function RosterTable({ rows }: { rows: DirectoryRow[] }) {
                         href={`mailto:${b.email}`}
                         aria-label={`Email ${b.name}`}
                         title={b.email}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:text-phisig-red hover:border-phisig-red/40 hover:bg-secondary active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:text-brand-red hover:border-brand-red/40 hover:bg-secondary active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
                       >
                         <MailGlyph />
                       </a>
@@ -607,7 +607,7 @@ function RosterTable({ rows }: { rows: DirectoryRow[] }) {
                         href={`tel:${b.phone}`}
                         aria-label={`Call ${b.name}`}
                         title={b.phone}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:text-phisig-red hover:border-phisig-red/40 hover:bg-secondary active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all hover:text-brand-red hover:border-brand-red/40 hover:bg-secondary active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
                       >
                         <PhoneGlyph />
                       </a>
@@ -642,7 +642,7 @@ function AvatarSm({ name, src, exec }: { name: string; src: string | null; exec:
     <div
       className={cn(
         "h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold text-white",
-        "bg-gradient-to-br from-phisig-red to-phisig-red-dark"
+        "bg-gradient-to-br from-brand-red to-brand-red-dark"
       )}
       aria-hidden="true"
     >
@@ -659,7 +659,7 @@ function EmptyState({ everEmpty, onClear }: { everEmpty: boolean; onClear: () =>
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 py-16 px-6 text-center">
       <span
-        className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/30"
+        className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-lg shadow-brand-red/30"
         aria-hidden="true"
       >
         {everEmpty ? <IconMembers className="h-7 w-7" accent="rgba(255,255,255,0.85)" /> : <IconDirectory className="h-7 w-7" accent="rgba(255,255,255,0.85)" />}
@@ -707,7 +707,7 @@ function ToggleButton({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red",
+        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red",
         active
           ? "bg-background text-foreground shadow-sm"
           : "text-muted-foreground hover:text-foreground"
@@ -745,8 +745,8 @@ function FilterSelect({
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         className={cn(
-          "h-9 appearance-none rounded-lg border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground cursor-pointer transition-colors hover:border-phisig-red/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:ring-offset-1",
-          value && "border-phisig-red/45 text-phisig-red"
+          "h-9 appearance-none rounded-lg border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground cursor-pointer transition-colors hover:border-brand-red/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-1",
+          value && "border-brand-red/45 text-brand-red"
         )}
       >
         {allowEmpty && <option value="">{allLabel}</option>}
@@ -862,7 +862,7 @@ function CapGlyph() {
 
 function LinkGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-phisig-red" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-brand-red" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9.5 14.5l5-5" />
       <path d="M8 11l-1.5 1.5a3 3 0 0 0 4.2 4.2L12 15.5" />
       <path d="M16 13l1.5-1.5a3 3 0 0 0-4.2-4.2L12 8.5" />

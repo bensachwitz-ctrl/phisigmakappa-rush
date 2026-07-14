@@ -25,7 +25,7 @@ export type FunnelStage = {
   id: "submitted" | "active" | "bid" | "accepted";
   label: string;
   count: number;
-  tone: "phisig-red" | "amber" | "emerald" | "blue";
+  tone: "brand-red" | "amber" | "emerald" | "blue";
   description: string;
 };
 
@@ -42,7 +42,7 @@ export function RushFunnel({
 }) {
   const stages: FunnelStage[] = [
     { id: "submitted", label: "Submitted",  count: submitted, tone: "blue",       description: "Filled out the rush interest form" },
-    { id: "active",    label: "Active",     count: active,    tone: "phisig-red", description: "Still in consideration" },
+    { id: "active",    label: "Active",     count: active,    tone: "brand-red", description: "Still in consideration" },
     { id: "bid",       label: "Bid",        count: bid,       tone: "amber",      description: "Bid extended (any response)" },
     { id: "accepted",  label: "Accepted",   count: accepted,  tone: "emerald",    description: "Joined the chapter" },
   ];
@@ -55,7 +55,7 @@ export function RushFunnel({
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="text-sm font-semibold tracking-tight flex items-center gap-2">
-              <Users className="h-4 w-4 text-phisig-red" aria-hidden="true" />
+              <Users className="h-4 w-4 text-brand-red" aria-hidden="true" />
               Rush funnel
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -96,7 +96,7 @@ export function RushFunnel({
                     role="presentation"
                     className={cn(
                       "h-full rounded-md transition-[width] duration-500 ease-out",
-                      stage.tone === "phisig-red" && "bg-phisig-red",
+                      stage.tone === "brand-red" && "bg-brand-red",
                       stage.tone === "amber" && "bg-amber-500",
                       stage.tone === "emerald" && "bg-emerald-500",
                       stage.tone === "blue" && "bg-blue-500",

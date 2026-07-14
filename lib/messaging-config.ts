@@ -59,7 +59,7 @@ export async function getResendConfig(): Promise<ResendConfig> {
     cfg["resend.fromEmail"]?.trim() ||
     process.env.RESEND_FROM_EMAIL ||
     // NEUTRAL platform default. A fresh non-Phi-Sig chapter that sets a Resend
-    // key but no fromEmail must NOT send From: <their name> <rush@phisig-usc.com>
+    // key but no fromEmail must NOT send From: <their name> <rush@chapter.example>
     // (cross-brand leak). The per-tenant resend.fromEmail / env still override.
     "no-reply@greekstack.vercel.app";
 

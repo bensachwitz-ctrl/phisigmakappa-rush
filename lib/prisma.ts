@@ -109,8 +109,8 @@ function getCachedClient(schema: string): PrismaClient {
  * Returns an explicit PrismaClient bound to a specific tenant SCHEMA, independent
  * of the request Host. Use this in server-to-server / no-Host contexts — Stripe
  * webhooks, cron jobs, scripts — where the Host-header proxy (`prisma`) would
- * wrongly resolve to the public schema. Accepts a bare subdomain ("phisig") or a
- * full schema name ("schema_phisig"); sanitized identically to provisioning.
+ * wrongly resolve to the public schema. Accepts a bare subdomain ("chapter") or a
+ * full schema name ("schema_chapter"); sanitized identically to provisioning.
  */
 export function getTenantClient(subdomainOrSchema: string): PrismaClient {
   const s = subdomainOrSchema.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();

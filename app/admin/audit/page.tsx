@@ -32,7 +32,7 @@ export default async function AuditPage() {
 
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
             <ScrollText className="h-3 w-3" aria-hidden="true" /> Governance
           </span>
           {/* Tamper-evidence badge — verifyChain() recomputes the hash chain over

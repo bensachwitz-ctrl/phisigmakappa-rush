@@ -401,13 +401,13 @@ export function RushForm({
       />
       <div className="relative h-1 bg-secondary">
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700 ease-out"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-red to-brand-red-dark transition-all duration-700 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {booth && idleSecondsLeft !== null && idleSecondsLeft <= 20 && (
-        <div className="bg-phisig-red-soft border-b border-phisig-red/20 px-4 py-2 text-center text-xs text-phisig-red font-semibold">
+        <div className="bg-brand-red-soft border-b border-brand-red/20 px-4 py-2 text-center text-xs text-brand-red font-semibold">
           Auto-clearing in {idleSecondsLeft}s - tap any field to keep going.
         </div>
       )}
@@ -423,8 +423,8 @@ export function RushForm({
                   <span
                     className={cn(
                       "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold transition-all duration-300",
-                      done && "bg-phisig-red text-white",
-                      active && "bg-phisig-red text-white ring-4 ring-phisig-red/20 scale-110",
+                      done && "bg-brand-red text-white",
+                      active && "bg-brand-red text-white ring-4 ring-brand-red/20 scale-110",
                       !done && !active && "bg-secondary text-muted-foreground"
                     )}
                   >
@@ -453,21 +453,21 @@ export function RushForm({
                   formal, important step (not a throwaway checkbox). The input,
                   its handler, and the aria-describedby linkage are UNCHANGED;
                   the whole <label> still toggles the checkbox on click. */}
-              <label className="group mt-6 flex items-start gap-3 rounded-xl border border-phisig-red/20 bg-phisig-red-soft/40 p-4 cursor-pointer transition-colors hover:border-phisig-red/35 hover:bg-phisig-red-soft/60">
+              <label className="group mt-6 flex items-start gap-3 rounded-xl border border-brand-red/20 bg-brand-red-soft/40 p-4 cursor-pointer transition-colors hover:border-brand-red/35 hover:bg-brand-red-soft/60">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-border text-brand-red focus:ring-brand-red shrink-0 cursor-pointer"
                   aria-describedby="sms-consent-text"
                 />
                 <span id="sms-consent-text" className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-phisig-red">
+                  <span className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-red">
                     <IconShieldCheckDuo className="h-3.5 w-3.5" /> Consent to contact
                   </span>
                   {SMS_EXPRESS_CONSENT}{" "}
                   See our{" "}
-                  <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
+                  <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline font-medium">
                     privacy policy
                   </a>.
                 </span>
@@ -512,15 +512,15 @@ export function RushForm({
             without adding a step or touching the submit flow. */}
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
-            <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> Never sold or shared
+            <IconShieldCheckDuo className="h-3.5 w-3.5 text-brand-red" /> Never sold or shared
           </span>
           <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
           <span className="inline-flex items-center gap-1.5">
-            <IconCheckCircle className="h-3.5 w-3.5 text-phisig-red" /> Opt out anytime - reply STOP
+            <IconCheckCircle className="h-3.5 w-3.5 text-brand-red" /> Opt out anytime - reply STOP
           </span>
           <span className="hidden sm:inline text-border" aria-hidden="true">·</span>
           <span className="inline-flex items-center gap-1.5">
-            <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> Goes straight to the rush chair
+            <IconBolt className="h-3.5 w-3.5 text-brand-red" /> Goes straight to the rush chair
           </span>
         </div>
       </CardContent>
@@ -626,10 +626,10 @@ function ContactStep({
       {/* TCPA pre-disclosure: must appear before / at the point of phone collection.
           Copy is unchanged (compliance-critical); only a small brand shield is
           added inline as a visual lead. */}
-      <p className="text-[11px] sm:text-xs text-muted-foreground bg-phisig-red-soft/50 border border-phisig-red/15 rounded-xl p-3 leading-relaxed">
-        <IconShieldCheckDuo className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px text-phisig-red align-middle" />
+      <p className="text-[11px] sm:text-xs text-muted-foreground bg-brand-red-soft/50 border border-brand-red/15 rounded-xl p-3 leading-relaxed">
+        <IconShieldCheckDuo className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px text-brand-red align-middle" />
         <span className="font-semibold text-foreground">SMS notice: </span>{SMS_PRE_DISCLOSURE}{" "}
-        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission - see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
+        <span className="block mt-1.5">If you&apos;re 17, you&apos;ll need a parent or guardian&apos;s permission - see our <a href="/privacy" target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline font-medium">privacy policy</a>. You&apos;ll affirm consent on the final step before submitting.</span>
       </p>
 
       {/* Age attestation — separate one-tap toggle so the consent record is
@@ -645,8 +645,8 @@ function ContactStep({
             className={cn(
               "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
               data.ageAttestation === "ADULT_18_PLUS"
-                ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
-                : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+                ? "border-brand-red bg-brand-red text-white shadow-md shadow-brand-red/25"
+                : "border-border hover:border-brand-red/40 hover:bg-brand-red-soft hover:-translate-y-0.5"
             )}
           >
             I&apos;m 18 or older
@@ -659,8 +659,8 @@ function ContactStep({
             className={cn(
               "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
               data.ageAttestation === "MINOR_17_WITH_GUARDIAN_PERMISSION"
-                ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
-                : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+                ? "border-brand-red bg-brand-red text-white shadow-md shadow-brand-red/25"
+                : "border-border hover:border-brand-red/40 hover:bg-brand-red-soft hover:-translate-y-0.5"
             )}
           >
             I&apos;m 17, with parent permission
@@ -702,8 +702,8 @@ function ProfileStep({
               className={cn(
                 "rounded-full border px-4 py-2 text-sm transition-all duration-200 active:scale-95",
                 data.year === y
-                  ? "border-phisig-red bg-phisig-red text-white shadow-md shadow-phisig-red/25"
-                  : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:-translate-y-0.5"
+                  ? "border-brand-red bg-brand-red text-white shadow-md shadow-brand-red/25"
+                  : "border-border hover:border-brand-red/40 hover:bg-brand-red-soft hover:-translate-y-0.5"
               )}
             >
               {y}
@@ -761,7 +761,7 @@ function ProfileStep({
             const fieldId = `custom-${q.key}`;
             const err = errors[fieldId];
             const inputClass =
-              "bg-card/45 focus-visible:ring-phisig-red focus-visible:border-phisig-red";
+              "bg-card/45 focus-visible:ring-brand-red focus-visible:border-brand-red";
 
             // Checkbox renders inline (label sits beside the box), so it skips the
             // shared <Field> label wrapper and manages its own error line.
@@ -774,15 +774,15 @@ function ProfileStep({
                       type="checkbox"
                       checked={currentVal === "true"}
                       onChange={(e) => setAnswer(e.target.checked ? "true" : "false")}
-                      className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0"
+                      className="mt-0.5 h-4 w-4 rounded border-border text-brand-red focus:ring-brand-red shrink-0"
                     />
                     <span className="text-sm text-foreground">
                       {q.label}{" "}
-                      {q.required && <span className="text-phisig-red" aria-hidden="true">*</span>}
+                      {q.required && <span className="text-brand-red" aria-hidden="true">*</span>}
                     </span>
                   </label>
                   {err && (
-                    <p className="mt-1 text-xs text-phisig-red animate-fade-in" role="alert">{err}</p>
+                    <p className="mt-1 text-xs text-brand-red animate-fade-in" role="alert">{err}</p>
                   )}
                 </div>
               );
@@ -805,7 +805,7 @@ function ProfileStep({
                     value={currentVal}
                     onChange={(e) => setAnswer(e.target.value)}
                     className={cn(
-                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:border-phisig-red disabled:cursor-not-allowed disabled:opacity-50",
+                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:border-brand-red disabled:cursor-not-allowed disabled:opacity-50",
                       inputClass,
                     )}
                   >
@@ -885,7 +885,7 @@ function PhotoStep({
             <img
               src={avatarSrc(data.headshotUrl, 352)}
               alt="Your headshot"
-              className="h-44 w-44 rounded-full object-cover ring-4 ring-phisig-red/15 ring-offset-2 ring-offset-background shadow-lg animate-fade-in"
+              className="h-44 w-44 rounded-full object-cover ring-4 ring-brand-red/15 ring-offset-2 ring-offset-background shadow-lg animate-fade-in"
             />
             <button
               type="button"
@@ -915,12 +915,12 @@ function PhotoStep({
             "group relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200",
             "flex flex-col items-center justify-center text-center px-6 py-12",
             drag
-              ? "border-phisig-red bg-phisig-red-soft scale-[1.01]"
-              : "border-border hover:border-phisig-red/40 hover:bg-phisig-red-soft/30",
+              ? "border-brand-red bg-brand-red-soft scale-[1.01]"
+              : "border-border hover:border-brand-red/40 hover:bg-brand-red-soft/30",
             busy && "pointer-events-none opacity-60"
           )}
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-phisig-red-soft text-phisig-red mb-4 transition-transform duration-300 group-hover:scale-105">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-red-soft text-brand-red mb-4 transition-transform duration-300 group-hover:scale-105">
             {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <IconCamera className="h-6 w-6" />}
           </div>
           <p className="text-base font-medium">
@@ -965,10 +965,10 @@ function ReviewStep({ data, totalSteps, booth }: { data: FormData; totalSteps: n
           {data.headshotUrl ? (
             <img
               src={avatarSrc(data.headshotUrl, 160)} alt=""
-              className="h-20 w-20 rounded-full object-cover ring-2 ring-phisig-red/20 ring-offset-2 ring-offset-background shrink-0"
+              className="h-20 w-20 rounded-full object-cover ring-2 ring-brand-red/20 ring-offset-2 ring-offset-background shrink-0"
             />
           ) : (
-            <div className="h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border shrink-0 flex items-center justify-center text-phisig-red/70">
+            <div className="h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border shrink-0 flex items-center justify-center text-brand-red/70">
               <IconCamera className="h-7 w-7" />
             </div>
           )}
@@ -1024,10 +1024,10 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
 
   if (booth) {
     return (
-      <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10 animate-spring-in">
-        <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
+      <Card className="border-brand-red/30 overflow-hidden shadow-2xl shadow-brand-red/10 animate-spring-in">
+        <div className="h-1 bg-gradient-to-r from-brand-red to-brand-red-dark" />
         <CardContent className="py-14 px-6 text-center animate-fade-in">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-xl shadow-brand-red/30 animate-pulse-ring">
             <CheckCircle2 className="h-10 w-10" />
           </div>
           <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight">Got it, {first}.</h3>
@@ -1039,7 +1039,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
               Consent receipt: {receiptId.slice(0, 12)}…
             </p>
           )}
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-phisig-red-soft border border-phisig-red/20 px-4 py-2 text-xs font-semibold text-phisig-red">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand-red-soft border border-brand-red/20 px-4 py-2 text-xs font-semibold text-brand-red">
             Next rushee in 6 seconds…
           </div>
           <div className="mt-4">
@@ -1052,10 +1052,10 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
     );
   }
   return (
-    <Card className="border-phisig-red/30 overflow-hidden shadow-2xl shadow-phisig-red/10 animate-spring-in">
-      <div className="h-1 bg-gradient-to-r from-phisig-red to-phisig-red-dark" />
+    <Card className="border-brand-red/30 overflow-hidden shadow-2xl shadow-brand-red/10 animate-spring-in">
+      <div className="h-1 bg-gradient-to-r from-brand-red to-brand-red-dark" />
       <CardContent className="py-12 px-6 text-center animate-fade-in">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/30 animate-pulse-ring">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-xl shadow-brand-red/30 animate-pulse-ring">
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight">
@@ -1066,7 +1066,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
         </p>
         {receiptId && (
           <p className="mt-2 text-[10px] text-muted-foreground/70 font-mono">
-            Consent receipt: <a className="hover:text-phisig-red" href={`/api/consent/${receiptId}`} target="_blank" rel="noreferrer noopener">{receiptId.slice(0, 12)}…</a>
+            Consent receipt: <a className="hover:text-brand-red" href={`/api/consent/${receiptId}`} target="_blank" rel="noreferrer noopener">{receiptId.slice(0, 12)}…</a>
           </p>
         )}
 
@@ -1076,12 +1076,12 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
             { num: "2", label: "We'll text & email you", Icon: IconBolt },
             { num: "3", label: "Show up & meet the brothers", Icon: IconSparkle },
           ].map((s) => (
-            <div key={s.num} className="group rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-phisig-red/30">
+            <div key={s.num} className="group rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-brand-red/30">
               <div className="flex items-center justify-between">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-phisig-red text-white text-[11px] font-semibold">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-red text-white text-[11px] font-semibold">
                   {s.num}
                 </div>
-                <s.Icon className="h-4 w-4 text-phisig-red transition-transform duration-300 group-hover:scale-110" />
+                <s.Icon className="h-4 w-4 text-brand-red transition-transform duration-300 group-hover:scale-110" />
               </div>
               <p className="mt-2 text-xs font-medium leading-snug">{s.label}</p>
             </div>
@@ -1116,7 +1116,7 @@ function SuccessCard({ data, booth, receiptId, identity, socialHandle, socialUrl
 function Header({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.18em] text-phisig-red font-medium">{eyebrow}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-brand-red font-medium">{eyebrow}</p>
       <h3 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight">{title}</h3>
       <p className="mt-1.5 text-sm text-muted-foreground">{sub}</p>
     </div>
@@ -1142,7 +1142,7 @@ function Field({
   return (
     <div className={cn(error && "animate-shake-x")}>
       <Label htmlFor={id} className="mb-1.5 inline-block">
-        {label} {required && <span className="text-phisig-red" aria-hidden="true">*</span>}
+        {label} {required && <span className="text-brand-red" aria-hidden="true">*</span>}
         {required && <span className="sr-only"> (required)</span>}
       </Label>
       {/* field-glow paints a soft cardinal ring on focus — better feedback
@@ -1174,7 +1174,7 @@ function Field({
         )}
       </div>
       {error && (
-        <p id={errorId} className="mt-1 text-xs text-phisig-red animate-fade-in" role="alert">
+        <p id={errorId} className="mt-1 text-xs text-brand-red animate-fade-in" role="alert">
           {error}
         </p>
       )}

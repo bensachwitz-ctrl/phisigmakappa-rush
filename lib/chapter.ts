@@ -7,6 +7,6 @@
 // Always import `CURRENT_CHAPTER_ID` rather than hardcoding the string in
 // individual routes.
 
-export const CURRENT_CHAPTER_ID = "gamma-triton";
+export const CURRENT_CHAPTER_ID = "demo-chapter";
 
-export const CURRENT_CHAPTER_DISPLAY_NAME = "Phi Sigma Kappa — Gamma Triton (USC)";
+export const CURRENT_CHAPTER_DISPLAY_NAME = "Greek Stack Demo Chapter";

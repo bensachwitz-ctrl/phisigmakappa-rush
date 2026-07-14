@@ -78,7 +78,7 @@ export function ElectionsListClient({ initial }: { initial: ElectionRow[] }) {
                 style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
               >
                 <Link href={`/admin/elections/${e.id}`} className="block">
-                  <Card className="lift overflow-hidden transition-colors hover:border-phisig-red/40">
+                  <Card className="lift overflow-hidden transition-colors hover:border-brand-red/40">
                     <CardContent className="flex items-center gap-4 p-5">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">

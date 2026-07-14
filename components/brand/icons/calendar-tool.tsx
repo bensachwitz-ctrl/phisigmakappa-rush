@@ -15,14 +15,14 @@ import { IconBase, type IconProps } from "./icon-base";
  * Like the other CHAPTER-facing glyphs (see ./chapter.tsx), the accent defaults
  * to the live per-tenant primary — `hsl(var(--primary) / 0.55)` — so the
  * decorative layer always reads in the CHAPTER brand, never platform blue. The
- * primary line still inherits `currentColor`, so wrapping in `text-phisig-red`
+ * primary line still inherits `currentColor`, so wrapping in `text-brand-red`
  * (= the chapter primary) keeps both layers on-brand with zero per-call wiring.
  *
  * Server-safe (pure SVG, no "use client"); `aria-hidden` by default. Imported
  * DIRECTLY from this file (NOT the index barrel) so the barrel stays untouched.
  *
  * USAGE
- *   <IconCalendarTool className="h-7 w-7 text-phisig-red" />     // both layers brand-tinted
+ *   <IconCalendarTool className="h-7 w-7 text-brand-red" />     // both layers brand-tinted
  *   <IconChip icon={IconCalendarTool} tone="brand" size="lg" />  // hosted in the shared chip
  */
 

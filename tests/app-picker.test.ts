@@ -147,7 +147,7 @@ describe("brand derivation", () => {
 
   it("resolveChapterBrand synthesizes a brand from school colors for an unknown org", () => {
     const b = resolveChapterBrand({ name: "Some Local Society", subdomain: "sls", school: "Clemson University" });
-    // Clemson colors → a valid #rrggbb primary, not the default phi-sig red.
+    // Clemson colors → a valid #rrggbb primary, not the default platform blue.
     expect(b.primaryColor).toMatch(/^#[0-9a-fA-F]{6}$/);
   });
 

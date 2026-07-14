@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
  *
  * USAGE
  *   import { IllustrationRoster } from "@/components/brand/illustrations/roster";
- *   <IllustrationRoster className="text-phisig-red" />       // admin: tenant brand
+ *   <IllustrationRoster className="text-brand-red" />       // admin: tenant brand
  *   <IllustrationCalendar className="text-maroon-700" />     // portal: maroon
  *   <IllustrationSearch size={120} accent="hsl(var(--primary) / 0.18)" />
  *

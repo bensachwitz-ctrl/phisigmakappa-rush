@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // ── getCurrentBrotherIdAsync — two-cookie resolution (P1 blocker #6) ──────────
 // The synchronous getCurrentBrotherId() reads ONLY the admin cookie
-// (phisig_admin), so a plain portal member holding only a phisig_portal cookie
+// (greekstack_admin), so a plain portal member holding only a greekstack_portal cookie
 // resolved to null and their own self-service routes (mark-read, service-hours,
 // expenses, chores-complete, excused-absence) 401'd. getCurrentBrotherIdAsync()
 // adds the portal fallback: it must resolve a brother id from EITHER cookie.
@@ -20,8 +20,8 @@ let portalUserRow: { brotherId: string | null } | null = null;
 vi.mock("next/headers", () => ({
   cookies: () => ({
     get: (name: string) => {
-      if (name === "phisig_admin") return adminCookie ? { value: adminCookie } : undefined;
-      if (name === "phisig_portal") return portalCookie ? { value: portalCookie } : undefined;
+      if (name === "greekstack_admin") return adminCookie ? { value: adminCookie } : undefined;
+      if (name === "greekstack_portal") return portalCookie ? { value: portalCookie } : undefined;
       return undefined;
     },
     set: () => undefined,
@@ -60,14 +60,14 @@ async function loadPortal() {
 }
 
 describe("getCurrentBrotherIdAsync — resolves both cookie types", () => {
-  it("resolves the brother id from an admin cookie (phisig_admin)", async () => {
+  it("resolves the brother id from an admin cookie (greekstack_admin)", async () => {
     const { createSessionToken, getCurrentBrotherIdAsync } = await loadAuth();
     adminCookie = createSessionToken("brother_admin", false, "alpha");
 
     expect(await getCurrentBrotherIdAsync()).toBe("brother_admin");
   });
 
-  it("resolves the brother id from a portal brother session (phisig_portal)", async () => {
+  it("resolves the brother id from a portal brother session (greekstack_portal)", async () => {
     const { getCurrentBrotherIdAsync } = await loadAuth();
     const { signPortalToken } = await loadPortal();
     // No admin cookie — only a valid portal cookie.

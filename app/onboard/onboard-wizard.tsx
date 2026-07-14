@@ -239,7 +239,7 @@ export default function OnboardWizard() {
     });
   }
 
-  // Identity State — start EMPTY so a new chapter never publishes Phi Sig's
+  // Identity State — start EMPTY so a new chapter never publishes Demo Chapter's
   // real identity by skimming the form. Placeholders show the reference values
   // as hints; required fields are enforced in validateStep("chapter").
   const [fraternityName, setFraternityName] = React.useState("");
@@ -289,16 +289,16 @@ export default function OnboardWizard() {
   const [heroTagline, setHeroTagline] = React.useState("");
 
   // Pricing method (Stage 1 "pricing"). `plan` is the value persisted to the Tenant:
+  //   "trial"   — Free 30-day trial, no card required, can upgrade later
   //   "monthly" — Base, FIRST MONTH FREE, then $50/mo + $200 per rush cycle
   //   "yearly"  — Annual, $800/year, INCLUDES all rush-cycle fees (best value)
   //   "custom"  — Custom build (a "talk to our team" path → the book-a-call/Cal link)
-  // Defaults to "monthly" — the headline first-month-free offer — so a founder who
-  // skips straight through still lands on the most generous option.
+  // Defaults to "trial" — the no-commitment, no-card offer.
   // ("semester" is retained for back-compat with already-provisioned tenants;
   // "dues_percentage" is selected via the "Online Dues Collection" toggle, which
   // waives the monthly platform fee and switches the billing model to a share of
   // dues collected.)
-  const [plan, setPlan] = React.useState<"monthly" | "yearly" | "semester" | "dues_percentage" | "custom">("monthly");
+  const [plan, setPlan] = React.useState<"trial" | "monthly" | "yearly" | "semester" | "dues_percentage" | "custom">("trial");
   // Optional: the chapter wants Greek Stack to collect dues on their behalf.
   // Checking this switches the plan to "dues_percentage" (monthly fee waived;
   // Greek Stack earns via a share of dues). Requires a human setup call because
@@ -345,8 +345,8 @@ export default function OnboardWizard() {
   const [paymentMethodId, setPaymentMethodId] = React.useState<string | null>(null);
 
   const STEPS = React.useMemo(() => {
-    // Custom and Dues-Share plans never collect a platform card at signup.
-    if (plan === "custom" || plan === "dues_percentage") {
+    // Trial, Custom, and Dues-Share plans never collect a platform card at signup.
+    if (plan === "trial" || plan === "custom" || plan === "dues_percentage") {
       return ALL_STEPS.filter((s) => s.id !== "payment");
     }
     return ALL_STEPS;
@@ -534,7 +534,7 @@ export default function OnboardWizard() {
     }
 
     if (step === "admin") {
-      if (plan === "custom") {
+      if (plan === "trial" || plan === "custom") {
         setDir(1);
         setStep("launch");
       } else {
@@ -597,7 +597,7 @@ export default function OnboardWizard() {
 
   function goPrev() {
     if (step === "launch") {
-      if (plan === "custom") {
+      if (plan === "trial" || plan === "custom") {
         setDir(-1);
         setStep("admin");
       } else {
@@ -904,7 +904,7 @@ export default function OnboardWizard() {
             decorative icons aria-hidden, wraps cleanly on mobile. */}
         <ul className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
           {[
-            { icon: IconSecurity, text: plan === "custom" || plan === "dues_percentage" ? "No card required" : "Secure Stripe setup" },
+            { icon: IconSecurity, text: plan === "trial" || plan === "custom" || plan === "dues_percentage" ? "No card required" : "Secure Stripe setup" },
             { icon: IconLaunch, text: "Live in under a minute" },
             { icon: IconCheckCircle, text: "Edit anything later" },
           ].map((t) => {
@@ -1213,7 +1213,7 @@ export default function OnboardWizard() {
                         label="Choose your subdomain"
                         value={subdomain}
                         onChange={setSubdomain}
-                        placeholder="phisig-usc"
+                        placeholder="your-chapter"
                         inputRef={subdomainRef}
                         error={errors.subdomain}
                         // Tint the input border to match a resolved blocking
@@ -1229,7 +1229,7 @@ export default function OnboardWizard() {
                         }
                       />
                     </div>
-                    <WField label="Organization name" value={fraternityName} onChange={setFraternityName} placeholder="Phi Sigma Kappa" error={errors.fraternityName} required />
+                    <WField label="Organization name" value={fraternityName} onChange={setFraternityName} placeholder="Greek Stack Demo Chapter" error={errors.fraternityName} required />
                     <WField label="Chapter Greek letters" value={greekLetters} onChange={setGreekLetters} placeholder="Gamma Triton" error={errors.greekLetters} required />
                     <div className="sm:col-span-2">
                       <WField label="School / university" value={schoolName} onChange={setSchoolName} placeholder="University of South Carolina" error={errors.schoolName} required />
@@ -1298,7 +1298,7 @@ export default function OnboardWizard() {
                       <div className="space-y-3">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Identity</p>
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <WField label="Organization name (short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Phi Sig" />
+                          <WField label="Organization name (short)" value={fraternityShort} onChange={setFraternityShort} placeholder="Demo Chapter" />
                           <WField label="School abbreviation" value={schoolShort} onChange={setSchoolShort} placeholder="USC" />
                           <WField
                             label="Organization letters (glyphs)"
@@ -1480,8 +1480,8 @@ export default function OnboardWizard() {
                   onCollectDuesChange={(checked) => {
                     setCollectDues(checked);
                     // Dues-Share waives the monthly platform fee; unchecking reverts
-                    // to the default monthly subscription plan.
-                    setPlan(checked ? "dues_percentage" : "monthly");
+                    // to the default free trial plan.
+                    setPlan(checked ? "dues_percentage" : "trial");
                   }}
                   promoCode={promoCode}
                   setPromoCode={setPromoCode}
@@ -1637,11 +1637,18 @@ export default function OnboardWizard() {
                           No card required now - you&apos;re launching on the{" "}
                           <span className="font-semibold text-white">Custom plan</span>.
                         </>
+                      ) : plan === "trial" ? (
+                        <>
+                          No card required - you&apos;re launching on the{" "}
+                          <span className="font-semibold text-white">Free Trial</span>. You have 30 days of full access; upgrade anytime from Admin → Billing.
+                        </>
                       ) : (
                         <>
                           Card verified securely - you won&apos;t be charged today. You&apos;re launching on the{" "}
                           <span className="font-semibold text-white">
-                            {plan === "yearly" ? "Annual Plan ($800/year, billed today)" : "Monthly Plan (first month free, then $50/mo + $200/rush)"}
+                            {plan === "yearly"
+                              ? "Annual Plan ($800/year, billed today)"
+                              : "Monthly Plan (first month free, then $50/mo + $200/rush)"}
                           </span>. A receipt is on its way to your email.
                           {collectDues && " Our team will reach out to configure your chapter's dues collection."}
                         </>
@@ -1804,13 +1811,14 @@ const stepVariants = {
 
 /* ── Pricing step ──────────────────────────────────────────────────────────── */
 
-type PlanId = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
+type PlanId = "trial" | "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
 
 /* One-line plan label reused in the launch summary + the "no card required" note.
-   Only "monthly", "yearly", and "custom" are selectable in the UI; "semester" /
-   "dues_percentage" are kept only for round-trip safety on already-persisted
-   values and map to the closest current label. */
+   "trial", "monthly", "yearly", and "custom" are selectable in the UI;
+   "semester" / "dues_percentage" are kept only for round-trip safety on
+   already-persisted values and map to the closest current label. */
 const PLAN_SUMMARY: Record<PlanId, string> = {
+  trial: "Free trial - 30 days, no card required, upgrade anytime",
   monthly: "Monthly - first month free, then $50/mo + $200 per rush cycle",
   yearly: "Annual - $800/year (includes all rush fees)",
   semester: "Monthly - first month free, then $50/mo + $200 per rush cycle",
@@ -1833,15 +1841,15 @@ function customBuildHref(): string {
 
 /**
  * PRICING STEP — choose how the chapter pays Greekstack. The model is simple:
+ *   • Trial — 30 days free, no card required, upgrade anytime
  *   • Monthly — first month free, then $50/mo + $200 per rush cycle
  *   • Annual  — $800/year, which INCLUDES every rush-cycle fee (best value)
  *   • Dues-Share — no monthly fee; Greek Stack earns a percentage of dues collected
- * presented as two big radio cards, plus a link out to a "Custom" build that
+ * presented as three big radio cards, plus a link out to a "Custom" build that
  * opens a conversation with the team (the Cal.com book-a-call link when configured,
- * else the apex /contact#custom form). Monthly/Annual require a card at signup
- * (first month free for Monthly); Dues-Share and Custom do not. Pricing mirrors
- * the marketing landing page exactly so a prospect never sees two different
- * numbers.
+ * else the apex /contact#custom form). Trial, Dues-Share and Custom require no
+ * card at signup; Monthly/Annual do. Pricing mirrors the marketing landing page
+ * exactly so a prospect never sees two different numbers.
  *
  * Fully controlled: the selected `plan` lives in the wizard; this just renders +
  * reports changes. Implemented as a real radiogroup (role + roving aria-checked)
@@ -2036,6 +2044,7 @@ function PricingStep({
   setAppliedWaiver: (w: boolean) => void;
 }) {
   const [applyingPromo, setApplyingPromo] = React.useState(false);
+  const trialSelected = plan === "trial";
   const monthlySelected = plan === "monthly" || plan === "semester";
   const yearlySelected = plan === "yearly";
 
@@ -2201,8 +2210,31 @@ function PricingStep({
           <div
             role="radiogroup"
             aria-label="Pricing plan"
-            className="grid gap-4 lg:grid-cols-2"
+            className="grid gap-4 lg:grid-cols-3"
           >
+            {/* Free Trial */}
+            <PlanCard
+              selected={trialSelected}
+              onSelect={() => onChange("trial")}
+              icon={IconSecurity}
+              eyebrow="Try free"
+              title="Trial"
+              recommended
+              headline={
+                <>
+                  <span className="text-3xl font-extrabold text-white">$0</span>
+                  <span className="text-sm font-semibold text-slate-400">/30 days</span>
+                </>
+              }
+              highlight="No card required"
+              features={[
+                "Core chapter platform - recruitment, roster, events, compliance",
+                "30 days free with full access to every feature",
+                "Upgrade to Monthly or Annual anytime from Admin → Billing",
+                "Optional online dues collection (keep standard Connect keys)",
+              ]}
+            />
+
             {/* Monthly */}
             <PlanCard
               selected={monthlySelected}
@@ -2210,7 +2242,6 @@ function PricingStep({
               icon={IconCoins}
               eyebrow="Pay monthly"
               title="Monthly"
-              recommended
               headline={
                 <>
                   <span className="text-3xl font-extrabold text-white">$50</span>
@@ -2336,6 +2367,8 @@ function PricingStep({
         <span>
           {collectDues
             ? "Your dues-share chapter goes live today. No card required. Reach out to our team after launch to configure dues payments."
+            : plan === "trial"
+            ? "Your free trial chapter goes live today. No card required - upgrade anytime from Admin → Billing."
             : "First month free with your card on file - you won't be charged today, and a receipt is emailed when you launch."
           }
         </span>

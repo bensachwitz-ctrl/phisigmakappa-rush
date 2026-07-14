@@ -79,7 +79,7 @@ function perms(pairs: Array<readonly [DomainKey, DomainAccess]>): OfficerPermiss
 }
 
 /**
- * Default permission catalog for every standard Phi Sigma Kappa officer.
+ * Default permission catalog for every standard Greek Stack Demo Chapter officer.
  * Edit via /admin/officers → Edit Position → permissions JSON.
  */
 export const DEFAULT_OFFICER_CATALOG: OfficerSeed[] = [

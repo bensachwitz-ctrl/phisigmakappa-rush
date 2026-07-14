@@ -70,8 +70,8 @@ export function termsForOrgType(orgType: string): ChapterTerms {
 }
 
 export type ChapterIdentity = {
-  fraternityName: string;       // "Phi Sigma Kappa"
-  fraternityShort: string;      // "Phi Sig"
+  fraternityName: string;       // "Greek Stack Demo Chapter"
+  fraternityShort: string;      // "Demo Chapter"
   orgType: string;              // "fraternity" | "sorority" | "professional" | "other"
   terms: ChapterTerms;          // member-noun vocabulary derived from orgType
   greekLetters: string;         // "Gamma Triton"
@@ -82,20 +82,20 @@ export type ChapterIdentity = {
   charterYear: string;          // "1975"
   foundingYear: string;         // "1873"
   foundingLocation: string;     // "Massachusetts Agricultural College"
-  nationalName: string;         // "Phi Sigma Kappa"
-  nationalHqUrl: string;        // "https://phisigmakappa.org"
+  nationalName: string;         // "Greek Stack Demo Chapter"
+  nationalHqUrl: string;        // "https://nationalhq.org"
   cardinalPrinciples: string;   // "Brotherhood, Scholarship, Character"
   tagline: string;              // "#DamnProud"
-  appShortTitle: string;        // "Phi Sig USC"
+  appShortTitle: string;        // "Demo Chapter USC"
   fraternityLetters: string;    // "ΦΣΚ"
   timeZone: string;             // "America/New_York"
   logoUrl: string;              // chapter-uploaded logo/crest image URL ("" = auto shield)
 
   // Derived (single source of truth for the four most-templated combos):
-  chapterFullName: string;      // "Phi Sigma Kappa Gamma Triton"
-  chapterAttribution: string;   // "Phi Sig USC"  (most-used in email/SMS sigs)
-  pageTitle: string;            // "Phi Sigma Kappa Gamma Triton — Rush at USC"
-  ogAlt: string;                // "Phi Sigma Kappa @ USC"
+  chapterFullName: string;      // "Greek Stack Demo Chapter Gamma Triton"
+  chapterAttribution: string;   // "Demo Chapter USC"  (most-used in email/SMS sigs)
+  pageTitle: string;            // "Greek Stack Demo Chapter Gamma Triton — Rush at USC"
+  ogAlt: string;                // "Greek Stack Demo Chapter @ USC"
 };
 
 /**

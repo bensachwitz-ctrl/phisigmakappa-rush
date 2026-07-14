@@ -35,7 +35,7 @@ export async function middleware(req: NextRequest) {
 
   // Page-level admin gate — redirect unauthenticated requests to /admin/login.
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    const token = req.cookies.get("phisig_admin")?.value;
+    const token = req.cookies.get("greekstack_admin")?.value;
     const ok = await verifyEdgeSession(token, hostname);
     if (!ok) {
       const url = req.nextUrl.clone();
@@ -98,7 +98,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Billing Lockout Gate for API mutations
-  const isBillingLocked = req.cookies.get("phisig_billing_locked")?.value === "1";
+  const isBillingLocked = req.cookies.get("greekstack_billing_locked")?.value === "1";
   if (isBillingLocked && STATE_CHANGING_METHODS.has(req.method) && pathname.startsWith("/api/")) {
     const isAllowed =
       pathname === "/api/admin/billing/checkout" ||

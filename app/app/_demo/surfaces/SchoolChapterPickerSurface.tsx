@@ -51,7 +51,7 @@ const GS_GOLD_BRAND = "#E8B53A";
 
 /**
  * A short, classical MONOGRAM (1-2 letters) for the medallion avatar — derived
- * from a school or chapter name ("Greekstack University" → "GU", "Phi Sigma
+ * from a school or chapter name ("Greekstack University" → "GU", "Demo Chapterma
  * Kappa" → "PS"). Pure + deterministic; never empty.
  */
 function monogramFor(name: string | null | undefined): string {

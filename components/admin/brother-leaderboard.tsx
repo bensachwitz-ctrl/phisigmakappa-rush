@@ -66,7 +66,7 @@ export function BrotherLeaderboard({ brothers }: { brothers: LeaderboardBrother[
           <LeaderboardColumn
             title="Top voters"
             icon={Vote}
-            tone="phisig-red"
+            tone="brand-red"
             unit="vote"
             entries={topVoters.map((b) => ({ id: b.id, name: b.name, position: b.position, headshotUrl: b.headshotUrl, count: b.voteCount }))}
           />
@@ -103,7 +103,7 @@ function LeaderboardColumn({
 }: {
   title: string;
   icon: React.ElementType;
-  tone: "phisig-red" | "emerald" | "blue";
+  tone: "brand-red" | "emerald" | "blue";
   unit: string;
   entries: Entry[];
 }) {
@@ -151,7 +151,7 @@ function LeaderboardColumn({
             ) : (
               <div className={cn(
                 "h-6 w-6 rounded-full text-white flex items-center justify-center text-[10px] font-semibold shrink-0",
-                tone === "phisig-red" && "bg-phisig-red",
+                tone === "brand-red" && "bg-brand-red",
                 tone === "emerald" && "bg-emerald-500",
                 tone === "blue" && "bg-blue-500",
               )}>
@@ -166,7 +166,7 @@ function LeaderboardColumn({
             </div>
             <Badge className={cn(
               "tabular-nums text-[10px] shrink-0",
-              tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red ring-1 ring-phisig-red/20",
+              tone === "brand-red" && "bg-brand-red-soft text-brand-red ring-1 ring-brand-red/20",
               tone === "emerald" && "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
               tone === "blue" && "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
             )}>

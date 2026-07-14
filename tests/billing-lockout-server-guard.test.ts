@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── P1 #3 — billing/trial lockout is now enforced SERVER-SIDE ─────────────────
 // Before this fix the lockout lived ONLY in middleware, keyed off a NON-HttpOnly
-// `phisig_billing_locked` cookie the admin layout set via document.cookie. Delete
+// `greekstack_billing_locked` cookie the admin layout set via document.cookie. Delete
 // the cookie (or call with a curl/Bearer request that never carries it) and every
 // mutation passed — no server route re-checked entitlement. So expired/canceled
 // chapters kept full write access.

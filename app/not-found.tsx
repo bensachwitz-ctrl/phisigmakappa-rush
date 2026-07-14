@@ -33,7 +33,7 @@ export default async function NotFound() {
               />
               <IconChip icon={Compass} tone="brand" size="lg" className="animate-float" />
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-red/20 bg-brand-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">
               404 · Not found
             </span>
             <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight [text-wrap:balance]">

@@ -119,7 +119,7 @@ export function CheckInForm({ code, orgName }: Props) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="(803) 555-0142"
-          className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
         />
         {!expanded && (
           <p className="mt-1.5 text-xs text-muted-foreground">
@@ -129,11 +129,11 @@ export function CheckInForm({ code, orgName }: Props) {
       </div>
 
       {expanded && (
-        <div className="space-y-4 rounded-xl border border-dashed border-phisig-red/30 bg-phisig-red/[0.03] p-4">
+        <div className="space-y-4 rounded-xl border border-dashed border-brand-red/30 bg-brand-red/[0.03] p-4">
           <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 text-xs text-blue-800 leading-relaxed">
             Your phone number wasn&apos;t found in our recruitment database. Please complete the quick form below to register and check in.
           </div>
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-phisig-red">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brand-red">
             <UserPlus className="h-3.5 w-3.5" /> New here - tell us about you
           </p>
           <div>
@@ -147,7 +147,7 @@ export function CheckInForm({ code, orgName }: Props) {
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               placeholder="Jordan Reyes"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
             />
           </div>
           <div>
@@ -162,7 +162,7 @@ export function CheckInForm({ code, orgName }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="you@school.edu"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -175,7 +175,7 @@ export function CheckInForm({ code, orgName }: Props) {
                 value={major}
                 onChange={(e) => setMajor(e.target.value)}
                 placeholder="Finance"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
               />
             </div>
             <div>
@@ -186,7 +186,7 @@ export function CheckInForm({ code, orgName }: Props) {
                 id="ci-year"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
               >
                 <option value="">Select…</option>
                 {["Freshman", "Sophomore", "Junior", "Senior", "Transfer", "Graduate"].map(
@@ -208,7 +208,7 @@ export function CheckInForm({ code, orgName }: Props) {
               value={hometown}
               onChange={(e) => setHometown(e.target.value)}
               placeholder="Charleston, SC"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/50"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand-red/50"
             />
           </div>
           <label className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
@@ -217,7 +217,7 @@ export function CheckInForm({ code, orgName }: Props) {
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
               disabled={busy || !phone}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-phisig-red"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-brand-red"
             />
             <span>
               I agree to receive recurring recruitment/rush text &amp; email messages
@@ -238,7 +238,7 @@ export function CheckInForm({ code, orgName }: Props) {
       <button
         type="submit"
         disabled={busy || !phone || (expanded && !consent)}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-phisig-red px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-phisig-red/90 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-red px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-red/90 disabled:opacity-50"
       >
         {busy ? (
           <>

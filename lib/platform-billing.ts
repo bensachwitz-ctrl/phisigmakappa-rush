@@ -37,7 +37,13 @@ import { feeWaiverMaxRedemptions, feeWaiverRedeemBy } from "@/lib/promo-server";
  */
 
 /** The set of plan slugs a chapter row can carry. */
-export type PlatformPlan = "monthly" | "yearly" | "semester" | "dues_percentage" | "custom";
+export type PlatformPlan =
+  | "monthly"
+  | "yearly"
+  | "semester"
+  | "dues_percentage"
+  | "custom"
+  | "trial";
 
 /** The SELF-SERVE subscription plans (the only ones billing/checkout mints). */
 export type SubscriptionPlan = "monthly" | "yearly" | "semester";
@@ -53,6 +59,7 @@ export const PLATFORM_PLANS: readonly PlatformPlan[] = [
   "semester",
   "dues_percentage",
   "custom",
+  "trial",
 ] as const;
 
 /** True when `plan` is one of the self-serve Stripe subscription plans. */
@@ -66,7 +73,7 @@ export function isSubscriptionPlan(
  * Normalize a raw `plan` string off a Tenant row / request into a known slug.
  * Unknown/empty/legacy values resolve to "monthly" (the historical default —
  * a $50/mo subscription with a trial), so an unprovisioned or legacy "chapter"
- * row keeps the prior behavior.
+ * row keeps the prior behavior. "trial" / "free" maps to the free tier.
  */
 export function normalizePlan(plan: string | null | undefined): PlatformPlan {
   const p = (plan || "").trim().toLowerCase();
@@ -76,6 +83,7 @@ export function normalizePlan(plan: string | null | undefined): PlatformPlan {
     return "dues_percentage";
   }
   if (p === "custom") return "custom";
+  if (p === "trial" || p === "free") return "trial";
   // "monthly", "chapter" (legacy), "", and anything unrecognized → monthly.
   return "monthly";
 }
@@ -288,6 +296,8 @@ export function planDisplayName(plan: string | null | undefined): string {
       return "Greekstack Chapter — Dues %";
     case "custom":
       return "Greekstack Chapter — Custom";
+    case "trial":
+      return "Greekstack Chapter — Free Trial";
     case "monthly":
     default:
       return "Greekstack Chapter";
@@ -305,6 +315,8 @@ export function planPriceLabel(plan: string | null | undefined): string {
       return `${DUES_INTRO_FEE_PCT}% of dues this semester, then ${DUES_STANDARD_FEE_PCT}%`;
     case "custom":
       return "Custom pricing";
+    case "trial":
+      return "Free for 30 days";
     case "monthly":
     default:
       return `$${dollars(PLATFORM_MONTHLY_PRICE_CENTS)}/mo`;

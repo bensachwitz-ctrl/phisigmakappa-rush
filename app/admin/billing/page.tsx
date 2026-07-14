@@ -95,13 +95,13 @@ export default async function BillingPage({
 
       <div className="mb-8 flex items-start gap-4">
         <span
-          className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/15"
+          className="hidden sm:inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-red/10 text-brand-red ring-1 ring-brand-red/15"
           aria-hidden="true"
         >
           <CreditCard className="h-6 w-6" />
         </span>
         <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
             <CreditCard className="h-3 w-3" /> Plan &amp; billing
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Billing</h1>

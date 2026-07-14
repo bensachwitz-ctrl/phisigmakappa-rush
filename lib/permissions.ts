@@ -83,7 +83,7 @@ export async function requireOfficerPermission(
   // BILLING WRITE GUARD (P1): a chapter whose PLATFORM subscription is locked out
   // (canceled / unpaid / trial-expired / deadline-elapsed) may READ its admin
   // surface but must NOT be able to WRITE. Enforced server-side here — atop the
-  // deletable middleware `phisig_billing_locked` cookie — so a cookie-stripped,
+  // deletable middleware `greekstack_billing_locked` cookie — so a cookie-stripped,
   // curl, or Bearer mutation is refused with 402. Permission is checked FIRST
   // above so a non-officer still gets 403 (we never leak billing state to someone
   // who isn't even allowed to act). Only "write" actions are gated; reads are
@@ -145,7 +145,7 @@ export async function checkOfficerPermission(
  * assignments) to /portal. But that gate lived ONLY in the layout: many
  * /api/admin/* GET handlers gated on `isAdminAuthed()` alone, which proves only
  * that the cookie HMAC is valid for this tenant — NOT that it's an officer/admin.
- * So a plain member who minted a `phisig_admin` cookie via the "Active brothers"
+ * So a plain member who minted a `greekstack_admin` cookie via the "Active brothers"
  * login (and is bounced from the /admin UI) could still fetch chapter-wide PII,
  * PNM votes/notes, and rush enrichment straight from the JSON endpoints.
  *

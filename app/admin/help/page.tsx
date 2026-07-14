@@ -29,7 +29,7 @@ const SECTIONS = [
     title: "Dashboard - decisions at a glance",
     body: (
       <>
-        The top of the <Link href="/admin" className="text-phisig-red hover:underline">Rush</Link> tab now
+        The top of the <Link href="/admin" className="text-brand-red hover:underline">Rush</Link> tab now
         shows a 6-tile insight strip plus a "Ready to decide" panel - so the e-board knows what needs
         attention without scrolling the roster.
       </>
@@ -67,7 +67,7 @@ const SECTIONS = [
     title: "Brother engagement leaderboard",
     body: (
       <>
-        On the <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers</Link> tab
+        On the <Link href="/admin/brothers" className="text-brand-red hover:underline">Brothers</Link> tab
         a leaderboard panel shows top 5 in three categories - drives healthy competition and exposes who
         needs a tap on the shoulder.
       </>
@@ -87,7 +87,7 @@ const SECTIONS = [
       <>
         Every status change, vote, dues toggle, broadcast, event create/delete, announcement, and settings
         save is recorded with actor + subject + before/after diff at{" "}
-        <Link href="/admin/audit" className="text-phisig-red hover:underline">/admin/audit</Link>. Admin-only.
+        <Link href="/admin/audit" className="text-brand-red hover:underline">/admin/audit</Link>. Admin-only.
       </>
     ),
     bullets: [
@@ -105,7 +105,7 @@ const SECTIONS = [
     body: (
       <>
         Net-new chapters spinning up the platform fill out the{" "}
-        <Link href="/admin/setup" className="text-phisig-red hover:underline">5-step setup wizard</Link>{" "}
+        <Link href="/admin/setup" className="text-brand-red hover:underline">5-step setup wizard</Link>{" "}
  - fraternity, school, brand colors, contact, anti-hazing - and the whole site re-brands on the
         next page load. Existing chapters can tweak any of it later in Site content → Chapter identity.
       </>
@@ -124,7 +124,7 @@ const SECTIONS = [
     title: "Rush - managing PNMs",
     body: (
       <>
-        The <Link href="/admin" className="text-phisig-red hover:underline">Rush</Link> tab is the heart of recruitment.
+        The <Link href="/admin" className="text-brand-red hover:underline">Rush</Link> tab is the heart of recruitment.
         Every kid who signs up via the public form lands here.
       </>
     ),
@@ -143,7 +143,7 @@ const SECTIONS = [
     title: "Brothers - chapter directory",
     body: (
       <>
-        The <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers</Link> tab is the active-member roster.
+        The <Link href="/admin/brothers" className="text-brand-red hover:underline">Brothers</Link> tab is the active-member roster.
         Use it to track who's paid dues, who's logged service hours, and who's on the e-board.
       </>
     ),
@@ -160,7 +160,7 @@ const SECTIONS = [
     title: "Events - rush + chapter calendar",
     body: (
       <>
-        The <Link href="/admin/events" className="text-phisig-red hover:underline">Events</Link> tab feeds the public schedule
+        The <Link href="/admin/events" className="text-brand-red hover:underline">Events</Link> tab feeds the public schedule
         on the homepage. Public events show on the rush page; invite-only events stay hidden from the public site
         but appear on the brother calendar.
       </>
@@ -179,7 +179,7 @@ const SECTIONS = [
     title: "News - chapter announcements",
     body: (
       <>
-        The <Link href="/admin/announcements" className="text-phisig-red hover:underline">News</Link> tab is for chapter-wide updates - 
+        The <Link href="/admin/announcements" className="text-brand-red hover:underline">News</Link> tab is for chapter-wide updates - 
         meeting reminders, philanthropy events, dues deadlines.
       </>
     ),
@@ -195,7 +195,7 @@ const SECTIONS = [
     title: "Site - content control",
     body: (
       <>
-        The <Link href="/admin/settings" className="text-phisig-red hover:underline">Site</Link> tab controls everything on the public homepage - 
+        The <Link href="/admin/settings" className="text-brand-red hover:underline">Site</Link> tab controls everything on the public homepage - 
         photos, copy, stats. No code, no Vercel.
       </>
     ),
@@ -314,7 +314,7 @@ export default function HelpPage() {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
           <BookOpen className="h-3 w-3" /> Chapter handbook
         </span>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">
@@ -333,7 +333,7 @@ export default function HelpPage() {
           {COMMON_TASKS.map((t) => (
             <Card key={t.title} className="lift">
               <CardContent className="p-5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-phisig-red text-white shadow-md shadow-phisig-red/20">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-red text-white shadow-md shadow-brand-red/20">
                   <t.icon className="h-4 w-4" />
                 </span>
                 <h3 className="mt-3 text-base font-semibold tracking-tight">{t.title}</h3>
@@ -353,7 +353,7 @@ export default function HelpPage() {
           <Card key={s.title} className="lift">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-phisig-red-soft text-phisig-red shrink-0">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red shrink-0">
                   <s.icon className="h-5 w-5" />
                 </span>
                 <div className="flex-1 min-w-0">
@@ -362,7 +362,7 @@ export default function HelpPage() {
                   <ul className="mt-3 space-y-1.5 text-sm">
                     {s.bullets.map((b, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-phisig-red shrink-0" />
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-red shrink-0" />
                         <span className="text-muted-foreground">{b}</span>
                       </li>
                     ))}

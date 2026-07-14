@@ -46,11 +46,11 @@ export function chipIconFor(name: string): LucideIcon {
  * Text-only eyebrow pill — clean type, tracking, hairline border. Decorative
  * glyphs were purged from every badge/eyebrow pill (owner round-9: the
  * glyph-in-pill pattern reads as AI slop even with bespoke icons). Brand-toned
- * via phisig-red (the chapter color), so it reads for any tenant palette.
+ * via brand-red (the chapter color), so it reads for any tenant palette.
  */
 export function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-phisig-red/20 bg-phisig-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+    <span className="inline-flex items-center rounded-full border border-brand-red/20 bg-brand-red-soft/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">
       {children}
     </span>
   );
@@ -108,9 +108,9 @@ export function ContactPill({
   icon: Icon, label, sub,
 }: { icon: React.ElementType; label: string; sub: string }) {
   return (
-    <div className="group rounded-xl border border-border bg-card p-3 lift transition-colors hover:border-phisig-red/30">
+    <div className="group rounded-xl border border-border bg-card p-3 lift transition-colors hover:border-brand-red/30">
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-phisig-red shrink-0 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
+        <Icon className="h-3.5 w-3.5 text-brand-red shrink-0 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
         <span className="text-xs font-medium truncate">{label}</span>
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{sub}</p>
@@ -139,10 +139,10 @@ export function PostTile({
   if (!slug || !slug.trim()) {
     return (
       <div className={`group relative rounded-2xl overflow-hidden border border-border lift block aspect-square ${className ?? ""}`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark flex items-center justify-center pointer-events-none">
           <Crest className="h-20 w-20 text-white/25" aria-hidden="true" />
         </div>
-        <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+        <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-brand-red shadow-sm pointer-events-none">
           <Icon className="h-3 w-3" aria-hidden="true" /> {caption}
         </span>
       </div>
@@ -176,7 +176,7 @@ export function PostTile({
       {/* Fallback layer — cardinal gradient with chapter crest, visible until the
           image loads. <SmartImage> ALSO renders this exact tile if the src is
           empty or 404s, so a missing photo never shows a broken-image glyph. */}
-      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark flex items-center justify-center pointer-events-none">
         <Crest className="h-20 w-20 text-white/25" aria-hidden="true" />
       </div>
       <SmartImage
@@ -198,7 +198,7 @@ export function PostTile({
         crestClassName="h-20 w-20"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-20" />
-      <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+      <span className="absolute bottom-2.5 left-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-brand-red shadow-sm pointer-events-none">
         <Icon className="h-3 w-3" aria-hidden="true" /> {caption}
       </span>
     </a>

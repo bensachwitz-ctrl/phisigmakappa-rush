@@ -68,7 +68,7 @@ export default async function CheckInPage({ params }: { params: { code: string }
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-phisig-mist">
+    <div className="min-h-screen bg-brand-mist">
       <div className="container py-6">
         <Link
           href="/"
@@ -82,7 +82,7 @@ export default async function CheckInPage({ params }: { params: { code: string }
         {result.kind === "ok" ? (
           <>
             <div className="text-center">
-              <span className="block text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+              <span className="block text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
                 Rush check-in{attribution ? ` · ${attribution}` : ""}
               </span>
               <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
@@ -133,7 +133,7 @@ export default async function CheckInPage({ params }: { params: { code: string }
             </p>
             <Link
               href="/"
-              className="mt-5 inline-flex text-sm font-medium text-phisig-red hover:underline"
+              className="mt-5 inline-flex text-sm font-medium text-brand-red hover:underline"
             >
               Go to the chapter site
             </Link>

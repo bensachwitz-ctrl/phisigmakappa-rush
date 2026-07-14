@@ -209,9 +209,9 @@ export function AnnouncementsManager({
       </div>
 
       {list.length === 0 ? (
-        <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
+        <Card className="border-brand-red/20 bg-gradient-to-br from-brand-red-soft/30 to-white">
           <CardContent className="py-12 px-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-lg shadow-phisig-red/20">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-red text-white shadow-lg shadow-brand-red/20">
               <Megaphone className="h-6 w-6" />
             </div>
             <h3 className="text-lg font-semibold tracking-tight">Post your first chapter announcement</h3>
@@ -231,13 +231,13 @@ export function AnnouncementsManager({
       ) : (
         <div className="grid gap-3">
           {list.map((a) => (
-            <Card key={a.id} className={cn("overflow-hidden lift", a.pinned && "border-phisig-red/40 bg-phisig-red-soft/20")}>
+            <Card key={a.id} className={cn("overflow-hidden lift", a.pinned && "border-brand-red/40 bg-brand-red-soft/20")}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       {a.pinned && (
-                        <Badge className="bg-phisig-red text-white">
+                        <Badge className="bg-brand-red text-white">
                           <Pin className="h-3 w-3 mr-1" /> Pinned
                         </Badge>
                       )}
@@ -259,7 +259,7 @@ export function AnnouncementsManager({
                   {canWrite && (
                     <div className="flex flex-col gap-1">
                       <Button variant="ghost" size="icon" onClick={() => togglePin(a)} aria-label={a.pinned ? "Unpin announcement" : "Pin announcement"} title={a.pinned ? "Unpin" : "Pin"}>
-                        <Pin className={cn("h-4 w-4", a.pinned && "fill-current text-phisig-red")} />
+                        <Pin className={cn("h-4 w-4", a.pinned && "fill-current text-brand-red")} />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => openEdit(a)} aria-label="Edit announcement" title="Edit">
                         <Edit3 className="h-4 w-4" />

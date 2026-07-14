@@ -211,7 +211,7 @@ export function AdminNav({
               const ev = new KeyboardEvent("keydown", { key: "k", metaKey: true, ctrlKey: true });
               window.dispatchEvent(ev);
             }}
-            className="hidden lg:inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-medium text-muted-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+            className="hidden lg:inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-medium text-muted-foreground hover:bg-secondary hover:border-brand-red/40 transition-colors"
             title="Open command palette (⌘K)"
             aria-label="Open command palette"
           >
@@ -223,7 +223,7 @@ export function AdminNav({
           {/* Quick Help button — mobile only (desktop reaches Help via "More") */}
           <Link
             href="/admin/help"
-            className="lg:hidden inline-flex items-center gap-1 text-muted-foreground hover:text-phisig-red px-2 py-1 rounded-md text-xs"
+            className="lg:hidden inline-flex items-center gap-1 text-muted-foreground hover:text-brand-red px-2 py-1 rounded-md text-xs"
             title="Help"
           >
             <IconHelp className="h-4 w-4" aria-hidden="true" />
@@ -234,10 +234,10 @@ export function AdminNav({
             href="/"
             target="_blank"
             rel="noreferrer noopener"
-            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary hover:border-brand-red/40 transition-colors"
             title="Open the public homepage in a new tab"
           >
-            <IconExternal className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
+            <IconExternal className="h-3.5 w-3.5 text-brand-red" aria-hidden="true" />
             <span className="hidden md:inline">View site</span>
           </Link>
 
@@ -271,7 +271,7 @@ export function AdminNav({
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors",
-                    active ? "bg-phisig-red text-white" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    active ? "bg-brand-red text-white" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
                   <it.icon className="h-4 w-4" aria-hidden="true" />

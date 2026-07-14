@@ -16,11 +16,11 @@ import { IconBase, type IconProps } from "./icon-base";
  * brand, never platform blue. So these default `accent` to the live chapter
  * primary — `hsl(var(--primary) / 0.55)` — the same runtime CSS var the whole
  * chapter build themes through (re-skins per tenant for free). The primary line
- * still inherits `currentColor`, so wrapping in `text-phisig-red` (= the chapter
+ * still inherits `currentColor`, so wrapping in `text-brand-red` (= the chapter
  * primary) keeps both layers on-brand with zero per-call wiring.
  *
  * USAGE
- *   <IconHandshake className="h-5 w-5 text-phisig-red" />   // both layers brand-tinted
+ *   <IconHandshake className="h-5 w-5 text-brand-red" />   // both layers brand-tinted
  *   <IconChip icon={IconBond} tone="brand" />               // hosted in the shared chip
  *
  * Server-safe (pure SVG, no "use client"); `aria-hidden` by default. Imported

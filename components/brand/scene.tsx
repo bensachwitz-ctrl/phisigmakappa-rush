@@ -30,7 +30,7 @@ const THEMES: Record<
   brotherhood: {
     label: "Brotherhood",
     icon: Users,
-    gradient: "from-phisig-red via-phisig-red-dark to-phisig-red-dark",
+    gradient: "from-brand-red via-brand-red-dark to-brand-red-dark",
     accent: "#FCEFF1",
     pattern: "rays",
     motif: "letters",
@@ -38,7 +38,7 @@ const THEMES: Record<
   gameday: {
     label: "Game Day",
     icon: Trophy,
-    gradient: "from-phisig-red-dark via-phisig-red to-phisig-ink",
+    gradient: "from-brand-red-dark via-brand-red to-brand-ink",
     accent: "#FFFFFF",
     pattern: "stripes",
     motif: "stars",
@@ -46,7 +46,7 @@ const THEMES: Record<
   formals: {
     label: "Formals",
     icon: Award,
-    gradient: "from-zinc-900 via-zinc-800 to-phisig-red-dark",
+    gradient: "from-zinc-900 via-zinc-800 to-brand-red-dark",
     accent: "#FCEFF1",
     pattern: "dots",
     motif: "crown",
@@ -54,7 +54,7 @@ const THEMES: Record<
   philanthropy: {
     label: "Philanthropy",
     icon: HandHeart,
-    gradient: "from-phisig-red-dark via-phisig-red to-phisig-red-soft",
+    gradient: "from-brand-red-dark via-brand-red to-brand-red-soft",
     accent: "#FFFFFF",
     pattern: "arch",
     motif: "shield",
@@ -62,7 +62,7 @@ const THEMES: Record<
   scholarship: {
     label: "Scholarship",
     icon: BookOpen,
-    gradient: "from-phisig-ink via-zinc-800 to-phisig-red",
+    gradient: "from-brand-ink via-zinc-800 to-brand-red",
     accent: "#FCEFF1",
     pattern: "checker",
     motif: "columns",
@@ -70,7 +70,7 @@ const THEMES: Record<
   socials: {
     label: "Socials",
     icon: Music,
-    gradient: "from-phisig-red via-phisig-red-dark to-phisig-red",
+    gradient: "from-brand-red via-brand-red-dark to-brand-red",
     accent: "#FFFFFF",
     pattern: "rays",
     motif: "torch",
@@ -78,7 +78,7 @@ const THEMES: Record<
   chapter: {
     label: "The Chapter",
     icon: Building2,
-    gradient: "from-zinc-900 to-phisig-red-dark",
+    gradient: "from-zinc-900 to-brand-red-dark",
     accent: "#FCEFF1",
     pattern: "arch",
     motif: "shield",
@@ -86,7 +86,7 @@ const THEMES: Record<
   tradition: {
     label: "Tradition",
     icon: Crown,
-    gradient: "from-phisig-red-dark via-phisig-red to-phisig-red-dark",
+    gradient: "from-brand-red-dark via-brand-red to-brand-red-dark",
     accent: "#FFFFFF",
     pattern: "stripes",
     motif: "letters",
@@ -126,7 +126,7 @@ export function Scene({
 
       <div className="relative h-full flex flex-col justify-end p-5 sm:p-6">
         <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-white/95 backdrop-blur px-2.5 py-1 text-[11px] font-medium text-foreground shadow">
-          <t.icon className="h-3 w-3 text-phisig-red" /> {t.label}
+          <t.icon className="h-3 w-3 text-brand-red" /> {t.label}
         </span>
         {caption && (
           <p className="mt-3 text-white text-base sm:text-lg font-semibold tracking-tight max-w-xs">

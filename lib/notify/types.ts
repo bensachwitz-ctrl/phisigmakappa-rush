@@ -52,7 +52,7 @@ export type NotifyEventType =
 /** One message to fan out. */
 export interface NotifyMessage {
   /** Optional chapter label used for attribution in the rendered message
-   *  ("[Phi Sig] ..."). Falls back to the resolved chapter identity when unset;
+   *  ("[Demo Chapter] ..."). Falls back to the resolved chapter identity when unset;
    *  never load-bearing. */
   chapter?: string;
   /** The event type that fired — used by per-user routing (commit #2) and echoed

@@ -117,7 +117,7 @@ export async function POST(req: Request, { params }: { params: { token: string }
     const userAgent = req.headers.get("user-agent") || "unknown";
 
     const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
-    const fraternityName = cfg["chapter.fraternityName"] || "Phi Sigma Kappa";
+    const fraternityName = cfg["chapter.fraternityName"] || "Your Chapter";
     const greekLetters = cfg["chapter.greekLetters"] || "";
     const organization = [fraternityName, greekLetters].filter(Boolean).join(" - ") || "Greek Chapter";
 

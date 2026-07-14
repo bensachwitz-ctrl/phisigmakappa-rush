@@ -176,7 +176,7 @@ export function RushFormBuilderClient({ initialFields }: { initialFields: FormFi
             className={cn(
               "border-border/70 transition-colors",
               dragIndex === i && "opacity-60",
-              dropIndex === i && dragIndex !== i && "border-phisig-red ring-1 ring-phisig-red/30",
+              dropIndex === i && dragIndex !== i && "border-brand-red ring-1 ring-brand-red/30",
             )}
           >
             <CardContent className="p-4 space-y-3">
@@ -249,7 +249,7 @@ export function RushFormBuilderClient({ initialFields }: { initialFields: FormFi
                       type="checkbox"
                       checked={f.required}
                       onChange={() => handleRequired(f.key)}
-                      className="h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red"
+                      className="h-4 w-4 rounded border-border text-brand-red focus:ring-brand-red"
                     />
                     Required
                   </label>
@@ -330,7 +330,7 @@ function FormPreview({ fields }: { fields: FormFieldConfig[] }) {
         <div key={f.key} className="space-y-1.5">
           <label className="block text-sm font-medium">
             {f.label || "Untitled question"}
-            {f.required && <span className="ml-0.5 text-phisig-red" aria-hidden="true">*</span>}
+            {f.required && <span className="ml-0.5 text-brand-red" aria-hidden="true">*</span>}
           </label>
           {f.type === "textarea" ? (
             <textarea

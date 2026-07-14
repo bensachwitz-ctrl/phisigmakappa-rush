@@ -322,8 +322,8 @@ export function FamilyManager({
   /* ── Empty state ───────────────────────────────────────────────────────── */
   if (list.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-gradient-to-br from-phisig-red/[0.04] to-transparent py-16 px-6 text-center">
-        <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 mb-5">
+      <div className="rounded-2xl border border-dashed border-border bg-gradient-to-br from-brand-red/[0.04] to-transparent py-16 px-6 text-center">
+        <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-lg shadow-brand-red/25 mb-5">
           <IconFamily className="h-8 w-8" accent="rgba(255,255,255,0.85)" />
         </span>
         <h3 className="text-lg font-semibold tracking-tight">No brothers yet</h3>
@@ -333,7 +333,7 @@ export function FamilyManager({
         </p>
         <a
           href="/admin/brothers"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-phisig-red hover:underline cursor-pointer"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-red hover:underline cursor-pointer"
         >
           <UserPlus className="h-4 w-4" /> Go to the directory
         </a>
@@ -354,7 +354,7 @@ export function FamilyManager({
       {/* per-pledge-class breakdown (glass strip) */}
       {stats.perPledge.length > 0 && (
         <div className="gs-glass rounded-2xl p-4">
-          <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-phisig-red mb-2.5">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-brand-red mb-2.5">
             Members per pledge class
           </p>
           <div className="flex flex-wrap gap-2">
@@ -364,10 +364,10 @@ export function FamilyManager({
                 type="button"
                 onClick={() => setPledgeFilter((cur) => (cur === pc ? "ALL" : pc))}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:ring-offset-1",
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-1",
                   pledgeFilter === pc
-                    ? "border-phisig-red bg-phisig-red text-white shadow-sm"
-                    : "border-border bg-card text-muted-foreground hover:border-phisig-red/50 hover:text-foreground",
+                    ? "border-brand-red bg-brand-red text-white shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:border-brand-red/50 hover:text-foreground",
                 )}
               >
                 {pc}
@@ -474,7 +474,7 @@ export function FamilyManager({
               setQuery("");
               setPledgeFilter("ALL");
             }}
-            className="mt-3 text-sm font-medium text-phisig-red hover:underline cursor-pointer"
+            className="mt-3 text-sm font-medium text-brand-red hover:underline cursor-pointer"
           >
             Clear filters
           </button>
@@ -567,7 +567,7 @@ function AssignPanel({
       className="gs-glass gs-shimmer-border rounded-2xl p-5 scroll-mt-24"
     >
       <div className="flex items-center gap-2 mb-4">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-sm">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-sm">
           <UserPlus className="h-4 w-4" />
         </span>
         <div>
@@ -649,7 +649,7 @@ function AssignPanel({
           {subject ? (
             chosenBigId ? (
               <span className="inline-flex items-center gap-1.5 flex-wrap">
-                <Badge className="bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/20">
+                <Badge className="bg-brand-red/10 text-brand-red ring-1 ring-brand-red/20">
                   {byId.get(chosenBigId)?.name}
                 </Badge>
                 <CornerDownRight className="h-3.5 w-3.5" />
@@ -783,8 +783,8 @@ function SearchableSelect({
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "flex h-10 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm transition-colors",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red focus-visible:ring-offset-1",
-          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-phisig-red/50",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red focus-visible:ring-offset-1",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-brand-red/50",
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -824,7 +824,7 @@ function SearchableSelect({
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={onKeyDown}
                   placeholder="Type a name…"
-                  className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red"
+                  className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
                 />
               </div>
             </div>
@@ -859,7 +859,7 @@ function SearchableSelect({
                         onClick={() => choose(o.id)}
                         className={cn(
                           "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors cursor-pointer",
-                          isActive ? "bg-phisig-red/10" : "hover:bg-secondary",
+                          isActive ? "bg-brand-red/10" : "hover:bg-secondary",
                         )}
                       >
                         <Avatar name={o.label} url={o.headshotUrl} size="sm" />
@@ -871,7 +871,7 @@ function SearchableSelect({
                             </span>
                           )}
                         </span>
-                        {isSel && <Check className="h-4 w-4 text-phisig-red shrink-0" />}
+                        {isSel && <Check className="h-4 w-4 text-brand-red shrink-0" />}
                       </button>
                     </li>
                   );
@@ -937,12 +937,12 @@ function NodeRow({
           "group/node relative flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all",
           dimmed ? "opacity-40" : "opacity-100",
           isSelected
-            ? "border-phisig-red bg-phisig-red/[0.06] shadow-sm ring-1 ring-phisig-red/20"
+            ? "border-brand-red bg-brand-red/[0.06] shadow-sm ring-1 ring-brand-red/20"
             : isSearchHit
               ? "border-[#f59e0b]/60 bg-[#f59e0b]/[0.06]"
               : inHoverPath
-                ? "border-phisig-red/50 bg-phisig-red/[0.05]"
-                : "border-border bg-card hover:border-phisig-red/40 hover:bg-secondary/40",
+                ? "border-brand-red/50 bg-brand-red/[0.05]"
+                : "border-border bg-card hover:border-brand-red/40 hover:bg-secondary/40",
         )}
         onMouseEnter={() => setHoverLineage(lineageOf(node.id, byId))}
         onMouseLeave={() => setHoverLineage(null)}
@@ -983,7 +983,7 @@ function NodeRow({
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
             {node.position && (
-              <span className="uppercase tracking-wide font-semibold text-phisig-red">
+              <span className="uppercase tracking-wide font-semibold text-brand-red">
                 {node.position}
               </span>
             )}
@@ -1003,12 +1003,12 @@ function NodeRow({
 
         {/* saving spinner / pick affordance */}
         {savingId === node.id ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-phisig-red" />
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-brand-red" />
         ) : onPick ? (
           <button
             type="button"
             onClick={() => onPick(node)}
-            className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-phisig-red/10 hover:text-phisig-red group-hover/node:opacity-100 focus-visible:opacity-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red"
+            className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-brand-red/10 hover:text-brand-red group-hover/node:opacity-100 focus-visible:opacity-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red"
             title="Edit this brother's big"
           >
             Edit
@@ -1028,7 +1028,7 @@ function NodeRow({
               transition={reduce ? { duration: 0.12 } : SPRING}
               className="overflow-hidden"
             >
-              <div className="relative ml-[1.45rem] mt-1 space-y-1 border-l-2 border-phisig-red/20 pl-3">
+              <div className="relative ml-[1.45rem] mt-1 space-y-1 border-l-2 border-brand-red/20 pl-3">
                 {node.littles.map((kid, idx) => (
                   <motion.div
                     key={kid.id}
@@ -1040,7 +1040,7 @@ function NodeRow({
                     {/* elbow connector from the parent rail to this child */}
                     <span
                       aria-hidden="true"
-                      className="absolute -left-3 top-[1.4rem] h-px w-3 bg-phisig-red/30"
+                      className="absolute -left-3 top-[1.4rem] h-px w-3 bg-brand-red/30"
                     />
                     <NodeRow
                       node={kid}
@@ -1101,7 +1101,7 @@ function Avatar({
       ) : (
         <span
           className={cn(
-            "inline-flex items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark font-semibold text-white ring-1 ring-white/30",
+            "inline-flex items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark font-semibold text-white ring-1 ring-white/30",
             dims,
           )}
         >
@@ -1134,7 +1134,7 @@ function StatCard({
         <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </span>
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-phisig-red/15 to-phisig-red/5 text-phisig-red ring-1 ring-phisig-red/15">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-brand-red/15 to-brand-red/5 text-brand-red ring-1 ring-brand-red/15">
           <Icon className="h-3.5 w-3.5" />
         </span>
       </div>

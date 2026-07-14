@@ -93,7 +93,7 @@ export function EventQrDialog({
       <DialogContent className="max-w-sm" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <QrIcon className="h-4 w-4 text-phisig-red" /> Rush check-in QR
+            <QrIcon className="h-4 w-4 text-brand-red" /> Rush check-in QR
           </DialogTitle>
         </DialogHeader>
 

@@ -395,7 +395,7 @@ export function RusheesManager({
           label="PNMs in pipeline"
           value={stats.total.toString()}
           icon={Users}
-          accent="text-phisig-red"
+          accent="text-brand-red"
         />
         <StatCard
           label="Avg events / PNM"
@@ -466,7 +466,7 @@ export function RusheesManager({
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                 active
-                  ? "bg-phisig-red text-white shadow-sm"
+                  ? "bg-brand-red text-white shadow-sm"
                   : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
               )}
             >
@@ -494,7 +494,7 @@ export function RusheesManager({
               className={cn(
                 "py-2.5 px-4 text-sm font-semibold border-b-2 transition-all",
                 activeSubTab === "directory"
-                  ? "border-phisig-red text-phisig-red"
+                  ? "border-brand-red text-brand-red"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
@@ -507,7 +507,7 @@ export function RusheesManager({
               className={cn(
                 "py-2.5 px-4 text-sm font-semibold border-b-2 transition-all",
                 activeSubTab === "schedule"
-                  ? "border-phisig-red text-phisig-red"
+                  ? "border-brand-red text-brand-red"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
@@ -617,7 +617,7 @@ export function RusheesManager({
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <div className="flex gap-2.5 items-start">
-                  <ShieldAlert className="w-5 h-5 text-phisig-red shrink-0 mt-0.5" />
+                  <ShieldAlert className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
                   <div>
                     <h5 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Weekly Sober Driving Roster</h5>
                     <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
@@ -629,7 +629,7 @@ export function RusheesManager({
 
               {loadingSchedule ? (
                 <div className="py-12 text-center text-muted-foreground flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-phisig-red" /> Fetching shifts...
+                  <Loader2 className="w-4 h-4 animate-spin text-brand-red" /> Fetching shifts...
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -809,7 +809,7 @@ function RusheeTable({
             key={r.id}
             type="button"
             onClick={() => onRowClick(r.id)}
-            className="w-full text-left rounded-xl border border-border bg-card p-3 hover:border-phisig-red/40 transition-colors"
+            className="w-full text-left rounded-xl border border-border bg-card p-3 hover:border-brand-red/40 transition-colors"
           >
             <div className="flex items-start gap-3">
               <Thumb headshotUrl={r.headshotUrl} name={r.name} />
@@ -831,7 +831,7 @@ function RusheeTable({
                       {r.lastImpressionTone}
                     </span>
                   )}
-                  <span className="ml-auto inline-flex items-center gap-1 text-phisig-red">
+                  <span className="ml-auto inline-flex items-center gap-1 text-brand-red">
                     Open <ArrowRight className="h-3 w-3" />
                   </span>
                 </div>
@@ -864,7 +864,7 @@ function Thumb({ headshotUrl, name }: { headshotUrl: string | null; name: string
   }
   return (
     <div
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-phisig-red text-white text-xs font-semibold ring-1 ring-phisig-red-dark"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-red text-white text-xs font-semibold ring-1 ring-brand-red-dark"
       aria-hidden
     >
       {initials || "?"}

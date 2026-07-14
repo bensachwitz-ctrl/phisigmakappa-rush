@@ -97,13 +97,13 @@ export function SectionImageUploader({
         }}
         className={cn(
           "flex min-h-[96px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed p-4 text-center transition-colors",
-          dragOver ? "border-phisig-red bg-phisig-red-soft/40" : "border-border bg-card hover:border-phisig-red/40",
+          dragOver ? "border-brand-red bg-brand-red-soft/40" : "border-border bg-card hover:border-brand-red/40",
           busy && "pointer-events-none opacity-70",
         )}
       >
         {busy ? (
           <>
-            <Loader2 className="h-5 w-5 animate-spin text-phisig-red" aria-hidden="true" />
+            <Loader2 className="h-5 w-5 animate-spin text-brand-red" aria-hidden="true" />
             <span className="text-xs text-muted-foreground">Optimizing &amp; uploading…</span>
           </>
         ) : value && isSafeImageUrl(value) ? (
@@ -114,7 +114,7 @@ export function SectionImageUploader({
           </span>
         ) : (
           <>
-            <UploadCloud className="h-6 w-6 text-phisig-red" aria-hidden="true" />
+            <UploadCloud className="h-6 w-6 text-brand-red" aria-hidden="true" />
             <span className="text-xs font-medium">Drag an image here, or click to browse</span>
             <span className="text-[10px] text-muted-foreground">JPG, PNG, WEBP, HEIC · resized &amp; optimized automatically</span>
           </>
@@ -123,7 +123,7 @@ export function SectionImageUploader({
       </label>
 
       {/* URL / link field — paste an existing image instead of uploading. */}
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 focus-within:border-phisig-red/40">
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 focus-within:border-brand-red/40">
         <LinkIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <input
           type="url"

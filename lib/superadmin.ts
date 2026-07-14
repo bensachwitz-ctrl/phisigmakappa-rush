@@ -6,10 +6,10 @@ import crypto from "crypto";
  * chapter-admin auth in lib/auth.ts.
  *
  * Why a wholly distinct cookie + secret + verifier instead of reusing the
- * chapter `phisig_admin` session?
+ * chapter `greekstack_admin` session?
  *   • Chapter admins (e-board of any tenant) must NEVER reach the platform
  *     console — it can suspend or DELETE every chapter on the platform. A
- *     chapter admin holds a valid `phisig_admin` cookie; if the console trusted
+ *     chapter admin holds a valid `greekstack_admin` cookie; if the console trusted
  *     that cookie (even with an extra flag) any chapter's e-board could escalate
  *     to operator. So the console gates ONLY on `gs_superadmin`, which is minted
  *     exclusively by SUPERADMIN_PASSWORD and signed with a secret a chapter

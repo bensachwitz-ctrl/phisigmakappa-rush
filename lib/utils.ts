@@ -27,7 +27,7 @@ export const STATUS_STYLES: Record<RushStatus, string> = {
   ACTIVE: "bg-zinc-100 text-zinc-900 ring-1 ring-zinc-200",
   DROPPED: "bg-zinc-200 text-zinc-500 ring-1 ring-zinc-300 line-through",
   BID_EXTENDED: "bg-amber-50 text-amber-900 ring-1 ring-amber-200",
-  ACCEPTED: "bg-phisig-red text-white ring-1 ring-phisig-red-dark",
+  ACCEPTED: "bg-brand-red text-white ring-1 ring-brand-red-dark",
   DECLINED: "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200",
 };
 
@@ -108,7 +108,7 @@ export function titleCaseAddress(input: string | undefined | null): string {
  * Live audit caught two recurring bugs traced to admin-pasted values that had
  * trailing junk: (a) a URL like "https://hazingprevention.org/help/…." with a
  * literal Unicode ellipsis that 404s, and (b) mailto values like
- * "advisor@phisig-usc.com\" with a trailing backslash from a copy-paste.
+ * "advisor@chapter.example\" with a trailing backslash from a copy-paste.
  *
  * This strips:
  *   • trailing whitespace, line endings

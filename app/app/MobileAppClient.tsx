@@ -575,7 +575,7 @@ export default function MobileAppClient({ initialTenants, hasRealChapters: hasRe
       // cold-start school picker. Mark the entry mode so the render branch shows
       // the ChapterChooser/auto-demo instead of the school picker.
       setEntryMode("showcase");
-      const demoTenant = DEMO_TENANTS[0]; // Phi Sigma Kappa
+      const demoTenant = DEMO_TENANTS[0]; // Greek Stack Demo Chapter
       const brand = FRATERNITY_BRANDS[0];
       const demoUser = {
         id: "demo-user-id",

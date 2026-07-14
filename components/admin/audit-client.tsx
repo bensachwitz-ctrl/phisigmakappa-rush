@@ -213,10 +213,10 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
         active
-          ? "border-phisig-red bg-phisig-red-soft text-phisig-red"
-          : "border-border bg-card text-muted-foreground hover:border-phisig-red/40 hover:text-foreground"
+          ? "border-brand-red bg-brand-red-soft text-brand-red"
+          : "border-border bg-card text-muted-foreground hover:border-brand-red/40 hover:text-foreground"
       )}
     >
       {label}
@@ -262,7 +262,7 @@ function humanAction(action: string): string {
 
 function ActionIcon({ action }: { action: string }) {
   const cfg = (() => {
-    if (action.startsWith("RUSH_VOTE")) return { icon: Vote, tone: "phisig-red" as const };
+    if (action.startsWith("RUSH_VOTE")) return { icon: Vote, tone: "brand-red" as const };
     if (action.startsWith("RUSH")) return { icon: Edit3, tone: "amber" as const };
     if (action.startsWith("DUES")) return { icon: CreditCard, tone: "emerald" as const };
     if (action.startsWith("BROTHER")) return { icon: User, tone: "blue" as const };
@@ -276,7 +276,7 @@ function ActionIcon({ action }: { action: string }) {
   return (
     <span className={cn(
       "inline-flex h-7 w-7 items-center justify-center rounded-full shrink-0",
-      cfg.tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red",
+      cfg.tone === "brand-red" && "bg-brand-red-soft text-brand-red",
       cfg.tone === "amber" && "bg-amber-50 text-amber-700",
       cfg.tone === "emerald" && "bg-emerald-50 text-emerald-700",
       cfg.tone === "blue" && "bg-blue-50 text-blue-700",

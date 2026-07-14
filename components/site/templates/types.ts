@@ -69,7 +69,6 @@ export interface SectionContext {
   cfg: Record<string, string>;
   identity: ChapterIdentity;
   terms: ChapterTerms;
-  isPhiSig: boolean;
   booth: boolean;
 
   stats: StatRow[];

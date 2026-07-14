@@ -6,7 +6,7 @@ import { getSubdomain } from "@/lib/prisma";
  * Per-tenant base URL derived from the live request Host header, so each
  * chapter's sitemap lists URLs on THAT chapter's domain. Falls back to the
  * NEUTRAL Greekstack apex (never a chapter reference host like
- * phisigmakappa.vercel.app, which would leak one chapter's host into every
+ * chapter.greekstack.vercel.app, which would leak one chapter's host into every
  * other deploy's sitemap). Mirrors app/layout.tsx requestHost/resolveMetadataBase.
  */
 function resolveContext(): { base: string; isApex: boolean } {

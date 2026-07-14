@@ -265,19 +265,19 @@ export function LibraryClient({
       <div className="grid grid-cols-3 gap-3">
         <div className="lift rounded-xl border p-3 bg-card">
           <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-            <FileText className="h-3.5 w-3.5 text-phisig-red" /> Documents
+            <FileText className="h-3.5 w-3.5 text-brand-red" /> Documents
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.total}</div>
         </div>
         <div className="lift rounded-xl border p-3 bg-card">
           <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-            <FolderOpen className="h-3.5 w-3.5 text-phisig-red" /> Categories
+            <FolderOpen className="h-3.5 w-3.5 text-brand-red" /> Categories
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.categories}</div>
         </div>
         <div className="lift rounded-xl border p-3 bg-card">
           <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-            <BookMarked className="h-3.5 w-3.5 text-phisig-red" /> Total Size
+            <BookMarked className="h-3.5 w-3.5 text-brand-red" /> Total Size
           </div>
           <div className="text-2xl font-bold mt-0.5">{formatBytes(stats.totalBytes)}</div>
         </div>
@@ -338,7 +338,7 @@ export function LibraryClient({
             <Card key={d.id} className="border border-border/80">
               <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div className="h-10 w-10 rounded-lg bg-phisig-red/10 text-phisig-red flex items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-lg bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0">
                     <FileText className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 space-y-1">
@@ -404,7 +404,7 @@ export function LibraryClient({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className={cn(
-                  "w-full rounded-xl border-2 border-dashed border-border p-6 text-center transition hover:border-phisig-red/40 hover:bg-secondary/30",
+                  "w-full rounded-xl border-2 border-dashed border-border p-6 text-center transition hover:border-brand-red/40 hover:bg-secondary/30",
                   form.url && "border-emerald-300 bg-emerald-50/40"
                 )}
               >

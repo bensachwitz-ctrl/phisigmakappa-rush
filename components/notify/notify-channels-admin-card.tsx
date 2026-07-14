@@ -113,7 +113,7 @@ export function NotifyChannelsAdminCard({
   return (
     <div className="mt-8 rounded-xl border border-border bg-card p-5">
       <div className="mb-1 flex items-center gap-2">
-        <Bell className="h-4 w-4 text-phisig-red" />
+        <Bell className="h-4 w-4 text-brand-red" />
         <h2 className="text-lg font-semibold text-foreground">Notification channels</h2>
       </div>
       <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
@@ -132,7 +132,7 @@ export function NotifyChannelsAdminCard({
               type="checkbox"
               checked={offered.has(ch)}
               onChange={() => toggle(ch)}
-              className="h-4 w-4 rounded border-border accent-phisig-red"
+              className="h-4 w-4 rounded border-border accent-brand-red"
             />
             <span className="text-sm font-medium text-foreground">{CHANNEL_LABELS[ch]}</span>
           </label>
@@ -202,14 +202,14 @@ export function NotifyChannelsAdminCard({
           type="button"
           onClick={save}
           disabled={saving}
-          className="rounded-md bg-phisig-red px-4 py-2 text-sm font-semibold text-white hover:bg-phisig-red/90 disabled:opacity-60"
+          className="rounded-md bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:bg-brand-red/90 disabled:opacity-60"
         >
           {saving ? "Saving..." : "Save channels"}
         </button>
         {status && (
           <span
             role="status"
-            className={ok ? "text-sm font-medium text-emerald-700" : "text-sm font-medium text-phisig-red"}
+            className={ok ? "text-sm font-medium text-emerald-700" : "text-sm font-medium text-brand-red"}
           >
             {status}
           </span>

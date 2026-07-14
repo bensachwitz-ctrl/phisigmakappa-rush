@@ -53,7 +53,7 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
           <div className="absolute inset-0 -z-20 bg-[radial-gradient(120%_120%_at_0%_0%,hsl(var(--primary)/0.10),transparent_55%)]" aria-hidden />
         </>
       ) : (
-        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/30" aria-hidden />
+        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-brand-red-soft via-white to-brand-red-soft/30" aria-hidden />
       )}
       <FloatingSymbols
         greekLettersGlyphs={identity.greekLettersGlyphs}
@@ -71,7 +71,7 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
           {/* ── Copy column ───────────────────────────────────────────── */}
           <div className="max-w-2xl animate-slide-up">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand-secondary/40 bg-white/95 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-phisig-red shadow-sm backdrop-blur">
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand-secondary/40 bg-white/95 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-red shadow-sm backdrop-blur">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-secondary" />
                 {heroEyebrow}
               </span>
@@ -85,12 +85,12 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
             <h1 className="mt-5 text-4xl font-bold leading-[0.95] tracking-tight [text-wrap:balance] sm:text-6xl lg:text-7xl">
               {heroLead}{" "}<br className="hidden sm:block" />
               {heroTail}{" "}
-              <span className="relative inline-block text-phisig-red">
+              <span className="relative inline-block text-brand-red">
                 <TypewriterCycle
                   phrases={heroHighlightPhrases}
                   settleText={heroHighlight}
                   ssrText={heroHighlight}
-                  caretClassName="bg-phisig-red"
+                  caretClassName="bg-brand-red"
                 />
                 {/* Modern underline uses the GOLD accent so the headline carries
                     the secondary brand color. */}
@@ -122,22 +122,22 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconPin className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconPin className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">{titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}</span>
               </span>
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconBolt className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
               </span>
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{identity.greekLetters} chapter</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconShieldCheckDuo className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">{identity.greekLetters} chapter</span>
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="group/ig inline-flex items-center gap-1.5 rounded-full border border-brand-secondary/30 bg-brand-secondary/10 px-3 py-1.5 font-medium text-phisig-red backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-secondary/20"
+                className="group/ig inline-flex items-center gap-1.5 rounded-full border border-brand-secondary/30 bg-brand-secondary/10 px-3 py-1.5 font-medium text-brand-red backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-secondary/20"
               >
-                <IconInstagramDuo className="h-3.5 w-3.5 text-phisig-red transition-transform duration-300 group-hover/ig:scale-110" /> {cfg["contact.instagramHandle"]}
+                <IconInstagramDuo className="h-3.5 w-3.5 text-brand-red transition-transform duration-300 group-hover/ig:scale-110" /> {cfg["contact.instagramHandle"]}
               </Link>
             </div>
           </div>
@@ -182,7 +182,7 @@ export function HeroSplit(ctx: SectionContext): React.ReactNode {
           <Link
             href="#register"
             aria-label="Scroll to the rush sign-up form"
-            className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-phisig-red"
+            className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-brand-red"
           >
             <span className="uppercase tracking-[0.18em]">Scroll</span>
             <ChevronDown className="h-5 w-5 animate-bounce" aria-hidden="true" />

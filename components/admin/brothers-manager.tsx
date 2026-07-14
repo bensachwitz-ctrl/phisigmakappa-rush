@@ -381,7 +381,7 @@ export function BrothersManager({
             secondaryAction={isAdmin ? { label: "or add manually", onClick: openCreate } : undefined}
           />
         ) : (
-          <Card className="border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/30 to-white">
+          <Card className="border-brand-red/20 bg-gradient-to-br from-brand-red-soft/30 to-white">
             <CardContent className="py-12 px-6 text-center">
               <p className="text-sm text-muted-foreground">No brothers match "{query}". Try a different search.</p>
             </CardContent>
@@ -396,14 +396,14 @@ export function BrothersManager({
                   {b.headshotUrl ? (
                     <img src={avatarSrc(b.headshotUrl, 96)} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-border shrink-0" />
                   ) : (
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white flex items-center justify-center text-sm font-semibold shrink-0">
                       {b.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-semibold tracking-tight truncate">{b.name}</h3>
                     {b.position && (
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-phisig-red font-semibold mt-0.5">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-brand-red font-semibold mt-0.5">
                         {b.position}
                       </p>
                     )}
@@ -677,7 +677,7 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: any; ico
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
-        <Icon className="h-3 w-3 text-phisig-red" /> {label}
+        <Icon className="h-3 w-3 text-brand-red" /> {label}
       </div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
     </div>
@@ -758,7 +758,7 @@ function InviteBrotherDialog({ open, onClose }: { open: boolean; onClose: () => 
                   className={
                     "rounded-md border px-3 py-2 text-sm transition " +
                     (channel === c
-                      ? "bg-phisig-red text-white border-phisig-red"
+                      ? "bg-brand-red text-white border-brand-red"
                       : "border-border bg-card text-muted-foreground hover:text-foreground")
                   }
                 >
@@ -934,7 +934,7 @@ function PendingInvites() {
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-phisig-red">Brother invites</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-brand-red">Brother invites</p>
             <p className="text-sm font-medium mt-0.5">
               {pending.length} pending{recent.length > 0 ? ` · ${recent.length} recent` : ""}
             </p>
@@ -956,7 +956,7 @@ function PendingInvites() {
               iv.status === "REVOKED" ? "bg-zinc-100 text-zinc-600"
               : iv.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700"
               : isExpired ? "bg-amber-50 text-amber-700"
-              : "bg-phisig-red-soft text-phisig-red";
+              : "bg-brand-red-soft text-brand-red";
             const statusLabel =
               iv.status === "REVOKED" ? "Revoked"
               : iv.status === "COMPLETED" ? "Completed"

@@ -34,7 +34,7 @@ async function sendWelcomeEmail(opts: { to: string; firstName: string; siteUrl: 
     identity = null;
   }
   // Brand color tints the masthead + CTA (neutral platform fallback) so the
-  // welcome email matches the chapter — the old template hardcoded the Phi Sig
+  // welcome email matches the chapter — the old template hardcoded the Demo Chapter
   // cardinal #a3001a, painting every chapter's welcome email red.
   const cfg = await getSiteConfig().catch(() => ({} as Record<string, string>));
   const brandHex = cfg["brand.primaryHex"] || "";

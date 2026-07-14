@@ -36,7 +36,7 @@ export default async function Image() {
   const primaryDark = safeHex(cfg["brand.primaryDarkHex"], "#A20D26");
 
   const glyphs = id.fraternityLetters; // e.g. "ΦΣΚ"
-  const eyebrow = id.fraternityName; // e.g. "Phi Sigma Kappa"
+  const eyebrow = id.fraternityName; // e.g. "Greek Stack Demo Chapter"
   const subRow = `${id.greekLetters} · ${id.schoolName}`;
   const brothers = cfg["stats.brothers"] || "";
   const gpa = cfg["stats.gpa"] || "";
@@ -197,7 +197,7 @@ export default async function Image() {
 
 /**
  * Generic Greekstack marketing card for the apex (no subdomain). Deliberately
- * carries ZERO chapter identity — no Phi Sig, no Gamma Triton, no USC.
+ * carries ZERO chapter identity — no Demo Chapter, no Gamma Triton, no USC.
  */
 function GreekstackCard() {
   return (

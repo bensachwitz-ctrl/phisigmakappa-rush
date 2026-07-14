@@ -106,7 +106,7 @@ export function DuesConnectCard() {
     <Card>
       <CardHeader>
         <div className="flex items-start gap-3">
-          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-phisig-red-soft text-phisig-red">
+          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-red-soft text-brand-red">
             <Banknote className="h-5 w-5" />
           </div>
           <div className="min-w-0">

@@ -165,7 +165,7 @@ export function SoberDriverScheduler({ canWrite }: { canWrite: boolean }) {
       </div>
 
       <div className="flex items-center gap-2.5 p-4 bg-secondary/40 border border-border rounded-2xl">
-        <ShieldAlert className="w-5 h-5 text-phisig-red shrink-0" />
+        <ShieldAlert className="w-5 h-5 text-brand-red shrink-0" />
         <p className="text-xs text-muted-foreground leading-relaxed">
           Assign a pledge/new member to each weekend shift. Only PLEDGE-status members can be a sober
           driver; add someone to the roster as a pledge first if they aren't listed.
@@ -174,7 +174,7 @@ export function SoberDriverScheduler({ canWrite }: { canWrite: boolean }) {
 
       {loading ? (
         <div className="py-12 text-center text-muted-foreground flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-phisig-red" /> Fetching shifts…
+          <Loader2 className="w-4 h-4 animate-spin text-brand-red" /> Fetching shifts…
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

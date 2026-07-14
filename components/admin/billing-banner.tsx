@@ -159,7 +159,7 @@ function bannerTone(args: {
     text: "text-amber-800",
     iconColor: "text-amber-600",
     cta: isInactive
-      ? "bg-phisig-red text-white hover:opacity-90"
+      ? "bg-brand-red text-white hover:opacity-90"
       : "bg-amber-500 text-white hover:bg-amber-600",
     dismiss: "text-amber-500 hover:bg-amber-100 hover:text-amber-700",
   };

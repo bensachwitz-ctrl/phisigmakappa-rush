@@ -75,8 +75,8 @@ describe("focus floor wins over component overrides — unlayered !important (gl
 describe("EmptyState CTA — ring contrasts with the fill (empty-state.tsx)", () => {
   const src = read("components/admin/empty-state.tsx");
 
-  it("no longer rings in phisig-red on a phisig-red fill", () => {
-    expect(src).not.toContain("focus-visible:ring-phisig-red/40");
+  it("no longer rings in brand-red on a brand-red fill", () => {
+    expect(src).not.toContain("focus-visible:ring-brand-red/40");
   });
 
   it("uses a high-contrast ring (ring-foreground) + a white ring offset", () => {

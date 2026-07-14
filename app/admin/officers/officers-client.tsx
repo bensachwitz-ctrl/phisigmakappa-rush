@@ -335,7 +335,7 @@ export function OfficersClient({
         <div className="flex items-start gap-4">
           <IconChip icon={ShieldCheck} tone="brand" size="lg" className="hidden sm:inline-flex" />
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
               <ShieldCheck className="h-3 w-3" /> Roles &amp; permissions
             </span>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Officer permissions</h1>
@@ -355,19 +355,19 @@ export function OfficersClient({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <Briefcase className="h-3.5 w-3.5 text-phisig-red" /> Active positions
+            <Briefcase className="h-3.5 w-3.5 text-brand-red" /> Active positions
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.positions}</div>
         </div>
         <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <Users className="h-3.5 w-3.5 text-phisig-red" /> Officers serving
+            <Users className="h-3.5 w-3.5 text-brand-red" /> Officers serving
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.officers}</div>
         </div>
         <div className="lift rounded-xl border p-4 bg-card">
           <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground font-semibold">
-            <ShieldCheck className="h-3.5 w-3.5 text-phisig-red" /> Current terms
+            <ShieldCheck className="h-3.5 w-3.5 text-brand-red" /> Current terms
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.currentAssignments}</div>
         </div>
@@ -568,7 +568,7 @@ export function OfficersClient({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-phisig-red" />
+              <ShieldCheck className="h-5 w-5 text-brand-red" />
               Edit permissions{editPosition ? ` - ${editPosition.title}` : ""}
             </DialogTitle>
             <DialogDescription>
@@ -592,7 +592,7 @@ export function OfficersClient({
                   type="checkbox"
                   checked={!!draftPerms.superAdmin}
                   onChange={(e) => setSuperAdmin(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-input text-phisig-red focus:ring-2 focus:ring-ring"
+                  className="mt-0.5 h-4 w-4 rounded border-input text-brand-red focus:ring-2 focus:ring-ring"
                 />
                 <div className="space-y-0.5">
                   <p className="text-sm font-semibold flex items-center gap-1.5">
@@ -675,7 +675,7 @@ export function OfficersClient({
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-phisig-red" /> Assign a brother to a position
+              <UserPlus className="h-5 w-5 text-brand-red" /> Assign a brother to a position
             </DialogTitle>
             <DialogDescription>
               The brother inherits that position&apos;s permissions for the term you set.
@@ -825,7 +825,7 @@ function AccessSummary({ perms }: { perms: OfficerPermissions }) {
       {writes.map((d) => (
         <span
           key={d.key}
-          className="inline-flex items-center rounded bg-phisig-red-soft/40 px-1.5 py-0.5 text-[10px] font-medium text-phisig-red"
+          className="inline-flex items-center rounded bg-brand-red-soft/40 px-1.5 py-0.5 text-[10px] font-medium text-brand-red"
         >
           {d.label}
         </span>

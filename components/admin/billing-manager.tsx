@@ -29,7 +29,7 @@ import { IconBilling as CreditCard, IconCheckCircle as CheckCircle2, IconClock a
  *       – contact-driven; directs to sales.
  * Plus a "Switch plan" affordance and a "Need something custom? Talk to sales"
  * link to /contact#custom. Brand-tinted via the chapter's --brand-primary /
- * phisig-red.
+ * brand-red.
  *
  * NEVER hard-blocks — informational + a CTA. `plan` is optional (defaults to the
  * monthly subscription view) so an un-updated server page still renders sanely.
@@ -177,10 +177,10 @@ export function BillingManager(props: {
       )}
 
       {/* Current plan + status */}
-      <Card className="overflow-hidden border-phisig-red/15">
+      <Card className="overflow-hidden border-brand-red/15">
         <CardHeader>
           <div className="flex items-start gap-3">
-            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/15">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-red/10 text-brand-red ring-1 ring-brand-red/15">
               {planIcon}
             </div>
             <div className="min-w-0 flex-1">
@@ -224,7 +224,7 @@ export function BillingManager(props: {
                 </span>
               </p>
               <p className="flex items-start gap-2 text-muted-foreground">
-                <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+                <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-brand-red" />
                 Full access to every feature - your rush site, roster, dues, events,
                 and compliance trail - with no upfront or recurring cost.
               </p>
@@ -241,7 +241,7 @@ export function BillingManager(props: {
           ) : isCustom ? (
             /* ── CUSTOM PLAN ──────────────────────────────────────────── */
             <p className="flex items-start gap-2 text-muted-foreground">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-red" />
               <span>
                 Your chapter is on a <strong>custom plan</strong> arranged with our
                 team. Need to make a change or have a question about billing? Reach
@@ -302,7 +302,7 @@ export function BillingManager(props: {
             </p>
           ) : (
             <p className="flex items-start gap-2 text-muted-foreground">
-              <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+              <IconSpark className="mt-0.5 h-4 w-4 shrink-0 text-brand-red" />
               Subscribe to lock in your chapter&apos;s platform - full access to
               every feature for {priceLabel}.
             </p>
@@ -391,7 +391,7 @@ export function BillingManager(props: {
           {isCustom && (
             <a
               href="/contact#custom"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-phisig-red px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-red px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               Contact your account team <ArrowRight className="h-4 w-4" />
             </a>
@@ -422,7 +422,7 @@ export function BillingManager(props: {
         Need something custom (multi-chapter, council, or HQ rollout)?{" "}
         <a
           href="/contact#custom"
-          className="font-medium text-phisig-red underline-offset-2 hover:underline"
+          className="font-medium text-brand-red underline-offset-2 hover:underline"
         >
           Talk to sales
         </a>
@@ -430,10 +430,10 @@ export function BillingManager(props: {
       </p>
 
       {/* Value prop */}
-      <Card className="bg-gradient-to-b from-phisig-red/[0.04] to-transparent border-phisig-red/10">
+      <Card className="bg-gradient-to-b from-brand-red/[0.04] to-transparent border-brand-red/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck className="h-4 w-4 text-phisig-red" />
+            <ShieldCheck className="h-4 w-4 text-brand-red" />
             What your plan includes
           </CardTitle>
         </CardHeader>
@@ -441,7 +441,7 @@ export function BillingManager(props: {
           <ul className="grid gap-2.5 text-sm text-muted-foreground sm:grid-cols-2">
             {VALUE_PROPS.map((v) => (
               <li key={v} className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-phisig-red" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-red" />
                 <span>{v}</span>
               </li>
             ))}
@@ -539,7 +539,7 @@ function SwitchPlan({
                 }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="text-phisig-red">{o.icon}</span>
+                <span className="text-brand-red">{o.icon}</span>
                 <span className="min-w-0 flex-1">{o.label}</span>
                 {!o.selfServe && (
                   <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

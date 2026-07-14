@@ -187,7 +187,7 @@ export function OnboardingForm({
             Your profile is live in the chapter directory.
           </p>
           <div className="mt-5 rounded-xl border border-border bg-white p-4 text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Your sign-in</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">Your sign-in</p>
             <p className="mt-2 text-sm">
               <span className="text-muted-foreground">Username: </span>
               <span className="font-mono font-semibold">{firstName}</span>
@@ -198,11 +198,11 @@ export function OnboardingForm({
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               Sign in any time at{" "}
-              <a href="/admin/login" className="text-phisig-red hover:underline font-medium">/admin/login</a>{" "}
+              <a href="/admin/login" className="text-brand-red hover:underline font-medium">/admin/login</a>{" "}
               → choose <strong>Brother</strong> tab.
             </p>
           </div>
-          <p className="mt-4 text-xs text-phisig-red font-semibold tracking-[0.18em] uppercase">#DamnProud</p>
+          <p className="mt-4 text-xs text-brand-red font-semibold tracking-[0.18em] uppercase">#DamnProud</p>
         </CardContent>
       </Card>
     );
@@ -241,7 +241,7 @@ export function OnboardingForm({
                   className={
                     "min-h-[44px] rounded-full border px-3 py-1.5 text-sm transition " +
                     (form.year === y
-                      ? "bg-phisig-red text-white border-phisig-red"
+                      ? "bg-brand-red text-white border-brand-red"
                       : "border-border bg-card text-muted-foreground hover:text-foreground")
                   }
                 >
@@ -310,9 +310,9 @@ export function OnboardingForm({
             />
           </div>
 
-          <div className="rounded-xl border border-phisig-red/20 bg-phisig-red-soft/30 p-4 space-y-4">
+          <div className="rounded-xl border border-brand-red/20 bg-brand-red-soft/30 p-4 space-y-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">Set your sign-in</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">Set your sign-in</p>
               <p id="onb-pw-help" className="mt-1 text-xs text-muted-foreground">
                 Your username will be your first name (<span className="font-mono">{(form.name.trim().split(/\s+/)[0]) || "yourFirstName"}</span>). Use at least 8 characters with a letter and a number - it's the only way back into your account.
               </p>
@@ -366,7 +366,7 @@ export function OnboardingForm({
                 id="onb-hazing-waiver"
                 checked={form.agreedToHazingWaiver}
                 onCheckedChange={(checked) => set("agreedToHazingWaiver", checked === true)}
-                className="mt-1 border-slate-300 data-[state=checked]:bg-phisig-red data-[state=checked]:border-phisig-red"
+                className="mt-1 border-slate-300 data-[state=checked]:bg-brand-red data-[state=checked]:border-brand-red"
                 aria-invalid={!!errors.agreedToHazingWaiver}
                 aria-describedby={describedBy("agreedToHazingWaiver")}
               />

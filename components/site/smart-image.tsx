@@ -12,7 +12,7 @@
  *   • Runtime load error (404 / blocked / decode fail) → swaps to the fallback.
  *
  * The fallback is a cardinal-gradient tile with the chapter Crest (recolored per
- * tenant via the --phisig-red CSS var) — the SAME branded empty-state language
+ * tenant via the --brand-red CSS var) — the SAME branded empty-state language
  * already used by the Instagram feed + hero collage, so a missing photo looks
  * deliberate, not broken. Transparent by construction (no baked dark box).
  *
@@ -58,7 +58,7 @@ export function SmartImage({
     return (
       <span
         className={cn(
-          "absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark text-white",
+          "absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark text-white",
           fallbackClassName,
         )}
         aria-hidden={alt ? undefined : true}
@@ -114,7 +114,7 @@ export function AvatarImage({
     return (
       <span
         className={cn(
-          "flex items-center justify-center bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white font-semibold",
+          "flex items-center justify-center bg-gradient-to-br from-brand-red to-brand-red-dark text-white font-semibold",
           fallbackClassName || className,
         )}
         role={alt ? "img" : undefined}

@@ -139,7 +139,7 @@ export function ManageElectionClient({
         <div>
           <Link
             href="/admin/elections"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-phisig-red transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-brand-red transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> All elections
           </Link>
@@ -206,7 +206,7 @@ export function ManageElectionClient({
                 </Button>
               )}
               {isSeated && (
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-phisig-red">
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-red">
                   <CheckCircle2 className="h-4 w-4" /> Winners seated as officers
                 </span>
               )}
@@ -356,7 +356,7 @@ function SeatCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <ListChecks className="h-4 w-4 shrink-0 text-phisig-red" />
+              <ListChecks className="h-4 w-4 shrink-0 text-brand-red" />
               <p className="truncate text-base font-semibold tracking-tight">{seat.title}</p>
               {seat.positionId ? (
                 <Badge className="bg-secondary text-foreground">Officer seat</Badge>
@@ -422,20 +422,20 @@ function SeatResults({ seat, isSeated }: { seat: Seat; isSeated: boolean }) {
             key={r.candidateId}
             className={cn(
               "relative overflow-hidden rounded-lg border bg-background",
-              isWinner ? "border-phisig-red" : "border-border",
+              isWinner ? "border-brand-red" : "border-border",
             )}
           >
             <span
               aria-hidden="true"
-              className={cn("absolute inset-y-0 left-0", isWinner ? "bg-phisig-red/15" : "bg-secondary")}
+              className={cn("absolute inset-y-0 left-0", isWinner ? "bg-brand-red/15" : "bg-secondary")}
               style={{ width: `${r.pct}%` }}
             />
             <span className="relative flex items-center justify-between gap-3 px-4 py-2.5">
               <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
-                {isWinner && <Trophy className="h-4 w-4 shrink-0 text-phisig-red" />}
+                {isWinner && <Trophy className="h-4 w-4 shrink-0 text-brand-red" />}
                 <span className="truncate">{r.name}</span>
                 {isWinner && isSeated && (
-                  <Badge className="bg-phisig-red-soft text-phisig-red">Seated</Badge>
+                  <Badge className="bg-brand-red-soft text-brand-red">Seated</Badge>
                 )}
               </span>
               <span className="flex shrink-0 items-baseline gap-2 text-xs text-muted-foreground tabular-nums">
@@ -725,8 +725,8 @@ function AddSeatButton({
                 className={cn(
                   "press flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
                   mode === "position"
-                    ? "border-phisig-red bg-phisig-red-soft text-phisig-red"
-                    : "border-border text-muted-foreground hover:border-phisig-red/40",
+                    ? "border-brand-red bg-brand-red-soft text-brand-red"
+                    : "border-border text-muted-foreground hover:border-brand-red/40",
                 )}
               >
                 Officer position
@@ -737,8 +737,8 @@ function AddSeatButton({
                 className={cn(
                   "press flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
                   mode === "custom"
-                    ? "border-phisig-red bg-phisig-red-soft text-phisig-red"
-                    : "border-border text-muted-foreground hover:border-phisig-red/40",
+                    ? "border-brand-red bg-brand-red-soft text-brand-red"
+                    : "border-border text-muted-foreground hover:border-brand-red/40",
                 )}
               >
                 Custom office

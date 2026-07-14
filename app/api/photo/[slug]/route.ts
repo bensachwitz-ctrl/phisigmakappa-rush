@@ -431,7 +431,7 @@ export async function GET(
       clearTimeout(timer);
     }
 
-    // Sanity check: real Phi Sig chapter photos from Instagram are 100KB+.
+    // Sanity check: real Demo Chapter chapter photos from Instagram are 100KB+.
     // Anything under 60KB is almost certainly an IG branding/logo asset
     // returned by a login-wall or private-post fallback path (the IG app
     // icon at high res tops out around 50KB). Reject so we don't poison

@@ -39,7 +39,7 @@ function hrefFor(slug: string, fallbackUrl: string) {
 
 // White-label empty state — when a chapter hasn't wired its own feed yet we
 // render the designed cardinal-gradient Crest tile (brand-tinted via the
-// --phisig-red CSS var, so it recolors per tenant) instead of leaking another
+// --brand-red CSS var, so it recolors per tenant) instead of leaking another
 // chapter's photos. Mirrors the PostTile fallback used in the hero collage.
 function CrestFallbackTile({
   className,
@@ -55,10 +55,10 @@ function CrestFallbackTile({
         className
       )}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark flex items-center justify-center pointer-events-none">
         <Crest className="h-16 w-16 text-white/25" aria-hidden="true" />
       </div>
-      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-brand-red shadow-sm pointer-events-none">
         <Instagram className="h-3 w-3" aria-hidden="true" /> {label}
       </span>
     </div>
@@ -138,14 +138,14 @@ export function InstagramFeed({
 
           {/* Top-right Instagram badge — chapter handle from cfg (white-label). */}
           {handle && (
-            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-phisig-red shadow-sm pointer-events-none">
+            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-brand-red shadow-sm pointer-events-none">
               <Instagram className="h-3 w-3" /> {handle}
             </span>
           )}
 
           {/* Bottom caption */}
           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 pointer-events-none">
-            <span className="inline-block rounded-full bg-phisig-red text-white px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="inline-block rounded-full bg-brand-red text-white px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
               {p.tag}
             </span>
             <p className={cn(
@@ -209,7 +209,7 @@ export function InstagramStrip({
             href={handleUrl}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 text-sm font-medium text-phisig-red hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-brand-red hover:underline"
           >
             <Instagram className="h-4 w-4" /> See more on {handle}
             <ExternalLink className="h-3 w-3" />

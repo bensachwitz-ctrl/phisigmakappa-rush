@@ -41,7 +41,7 @@ export default async function DuesPayoutsPage() {
       </Link>
 
       <div className="mb-6">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-phisig-red">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-brand-red">
           <Banknote className="h-3 w-3" /> Treasurer
         </span>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Payouts</h1>

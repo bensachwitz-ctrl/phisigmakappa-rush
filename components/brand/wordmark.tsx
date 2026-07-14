@@ -23,15 +23,13 @@ export function Wordmark({
     logoUrl,
   } = useChapterIdentity();
 
-  const isPhiSig = fraternityName.toLowerCase().includes("phi sigma kappa");
   const wmUid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const wmGradId = `wm-shield-${wmUid}`;
   const wmGlyph = (fraternityLetters || greekLettersGlyphs || "G").slice(0, 4);
 
   // A chapter-uploaded logo (set in /admin/setup or /admin/settings → Brand)
-  // takes precedence over both the Phi Sig reference image and the auto-
-  // generated shield. Rendered as a square, contained image so any aspect
-  // ratio sits cleanly next to the wordmark text.
+  // takes precedence over the auto-generated shield. Rendered as a square,
+  // contained image so any aspect ratio sits cleanly next to the wordmark text.
   const hasLogo = !!(logoUrl && logoUrl.trim());
   const logoMark = (size: number) => (
     /* eslint-disable-next-line @next/next/no-img-element */
@@ -77,21 +75,7 @@ export function Wordmark({
           className
         )}
       >
-        {hasLogo ? (
-          logoMark(28)
-        ) : isPhiSig ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src="/brand/phisigmakappa-shield-only.jpg"
-            alt={fraternityName}
-            width={28}
-            height={28}
-            decoding="async"
-            className="h-7 w-auto object-contain"
-          />
-        ) : (
-          renderGenericShield(28)
-        )}
+        {hasLogo ? logoMark(28) : renderGenericShield(28)}
         <span className="font-display">{fraternityLetters}</span>
         <span className="text-muted-foreground font-normal text-sm">{schoolShort}</span>
       </span>
@@ -106,21 +90,7 @@ export function Wordmark({
         className
       )}
     >
-      {hasLogo ? (
-        logoMark(36)
-      ) : isPhiSig ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src="/brand/phisigmakappa-shield-only.jpg"
-          alt={fraternityName}
-          width={36}
-          height={36}
-          decoding="async"
-          className="h-9 w-auto object-contain"
-        />
-      ) : (
-        renderGenericShield(36)
-      )}
+      {hasLogo ? logoMark(36) : renderGenericShield(36)}
       <span className="flex flex-col leading-none">
         <span className="text-[11px] uppercase tracking-[0.22em] opacity-70 font-medium">
           {fraternityName}
@@ -139,9 +109,8 @@ export function Crest({ className }: { className?: string }) {
   const fs = glyph.length >= 4 ? 13 : glyph.length === 3 ? 16 : glyph.length === 2 ? 21 : 27;
 
   // Generic, auto-tinted chapter crest — the chapter's OWN glyph on a gradient
-  // of its brand colors. No org-specific iconography (the previous version drew
-  // Phi Sig's sphinx, which would be wrong on every other chapter), so this
-  // renders a correct, premium mark for ANY organization automatically.
+  // of its brand colors. No org-specific iconography, so this renders a correct,
+  // premium mark for ANY organization automatically.
   return (
     <svg viewBox="0 0 64 72" fill="none" className={className} aria-hidden="true">
       <defs>

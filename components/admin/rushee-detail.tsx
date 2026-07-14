@@ -339,7 +339,7 @@ export function RusheeDetail({
                     .sort((a, b) => b.event.startsAt.localeCompare(a.event.startsAt))
                     .map((a) => (
                     <li key={a.id} className="flex items-start gap-3 rounded-lg border border-border bg-background p-3">
-                      <div className="shrink-0 mt-0.5 h-2 w-2 rounded-full bg-phisig-red" aria-hidden />
+                      <div className="shrink-0 mt-0.5 h-2 w-2 rounded-full bg-brand-red" aria-hidden />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{a.event.name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -406,7 +406,7 @@ function PnmAvatar({ headshotUrl, name }: { headshotUrl: string | null; name: st
     .join("");
   if (headshotUrl) {
     return (
-      <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-phisig-red/40 bg-secondary">
+      <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-brand-red/40 bg-secondary">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={avatarSrc(headshotUrl, 192)} alt={`${name} headshot`} className="h-full w-full object-cover" />
       </div>
@@ -414,7 +414,7 @@ function PnmAvatar({ headshotUrl, name }: { headshotUrl: string | null; name: st
   }
   return (
     <div
-      className="flex h-24 w-24 items-center justify-center rounded-full bg-phisig-red text-white text-2xl font-semibold ring-2 ring-phisig-red-dark"
+      className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-red text-white text-2xl font-semibold ring-2 ring-brand-red-dark"
       aria-hidden
     >
       {initials || "?"}

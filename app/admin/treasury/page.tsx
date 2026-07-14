@@ -89,7 +89,7 @@ export default async function TreasuryPage({
     <div className="container py-8 space-y-6">
       <div className="flex items-start gap-3">
         <span
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-phisig-red/10 text-phisig-red ring-1 ring-phisig-red/15"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-red/10 text-brand-red ring-1 ring-brand-red/15"
           aria-hidden="true"
         >
           <IconTreasury className="h-6 w-6" accent="currentColor" />

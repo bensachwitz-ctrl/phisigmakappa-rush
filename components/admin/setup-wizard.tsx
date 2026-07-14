@@ -113,15 +113,15 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                 onClick={() => setStep(s.id)}
                 aria-current={current ? "step" : undefined}
                 className={cn(
-                  "w-full flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/40",
-                  current && "border-phisig-red bg-phisig-red-soft",
+                  "w-full flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40",
+                  current && "border-brand-red bg-brand-red-soft",
                   done && !current && "border-emerald-300 bg-emerald-50/40",
-                  !current && !done && "border-border bg-card hover:border-phisig-red/30"
+                  !current && !done && "border-border bg-card hover:border-brand-red/30"
                 )}
               >
                 <span className={cn(
                   "inline-flex h-7 w-7 items-center justify-center rounded-full",
-                  current && "bg-phisig-red text-white",
+                  current && "bg-brand-red text-white",
                   done && !current && "bg-emerald-500 text-white",
                   !current && !done && "bg-secondary text-muted-foreground"
                 )}>
@@ -129,7 +129,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                 </span>
                 <span className={cn(
                   "text-[11px] font-medium leading-tight",
-                  current ? "text-phisig-red" : done ? "text-emerald-800" : "text-muted-foreground"
+                  current ? "text-brand-red" : done ? "text-emerald-800" : "text-muted-foreground"
                 )}>
                   Step {i + 1}
                 </span>
@@ -147,7 +147,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
         <CardContent className="p-6 sm:p-8 space-y-5">
           <div>
             <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-              {React.createElement(STEPS[stepIndex].icon, { className: "h-5 w-5 text-phisig-red", "aria-hidden": true })}
+              {React.createElement(STEPS[stepIndex].icon, { className: "h-5 w-5 text-brand-red", "aria-hidden": true })}
               {STEPS[stepIndex].label}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{STEPS[stepIndex].blurb}</p>
@@ -155,15 +155,15 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
 
           {step === "identity" && (
             <div className="grid sm:grid-cols-2 gap-4">
-              <WField label="Organization name (full)" id="chapter.fraternityName" values={values} set={set} placeholder="Phi Sigma Kappa" />
-              <WField label="Organization short" id="chapter.fraternityShort" values={values} set={set} placeholder="Phi Sig" />
+              <WField label="Organization name (full)" id="chapter.fraternityName" values={values} set={set} placeholder="Greek Stack Demo Chapter" />
+              <WField label="Organization short" id="chapter.fraternityShort" values={values} set={set} placeholder="Demo Chapter" />
               <WField label="Greek letters (chapter)" id="chapter.greekLetters" values={values} set={set} placeholder="Gamma Triton" />
               <WField label="Org letters (glyphs)" id="chapter.fraternityLetters" values={values} set={set} placeholder="ΦΣΚ" />
               <WField label="Chapter glyphs" id="chapter.greekLettersGlyphs" values={values} set={set} placeholder="ΓΤ" />
               <WField label="School / university" id="chapter.schoolName" values={values} set={set} placeholder="University of South Carolina" />
               <WField label="School short" id="chapter.schoolShort" values={values} set={set} placeholder="USC" />
               <WField label="School URL" id="chapter.schoolUrl" values={values} set={set} placeholder="https://sc.edu" />
-              <WField label="National HQ URL" id="chapter.nationalHqUrl" values={values} set={set} placeholder="https://phisigmakappa.org" />
+              <WField label="National HQ URL" id="chapter.nationalHqUrl" values={values} set={set} placeholder="https://nationalhq.org" />
               <WField label="Charter year" id="chapter.charterYear" values={values} set={set} placeholder="1975" />
               <WField label="Founding year (national)" id="chapter.foundingYear" values={values} set={set} placeholder="1873" />
               <WSelect
@@ -200,7 +200,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <WField label="Cardinal principles / motto" id="chapter.cardinalPrinciples" values={values} set={set} placeholder="Brotherhood, Scholarship, Character" full />
               <WField label="Tagline / hashtag" id="chapter.tagline" values={values} set={set} placeholder="#DamnProud" />
               <WField label="Recruitment term label" id="rush.termLabel" values={values} set={set} placeholder="Fall '26" />
-              <WField label="iOS launcher caption (≤12 chars)" id="chapter.appShortTitle" values={values} set={set} placeholder="Phi Sig USC" maxLength={12} />
+              <WField label="iOS launcher caption (≤12 chars)" id="chapter.appShortTitle" values={values} set={set} placeholder="Demo Chapter USC" maxLength={12} />
             </div>
           )}
 
@@ -208,7 +208,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
             <>
               <div className="rounded-xl border border-border bg-secondary/30 p-4">
                 <Label className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium">
-                  <IconImage className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Chapter logo (optional)
+                  <IconImage className="h-4 w-4 text-brand-red" aria-hidden="true" /> Chapter logo (optional)
                 </Label>
                 <p className="text-xs text-muted-foreground mb-3">
                   Upload your crest or logo (square / transparent PNG works best). It appears in the
@@ -267,7 +267,7 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={values["antiHazing.body"] || ""}
                   onChange={(e) => set("antiHazing.body", e.target.value)}
-                  placeholder="Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form…"
+                  placeholder="Greek Stack Demo Chapter national and the Gamma Triton chapter strictly prohibit hazing in any form…"
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   Two sentences. Rendered on /privacy, /parents, and the homepage Zero-tolerance card.
@@ -288,15 +288,15 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
                 </p>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <Link href="/" target="_blank" rel="noreferrer noopener" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
+                <Link href="/" target="_blank" rel="noreferrer noopener" className="rounded-xl border border-border bg-card p-4 hover:border-brand-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
-                    <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" /> View your public homepage
+                    <IconSpark className="h-4 w-4 text-brand-red" aria-hidden="true" /> View your public homepage
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">Opens in a new tab - confirm everything reads correctly.</p>
                 </Link>
-                <Link href="/admin/settings" className="rounded-xl border border-border bg-card p-4 hover:border-phisig-red/40 transition-colors">
+                <Link href="/admin/settings" className="rounded-xl border border-border bg-card p-4 hover:border-brand-red/40 transition-colors">
                   <p className="text-sm font-semibold tracking-tight flex items-center gap-2">
-                    <IconBuilding className="h-4 w-4 text-phisig-red" aria-hidden="true" /> Advanced settings
+                    <IconBuilding className="h-4 w-4 text-brand-red" aria-hidden="true" /> Advanced settings
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">Hero photos, stats, FAQ, timeline, executive board, all editable.</p>
                 </Link>
@@ -304,10 +304,10 @@ export function SetupWizard({ initial }: { initial: Cfg }) {
               <div className="rounded-xl border border-border bg-card p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Next steps</p>
                 <ul className="mt-2 space-y-1.5 text-sm">
-                  <li>• Invite e-board members via <Link href="/admin/brothers" className="text-phisig-red hover:underline">Brothers → Invite</Link>.</li>
-                  <li>• Add the first rush event in <Link href="/admin/events" className="text-phisig-red hover:underline">Events</Link>.</li>
-                  <li>• Swap the 3 hero photos in <Link href="/admin/settings" className="text-phisig-red hover:underline">Site content → Hero</Link>.</li>
-                  <li>• Read the full handbook at <Link href="/admin/help" className="text-phisig-red hover:underline">Help</Link>.</li>
+                  <li>• Invite e-board members via <Link href="/admin/brothers" className="text-brand-red hover:underline">Brothers → Invite</Link>.</li>
+                  <li>• Add the first rush event in <Link href="/admin/events" className="text-brand-red hover:underline">Events</Link>.</li>
+                  <li>• Swap the 3 hero photos in <Link href="/admin/settings" className="text-brand-red hover:underline">Site content → Hero</Link>.</li>
+                  <li>• Read the full handbook at <Link href="/admin/help" className="text-brand-red hover:underline">Help</Link>.</li>
                 </ul>
               </div>
             </div>
@@ -621,13 +621,13 @@ export function FirstRunCard({
   return (
     <section
       aria-label="Get your chapter live"
-      className="relative overflow-hidden rounded-2xl border border-phisig-red/15 bg-gradient-to-br from-phisig-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]"
+      className="relative overflow-hidden rounded-2xl border border-brand-red/15 bg-gradient-to-br from-brand-red-soft/45 via-white to-white p-5 shadow-[0_12px_34px_-18px_hsl(var(--primary)/0.22)]"
     >
-      <span aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-phisig-red/10 blur-3xl" />
+      <span aria-hidden className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-brand-red/10 blur-3xl" />
 
       {/* ── Header + single unified progress meter ───────────────────────── */}
       <div className="relative flex items-start gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shrink-0 shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]">
           <IconSpark className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="flex-1 min-w-0">
@@ -644,7 +644,7 @@ export function FirstRunCard({
           {/* Single progress bar — done vs total across the whole flow. */}
           <div className="mt-3 flex items-center gap-2.5">
             <div
-              className="h-1.5 flex-1 rounded-full bg-phisig-red/10 overflow-hidden"
+              className="h-1.5 flex-1 rounded-full bg-brand-red/10 overflow-hidden"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={total}
@@ -652,11 +652,11 @@ export function FirstRunCard({
               aria-label="Chapter setup progress"
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-brand-red to-brand-red-dark transition-all duration-700"
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <span className="text-[11px] font-semibold text-phisig-red tabular-nums shrink-0">
+            <span className="text-[11px] font-semibold text-brand-red tabular-nums shrink-0">
               {done}/{total} done
             </span>
           </div>
@@ -669,9 +669,9 @@ export function FirstRunCard({
             screen (invite links + Add-Members wizard live there). */}
         <Link
           href="/admin/brothers"
-          className="group flex items-center gap-3 rounded-xl border border-phisig-red/20 bg-white/70 p-3 transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+          className="group flex items-center gap-3 rounded-xl border border-brand-red/20 bg-white/70 p-3 transition-colors hover:border-brand-red/40 hover:bg-brand-red-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shrink-0 shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.55)]">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-red to-brand-red-dark text-white shrink-0 shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.55)]">
             <IconUserPlus className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
@@ -680,12 +680,12 @@ export function FirstRunCard({
               Send invite links so officers set their own login
             </p>
           </div>
-          <IconArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" aria-hidden="true" />
+          <IconArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-brand-red" aria-hidden="true" />
         </Link>
 
         {/* Load sample data — instant populated value for a new admin. */}
-        <div className="flex items-center gap-3 rounded-xl border border-phisig-red/15 bg-white/70 p-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-phisig-red-soft text-phisig-red shrink-0 ring-1 ring-phisig-red/15">
+        <div className="flex items-center gap-3 rounded-xl border border-brand-red/15 bg-white/70 p-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-red-soft text-brand-red shrink-0 ring-1 ring-brand-red/15">
             <IconDatabase className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
@@ -740,7 +740,7 @@ export function FirstRunCard({
             {!c.ok && (
               <Link
                 href={c.href}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-phisig-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-red hover:underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
               >
                 Fix <IconArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
@@ -750,10 +750,10 @@ export function FirstRunCard({
       </ul>
 
       {/* ── Footer: resume the full wizard + subtle clear-sample link ────── */}
-      <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-phisig-red/10 pt-3">
+      <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-brand-red/10 pt-3">
         <Link
           href="/admin/setup"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-phisig-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 rounded"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-red hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 rounded"
         >
           <IconWand className="h-3.5 w-3.5" aria-hidden="true" />
           {brandSetupComplete ? "Review chapter setup wizard" : "Resume full setup wizard"}
@@ -763,7 +763,7 @@ export function FirstRunCard({
           type="button"
           onClick={() => runSample("clear")}
           disabled={sampleBusy !== null}
-          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/20 rounded"
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/20 rounded"
         >
           {sampleBusy === "clear" ? (
             <IconSpinner className="h-3 w-3 animate-spin" aria-hidden="true" />

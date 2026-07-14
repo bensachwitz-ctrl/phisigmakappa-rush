@@ -86,13 +86,13 @@ const VOTE_OPTIONS = [
 ] as const;
 
 // Chapter identity passed via prop so templates re-brand when the chapter
-// customizes Site content. All literal "Phi Sig USC" / "Phi Sig house" /
+// customizes Site content. All literal "Demo Chapter USC" / "Demo Chapter house" /
 // chapter-name references have been generalized to read from cfg.
 type ChapterBrand = {
-  fraternityName: string;   // "Phi Sigma Kappa"
-  fraternityShort: string;  // "Phi Sig"
+  fraternityName: string;   // "Greek Stack Demo Chapter"
+  fraternityShort: string;  // "Demo Chapter"
   schoolShort: string;      // "USC"
-  chapterAttribution: string; // "Phi Sig USC" (derived)
+  chapterAttribution: string; // "Demo Chapter USC" (derived)
   houseAddress: string;     // "1525 College St" — first line for SMS brevity
 };
 
@@ -413,7 +413,7 @@ export function Roster({
           onClick={() => setSmartFilter(smartFilter === "decidable" ? "none" : "decidable")}
           aria-pressed={smartFilter === "decidable"}
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
             smartFilter === "decidable"
               ? "border-emerald-300 bg-emerald-50 text-emerald-900"
               : "border-border bg-card text-muted-foreground hover:border-emerald-300 hover:text-foreground"
@@ -427,10 +427,10 @@ export function Roster({
           onClick={() => setSmartFilter(smartFilter === "needs-my-vote" ? "none" : "needs-my-vote")}
           aria-pressed={smartFilter === "needs-my-vote"}
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
             smartFilter === "needs-my-vote"
-              ? "border-phisig-red bg-phisig-red-soft text-phisig-red"
-              : "border-border bg-card text-muted-foreground hover:border-phisig-red/40 hover:text-foreground"
+              ? "border-brand-red bg-brand-red-soft text-brand-red"
+              : "border-border bg-card text-muted-foreground hover:border-brand-red/40 hover:text-foreground"
           )}
         >
           Needs my vote
@@ -441,7 +441,7 @@ export function Roster({
           onClick={() => setSmartFilter(smartFilter === "bid-pending" ? "none" : "bid-pending")}
           aria-pressed={smartFilter === "bid-pending"}
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
             smartFilter === "bid-pending"
               ? "border-amber-300 bg-amber-50 text-amber-900"
               : "border-border bg-card text-muted-foreground hover:border-amber-300 hover:text-foreground"
@@ -773,7 +773,7 @@ function Avatar({ rush, size = 36 }: { rush: Rush; size?: number }) {
   return (
     <div
       style={{ width: size, height: size }}
-      className="rounded-full bg-phisig-red-soft text-phisig-red flex items-center justify-center text-xs font-semibold shrink-0"
+      className="rounded-full bg-brand-red-soft text-brand-red flex items-center justify-center text-xs font-semibold shrink-0"
     >
       {initials}
     </div>

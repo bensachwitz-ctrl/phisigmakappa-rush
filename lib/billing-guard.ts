@@ -4,7 +4,7 @@
 // WHY THIS EXISTS (billing/trial lockout was bypassable — P1)
 // ───────────────────────────────────────────────────────────────────────────
 // The billing lockout was enforced ONLY in middleware.ts, keyed off a
-// NON-HttpOnly `phisig_billing_locked` cookie that app/admin/layout.tsx set via
+// NON-HttpOnly `greekstack_billing_locked` cookie that app/admin/layout.tsx set via
 // `document.cookie`. That is not a security boundary:
 //   • the cookie is client-set, so browser JS can simply delete it;
 //   • a curl / native Bearer caller never carries it at all;

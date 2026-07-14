@@ -72,7 +72,7 @@ export function PnmCompareModal({
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <IconSpark className="h-5 w-5 text-phisig-red" aria-hidden="true" />
+            <IconSpark className="h-5 w-5 text-brand-red" aria-hidden="true" />
             Compare {rushes.length} {rushes.length === 1 ? "PNM" : "PNMs"}
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
@@ -103,7 +103,7 @@ export function PnmCompareModal({
                     className="h-12 w-12 rounded-full object-cover ring-1 ring-border shrink-0"
                   />
                 ) : (
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white flex items-center justify-center text-sm font-semibold shrink-0">
                     {r.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                 )}

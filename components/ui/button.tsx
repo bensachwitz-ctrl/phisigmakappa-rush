@@ -30,7 +30,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98]",
         gradient:
-          "bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 hover:shadow-xl hover:shadow-phisig-red/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+          "bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-lg shadow-brand-red/25 hover:shadow-xl hover:shadow-brand-red/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
         // CUSTOM premium platform button — royal-blue → sky vertical gradient
         // with a bright white top-edge highlight (::before glaze on the top
         // half), a hairline gold bottom edge + inset white ring carried in the

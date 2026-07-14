@@ -11,7 +11,7 @@ import { resolve } from "node:path";
 // These files are the surfaces a polish sweep just de-leaked. We pin them so a
 // future edit can't silently reintroduce a literal reference-chapter handle/name
 // into user-visible copy. We scope to the precise leaks fixed (not a blanket
-// "phisig" ban — the brand TOKEN names like `phisig-red` are legitimate and
+// "phisig" ban — the brand TOKEN names like `brand-red` are legitimate and
 // pervasive), so this stays a tight, low-noise guard.
 const ROOT = resolve(__dirname, "..");
 

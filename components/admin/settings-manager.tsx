@@ -159,7 +159,7 @@ export function SettingsManager({
           aria-label={`${dirty.size} unsaved change${dirty.size === 1 ? "" : "s"}`}
           className="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-0"
         >
-          <div className="rounded-xl border border-phisig-red/30 bg-white shadow-lg p-3 flex items-center justify-between gap-3">
+          <div className="rounded-xl border border-brand-red/30 bg-white shadow-lg p-3 flex items-center justify-between gap-3">
             <p className="text-sm">
               <span className="font-semibold">{dirty.size}</span> unsaved change{dirty.size === 1 ? "" : "s"}
             </p>
@@ -183,15 +183,15 @@ export function SettingsManager({
       <Section id="chapter" title="Chapter identity" eyebrow="Who and where - drives page titles, social shares, JSON-LD, footer" icon={ShieldCheck}>
         <p className="text-xs text-muted-foreground mb-4">
           These fields white-label the entire site. A net-new chapter spinning up the platform fills these
-          in once on the <Link href="/admin/setup" className="text-phisig-red hover:underline font-medium">setup wizard</Link>.
+          in once on the <Link href="/admin/setup" className="text-brand-red hover:underline font-medium">setup wizard</Link>.
           Existing deployments can tweak any line below - changes apply on next page load.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Fraternity name (full)">
-            <Input value={values["chapter.fraternityName"] || ""} onChange={(e) => set("chapter.fraternityName", e.target.value)} placeholder="Phi Sigma Kappa" />
+            <Input value={values["chapter.fraternityName"] || ""} onChange={(e) => set("chapter.fraternityName", e.target.value)} placeholder="Greek Stack Demo Chapter" />
           </Field>
           <Field label="Fraternity short name">
-            <Input value={values["chapter.fraternityShort"] || ""} onChange={(e) => set("chapter.fraternityShort", e.target.value)} placeholder="Phi Sig" />
+            <Input value={values["chapter.fraternityShort"] || ""} onChange={(e) => set("chapter.fraternityShort", e.target.value)} placeholder="Demo Chapter" />
           </Field>
           <Field label="Greek letters (chapter designation)">
             <Input value={values["chapter.greekLetters"] || ""} onChange={(e) => set("chapter.greekLetters", e.target.value)} placeholder="Gamma Triton" />
@@ -209,7 +209,7 @@ export function SettingsManager({
             <Input value={values["chapter.schoolUrl"] || ""} onChange={(e) => set("chapter.schoolUrl", e.target.value)} placeholder="https://sc.edu" />
           </Field>
           <Field label="National fraternity HQ URL">
-            <Input value={values["chapter.nationalHqUrl"] || ""} onChange={(e) => set("chapter.nationalHqUrl", e.target.value)} placeholder="https://phisigmakappa.org" />
+            <Input value={values["chapter.nationalHqUrl"] || ""} onChange={(e) => set("chapter.nationalHqUrl", e.target.value)} placeholder="https://nationalhq.org" />
           </Field>
           <Field label="Chapter charter year">
             <Input value={values["chapter.charterYear"] || ""} onChange={(e) => set("chapter.charterYear", e.target.value)} placeholder="1975" />
@@ -227,7 +227,7 @@ export function SettingsManager({
             <Input value={values["chapter.tagline"] || ""} onChange={(e) => set("chapter.tagline", e.target.value)} placeholder="#DamnProud" />
           </Field>
           <Field label="iOS home-screen launcher title (≤12 chars)">
-            <Input value={values["chapter.appShortTitle"] || ""} onChange={(e) => set("chapter.appShortTitle", e.target.value)} placeholder="Phi Sig USC" maxLength={12} />
+            <Input value={values["chapter.appShortTitle"] || ""} onChange={(e) => set("chapter.appShortTitle", e.target.value)} placeholder="Demo Chapter USC" maxLength={12} />
           </Field>
           <Field label="Organization type">
             <Select value={values["chapter.orgType"] || "fraternity"} onValueChange={(v) => set("chapter.orgType", v)}>
@@ -468,7 +468,7 @@ export function SettingsManager({
         </div>
         <Link
           href="/admin/dues/connect"
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-phisig-red hover:underline"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-red hover:underline"
         >
           Connect payout account <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
@@ -602,14 +602,14 @@ export function SettingsManager({
         }
       >
         <p className="text-xs text-muted-foreground mb-4">
-          Enable self-serve event scheduling for brothers and visitors. Clone and host <code className="font-mono text-foreground">https://github.com/calcom/cal.diy.git</code> and paste your instance booking URL or Cal.com username below (e.g. <code className="font-mono">phisigusc</code> or <code className="font-mono">https://cal.phisigusc.com/rush-coffee</code>). If left blank, the site will use a gorgeous, fully-functional built-in scheduler that records events directly to the database and sends confirmations via Resend.
+          Enable self-serve event scheduling for brothers and visitors. Clone and host <code className="font-mono text-foreground">https://github.com/calcom/cal.diy.git</code> and paste your instance booking URL or Cal.com username below (e.g. <code className="font-mono">chapterusername</code> or <code className="font-mono">https://cal.chapter.example/meeting</code>). If left blank, the site will use a gorgeous, fully-functional built-in scheduler that records events directly to the database and sends confirmations via Resend.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Cal.diy / Cal.com Username or Booking URL">
             <Input
               value={values["calendar.calDiyUrl"] || ""}
               onChange={(e) => set("calendar.calDiyUrl", e.target.value)}
-              placeholder="e.g. phisigusc or https://cal.phisigusc.com/meeting"
+              placeholder="e.g. chapterusername or https://cal.chapter.example/meeting"
             />
           </Field>
         </div>
@@ -625,7 +625,7 @@ export function SettingsManager({
             <Textarea
               value={values["hero.subline"] || ""}
               onChange={(e) => set("hero.subline", e.target.value)}
-              placeholder="Phi Sigma Kappa, Gamma Triton at the University of South Carolina…"
+              placeholder="Greek Stack Demo Chapter, Gamma Triton at the University of South Carolina…"
               rows={3}
             />
           </Field>
@@ -690,7 +690,7 @@ export function SettingsManager({
         )}
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Rush email">
-            <Input value={values["contact.rushEmail"] || ""} onChange={(e) => set("contact.rushEmail", e.target.value)} placeholder="rush@phisig-usc.com" />
+            <Input value={values["contact.rushEmail"] || ""} onChange={(e) => set("contact.rushEmail", e.target.value)} placeholder="rush@chapter.example" />
           </Field>
           <Field label="Rush phone (optional)">
             <Input value={values["contact.rushPhone"] || ""} onChange={(e) => set("contact.rushPhone", e.target.value)} placeholder="(803) 555-0142" />
@@ -702,7 +702,7 @@ export function SettingsManager({
             <Input value={values["contact.advisorTitle"] || ""} onChange={(e) => set("contact.advisorTitle", e.target.value)} placeholder="Alumni Chapter Advisor, Gamma Triton" />
           </Field>
           <Field label="Chapter advisor - email">
-            <Input value={values["contact.advisorEmail"] || ""} onChange={(e) => set("contact.advisorEmail", e.target.value)} placeholder="advisor@phisig-usc.com" />
+            <Input value={values["contact.advisorEmail"] || ""} onChange={(e) => set("contact.advisorEmail", e.target.value)} placeholder="advisor@chapter.example" />
           </Field>
           <Field label="Address">
             <Input value={values["contact.address"] || ""} onChange={(e) => set("contact.address", e.target.value)} placeholder="1525 College St" />
@@ -858,7 +858,7 @@ export function SettingsManager({
               value={values["testimonial.quote"] || ""}
               onChange={(e) => set("testimonial.quote", e.target.value)}
               rows={4}
-              placeholder="Phi Sig isn't a four-year decision…"
+              placeholder="Demo Chapter isn't a four-year decision…"
             />
           </Field>
           <Field label="Author">
@@ -893,7 +893,7 @@ export function SettingsManager({
               value={values["about.history"] || ""}
               onChange={(e) => set("about.history", e.target.value)}
               rows={5}
-              placeholder="Phi Sigma Kappa was founded at Massachusetts Agricultural College in 1873…"
+              placeholder="Greek Stack Demo Chapter was founded at Massachusetts Agricultural College in 1873…"
             />
           </Field>
           <Field label="Anti-hazing block body (the paragraph above the hotline)">
@@ -901,7 +901,7 @@ export function SettingsManager({
               value={values["antiHazing.body"] || ""}
               onChange={(e) => set("antiHazing.body", e.target.value)}
               rows={4}
-              placeholder="Phi Sigma Kappa national and the Gamma Triton chapter strictly prohibit hazing in any form…"
+              placeholder="Greek Stack Demo Chapter national and the Gamma Triton chapter strictly prohibit hazing in any form…"
             />
           </Field>
         </div>
@@ -936,7 +936,7 @@ export function SettingsManager({
                 href={cleanUrl(values["contact.instagramUrl"]) || `https://www.instagram.com/${(values["contact.instagramHandle"] || "").replace(/^@/, "")}/`}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-phisig-red hover:underline inline-flex items-center gap-1"
+                className="text-brand-red hover:underline inline-flex items-center gap-1"
               >
                 {values["contact.instagramHandle"] || "your chapter Instagram"} <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </Link>
@@ -1083,13 +1083,13 @@ export function SettingsManager({
             return (
               <label
                 key={s.key}
-                className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 cursor-pointer hover:border-phisig-red/40 transition-colors"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 cursor-pointer hover:border-brand-red/40 transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={on}
                   onChange={(e) => set(s.key, e.target.checked ? "true" : "false")}
-                  className="mt-0.5 h-4 w-4 rounded border-border text-phisig-red focus:ring-phisig-red shrink-0 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-border text-brand-red focus:ring-brand-red shrink-0 cursor-pointer"
                 />
                 <span className="text-sm">{s.label}</span>
               </label>
@@ -1129,7 +1129,7 @@ function Section({
     <Card id={anchorId} className="scroll-mt-24">
       <CardContent className="p-5 sm:p-6">
         <div className="mb-5">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
             <Icon className="h-3 w-3" /> {eyebrow}
           </div>
           <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
@@ -1275,7 +1275,7 @@ function PhotoCard({
             if (f) handleUpload(f);
           }}
         />
-        <span className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-phisig-red text-white px-3 py-2 text-sm font-medium hover:bg-phisig-red-dark transition-colors">
+        <span className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-red text-white px-3 py-2 text-sm font-medium hover:bg-brand-red-dark transition-colors">
           {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
           {uploading ? "Uploading…" : "Upload photo"}
         </span>
@@ -1385,7 +1385,7 @@ function JsonArrayEditor({
                 <button
                   type="button"
                   onClick={() => setOpenIdx(open ? null : i)}
-                  className="flex-1 text-left text-sm font-medium hover:text-phisig-red transition-colors truncate"
+                  className="flex-1 text-left text-sm font-medium hover:text-brand-red transition-colors truncate"
                 >
                   <span className="text-muted-foreground mr-2 text-xs">#{i + 1}</span>
                   {rowLabel(row)}
@@ -1604,7 +1604,7 @@ function EboardHeadshotInput({ value, onChange }: { value: string; onChange: (v:
         <img
           src={imageSrc(value, { w: 96, h: 96, crop: "fill", gravity: "auto" })}
           alt="Headshot preview"
-          className="h-12 w-12 rounded-full object-cover ring-2 ring-phisig-red/20"
+          className="h-12 w-12 rounded-full object-cover ring-2 ring-brand-red/20"
         />
       ) : (
         <div className="h-12 w-12 rounded-full bg-secondary border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">
@@ -1663,7 +1663,7 @@ function PhotoPreview({ slug, className, objectPosition, handle }: { slug?: stri
         style={{ objectPosition: objectPosition || "50% 50%" }}
       />
       {cleanHandle && (
-        <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-phisig-red font-semibold">
+        <span className="absolute bottom-2 right-2 text-[10px] bg-white/90 backdrop-blur rounded px-2 py-0.5 inline-flex items-center gap-1 text-brand-red font-semibold">
           {cleanHandle} <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
         </span>
       )}

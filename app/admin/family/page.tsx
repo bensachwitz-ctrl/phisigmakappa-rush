@@ -55,7 +55,7 @@ export default async function FamilyPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3.5">
           <span
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-lg shadow-phisig-red/25 shrink-0"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-lg shadow-brand-red/25 shrink-0"
             aria-hidden="true"
           >
             <IconFamily className="h-6 w-6" accent="rgba(255,255,255,0.85)" />

@@ -50,7 +50,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
           overflow-hidden box, so it stands in for the old hero <section>. The
           gradient + dot-grid + floating glyphs layer underneath via negative z. */}
       <AnimatedBackground variant="aurora" tone="brand" className="overflow-hidden">
-        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red-soft via-white to-phisig-red-soft/40" aria-hidden />
+        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-brand-red-soft via-white to-brand-red-soft/40" aria-hidden />
         <div className="absolute inset-0 -z-20 bg-dot-grid opacity-30" aria-hidden />
         {/* Soft top vignette so the nav reads cleanly over the aurora wash */}
         <div className="absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-white/70 to-transparent" aria-hidden />
@@ -110,8 +110,8 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
           <div className={`grid ${gridColsClass} gap-8 lg:gap-14 items-center`}>
             <div className={`max-w-2xl animate-slide-up${headlineRight ? " lg:order-2" : ""}`}>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-phisig-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-phisig-red shadow-sm animate-heartbeat">
-                <span className="h-1.5 w-1.5 rounded-full bg-phisig-red animate-pulse" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand-red/20 bg-white/95 backdrop-blur px-3 py-1 text-xs font-medium text-brand-red shadow-sm animate-heartbeat">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-red animate-pulse" />
                 {heroEyebrow}
               </span>
               <RushCountdown
@@ -124,7 +124,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
             <h1 className="mt-5 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] [text-wrap:balance]">
               {heroLead}{" "}<br className="hidden sm:block" />
               {heroTail}{" "}
-              <span className="relative inline-block text-phisig-red">
+              <span className="relative inline-block text-brand-red">
                 {/* Kinetic highlight: types through rush value-props then settles
                     on the real highlight word. SSR/first-paint = the real word
                     (LCP-safe), brand-colored caret. */}
@@ -132,11 +132,11 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
                   phrases={heroHighlightPhrases}
                   settleText={heroHighlight}
                   ssrText={heroHighlight}
-                  caretClassName="bg-phisig-red"
+                  caretClassName="bg-brand-red"
                 />
                 {/* Hand-drawn brand underline that scales with the word */}
                 <span
-                  className="absolute -bottom-1 left-0 h-[0.18em] w-full rounded-full bg-gradient-to-r from-phisig-red to-phisig-red-dark opacity-70"
+                  className="absolute -bottom-1 left-0 h-[0.18em] w-full rounded-full bg-gradient-to-r from-brand-red to-brand-red-dark opacity-70"
                   aria-hidden="true"
                 />
               </span>.
@@ -173,24 +173,24 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
             {/* Credibility row — upgraded from flat translucent pills to frosted
                 glass chips (.gs-glass) with custom brand duotone icons. Each
                 lifts a hair on hover for a tactile, premium micro-interaction.
-                The icons inherit the chapter color via text-phisig-red. */}
+                The icons inherit the chapter color via text-brand-red. */}
             <div className="mt-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconPin className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconPin className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">{titleCaseAddress(cfg["contact.address"])}, {titleCaseAddress(cfg["contact.cityState"])}</span>
               </span>
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconBolt className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconBolt className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">Reply within 24 hours</span>
               </span>
-              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-phisig-red/90 transition-transform duration-300 hover:-translate-y-0.5">
-                <IconShieldCheckDuo className="h-3.5 w-3.5 text-phisig-red" /> <span className="text-foreground/80">{identity.greekLetters ? `${identity.greekLetters} chapter` : identity.fraternityShort}</span>
+              <span className="gs-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-brand-red/90 transition-transform duration-300 hover:-translate-y-0.5">
+                <IconShieldCheckDuo className="h-3.5 w-3.5 text-brand-red" /> <span className="text-foreground/80">{identity.greekLetters ? `${identity.greekLetters} chapter` : identity.fraternityShort}</span>
               </span>
               <Link
                 href={cleanUrl(cfg["contact.instagramUrl"])}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="group/ig inline-flex items-center gap-1.5 rounded-full border border-phisig-red/25 bg-phisig-red-soft/60 px-3 py-1.5 font-medium text-phisig-red backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-phisig-red-soft hover:shadow-md hover:shadow-phisig-red/15"
+                className="group/ig inline-flex items-center gap-1.5 rounded-full border border-brand-red/25 bg-brand-red-soft/60 px-3 py-1.5 font-medium text-brand-red backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-soft hover:shadow-md hover:shadow-brand-red/15"
               >
-                <IconInstagramDuo className="h-3.5 w-3.5 text-phisig-red transition-transform duration-300 group-hover/ig:scale-110" /> {cfg["contact.instagramHandle"]}
+                <IconInstagramDuo className="h-3.5 w-3.5 text-brand-red transition-transform duration-300 group-hover/ig:scale-110" /> {cfg["contact.instagramHandle"]}
               </Link>
             </div>
             </div>
@@ -226,7 +226,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
                   a founding year on file, so a chapter without one never shows an
                   empty "SINCE" chip. */}
               {identity.foundingYear ? (
-                <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white shadow-xl shadow-phisig-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
+                <div className="absolute -right-4 -top-4 hidden lg:flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white shadow-xl shadow-brand-red/40 ring-4 ring-white/80 z-10 pointer-events-none animate-float">
                   <span className="text-center leading-tight">
                     <span className="block text-[9px] uppercase tracking-[0.16em] opacity-80">Since</span>
                     <span className="block text-base font-semibold">{identity.foundingYear}</span>
@@ -243,7 +243,7 @@ export function HeroClassic(ctx: SectionContext): React.ReactNode {
             <Link
               href="#register"
               aria-label="Scroll to the rush sign-up form"
-              className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-phisig-red"
+              className="group inline-flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-brand-red"
             >
               <span className="uppercase tracking-[0.18em]">Scroll</span>
               <ChevronDown className="h-5 w-5 animate-bounce" aria-hidden="true" />

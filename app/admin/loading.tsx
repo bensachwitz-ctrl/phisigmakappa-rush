@@ -7,7 +7,7 @@
 //
 // It sketches the dominant admin layout: a page header (icon + title + subtitle)
 // → a 4-up KPI strip → a two-column content row → a list/table block. Neutral,
-// brand-token-based (bg-card / border-border / bg-muted / phisig tokens), and
+// brand-token-based (bg-card / border-border / bg-muted / brand tokens), and
 // motion comes from Tailwind's `animate-pulse`, which globals.css already
 // neutralizes under prefers-reduced-motion.
 

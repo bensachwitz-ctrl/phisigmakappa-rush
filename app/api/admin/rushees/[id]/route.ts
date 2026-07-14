@@ -6,7 +6,7 @@
 //
 // PATCH handles inline edits (notes, status, simple profile fields). It's
 // distinct from /api/admin/rush PATCH only in that it routes through
-// auditAndNotify(), the established Phi Sig pattern — the existing
+// auditAndNotify(), the established Demo Chapter pattern — the existing
 // /api/admin/rush endpoint pre-dates auditAndNotify and uses the older
 // audit() helper for backwards compatibility with /admin's dashboard.
 //

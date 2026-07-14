@@ -69,7 +69,7 @@ function daysUntil(when: Date | null): number | null {
  * Resolve the platform-billing entitlement for a chapter subdomain.
  *
  * NEVER throws and NEVER returns `entitled: false` on uncertainty — see the
- * fail-open contract above. Pass the bare subdomain (e.g. "phisig"); an empty
+ * fail-open contract above. Pass the bare subdomain (e.g. "chapter"); an empty
  * subdomain (the apex) is treated as entitled (the apex has no chapter to gate).
  */
 export async function getEntitlement(subdomain: string): Promise<Entitlement> {

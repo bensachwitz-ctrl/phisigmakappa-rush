@@ -336,7 +336,7 @@ function PollCard({
             <button
               type="button"
               onClick={() => onClose(poll.id)}
-              className="press inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft hover:text-phisig-red"
+              className="press inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-brand-red/40 hover:bg-brand-red-soft hover:text-brand-red"
             >
               <Lock className="h-3.5 w-3.5" />
               Close
@@ -386,10 +386,10 @@ function PollCard({
                 aria-checked={false}
                 tabIndex={idx === 0 ? 0 : -1}
                 onClick={() => onVote(poll.id, o.id)}
-                className="press group inline-flex w-full items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-left text-sm font-medium transition-colors hover:border-phisig-red/40 hover:bg-phisig-red-soft focus-visible:border-phisig-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30"
+                className="press group inline-flex w-full items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-left text-sm font-medium transition-colors hover:border-brand-red/40 hover:bg-brand-red-soft focus-visible:border-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
               >
                 <span className="truncate pr-3">{o.label}</span>
-                <span className="text-xs text-muted-foreground transition-colors group-hover:text-phisig-red">
+                <span className="text-xs text-muted-foreground transition-colors group-hover:text-brand-red">
                   Tap to vote
                 </span>
               </button>
@@ -405,7 +405,7 @@ function PollCard({
             <button
               type="button"
               onClick={() => onUnvote(poll.id)}
-              className="inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-phisig-red"
+              className="inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-brand-red"
             >
               <XCircle className="h-3.5 w-3.5" />
               Clear my vote
@@ -468,10 +468,10 @@ function PollResults({
             aria-label={`${o.label} — ${pct} percent, ${count} ${count === 1 ? "vote" : "votes"}`}
             tabIndex={firstFocusable ? 0 : -1}
             className={cn(
-              "press group relative w-full overflow-hidden rounded-lg border bg-background text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30",
+              "press group relative w-full overflow-hidden rounded-lg border bg-background text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
               mine
-                ? "border-phisig-red bg-phisig-red-soft"
-                : "border-border hover:border-phisig-red/40",
+                ? "border-brand-red bg-brand-red-soft"
+                : "border-border hover:border-brand-red/40",
               disabled && "cursor-default",
             )}
           >
@@ -480,14 +480,14 @@ function PollResults({
               aria-hidden="true"
               className={cn(
                 "absolute inset-y-0 left-0 transition-[width] duration-500 ease-out",
-                mine ? "bg-phisig-red/20" : "bg-secondary",
+                mine ? "bg-brand-red/20" : "bg-secondary",
               )}
               style={{ width: `${poll.totalVotes === 0 ? 0 : pct}%` }}
             />
             <span className="relative flex items-center justify-between gap-3 px-4 py-3">
               <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
                 {mine && (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-phisig-red" aria-hidden="true" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-red" aria-hidden="true" />
                 )}
                 <span className="truncate">{o.label}</span>
               </span>

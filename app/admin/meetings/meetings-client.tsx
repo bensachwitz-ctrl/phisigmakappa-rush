@@ -562,7 +562,7 @@ export function MeetingsClient({
             </span>
           )}
           {canWrite && (
-            <Button onClick={openCreate} className="bg-phisig-red text-white hover:bg-phisig-red-dark">
+            <Button onClick={openCreate} className="bg-brand-red text-white hover:bg-brand-red-dark">
               <Plus className="h-4 w-4 mr-1.5" /> New Meeting
             </Button>
           )}
@@ -573,7 +573,7 @@ export function MeetingsClient({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="lift rounded-xl border p-3 bg-card">
           <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-semibold">
-            <CalendarDays className="h-3.5 w-3.5 text-phisig-red" /> Total Meetings
+            <CalendarDays className="h-3.5 w-3.5 text-brand-red" /> Total Meetings
           </div>
           <div className="text-2xl font-bold mt-0.5">{stats.total}</div>
         </div>
@@ -650,7 +650,7 @@ export function MeetingsClient({
           {filtered.map((m) => {
             const when = new Date(m.scheduledAt);
             return (
-              <Card key={m.id} className="lift border border-border/80 hover:border-phisig-red/20 transition">
+              <Card key={m.id} className="lift border border-border/80 hover:border-brand-red/20 transition">
                 <CardContent className="p-4 flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
                   <div className="space-y-1.5 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -786,7 +786,7 @@ export function MeetingsClient({
             <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={createBusy}>
               Cancel
             </Button>
-            <Button onClick={createMeeting} disabled={createBusy} className="bg-phisig-red text-white hover:bg-phisig-red-dark">
+            <Button onClick={createMeeting} disabled={createBusy} className="bg-brand-red text-white hover:bg-brand-red-dark">
               {createBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
               Schedule Meeting
             </Button>
@@ -869,7 +869,7 @@ export function MeetingsClient({
               {/* Roster body — 4-state */}
               {loadingRoster ? (
                 <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground text-sm">
-                  <Loader2 className="h-6 w-6 animate-spin text-phisig-red" /> Loading roster…
+                  <Loader2 className="h-6 w-6 animate-spin text-brand-red" /> Loading roster…
                 </div>
               ) : rosterError ? (
                 <div className="flex flex-col items-center gap-3 py-10 text-center">
@@ -894,7 +894,7 @@ export function MeetingsClient({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold truncate">{r.name}</p>
-                            {r.dirty && <span className="h-1.5 w-1.5 rounded-full bg-phisig-red" title="Unsaved change" />}
+                            {r.dirty && <span className="h-1.5 w-1.5 rounded-full bg-brand-red" title="Unsaved change" />}
                             {!canWrite && getAttendanceBadge(r.status)}
                           </div>
                           {(pendingExcuse || (r.status === "excused" && r.excuseReason)) && (
@@ -1014,7 +1014,7 @@ export function MeetingsClient({
               <Button
                 onClick={saveRoster}
                 disabled={savingRoster || loadingRoster || dirtyCount === 0}
-                className="bg-phisig-red text-white hover:bg-phisig-red-dark"
+                className="bg-brand-red text-white hover:bg-brand-red-dark"
               >
                 {savingRoster && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
                 Save Attendance{dirtyCount > 0 ? ` (${dirtyCount})` : ""}
@@ -1041,7 +1041,7 @@ export function MeetingsClient({
               className={cn(
                 confirmState?.destructive
                   ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  : "bg-phisig-red text-white hover:bg-phisig-red-dark"
+                  : "bg-brand-red text-white hover:bg-brand-red-dark"
               )}
             >
               {confirmBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}

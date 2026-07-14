@@ -48,7 +48,7 @@ export function EmptyState({
   description,
   primaryAction,
   secondaryAction,
-  tone = "phisig-red",
+  tone = "brand-red",
 }: {
   icon?: React.ElementType;
   /** Optional bespoke scene shown above the title. Defaults to IllustrationWelcome. */
@@ -57,15 +57,15 @@ export function EmptyState({
   description: string;
   primaryAction?: EmptyAction;
   secondaryAction?: EmptyAction;
-  tone?: "phisig-red" | "emerald" | "amber" | "blue";
+  tone?: "brand-red" | "emerald" | "amber" | "blue";
 }) {
   // WCAG 2.2 1.4.11/2.4.13: the focus ring must contrast with the button fill.
-  // A red ring on a red fill (the old ring-phisig-red/40 on bg-phisig-red) is
+  // A red ring on a red fill (the old ring-brand-red/40 on bg-brand-red) is
   // invisible. Use a dark, high-contrast ring (ring-foreground) + a white
   // ring-offset on every tone so the focus indicator reads on any colored fill.
   const primaryClass = cn(
     "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
-    tone === "phisig-red" && "bg-phisig-red text-white hover:bg-phisig-red-dark",
+    tone === "brand-red" && "bg-brand-red text-white hover:bg-brand-red-dark",
     tone === "emerald" && "bg-emerald-600 text-white hover:bg-emerald-700",
     tone === "amber" && "bg-amber-500 text-white hover:bg-amber-600",
     tone === "blue" && "bg-blue-600 text-white hover:bg-blue-700",
@@ -82,7 +82,7 @@ export function EmptyState({
         <div
           className={cn(
             "relative mx-auto mb-5 w-fit",
-            tone === "phisig-red" && "text-phisig-red",
+            tone === "brand-red" && "text-brand-red",
             tone === "emerald" && "text-emerald-600",
             tone === "amber" && "text-amber-600",
             tone === "blue" && "text-blue-600",
@@ -93,7 +93,7 @@ export function EmptyState({
             <span
               className={cn(
                 "absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full ring-4 ring-card shadow-sm",
-                tone === "phisig-red" && "bg-phisig-red-soft text-phisig-red",
+                tone === "brand-red" && "bg-brand-red-soft text-brand-red",
                 tone === "emerald" && "bg-emerald-50 text-emerald-700",
                 tone === "amber" && "bg-amber-50 text-amber-700",
                 tone === "blue" && "bg-blue-50 text-blue-700",

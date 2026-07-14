@@ -49,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // The middleware + the session gate above only prove the cookie is a VALID
   // session for this tenant — NOT that it belongs to an officer/admin. But the
   // member-login branch (POST /api/admin/login, mode:"brother") mints the SAME
-  // `phisig_admin` cookie with isAdmin=false for any plain brother. So without
+  // `greekstack_admin` cookie with isAdmin=false for any plain brother. So without
   // this check, a regular member who signed into the member app would carry a
   // cookie that satisfies both the middleware and the session gate and could
   // reach EVERY /admin/* surface — including the ones that don't yet call
@@ -120,7 +120,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       cookieScript = (
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.cookie = "phisig_billing_locked=1; path=/; max-age=43200; SameSite=Lax"`,
+            __html: `document.cookie = "greekstack_billing_locked=1; path=/; max-age=43200; SameSite=Lax"`,
           }}
         />
       );
@@ -133,7 +133,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       cookieScript = (
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.cookie = "phisig_billing_locked=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"`,
+            __html: `document.cookie = "greekstack_billing_locked=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"`,
           }}
         />
       );

@@ -4,7 +4,7 @@
  * WHY: every transactional email in the platform (brother/alumni invites,
  * bids, broadcasts, dues receipts, donation thank-yous, the send-email blast)
  * previously hand-rolled its own inline HTML — and most of them hardcoded the
- * Phi Sig cardinal red (#a3001a / #C8102E) masthead + CTA. A navy/gold chapter
+ * Demo Chapter cardinal red (#a3001a / #C8102E) masthead + CTA. A navy/gold chapter
  * therefore sent RED email. This module is the single source of truth for the
  * email chrome so a re-brand for any chapter (Beta Sigma @ Maryland,
  * Epsilon @ Drexel, a sorority, a co-ed pro org) propagates from one place.
@@ -40,7 +40,7 @@ export type RenderEmailOptions = {
    *  the neutral platform color when empty/invalid — NEVER red. */
   brandHex?: string | null;
   /** Chapter display name for the masthead eyebrow + footer (e.g.
-   *  "Phi Sig USC", "Beta Sigma @ Maryland"). Falls back to "Your Chapter". */
+   *  "Demo Chapter USC", "Beta Sigma @ Maryland"). Falls back to "Your Chapter". */
   chapterName?: string | null;
   /** Optional second masthead line (e.g. school name) shown under chapterName. */
   chapterSubline?: string | null;

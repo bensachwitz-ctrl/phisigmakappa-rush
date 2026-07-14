@@ -5,9 +5,9 @@
  *
  * The single settings field intentionally accepts THREE shapes so a chapter can
  * paste whatever their scheduler gives them without a second key:
- *   • a bare Cal.com username        → "phisigusc"
- *   • a username + event-type slug   → "phisigusc/rush-coffee"
- *   • a full self-hosted Cal.diy URL → "https://cal.phisigusc.com/meeting"
+ *   • a bare Cal.com username        → "chapterusername"
+ *   • a username + event-type slug   → "chapterusername/meeting"
+ *   • a full self-hosted Cal.diy URL → "https://cal.chapter.example/meeting"
  *
  * Returns "" when unset/blank so callers render nothing (never a broken iframe).
  * Pure + isomorphic (no deps) so it is safe to import from client and server.
@@ -22,7 +22,7 @@ export function calcomEmbedUrl(raw: string | undefined | null): string {
     // (or a javascript:/data: scheme) must NEVER load — return "" so the caller
     // self-hides instead. Allowed: cal.com (+ subdomains), cal.diy (+ subdomains),
     // and self-hosted Cal instances whose host starts with "cal." (the documented
-    // pattern, e.g. cal.phisigusc.com).
+    // pattern, e.g. cal.chapter.example).
     let u: URL;
     try {
       u = new URL(v);

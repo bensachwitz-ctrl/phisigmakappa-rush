@@ -165,16 +165,17 @@ export async function POST(req: Request) {
   }
 
   // Resolve the EFFECTIVE plan: explicit request → stored plan → "monthly".
-  // Only the two self-serve subscription plans are mintable here.
+  // Only the self-serve subscription plans are mintable here; trial chapters
+  // default to monthly when they upgrade.
   const effective = normalizePlan(requestedPlan ?? tenant?.plan ?? null);
-  if (!isSubscriptionPlan(effective)) {
+  if (effective === "dues_percentage" || effective === "custom") {
     const msg =
       effective === "dues_percentage"
         ? "Your chapter is on the dues-percentage plan — there's no monthly subscription to start. Greekstack's share comes out of dues automatically."
         : "Custom plans are set up with our team. Visit /contact to talk to sales.";
     return NextResponse.json({ ok: false, error: msg }, { status: 400 });
   }
-  const plan: SubscriptionPlan = effective;
+  const plan: SubscriptionPlan = isSubscriptionPlan(effective) ? effective : "monthly";
 
   // Best-effort label for the Stripe customer (admin's email if available).
   const admin = await getCurrentBrother().catch(() => null);

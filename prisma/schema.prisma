@@ -1,4 +1,4 @@
-// Phi Sigma Kappa @ USC — Rush Management
+// Greek Stack — generic chapter management platform
 // Production target: Vercel Postgres / Neon. Schema is dialect-agnostic and works
 // with sqlite locally if you swap the provider to "sqlite".
 //

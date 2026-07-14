@@ -49,7 +49,7 @@ export async function PATCH(req: Request) {
   for (const [key, rawValue] of Object.entries(parsed.data.updates)) {
     // Defense in depth: scrub trailing junk that creeps in from copy-paste —
     // unicode ellipses, trailing backslashes, smart quotes, double-dot trails.
-    // Live R10 audit caught a ".../help/…." URL and "advisor@phisig-usc.com\"
+    // Live R10 audit caught a ".../help/…." URL and "advisor@chapter.example\"
     // mailto values from real admin saves. Run-of-the-mill text fields get the
     // same trim. URL/email shaped fields get a stricter clean.
     const value = scrubAdminValue(key, rawValue);

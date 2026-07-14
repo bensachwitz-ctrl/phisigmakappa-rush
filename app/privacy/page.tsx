@@ -133,7 +133,7 @@ async function ChapterPrivacyPage() {
           <IconArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> Back to home
         </Link>
 
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-phisig-red">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-red">
           <IconShieldCheck className="h-3.5 w-3.5" accent="currentColor" aria-hidden="true" /> Privacy
         </span>
         <h1 className="mt-2 text-3xl sm:text-5xl font-semibold tracking-tight">
@@ -154,7 +154,7 @@ async function ChapterPrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">SMS &amp; email consent (<abbr title="Telephone Consumer Protection Act — the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted">TCPA</abbr>)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Your information is used solely to communicate with you about rush at {greekLetters ? `the ${greekLetters} chapter` : "the chapter"} — specifically: schedule announcements, event reminders, and bid-night logistics. By checking the consent box on the rush interest form you provide express written consent under <abbr title="Telephone Consumer Protection Act, the federal law governing automated texts and calls" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">47 CFR §64.1200(f)(9)</abbr> to receive recurring marketing and informational text and email messages from <span className="text-foreground font-medium">{chapterShortAttribution}</span> sent using an automatic telephone dialing system or other automated technology. You can expect up to 8 messages per rush cycle. Message and data rates may apply. Consent to receive these messages is not a condition of any membership consideration. Reply <span className="font-mono text-foreground">HELP</span> for help, or <span className="font-mono text-foreground">STOP</span> at any time to opt out of texts; you may also email{" "}
-            <a href={rushMailto} className="text-phisig-red hover:underline">
+            <a href={rushMailto} className="text-brand-red hover:underline">
               {rushEmail}
             </a>{" "}
             to be removed from all communications. Consent to receive texts is not a condition of any membership consideration.
@@ -171,7 +171,7 @@ async function ChapterPrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">Age &amp; minor protections</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             By submitting the rush form you affirm one of the following: (a) you are <span className="font-medium text-foreground">18 years of age or older</span>, or (b) you are <span className="font-medium text-foreground">17 and have a parent or legal guardian's permission</span> to receive rush communications by phone and email. Many incoming{schoolShort ? ` ${schoolShort}` : ""} freshmen are 17 at orientation — a parent or guardian may also email{" "}
-            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
+            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-brand-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>{" "}
             to confirm consent on a 17-year-old's behalf or to request removal at any time. We do not knowingly collect personal information from anyone under 13. If we learn we have inadvertently collected data from a minor, we will delete it promptly upon request.
@@ -196,7 +196,7 @@ async function ChapterPrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">Retention</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Rush data is retained through the Fall 2026 recruitment cycle. After Bid Night, records of rushees who declined or were not extended a bid are deleted within 90 days unless you explicitly opt in to future communications by emailing{" "}
-            <a href={rushMailto} className="text-phisig-red hover:underline">
+            <a href={rushMailto} className="text-brand-red hover:underline">
               {rushEmail}
             </a>
             . Records of accepted members move to the active member directory and are retained while you remain in the chapter. We retain proof of SMS consent (timestamp + IP) for four years as required by TCPA recordkeeping rules.
@@ -207,7 +207,7 @@ async function ChapterPrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">Your rights — including California &amp; Virginia</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             You have the right to request a copy of your data, ask for it to be corrected, or request deletion at any time by emailing{" "}
-            <a href={rushMailto} className="text-phisig-red hover:underline">
+            <a href={rushMailto} className="text-brand-red hover:underline">
               {rushEmail}
             </a>
             . We will respond within 30 days. California (<abbr title="California Consumer Privacy Act / California Privacy Rights Act — state laws giving California residents control over their personal data" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">CCPA/CPRA</abbr>) and Virginia (<abbr title="Virginia Consumer Data Protection Act — Virginia&apos;s state privacy law" className="cursor-help no-underline decoration-dotted decoration-muted-foreground/40">VCDPA</abbr>) residents have additional rights to know, correct, delete, and opt out of the sale or sharing of personal information for cross-context behavioral advertising. <span className="font-medium text-foreground">We do not sell or share your personal information for cross-context behavioral advertising.</span>
@@ -225,17 +225,17 @@ async function ChapterPrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">Hazing reports</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {fraternityName} national and {greekLetters ? `the ${greekLetters} chapter` : "the chapter"} have a zero-tolerance anti-hazing policy. Reports can be submitted anonymously to <span className="text-foreground font-medium">{cfg["contact.advisorName"]}</span> at{" "}
-            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-phisig-red hover:underline">
+            <a href={cleanMailto(cfg["contact.advisorEmail"])} className="text-brand-red hover:underline">
               {cfg["contact.advisorEmail"]}
             </a>
             , via the national anti-hazing hotline{" "}
-            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline font-medium">
+            <a href={cleanUrl(cfg["antiHazing.hotlineUrl"])} target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline font-medium">
               {cfg["antiHazing.hotline"]}
             </a>
             {cfg["chapter.nationalHqUrl"] ? (
               <>
                 , or through{" "}
-                <a href={cfg["chapter.nationalHqUrl"]} target="_blank" rel="noreferrer noopener" className="text-phisig-red hover:underline">
+                <a href={cfg["chapter.nationalHqUrl"]} target="_blank" rel="noreferrer noopener" className="text-brand-red hover:underline">
                   {cfg["chapter.nationalHqUrl"].replace(/^https?:\/\//, "")}
                 </a>
               </>
@@ -246,7 +246,7 @@ async function ChapterPrivacyPage() {
 
         <p className="mt-12 text-xs text-muted-foreground">
           Last updated: {cfg["privacy.lastUpdated"]} · Questions:{" "}
-          <a href={rushMailto} className="text-phisig-red hover:underline">
+          <a href={rushMailto} className="text-brand-red hover:underline">
             {rushEmail}
           </a>
         </p>

@@ -4,7 +4,7 @@
 //
 // Design points worth knowing before editing:
 //
-// 1. Separate cookie name (`phisig_portal`) — admin sessions are signed with
+// 1. Separate cookie name (`greekstack_portal`) — admin sessions are signed with
 //    ADMIN_SESSION_SECRET; portal sessions with PORTAL_SESSION_SECRET. If
 //    PORTAL_SESSION_SECRET is missing we degrade gracefully to the admin
 //    secret so a deploy without the new env var still works. In production
@@ -28,7 +28,7 @@ import crypto from "crypto";
 import { prisma, getSubdomain } from "@/lib/prisma";
 import { parseSessionToken } from "@/lib/auth";
 
-export const PORTAL_COOKIE = "phisig_portal";
+export const PORTAL_COOKIE = "greekstack_portal";
 const MAX_AGE_DAYS = 30;
 const MAX_AGE_MS = MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 
@@ -230,12 +230,12 @@ export function clearPortalCookie(): void {
  * an "Admin viewing — all X" banner and gets CRUD access to the underlying
  * admin tables.
  *
- * Implementation note: we read the existing phisig_admin cookie via the
+ * Implementation note: we read the existing greekstack_admin cookie via the
  * already-shipped parseSessionToken helper so a future change to admin cookie
  * shape only needs editing in lib/auth.ts.
  */
 export function isAdminOverride(): boolean {
-  const adminCookie = cookies().get("phisig_admin")?.value;
+  const adminCookie = cookies().get("greekstack_admin")?.value;
   const parsed = parseSessionToken(adminCookie);
   return !!parsed?.valid && parsed.isAdmin;
 }

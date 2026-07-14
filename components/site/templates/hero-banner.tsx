@@ -51,12 +51,12 @@ export function HeroBanner(ctx: SectionContext): React.ReactNode {
             decoding="async"
           />
           {/* Deep brand scrim so the centered white headline reads over any photo. */}
-          <div className="absolute inset-0 -z-20 bg-gradient-to-b from-phisig-red-dark/85 via-phisig-red/70 to-phisig-red-dark/90" aria-hidden />
+          <div className="absolute inset-0 -z-20 bg-gradient-to-b from-brand-red-dark/85 via-brand-red/70 to-brand-red-dark/90" aria-hidden />
           <div className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_50%_0%,transparent_30%,rgba(0,0,0,0.45)_100%)]" aria-hidden />
         </>
       ) : (
         <>
-          <div className="absolute inset-0 -z-30 bg-gradient-to-br from-phisig-red via-phisig-red-dark to-phisig-red-dark" aria-hidden />
+          <div className="absolute inset-0 -z-30 bg-gradient-to-br from-brand-red via-brand-red-dark to-brand-red-dark" aria-hidden />
           {/* Large brand-tinted Crest watermark — the same designed empty-state
               treatment PostTile uses when a chapter has no photo. */}
           <div className="pointer-events-none absolute inset-0 -z-20 flex items-center justify-center" aria-hidden>

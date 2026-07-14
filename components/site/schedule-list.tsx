@@ -8,7 +8,7 @@ import { htmlToPlainText } from "@/lib/rich-text";
 export async function ScheduleList() {
   const identity = await getChapterIdentity().catch(() => null);
   // Watermark letters from the chapter's own glyphs — never a hardcoded "ΦΣΚ"
-  // (that watermarked Phi Sig's letters over every tenant's empty schedule).
+  // (that watermarked Demo Chapter's letters over every tenant's empty schedule).
   const letters =
     identity?.greekLettersGlyphs || identity?.fraternityLetters || "";
   const timezone = identity?.timeZone || "America/New_York";
@@ -30,13 +30,13 @@ export async function ScheduleList() {
 
   if (!events.length) {
     return (
-      <Card className="relative overflow-hidden border-phisig-red/20 bg-gradient-to-br from-phisig-red-soft/40 via-white to-white">
+      <Card className="relative overflow-hidden border-brand-red/20 bg-gradient-to-br from-brand-red-soft/40 via-white to-white">
         <div className="absolute -top-8 -right-8 opacity-10 select-none">
-          <span className="text-9xl font-display font-bold text-phisig-red leading-none">{letters}</span>
+          <span className="text-9xl font-display font-bold text-brand-red leading-none">{letters}</span>
         </div>
         <CardContent className="relative py-12 px-6 sm:px-10">
           <div className="max-w-md">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-phisig-red/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-phisig-red">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-red/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-red">
               <CalendarDays className="h-3 w-3" /> Coming in August
             </span>
             <h3 className="mt-3 text-xl sm:text-2xl font-semibold tracking-tight">
@@ -57,7 +57,7 @@ export async function ScheduleList() {
                 "Bid Night",
               ].map((label) => (
                 <li key={label} className="inline-flex items-center gap-2 rounded-md bg-white border border-border px-2.5 py-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-phisig-red" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-red" />
                   <span className="font-medium">{label}</span>
                 </li>
               ))}
@@ -72,10 +72,10 @@ export async function ScheduleList() {
     <ol className="relative space-y-4">
       {events.map((e, i) => (
         <li key={e.id}>
-          <Card className="overflow-hidden hover:border-phisig-red/40 transition-colors">
+          <Card className="overflow-hidden hover:border-brand-red/40 transition-colors">
             <CardContent className="p-0">
               <div className="grid grid-cols-[88px_1fr] sm:grid-cols-[120px_1fr]">
-                <div className="bg-phisig-red text-white flex flex-col items-center justify-center text-center p-4">
+                <div className="bg-brand-red text-white flex flex-col items-center justify-center text-center p-4">
                   {/* Pinned to chapter timezone so SSR (UTC) and CSR don't mismatch. */}
                   <div className="text-[10px] uppercase tracking-[0.18em] opacity-85">
                     {new Date(e.startsAt).toLocaleDateString("en-US", { month: "short", timeZone: timezone })}

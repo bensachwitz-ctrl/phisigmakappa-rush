@@ -42,7 +42,7 @@ export default async function ManageElectionPage({ params }: { params: { id: str
               </div>
               <Link
                 href="/admin"
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-phisig-red/40 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-brand-red/40 transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to dashboard
               </Link>

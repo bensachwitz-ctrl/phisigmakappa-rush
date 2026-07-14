@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/platform/tenants — list every chapter in the central registry.
- * Gated hard on the platform-operator cookie; a chapter admin's `phisig_admin`
+ * Gated hard on the platform-operator cookie; a chapter admin's `greekstack_admin`
  * cookie cannot pass this check (different cookie + secret).
  */
 export async function GET() {

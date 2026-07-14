@@ -435,7 +435,7 @@ async function handleCheckoutCompleted(
   // receipt_url was captured above but never emailed (only donations got a
   // confirmation). Read THIS chapter's identity + brand color from the explicit
   // tenant db (Stripe carries no subdomain, so never the Host proxy), so a
-  // payment to Beta Sigma @ Maryland isn't branded as Phi Sig @ USC. A send
+  // payment to Beta Sigma @ Maryland isn't branded as Demo Chapter @ USC. A send
   // failure must NEVER fail the webhook (Stripe would retry a confirmed payment).
   try {
     if (brother?.email) {
@@ -665,7 +665,7 @@ async function handleDonationCompleted(
   // White-label the thank-you email: read THIS chapter's identity from the
   // explicit tenant db (never the Host proxy — Stripe carries no subdomain),
   // so a donation to Beta Sigma @ Maryland doesn't thank the donor on behalf
-  // of Phi Sigma Kappa @ USC.
+  // of Greek Stack Demo Chapter @ USC.
   const cfgRows = await db.siteConfig.findMany().catch(
     () => [] as { key: string; value: string }[],
   );

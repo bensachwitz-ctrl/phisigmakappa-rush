@@ -31,7 +31,7 @@ import { IconSpark } from "@/components/brand/icons";
 // Color tokens here MUST stay in sync with components/brother/event-calendar.tsx
 // so admins see the same color stripe on a card that brothers see post-publish.
 export const EVENT_CATEGORIES = [
-  { id: "RUSH",        label: "Rush event",      tone: "bg-phisig-red text-white",            stripe: "bg-phisig-red"    },
+  { id: "RUSH",        label: "Rush event",      tone: "bg-brand-red text-white",            stripe: "bg-brand-red"    },
   { id: "DATE",        label: "Date event",      tone: "bg-pink-500 text-white",              stripe: "bg-pink-500"      },
   { id: "BROTHERHOOD", label: "Brotherhood",     tone: "bg-blue-500 text-white",              stripe: "bg-blue-500"      },
   { id: "CHAPTER",     label: "Chapter meeting", tone: "bg-amber-500 text-white",             stripe: "bg-amber-500"     },
@@ -213,8 +213,8 @@ export function EventsManager({
   React.useEffect(() => {
     if (!canWrite) return; // read-only officers can't pop the create dialog
     const handler = () => openCreate();
-    window.addEventListener("phisig:open-add-event", handler);
-    return () => window.removeEventListener("phisig:open-add-event", handler);
+    window.addEventListener("greekstack:open-add-event", handler);
+    return () => window.removeEventListener("greekstack:open-add-event", handler);
   }, [canWrite]);
 
   function openEdit(e: Event) {

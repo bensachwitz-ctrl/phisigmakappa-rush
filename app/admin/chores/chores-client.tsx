@@ -381,7 +381,7 @@ export function ChoresClient({
           className={cn(
             "pb-3 px-4 text-sm font-semibold border-b-2 -mb-[2px] transition",
             activeTab === "assignments"
-              ? "border-phisig-red text-phisig-red"
+              ? "border-brand-red text-brand-red"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -392,7 +392,7 @@ export function ChoresClient({
           className={cn(
             "pb-3 px-4 text-sm font-semibold border-b-2 -mb-[2px] transition",
             activeTab === "catalog"
-              ? "border-phisig-red text-phisig-red"
+              ? "border-brand-red text-brand-red"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -405,7 +405,7 @@ export function ChoresClient({
           {/* Week picker / controls */}
           <div className="flex items-center justify-between flex-wrap gap-3 bg-secondary/35 border rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-phisig-red" />
+              <Calendar className="h-5 w-5 text-brand-red" />
               <div>
                 <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Scheduled Week</p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -421,7 +421,7 @@ export function ChoresClient({
                 <RotateCw className={cn("h-4 w-4", loadingAssignments && "animate-spin")} />
               </Button>
               {canWrite && (
-                <Button onClick={runRotation} disabled={loadingAssignments} className="bg-phisig-red text-white hover:bg-phisig-red-dark">
+                <Button onClick={runRotation} disabled={loadingAssignments} className="bg-brand-red text-white hover:bg-brand-red-dark">
                   <RotateCw className="h-4 w-4 mr-1.5" /> Rotate Wheel
                 </Button>
               )}
@@ -453,7 +453,7 @@ export function ChoresClient({
           {/* Table */}
           {loadingAssignments ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-phisig-red" />
+              <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
             </div>
           ) : assignments.length === 0 ? (
             <Card className="text-center py-12 border-dashed">
@@ -501,7 +501,7 @@ export function ChoresClient({
                       </div>
 
                       <div className="flex items-center gap-2 border-t pt-3">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-phisig-red to-phisig-red-dark text-white flex items-center justify-center text-xs font-semibold shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-red to-brand-red-dark text-white flex items-center justify-center text-xs font-semibold shrink-0">
                           <User className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -774,7 +774,7 @@ export function ChoresClient({
               className={cn(
                 confirmState?.destructive
                   ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  : "bg-phisig-red text-white hover:bg-phisig-red-dark"
+                  : "bg-brand-red text-white hover:bg-brand-red-dark"
               )}
             >
               {confirmBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}

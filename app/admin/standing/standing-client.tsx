@@ -150,7 +150,7 @@ export function StandingClient({
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-phisig-red text-white shadow-sm shrink-0">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-red text-white shadow-sm shrink-0">
             <Trophy className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -183,7 +183,7 @@ export function StandingClient({
         <Card className={GLASS_CARD}>
           <CardContent className="p-5 space-y-5">
             <div className="flex items-center gap-2">
-              <IconSpark className="h-4 w-4 text-phisig-red" aria-hidden="true" />
+              <IconSpark className="h-4 w-4 text-brand-red" aria-hidden="true" />
               <h2 className="text-sm font-semibold tracking-tight">Scoring rules</h2>
               <span className="text-[11px] text-muted-foreground">
                 Points available now total <span className="font-semibold tabular-nums">{Math.round(weightSum)}</span>
@@ -195,7 +195,7 @@ export function StandingClient({
               {WEIGHT_FIELDS.map((f) => (
                 <div key={f.key} className="rounded-xl border border-border bg-background/60 p-3">
                   <Label htmlFor={f.key} className="flex items-center gap-1.5 text-xs font-semibold">
-                    <f.icon className="h-3.5 w-3.5 text-phisig-red" aria-hidden="true" />
+                    <f.icon className="h-3.5 w-3.5 text-brand-red" aria-hidden="true" />
                     {f.label}
                   </Label>
                   <Input
@@ -361,7 +361,7 @@ function MemberCard({
 }) {
   const tone = standingTone(member.standing);
   return (
-    <Card className={cn("overflow-hidden transition", open && "ring-1 ring-phisig-red/20")}>
+    <Card className={cn("overflow-hidden transition", open && "ring-1 ring-brand-red/20")}>
       <button
         type="button"
         onClick={onToggle}
@@ -391,7 +391,7 @@ function MemberCard({
               className="h-9 w-9 rounded-full object-cover ring-1 ring-border shrink-0"
             />
           ) : (
-            <div className="h-9 w-9 rounded-full bg-phisig-red text-white flex items-center justify-center text-[11px] font-semibold shrink-0">
+            <div className="h-9 w-9 rounded-full bg-brand-red text-white flex items-center justify-center text-[11px] font-semibold shrink-0">
               {member.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
             </div>
           )}
@@ -450,7 +450,7 @@ function MemberCard({
                     <span className="text-[11px] font-medium text-muted-foreground">/{row.max}</span>
                   </p>
                   <div className="mt-1.5 h-1 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full rounded-full bg-phisig-red" style={{ width: `${rowPct}%` }} />
+                    <div className="h-full rounded-full bg-brand-red" style={{ width: `${rowPct}%` }} />
                   </div>
                   <p className="mt-1 text-[10px] text-muted-foreground truncate" title={row.detail}>
                     {row.detail}
@@ -504,7 +504,7 @@ function SummaryTile({
         <Icon
           className={cn(
             "h-4 w-4",
-            tone === "brand" && "text-phisig-red",
+            tone === "brand" && "text-brand-red",
             tone === "emerald" && "text-emerald-600",
             tone === "amber" && "text-amber-600",
             tone === "default" && "text-muted-foreground"

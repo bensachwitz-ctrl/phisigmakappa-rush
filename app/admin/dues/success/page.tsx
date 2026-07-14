@@ -54,7 +54,7 @@ export default async function DuesSuccessPage({
                     href={payment.receiptUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-phisig-red hover:underline inline-flex items-center gap-1"
+                    className="text-brand-red hover:underline inline-flex items-center gap-1"
                   >
                     View Stripe receipt <IconArrowRight className="h-3 w-3" />
                   </a>

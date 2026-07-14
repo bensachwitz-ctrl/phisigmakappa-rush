@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── P1 blocker #5: dues checkout return URLs must be PORTAL-aware ─────────────
 // The Stripe success_url/cancel_url used to point at /admin/dues/success and
-// /admin/brothers — both middleware-gated. A portal-only member (no phisig_admin
+// /admin/brothers — both middleware-gated. A portal-only member (no greekstack_admin
 // cookie) or a native caller (system browser, no session) got bounced to
 // /admin/login after paying and never saw a receipt. This pins the return URLs
 // to the ungated /portal/brothers/* routes so the receipt renders for the payer.

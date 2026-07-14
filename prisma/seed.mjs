@@ -5,13 +5,11 @@ const prisma = new PrismaClient();
 /**
  * Seed the CENTRAL chapter registry (public."Tenant") so the iOS /app
  * School→Chapter picker is never empty on a fresh DB and the single-tenant
- * Phi-Sig flow has a real, routable chapter.
+ * demo flow has a real, routable chapter.
  *
  * Reuses the existing `Tenant` model — NO new columns, NO migration. Demo rows
  * are flagged with a "[Demo]" suffix in `name` (a naming convention) so the UI
- * can badge them "Demo" without an additive `isDemo` column. The canonical
- * Phi-Sig USC chapter uses the real production subdomain (`phisig`) so it appears
- * as a LIVE chapter, distinct from the inert `psk` demo in mock-data.ts.
+ * can badge them "Demo" without an additive `isDemo` column.
  *
  * Idempotent: every row is upserted by its unique `subdomain`, so re-running the
  * seed updates in place and never duplicates or clobbers other registry rows.
@@ -21,9 +19,9 @@ async function seedTenantRegistry() {
   //     to the real per-chapter login + tenant-bound mobile auth.
   const liveChapters = [
     {
-      subdomain: "phisig",
-      name: "Phi Sigma Kappa",
-      school: "University of South Carolina",
+      subdomain: "demo",
+      name: "Greek Stack Demo Chapter",
+      school: "Demo University",
       isActive: true,
     },
   ];
@@ -64,16 +62,16 @@ async function main() {
       {
         name: "Meet the Brothers — Cookout",
         description:
-          "Open-house BBQ at the Phi Sig house. Meet active brothers, eat well, and get a feel for the chapter.",
-        location: "Phi Sigma Kappa House — 1525 College St",
+          "Open-house BBQ at the chapter house. Meet active members, eat well, and get a feel for the chapter.",
+        location: "Chapter House — 1525 College St",
         dressCode: "Casual (shorts/t-shirt)",
         startsAt: new Date(now + 2 * day),
       },
       {
-        name: "Tailgate at Williams-Brice",
-        description: "Pre-game tailgate before the Gamecocks home opener.",
-        location: "Williams-Brice Stadium — Lot 5",
-        dressCode: "Garnet & Black gameday",
+        name: "Tailgate",
+        description: "Pre-game tailgate before the home opener.",
+        location: "University Stadium — Lot 5",
+        dressCode: "School colors gameday",
         startsAt: new Date(now + 5 * day),
       },
       {
@@ -85,8 +83,8 @@ async function main() {
       },
       {
         name: "Formal Dinner — Invite Only",
-        description: "Sit-down dinner for select rushes. Invitation required.",
-        location: "Capital City Club, downtown",
+        description: "Sit-down dinner for select recruits. Invitation required.",
+        location: "Downtown Club",
         dressCode: "Coat & tie",
         isPrivate: true,
         startsAt: new Date(now + 14 * day),
@@ -94,7 +92,7 @@ async function main() {
       {
         name: "Bid Night",
         description: "Bid extension and welcome ceremony for accepting members.",
-        location: "Phi Sigma Kappa House",
+        location: "Chapter House",
         dressCode: "Smart casual",
         isPrivate: true,
         startsAt: new Date(now + 18 * day),

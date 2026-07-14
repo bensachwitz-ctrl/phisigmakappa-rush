@@ -45,7 +45,7 @@ export default async function AdminFormsPage() {
               className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground"
             >
               {f.label}
-              {f.required && <span className="text-phisig-red" aria-hidden="true">*</span>}
+              {f.required && <span className="text-brand-red" aria-hidden="true">*</span>}
             </span>
           ))}
         </div>

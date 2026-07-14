@@ -16,7 +16,7 @@ import { IconPlus as Plus } from "@/components/brand/icons";
 export function AddEventButton() {
   function handleClick() {
     if (typeof window === "undefined") return;
-    window.dispatchEvent(new CustomEvent("phisig:open-add-event"));
+    window.dispatchEvent(new CustomEvent("greekstack:open-add-event"));
     // Smooth-scroll to the manage section so the admin sees the new event
     // appear in the list once they save.
     const el = document.getElementById("manage-events");
@@ -28,7 +28,7 @@ export function AddEventButton() {
     <Button
       onClick={handleClick}
       size="default"
-      className="press cta-shine shadow-lg shadow-phisig-red/20"
+      className="press cta-shine shadow-lg shadow-brand-red/20"
       aria-label="Add a new chapter event"
     >
       <Plus className="h-4 w-4" /> Add event

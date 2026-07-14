@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   }
 
   let sentEmail = 0, sentSms = 0, mockMode = false;
-  // Chapter identity is the From-line. Falls back to Phi Sig USC reference
+  // Chapter identity is the From-line. Falls back to Demo Chapter USC reference
   // values, so an existing deploy renders identically.
   const identity = await getChapterIdentity();
 

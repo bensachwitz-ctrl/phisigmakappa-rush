@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 // for the hover rise. Uses hsl(var(--primary)) so it re-tints per chapter
 // (the portal's maroon scale is separate; this is the admin/brand surface).
 const GLASS_CARD =
-  "lift relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-white/80 backdrop-blur-xl " +
+  "lift relative overflow-hidden rounded-2xl border border-brand-red/10 bg-white/80 backdrop-blur-xl " +
   "ring-1 ring-[hsl(var(--primary)/0.06)] shadow-[0_1px_0_0_rgba(255,255,255,0.8)_inset,0_10px_30px_-14px_rgba(11,11,12,0.16),0_28px_56px_-32px_hsl(var(--primary)/0.20)]";
 
 export default async function AdminDashboard({ searchParams }: { searchParams?: { view?: string } }) {
@@ -297,13 +297,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       {/* E-Board View Slider Toggle — frosted glass pill with a brand-tinted
           active chip and a soft layered shadow. */}
       <div className="flex justify-center mb-8">
-        <div className="inline-flex rounded-2xl bg-white/70 backdrop-blur-xl p-1 border border-phisig-red/10 ring-1 ring-[hsl(var(--primary)/0.05)] shadow-[0_8px_24px_-14px_rgba(11,11,12,0.18)]">
+        <div className="inline-flex rounded-2xl bg-white/70 backdrop-blur-xl p-1 border border-brand-red/10 ring-1 ring-[hsl(var(--primary)/0.05)] shadow-[0_8px_24px_-14px_rgba(11,11,12,0.18)]">
           <Link
             href="/admin?view=brothers"
             aria-current={currentView === "brothers" ? "page" : undefined}
-            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 ${
               currentView === "brothers"
-                ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
+                ? "bg-gradient-to-b from-brand-red to-brand-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/60"
             }`}
           >
@@ -317,9 +317,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
             <Link
               href="/admin?view=alumni"
               aria-current={currentView === "alumni" ? "page" : undefined}
-              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30 ${
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 ${
                 currentView === "alumni"
-                  ? "bg-gradient-to-b from-phisig-red to-phisig-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
+                  ? "bg-gradient-to-b from-brand-red to-brand-red-dark text-white shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.55)] font-bold"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/60"
               }`}
             >
@@ -331,9 +331,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       {currentView === "alumni" ? (
         <div className="space-y-8">
-          <Reveal as="div" className="relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-gradient-to-br from-phisig-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
+          <Reveal as="div" className="relative overflow-hidden rounded-2xl border border-brand-red/10 bg-gradient-to-br from-brand-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
             {/* soft brand orb for depth — decorative */}
-            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-phisig-red/10 blur-3xl" />
+            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-brand-red/10 blur-3xl" />
             <div className="relative flex items-start gap-4">
               <IconChip icon={IconAlumni} tone="brand" size="lg" className="hidden sm:inline-flex" />
               <div>
@@ -358,7 +358,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               return (
                 <Reveal key={kpi.label} delay={i * 70}>
                   <div className={`group ${GLASS_CARD} p-6 h-full`}>
-                    <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent opacity-80" />
+                    <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-red/70 via-brand-red/30 to-transparent opacity-80" />
                     <div className="flex items-center justify-between space-y-0 pb-2">
                       <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
                       <IconChip icon={Icon} tone="brand" size="sm" className="transition-transform duration-300 group-hover:scale-105" />
@@ -382,7 +382,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead>
-                      <tr className="border-b border-phisig-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
+                      <tr className="border-b border-brand-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
                         <th className="pb-2">Name</th>
                         <th className="pb-2">Class</th>
                         <th className="pb-2">Company</th>
@@ -392,7 +392,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                     <tbody className="divide-y divide-border/70">
                       {recentAlumniList.length > 0 ? (
                         recentAlumniList.map((a) => (
-                          <tr key={a.id} className="hover:bg-phisig-red-soft/40 transition-colors">
+                          <tr key={a.id} className="hover:bg-brand-red-soft/40 transition-colors">
                             <td className="py-2.5 font-medium">{a.fullName}</td>
                             <td className="py-2.5 tabular-nums">{a.graduationYear}</td>
                             <td className="py-2.5 truncate max-w-[120px]">{a.employer || "N/A"}</td>
@@ -404,7 +404,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                           <td colSpan={4} className="py-10">
                             <div className="flex flex-col items-center gap-3 text-center">
                               <span className="relative">
-                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-phisig-red/15 blur-2xl" />
+                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-brand-red/15 blur-2xl" />
                                 <IconChip icon={IconAlumni} tone="brand" size="md" />
                               </span>
                               <p className="text-xs text-muted-foreground max-w-[220px]">
@@ -430,7 +430,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead>
-                      <tr className="border-b border-phisig-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
+                      <tr className="border-b border-brand-red/15 text-muted-foreground text-xs font-bold uppercase tracking-wide">
                         <th className="pb-2">Alumnus</th>
                         <th className="pb-2">Amount</th>
                         <th className="pb-2">Campaign</th>
@@ -440,7 +440,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                     <tbody className="divide-y divide-border/70">
                       {recentDonations.length > 0 ? (
                         recentDonations.map((d) => (
-                          <tr key={d.id} className="hover:bg-phisig-red-soft/40 transition-colors">
+                          <tr key={d.id} className="hover:bg-brand-red-soft/40 transition-colors">
                             <td className="py-2.5 font-medium">{d.alumni?.fullName || "Anonymous"}</td>
                             <td className="py-2.5 font-bold tabular-nums">${(d.amountCents / 100).toFixed(2)}</td>
                             <td className="py-2.5 truncate max-w-[120px]">{d.campaign || "General"}</td>
@@ -452,7 +452,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                           <td colSpan={4} className="py-10">
                             <div className="flex flex-col items-center gap-3 text-center">
                               <span className="relative">
-                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-phisig-red/15 blur-2xl" />
+                                <span aria-hidden className="absolute inset-0 -z-10 rounded-2xl bg-brand-red/15 blur-2xl" />
                                 <IconChip icon={IconDues} tone="brand" size="md" />
                               </span>
                               <p className="text-xs text-muted-foreground max-w-[220px]">
@@ -471,8 +471,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
         </div>
       ) : (
         <>
-          <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-phisig-red/10 bg-gradient-to-br from-phisig-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
-            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-phisig-red/10 blur-3xl" />
+          <Reveal as="div" className="mb-6 relative overflow-hidden rounded-2xl border border-brand-red/10 bg-gradient-to-br from-brand-red-soft/50 via-white to-white p-5 sm:p-6 shadow-[0_10px_30px_-16px_hsl(var(--primary)/0.18)]">
+            <span aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-brand-red/10 blur-3xl" />
             <div className="relative flex items-start gap-4">
               <IconChip icon={IconDashboard} tone="brand" size="lg" className="hidden sm:inline-flex" />
               <div>
@@ -551,7 +551,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
               the GLASS_CARD + IconChip tile style used across the dashboard. */}
           <Reveal as="div" className="mb-6">
             <div className="mb-3 flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4 text-phisig-red" />
+              <LayoutGrid className="h-4 w-4 text-brand-red" />
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Chapter tools</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -572,14 +572,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 const Icon = t.icon;
                 return (
                   <Reveal key={t.href} delay={i * 60}>
-                    <Link href={t.href} className={`group ${GLASS_CARD} flex h-full items-center gap-3.5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phisig-red/30`}>
-                      <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-phisig-red/70 via-phisig-red/30 to-transparent opacity-80" />
+                    <Link href={t.href} className={`group ${GLASS_CARD} flex h-full items-center gap-3.5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30`}>
+                      <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-red/70 via-brand-red/30 to-transparent opacity-80" />
                       <IconChip icon={Icon} tone="brand" size="md" className="shrink-0 transition-transform duration-300 group-hover:scale-105" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold tracking-tight">{t.label}</p>
                         <p className="truncate text-xs text-muted-foreground">{t.sub}</p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-phisig-red" />
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-brand-red" />
                     </Link>
                   </Reveal>
                 );
